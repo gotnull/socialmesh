@@ -551,7 +551,7 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
       ),
@@ -616,8 +616,8 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
             // Title and author
             Text(
               mWidget.name,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: context.textPrimary,
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
@@ -649,8 +649,8 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
             // Description
             Text(
               'Description',
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: context.textPrimary,
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),
@@ -669,8 +669,8 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
             if (mWidget.tags.isNotEmpty) ...[
               Text(
                 'Tags',
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: context.textPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
@@ -732,7 +732,7 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
                           if (isAlreadyInstalled)
                             const Icon(
                               Icons.check_circle,
-                              color: Colors.white70,
+                              color: Colors.white,
                               size: 20,
                             ),
                           if (isAlreadyInstalled) const SizedBox(width: 8),
@@ -744,7 +744,7 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                               color: isAlreadyInstalled
-                                  ? Colors.white70
+                                  ? context.textSecondary
                                   : Colors.white,
                             ),
                           ),

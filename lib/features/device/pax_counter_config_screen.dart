@@ -248,7 +248,7 @@ class _PaxCounterConfigScreenState
                           const SizedBox(width: 8),
                           const Text(
                             'WiFi Scanning',
-                            style: TextStyle(color: Colors.white),
+                            style: TextStyle(color: Colors.grey),
                           ),
                         ],
                       ),
@@ -277,7 +277,7 @@ class _PaxCounterConfigScreenState
                           const SizedBox(width: 8),
                           const Text(
                             'Bluetooth Scanning',
-                            style: TextStyle(color: Colors.white),
+                            style: TextStyle(color: Colors.grey),
                           ),
                         ],
                       ),
@@ -313,7 +313,7 @@ class _PaxCounterConfigScreenState
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: Colors.white.withValues(alpha: 0.7),
+                      color: context.textSecondary,
                     ),
                   ),
                   SizedBox(height: 8),

@@ -544,7 +544,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
               focusNode: _nameFocusNode,
               style: TextStyle(
                 fontSize: 15,
-                color: Colors.white,
+                color: context.textPrimary,
 
                 fontWeight: FontWeight.w500,
               ),

@@ -50,10 +50,10 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
                 children: [
                   Icon(Icons.store, color: context.accentColor, size: 24),
                   const SizedBox(width: 8),
-                  const Text(
+                  Text(
                     'Device Shop',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: context.textPrimary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -142,7 +142,7 @@ class _CategoriesSection extends StatelessWidget {
           child: Text(
             'Categories',
             style: TextStyle(
-              color: Colors.white,
+              color: context.textPrimary,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
@@ -215,7 +215,7 @@ class _CategoryCard extends StatelessWidget {
                 Text(
                   category.label,
                   style: TextStyle(
-                    color: Colors.white,
+                    color: context.textPrimary,
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
                   ),
@@ -282,7 +282,7 @@ class _PartnersSection extends ConsumerWidget {
                   Text(
                     'Official Partners',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: context.textPrimary,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
@@ -352,8 +352,8 @@ class _PartnerCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   seller.name,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: context.textPrimary,
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                   ),
@@ -470,7 +470,7 @@ class _ProductSection extends StatelessWidget {
               Text(
                 title,
                 style: TextStyle(
-                  color: Colors.white,
+                  color: context.textPrimary,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
@@ -661,8 +661,8 @@ class ProductCard extends ConsumerWidget {
                       children: [
                         Text(
                           product.name,
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: context.textPrimary,
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                           ),
@@ -762,7 +762,7 @@ class _SectionLoading extends StatelessWidget {
           child: Text(
             title,
             style: TextStyle(
-              color: Colors.white,
+              color: context.textPrimary,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),

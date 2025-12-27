@@ -133,7 +133,7 @@ class _SkyTrackerScreenState extends ConsumerState<SkyTrackerScreen>
             SizedBox(width: 8),
             Text(
               'Sky Tracker',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: context.textPrimary),
             ),
           ],
         ),

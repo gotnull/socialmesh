@@ -147,7 +147,7 @@ class _DetectionSensorCard extends StatelessWidget {
             ),
             child: Icon(
               log.detected ? Icons.sensors : Icons.sensors_off,
-              color: log.detected ? AccentColors.orange : Colors.white38,
+              color: log.detected ? AccentColors.orange : context.textTertiary,
               size: 24,
             ),
           ),
@@ -163,10 +163,10 @@ class _DetectionSensorCard extends StatelessWidget {
                   children: [
                     Text(
                       log.name.isNotEmpty ? log.name : 'Detection Sensor',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
-                        color: Colors.white,
+                        color: context.textPrimary,
                       ),
                     ),
                     _DetectionBadge(detected: log.detected),
@@ -209,7 +209,7 @@ class _DetectionBadge extends StatelessWidget {
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w600,
-          color: detected ? AccentColors.orange : Colors.white54,
+          color: detected ? AccentColors.orange : context.textTertiary,
         ),
       ),
     );

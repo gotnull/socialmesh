@@ -552,9 +552,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
       decoration: BoxDecoration(
         color: context.card,
-        border: Border(
-          top: BorderSide(color: context.border.withAlpha(150)),
-        ),
+        border: Border(top: BorderSide(color: context.border.withAlpha(150))),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withAlpha(60),
@@ -582,9 +580,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                     decoration: BoxDecoration(
                       color: context.background,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: context.border.withAlpha(100),
-                      ),
+                      border: Border.all(color: context.border.withAlpha(100)),
                     ),
                     child: Row(
                       children: MeshConfigSaveLocation.values.map((location) {
@@ -692,9 +688,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                                 ],
                               )
                             : null,
-                        color: _hasUnsavedChanges
-                            ? null
-                            : context.background,
+                        color: _hasUnsavedChanges ? null : context.background,
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
                           color: _hasUnsavedChanges
@@ -957,9 +951,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                       : context.background,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: isSelected
-                        ? context.accentColor
-                        : context.border,
+                    color: isSelected ? context.accentColor : context.border,
                   ),
                 ),
                 child: Text(
@@ -967,7 +959,9 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                    color: isSelected ? context.accentColor : Colors.white,
+                    color: isSelected
+                        ? context.accentColor
+                        : context.textSecondary,
                   ),
                 ),
               ),
@@ -1529,19 +1523,16 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                 SizedBox(height: 8),
                 Text(
                   'Test ${_secretPattern.name} here',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: Colors.white70,
+                    color: context.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   _getPatternInstructions(_secretPattern),
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: context.textTertiary,
-                  ),
+                  style: TextStyle(fontSize: 11, color: context.textTertiary),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -1682,10 +1673,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                     ],
                   ),
                 ),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: context.textSecondary,
-                ),
+                Icon(Icons.chevron_right_rounded, color: context.textSecondary),
               ],
             ),
           ),
@@ -1717,11 +1705,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
               style: const TextStyle(fontSize: 14, color: Colors.white),
             ),
             const Spacer(),
-            Icon(
-              Icons.chevron_right,
-              size: 18,
-              color: context.textTertiary,
-            ),
+            Icon(Icons.chevron_right, size: 18, color: context.textTertiary),
           ],
         ),
       ),
@@ -1854,9 +1838,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: value
-              ? context.accentColor.withAlpha(30)
-              : context.background,
+          color: value ? context.accentColor.withAlpha(30) : context.background,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: value ? context.accentColor : context.border,

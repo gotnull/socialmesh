@@ -589,7 +589,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         backgroundColor: context.card,
         title: Text(
           'Discard Changes?',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: context.textPrimary),
         ),
         content: Text(
           'You have unsaved changes. Are you sure you want to close without saving?',
@@ -667,7 +667,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
               SizedBox(width: 12),
               Text(
                 'Switch Template?',
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(color: context.textPrimary),
               ),
             ],
           ),
@@ -688,7 +688,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
               Text(
                 'What would you like to do?',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: context.textPrimary,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -848,11 +848,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                     ),
                     child: Center(
                       child: isCompleted
-                          ? Icon(
-                              Icons.check,
-                              size: 16,
-                              color: Colors.white,
-                            )
+                          ? Icon(Icons.check, size: 16, color: Colors.white)
                           : Text(
                               '${index + 1}',
                               style: TextStyle(
@@ -871,9 +867,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                     child: Container(
                       height: 2,
                       margin: const EdgeInsets.symmetric(horizontal: 4),
-                      color: isCompleted
-                          ? context.accentColor
-                          : context.border,
+                      color: isCompleted ? context.accentColor : context.border,
                     ),
                   ),
               ],
@@ -1053,8 +1047,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
               // Name
               Text(
                 template.name,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: context.textPrimary,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),
@@ -1174,7 +1168,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         SizedBox(height: 8),
         TextField(
           controller: _nameController,
-          style: const TextStyle(color: Colors.white, fontSize: 16),
+          style: TextStyle(color: context.textPrimary, fontSize: 16),
           decoration: InputDecoration(
             hintText: 'e.g., My Battery Widget',
             hintStyle: TextStyle(color: context.textTertiary),
@@ -1936,9 +1930,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                         : context.card,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: isSelected
-                          ? context.accentColor
-                          : context.border,
+                      color: isSelected ? context.accentColor : context.border,
                     ),
                   ),
                   child: Column(
@@ -1995,7 +1987,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                 Text(
                   title,
                   style: TextStyle(
-                    color: Colors.white,
+                    color: context.textPrimary,
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
@@ -2216,8 +2208,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                   Expanded(
                     child: Text(
                       binding.label,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: context.textPrimary,
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                       ),
@@ -2280,16 +2272,16 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             children: [
               Icon(
                 type.$3,
-                color: isSelected
-                    ? context.accentColor
-                    : context.textSecondary,
+                color: isSelected ? context.accentColor : context.textSecondary,
                 size: 18,
               ),
               SizedBox(height: 2),
               Text(
                 type.$2,
                 style: TextStyle(
-                  color: isSelected ? context.accentColor : Colors.white,
+                  color: isSelected
+                      ? context.accentColor
+                      : context.textSecondary,
                   fontSize: 9,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                 ),
@@ -2320,9 +2312,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           children: [
             Icon(
               Icons.merge_type,
-              color: _mergeCharts
-                  ? context.accentColor
-                  : context.textSecondary,
+              color: _mergeCharts ? context.accentColor : context.textSecondary,
               size: 20,
             ),
             SizedBox(width: 12),
@@ -2445,7 +2435,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         backgroundColor: context.card,
         title: Text(
           'Merge Charts?',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: context.textPrimary),
         ),
         content: Text(
           'You have selected different chart types for each series. '
@@ -3049,7 +3039,9 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                         child: Text(
                           label,
                           style: TextStyle(
-                            color: config.enabled ? color : Colors.white70,
+                            color: config.enabled
+                                ? color
+                                : context.textSecondary,
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                           ),
@@ -3977,11 +3969,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                           ),
                         ),
                         child: _addToDashboard
-                            ? Icon(
-                                Icons.check,
-                                size: 16,
-                                color: Colors.white,
-                              )
+                            ? Icon(Icons.check, size: 16, color: Colors.white)
                             : null,
                       ),
                       const SizedBox(width: 10),
@@ -5375,9 +5363,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             type: ElementType.column,
             style: StyleSchema(
               padding: isHorizontal ? 4 : 8,
-              backgroundColor: _colorToHex(
-                context.card.withValues(alpha: 0.5),
-              ),
+              backgroundColor: _colorToHex(context.card.withValues(alpha: 0.5)),
               borderRadius: 6,
               alignment: AlignmentOption.center,
             ),

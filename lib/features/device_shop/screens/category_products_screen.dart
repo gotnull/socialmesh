@@ -240,7 +240,7 @@ class _CategoryProductsScreenState
           else
             const SizedBox(width: 18),
           const SizedBox(width: 8),
-          Text(label, style: TextStyle(color: Colors.white)),
+          Text(label, style: TextStyle(color: context.textPrimary)),
         ],
       ),
     );
@@ -311,7 +311,7 @@ class _CategoryProductsScreenState
                     SwitchListTile(
                       title: Text(
                         'In Stock Only',
-                        style: TextStyle(color: Colors.white),
+                        style: TextStyle(color: context.textPrimary),
                       ),
                       value: _inStockOnly,
                       onChanged: (v) {

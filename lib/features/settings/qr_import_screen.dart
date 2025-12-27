@@ -227,10 +227,7 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: context.card,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          'Import Channel',
-          style: TextStyle(color: Colors.white),
-        ),
+        title: Text('Import Channel', style: TextStyle(color: Colors.white)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -375,16 +372,16 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.flash_on, color: Colors.white),
+            icon: Icon(Icons.flash_on, color: context.textPrimary),
             onPressed: () => _controller.toggleTorch(),
           ),
           IconButton(
-            icon: Icon(Icons.flip_camera_ios, color: Colors.white),
+            icon: Icon(Icons.flip_camera_ios, color: context.textPrimary),
             onPressed: () => _controller.switchCamera(),
           ),
         ],

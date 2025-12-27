@@ -1991,7 +1991,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
         TextFormField(
           initialValue: value,
           onChanged: onChanged,
-          style: const TextStyle(color: Colors.white, fontSize: 13),
+          style: TextStyle(color: context.textPrimary, fontSize: 13),
           decoration: InputDecoration(
             isDense: true,
             contentPadding: const EdgeInsets.symmetric(
@@ -2269,7 +2269,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
             isDense: true,
             dropdownColor: context.card,
             underline: const SizedBox.shrink(),
-            style: const TextStyle(color: Colors.white, fontSize: 13),
+            style: TextStyle(color: context.textPrimary, fontSize: 13),
             items: options.asMap().entries.map((entry) {
               final index = entry.key;
               final option = entry.value;
@@ -2333,7 +2333,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                 Expanded(
                   child: Text(
                     value,
-                    style: const TextStyle(color: Colors.white, fontSize: 13),
+                    style: TextStyle(color: context.textPrimary, fontSize: 13),
                   ),
                 ),
                 Icon(
@@ -2885,11 +2885,11 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: context.card,
-        title: Text('Widget Name', style: TextStyle(color: Colors.white)),
+        title: Text('Widget Name', style: TextStyle(color: context.textPrimary)),
         content: TextField(
           controller: controller,
           autofocus: true,
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: context.textPrimary),
           decoration: InputDecoration(
             hintText: 'Enter widget name',
             hintStyle: TextStyle(color: context.textTertiary),

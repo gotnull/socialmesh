@@ -378,7 +378,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
           SizedBox(height: 32),
           TextField(
             controller: _nameController,
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: context.textPrimary),
             maxLength: 12,
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),

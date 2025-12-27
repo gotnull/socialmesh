@@ -989,7 +989,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
-                color: Colors.white,
+                color: context.textPrimary,
               ),
             ),
             SizedBox(height: 16),
@@ -1098,7 +1098,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
         actions: [
@@ -1171,7 +1171,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                         TextField(
                           controller: _rtttlController,
                           style: TextStyle(
-                            color: Colors.white,
+                            color: context.textPrimary,
                             fontFamily: 'monospace',
                             fontSize: 13,
                           ),
@@ -1370,8 +1370,8 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                               children: [
                                 Text(
                                   'Browse ${_libraryToneCount > 0 ? '${(_libraryToneCount / 1000).toStringAsFixed(1).replaceAll('.0', '')}k+' : ''} Ringtones',
-                                  style: const TextStyle(
-                                    color: Colors.white,
+                                  style: TextStyle(
+                                    color: context.textPrimary,
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -1622,7 +1622,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                             style: TextStyle(
                                               color: isSelected
                                                   ? context.accentColor
-                                                  : Colors.white,
+                                                  : context.textPrimary,
                                               fontWeight: isSelected
                                                   ? FontWeight.w600
                                                   : FontWeight.w500,
@@ -1840,7 +1840,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                                   style: TextStyle(
                                                     color: isSelected
                                                         ? context.accentColor
-                                                        : Colors.white,
+                                                        : context.textPrimary,
                                                     fontWeight: isSelected
                                                         ? FontWeight.w600
                                                         : FontWeight.w500,
@@ -1953,7 +1953,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                               Text(
                                 'Tip: Find your device',
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: context.textPrimary,
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -2211,7 +2211,7 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                    color: context.textPrimary,
                   ),
                 ),
                 SizedBox(height: 4),
@@ -2232,7 +2232,7 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
             child: TextField(
               controller: _searchController,
               focusNode: _searchFocus,
-              style: const TextStyle(color: Colors.white, fontSize: 15),
+              style: TextStyle(color: context.textPrimary, fontSize: 15),
               decoration: InputDecoration(
                 hintText: 'Search by song, artist, or theme...',
                 hintStyle: TextStyle(
@@ -2404,8 +2404,8 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
                                     children: [
                                       Text(
                                         item.formattedTitle,
-                                        style: const TextStyle(
-                                          color: Colors.white,
+                                        style: TextStyle(
+                                          color: context.textPrimary,
                                           fontWeight: FontWeight.w500,
 
                                           fontSize: 15,

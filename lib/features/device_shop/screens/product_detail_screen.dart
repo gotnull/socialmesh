@@ -53,7 +53,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
               const SizedBox(height: 16),
               Text(
                 'Error loading product',
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(color: context.textPrimary),
               ),
               const SizedBox(height: 8),
               TextButton(
@@ -69,15 +69,11 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.search_off,
-                    color: context.textTertiary,
-                    size: 48,
-                  ),
+                  Icon(Icons.search_off, color: context.textTertiary, size: 48),
                   const SizedBox(height: 16),
                   Text(
                     'Product not found',
-                    style: TextStyle(color: Colors.white),
+                    style: TextStyle(color: context.textPrimary),
                   ),
                   const SizedBox(height: 8),
                   TextButton(
@@ -693,11 +689,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                   SizedBox(height: 12),
                   Row(
                     children: [
-                      Icon(
-                        Icons.public,
-                        color: context.textTertiary,
-                        size: 18,
-                      ),
+                      Icon(Icons.public, color: context.textTertiary, size: 18),
                       SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -820,7 +812,7 @@ Price: ${product.formattedPrice}${product.purchaseUrl != null ? '\n\n${product.p
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: context.card,
-        title: Text('Purchase', style: TextStyle(color: Colors.white)),
+        title: Text('Purchase', style: TextStyle(color: context.textPrimary)),
         content: Text(
           'Contact the seller to purchase this product.',
           style: TextStyle(color: context.textSecondary),
@@ -1232,10 +1224,7 @@ class _WriteReviewSheetState extends ConsumerState<_WriteReviewSheet> {
             const SizedBox(height: 24),
 
             // Rating
-            Text(
-              'Your Rating',
-              style: TextStyle(color: context.textSecondary),
-            ),
+            Text('Your Rating', style: TextStyle(color: context.textSecondary)),
             SizedBox(height: 8),
             Row(
               children: List.generate(
@@ -1255,7 +1244,7 @@ class _WriteReviewSheetState extends ConsumerState<_WriteReviewSheet> {
             // Title
             TextField(
               controller: _titleController,
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: context.textPrimary),
               decoration: InputDecoration(
                 labelText: 'Title (optional)',
                 labelStyle: TextStyle(color: context.textSecondary),
@@ -1272,7 +1261,7 @@ class _WriteReviewSheetState extends ConsumerState<_WriteReviewSheet> {
             // Body
             TextField(
               controller: _bodyController,
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: context.textPrimary),
               maxLines: 4,
               decoration: InputDecoration(
                 labelText: 'Your Review',

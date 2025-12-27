@@ -530,14 +530,11 @@ class _ToggleTile extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: const TextStyle(fontSize: 14, color: Colors.white),
+                style: TextStyle(fontSize: 14, color: context.textPrimary),
               ),
               Text(
                 subtitle,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.white.withValues(alpha: 0.5),
-                ),
+                style: TextStyle(fontSize: 12, color: context.textSecondary),
               ),
             ],
           ),

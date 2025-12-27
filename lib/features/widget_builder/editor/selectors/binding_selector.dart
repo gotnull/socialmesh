@@ -188,7 +188,7 @@ class _BindingSelectorContentState extends State<_BindingSelectorContent> {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: Colors.white,
+                color: context.textPrimary,
               ),
             ),
           ),
@@ -197,7 +197,7 @@ class _BindingSelectorContentState extends State<_BindingSelectorContent> {
           TextField(
             controller: _searchController,
             onChanged: (value) => setState(() => _searchQuery = value),
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: context.textPrimary),
             decoration: InputDecoration(
               hintText: 'Search variables...',
               hintStyle: TextStyle(color: context.textSecondary),

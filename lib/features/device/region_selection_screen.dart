@@ -295,14 +295,11 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                 border: Border.all(color: context.border),
               ),
               child: TextField(
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(color: context.textPrimary),
                 decoration: InputDecoration(
                   hintText: 'Search regions...',
                   hintStyle: TextStyle(color: context.textTertiary),
-                  prefixIcon: Icon(
-                    Icons.search,
-                    color: context.textTertiary,
-                  ),
+                  prefixIcon: Icon(Icons.search, color: context.textTertiary),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
@@ -333,9 +330,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                         : context.card,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: isSelected
-                          ? context.accentColor
-                          : context.border,
+                      color: isSelected ? context.accentColor : context.border,
                       width: isSelected ? 2 : 1,
                     ),
                   ),

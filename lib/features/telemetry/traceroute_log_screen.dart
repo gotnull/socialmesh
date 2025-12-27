@@ -166,14 +166,14 @@ class _TraceRouteCard extends StatelessWidget {
                   children: [
                     const Text(
                       'To',
-                      style: TextStyle(fontSize: 11, color: Colors.white54),
+                      style: TextStyle(fontSize: 11, color: Colors.grey),
                     ),
                     Text(
                       destName,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
-                        color: Colors.white,
+                        color: context.textPrimary,
                       ),
                     ),
                   ],
@@ -384,14 +384,14 @@ class _HopItem extends StatelessWidget {
                 children: [
                   Text(
                     name,
-                    style: const TextStyle(fontSize: 13, color: Colors.white),
+                    style: TextStyle(fontSize: 13, color: context.textPrimary),
                   ),
                   if (snr != null)
                     Text(
                       'SNR: ${snr!.toStringAsFixed(1)}',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.white.withValues(alpha: 0.5),
+                        color: context.textSecondary,
                       ),
                     ),
                 ],

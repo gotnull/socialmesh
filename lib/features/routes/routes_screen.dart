@@ -35,12 +35,12 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen> {
         backgroundColor: context.background,
         leading: const HamburgerMenuButton(),
         centerTitle: true,
-        title: const Text(
+        title: Text(
           'Routes',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
         actions: [
@@ -100,27 +100,20 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.route_outlined,
-            size: 80,
-            color: Colors.white.withValues(alpha: 0.2),
-          ),
+          Icon(Icons.route_outlined, size: 80, color: context.textTertiary),
           const SizedBox(height: 24),
           Text(
             'No Routes Yet',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: Colors.white.withValues(alpha: 0.7),
+              color: context.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Record your first route or import a GPX file',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.white.withValues(alpha: 0.5),
-            ),
+            style: TextStyle(fontSize: 14, color: context.textTertiary),
           ),
         ],
       ),
@@ -287,23 +280,23 @@ class _ActiveRouteBanner extends ConsumerWidget {
               const Spacer(),
               Text(
                 '${route.locations.length} points',
-                style: const TextStyle(fontSize: 12, color: Colors.white70),
+                style: TextStyle(fontSize: 12, color: context.textSecondary),
               ),
             ],
           ),
           const SizedBox(height: 12),
           Text(
             route.name,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: context.textPrimary,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             '${_formatDistance(route.totalDistance)} • ${_formatDuration(DateTime.now().difference(route.createdAt))}',
-            style: const TextStyle(fontSize: 14, color: Colors.white70),
+            style: TextStyle(fontSize: 14, color: context.textSecondary),
           ),
           const SizedBox(height: 16),
           Row(
@@ -429,7 +422,7 @@ class _RouteCard extends StatelessWidget {
                             dateFormat.format(route.createdAt),
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.white.withValues(alpha: 0.5),
+                              color: context.textTertiary,
                             ),
                           ),
                         ],
@@ -508,7 +501,7 @@ class _RouteCard extends StatelessWidget {
                     route.notes!,
                     style: TextStyle(
                       fontSize: 13,
-                      color: Colors.white.withValues(alpha: 0.6),
+                      color: context.textSecondary,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -552,10 +545,7 @@ class _StatChip extends StatelessWidget {
         const SizedBox(width: 4),
         Text(
           value,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.white.withValues(alpha: 0.7),
-          ),
+          style: TextStyle(fontSize: 12, color: context.textSecondary),
         ),
       ],
     );
@@ -627,7 +617,7 @@ class _NewRouteSheetState extends State<_NewRouteSheet> {
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: Colors.white.withValues(alpha: 0.7),
+            color: context.textSecondary,
           ),
         ),
         const SizedBox(height: 12),

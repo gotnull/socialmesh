@@ -98,7 +98,7 @@ class _WidgetApprovalScreenState extends ConsumerState<WidgetApprovalScreen> {
           backgroundColor: context.card,
           title: Text(
             'Reject Widget',
-            style: TextStyle(color: Colors.white),
+            style: TextStyle(color: context.textPrimary),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -122,7 +122,7 @@ class _WidgetApprovalScreenState extends ConsumerState<WidgetApprovalScreen> {
                     borderSide: BorderSide.none,
                   ),
                 ),
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(color: context.textPrimary),
               ),
             ],
           ),

@@ -88,10 +88,10 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen> {
           centerTitle: true,
           title: Text(
             'Channels (${channels.length})',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: context.textPrimary,
             ),
           ),
           actions: [
@@ -374,7 +374,7 @@ class _ChannelTile extends ConsumerWidget {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        color: context.textPrimary,
                       ),
                     ),
                     SizedBox(height: 6),

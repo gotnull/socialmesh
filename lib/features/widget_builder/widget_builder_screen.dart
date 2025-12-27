@@ -294,7 +294,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
                             ? Icons.dashboard_outlined
                             : Icons.dashboard_customize,
                         size: 18,
-                        color: isOnDashboard ? AppTheme.errorRed : Colors.white,
+                        color: isOnDashboard ? AppTheme.errorRed : context.textSecondary,
                       ),
                       SizedBox(width: 8),
                       Text(
@@ -881,9 +881,9 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text(
+                  child: Text(
                     'OK',
-                    style: TextStyle(color: Colors.white),
+                    style: TextStyle(color: context.accentColor),
                   ),
                 ),
               ],

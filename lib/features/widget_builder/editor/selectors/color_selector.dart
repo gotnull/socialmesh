@@ -228,7 +228,7 @@ class InlineColorSelector extends StatelessWidget {
                   ),
                   Text(
                     colorName,
-                    style: TextStyle(fontSize: 13, color: Colors.white),
+                    style: TextStyle(fontSize: 13, color: context.textPrimary),
                   ),
                 ],
               ),

@@ -122,14 +122,11 @@ class _MeshReachabilityScreenState
                 ),
                 child: TextField(
                   onChanged: (value) => setState(() => _searchQuery = value),
-                  style: TextStyle(color: Colors.white),
+                  style: TextStyle(color: context.textPrimary),
                   decoration: InputDecoration(
                     hintText: 'Search nodes',
                     hintStyle: TextStyle(color: context.textTertiary),
-                    prefixIcon: Icon(
-                      Icons.search,
-                      color: context.textTertiary,
-                    ),
+                    prefixIcon: Icon(Icons.search, color: context.textTertiary),
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.symmetric(
                       horizontal: 16,
@@ -191,7 +188,7 @@ class _MeshReachabilityScreenState
             Expanded(
               child: Text(
                 'About Reachability',
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(color: context.textPrimary),
               ),
             ),
           ],
@@ -429,11 +426,7 @@ class _EmptyState extends StatelessWidget {
               color: context.card,
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Icon(
-              Icons.wifi_find,
-              size: 40,
-              color: context.textTertiary,
-            ),
+            child: Icon(Icons.wifi_find, size: 40, color: context.textTertiary),
           ),
           SizedBox(height: 24),
           Text(

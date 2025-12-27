@@ -522,7 +522,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen> {
       maxLines: maxLines,
       maxLength: maxLength,
       textCapitalization: textCapitalization,
-      style: TextStyle(color: Colors.white),
+      style: TextStyle(color: context.textPrimary),
       validator: validator,
       decoration: InputDecoration(
         labelText: label,
@@ -580,10 +580,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen> {
                 children: [
                   Text(
                     label,
-                    style: TextStyle(
-                      color: context.textTertiary,
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: context.textTertiary, fontSize: 12),
                   ),
                   SizedBox(height: 2),
                   Text(

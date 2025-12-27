@@ -87,19 +87,11 @@ class _ActionSelectorState extends State<ActionSelector> {
             if (hasAction)
               IconButton(
                 onPressed: () => widget.onSelect(null),
-                icon: Icon(
-                  Icons.close,
-                  size: 18,
-                  color: context.textSecondary,
-                ),
+                icon: Icon(Icons.close, size: 18, color: context.textSecondary),
                 visualDensity: VisualDensity.compact,
               )
             else
-              Icon(
-                Icons.chevron_right,
-                color: context.textSecondary,
-                size: 20,
-              ),
+              Icon(Icons.chevron_right, color: context.textSecondary, size: 20),
           ],
         ),
       ),
@@ -464,7 +456,7 @@ class _ActionSelectorSheetState extends State<_ActionSelectorSheet> {
               children: [
                 Text(
                   label,
-                  style: TextStyle(color: Colors.white, fontSize: 13),
+                  style: TextStyle(color: context.textPrimary, fontSize: 13),
                 ),
                 Text(
                   subtitle,

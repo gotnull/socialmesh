@@ -1120,10 +1120,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.edit, color: Colors.white),
-            title: const Text(
+            leading: Icon(Icons.edit, color: context.textSecondary),
+            title: Text(
               'Edit Channel',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: context.textPrimary),
             ),
             onTap: () {
               Navigator.pop(context);
@@ -1327,7 +1327,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           backgroundColor: context.background,
           titleSpacing: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            icon: Icon(Icons.arrow_back, color: context.textPrimary),
             onPressed: () {
               _dismissKeyboard();
               if (_isSearching) {
@@ -2053,7 +2053,10 @@ class _MessageBubble extends StatelessWidget {
                     ],
                     Text(
                       message.text,
-                      style: const TextStyle(fontSize: 15, color: Colors.white),
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: context.textPrimary,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Row(
@@ -2134,7 +2137,7 @@ class _QuickResponsesSheet extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                    color: context.textPrimary,
                   ),
                 ),
               ],
@@ -2241,8 +2244,8 @@ class _QuickResponseTile extends StatelessWidget {
           child: Center(
             child: Text(
               response.text,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: context.textPrimary,
                 fontWeight: FontWeight.w500,
                 fontSize: 14,
               ),

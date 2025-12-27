@@ -313,7 +313,10 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: context.surface,
-        title: Text('Delete Region', style: TextStyle(color: Colors.white)),
+        title: Text(
+          'Delete Region',
+          style: TextStyle(color: context.textPrimary),
+        ),
         content: Text(
           'Delete "${region.name}" and all its tiles? This cannot be undone.',
           style: TextStyle(color: context.textSecondary),
@@ -367,14 +370,17 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: context.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Download Region', style: TextStyle(color: Colors.white)),
+        title: Text(
+          'Download Region',
+          style: TextStyle(color: context.textPrimary),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             TextField(
               controller: nameController,
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: context.textPrimary),
               decoration: InputDecoration(
                 labelText: 'Region Name',
                 labelStyle: TextStyle(color: context.textSecondary),
@@ -626,7 +632,7 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
                       Expanded(
                         child: Text(
                           'Downloading "$_currentDownloadRegion"...',
-                          style: const TextStyle(color: Colors.white),
+                          style: TextStyle(color: context.textPrimary),
                         ),
                       ),
                       Text(

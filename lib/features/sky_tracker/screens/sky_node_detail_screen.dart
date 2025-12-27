@@ -125,10 +125,7 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen> {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            context.accentColor.withValues(alpha: 0.3),
-            context.card,
-          ],
+          colors: [context.accentColor.withValues(alpha: 0.3), context.card],
         ),
       ),
       child: SafeArea(
@@ -437,7 +434,7 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen> {
               const SizedBox(height: 2),
               Text(
                 value,
-                style: const TextStyle(color: Colors.white, fontSize: 14),
+                style: TextStyle(color: context.textPrimary, fontSize: 14),
               ),
             ],
           ),
@@ -465,8 +462,8 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen> {
               SizedBox(width: 8),
               Text(
                 'Reception Reports',
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: context.textPrimary,
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
@@ -589,10 +586,7 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen> {
                 if (report.snr != null)
                   Text(
                     'SNR ${report.snr!.toStringAsFixed(1)}',
-                    style: TextStyle(
-                      color: context.textTertiary,
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: context.textTertiary, fontSize: 12),
                   ),
               ],
             ),
@@ -873,7 +867,7 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet> {
                   child: TextField(
                     controller: _rssiController,
                     keyboardType: TextInputType.numberWithOptions(signed: true),
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: context.textPrimary),
                     decoration: InputDecoration(
                       labelText: 'RSSI (dBm)',
                       labelStyle: TextStyle(color: context.textSecondary),
@@ -895,7 +889,7 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet> {
                     keyboardType: TextInputType.numberWithOptions(
                       decimal: true,
                     ),
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: context.textPrimary),
                     decoration: InputDecoration(
                       labelText: 'SNR (dB)',
                       labelStyle: TextStyle(color: context.textSecondary),
@@ -918,7 +912,7 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet> {
             TextField(
               controller: _notesController,
               maxLines: 3,
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: context.textPrimary),
               decoration: InputDecoration(
                 labelText: 'Notes (optional)',
                 labelStyle: TextStyle(color: context.textSecondary),

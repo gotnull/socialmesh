@@ -332,7 +332,7 @@ class _IconSelectorContentState extends State<_IconSelectorContent> {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: Colors.white,
+                color: context.textPrimary,
               ),
             ),
           ),
@@ -341,7 +341,7 @@ class _IconSelectorContentState extends State<_IconSelectorContent> {
           TextField(
             controller: _searchController,
             onChanged: (value) => setState(() => _searchQuery = value),
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: context.textPrimary),
             decoration: InputDecoration(
               hintText: 'Search icons...',
               hintStyle: TextStyle(color: context.textSecondary),
@@ -483,7 +483,7 @@ class _IconSelectorContentState extends State<_IconSelectorContent> {
               Icon(
                 option.icon,
                 size: 24,
-                color: isSelected ? accentColor : Colors.white70,
+                color: isSelected ? accentColor : context.textSecondary,
               ),
               SizedBox(height: 4),
               Text(
