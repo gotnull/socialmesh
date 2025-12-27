@@ -304,7 +304,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
                         style: TextStyle(
                           color: isOnDashboard
                               ? AppTheme.errorRed
-                              : Colors.white,
+                              : context.textPrimary,
                         ),
                       ),
                     ],
@@ -314,9 +314,12 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
                   value: 'edit',
                   child: Row(
                     children: [
-                      Icon(Icons.edit, size: 18, color: Colors.white),
+                      Icon(Icons.edit, size: 18, color: context.textPrimary),
                       SizedBox(width: 8),
-                      Text('Edit', style: TextStyle(color: Colors.white)),
+                      Text(
+                        'Edit',
+                        style: TextStyle(color: context.textPrimary),
+                      ),
                     ],
                   ),
                 ),
@@ -324,9 +327,12 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
                   value: 'duplicate',
                   child: Row(
                     children: [
-                      Icon(Icons.copy, size: 18, color: Colors.white),
+                      Icon(Icons.copy, size: 18, color: context.textPrimary),
                       SizedBox(width: 8),
-                      Text('Duplicate', style: TextStyle(color: Colors.white)),
+                      Text(
+                        'Duplicate',
+                        style: TextStyle(color: context.textPrimary),
+                      ),
                     ],
                   ),
                 ),
@@ -334,9 +340,12 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
                   value: 'export',
                   child: Row(
                     children: [
-                      Icon(Icons.share, size: 18, color: Colors.white),
+                      Icon(Icons.share, size: 18, color: context.textPrimary),
                       SizedBox(width: 8),
-                      Text('Export', style: TextStyle(color: Colors.white)),
+                      Text(
+                        'Export',
+                        style: TextStyle(color: context.textPrimary),
+                      ),
                     ],
                   ),
                 ),
@@ -628,7 +637,10 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
               ),
               SizedBox(width: 8),
             ],
-            Text('Delete Widget?', style: TextStyle(color: Colors.white)),
+            Text(
+              'Delete Widget?',
+              style: TextStyle(color: context.textPrimary),
+            ),
           ],
         ),
         content: Text(
@@ -699,7 +711,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
         backgroundColor: context.card,
         title: Text(
           'Submit to Marketplace',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: context.textPrimary),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -817,7 +829,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
                   SizedBox(width: 8),
                   Text(
                     'Similar Widget Found',
-                    style: TextStyle(color: Colors.white),
+                    style: TextStyle(color: context.textPrimary),
                   ),
                 ],
               ),
@@ -842,7 +854,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
                         Text(
                           duplicateCheck.duplicateName ?? 'Unknown',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: context.textPrimary,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -862,10 +874,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
                   SizedBox(height: 12),
                   Text(
                     'Consider making your widget more unique before submitting.',
-                    style: TextStyle(
-                      color: context.textTertiary,
-                      fontSize: 13,
-                    ),
+                    style: TextStyle(color: context.textTertiary, fontSize: 13),
                   ),
                 ],
               ),

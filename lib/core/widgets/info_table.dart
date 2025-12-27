@@ -99,9 +99,9 @@ class InfoTable extends StatelessWidget {
                         ),
                         child: Text(
                           item.value,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
-                            color: Colors.white,
+                            color: context.textPrimary,
                             fontWeight: FontWeight.w500,
                           ),
                           textAlign: TextAlign.right,

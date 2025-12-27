@@ -144,14 +144,11 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen> {
                 child: TextField(
                   controller: _searchController,
                   onChanged: (value) => setState(() => _searchQuery = value),
-                  style: TextStyle(color: Colors.white),
+                  style: TextStyle(color: context.textPrimary),
                   decoration: InputDecoration(
                     hintText: 'Search channels',
                     hintStyle: TextStyle(color: context.textTertiary),
-                    prefixIcon: Icon(
-                      Icons.search,
-                      color: context.textTertiary,
-                    ),
+                    prefixIcon: Icon(Icons.search, color: context.textTertiary),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
                             icon: Icon(
@@ -238,10 +235,7 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen> {
             ),
             const SizedBox(height: 8),
             // Divider
-            Container(
-              height: 1,
-              color: context.border.withValues(alpha: 0.3),
-            ),
+            Container(height: 1, color: context.border.withValues(alpha: 0.3)),
             // Channels list
             Expanded(
               child: filteredChannels.isEmpty
@@ -352,9 +346,7 @@ class _ChannelTile extends ConsumerWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: isPrimary
-                      ? context.accentColor
-                      : context.background,
+                  color: isPrimary ? context.accentColor : context.background,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
@@ -826,9 +818,7 @@ class _ChannelFilterChip extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected
-              ? chipColor.withValues(alpha: 0.2)
-              : context.card,
+          color: isSelected ? chipColor.withValues(alpha: 0.2) : context.card,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected

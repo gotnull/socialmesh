@@ -180,7 +180,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
           backgroundColor: context.card,
           title: Text(
             'Filter Log Levels',
-            style: TextStyle(color: Colors.white),
+            style: TextStyle(color: context.textPrimary),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -276,7 +276,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: context.card,
-        title: Text('Clear Logs', style: TextStyle(color: Colors.white)),
+        title: Text('Clear Logs', style: TextStyle(color: context.textPrimary)),
         content: Text(
           'Are you sure you want to clear all logs?',
           style: TextStyle(color: context.textSecondary),
@@ -316,7 +316,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
         actions: [
@@ -365,7 +365,10 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
                       size: 20,
                     ),
                     SizedBox(width: 12),
-                    Text('Filter', style: TextStyle(color: Colors.white)),
+                    Text(
+                      'Filter',
+                      style: TextStyle(color: context.textPrimary),
+                    ),
                   ],
                 ),
               ),
@@ -375,7 +378,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
                   children: [
                     Icon(Icons.copy, color: context.textSecondary, size: 20),
                     SizedBox(width: 12),
-                    Text('Copy', style: TextStyle(color: Colors.white)),
+                    Text('Copy', style: TextStyle(color: context.textPrimary)),
                   ],
                 ),
               ),
@@ -385,7 +388,10 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
                   children: [
                     Icon(Icons.share, color: context.textSecondary, size: 20),
                     SizedBox(width: 12),
-                    Text('Share Log', style: TextStyle(color: Colors.white)),
+                    Text(
+                      'Share Log',
+                      style: TextStyle(color: context.textPrimary),
+                    ),
                   ],
                 ),
               ),
@@ -431,7 +437,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
             padding: const EdgeInsets.all(16),
             child: TextField(
               controller: _searchController,
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: context.textPrimary),
               decoration: InputDecoration(
                 hintText: 'Search logs...',
                 hintStyle: TextStyle(color: context.textTertiary),

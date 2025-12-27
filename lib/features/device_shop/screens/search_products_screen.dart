@@ -96,7 +96,7 @@ class _SearchProductsScreenState extends ConsumerState<SearchProductsScreen> {
     return TextField(
       controller: _searchController,
       focusNode: _focusNode,
-      style: TextStyle(color: Colors.white),
+      style: TextStyle(color: context.textPrimary),
       decoration: InputDecoration(
         hintText: 'Search devices, modules, antennas...',
         hintStyle: TextStyle(color: context.textTertiary),
@@ -126,7 +126,7 @@ class _SearchProductsScreenState extends ConsumerState<SearchProductsScreen> {
                 Text(
                   'Recent Searches',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: context.textPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -161,7 +161,7 @@ class _SearchProductsScreenState extends ConsumerState<SearchProductsScreen> {
           Text(
             'Popular Searches',
             style: TextStyle(
-              color: Colors.white,
+              color: context.textPrimary,
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
@@ -186,7 +186,7 @@ class _SearchProductsScreenState extends ConsumerState<SearchProductsScreen> {
           Text(
             'Browse by Category',
             style: TextStyle(
-              color: Colors.white,
+              color: context.textPrimary,
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
@@ -208,7 +208,10 @@ class _SearchProductsScreenState extends ConsumerState<SearchProductsScreen> {
                   size: 20,
                 ),
               ),
-              title: Text(cat.label, style: TextStyle(color: Colors.white)),
+              title: Text(
+                cat.label,
+                style: TextStyle(color: context.textPrimary),
+              ),
               subtitle: Text(
                 cat.description,
                 style: TextStyle(color: context.textTertiary, fontSize: 12),
@@ -252,7 +255,7 @@ class _SearchProductsScreenState extends ConsumerState<SearchProductsScreen> {
           children: [
             Icon(Icons.error_outline, color: AppTheme.errorRed, size: 48),
             const SizedBox(height: 16),
-            Text('Search failed', style: TextStyle(color: Colors.white)),
+            Text('Search failed', style: TextStyle(color: context.textPrimary)),
             TextButton(
               onPressed: () => ref.invalidate(productSearchProvider(_query)),
               child: Text('Retry'),
@@ -270,7 +273,7 @@ class _SearchProductsScreenState extends ConsumerState<SearchProductsScreen> {
                 SizedBox(height: 16),
                 Text(
                   'No results for "$_query"',
-                  style: TextStyle(color: Colors.white, fontSize: 18),
+                  style: TextStyle(color: context.textPrimary, fontSize: 18),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -339,7 +342,10 @@ class _SearchChip extends StatelessWidget {
             children: [
               Icon(icon, color: context.textTertiary, size: 16),
               SizedBox(width: 6),
-              Text(label, style: TextStyle(color: Colors.white, fontSize: 13)),
+              Text(
+                label,
+                style: TextStyle(color: context.textPrimary, fontSize: 13),
+              ),
               if (onDelete != null) ...[
                 const SizedBox(width: 4),
                 GestureDetector(
@@ -427,8 +433,8 @@ class _SearchResultCard extends StatelessWidget {
                     // Name
                     Text(
                       product.name,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: context.textPrimary,
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),

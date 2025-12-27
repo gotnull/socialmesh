@@ -20,7 +20,10 @@ class FavoritesScreen extends ConsumerWidget {
         backgroundColor: context.background,
         appBar: AppBar(
           backgroundColor: context.card,
-          title: Text('Favorites', style: TextStyle(color: Colors.white)),
+          title: Text(
+            'Favorites',
+            style: TextStyle(color: context.textPrimary),
+          ),
         ),
         body: Center(
           child: Column(
@@ -34,7 +37,7 @@ class FavoritesScreen extends ConsumerWidget {
               SizedBox(height: 16),
               Text(
                 'Sign in to save favorites',
-                style: TextStyle(color: Colors.white, fontSize: 18),
+                style: TextStyle(color: context.textPrimary, fontSize: 18),
               ),
               const SizedBox(height: 8),
               Text(
@@ -53,7 +56,7 @@ class FavoritesScreen extends ConsumerWidget {
       backgroundColor: context.background,
       appBar: AppBar(
         backgroundColor: context.card,
-        title: Text('Favorites', style: TextStyle(color: Colors.white)),
+        title: Text('Favorites', style: TextStyle(color: context.textPrimary)),
       ),
       body: favoritesAsync.when(
         loading: () => Center(child: CircularProgressIndicator()),
@@ -65,7 +68,7 @@ class FavoritesScreen extends ConsumerWidget {
               const SizedBox(height: 16),
               Text(
                 'Error loading favorites',
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(color: context.textPrimary),
               ),
               TextButton(
                 onPressed: () =>
@@ -89,7 +92,7 @@ class FavoritesScreen extends ConsumerWidget {
                   SizedBox(height: 16),
                   Text(
                     'No favorites yet',
-                    style: TextStyle(color: Colors.white, fontSize: 18),
+                    style: TextStyle(color: context.textPrimary, fontSize: 18),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -161,7 +164,7 @@ class _FavoriteProductCard extends ConsumerWidget {
         leading: Icon(Icons.error_outline, color: AppTheme.errorRed),
         title: Text(
           'Unable to load product',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: context.textPrimary),
         ),
         trailing: IconButton(
           icon: Icon(Icons.delete_outline, color: context.textTertiary),

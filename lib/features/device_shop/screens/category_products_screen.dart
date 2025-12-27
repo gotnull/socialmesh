@@ -34,7 +34,7 @@ class _CategoryProductsScreenState
         backgroundColor: context.card,
         title: Text(
           widget.category.label,
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: context.textPrimary),
         ),
         actions: [
           IconButton(
@@ -67,7 +67,7 @@ class _CategoryProductsScreenState
               const SizedBox(height: 16),
               Text(
                 'Error loading products',
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(color: context.textPrimary),
               ),
               TextButton(
                 onPressed: () =>
@@ -90,7 +90,7 @@ class _CategoryProductsScreenState
                   SizedBox(height: 16),
                   Text(
                     'No products found',
-                    style: TextStyle(color: Colors.white, fontSize: 18),
+                    style: TextStyle(color: context.textPrimary, fontSize: 18),
                   ),
                   const SizedBox(height: 8),
                   Text(

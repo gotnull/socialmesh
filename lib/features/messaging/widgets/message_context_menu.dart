@@ -173,7 +173,10 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu> {
                   children: [
                     Text(
                       'Tapback',
-                      style: TextStyle(fontSize: 16, color: Colors.white),
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: context.textPrimary,
+                      ),
                     ),
                     const Spacer(),
                     Icon(
@@ -216,7 +219,7 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu> {
             const SizedBox(width: 12),
             Text(
               config.label,
-              style: const TextStyle(fontSize: 16, color: Colors.white),
+              style: TextStyle(fontSize: 16, color: context.textPrimary),
             ),
           ],
         ),
@@ -284,7 +287,7 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu> {
               children: [
                 Text(
                   'Message Details',
-                  style: TextStyle(fontSize: 16, color: Colors.white),
+                  style: TextStyle(fontSize: 16, color: context.textPrimary),
                 ),
                 const Spacer(),
                 Icon(

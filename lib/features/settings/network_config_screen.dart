@@ -126,7 +126,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: context.textPrimary,
             ),
           ),
           actions: [
@@ -195,7 +195,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                           TextField(
                             controller: _ssidController,
                             textInputAction: TextInputAction.next,
-                            style: TextStyle(color: Colors.white),
+                            style: TextStyle(color: context.textPrimary),
                             decoration: InputDecoration(
                               labelText: 'Network Name (SSID)',
                               labelStyle: TextStyle(
@@ -230,7 +230,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                             textInputAction: TextInputAction.done,
                             onSubmitted: (_) =>
                                 FocusScope.of(context).unfocus(),
-                            style: const TextStyle(color: Colors.white),
+                            style: TextStyle(color: context.textPrimary),
                             decoration: InputDecoration(
                               labelText: 'Password',
                               labelStyle: TextStyle(
@@ -311,7 +311,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                         Text(
                           'NTP Server',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: context.textPrimary,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -320,7 +320,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                           controller: _ntpController,
                           textInputAction: TextInputAction.done,
                           onSubmitted: (_) => FocusScope.of(context).unfocus(),
-                          style: const TextStyle(color: Colors.white),
+                          style: TextStyle(color: context.textPrimary),
                           decoration: InputDecoration(
                             hintText: 'pool.ntp.org',
                             hintStyle: TextStyle(color: context.textTertiary),
@@ -459,10 +459,10 @@ class _SettingsTile extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
-                      color: Colors.white,
+                      color: context.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 2),

@@ -30,7 +30,7 @@ class SellerProfileScreen extends ConsumerWidget {
               const SizedBox(height: 16),
               Text(
                 'Error loading seller',
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(color: context.textPrimary),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context),
@@ -53,7 +53,7 @@ class SellerProfileScreen extends ConsumerWidget {
                   const SizedBox(height: 16),
                   Text(
                     'Seller not found',
-                    style: TextStyle(color: Colors.white),
+                    style: TextStyle(color: context.textPrimary),
                   ),
                   TextButton(
                     onPressed: () => Navigator.pop(context),
@@ -520,10 +520,7 @@ class _ContactRow extends StatelessWidget {
                 children: [
                   Text(
                     label,
-                    style: TextStyle(
-                      color: context.textTertiary,
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: context.textTertiary, fontSize: 12),
                   ),
                   Text(
                     value,

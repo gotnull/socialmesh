@@ -48,12 +48,12 @@ class _AccountSubscriptionsScreenState
         backgroundColor: context.background,
         leading: const HamburgerMenuButton(),
         centerTitle: true,
-        title: const Text(
+        title: Text(
           'Account',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
       ),
@@ -184,9 +184,9 @@ class _AccountSubscriptionsScreenState
                     children: [
                       Text(
                         isAnonymous ? 'Guest Account' : 'Signed In',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: context.textPrimary,
                         ),
                       ),
                       if (user.email != null)
@@ -314,7 +314,7 @@ class _AccountSubscriptionsScreenState
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: context.textPrimary,
             ),
           ),
           const SizedBox(height: 4),
@@ -416,7 +416,7 @@ class _AccountSubscriptionsScreenState
                   'Cloud Sync',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                    color: context.textPrimary,
                   ),
                 ),
                 subtitle: Text(
@@ -567,7 +567,7 @@ class _AccountSubscriptionsScreenState
               'Premium Features',
               style: TextStyle(
                 fontWeight: FontWeight.w600,
-                color: Colors.white,
+                color: context.textPrimary,
               ),
             ),
             subtitle: Text(
@@ -859,7 +859,7 @@ class _AccountSubscriptionsScreenState
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: context.textPrimary,
               ),
             ),
             SizedBox(height: 8),
@@ -1073,10 +1073,10 @@ class _ProfilePreviewCard extends StatelessWidget {
                     children: [
                       Text(
                         displayName,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: context.textPrimary,
                         ),
                       ),
                       if (profile?.callsign != null) ...[
@@ -1645,7 +1645,7 @@ class _CloudSyncPaywallSheetState
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: context.textPrimary,
             ),
           ),
           const SizedBox(height: 8),

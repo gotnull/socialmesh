@@ -1243,7 +1243,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ? 'Configuring Remote Node'
                       : 'Configure Device',
                   style: TextStyle(
-                    color: remoteState.isRemote ? accentColor : Colors.white,
+                    color: remoteState.isRemote
+                        ? accentColor
+                        : context.textPrimary,
                     fontWeight: remoteState.isRemote
                         ? FontWeight.w600
                         : FontWeight.normal,
@@ -1644,7 +1646,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: context.textPrimary,
             ),
           ),
         ),
@@ -2747,7 +2749,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white,
+                  color: context.textPrimary,
                 ),
               ),
             ),
@@ -2765,7 +2767,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 title: Text(
                   intensity.label,
                   style: TextStyle(
-                    color: isSelected ? Colors.white : context.textSecondary,
+                    color: isSelected
+                        ? context.textPrimary
+                        : context.textSecondary,
                     fontWeight: isSelected
                         ? FontWeight.w600
                         : FontWeight.normal,
@@ -2826,8 +2830,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
         title: Text(
           '$limit messages',
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: context.textPrimary,
             fontFamily: 'JetBrainsMono',
           ),
         ),
@@ -3060,12 +3064,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Device Information',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w700,
-              color: Colors.white,
+              color: context.textPrimary,
             ),
           ),
           const SizedBox(height: 24),

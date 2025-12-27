@@ -84,7 +84,7 @@ class _WidgetMarketplaceScreenState
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: context.textPrimary,
             ),
           ),
           bottom: TabBar(
@@ -122,7 +122,7 @@ class _WidgetMarketplaceScreenState
               child: TextField(
                 controller: _searchController,
                 onChanged: (value) => _search(value),
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: context.textPrimary),
                 decoration: InputDecoration(
                   hintText: 'Search widgets...',
                   hintStyle: TextStyle(color: context.textTertiary),
@@ -342,11 +342,7 @@ class _WidgetMarketplaceScreenState
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.widgets_outlined,
-              size: 48,
-              color: context.textTertiary,
-            ),
+            Icon(Icons.widgets_outlined, size: 48, color: context.textTertiary),
             SizedBox(height: 16),
             Text(
               message,
@@ -386,7 +382,7 @@ class _WidgetMarketplaceScreenState
         title: Text(
           WidgetCategories.getDisplayName(category),
           style: TextStyle(
-            color: Colors.white,
+            color: context.textPrimary,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -434,11 +430,7 @@ class _WidgetMarketplaceScreenState
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.widgets_outlined,
-              size: 48,
-              color: context.textTertiary,
-            ),
+            Icon(Icons.widgets_outlined, size: 48, color: context.textTertiary),
             SizedBox(height: 16),
             Text(
               'No widgets available',

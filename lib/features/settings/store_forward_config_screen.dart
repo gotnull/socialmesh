@@ -166,7 +166,7 @@ class _StoreForwardConfigScreenState
                 Text(
                   'Store & Forward',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: context.textPrimary,
                     fontWeight: FontWeight.w600,
                     fontSize: 15,
                   ),
@@ -200,7 +200,7 @@ class _StoreForwardConfigScreenState
           ListTile(
             title: Text(
               'Enable Store & Forward',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: context.textPrimary),
             ),
             subtitle: Text(
               'Participate in the S&F network',
@@ -215,7 +215,7 @@ class _StoreForwardConfigScreenState
           ListTile(
             title: Text(
               'Act as Server',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: context.textPrimary),
             ),
             subtitle: Text(
               'Store messages for other nodes (uses more RAM)',
@@ -230,7 +230,7 @@ class _StoreForwardConfigScreenState
           ListTile(
             title: Text(
               'Heartbeat',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: context.textPrimary),
             ),
             subtitle: Text(
               'Send periodic announcements to the mesh',
@@ -259,14 +259,11 @@ class _StoreForwardConfigScreenState
           ListTile(
             title: Text(
               'Records Limit',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: context.textPrimary),
             ),
             subtitle: Text(
               _records == 0 ? 'Use device default' : '$_records records',
-              style: TextStyle(
-                color: context.textTertiary,
-                fontSize: 12,
-              ),
+              style: TextStyle(color: context.textTertiary, fontSize: 12),
             ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
@@ -297,14 +294,11 @@ class _StoreForwardConfigScreenState
           ListTile(
             title: Text(
               'History Return Max',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: context.textPrimary),
             ),
             subtitle: Text(
               'Max $_historyReturnMax messages per request',
-              style: TextStyle(
-                color: context.textTertiary,
-                fontSize: 12,
-              ),
+              style: TextStyle(color: context.textTertiary, fontSize: 12),
             ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
@@ -335,14 +329,11 @@ class _StoreForwardConfigScreenState
           ListTile(
             title: Text(
               'History Window',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: context.textPrimary),
             ),
             subtitle: Text(
               'Keep messages for ${_historyReturnWindow ~/ 60} hours',
-              style: TextStyle(
-                color: context.textTertiary,
-                fontSize: 12,
-              ),
+              style: TextStyle(color: context.textTertiary, fontSize: 12),
             ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,

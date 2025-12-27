@@ -94,8 +94,8 @@ class WidgetPreviewCard extends ConsumerWidget {
                             Flexible(
                               child: Text(
                                 title,
-                                style: const TextStyle(
-                                  color: Colors.white,
+                                style: TextStyle(
+                                  color: context.textPrimary,
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -192,8 +192,8 @@ class WidgetPreviewCardLoading extends StatelessWidget {
                         if (title != null)
                           Text(
                             title!,
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: context.textPrimary,
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                             ),
