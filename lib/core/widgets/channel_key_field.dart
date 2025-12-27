@@ -181,12 +181,12 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Encryption Key',
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                            color: context.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -249,9 +249,9 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
               child: _isEditingKey && widget.editable
                   ? TextField(
                       controller: _keyController,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
-                        color: Colors.white,
+                        color: context.textPrimary,
                         fontFamily: 'monospace',
                         fontWeight: FontWeight.w500,
                       ),

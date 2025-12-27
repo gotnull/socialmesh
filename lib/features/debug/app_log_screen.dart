@@ -331,7 +331,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
             },
           ),
           PopupMenuButton<String>(
-            icon: Icon(Icons.more_vert, color: Colors.white),
+            icon: Icon(Icons.more_vert, color: context.textPrimary),
             color: context.card,
             onSelected: (value) {
               switch (value) {
@@ -616,7 +616,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
                     ? AppTheme.errorRed
                     : entry.level == LogLevel.warning
                     ? AppTheme.warningYellow
-                    : Colors.white,
+                    : context.textPrimary,
               ),
             ),
           ),

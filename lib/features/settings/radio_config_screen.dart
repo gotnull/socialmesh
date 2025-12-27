@@ -450,7 +450,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                   child: DropdownButton<int>(
                     underline: const SizedBox.shrink(),
                     dropdownColor: context.card,
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: context.textPrimary),
                     value: _bandwidth,
                     items: bandwidthOptions.map((b) {
                       return DropdownMenuItem(value: b.$1, child: Text(b.$2));
@@ -484,7 +484,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                   child: DropdownButton<int>(
                     underline: const SizedBox.shrink(),
                     dropdownColor: context.card,
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: context.textPrimary),
                     value: _spreadFactor,
                     items: spreadFactorOptions.map((s) {
                       return DropdownMenuItem(value: s.$1, child: Text(s.$2));

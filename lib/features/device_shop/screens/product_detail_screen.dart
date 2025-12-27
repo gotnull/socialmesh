@@ -279,8 +279,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           // Name
           Text(
             product.name,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: context.textPrimary,
               fontSize: 24,
               fontWeight: FontWeight.bold,
             ),
@@ -324,8 +324,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                 const SizedBox(width: 4),
                 Text(
                   product.rating.toStringAsFixed(1),
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: context.textPrimary,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -420,8 +420,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           // Description
           Text(
             'Description',
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: context.textPrimary,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
@@ -474,7 +474,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           Text(
             'Technical Specifications',
             style: TextStyle(
-              color: Colors.white,
+              color: context.textPrimary,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
@@ -530,8 +530,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           Flexible(
             child: Text(
               value,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: context.textPrimary,
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
@@ -574,7 +574,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           Text(
             'Features',
             style: TextStyle(
-              color: Colors.white,
+              color: context.textPrimary,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
@@ -592,7 +592,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
             Text(
               'Included Accessories',
               style: TextStyle(
-                color: Colors.white,
+                color: context.textPrimary,
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),
@@ -625,7 +625,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           Text(
             'Shipping',
             style: TextStyle(
-              color: Colors.white,
+              color: context.textPrimary,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
@@ -657,8 +657,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                     product.shippingCost! > 0
                                 ? 'Shipping: \$${product.shippingCost!.toStringAsFixed(2)}'
                                 : 'Free Shipping',
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: context.textPrimary,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -1036,8 +1036,8 @@ class _ReviewCard extends StatelessWidget {
                       children: [
                         Text(
                           review.userName ?? 'Anonymous',
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: context.textPrimary,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -1093,8 +1093,8 @@ class _ReviewCard extends StatelessWidget {
             SizedBox(height: 12),
             Text(
               review.title!,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: context.textPrimary,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -1215,8 +1215,8 @@ class _WriteReviewSheetState extends ConsumerState<_WriteReviewSheet> {
             SizedBox(height: 20),
             Text(
               'Write a Review',
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: context.textPrimary,
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),

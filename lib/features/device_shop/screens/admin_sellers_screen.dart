@@ -87,7 +87,7 @@ class _AdminSellersScreenState extends ConsumerState<AdminSellersScreen> {
                         Icon(
                           Icons.store_outlined,
                           size: 64,
-                          color: Colors.white.withValues(alpha: 0.3),
+                          color: context.textTertiary,
                         ),
                         const SizedBox(height: 16),
                         const Text('No sellers found'),
@@ -226,7 +226,7 @@ class _SellerListItem extends StatelessWidget {
                         seller.description!,
                         style: TextStyle(
                           fontSize: 13,
-                          color: Colors.white.withValues(alpha: 0.6),
+                          color: context.textSecondary,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -234,11 +234,20 @@ class _SellerListItem extends StatelessWidget {
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        _buildStat(Icons.inventory_2, '${seller.productCount}'),
-                        const SizedBox(width: 16),
-                        _buildStat(Icons.shopping_cart, '${seller.salesCount}'),
+                        _buildStat(
+                          context,
+                          Icons.inventory_2,
+                          '${seller.productCount}',
+                        ),
                         const SizedBox(width: 16),
                         _buildStat(
+                          context,
+                          Icons.shopping_cart,
+                          '${seller.salesCount}',
+                        ),
+                        const SizedBox(width: 16),
+                        _buildStat(
+                          context,
                           Icons.star,
                           seller.rating.toStringAsFixed(1),
                         ),
@@ -326,18 +335,15 @@ class _SellerListItem extends StatelessWidget {
     );
   }
 
-  Widget _buildStat(IconData icon, String value) {
+  Widget _buildStat(BuildContext context, IconData icon, String value) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: Colors.white.withValues(alpha: 0.5)),
+        Icon(icon, size: 14, color: context.textTertiary),
         const SizedBox(width: 4),
         Text(
           value,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.white.withValues(alpha: 0.5),
-          ),
+          style: TextStyle(fontSize: 12, color: context.textTertiary),
         ),
       ],
     );

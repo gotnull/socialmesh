@@ -343,15 +343,15 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
         appBar: AppBar(
           backgroundColor: context.background,
           leading: IconButton(
-            icon: Icon(Icons.close, color: Colors.white),
+            icon: Icon(Icons.close, color: context.textPrimary),
             onPressed: () => Navigator.pop(context),
           ),
           title: Text(
             isEditing ? 'Edit Channel' : 'New Channel',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: context.textPrimary,
             ),
           ),
           centerTitle: true,
@@ -489,7 +489,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: context.textPrimary,
                         ),
                       ),
                       SizedBox(height: 2),
@@ -535,9 +535,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
             decoration: BoxDecoration(
               color: context.background,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: context.border.withValues(alpha: 0.5),
-              ),
+              border: Border.all(color: context.border.withValues(alpha: 0.5)),
             ),
             child: TextFormField(
               controller: _nameController,
@@ -655,7 +653,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                                       ? FontWeight.w600
                                       : FontWeight.w500,
                                   color: isSelected
-                                      ? Colors.white
+                                      ? context.textPrimary
                                       : context.textSecondary,
                                 ),
                               ),
@@ -690,11 +688,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                                 : Colors.transparent,
                           ),
                           child: isSelected
-                              ? Icon(
-                                  Icons.check,
-                                  color: Colors.white,
-                                  size: 14,
-                                )
+                              ? Icon(Icons.check, color: Colors.white, size: 14)
                               : null,
                         ),
                       ],
@@ -817,10 +811,10 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
-                    color: Colors.white,
+                    color: context.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -897,7 +891,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w500,
-                          color: Colors.white,
+                          color: context.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -947,7 +941,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
-                      color: Colors.white,
+                      color: context.textPrimary,
                     ),
                   ),
                 ),

@@ -160,7 +160,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: context.textPrimary,
             ),
           ),
           actions: [
@@ -219,10 +219,10 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
+                              Text(
                                 'Bluetooth Enabled',
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: context.textPrimary,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -276,7 +276,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                               title: Text(
                                 _getModeLabel(mode),
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: context.textPrimary,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -345,7 +345,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                               FilteringTextInputFormatter.digitsOnly,
                             ],
                             style: TextStyle(
-                              color: Colors.white,
+                              color: context.textPrimary,
                               fontSize: 24,
                               fontWeight: FontWeight.w600,
                               letterSpacing: 8,

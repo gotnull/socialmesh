@@ -200,7 +200,7 @@ class _DetectionSensorConfigScreenState
                 Text(
                   'Detection Sensor',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: context.textPrimary,
                     fontWeight: FontWeight.w600,
                     fontSize: 15,
                   ),
@@ -515,7 +515,7 @@ class _DetectionSensorConfigScreenState
                   Text(
                     'Trigger Type',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: context.textPrimary,
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                     ),
@@ -537,7 +537,7 @@ class _DetectionSensorConfigScreenState
                     style: TextStyle(
                       color: _triggerType == type
                           ? context.accentColor
-                          : Colors.white,
+                          : context.textPrimary,
                     ),
                   ),
                   trailing: _triggerType == type

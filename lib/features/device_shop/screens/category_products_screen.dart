@@ -287,8 +287,8 @@ class _CategoryProductsScreenState
                       children: [
                         Text(
                           'Filters',
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: context.textPrimary,
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                           ),
@@ -337,7 +337,7 @@ class _CategoryProductsScreenState
                     Text(
                       'Price Range',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: context.textPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -373,7 +373,7 @@ class _CategoryProductsScreenState
                     Text(
                       'Frequency Bands',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: context.textPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -546,8 +546,8 @@ class _ProductGridCard extends ConsumerWidget {
                   children: [
                     Text(
                       product.name,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: context.textPrimary,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),

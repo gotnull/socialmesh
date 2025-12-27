@@ -387,9 +387,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
               labelText: 'Channel Name',
               labelStyle: TextStyle(color: context.textSecondary),
               hintText: 'e.g., Family, Friends, Hiking',
-              hintStyle: TextStyle(
-                color: context.textSecondary.withAlpha(128),
-              ),
+              hintStyle: TextStyle(color: context.textSecondary.withAlpha(128)),
               filled: true,
               fillColor: context.surface,
               border: OutlineInputBorder(
@@ -503,7 +501,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
                       Text(
                         level.title,
                         style: theme.textTheme.bodyLarge?.copyWith(
-                          color: Colors.white,
+                          color: context.textPrimary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -675,11 +673,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
           // MQTT section header
           Row(
             children: [
-              Icon(
-                Icons.cloud_outlined,
-                size: 16,
-                color: context.textTertiary,
-              ),
+              Icon(Icons.cloud_outlined, size: 16, color: context.textTertiary),
               SizedBox(width: 8),
               Text(
                 'MQTT Settings',
@@ -773,7 +767,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
                 Text(
                   title,
                   style: theme.textTheme.bodyLarge?.copyWith(
-                    color: Colors.white,
+                    color: context.textPrimary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -828,11 +822,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Icon(
-              Icons.check_circle,
-              size: 64,
-              color: AppTheme.successGreen,
-            ),
+            Icon(Icons.check_circle, size: 64, color: AppTheme.successGreen),
             const SizedBox(height: 24),
             Text('Channel Created!', style: theme.textTheme.headlineMedium),
             const SizedBox(height: 8),
@@ -1030,7 +1020,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
           Text(
             value.isEmpty ? '-' : value,
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: Colors.white,
+              color: context.textPrimary,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -1059,7 +1049,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
                   ? '${keyBase64.substring(0, keyBase64.length.clamp(0, 8))}...'
                   : '-',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: Colors.white,
+                color: context.textPrimary,
                 fontWeight: FontWeight.w600,
                 fontFamily: 'monospace',
               ),
@@ -1080,9 +1070,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: context.surface,
-        border: Border(
-          top: BorderSide(color: context.border.withAlpha(128)),
-        ),
+        border: Border(top: BorderSide(color: context.border.withAlpha(128))),
       ),
       child: SafeArea(
         child: Row(

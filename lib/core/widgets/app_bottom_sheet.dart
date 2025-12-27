@@ -124,10 +124,10 @@ class AppBottomSheet extends StatelessWidget {
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: context.textPrimary,
             ),
           ),
           const SizedBox(height: 12),
@@ -194,10 +194,10 @@ class AppBottomSheet extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
             child: Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: Colors.white,
+                color: context.textPrimary,
               ),
             ),
           ),
@@ -360,10 +360,10 @@ class BottomSheetHeader extends StatelessWidget {
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: context.textPrimary,
             ),
           ),
           if (subtitle != null) ...[
@@ -396,10 +396,10 @@ class BottomSheetHeader extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white,
+                  color: context.textPrimary,
                 ),
               ),
               if (subtitle != null) ...[
@@ -462,7 +462,7 @@ class BottomSheetTextField extends StatelessWidget {
       onChanged: onChanged,
       onSubmitted: onSubmitted,
       style: TextStyle(
-        color: Colors.white,
+        color: context.textPrimary,
         fontSize: 16,
         fontFamily: monospace ? 'monospace' : 'Inter',
       ),

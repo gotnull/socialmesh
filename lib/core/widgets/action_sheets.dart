@@ -191,7 +191,7 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent> {
                 child: Text(
                   'Quick Message',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: context.textPrimary,
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                   ),
@@ -259,8 +259,8 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent> {
                           children: [
                             Text(
                               selectedName,
-                              style: const TextStyle(
-                                color: Colors.white,
+                              style: TextStyle(
+                                color: context.textPrimary,
                                 fontSize: 15,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -362,7 +362,7 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent> {
               const SizedBox(height: 8),
               TextField(
                 controller: _controller,
-                style: const TextStyle(color: Colors.white, fontSize: 14),
+                style: TextStyle(color: context.textPrimary, fontSize: 14),
                 decoration: InputDecoration(
                   hintText: 'Type a message...',
                   hintStyle: TextStyle(
@@ -599,7 +599,7 @@ class _SosSheetContentState extends State<SosSheetContent> {
               Text(
                 'Emergency SOS',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: context.textPrimary,
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
                 ),
@@ -637,7 +637,7 @@ class _SosSheetContentState extends State<SosSheetContent> {
                     Text(
                       'This will:',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: context.textPrimary,
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),
@@ -873,7 +873,7 @@ class _TracerouteSheetContentState extends State<TracerouteSheetContent> {
               Text(
                 'Traceroute',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: context.textPrimary,
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                 ),
@@ -981,7 +981,7 @@ class _TracerouteSheetContentState extends State<TracerouteSheetContent> {
                               : 'Tap to select a node',
                           style: TextStyle(
                             color: _selectedNodeNum != null
-                                ? Colors.white
+                                ? context.textPrimary
                                 : context.textTertiary,
                             fontSize: 15,
                             fontWeight: _selectedNodeNum != null

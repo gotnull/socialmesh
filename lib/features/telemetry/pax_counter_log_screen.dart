@@ -26,12 +26,12 @@ class PaxCounterLogScreen extends ConsumerWidget {
       backgroundColor: context.background,
       appBar: AppBar(
         backgroundColor: context.background,
-        title: const Text(
+        title: Text(
           'PAX Counter Log',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
         leading: IconButton(
@@ -50,7 +50,7 @@ class PaxCounterLogScreen extends ConsumerWidget {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
-                  color: Colors.white.withValues(alpha: 0.7),
+                  color: context.textSecondary,
                 ),
               ),
             ),
@@ -58,7 +58,10 @@ class PaxCounterLogScreen extends ConsumerWidget {
               child: logsAsync.when(
                 data: (logs) {
                   if (logs.isEmpty) {
-                    return _buildEmptyState('No PAX data recorded yet');
+                    return _buildEmptyState(
+                      context,
+                      'No PAX data recorded yet',
+                    );
                   }
                   final sortedLogs = logs.reversed.toList();
                   return ListView.builder(
@@ -79,31 +82,21 @@ class PaxCounterLogScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmptyState(String message) {
+  Widget _buildEmptyState(BuildContext context, String message) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.people_outline,
-            size: 64,
-            color: Colors.white.withValues(alpha: 0.3),
-          ),
+          Icon(Icons.people_outline, size: 64, color: context.textTertiary),
           const SizedBox(height: 16),
           Text(
             message,
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.white.withValues(alpha: 0.5),
-            ),
+            style: TextStyle(fontSize: 16, color: context.textSecondary),
           ),
           const SizedBox(height: 8),
           Text(
             'PAX counter detects nearby devices',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.white.withValues(alpha: 0.3),
-            ),
+            style: TextStyle(fontSize: 14, color: context.textTertiary),
           ),
         ],
       ),
@@ -136,10 +129,7 @@ class _PaxCounterCard extends StatelessWidget {
             children: [
               Text(
                 timeFormat.format(log.timestamp),
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.white.withValues(alpha: 0.5),
-                ),
+                style: TextStyle(fontSize: 12, color: context.textTertiary),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(

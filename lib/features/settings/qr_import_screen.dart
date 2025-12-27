@@ -227,7 +227,10 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: context.card,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Import Channel', style: TextStyle(color: Colors.white)),
+        title: Text(
+          'Import Channel',
+          style: TextStyle(color: context.textPrimary),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -304,8 +307,8 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
         Expanded(
           child: Text(
             value,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: context.textPrimary,
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
@@ -440,7 +443,7 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
                   SizedBox(height: 12),
                   Text(
                     'Point your camera at a Meshtastic channel QR code',
-                    style: TextStyle(color: Colors.white, fontSize: 14),
+                    style: TextStyle(color: context.textPrimary, fontSize: 14),
                     textAlign: TextAlign.center,
                   ),
                   SizedBox(height: 8),

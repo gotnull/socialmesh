@@ -69,8 +69,8 @@ class ChannelSelectorSheet extends ConsumerWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: context.textPrimary,
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                   ),
@@ -211,7 +211,7 @@ class _ChannelTile extends StatelessWidget {
                             style: TextStyle(
                               color: isSelected
                                   ? context.accentColor
-                                  : Colors.white,
+                                  : context.textPrimary,
                               fontSize: 15,
                               fontWeight: FontWeight.w500,
                             ),

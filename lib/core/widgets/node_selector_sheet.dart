@@ -114,8 +114,8 @@ class _NodeSelectorSheetState extends ConsumerState<NodeSelectorSheet> {
               children: [
                 Text(
                   widget.title,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: context.textPrimary,
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                   ),
@@ -147,13 +147,10 @@ class _NodeSelectorSheetState extends ConsumerState<NodeSelectorSheet> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: TextField(
-              style: const TextStyle(color: Colors.white, fontSize: 14),
+              style: TextStyle(color: context.textPrimary, fontSize: 14),
               decoration: InputDecoration(
                 hintText: 'Search nodes...',
-                hintStyle: TextStyle(
-                  color: context.textTertiary,
-                  fontSize: 14,
-                ),
+                hintStyle: TextStyle(color: context.textTertiary, fontSize: 14),
                 prefixIcon: Icon(
                   Icons.search,
                   color: context.textTertiary,
@@ -206,10 +203,7 @@ class _NodeSelectorSheetState extends ConsumerState<NodeSelectorSheet> {
                   const Spacer(),
                   Text(
                     '${nodes.length} nodes',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: context.textTertiary,
-                    ),
+                    style: TextStyle(fontSize: 11, color: context.textTertiary),
                   ),
                 ],
               ),
@@ -354,7 +348,9 @@ class _NodeTile extends StatelessWidget {
                     Text(
                       title,
                       style: TextStyle(
-                        color: isSelected ? context.accentColor : Colors.white,
+                        color: isSelected
+                            ? context.accentColor
+                            : context.textPrimary,
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
                       ),

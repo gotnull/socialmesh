@@ -75,10 +75,10 @@ class DashboardWidgetBase extends StatelessWidget {
           Expanded(
             child: Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: Colors.white,
+                color: context.textPrimary,
               ),
             ),
           ),
@@ -124,7 +124,7 @@ class DashboardWidgetBase extends StatelessWidget {
         backgroundColor: context.card,
         title: Text(
           'Remove Widget?',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: context.textPrimary),
         ),
         content: Text(
           'Are you sure you want to remove "$title" from your dashboard?',
@@ -200,10 +200,7 @@ class StatCardWidget extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   label,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: context.textSecondary,
-                  ),
+                  style: TextStyle(fontSize: 14, color: context.textSecondary),
                 ),
               ],
             ),
@@ -283,10 +280,7 @@ class ActionCardWidget extends StatelessWidget {
                   ),
                 ),
                 trailing ??
-                    Icon(
-                      Icons.chevron_right,
-                      color: context.textTertiary,
-                    ),
+                    Icon(Icons.chevron_right, color: context.textTertiary),
               ],
             ),
           ),

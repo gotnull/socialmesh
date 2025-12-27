@@ -88,7 +88,7 @@ class SellerProfileScreen extends ConsumerWidget {
                   child: Text(
                     'Products (${seller.productCount})',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: context.textPrimary,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
@@ -225,8 +225,8 @@ class SellerProfileScreen extends ConsumerWidget {
                   children: [
                     Text(
                       seller.name,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: context.textPrimary,
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
@@ -357,8 +357,8 @@ class _StatItem extends StatelessWidget {
         SizedBox(height: 4),
         Text(
           value,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: context.textPrimary,
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
@@ -394,7 +394,7 @@ class _SellerDescription extends StatelessWidget {
           Text(
             'About',
             style: TextStyle(
-              color: Colors.white,
+              color: context.textPrimary,
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
@@ -438,8 +438,8 @@ class _ContactSection extends StatelessWidget {
         children: [
           Text(
             'Contact & Shipping',
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: context.textPrimary,
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
@@ -525,7 +525,9 @@ class _ContactRow extends StatelessWidget {
                   Text(
                     value,
                     style: TextStyle(
-                      color: onTap != null ? context.accentColor : Colors.white,
+                      color: onTap != null
+                          ? context.accentColor
+                          : context.textPrimary,
                       fontSize: 14,
                     ),
                   ),

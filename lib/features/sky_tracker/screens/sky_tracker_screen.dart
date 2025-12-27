@@ -38,9 +38,7 @@ class _SkyTrackerScreenState extends ConsumerState<SkyTrackerScreen>
   void _scheduleFlight() {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const ScheduleFlightScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const ScheduleFlightScreen()),
     );
   }
 
@@ -54,18 +52,14 @@ class _SkyTrackerScreenState extends ConsumerState<SkyTrackerScreen>
         backgroundColor: context.background,
         title: Row(
           children: [
-            Icon(
-              Icons.flight,
-              color: context.accentColor,
-              size: 24,
-            ),
+            Icon(Icons.flight, color: context.accentColor, size: 24),
             SizedBox(width: 8),
-            const Text(
+            Text(
               'Sky Tracker',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
-                color: Colors.white,
+                color: context.textPrimary,
               ),
             ),
           ],
@@ -131,10 +125,7 @@ class _SkyTrackerScreenState extends ConsumerState<SkyTrackerScreen>
           children: [
             Icon(Icons.flight, color: context.accentColor),
             SizedBox(width: 8),
-            Text(
-              'Sky Tracker',
-              style: TextStyle(color: context.textPrimary),
-            ),
+            Text('Sky Tracker', style: TextStyle(color: context.textPrimary)),
           ],
         ),
         content: Column(
@@ -154,10 +145,7 @@ class _SkyTrackerScreenState extends ConsumerState<SkyTrackerScreen>
               'Schedule your flight with your node',
             ),
             const SizedBox(height: 8),
-            _buildInfoRow(
-              Icons.radar,
-              'Ground stations watch for your signal',
-            ),
+            _buildInfoRow(Icons.radar, 'Ground stations watch for your signal'),
             const SizedBox(height: 8),
             _buildInfoRow(
               Icons.celebration,
@@ -246,10 +234,8 @@ class _ActiveFlightsTab extends ConsumerWidget {
           child: ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: flights.length,
-            itemBuilder: (context, index) => _SkyNodeCard(
-              skyNode: flights[index],
-              showLiveTracking: true,
-            ),
+            itemBuilder: (context, index) =>
+                _SkyNodeCard(skyNode: flights[index], showLiveTracking: true),
           ),
         );
       },
@@ -268,15 +254,15 @@ class _UpcomingFlightsTab extends ConsumerWidget {
       error: (e, _) => _buildError(context, 'Failed to load flights'),
       data: (nodes) {
         // Filter to upcoming only (not active, not past)
-        final upcoming =
-            nodes.where((n) => !n.isActive && !n.isPast).toList();
+        final upcoming = nodes.where((n) => !n.isActive && !n.isPast).toList();
 
         if (upcoming.isEmpty) {
           return _buildEmpty(
             context,
             icon: Icons.schedule,
             title: 'No Upcoming Flights',
-            subtitle: 'No flights scheduled yet.\nPlan your next airborne test!',
+            subtitle:
+                'No flights scheduled yet.\nPlan your next airborne test!',
           );
         }
 
@@ -285,9 +271,8 @@ class _UpcomingFlightsTab extends ConsumerWidget {
           child: ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: upcoming.length,
-            itemBuilder: (context, index) => _SkyNodeCard(
-              skyNode: upcoming[index],
-            ),
+            itemBuilder: (context, index) =>
+                _SkyNodeCard(skyNode: upcoming[index]),
           ),
         );
       },
@@ -328,10 +313,8 @@ class _ReportsTab extends ConsumerWidget {
           child: ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: sorted.length,
-            itemBuilder: (context, index) => _ReportCard(
-              report: sorted[index],
-              rank: index + 1,
-            ),
+            itemBuilder: (context, index) =>
+                _ReportCard(report: sorted[index], rank: index + 1),
           ),
         );
       },
@@ -371,15 +354,12 @@ class _MyFlightsTab extends ConsumerWidget {
         }
 
         return RefreshIndicator(
-          onRefresh: () async =>
-              ref.invalidate(userSkyNodesProvider(user.uid)),
+          onRefresh: () async => ref.invalidate(userSkyNodesProvider(user.uid)),
           child: ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: flights.length,
-            itemBuilder: (context, index) => _SkyNodeCard(
-              skyNode: flights[index],
-              showActions: true,
-            ),
+            itemBuilder: (context, index) =>
+                _SkyNodeCard(skyNode: flights[index], showActions: true),
           ),
         );
       },
@@ -483,10 +463,7 @@ class _SkyNodeCard extends ConsumerWidget {
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
-                          Container(
-                            height: 2,
-                            color: context.border,
-                          ),
+                          Container(height: 2, color: context.border),
                           Icon(
                             Icons.flight,
                             color: skyNode.isActive
@@ -670,9 +647,7 @@ class _LiveTrackingIndicator extends ConsumerWidget {
       decoration: BoxDecoration(
         color: context.accentColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: context.accentColor.withValues(alpha: 0.3),
-        ),
+        border: Border.all(color: context.accentColor.withValues(alpha: 0.3)),
       ),
       child: positionAsync.when(
         loading: () => Row(
@@ -689,27 +664,17 @@ class _LiveTrackingIndicator extends ConsumerWidget {
             SizedBox(width: 8),
             Text(
               'Getting live position...',
-              style: TextStyle(
-                color: context.accentColor,
-                fontSize: 13,
-              ),
+              style: TextStyle(color: context.accentColor, fontSize: 13),
             ),
           ],
         ),
         error: (e, _) => Row(
           children: [
-            Icon(
-              Icons.cloud_off,
-              color: context.textTertiary,
-              size: 18,
-            ),
+            Icon(Icons.cloud_off, color: context.textTertiary, size: 18),
             SizedBox(width: 8),
             Text(
               'Position unavailable',
-              style: TextStyle(
-                color: context.textTertiary,
-                fontSize: 13,
-              ),
+              style: TextStyle(color: context.textTertiary, fontSize: 13),
             ),
           ],
         ),
@@ -717,18 +682,11 @@ class _LiveTrackingIndicator extends ConsumerWidget {
           if (positionState.position == null) {
             return Row(
               children: [
-                Icon(
-                  Icons.cloud_off,
-                  color: context.textTertiary,
-                  size: 18,
-                ),
+                Icon(Icons.cloud_off, color: context.textTertiary, size: 18),
                 SizedBox(width: 8),
                 Text(
                   positionState.error ?? 'Position unavailable',
-                  style: TextStyle(
-                    color: context.textTertiary,
-                    fontSize: 13,
-                  ),
+                  style: TextStyle(color: context.textTertiary, fontSize: 13),
                 ),
               ],
             );
@@ -772,10 +730,7 @@ class _ReportCard extends StatelessWidget {
   final ReceptionReport report;
   final int rank;
 
-  const _ReportCard({
-    required this.report,
-    required this.rank,
-  });
+  const _ReportCard({required this.report, required this.rank});
 
   @override
   Widget build(BuildContext context) {
@@ -881,10 +836,7 @@ class _ReportCard extends StatelessWidget {
             // Time
             Text(
               dateFormat.format(report.receivedAt.toLocal()),
-              style: TextStyle(
-                color: context.textTertiary,
-                fontSize: 12,
-              ),
+              style: TextStyle(color: context.textTertiary, fontSize: 12),
             ),
           ],
         ),
@@ -933,10 +885,7 @@ Widget _buildEmpty(
           Text(
             subtitle,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              color: context.textSecondary,
-              fontSize: 14,
-            ),
+            style: TextStyle(color: context.textSecondary, fontSize: 14),
           ),
         ],
       ),
@@ -956,10 +905,7 @@ Widget _buildError(BuildContext context, String message) {
           Text(
             message,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              color: context.textSecondary,
-              fontSize: 14,
-            ),
+            style: TextStyle(color: context.textSecondary, fontSize: 14),
           ),
         ],
       ),

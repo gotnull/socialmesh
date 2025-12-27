@@ -395,11 +395,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
               color: context.card,
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Icon(
-              Icons.timeline,
-              size: 40,
-              color: context.textTertiary,
-            ),
+            child: Icon(Icons.timeline, size: 40, color: context.textTertiary),
           ),
           SizedBox(height: 24),
           Text(
@@ -510,7 +506,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
                         child: Text(
                           event.title,
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: Colors.white,
+                            color: context.textPrimary,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -590,7 +586,7 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: Colors.white,
+                color: context.textPrimary,
               ),
             ),
           ),

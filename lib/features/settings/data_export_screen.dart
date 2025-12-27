@@ -49,7 +49,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
       ),
@@ -441,16 +441,15 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: isHighlighted ? context.accentColor : Colors.white,
+                    color: isHighlighted
+                        ? context.accentColor
+                        : context.textPrimary,
                   ),
                 ),
                 SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: context.textTertiary,
-                  ),
+                  style: TextStyle(fontSize: 12, color: context.textTertiary),
                 ),
               ],
             ),

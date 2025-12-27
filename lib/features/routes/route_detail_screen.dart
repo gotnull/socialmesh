@@ -407,7 +407,7 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
                         route.notes!,
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.white.withValues(alpha: 0.7),
+                          color: context.textSecondary,
                         ),
                       ),
                     ),
@@ -568,10 +568,10 @@ class _NodeInfoCard extends StatelessWidget {
                     children: [
                       Text(
                         node.displayName,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: context.textPrimary,
                         ),
                       ),
                       if (isMyNode) ...[
@@ -602,7 +602,7 @@ class _NodeInfoCard extends StatelessWidget {
                     node.isOnline ? 'Online' : 'Offline',
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.white.withValues(alpha: 0.6),
+                      color: context.textSecondary,
                     ),
                   ),
                 ],
@@ -645,18 +645,15 @@ class _StatItem extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           value,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
         Text(
           label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.white.withValues(alpha: 0.5),
-          ),
+          style: TextStyle(fontSize: 12, color: context.textSecondary),
         ),
       ],
     );

@@ -140,7 +140,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
         actions: [
@@ -281,7 +281,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
                             Text(
                               'ADC Multiplier',
                               style: TextStyle(
-                                color: Colors.white,
+                                color: context.textPrimary,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -293,7 +293,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
                                       decimal: true,
                                     ),
                                 textAlign: TextAlign.center,
-                                style: const TextStyle(color: Colors.white),
+                                style: TextStyle(color: context.textPrimary),
                                 decoration: InputDecoration(
                                   isDense: true,
                                   contentPadding: const EdgeInsets.symmetric(
@@ -485,7 +485,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
             Text(
               title,
               style: TextStyle(
-                color: Colors.white,
+                color: context.textPrimary,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -589,19 +589,16 @@ class _SettingsTile extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
-                      color: Colors.white,
+                      color: context.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: context.textTertiary,
-                    ),
+                    style: TextStyle(fontSize: 13, color: context.textTertiary),
                   ),
                 ],
               ),

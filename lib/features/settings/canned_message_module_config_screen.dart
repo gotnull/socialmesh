@@ -305,9 +305,7 @@ class _CannedMessageModuleConfigScreenState
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: isSelected
-                          ? context.accentColor
-                          : context.border,
+                      color: isSelected ? context.accentColor : context.border,
                       width: isSelected ? 2 : 1,
                     ),
                     color: isSelected
@@ -330,7 +328,7 @@ class _CannedMessageModuleConfigScreenState
                             Text(
                               item.$2,
                               style: TextStyle(
-                                color: Colors.white,
+                                color: context.textPrimary,
                                 fontWeight: isSelected
                                     ? FontWeight.bold
                                     : FontWeight.w500,
@@ -454,7 +452,7 @@ class _CannedMessageModuleConfigScreenState
         Text(
           label,
           style: TextStyle(
-            color: Colors.white,
+            color: context.textPrimary,
             fontSize: 14,
             fontWeight: FontWeight.w500,
           ),
@@ -472,7 +470,7 @@ class _CannedMessageModuleConfigScreenState
             isExpanded: true,
             underline: SizedBox(),
             dropdownColor: context.card,
-            style: const TextStyle(color: Colors.white, fontSize: 14),
+            style: TextStyle(color: context.textPrimary, fontSize: 14),
             items: List.generate(49, (i) => i).map((pin) {
               return DropdownMenuItem(
                 value: pin,
@@ -568,7 +566,7 @@ class _CannedMessageModuleConfigScreenState
         Text(
           label,
           style: TextStyle(
-            color: Colors.white,
+            color: context.textPrimary,
             fontSize: 14,
             fontWeight: FontWeight.w500,
           ),
@@ -589,7 +587,7 @@ class _CannedMessageModuleConfigScreenState
                 isExpanded: true,
                 underline: SizedBox(),
                 dropdownColor: context.card,
-                style: const TextStyle(color: Colors.white, fontSize: 14),
+                style: TextStyle(color: context.textPrimary, fontSize: 14),
                 items: options.map((item) {
                   return DropdownMenuItem(value: item.$1, child: Text(item.$2));
                 }).toList(),
@@ -666,10 +664,7 @@ class _SettingsTile extends StatelessWidget {
               if (subtitle != null)
                 Text(
                   subtitle!,
-                  style: TextStyle(
-                    color: context.textSecondary,
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: context.textSecondary, fontSize: 12),
                 ),
             ],
           ),

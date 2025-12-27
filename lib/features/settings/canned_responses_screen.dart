@@ -303,7 +303,7 @@ class _ResponseTile extends StatelessWidget {
         title: Text(
           response.text,
           style: TextStyle(
-            color: Colors.white,
+            color: context.textPrimary,
             fontWeight: FontWeight.w500,
           ),
         ),

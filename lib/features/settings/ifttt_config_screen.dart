@@ -261,7 +261,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                 keyboardType: TextInputType.text,
                 textInputAction: TextInputAction.done,
                 onSubmitted: (_) => FocusScope.of(context).unfocus(),
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(color: context.textPrimary),
                 decoration: InputDecoration(
                   labelText: 'Webhook Key',
                   labelStyle: TextStyle(color: context.textSecondary),
@@ -542,10 +542,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                       borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide(color: context.accentColor),
                     ),
-                    prefixIcon: Icon(
-                      Icons.radar,
-                      color: context.textSecondary,
-                    ),
+                    prefixIcon: Icon(Icons.radar, color: context.textSecondary),
                     suffixText: 'm',
                     suffixStyle: TextStyle(color: context.textSecondary),
                     filled: true,
@@ -964,10 +961,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
           Expanded(
             child: Text(
               text,
-              style: TextStyle(
-                fontSize: 13,
-                color: context.textSecondary,
-              ),
+              style: TextStyle(fontSize: 13, color: context.textSecondary),
             ),
           ),
         ],
@@ -1069,10 +1063,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
             flex: 2,
             child: Text(
               params,
-              style: TextStyle(
-                fontSize: 11,
-                color: context.textTertiary,
-              ),
+              style: TextStyle(fontSize: 11, color: context.textTertiary),
             ),
           ),
         ],
@@ -1147,10 +1138,7 @@ class _SettingsTile extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: context.textTertiary,
-                    ),
+                    style: TextStyle(fontSize: 13, color: context.textTertiary),
                   ),
                 ],
               ),

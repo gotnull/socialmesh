@@ -88,7 +88,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
         backgroundColor: context.card,
         title: Text(
           'Remove Widget?',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: context.textPrimary),
         ),
         content: Text(
           'Are you sure you want to remove "$displayName" from your dashboard?',
@@ -225,10 +225,10 @@ class _DashboardWidgetState extends State<DashboardWidget>
           Expanded(
             child: Text(
               displayName,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: Colors.white,
+                color: context.textPrimary,
               ),
             ),
           ),
@@ -349,10 +349,7 @@ class WidgetEmptyState extends StatelessWidget {
             SizedBox(height: 12),
             Text(
               message,
-              style: TextStyle(
-                fontSize: 13,
-                color: context.textTertiary,
-              ),
+              style: TextStyle(fontSize: 13, color: context.textTertiary),
               textAlign: TextAlign.center,
             ),
             if (actionLabel != null && onAction != null) ...[
@@ -398,10 +395,7 @@ class WidgetLoadingState extends StatelessWidget {
             SizedBox(height: 12),
             Text(
               message!,
-              style: TextStyle(
-                fontSize: 13,
-                color: context.textTertiary,
-              ),
+              style: TextStyle(fontSize: 13, color: context.textTertiary),
             ),
           ],
         ],

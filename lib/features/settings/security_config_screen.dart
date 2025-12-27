@@ -220,7 +220,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
         actions: [
@@ -391,7 +391,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
               Text(
                 'Public Key',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: context.textPrimary,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -411,7 +411,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
               style: TextStyle(
                 color: _publicKey.isEmpty
                     ? context.textTertiary
-                    : Colors.white,
+                    : context.textPrimary,
                 fontFamily: 'JetBrainsMono',
                 fontSize: 11,
               ),
@@ -430,10 +430,10 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
             children: [
               Icon(Icons.vpn_key, color: context.textSecondary, size: 20),
               SizedBox(width: 8),
-              const Text(
+              Text(
                 'Private Key',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: context.textPrimary,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -453,8 +453,8 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
           SizedBox(height: 8),
           TextField(
             obscureText: !_privateKeyVisible,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: context.textPrimary,
               fontFamily: 'JetBrainsMono',
               fontSize: 11,
             ),
@@ -468,17 +468,13 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide(
-                  color: isValidPrivateKey
-                      ? context.border
-                      : AppTheme.errorRed,
+                  color: isValidPrivateKey ? context.border : AppTheme.errorRed,
                 ),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide(
-                  color: isValidPrivateKey
-                      ? context.border
-                      : AppTheme.errorRed,
+                  color: isValidPrivateKey ? context.border : AppTheme.errorRed,
                 ),
               ),
             ),
@@ -504,7 +500,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
               Text(
                 'Regenerate Key Pair',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: context.textPrimary,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -592,8 +588,8 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
             SizedBox(width: 8),
             Text(
               label,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: context.textPrimary,
                 fontWeight: FontWeight.w500,
                 fontSize: 13,
               ),
@@ -602,8 +598,8 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
         ),
         const SizedBox(height: 6),
         TextField(
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: context.textPrimary,
             fontFamily: 'JetBrainsMono',
             fontSize: 11,
           ),
@@ -692,19 +688,16 @@ class _SettingsTile extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
-                      color: Colors.white,
+                      color: context.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: context.textTertiary,
-                    ),
+                    style: TextStyle(fontSize: 13, color: context.textTertiary),
                   ),
                 ],
               ),

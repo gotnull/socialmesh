@@ -257,7 +257,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
                             textInputAction: TextInputAction.done,
                             onSubmitted: (_) =>
                                 FocusScope.of(context).unfocus(),
-                            style: const TextStyle(color: Colors.white),
+                            style: TextStyle(color: context.textPrimary),
                             decoration: InputDecoration(
                               labelText: 'Topic Root',
                               labelStyle: TextStyle(
@@ -358,7 +358,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
                             textInputAction: TextInputAction.done,
                             onSubmitted: (_) =>
                                 FocusScope.of(context).unfocus(),
-                            style: const TextStyle(color: Colors.white),
+                            style: TextStyle(color: context.textPrimary),
                             decoration: InputDecoration(
                               labelText: 'Password',
                               labelStyle: TextStyle(

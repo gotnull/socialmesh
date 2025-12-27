@@ -316,7 +316,7 @@ class _ActionEditorState extends State<ActionEditor> {
                                         ? widget.action.targetChannelIndex
                                         : widget.action.targetNodeNum) !=
                                     null
-                                ? Colors.white
+                                ? context.textPrimary
                                 : context.textSecondary,
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
@@ -332,10 +332,7 @@ class _ActionEditorState extends State<ActionEditor> {
                       ],
                     ),
                   ),
-                  Icon(
-                    Icons.keyboard_arrow_down,
-                    color: context.textSecondary,
-                  ),
+                  Icon(Icons.keyboard_arrow_down, color: context.textSecondary),
                 ],
               ),
             ),
@@ -398,7 +395,7 @@ class _ActionEditorState extends State<ActionEditor> {
                   Text(
                     'Select Node',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: context.textPrimary,
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                     ),
@@ -424,10 +421,7 @@ class _ActionEditorState extends State<ActionEditor> {
                 children: [
                   Text(
                     '${nodes.length} nodes',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: context.textTertiary,
-                    ),
+                    style: TextStyle(fontSize: 11, color: context.textTertiary),
                   ),
                 ],
               ),
@@ -498,7 +492,7 @@ class _ActionEditorState extends State<ActionEditor> {
                   Text(
                     'Select Channel',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: context.textPrimary,
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                     ),
@@ -524,10 +518,7 @@ class _ActionEditorState extends State<ActionEditor> {
                 children: [
                   Text(
                     '${channels.length} channels',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: context.textTertiary,
-                    ),
+                    style: TextStyle(fontSize: 11, color: context.textTertiary),
                   ),
                 ],
               ),
@@ -638,7 +629,7 @@ class _ActionEditorState extends State<ActionEditor> {
                       style: TextStyle(
                         color: isSelected
                             ? Theme.of(context).colorScheme.primary
-                            : Colors.white,
+                            : context.textPrimary,
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
                       ),
@@ -718,7 +709,7 @@ class _ActionEditorState extends State<ActionEditor> {
                           hasSound ? selectedSound : 'Select a sound',
                           style: TextStyle(
                             color: hasSound
-                                ? Colors.white
+                                ? context.textPrimary
                                 : context.textSecondary,
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
@@ -734,10 +725,7 @@ class _ActionEditorState extends State<ActionEditor> {
                       ],
                     ),
                   ),
-                  Icon(
-                    Icons.keyboard_arrow_down,
-                    color: context.textSecondary,
-                  ),
+                  Icon(Icons.keyboard_arrow_down, color: context.textSecondary),
                 ],
               ),
             ),
@@ -899,7 +887,7 @@ class _ActionEditorState extends State<ActionEditor> {
                               : 'Custom sound (optional)',
                           style: TextStyle(
                             color: hasCustomSound
-                                ? Colors.white
+                                ? context.textPrimary
                                 : context.textSecondary,
                             fontSize: 14,
                           ),
@@ -1497,10 +1485,7 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet> {
                 SizedBox(width: 8),
                 Text(
                   '${displayItems.length} sounds',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: context.textTertiary,
-                  ),
+                  style: TextStyle(fontSize: 11, color: context.textTertiary),
                 ),
               ],
             ),
@@ -1587,7 +1572,7 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet> {
                                           fontWeight: FontWeight.w500,
                                           color: isSelected
                                               ? Colors.orange
-                                              : Colors.white,
+                                              : context.textPrimary,
                                         ),
                                       ),
                                       if (item.subtitle != null)

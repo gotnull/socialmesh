@@ -127,7 +127,7 @@ class _MessageContextMenuState extends ConsumerState<MessageContextMenu> {
     bool hasSubmenu = false,
     bool isExpanded = false,
   }) {
-    final color = isDestructive ? AppTheme.errorRed : Colors.white;
+    final color = isDestructive ? AppTheme.errorRed : context.textPrimary;
     return InkWell(
       onTap: onTap,
       child: Padding(

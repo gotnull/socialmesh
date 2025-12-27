@@ -26,12 +26,12 @@ class DetectionSensorLogScreen extends ConsumerWidget {
       backgroundColor: context.background,
       appBar: AppBar(
         backgroundColor: context.background,
-        title: const Text(
+        title: Text(
           'Detection Sensor Log',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
         leading: IconButton(
@@ -50,7 +50,7 @@ class DetectionSensorLogScreen extends ConsumerWidget {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
-                  color: Colors.white.withValues(alpha: 0.7),
+                  color: context.textSecondary,
                 ),
               ),
             ),
@@ -58,7 +58,10 @@ class DetectionSensorLogScreen extends ConsumerWidget {
               child: logsAsync.when(
                 data: (logs) {
                   if (logs.isEmpty) {
-                    return _buildEmptyState('No sensor events recorded yet');
+                    return _buildEmptyState(
+                      context,
+                      'No sensor events recorded yet',
+                    );
                   }
                   final sortedLogs = logs.reversed.toList();
                   return ListView.builder(
@@ -79,31 +82,21 @@ class DetectionSensorLogScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmptyState(String message) {
+  Widget _buildEmptyState(BuildContext context, String message) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.sensors_outlined,
-            size: 64,
-            color: Colors.white.withValues(alpha: 0.3),
-          ),
+          Icon(Icons.sensors_outlined, size: 64, color: context.textTertiary),
           const SizedBox(height: 16),
           Text(
             message,
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.white.withValues(alpha: 0.5),
-            ),
+            style: TextStyle(fontSize: 16, color: context.textSecondary),
           ),
           const SizedBox(height: 8),
           Text(
             'Detection sensors report motion and presence',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.white.withValues(alpha: 0.3),
-            ),
+            style: TextStyle(fontSize: 14, color: context.textTertiary),
           ),
         ],
       ),
@@ -175,10 +168,7 @@ class _DetectionSensorCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   timeFormat.format(log.timestamp),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.white.withValues(alpha: 0.5),
-                  ),
+                  style: TextStyle(fontSize: 12, color: context.textTertiary),
                 ),
               ],
             ),

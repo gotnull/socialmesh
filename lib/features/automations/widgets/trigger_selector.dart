@@ -383,7 +383,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                           style: TextStyle(
                             fontWeight: FontWeight.w500,
                             color: selectedNode != null
-                                ? Colors.white
+                                ? context.textPrimary
                                 : Colors.grey,
                           ),
                         ),
@@ -463,7 +463,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                   Text(
                     'Select Node',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: context.textPrimary,
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                     ),
@@ -489,10 +489,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                 children: [
                   Text(
                     '${nodes.length} nodes',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: context.textTertiary,
-                    ),
+                    style: TextStyle(fontSize: 11, color: context.textTertiary),
                   ),
                 ],
               ),
@@ -594,7 +591,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                       style: TextStyle(
                         color: isSelected
                             ? Theme.of(context).colorScheme.primary
-                            : Colors.white,
+                            : context.textPrimary,
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
                       ),

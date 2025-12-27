@@ -135,7 +135,7 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           'Node Already Exists',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: context.textPrimary),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -208,7 +208,7 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: context.card,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Add Node', style: TextStyle(color: Colors.white)),
+        title: Text('Add Node', style: TextStyle(color: context.textPrimary)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -280,8 +280,8 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
         Expanded(
           child: Text(
             value,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: context.textPrimary,
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
@@ -356,16 +356,16 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.flash_on, color: Colors.white),
+            icon: Icon(Icons.flash_on, color: context.textPrimary),
             onPressed: () => _controller.toggleTorch(),
           ),
           IconButton(
-            icon: Icon(Icons.flip_camera_ios, color: Colors.white),
+            icon: Icon(Icons.flip_camera_ios, color: context.textPrimary),
             onPressed: () => _controller.switchCamera(),
           ),
         ],
@@ -420,7 +420,7 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
                   SizedBox(height: 12),
                   Text(
                     'Point your camera at a node QR code',
-                    style: TextStyle(color: Colors.white, fontSize: 14),
+                    style: TextStyle(color: context.textPrimary, fontSize: 14),
                     textAlign: TextAlign.center,
                   ),
                   SizedBox(height: 8),

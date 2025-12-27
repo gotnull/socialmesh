@@ -23,12 +23,12 @@ class _HomeWidgetsScreenState extends ConsumerState<HomeWidgetsScreen> {
       backgroundColor: context.background,
       appBar: AppBar(
         backgroundColor: context.background,
-        title: const Text(
+        title: Text(
           'Home Widgets',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
       ),
@@ -219,19 +219,16 @@ class _HomeWidgetsScreenState extends ConsumerState<HomeWidgetsScreen> {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                    color: context.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   description,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: context.textTertiary,
-                  ),
+                  style: TextStyle(fontSize: 13, color: context.textTertiary),
                 ),
                 SizedBox(height: 8),
                 Wrap(

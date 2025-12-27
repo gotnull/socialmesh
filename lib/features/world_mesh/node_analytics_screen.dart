@@ -208,7 +208,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: context.textPrimary,
               ),
             ),
             SizedBox(height: 20),
@@ -221,9 +221,9 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
                 ),
                 child: Icon(Icons.link, color: AccentColors.blue),
               ),
-              title: const Text(
+              title: Text(
                 'Share Link',
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(color: context.textPrimary),
               ),
               subtitle: Text(
                 'Rich preview in iMessage, Slack, etc.',
@@ -245,7 +245,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
               ),
               title: Text(
                 'Share Details',
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(color: context.textPrimary),
               ),
               subtitle: Text(
                 'Full technical info as text',
@@ -347,16 +347,13 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: Colors.white,
+                color: context.textPrimary,
               ),
             ),
             SizedBox(height: 8),
             Text(
               '${_history.length} records',
-              style: TextStyle(
-                fontSize: 13,
-                color: context.textTertiary,
-              ),
+              style: TextStyle(fontSize: 13, color: context.textTertiary),
             ),
             const SizedBox(height: 24),
             Row(
@@ -489,7 +486,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
         actions: [
@@ -673,10 +670,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
                   SizedBox(height: 2),
                   Text(
                     _formatRole(node.role),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: context.textTertiary,
-                    ),
+                    style: TextStyle(fontSize: 12, color: context.textTertiary),
                   ),
                 ],
               ],
@@ -717,8 +711,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
               ),
             ),
           ),
-        if (hasLocation && widget.onShowOnMap != null)
-          SizedBox(width: 12),
+        if (hasLocation && widget.onShowOnMap != null) SizedBox(width: 12),
         // Refresh button
         Expanded(
           child: OutlinedButton.icon(
@@ -900,11 +893,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
               children: [
                 Row(
                   children: [
-                    Icon(
-                      Icons.people,
-                      size: 16,
-                      color: context.textTertiary,
-                    ),
+                    Icon(Icons.people, size: 16, color: context.textTertiary),
                     SizedBox(width: 8),
                     Text(
                       'Direct Neighbors (${node.neighbors?.length ?? 0})',
@@ -946,11 +935,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
               children: [
                 Row(
                   children: [
-                    Icon(
-                      Icons.router,
-                      size: 16,
-                      color: context.textTertiary,
-                    ),
+                    Icon(Icons.router, size: 16, color: context.textTertiary),
                     SizedBox(width: 8),
                     Text(
                       'Seen by Gateways (${node.seenBy.length})',
@@ -1068,11 +1053,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
       child: _history.isEmpty
           ? Column(
               children: [
-                Icon(
-                  Icons.history,
-                  size: 40,
-                  color: context.textTertiary,
-                ),
+                Icon(Icons.history, size: 40, color: context.textTertiary),
                 SizedBox(height: 12),
                 Text(
                   'No historical data yet',

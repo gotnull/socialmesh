@@ -486,8 +486,8 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
                       SizedBox(height: 8),
                       Text(
                         'Radius: ${_radiusMeters >= 1000 ? '${(_radiusMeters / 1000).toStringAsFixed(1)} km' : '${_radiusMeters.toStringAsFixed(0)} m'}',
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: context.textPrimary,
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                         ),
@@ -514,9 +514,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
                   decoration: BoxDecoration(
                     color: context.card.withAlpha(230),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: context.border.withAlpha(128),
-                    ),
+                    border: Border.all(color: context.border.withAlpha(128)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -532,10 +530,10 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
                       const SizedBox(width: 8),
                       Text(
                         '${allNodesWithPosition.length} nodes',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
-                          color: Colors.white,
+                          color: context.textPrimary,
                         ),
                       ),
                       const SizedBox(width: 4),
@@ -643,10 +641,10 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
                                 Text(
                                   _monitoredNodeName ??
                                       '!${_monitoredNodeNum!.toRadixString(16)}',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
-                                    color: Colors.white,
+                                    color: context.textPrimary,
                                   ),
                                 ),
                               ],
@@ -691,7 +689,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
                               ? '${(_radiusMeters / 1000).toStringAsFixed(1)} km'
                               : '${_radiusMeters.toStringAsFixed(0)} m',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: context.textPrimary,
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                           ),
@@ -906,7 +904,7 @@ class _NodeListPanel extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        color: context.textPrimary,
                       ),
                     ),
                   ),
@@ -932,7 +930,7 @@ class _NodeListPanel extends StatelessWidget {
               padding: const EdgeInsets.all(12),
               child: TextField(
                 controller: searchController,
-                style: TextStyle(color: Colors.white, fontSize: 14),
+                style: TextStyle(color: context.textPrimary, fontSize: 14),
                 decoration: InputDecoration(
                   hintText: 'Search nodes...',
                   hintStyle: TextStyle(
@@ -1075,10 +1073,10 @@ class _NodeListItem extends StatelessWidget {
                         Flexible(
                           child: Text(
                             node.displayName,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
-                              color: Colors.white,
+                              color: context.textPrimary,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,

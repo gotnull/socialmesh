@@ -72,7 +72,10 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: context.card,
-        title: Text('Remove Favorite?', style: TextStyle(color: Colors.white)),
+        title: Text(
+          'Remove Favorite?',
+          style: TextStyle(color: context.textPrimary),
+        ),
         content: Text(
           'Remove ${item.displayName} from your favorites?',
           style: TextStyle(color: context.textSecondary),
@@ -184,7 +187,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: context.textPrimary,
             ),
           ),
         ),
@@ -194,12 +197,12 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
         backgroundColor: context.background,
         appBar: AppBar(
           backgroundColor: context.background,
-          title: const Text(
+          title: Text(
             'Favorite Nodes',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: context.textPrimary,
             ),
           ),
         ),
@@ -215,7 +218,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
               const SizedBox(height: 16),
               Text(
                 'Error loading favorites',
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: context.textPrimary),
               ),
               const SizedBox(height: 8),
               TextButton(
@@ -245,7 +248,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
-                color: Colors.white,
+                color: context.textPrimary,
               ),
             ),
             actions: [
@@ -387,7 +390,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
                     backgroundColor: context.card,
                     title: Text(
                       'Remove Favorite?',
-                      style: TextStyle(color: Colors.white),
+                      style: TextStyle(color: context.textPrimary),
                     ),
                     content: Text(
                       'Remove ${item.displayName} from your favorites?',

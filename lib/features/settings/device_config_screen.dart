@@ -150,7 +150,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
         actions: [
@@ -243,7 +243,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                           Text(
                             'Node Info Broadcast',
                             style: TextStyle(
-                              color: Colors.white,
+                              color: context.textPrimary,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -414,7 +414,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
               Text(
                 'Button GPIO',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: context.textPrimary,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -428,7 +428,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                 child: DropdownButton<int>(
                   underline: const SizedBox.shrink(),
                   dropdownColor: context.card,
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: context.textPrimary),
                   value: _buttonGpio,
                   items: List.generate(49, (i) {
                     return DropdownMenuItem(
@@ -456,7 +456,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
               Text(
                 'Buzzer GPIO',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: context.textPrimary,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -470,7 +470,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                 child: DropdownButton<int>(
                   underline: const SizedBox.shrink(),
                   dropdownColor: context.card,
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: context.textPrimary),
                   value: _buzzerGpio,
                   items: List.generate(49, (i) {
                     return DropdownMenuItem(
@@ -517,7 +517,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                     Text(
                       'Time Zone',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: context.textPrimary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -536,7 +536,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
           ),
           SizedBox(height: 12),
           TextField(
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: context.textPrimary),
             decoration: InputDecoration(
               isDense: true,
               contentPadding: const EdgeInsets.symmetric(
@@ -666,9 +666,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: isSelected
-                          ? context.accentColor
-                          : context.border,
+                      color: isSelected ? context.accentColor : context.border,
                       width: isSelected ? 2 : 1,
                     ),
                     color: isSelected
@@ -881,19 +879,16 @@ class _SettingsTile extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
-                      color: Colors.white,
+                      color: context.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: context.textTertiary,
-                    ),
+                    style: TextStyle(fontSize: 13, color: context.textTertiary),
                   ),
                 ],
               ),

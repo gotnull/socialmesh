@@ -112,7 +112,7 @@ class _RemoteAdminSelectorSheetState
                   child: Text(
                     'Remote Administration',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: context.textPrimary,
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                     ),
@@ -135,13 +135,10 @@ class _RemoteAdminSelectorSheetState
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: TextField(
               controller: _searchController,
-              style: const TextStyle(color: Colors.white, fontSize: 14),
+              style: TextStyle(color: context.textPrimary, fontSize: 14),
               decoration: InputDecoration(
                 hintText: 'Search nodes...',
-                hintStyle: TextStyle(
-                  color: context.textTertiary,
-                  fontSize: 14,
-                ),
+                hintStyle: TextStyle(color: context.textTertiary, fontSize: 14),
                 prefixIcon: Icon(
                   Icons.search,
                   color: context.textTertiary,
@@ -209,10 +206,7 @@ class _RemoteAdminSelectorSheetState
                 const Spacer(),
                 Text(
                   '${nodes.length} available',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: context.textTertiary,
-                  ),
+                  style: TextStyle(fontSize: 11, color: context.textTertiary),
                 ),
               ],
             ),
@@ -366,7 +360,7 @@ class _DeviceTile extends StatelessWidget {
                     Text(
                       title,
                       style: TextStyle(
-                        color: isSelected ? accentColor : Colors.white,
+                        color: isSelected ? accentColor : context.textPrimary,
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
                       ),
@@ -451,10 +445,7 @@ class _NodeAdminTile extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: accentColor,
                           shape: BoxShape.circle,
-                          border: Border.all(
-                            color: context.card,
-                            width: 2,
-                          ),
+                          border: Border.all(color: context.card, width: 2),
                         ),
                       ),
                     ),
@@ -485,7 +476,7 @@ class _NodeAdminTile extends StatelessWidget {
                     Text(
                       node.displayName,
                       style: TextStyle(
-                        color: isSelected ? accentColor : Colors.white,
+                        color: isSelected ? accentColor : context.textPrimary,
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
                       ),

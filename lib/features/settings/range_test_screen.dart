@@ -243,7 +243,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
                 Text(
                   'Select Target Node',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: context.textPrimary,
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                   ),
@@ -298,7 +298,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
                   ),
                   title: Text(
                     displayName,
-                    style: TextStyle(color: Colors.white),
+                    style: TextStyle(color: context.textPrimary),
                   ),
                   subtitle: Text(
                     node.isOnline ? 'Online' : 'Offline',
@@ -444,7 +444,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: _isRunning ? context.accentColor : Colors.white,
+              color: _isRunning ? context.accentColor : context.textPrimary,
             ),
           ),
           SizedBox(height: 4),
@@ -515,7 +515,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
           ListTile(
             title: Text(
               'Enable Range Test Module',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: context.textPrimary),
             ),
             subtitle: Text(
               'Allow this device to participate in range tests',
@@ -530,7 +530,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
           ListTile(
             title: Text(
               'Sender Interval',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: context.textPrimary),
             ),
             subtitle: Text(
               'Send test packet every $_senderInterval seconds',
@@ -565,7 +565,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
           ListTile(
             title: Text(
               'Save Results to SD',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: context.textPrimary),
             ),
             subtitle: Text(
               'Store test results on device SD card',
@@ -647,7 +647,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
                 ),
                 title: Text(
                   'SNR: ${result.snr.toStringAsFixed(1)} dB • RSSI: ${result.rssi.toStringAsFixed(0)} dBm',
-                  style: TextStyle(color: Colors.white, fontSize: 13),
+                  style: TextStyle(color: context.textPrimary, fontSize: 13),
                 ),
                 subtitle: Text(
                   '${(result.distance / 1000).toStringAsFixed(2)} km • ${result.hopCount} hop(s)',
@@ -700,7 +700,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
               Text(
                 'How Range Test Works',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: context.textPrimary,
                   fontWeight: FontWeight.w600,
                 ),
               ),

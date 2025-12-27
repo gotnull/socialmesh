@@ -126,7 +126,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white,
+                  color: context.textPrimary,
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -1297,11 +1297,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                           ),
                         ),
                         const SizedBox(width: 4),
-                        Icon(
-                          Icons.edit,
-                          size: 14,
-                          color: context.textTertiary,
-                        ),
+                        Icon(Icons.edit, size: 14, color: context.textTertiary),
                       ],
                     ),
                   ),
@@ -2885,7 +2881,10 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: context.card,
-        title: Text('Widget Name', style: TextStyle(color: context.textPrimary)),
+        title: Text(
+          'Widget Name',
+          style: TextStyle(color: context.textPrimary),
+        ),
         content: TextField(
           controller: controller,
           autofocus: true,

@@ -157,12 +157,12 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
       backgroundColor: context.background,
       appBar: AppBar(
         backgroundColor: context.background,
-        title: const Text(
+        title: Text(
           'My Widgets',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
         actions: [
@@ -294,7 +294,9 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
                             ? Icons.dashboard_outlined
                             : Icons.dashboard_customize,
                         size: 18,
-                        color: isOnDashboard ? AppTheme.errorRed : context.textSecondary,
+                        color: isOnDashboard
+                            ? AppTheme.errorRed
+                            : context.textSecondary,
                       ),
                       SizedBox(width: 8),
                       Text(
@@ -414,8 +416,8 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
               SizedBox(height: 24),
               Text(
                 title,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: context.textPrimary,
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
                 ),

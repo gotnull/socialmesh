@@ -1406,7 +1406,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
               value: _secretPattern,
               isExpanded: true,
               dropdownColor: context.card,
-              style: TextStyle(color: Colors.white, fontSize: 14),
+              style: TextStyle(color: context.textPrimary, fontSize: 14),
               icon: Icon(
                 Icons.keyboard_arrow_down,
                 color: context.textSecondary,
@@ -1702,7 +1702,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
             SizedBox(width: 12),
             Text(
               label,
-              style: const TextStyle(fontSize: 14, color: Colors.white),
+              style: TextStyle(fontSize: 14, color: context.textPrimary),
             ),
             const Spacer(),
             Icon(Icons.chevron_right, size: 18, color: context.textTertiary),
@@ -1789,7 +1789,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
           width: 110,
           child: Text(
             label,
-            style: TextStyle(fontSize: 13, color: Colors.white),
+            style: TextStyle(fontSize: 13, color: context.textPrimary),
           ),
         ),
         Expanded(

@@ -26,12 +26,12 @@ class AirQualityLogScreen extends ConsumerWidget {
       backgroundColor: context.background,
       appBar: AppBar(
         backgroundColor: context.background,
-        title: const Text(
+        title: Text(
           'Air Quality Log',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
         leading: IconButton(
@@ -50,7 +50,7 @@ class AirQualityLogScreen extends ConsumerWidget {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
-                  color: Colors.white.withValues(alpha: 0.7),
+                  color: context.textSecondary,
                 ),
               ),
             ),
@@ -58,7 +58,10 @@ class AirQualityLogScreen extends ConsumerWidget {
               child: logsAsync.when(
                 data: (logs) {
                   if (logs.isEmpty) {
-                    return _buildEmptyState('No air quality data recorded yet');
+                    return _buildEmptyState(
+                      context,
+                      'No air quality data recorded yet',
+                    );
                   }
                   final sortedLogs = logs.reversed.toList();
                   return ListView.builder(
@@ -79,19 +82,16 @@ class AirQualityLogScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmptyState(String message) {
+  Widget _buildEmptyState(BuildContext context, String message) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.air, size: 64, color: Colors.white.withValues(alpha: 0.3)),
+          Icon(Icons.air, size: 64, color: context.textTertiary),
           const SizedBox(height: 16),
           Text(
             message,
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.white.withValues(alpha: 0.5),
-            ),
+            style: TextStyle(fontSize: 16, color: context.textSecondary),
           ),
         ],
       ),
@@ -123,10 +123,7 @@ class _AirQualityCard extends StatelessWidget {
             children: [
               Text(
                 timeFormat.format(log.timestamp),
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.white.withValues(alpha: 0.5),
-                ),
+                style: TextStyle(fontSize: 12, color: context.textTertiary),
               ),
               if (log.pm25Standard != null)
                 _AqiIndicator(pm25: log.pm25Standard!),
@@ -140,7 +137,7 @@ class _AirQualityCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w500,
-              color: Colors.white.withValues(alpha: 0.7),
+              color: context.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
@@ -174,7 +171,7 @@ class _AirQualityCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: Colors.white.withValues(alpha: 0.7),
+                color: context.textSecondary,
               ),
             ),
             const SizedBox(height: 8),

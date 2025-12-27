@@ -120,7 +120,7 @@ class _AdminProductsScreenState extends ConsumerState<AdminProductsScreen> {
                         Icon(
                           Icons.inventory_2_outlined,
                           size: 64,
-                          color: Colors.white.withValues(alpha: 0.3),
+                          color: context.textTertiary,
                         ),
                         const SizedBox(height: 16),
                         const Text('No products found'),
@@ -340,7 +340,7 @@ class _ProductListItem extends StatelessWidget {
                       '${product.category.label} • ${product.sellerName}',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.white.withValues(alpha: 0.6),
+                        color: context.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -357,28 +357,28 @@ class _ProductListItem extends StatelessWidget {
                         Icon(
                           Icons.visibility,
                           size: 14,
-                          color: Colors.white.withValues(alpha: 0.5),
+                          color: context.textTertiary,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           '${product.viewCount}',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.white.withValues(alpha: 0.5),
+                            color: context.textTertiary,
                           ),
                         ),
                         const SizedBox(width: 12),
                         Icon(
                           Icons.shopping_cart,
                           size: 14,
-                          color: Colors.white.withValues(alpha: 0.5),
+                          color: context.textTertiary,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           '${product.salesCount}',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.white.withValues(alpha: 0.5),
+                            color: context.textTertiary,
                           ),
                         ),
                       ],

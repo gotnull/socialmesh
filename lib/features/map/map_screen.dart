@@ -450,7 +450,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
         actions: [
@@ -1497,10 +1497,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
               totalNodes > 0
                   ? '$totalNodes nodes discovered but none have\nreported GPS position yet.'
                   : 'Nodes will appear on the map once they\nreport their GPS position.',
-              style: TextStyle(
-                fontSize: 14,
-                color: context.textSecondary,
-              ),
+              style: TextStyle(fontSize: 14, color: context.textSecondary),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 24),
@@ -1893,9 +1890,7 @@ class _NodeListPanel extends StatelessWidget {
         decoration: BoxDecoration(
           color: context.card,
           border: Border(
-            right: BorderSide(
-              color: context.border.withValues(alpha: 0.5),
-            ),
+            right: BorderSide(color: context.border.withValues(alpha: 0.5)),
           ),
           boxShadow: [
             BoxShadow(
@@ -1953,7 +1948,7 @@ class _NodeListPanel extends StatelessWidget {
               padding: const EdgeInsets.all(12),
               child: TextField(
                 controller: searchController,
-                style: TextStyle(color: Colors.white, fontSize: 14),
+                style: TextStyle(color: context.textPrimary, fontSize: 14),
                 decoration: InputDecoration(
                   hintText: 'Search nodes...',
                   hintStyle: TextStyle(
@@ -2111,10 +2106,7 @@ class _NodeListItem extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: AppTheme.warningYellow,
                             shape: BoxShape.circle,
-                            border: Border.all(
-                              color: context.card,
-                              width: 1.5,
-                            ),
+                            border: Border.all(color: context.card, width: 1.5),
                           ),
                           child: Center(
                             child: Text(
@@ -2326,9 +2318,7 @@ class _FilterBar extends StatelessWidget {
                         : context.background,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: isSelected
-                          ? context.accentColor
-                          : context.border,
+                      color: isSelected ? context.accentColor : context.border,
                       width: isSelected ? 1.5 : 1,
                     ),
                   ),

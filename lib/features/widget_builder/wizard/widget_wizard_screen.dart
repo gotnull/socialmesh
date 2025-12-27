@@ -772,7 +772,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
         actions: [
@@ -1400,8 +1400,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             const SizedBox(width: 8),
             Text(
               title,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: context.textPrimary,
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
@@ -2538,7 +2538,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                   Expanded(
                     child: Text(
                       bindingLabel,
-                      style: const TextStyle(color: Colors.white, fontSize: 13),
+                      style: TextStyle(
+                        color: context.textPrimary,
+                        fontSize: 13,
+                      ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -2884,7 +2887,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             children: [
               Text(
                 'Data Points',
-                style: TextStyle(color: Colors.white, fontSize: 13),
+                style: TextStyle(color: context.textPrimary, fontSize: 13),
               ),
               Text(
                 '$_dataPoints points',
@@ -2990,7 +2993,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         children: [
           Text(
             'Gradient Fill',
-            style: TextStyle(color: Colors.white, fontSize: 13),
+            style: TextStyle(color: context.textPrimary, fontSize: 13),
           ),
           SizedBox(height: 4),
           Text(

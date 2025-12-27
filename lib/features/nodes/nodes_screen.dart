@@ -1762,7 +1762,7 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
             Text(
               'Reboot Device',
               style: TextStyle(
-                color: Colors.white,
+                color: context.textPrimary,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -1843,7 +1843,7 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
             Text(
               'Shutdown Device',
               style: TextStyle(
-                color: Colors.white,
+                color: context.textPrimary,
                 fontWeight: FontWeight.w600,
               ),
             ),

@@ -452,16 +452,16 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
         backgroundColor: context.background,
         leading: widget.isOnboarding
             ? IconButton(
-                icon: Icon(Icons.arrow_back, color: Colors.white),
+                icon: Icon(Icons.arrow_back, color: context.textPrimary),
                 onPressed: () => Navigator.of(context).pop(),
               )
             : null,
         title: Text(
           widget.isOnboarding ? 'Connect Device' : 'Meshtastic',
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
         actions: [
@@ -537,7 +537,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                         Text(
                           'Scanning for nearby devices',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: context.textPrimary,
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
                           ),
@@ -620,10 +620,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                   Text(
                     'Make sure Bluetooth is enabled and\nyour Meshtastic device is powered on',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: context.textTertiary,
-                    ),
+                    style: TextStyle(fontSize: 14, color: context.textTertiary),
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
@@ -699,10 +696,10 @@ class _DeviceCard extends StatelessWidget {
                     children: [
                       Text(
                         device.name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: context.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -789,9 +786,7 @@ class _DeviceDetailsTable extends StatelessWidget {
 
             return Container(
               decoration: BoxDecoration(
-                color: isOdd
-                    ? const Color(0xFF29303D)
-                    : context.background,
+                color: isOdd ? const Color(0xFF29303D) : context.background,
                 border: Border(
                   bottom: index < details.length - 1
                       ? BorderSide(color: context.border, width: 1)
@@ -811,10 +806,7 @@ class _DeviceDetailsTable extends StatelessWidget {
                         ),
                         decoration: BoxDecoration(
                           border: Border(
-                            right: BorderSide(
-                              color: context.border,
-                              width: 1,
-                            ),
+                            right: BorderSide(color: context.border, width: 1),
                           ),
                         ),
                         child: Text(
@@ -837,9 +829,9 @@ class _DeviceDetailsTable extends StatelessWidget {
                         ),
                         child: Text(
                           item.$2,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
-                            color: Colors.white,
+                            color: context.textPrimary,
                             fontWeight: FontWeight.w500,
                           ),
                           textAlign: TextAlign.right,
