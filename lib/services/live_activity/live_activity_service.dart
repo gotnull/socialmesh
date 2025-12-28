@@ -113,11 +113,9 @@ class LiveActivityService {
       return false;
     }
 
-    // End any existing activity first
-    if (_currentActivityId != null) {
-      AppLogging.liveActivity('Ending existing activity: $_currentActivityId');
-      await endActivity();
-    }
+    // End ALL existing activities first (handles app restart scenario where
+    // _currentActivityId is null but old activities still exist)
+    await endAllActivities();
 
     try {
       final activityData = _buildActivityData(
