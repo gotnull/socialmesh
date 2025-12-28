@@ -117,10 +117,78 @@ Environment variables:
 |----------|---------|-------------|
 | `PORT` | `3001` | HTTP server port |
 | `MQTT_BROKER` | `mqtt://mqtt.meshtastic.org` | MQTT broker URL |
-| `MQTT_USERNAME` | (empty) | MQTT username (optional) |
-| `MQTT_PASSWORD` | (empty) | MQTT password (optional) |
-| `MQTT_TOPIC` | `msh/+/2/e/#` | MQTT topic pattern |
+| `MQTT_USERNAME` | `meshdev` | MQTT username |
+| `MQTT_PASSWORD` | `large4cats` | MQTT password |
+| `MQTT_TOPICS` | `msh/+/2/e/#,msh/+/2/json/#` | MQTT topic patterns |
 | `NODE_EXPIRY_HOURS` | `24` | Hours before nodes are considered stale |
+
+## Cloud Deployment
+
+### Railway (Recommended - $5-20/month)
+
+1. **Install Railway CLI:**
+   ```bash
+   npm install -g @railway/cli
+   railway login
+   ```
+
+2. **Deploy from mesh-observer directory:**
+   ```bash
+   cd mesh-observer
+   railway init
+   railway up
+   ```
+
+3. **Add persistent volume for SQLite:**
+   - Go to Railway dashboard → Your project → Settings
+   - Add a Volume, mount path: `/app/data`
+
+4. **Get your URL:**
+   - Railway provides a URL like `mesh-observer-xxx.up.railway.app`
+   - Update your DNS: `api.socialmesh.app` → Railway URL
+
+### Fly.io (Alternative - $5-15/month)
+
+1. **Install Fly CLI:**
+   ```bash
+   curl -L https://fly.io/install.sh | sh
+   fly auth login
+   ```
+
+2. **Create fly.toml:**
+   ```toml
+   app = "socialmesh-mesh-observer"
+   primary_region = "sjc"
+   
+   [build]
+     dockerfile = "Dockerfile"
+   
+   [http_service]
+     internal_port = 3001
+     force_https = true
+   
+   [mounts]
+     source = "mesh_data"
+     destination = "/app/data"
+   ```
+
+3. **Deploy:**
+   ```bash
+   cd mesh-observer
+   fly launch --no-deploy
+   fly volumes create mesh_data --size 1
+   fly deploy
+   ```
+
+### Update DNS
+
+After deployment, update your DNS:
+- `api.socialmesh.app` CNAME → `your-railway-url.up.railway.app`
+
+Or update `.env` in the Flutter app:
+```
+WORLD_MESH_API_URL=https://your-deployed-url.up.railway.app
+```
 
 ## How It Works
 
