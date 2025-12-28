@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:socialmesh/core/theme.dart';
 
 /// Custom animation utilities that complement the `animations` package.
 ///
@@ -1018,7 +1019,7 @@ class ThemedSwitch extends StatelessWidget {
     return Switch.adaptive(
       value: value,
       onChanged: onChanged,
-      activeThumbColor: Colors.white,
+      activeThumbColor: SemanticColors.onAccent,
       activeTrackColor: accentColor,
       inactiveThumbColor: Colors.grey.shade400,
       inactiveTrackColor: Colors.grey.shade700,
@@ -1280,7 +1281,7 @@ class RippleAnimation extends StatefulWidget {
   const RippleAnimation({
     super.key,
     required this.child,
-    this.color = Colors.white24,
+    this.color = const Color(0x3DFFFFFF), // SemanticColors.glow equivalent
     this.duration = const Duration(milliseconds: 600),
     this.enabled = true,
   });

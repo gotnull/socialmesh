@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:socialmesh/core/theme.dart';
 
 /// Enum for different secret gesture patterns
 enum SecretGesturePattern {
@@ -422,7 +423,7 @@ class _RippleEffect {
   final Offset position;
   final Color color;
 
-  _RippleEffect({required this.position, this.color = Colors.white});
+  _RippleEffect({required this.position, this.color = SemanticColors.onBrand});
 }
 
 class _RippleWidget extends StatefulWidget {
@@ -498,7 +499,7 @@ class _ProgressIndicator extends StatelessWidget {
         width: 40,
         height: 3,
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.2),
+          color: SemanticColors.glow(0.2),
           borderRadius: BorderRadius.circular(2),
         ),
         child: FractionallySizedBox(

@@ -700,7 +700,7 @@ class _SosSheetContentState extends State<SosSheetContent> {
                       onPressed: _canSend && !_isSending ? _sendSos : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.errorRed,
-                        foregroundColor: Colors.white,
+                        foregroundColor: SemanticColors.onAccent,
                         disabledBackgroundColor: context.border,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
@@ -713,7 +713,7 @@ class _SosSheetContentState extends State<SosSheetContent> {
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: Colors.white,
+                                color: SemanticColors.onAccent,
                               ),
                             )
                           : Row(

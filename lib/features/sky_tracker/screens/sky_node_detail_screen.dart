@@ -180,7 +180,7 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen> {
         Text(
           code,
           style: TextStyle(
-            color: Colors.white,
+            color: context.textPrimary,
             fontSize: 28,
             fontWeight: FontWeight.bold,
             letterSpacing: 2,

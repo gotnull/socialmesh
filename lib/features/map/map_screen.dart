@@ -1236,10 +1236,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
                             const SizedBox(width: 8),
                             Text(
                               '${nodesWithPosition.length}${nodesWithPosition.length != allNodesWithPosition.length ? '/${allNodesWithPosition.length}' : ''} nodes',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w500,
-                                color: Colors.white,
+                                color: context.textPrimary,
                               ),
                             ),
                             const SizedBox(width: 4),
@@ -1364,7 +1364,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: context.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
@@ -1489,7 +1489,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
-                color: Colors.white,
+                color: context.textPrimary,
               ),
             ),
             const SizedBox(height: 8),
@@ -1922,7 +1922,7 @@ class _NodeListPanel extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        color: context.textPrimary,
                       ),
                     ),
                   ),
@@ -2140,7 +2140,7 @@ class _NodeListItem extends StatelessWidget {
                               color: isSelected
                                   ? Colors.white
                                   : (node.isOnline
-                                        ? Colors.white
+                                        ? context.textPrimary
                                         : context.textSecondary),
                             ),
                             overflow: TextOverflow.ellipsis,
@@ -2285,10 +2285,10 @@ class _FilterBar extends StatelessWidget {
               SizedBox(width: 8),
               Text(
                 'Filter Nodes',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white,
+                  color: context.textPrimary,
                 ),
               ),
               const Spacer(),

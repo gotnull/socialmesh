@@ -1142,14 +1142,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             leading: Icon(
               Icons.key,
               color: channel.psk.isNotEmpty
-                  ? Colors.white
+                  ? context.textPrimary
                   : context.textTertiary,
             ),
             title: Text(
               'View Encryption Key',
               style: TextStyle(
                 color: channel.psk.isNotEmpty
-                    ? Colors.white
+                    ? context.textPrimary
                     : context.textTertiary,
               ),
             ),
@@ -1165,14 +1165,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             leading: Icon(
               Icons.qr_code,
               color: channel.psk.isNotEmpty
-                  ? Colors.white
+                  ? context.textPrimary
                   : context.textTertiary,
             ),
             title: Text(
               'Show QR Code',
               style: TextStyle(
                 color: channel.psk.isNotEmpty
-                    ? Colors.white
+                    ? context.textPrimary
                     : context.textTertiary,
               ),
             ),

@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:socialmesh/core/theme.dart';
 
 /// A 3D flip/rotate text widget that animates number changes with perspective
 /// Similar to a flip clock or rotating billboard effect
@@ -108,7 +109,7 @@ class _Flip3DTextState extends State<Flip3DText>
   Widget build(BuildContext context) {
     final defaultStyle = Theme.of(context).textTheme.headlineLarge?.copyWith(
       fontWeight: FontWeight.bold,
-      color: Colors.white,
+      color: SemanticColors.onBrand,
     );
     final effectiveStyle = widget.style ?? defaultStyle;
 
@@ -299,7 +300,7 @@ class _Flip3DPercentageState extends State<Flip3DPercentage>
                       colors: [
                         effectiveColor,
                         effectiveColor.withValues(alpha: 0.7),
-                        Colors.white.withValues(alpha: 0.9),
+                        SemanticColors.glow(0.9),
                         effectiveColor.withValues(alpha: 0.7),
                         effectiveColor,
                       ],
@@ -316,7 +317,7 @@ class _Flip3DPercentageState extends State<Flip3DPercentage>
                           style: TextStyle(
                             fontSize: _fontSize,
                             fontWeight: FontWeight.w800,
-                            color: Colors.white,
+                            color: SemanticColors.onBrand,
                             height: 1,
                             shadows: [
                               Shadow(
@@ -337,7 +338,7 @@ class _Flip3DPercentageState extends State<Flip3DPercentage>
                           style: TextStyle(
                             fontSize: _suffixSize,
                             fontWeight: FontWeight.w600,
-                            color: Colors.white.withValues(alpha: 0.8),
+                            color: SemanticColors.glow(0.8),
                             height: 1,
                           ),
                         ),
@@ -355,7 +356,7 @@ class _Flip3DPercentageState extends State<Flip3DPercentage>
                 widget.label!,
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.white.withValues(alpha: 0.6),
+                  color: SemanticColors.glow(0.6),
                   letterSpacing: 1.5,
                   fontWeight: FontWeight.w500,
                 ),
@@ -392,7 +393,7 @@ class Flip3DOdometer extends StatelessWidget {
 
     final defaultStyle = Theme.of(context).textTheme.displayMedium?.copyWith(
       fontWeight: FontWeight.bold,
-      color: Colors.white,
+      color: SemanticColors.onBrand,
       fontFeatures: const [FontFeature.tabularFigures()],
     );
 
@@ -414,7 +415,7 @@ class Flip3DOdometer extends StatelessWidget {
           suffix,
           style: (style ?? defaultStyle)?.copyWith(
             fontSize: ((style ?? defaultStyle)?.fontSize ?? 24) * 0.6,
-            color: Colors.white.withValues(alpha: 0.7),
+            color: SemanticColors.glow(0.7),
           ),
         ),
       ],
@@ -494,10 +495,7 @@ class _FlipDigitState extends State<_FlipDigit>
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [
-                  Colors.white.withValues(alpha: 0.1),
-                  Colors.transparent,
-                ],
+                colors: [SemanticColors.glow(0.1), Colors.transparent],
               ),
               borderRadius: BorderRadius.circular(4),
             ),
@@ -660,7 +658,7 @@ class _Flip3DPercentageMinimalState extends State<Flip3DPercentageMinimal>
                 widget.label!,
                 style: TextStyle(
                   fontSize: 11,
-                  color: Colors.white.withValues(alpha: 0.5),
+                  color: SemanticColors.glow(0.5),
                   letterSpacing: 1.2,
                   fontWeight: FontWeight.w500,
                 ),

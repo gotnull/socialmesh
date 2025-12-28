@@ -207,10 +207,10 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
         centerTitle: true,
         title: Text(
           _currentMode.label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
         actions: [
@@ -1600,10 +1600,7 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
           const SizedBox(width: 8),
           Text(
             label,
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.white.withValues(alpha: 0.7),
-            ),
+            style: TextStyle(fontSize: 11, color: context.textSecondary),
           ),
         ],
       ),
@@ -1614,15 +1611,9 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: Colors.white.withValues(alpha: 0.5)),
+        Icon(icon, size: 14, color: context.textTertiary),
         const SizedBox(width: 6),
-        Text(
-          text,
-          style: TextStyle(
-            fontSize: 11,
-            color: Colors.white.withValues(alpha: 0.5),
-          ),
-        ),
+        Text(text, style: TextStyle(fontSize: 11, color: context.textTertiary)),
       ],
     );
   }
@@ -1697,10 +1688,7 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
         children: [
           Text(
             label,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.white.withValues(alpha: 0.6),
-            ),
+            style: TextStyle(fontSize: 12, color: context.textSecondary),
           ),
           Text(
             value,
@@ -1764,7 +1752,7 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
                             mode.description,
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.white.withValues(alpha: 0.6),
+                              color: context.textSecondary,
                             ),
                           ),
                           selected: mode == _currentMode,

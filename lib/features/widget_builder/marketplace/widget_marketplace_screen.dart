@@ -850,7 +850,7 @@ class _CategoryScreenState extends ConsumerState<_CategoryScreen> {
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
       ),

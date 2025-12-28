@@ -259,7 +259,7 @@ class MeshGlobeState extends State<MeshGlobe> {
             Text(
               name,
               style: const TextStyle(
-                color: Colors.white,
+                color: SemanticColors.onBrand,
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
                 shadows: [Shadow(color: Colors.black, blurRadius: 3)],

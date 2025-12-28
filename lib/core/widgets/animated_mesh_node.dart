@@ -4,6 +4,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
+import 'package:socialmesh/core/theme.dart';
+
 /// Physics modes for accelerometer-controlled mesh
 enum MeshPhysicsMode {
   /// Momentum mode: accelerometer gives impulse, mesh continues spinning with friction
@@ -913,7 +915,7 @@ class _IcosahedronPainter extends CustomPainter {
 
       // Draw bright shimmer dot
       final shimmerPaint = Paint()
-        ..color = Colors.white.withAlpha(
+        ..color = SemanticColors.onBrand.withAlpha(
           (200 * edgeShimmer * depthFactor).round(),
         )
         ..maskFilter = MaskFilter.blur(BlurStyle.normal, baseWidth * 2);
@@ -1078,7 +1080,7 @@ class _IcosahedronPainter extends CustomPainter {
         point.dy - baseRadius * 0.3,
       );
       final highlightPaint = Paint()
-        ..color = Colors.white.withAlpha((70 * opacity).round())
+        ..color = SemanticColors.glow(0.27 * opacity)
         ..style = PaintingStyle.fill;
       canvas.drawCircle(highlightOffset, baseRadius * 0.35, highlightPaint);
     }

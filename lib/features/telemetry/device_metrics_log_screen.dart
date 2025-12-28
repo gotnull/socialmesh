@@ -442,8 +442,8 @@ class _DeviceGraphView extends StatelessWidget {
                         final log = sortedLogs[index];
                         return LineTooltipItem(
                           '${spot.y.toStringAsFixed(selectedMetric == _GraphMetric.voltage ? 2 : 0)}${selectedMetric.unit}\n${DateFormat('MMM d HH:mm').format(log.timestamp)}',
-                          const TextStyle(
-                            color: Colors.white,
+                          TextStyle(
+                            color: context.textPrimary,
                             fontWeight: FontWeight.bold,
                           ),
                         );

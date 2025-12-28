@@ -323,7 +323,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: Colors.white,
+                color: context.textPrimary,
               ),
             ),
             const SizedBox(height: 8),
@@ -507,10 +507,10 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
                         Expanded(
                           child: Text(
                             item.displayName,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                              color: context.textPrimary,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),

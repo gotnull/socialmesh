@@ -396,7 +396,7 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
         title: Text(
           node.displayName,
           style: theme.textTheme.bodyLarge?.copyWith(
-            color: Colors.white,
+            color: context.textPrimary,
             fontWeight: FontWeight.w500,
           ),
         ),

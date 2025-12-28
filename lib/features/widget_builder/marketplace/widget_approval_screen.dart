@@ -289,7 +289,7 @@ class _PendingWidgetCard extends StatelessWidget {
                   child: Text(
                     widget.name,
                     style: TextStyle(
-                      color: Colors.white,
+                      color: context.textPrimary,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),

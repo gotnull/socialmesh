@@ -275,7 +275,7 @@ class MeshMapWidget extends StatelessWidget {
           ),
         ],
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.8),
+          color: SemanticColors.onMarker.withValues(alpha: 0.8),
           width: 2,
         ),
       ),
@@ -283,7 +283,7 @@ class MeshMapWidget extends StatelessWidget {
         child: Text(
           _formatClusterCount(count),
           style: const TextStyle(
-            color: Colors.white,
+            color: SemanticColors.onMarker,
             fontWeight: FontWeight.bold,
             fontSize: 12,
           ),
@@ -350,7 +350,10 @@ class MeshNodeMarker extends StatelessWidget {
       decoration: BoxDecoration(
         color: baseColor,
         shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: isSelected ? 3 : 2),
+        border: Border.all(
+          color: SemanticColors.onMarker,
+          width: isSelected ? 3 : 2,
+        ),
         boxShadow: [
           BoxShadow(
             color: baseColor.withValues(alpha: isSelected ? 0.6 : 0.4),
@@ -359,7 +362,7 @@ class MeshNodeMarker extends StatelessWidget {
           ),
           if (isSelected)
             BoxShadow(
-              color: Colors.white.withValues(alpha: 0.3),
+              color: SemanticColors.glow(0.3),
               blurRadius: 4,
               spreadRadius: 1,
             ),
@@ -367,13 +370,13 @@ class MeshNodeMarker extends StatelessWidget {
       ),
       child: Center(
         child: isMyNode
-            ? const Icon(Icons.person, color: Colors.white, size: 20)
+            ? const Icon(Icons.person, color: SemanticColors.onMarker, size: 20)
             : Text(
                 (node.shortName?.isNotEmpty ?? false)
                     ? node.shortName![0].toUpperCase()
                     : '?',
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: SemanticColors.onMarker,
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                 ),
@@ -404,7 +407,7 @@ class MiniMeshNodeMarker extends StatelessWidget {
       decoration: BoxDecoration(
         color: color,
         shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 2),
+        border: Border.all(color: SemanticColors.onMarker, width: 2),
         boxShadow: [
           BoxShadow(
             color: color.withValues(alpha: 0.4),

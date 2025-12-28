@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:socialmesh/core/theme.dart';
 
 import '../../providers/app_providers.dart';
 import 'animated_mesh_node.dart';
@@ -349,7 +350,7 @@ class _OrbitingChipsPainter extends CustomPainter {
       style: TextStyle(
         fontSize: 11 * scale,
         fontWeight: FontWeight.w600,
-        color: Colors.white.withValues(alpha: opacity),
+        color: SemanticColors.glow(opacity),
         letterSpacing: 0.3,
       ),
     );
@@ -409,7 +410,7 @@ class _OrbitingChipsPainter extends CustomPainter {
       Radius.circular(chipRadius * 0.8),
     );
     final highlightPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.1 * opacity)
+      ..color = SemanticColors.glow(0.1 * opacity)
       ..style = PaintingStyle.fill;
     canvas.drawRRect(highlightRect, highlightPaint);
 

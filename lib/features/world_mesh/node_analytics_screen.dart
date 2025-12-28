@@ -154,7 +154,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
             Text(
               'Clear History',
               style: TextStyle(
-                color: Colors.white,
+                color: context.textPrimary,
                 fontWeight: FontWeight.w600,
               ),
             ),

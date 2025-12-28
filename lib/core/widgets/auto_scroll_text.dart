@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:socialmesh/core/theme.dart';
 
 /// Auto-scrolling text widget for long text.
 /// Only scrolls if the text overflows the available width.
@@ -168,10 +169,10 @@ class _AutoScrollTextState extends State<AutoScrollText> {
         // Build gradient stops
         final List<double> stops = [0.0, fadeStop, 1.0 - fadeStop, 1.0];
         final List<Color> colors = [
-          showLeadingFade ? Colors.transparent : Colors.white,
-          Colors.white,
-          Colors.white,
-          showTrailingFade ? Colors.transparent : Colors.white,
+          showLeadingFade ? Colors.transparent : SemanticColors.highContrast,
+          SemanticColors.highContrast,
+          SemanticColors.highContrast,
+          showTrailingFade ? Colors.transparent : SemanticColors.highContrast,
         ];
 
         return ShaderMask(

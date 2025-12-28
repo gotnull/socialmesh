@@ -67,7 +67,7 @@ class _MeshReachabilityScreenState
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white,
+                  color: context.textPrimary,
                 ),
               ),
               const SizedBox(width: 8),
@@ -275,7 +275,7 @@ class _InfoSection extends StatelessWidget {
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
         const SizedBox(height: 4),
@@ -532,10 +532,10 @@ class _ReachabilityNodeCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             nodeData.node.displayName,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                              color: context.textPrimary,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,

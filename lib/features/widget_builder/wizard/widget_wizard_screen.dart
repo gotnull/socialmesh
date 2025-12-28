@@ -604,7 +604,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.errorRed,
-              foregroundColor: Colors.white,
+              foregroundColor: SemanticColors.onAccent,
             ),
             child: const Text('Discard'),
           ),
@@ -703,7 +703,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
               onPressed: () => Navigator.pop(context, true),
               style: ElevatedButton.styleFrom(
                 backgroundColor: context.accentColor,
-                foregroundColor: Colors.white,
+                foregroundColor: SemanticColors.onAccent,
               ),
               child: const Text('Switch Template'),
             ),
@@ -848,7 +848,11 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                     ),
                     child: Center(
                       child: isCompleted
-                          ? Icon(Icons.check, size: 16, color: Colors.white)
+                          ? Icon(
+                              Icons.check,
+                              size: 16,
+                              color: SemanticColors.onAccent,
+                            )
                           : Text(
                               '${index + 1}',
                               style: TextStyle(
@@ -1467,7 +1471,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                           style: TextStyle(
                             color: isSelected
                                 ? context.accentColor
-                                : Colors.white,
+                                : context.textPrimary,
                             fontSize: 13,
                             fontWeight: isSelected
                                 ? FontWeight.w600
@@ -1624,8 +1628,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                     children: [
                       Text(
                         action.label,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: context.textPrimary,
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                         ),
@@ -1836,7 +1840,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                 Text(
                   'Cannot Save Widget',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: context.textPrimary,
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
                   ),
@@ -1881,7 +1885,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
               color: color,
               shape: BoxShape.circle,
               border: isSelected
-                  ? Border.all(color: Colors.white, width: 3)
+                  ? Border.all(color: SemanticColors.onMarker, width: 3)
                   : null,
               boxShadow: isSelected
                   ? [
@@ -1894,7 +1898,11 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                   : null,
             ),
             child: isSelected
-                ? const Icon(Icons.check, color: Colors.white, size: 22)
+                ? const Icon(
+                    Icons.check,
+                    color: SemanticColors.onMarker,
+                    size: 22,
+                  )
                 : null,
           ),
         );
@@ -1948,7 +1956,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                         style: TextStyle(
                           color: isSelected
                               ? context.accentColor
-                              : Colors.white,
+                              : context.textPrimary,
                           fontSize: 12,
                           fontWeight: isSelected
                               ? FontWeight.w600
@@ -2323,7 +2331,9 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                   Text(
                     'Merge into Single Chart',
                     style: TextStyle(
-                      color: _mergeCharts ? context.accentColor : Colors.white,
+                      color: _mergeCharts
+                          ? context.accentColor
+                          : context.textPrimary,
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
                     ),
@@ -2570,13 +2580,16 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                             color: color,
                             shape: BoxShape.circle,
                             border: isSelected
-                                ? Border.all(color: Colors.white, width: 2)
+                                ? Border.all(
+                                    color: SemanticColors.onMarker,
+                                    width: 2,
+                                  )
                                 : null,
                           ),
                           child: isSelected
                               ? const Icon(
                                   Icons.check,
-                                  color: Colors.white,
+                                  color: SemanticColors.onMarker,
                                   size: 14,
                                 )
                               : null,
@@ -2664,7 +2677,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                   Expanded(
                     child: Text(
                       bindingLabel,
-                      style: const TextStyle(color: Colors.white, fontSize: 13),
+                      style: TextStyle(
+                        color: context.textPrimary,
+                        fontSize: 13,
+                      ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -2684,13 +2700,16 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                             color: color,
                             shape: BoxShape.circle,
                             border: isSelected
-                                ? Border.all(color: Colors.white, width: 2)
+                                ? Border.all(
+                                    color: SemanticColors.onMarker,
+                                    width: 2,
+                                  )
                                 : null,
                           ),
                           child: isSelected
                               ? const Icon(
                                   Icons.check,
-                                  color: Colors.white,
+                                  color: SemanticColors.onMarker,
                                   size: 14,
                                 )
                               : null,
@@ -2800,7 +2819,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         Text(
           'Advanced Options',
           style: TextStyle(
-            color: Colors.white,
+            color: context.textPrimary,
             fontSize: 15,
             fontWeight: FontWeight.w600,
           ),
@@ -3109,7 +3128,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                                         shape: BoxShape.circle,
                                         border: isSelected
                                             ? Border.all(
-                                                color: Colors.white,
+                                                color: SemanticColors.onMarker,
                                                 width: 2,
                                               )
                                             : null,
@@ -3160,7 +3179,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                                         shape: BoxShape.circle,
                                         border: isSelected
                                             ? Border.all(
-                                                color: Colors.white,
+                                                color: SemanticColors.onMarker,
                                                 width: 2,
                                               )
                                             : null,
@@ -3203,7 +3222,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         children: [
           Text(
             'Data Display',
-            style: TextStyle(color: Colors.white, fontSize: 13),
+            style: TextStyle(color: context.textPrimary, fontSize: 13),
           ),
           const SizedBox(height: 10),
           Row(
@@ -3238,7 +3257,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                           style: TextStyle(
                             color: isSelected
                                 ? context.accentColor
-                                : Colors.white,
+                                : context.textPrimary,
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
                           ),
@@ -3283,7 +3302,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         children: [
           Text(
             'Comparison Baseline',
-            style: TextStyle(color: Colors.white, fontSize: 13),
+            style: TextStyle(color: context.textPrimary, fontSize: 13),
           ),
           const SizedBox(height: 10),
           Row(
@@ -3314,7 +3333,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                           opt.$3,
                           color: isSelected
                               ? context.accentColor
-                              : Colors.white,
+                              : context.textPrimary,
                           size: 18,
                         ),
                         SizedBox(height: 4),
@@ -3323,7 +3342,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                           style: TextStyle(
                             color: isSelected
                                 ? context.accentColor
-                                : Colors.white,
+                                : context.textPrimary,
                             fontSize: 10,
                           ),
                         ),
@@ -3389,10 +3408,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
+                        Text(
                           'Edit Threshold',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: context.textPrimary,
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
                           ),
@@ -3450,7 +3469,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                               color: color,
                               shape: BoxShape.circle,
                               border: isSelected
-                                  ? Border.all(color: Colors.white, width: 3)
+                                  ? Border.all(
+                                      color: SemanticColors.onMarker,
+                                      width: 3,
+                                    )
                                   : null,
                               boxShadow: isSelected
                                   ? [
@@ -3465,7 +3487,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                             child: isSelected
                                 ? const Icon(
                                     Icons.check,
-                                    color: Colors.white,
+                                    color: SemanticColors.onMarker,
                                     size: 18,
                                   )
                                 : null,
@@ -3490,7 +3512,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                         decimal: true,
                         signed: true,
                       ),
-                      style: const TextStyle(color: Colors.white, fontSize: 16),
+                      style: TextStyle(
+                        color: context.textPrimary,
+                        fontSize: 16,
+                      ),
                       decoration: InputDecoration(
                         hintText: 'Enter threshold value',
                         hintStyle: TextStyle(color: context.textSecondary),
@@ -3526,7 +3551,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                     SizedBox(height: 8),
                     TextField(
                       controller: labelController,
-                      style: const TextStyle(color: Colors.white, fontSize: 16),
+                      style: TextStyle(
+                        color: context.textPrimary,
+                        fontSize: 16,
+                      ),
                       decoration: InputDecoration(
                         hintText: 'e.g., "Warning", "Critical"',
                         hintStyle: TextStyle(color: context.textSecondary),
@@ -3574,7 +3602,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: selectedColor,
-                          foregroundColor: Colors.white,
+                          foregroundColor: SemanticColors.onAccent,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
@@ -3646,7 +3674,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         children: [
           Text(
             'Threshold Lines',
-            style: TextStyle(color: Colors.white, fontSize: 13),
+            style: TextStyle(color: context.textPrimary, fontSize: 13),
           ),
           SizedBox(height: 4),
           Text(
@@ -3781,8 +3809,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                               // Value
                               Text(
                                 '${threshold.value}',
-                                style: const TextStyle(
-                                  color: Colors.white,
+                                style: TextStyle(
+                                  color: context.textPrimary,
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -3871,7 +3899,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         children: [
           Text(
             'Merge Style',
-            style: TextStyle(color: Colors.white, fontSize: 13),
+            style: TextStyle(color: context.textPrimary, fontSize: 13),
           ),
           const SizedBox(height: 10),
           Row(
@@ -3902,7 +3930,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                           opt.$3,
                           color: isSelected
                               ? context.accentColor
-                              : Colors.white,
+                              : context.textPrimary,
                           size: 20,
                         ),
                         SizedBox(height: 4),
@@ -3911,7 +3939,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                           style: TextStyle(
                             color: isSelected
                                 ? context.accentColor
-                                : Colors.white,
+                                : context.textPrimary,
                             fontSize: 10,
                           ),
                           textAlign: TextAlign.center,
@@ -3972,14 +4000,18 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                           ),
                         ),
                         child: _addToDashboard
-                            ? Icon(Icons.check, size: 16, color: Colors.white)
+                            ? Icon(
+                                Icons.check,
+                                size: 16,
+                                color: SemanticColors.onAccent,
+                              )
                             : null,
                       ),
                       const SizedBox(width: 10),
-                      const Text(
+                      Text(
                         'Add to Dashboard',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: context.textPrimary,
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
                         ),
@@ -4000,7 +4032,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                         : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: context.accentColor,
-                      foregroundColor: Colors.white,
+                      foregroundColor: SemanticColors.onAccent,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),

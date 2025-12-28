@@ -38,7 +38,7 @@ class ConnectingAnimation extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white,
+                  color: context.textPrimary,
                 ),
               ),
               const SizedBox(height: 12),
@@ -50,10 +50,7 @@ class ConnectingAnimation extends StatelessWidget {
                   onPressed: onCancel,
                   child: Text(
                     'Cancel',
-                    style: TextStyle(
-                      color: context.textTertiary,
-                      fontSize: 16,
-                    ),
+                    style: TextStyle(color: context.textTertiary, fontSize: 16),
                   ),
                 ),
               ],

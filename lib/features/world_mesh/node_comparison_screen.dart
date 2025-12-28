@@ -22,12 +22,12 @@ class NodeComparisonScreen extends StatelessWidget {
       backgroundColor: context.background,
       appBar: AppBar(
         backgroundColor: context.background,
-        title: const Text(
+        title: Text(
           'Compare Nodes',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
       ),
@@ -133,10 +133,10 @@ class NodeComparisonScreen extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             node.displayName,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: context.textPrimary,
             ),
             textAlign: TextAlign.center,
             maxLines: 1,

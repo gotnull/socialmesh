@@ -298,8 +298,8 @@ class _AnimatedNodeCardState extends State<_AnimatedNodeCard>
                   SizedBox(height: 4),
                   Text(
                     displayName,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: context.textPrimary,
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                     ),

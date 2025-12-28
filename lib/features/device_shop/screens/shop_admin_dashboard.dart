@@ -37,9 +37,7 @@ class ShopAdminDashboard extends ConsumerWidget {
                   const SizedBox(height: 8),
                   Text(
                     'You do not have permission to access this area.',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.7),
-                    ),
+                    style: TextStyle(color: context.textSecondary),
                   ),
                 ],
               ),
@@ -344,18 +342,12 @@ class _StatCard extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.white.withValues(alpha: 0.7),
-                ),
+                style: TextStyle(fontSize: 12, color: context.textSecondary),
               ),
               if (subtitle != null)
                 Text(
                   subtitle!,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: Colors.white.withValues(alpha: 0.5),
-                  ),
+                  style: TextStyle(fontSize: 10, color: context.textTertiary),
                 ),
             ],
           ),
@@ -458,16 +450,13 @@ class _ManagementCard extends StatelessWidget {
                       subtitle,
                       style: TextStyle(
                         fontSize: 13,
-                        color: Colors.white.withValues(alpha: 0.6),
+                        color: context.textSecondary,
                       ),
                     ),
                   ],
                 ),
               ),
-              Icon(
-                Icons.chevron_right,
-                color: Colors.white.withValues(alpha: 0.4),
-              ),
+              Icon(Icons.chevron_right, color: context.textTertiary),
             ],
           ),
         ),

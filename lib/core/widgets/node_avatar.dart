@@ -84,7 +84,7 @@ class NodeAvatar extends StatelessWidget {
             child: Text(
               displayText,
               style: TextStyle(
-                color: Colors.white,
+                color: SemanticColors.onMarker,
                 fontSize: fontSize,
                 fontWeight: FontWeight.w700,
                 letterSpacing: displayText.length > 4 ? -0.5 : 0,

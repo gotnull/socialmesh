@@ -229,7 +229,7 @@ class NodeInfoCard extends ConsumerWidget {
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: SemanticColors.onBrand,
                     ),
                   ),
                 ),
@@ -245,10 +245,10 @@ class NodeInfoCard extends ConsumerWidget {
                         Flexible(
                           child: Text(
                             node.displayName,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                              color: context.textPrimary,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -455,7 +455,7 @@ class NodeInfoCard extends ConsumerWidget {
                       label: Text('Message'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: context.accentColor,
-                        foregroundColor: Colors.white,
+                        foregroundColor: SemanticColors.onAccent,
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),

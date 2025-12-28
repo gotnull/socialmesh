@@ -96,7 +96,7 @@ class TapbackPicker extends ConsumerWidget {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.3),
+              color: context.border,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -106,7 +106,7 @@ class TapbackPicker extends ConsumerWidget {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: Colors.white.withValues(alpha: 0.7),
+              color: context.textSecondary,
             ),
           ),
           const SizedBox(height: 16),

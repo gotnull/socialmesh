@@ -1133,8 +1133,8 @@ class _SearchResultTile extends StatelessWidget {
                 children: [
                   Text(
                     node.displayName,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: context.textPrimary,
                       fontWeight: FontWeight.w500,
                       fontSize: 14,
                     ),
