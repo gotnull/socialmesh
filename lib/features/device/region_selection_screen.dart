@@ -223,15 +223,15 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
         leading: widget.isInitialSetup
             ? null
             : IconButton(
-                icon: Icon(Icons.arrow_back, color: Colors.white),
+                icon: Icon(Icons.arrow_back, color: context.textPrimary),
                 onPressed: () => Navigator.of(context).pop(),
               ),
         title: Text(
           widget.isInitialSetup ? 'Select Your Region' : 'Change Region',
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
       ),
@@ -261,10 +261,10 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             'Important: Select Your Region',
                             style: TextStyle(
-                              color: Colors.white,
+                              color: context.textPrimary,
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                             ),
@@ -273,7 +273,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                           Text(
                             'Choose the correct frequency for your location to comply with local regulations.',
                             style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.8),
+                              color: context.textSecondary,
                               fontSize: 12,
                             ),
                           ),

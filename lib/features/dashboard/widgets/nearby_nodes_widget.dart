@@ -108,10 +108,10 @@ class _NodeTile extends StatelessWidget {
                     Expanded(
                       child: Text(
                         node.displayName,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: context.textPrimary,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,

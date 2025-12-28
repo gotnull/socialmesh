@@ -655,8 +655,8 @@ class _SettingsTile extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: context.textPrimary,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),

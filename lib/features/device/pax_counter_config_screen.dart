@@ -93,7 +93,7 @@ class _PaxCounterConfigScreenState
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: context.textPrimary,
             ),
           ),
           leading: IconButton(
@@ -122,7 +122,7 @@ class _PaxCounterConfigScreenState
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
         leading: IconButton(
@@ -174,19 +174,19 @@ class _PaxCounterConfigScreenState
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'PAX Counter',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: context.textPrimary,
                         ),
                       ),
                       Text(
                         'Counts nearby WiFi and Bluetooth devices',
                         style: TextStyle(
                           fontSize: 13,
-                          color: Colors.white.withValues(alpha: 0.6),
+                          color: context.textSecondary,
                         ),
                       ),
                     ],
@@ -231,7 +231,7 @@ class _PaxCounterConfigScreenState
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: Colors.white.withValues(alpha: 0.7),
+                      color: context.textSecondary,
                     ),
                   ),
                   SizedBox(height: 16),
@@ -355,14 +355,14 @@ class _PaxCounterConfigScreenState
                         '1 min',
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.white.withValues(alpha: 0.5),
+                          color: context.textTertiary,
                         ),
                       ),
                       Text(
                         '60 min',
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.white.withValues(alpha: 0.5),
+                          color: context.textTertiary,
                         ),
                       ),
                     ],
@@ -409,10 +409,7 @@ class _PaxCounterConfigScreenState
                 Text(
                   'PAX Counter passively listens for WiFi and Bluetooth probe requests from nearby devices. '
                   'It does not store MAC addresses or any personal data.',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.white.withValues(alpha: 0.7),
-                  ),
+                  style: TextStyle(fontSize: 13, color: context.textSecondary),
                 ),
               ],
             ),
@@ -451,18 +448,15 @@ class _SettingsTile extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
-                    color: Colors.white,
+                    color: context.textPrimary,
                   ),
                 ),
                 Text(
                   subtitle,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.white.withValues(alpha: 0.5),
-                  ),
+                  style: TextStyle(fontSize: 12, color: context.textTertiary),
                 ),
               ],
             ),

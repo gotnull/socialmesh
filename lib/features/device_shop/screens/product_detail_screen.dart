@@ -904,7 +904,7 @@ class _ReviewsSection extends ConsumerWidget {
               Text(
                 'Reviews',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: context.textPrimary,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),

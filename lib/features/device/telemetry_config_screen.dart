@@ -142,12 +142,12 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen> {
         backgroundColor: context.background,
         appBar: AppBar(
           backgroundColor: context.background,
-          title: const Text(
+          title: Text(
             'Telemetry',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: context.textPrimary,
             ),
           ),
           leading: IconButton(
@@ -168,7 +168,7 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen> {
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
         leading: IconButton(
@@ -342,7 +342,7 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen> {
                     'Shorter intervals increase airtime usage.',
                     style: TextStyle(
                       fontSize: 13,
-                      color: Colors.white.withValues(alpha: 0.7),
+                      color: context.textSecondary,
                     ),
                   ),
                 ),
@@ -381,10 +381,10 @@ class _SectionHeader extends StatelessWidget {
         const SizedBox(width: 12),
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
       ],
@@ -428,19 +428,19 @@ class _TelemetrySection extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Enabled',
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
-                        color: Colors.white,
+                        color: context.textPrimary,
                       ),
                     ),
                     Text(
                       description,
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.white.withValues(alpha: 0.5),
+                        color: context.textTertiary,
                       ),
                     ),
                   ],
@@ -451,14 +451,11 @@ class _TelemetrySection extends StatelessWidget {
           ),
           if (enabled) ...[
             const SizedBox(height: 16),
-            const Divider(color: Colors.white12, height: 1),
+            Divider(color: context.border, height: 1),
             const SizedBox(height: 16),
             Text(
               'Update Interval',
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.white.withValues(alpha: 0.7),
-              ),
+              style: TextStyle(fontSize: 13, color: context.textSecondary),
             ),
             const SizedBox(height: 8),
             Row(
@@ -473,10 +470,7 @@ class _TelemetrySection extends StatelessWidget {
                 ),
                 Text(
                   ' minutes',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white.withValues(alpha: 0.5),
-                  ),
+                  style: TextStyle(fontSize: 14, color: context.textTertiary),
                 ),
               ],
             ),

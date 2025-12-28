@@ -98,7 +98,6 @@ class _ChannelTile extends StatelessWidget {
                       color: isPrimary
                           ? context.accentColor
                           : context.textSecondary,
-                      
                     ),
                   ),
                 ),
@@ -137,11 +136,10 @@ class _ChannelTile extends StatelessWidget {
                     Expanded(
                       child: Text(
                         name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                          
+                          color: context.textPrimary,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -164,7 +162,6 @@ class _ChannelTile extends StatelessWidget {
                             fontSize: 8,
                             fontWeight: FontWeight.w700,
                             color: context.accentColor,
-                            
                           ),
                         ),
                       ),
@@ -180,7 +177,6 @@ class _ChannelTile extends StatelessWidget {
                     color: messageCount > 0
                         ? context.textSecondary
                         : context.textTertiary,
-                    
                   ),
                 ),
               ],

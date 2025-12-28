@@ -411,10 +411,10 @@ class _RouteCard extends StatelessWidget {
                         children: [
                           Text(
                             route.name,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                              color: context.textPrimary,
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -429,10 +429,7 @@ class _RouteCard extends StatelessWidget {
                       ),
                     ),
                     PopupMenuButton<String>(
-                      icon: Icon(
-                        Icons.more_vert,
-                        color: Colors.white.withValues(alpha: 0.5),
-                      ),
+                      icon: Icon(Icons.more_vert, color: context.textTertiary),
                       color: context.card,
                       onSelected: (value) {
                         if (value == 'export') onExport();

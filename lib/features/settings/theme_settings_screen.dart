@@ -590,7 +590,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        color: context.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 4),

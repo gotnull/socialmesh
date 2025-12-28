@@ -912,7 +912,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                             p.$2,
                             style: TextStyle(
                               color: isSelected
-                                  ? Colors.white
+                                  ? context.textPrimary
                                   : context.textSecondary,
                               fontWeight: FontWeight.w500,
                             ),

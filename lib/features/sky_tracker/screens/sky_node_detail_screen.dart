@@ -48,7 +48,7 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen> {
               widget.skyNode.flightNumber,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: context.textPrimary,
               ),
             ),
             actions: [
@@ -348,8 +348,8 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen> {
         const Spacer(),
         Text(
           value,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: context.textPrimary,
             fontWeight: FontWeight.w600,
             fontSize: 14,
           ),
@@ -373,7 +373,7 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen> {
           Text(
             'Flight Details',
             style: TextStyle(
-              color: Colors.white,
+              color: context.textPrimary,
               fontWeight: FontWeight.bold,
               fontSize: 16,
             ),
@@ -554,8 +554,8 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen> {
               children: [
                 Text(
                   report.reporterName ?? 'Anonymous',
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: context.textPrimary,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -846,7 +846,7 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet> {
                 Text(
                   'Report Reception',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: context.textPrimary,
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),

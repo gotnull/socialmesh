@@ -187,14 +187,14 @@ class StatCardWidget extends StatelessWidget {
             padding: const EdgeInsets.all(24),
             child: Column(
               children: [
-                Icon(icon, size: 40, color: Colors.white),
+                Icon(icon, size: 40, color: context.textPrimary),
                 SizedBox(height: 16),
                 Text(
                   value,
                   style: TextStyle(
                     fontSize: 36,
                     fontWeight: FontWeight.w600,
-                    color: valueColor ?? Colors.white,
+                    color: valueColor ?? context.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -262,10 +262,10 @@ class ActionCardWidget extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: context.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 4),

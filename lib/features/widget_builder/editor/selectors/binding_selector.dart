@@ -373,7 +373,7 @@ class _BindingSelectorContentState extends State<_BindingSelectorContent> {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
-                        color: isSelected ? accentColor : Colors.white,
+                        color: isSelected ? accentColor : context.textPrimary,
                       ),
                     ),
                     Text(
@@ -442,7 +442,9 @@ class _BindingSelectorContentState extends State<_BindingSelectorContent> {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
-                            color: isSelected ? accentColor : Colors.white,
+                            color: isSelected
+                                ? accentColor
+                                : context.textPrimary,
                           ),
                         ),
                       ),

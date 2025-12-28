@@ -195,10 +195,10 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
             autoReconnectState == AutoReconnectState.scanning
                 ? 'Scanning for device...'
                 : 'Connecting...',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: context.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
@@ -547,7 +547,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
-                color: Colors.white,
+                color: context.textPrimary,
               ),
             ),
             const SizedBox(height: 8),
@@ -866,7 +866,7 @@ class _AddWidgetSheet extends ConsumerWidget {
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white,
+                  color: context.textPrimary,
                 ),
               ),
               TextButton(
@@ -998,7 +998,7 @@ class _AddWidgetSheet extends ConsumerWidget {
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                    color: context.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -1107,7 +1107,7 @@ class _WidgetOption extends StatelessWidget {
                               color: isLocked
                                   ? context.textTertiary
                                   : isAdded
-                                  ? Colors.white
+                                  ? context.textPrimary
                                   : context.textSecondary,
                             ),
                           ),

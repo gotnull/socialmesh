@@ -274,7 +274,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
         child: TextField(
           controller: _searchController,
           focusNode: _searchFocusNode,
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: context.textPrimary),
           decoration: InputDecoration(
             hintText: 'Find a node',
             hintStyle: TextStyle(color: context.textTertiary),

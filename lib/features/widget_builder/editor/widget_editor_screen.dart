@@ -323,12 +323,12 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                     color: context.accentColor,
                   ),
                   const SizedBox(width: 8),
-                  const Text(
+                  Text(
                     'Add Block',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                      color: context.textPrimary,
                     ),
                   ),
                 ],
@@ -441,7 +441,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white,
+                  color: context.textPrimary,
                 ),
               ),
             ),
@@ -536,10 +536,10 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                     children: [
                       Text(
                         title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: context.textPrimary,
                         ),
                       ),
                       Text(
@@ -616,10 +616,10 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                     children: [
                       Text(
                         item.label,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: context.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -988,10 +988,10 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                           const SizedBox(width: 8),
                           Text(
                             _getElementTypeName(element.type),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                              color: context.textPrimary,
                             ),
                           ),
                           const Spacer(),
@@ -1070,7 +1070,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
         style: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w600,
-          color: Colors.white,
+          color: context.textPrimary,
         ),
       ),
       actions: [
@@ -1078,7 +1078,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
         IconButton(
           icon: Icon(
             _showToolbox ? Icons.view_sidebar : Icons.view_sidebar_outlined,
-            color: _showToolbox ? context.accentColor : Colors.white,
+            color: _showToolbox ? context.accentColor : context.textPrimary,
           ),
           onPressed: () => setState(() => _showToolbox = !_showToolbox),
           tooltip: 'Toggle Toolbox',
@@ -1119,14 +1119,18 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
             ),
             child: Row(
               children: [
-                Icon(Icons.widgets_outlined, size: 18, color: Colors.white),
+                Icon(
+                  Icons.widgets_outlined,
+                  size: 18,
+                  color: context.textPrimary,
+                ),
                 SizedBox(width: 8),
                 Text(
                   'Elements',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                    color: context.textPrimary,
                   ),
                 ),
               ],
@@ -1293,7 +1297,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
-                            color: Colors.white,
+                            color: context.textPrimary,
                           ),
                         ),
                         const SizedBox(width: 4),
@@ -1445,15 +1449,15 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.tune, size: 18, color: Colors.white),
+                Icon(Icons.tune, size: 18, color: context.textPrimary),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     _getElementTypeName(element.type),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                      color: context.textPrimary,
                     ),
                   ),
                 ),

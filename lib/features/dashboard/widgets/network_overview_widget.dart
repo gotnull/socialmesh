@@ -133,10 +133,10 @@ class _StatItem extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           value,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
         const SizedBox(height: 2),

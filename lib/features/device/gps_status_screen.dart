@@ -39,7 +39,7 @@ class GpsStatusScreen extends ConsumerWidget {
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
       ),
@@ -175,12 +175,12 @@ class GpsStatusScreen extends ConsumerWidget {
                     color: context.textTertiary.withValues(alpha: 0.5),
                   ),
                   SizedBox(height: 16),
-                  const Text(
+                  Text(
                     'No GPS Fix',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                      color: context.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -311,10 +311,10 @@ class GpsStatusScreen extends ConsumerWidget {
                       children: [
                         Text(
                           _formatTimestamp(positionTimestamp),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                            color: context.textPrimary,
                           ),
                         ),
                         Text(
@@ -448,10 +448,10 @@ class GpsStatusScreen extends ConsumerWidget {
           const Spacer(),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: context.textPrimary,
             ),
           ),
         ],

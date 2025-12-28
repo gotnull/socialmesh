@@ -375,10 +375,10 @@ class _HomeWidgetsScreenState extends ConsumerState<HomeWidgetsScreen> {
                       children: [
                         Text(
                           step.title,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                            color: context.textPrimary,
                           ),
                         ),
                         Text(

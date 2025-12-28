@@ -236,7 +236,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen> {
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
         actions: [
@@ -474,7 +474,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen> {
                       Text(
                         'Tips for best reception',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: context.textPrimary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -588,7 +588,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen> {
                     style: TextStyle(
                       color: value == 'Select'
                           ? context.textTertiary
-                          : Colors.white,
+                          : context.textPrimary,
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                     ),

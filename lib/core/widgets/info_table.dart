@@ -42,7 +42,7 @@ class InfoTable extends StatelessWidget {
 
             return Container(
               decoration: BoxDecoration(
-                color: isOdd ? const Color(0xFF29303D) : context.background,
+                color: isOdd ? context.cardAlt : context.background,
                 border: Border(
                   bottom: index < rows.length - 1
                       ? BorderSide(color: context.border, width: 1)

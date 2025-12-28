@@ -208,7 +208,7 @@ class _HealthFactor extends StatelessWidget {
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: isGood ? Colors.white : context.textSecondary,
+            color: isGood ? context.textPrimary : context.textSecondary,
           ),
         ),
         Text(

@@ -1794,7 +1794,10 @@ class _ManageListTile extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(fontSize: 16, color: Colors.white),
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: context.textPrimary,
+                      ),
                     ),
                     if (subtitle != null) ...[
                       const SizedBox(height: 2),

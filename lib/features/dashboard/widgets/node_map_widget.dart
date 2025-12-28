@@ -111,10 +111,10 @@ class NodeMapContent extends ConsumerWidget {
                         const SizedBox(width: 6),
                         Text(
                           '${nodesWithPosition.length}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                            color: context.textPrimary,
                           ),
                         ),
                       ],

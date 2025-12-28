@@ -201,7 +201,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
         actions: [
@@ -376,7 +376,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                                             ? FontWeight.w600
                                             : FontWeight.w500,
                                         color: isSelected
-                                            ? Colors.white
+                                            ? context.textPrimary
                                             : context.textSecondary,
                                       ),
                                     ),
@@ -504,10 +504,10 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                     children: [
                       Text(
                         label,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: context.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -553,9 +553,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
             decoration: BoxDecoration(
               color: context.background,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: context.border.withValues(alpha: 0.5),
-              ),
+              border: Border.all(color: context.border.withValues(alpha: 0.5)),
             ),
             child: TextField(
               controller: controller,
@@ -564,7 +562,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
               textCapitalization: textCapitalization,
               style: TextStyle(
                 fontSize: 15,
-                color: Colors.white,
+                color: context.textPrimary,
 
                 fontWeight: FontWeight.w500,
               ),

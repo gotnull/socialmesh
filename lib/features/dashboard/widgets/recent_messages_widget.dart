@@ -108,10 +108,10 @@ class _MessageTile extends StatelessWidget {
                     Expanded(
                       child: Text(
                         senderName,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: context.textPrimary,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -130,10 +130,7 @@ class _MessageTile extends StatelessWidget {
                 SizedBox(height: 2),
                 Text(
                   message,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: context.textSecondary,
-                  ),
+                  style: TextStyle(fontSize: 13, color: context.textSecondary),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),

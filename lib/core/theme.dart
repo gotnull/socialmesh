@@ -970,3 +970,25 @@ extension ThemeAwareColors on BuildContext {
   Color get textTertiary =>
       isDarkMode ? AppTheme.textTertiary : AppTheme.textTertiaryLight;
 }
+
+/// Semantic color constants for intentional white usage on colored backgrounds.
+/// These remain visually white in both themes - use for content on accent/brand surfaces.
+class SemanticColors {
+  SemanticColors._();
+
+  /// White foreground for content on accent-colored surfaces (buttons, FABs, badges)
+  static const Color onAccent = Colors.white;
+
+  /// White foreground for content on brand gradient backgrounds
+  static const Color onBrand = Colors.white;
+
+  /// White foreground for map markers, pins, and overlays on colored backgrounds
+  static const Color onMarker = Colors.white;
+
+  /// White for QR code contrast and similar high-contrast requirements
+  static const Color highContrast = Colors.white;
+
+  /// Semi-transparent white for glows, gradients, and visual effects
+  static Color glow([double opacity = 0.5]) =>
+      Colors.white.withValues(alpha: opacity);
+}

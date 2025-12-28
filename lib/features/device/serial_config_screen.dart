@@ -148,12 +148,12 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
         backgroundColor: context.background,
         appBar: AppBar(
           backgroundColor: context.background,
-          title: const Text(
+          title: Text(
             'Serial Config',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: context.textPrimary,
             ),
           ),
         ),
@@ -170,7 +170,7 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
         actions: [
@@ -284,7 +284,7 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                              color: context.textPrimary,
                             ),
                           ),
                           SizedBox(height: 2),
@@ -384,7 +384,7 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                              color: context.textPrimary,
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -498,7 +498,7 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
                                           ? FontWeight.w600
                                           : FontWeight.w500,
                                       color: isSelected
-                                          ? Colors.white
+                                          ? context.textPrimary
                                           : context.textSecondary,
                                     ),
                                   ),
@@ -579,19 +579,16 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                    color: context.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: context.textTertiary,
-                  ),
+                  style: TextStyle(fontSize: 12, color: context.textTertiary),
                 ),
               ],
             ),

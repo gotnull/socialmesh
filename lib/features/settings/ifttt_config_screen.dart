@@ -406,7 +406,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
               keyboardType: TextInputType.number,
               textInputAction: TextInputAction.done,
               onSubmitted: (_) => FocusScope.of(context).unfocus(),
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: context.textPrimary),
               decoration: InputDecoration(
                 labelText: 'Battery Threshold',
                 labelStyle: TextStyle(color: context.textSecondary),
@@ -462,7 +462,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
               ),
               textInputAction: TextInputAction.done,
               onSubmitted: (_) => FocusScope.of(context).unfocus(),
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: context.textPrimary),
               decoration: InputDecoration(
                 labelText: 'Temperature Threshold',
                 labelStyle: TextStyle(color: context.textSecondary),
@@ -524,7 +524,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                   controller: _geofenceRadiusController,
                   keyboardType: TextInputType.number,
                   textInputAction: TextInputAction.next,
-                  style: TextStyle(color: Colors.white),
+                  style: TextStyle(color: context.textPrimary),
                   decoration: InputDecoration(
                     labelText: 'Geofence Radius',
                     labelStyle: TextStyle(color: context.textSecondary),
@@ -557,7 +557,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                     signed: true,
                   ),
                   textInputAction: TextInputAction.next,
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: context.textPrimary),
                   decoration: InputDecoration(
                     labelText: 'Center Latitude',
                     labelStyle: TextStyle(color: context.textSecondary),
@@ -592,7 +592,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                   ),
                   textInputAction: TextInputAction.done,
                   onSubmitted: (_) => FocusScope.of(context).unfocus(),
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: context.textPrimary),
                   decoration: InputDecoration(
                     labelText: 'Center Longitude',
                     labelStyle: TextStyle(color: context.textSecondary),
@@ -721,10 +721,10 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                               SizedBox(height: 2),
                               Text(
                                 _geofenceNodeName!,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.white,
+                                  color: context.textPrimary,
                                 ),
                               ),
                             ],
@@ -787,7 +787,10 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                     Expanded(
                       child: Text(
                         'Alert Cooldown',
-                        style: TextStyle(fontSize: 14, color: Colors.white),
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: context.textPrimary,
+                        ),
                       ),
                     ),
                     Container(
@@ -805,8 +808,8 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                         dropdownColor: context.card,
                         underline: const SizedBox.shrink(),
                         isDense: true,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: context.textPrimary,
                           fontSize: 14,
                         ),
                         items: const [
@@ -991,7 +994,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w500,
-              color: Colors.white,
+              color: context.textPrimary,
             ),
           ),
           subtitle: Text(
@@ -1129,10 +1132,10 @@ class _SettingsTile extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
-                      color: Colors.white,
+                      color: context.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 2),

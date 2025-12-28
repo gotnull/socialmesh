@@ -108,12 +108,12 @@ class _AmbientLightingConfigScreenState
         backgroundColor: context.background,
         appBar: AppBar(
           backgroundColor: context.background,
-          title: const Text(
+          title: Text(
             'Ambient Lighting',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: context.textPrimary,
             ),
           ),
           leading: IconButton(
@@ -134,7 +134,7 @@ class _AmbientLightingConfigScreenState
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
         leading: IconButton(
@@ -180,19 +180,19 @@ class _AmbientLightingConfigScreenState
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'LED Enabled',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
-                        color: Colors.white,
+                        color: context.textPrimary,
                       ),
                     ),
                     Text(
                       'Turn ambient lighting on or off',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.white.withValues(alpha: 0.5),
+                        color: context.textTertiary,
                       ),
                     ),
                   ],
@@ -241,7 +241,7 @@ class _AmbientLightingConfigScreenState
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
-              color: Colors.white.withValues(alpha: 0.7),
+              color: context.textSecondary,
             ),
           ),
           const SizedBox(height: 12),
@@ -283,7 +283,7 @@ class _AmbientLightingConfigScreenState
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
-              color: Colors.white.withValues(alpha: 0.7),
+              color: context.textSecondary,
             ),
           ),
           const SizedBox(height: 16),
@@ -345,7 +345,7 @@ class _AmbientLightingConfigScreenState
                     'Ambient lighting is only available on devices with LED support (RAK WisBlock, T-Beam, etc.)',
                     style: TextStyle(
                       fontSize: 13,
-                      color: Colors.white.withValues(alpha: 0.7),
+                      color: context.textSecondary,
                     ),
                   ),
                 ),
@@ -381,10 +381,7 @@ class _ColorSlider extends StatelessWidget {
             width: 50,
             child: Text(
               label,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.white.withValues(alpha: 0.7),
-              ),
+              style: TextStyle(fontSize: 14, color: context.textSecondary),
             ),
           ),
           Expanded(
@@ -407,9 +404,9 @@ class _ColorSlider extends StatelessWidget {
             child: Text(
               '$value',
               textAlign: TextAlign.right,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
-                color: Colors.white,
+                color: context.textPrimary,
                 fontFamily: 'monospace',
               ),
             ),

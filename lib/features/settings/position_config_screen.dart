@@ -1004,7 +1004,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                                     : FontWeight.w500,
                                 color: isSelected
                                     ? context.accentColor
-                                    : Colors.white,
+                                    : context.textPrimary,
                               ),
                             ),
                             Text(

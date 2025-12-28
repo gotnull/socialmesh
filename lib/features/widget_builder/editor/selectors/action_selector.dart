@@ -67,7 +67,9 @@ class _ActionSelectorState extends State<ActionSelector> {
                         ? _getActionLabel(widget.currentAction!)
                         : 'Add tap action...',
                     style: TextStyle(
-                      color: hasAction ? Colors.white : context.textSecondary,
+                      color: hasAction
+                          ? context.textPrimary
+                          : context.textSecondary,
                       fontWeight: hasAction
                           ? FontWeight.w500
                           : FontWeight.normal,
@@ -199,7 +201,7 @@ class _ActionSelectorSheetState extends State<_ActionSelectorSheet> {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: Colors.white,
+                color: context.textPrimary,
               ),
             ),
           ],
@@ -341,7 +343,7 @@ class _ActionSelectorSheetState extends State<_ActionSelectorSheet> {
                   Text(
                     title,
                     style: TextStyle(
-                      color: Colors.white,
+                      color: context.textPrimary,
                       fontWeight: isSelected
                           ? FontWeight.w600
                           : FontWeight.w500,

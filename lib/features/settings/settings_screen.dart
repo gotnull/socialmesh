@@ -3274,7 +3274,9 @@ class _PremiumFeatureTile extends ConsumerWidget {
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
-                      color: hasFeature ? Colors.white : context.textSecondary,
+                      color: hasFeature
+                          ? context.textPrimary
+                          : context.textSecondary,
                     ),
                   ),
                 ),
@@ -3441,10 +3443,10 @@ class _ProfileTile extends ConsumerWidget {
                               Flexible(
                                 child: Text(
                                   profile.displayName,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
-                                    color: Colors.white,
+                                    color: context.textPrimary,
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                 ),

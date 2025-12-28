@@ -694,7 +694,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                                     : FontWeight.w500,
                                 color: isSelected
                                     ? context.accentColor
-                                    : Colors.white,
+                                    : context.textPrimary,
                               ),
                             ),
                             Text(
@@ -789,7 +789,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                             m.$2,
                             style: TextStyle(
                               color: isSelected
-                                  ? Colors.white
+                                  ? context.textPrimary
                                   : context.textSecondary,
                               fontWeight: FontWeight.w500,
                             ),

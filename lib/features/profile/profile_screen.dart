@@ -35,12 +35,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         backgroundColor: context.background,
         leading: const HamburgerMenuButton(),
         centerTitle: true,
-        title: const Text(
+        title: Text(
           'Profile',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
         actions: [
@@ -150,7 +150,7 @@ class _EmptyProfileView extends ConsumerWidget {
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: context.textPrimary,
             ),
           ),
 
@@ -220,10 +220,10 @@ class _ProfileView extends ConsumerWidget {
           // Display name and status
           Text(
             profile.displayName,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: context.textPrimary,
             ),
           ),
           if (profile.callsign != null) ...[
@@ -517,12 +517,12 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Cloud Backup',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                            color: context.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -1544,9 +1544,9 @@ class _ProfileInfoCard extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           item.value,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
-                            color: Colors.white,
+                            color: context.textPrimary,
                           ),
                         ),
                       ],
@@ -1828,7 +1828,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                            color: context.textPrimary,
                           ),
                           textAlign: TextAlign.center,
                         ),

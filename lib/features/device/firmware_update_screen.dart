@@ -92,17 +92,17 @@ class FirmwareUpdateScreen extends ConsumerWidget {
       backgroundColor: context.background,
       appBar: AppBar(
         backgroundColor: context.background,
-        title: const Text(
+        title: Text(
           'Firmware Update',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: context.textPrimary,
           ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white),
+            icon: Icon(Icons.refresh, color: context.textPrimary),
             onPressed: () {
               ref.invalidate(firmwareCheckProvider);
             },
@@ -151,10 +151,10 @@ class FirmwareUpdateScreen extends ConsumerWidget {
                       SizedBox(height: 4),
                       Text(
                         currentVersion,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.w700,
-                          color: Colors.white,
+                          color: context.textPrimary,
                         ),
                       ),
                     ],
@@ -372,12 +372,12 @@ class FirmwareUpdateScreen extends ConsumerWidget {
                                 size: 20,
                               ),
                               SizedBox(width: 8),
-                              const Text(
+                              Text(
                                 'Release Notes',
                                 style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.white,
+                                  color: context.textPrimary,
                                 ),
                               ),
                               const Spacer(),
@@ -613,10 +613,10 @@ class FirmwareUpdateScreen extends ConsumerWidget {
           const Spacer(),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: context.textPrimary,
             ),
           ),
         ],
@@ -653,7 +653,7 @@ class FirmwareUpdateScreen extends ConsumerWidget {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: context.textPrimary,
             ),
           ),
           const SizedBox(height: 8),

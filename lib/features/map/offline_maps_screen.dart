@@ -590,7 +590,7 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
                                   ? 'Tap to set second corner'
                                   : '${_estimateTileCount()} tiles selected',
                               style: TextStyle(
-                                color: Colors.white,
+                                color: context.textPrimary,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -682,7 +682,7 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        color: context.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -725,8 +725,8 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
               children: [
                 Text(
                   region.name,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: context.textPrimary,
                     fontWeight: FontWeight.w600,
                     fontSize: 15,
                   ),

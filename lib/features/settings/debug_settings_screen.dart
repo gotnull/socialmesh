@@ -502,10 +502,10 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                       children: [
                         Text(
                           title,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                            color: context.textPrimary,
                           ),
                         ),
                         Text(
@@ -1659,7 +1659,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: context.textPrimary,
                         ),
                       ),
                       SizedBox(height: 2),
@@ -1856,7 +1856,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
               label,
               style: TextStyle(
                 fontSize: 12,
-                color: value ? context.accentColor : Colors.white,
+                color: value ? context.accentColor : context.textPrimary,
               ),
             ),
           ],

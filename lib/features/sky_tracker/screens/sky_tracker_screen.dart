@@ -564,8 +564,8 @@ class _AirportCode extends StatelessWidget {
       ),
       child: Text(
         code,
-        style: const TextStyle(
-          color: Colors.white,
+        style: TextStyle(
+          color: context.textPrimary,
           fontSize: 16,
           fontWeight: FontWeight.bold,
           letterSpacing: 1,
@@ -776,8 +776,8 @@ class _ReportCard extends StatelessWidget {
                     children: [
                       Text(
                         report.flightNumber,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: context.textPrimary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -875,8 +875,8 @@ Widget _buildEmpty(
           SizedBox(height: 16),
           Text(
             title,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: context.textPrimary,
               fontSize: 18,
               fontWeight: FontWeight.w600,
             ),
