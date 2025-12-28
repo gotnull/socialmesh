@@ -487,14 +487,12 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
         }
 
         // Update theme mode from cloud preferences
-        if (prefs?.themeModeIndex != null) {
-          final themeMode = ThemeMode.values[prefs!.themeModeIndex!];
-          ref.read(themeModeProvider.notifier).setThemeMode(themeMode);
-          await settings.setThemeMode(prefs.themeModeIndex!);
-          AppLogging.debug(
-            '🎨 Updated theme mode from cloud: ${themeMode.name}',
-          );
-        }
+        // NOTE: We intentionally DON'T sync theme from cloud to local.
+        // Theme preference is device-specific and local storage is the source of truth.
+        // Cloud sync is only used for backup/restore scenarios, not for overwriting
+        // user's current device preference.
+        // The drawer toggle and theme settings screen both save to local AND cloud,
+        // so cloud stays in sync, but we don't let cloud override local on startup.
 
         // Load remaining cloud preferences
         await _loadRemainingCloudPreferences(settings, prefs);

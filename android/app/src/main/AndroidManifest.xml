@@ -26,7 +26,7 @@
 
     <application
         android:label="Socialmesh"
-        android:name="${applicationName}"
+        android:name=".SocialmeshApplication"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"

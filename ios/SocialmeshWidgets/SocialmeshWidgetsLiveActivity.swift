@@ -21,8 +21,13 @@ struct Design {
     static let purple = Color(red: 175/255, green: 82/255, blue: 222/255)
     static let cyan = Color(red: 50/255, green: 173/255, blue: 230/255)
     static let teal = Color(red: 90/255, green: 200/255, blue: 250/255)
-    static let dim = Color(white: 0.4)
-    static let dimmer = Color(white: 0.25)
+    static let dim = Color(white: 0.5)
+    static let dimmer = Color(white: 0.15)
+    
+    // Background colors for sci-fi aesthetic
+    static let backgroundDark = Color(red: 18/255, green: 18/255, blue: 22/255)
+    static let backgroundCard = Color(red: 28/255, green: 28/255, blue: 35/255)
+    static let glowAccent = accent.opacity(0.15)
     
     // Fonts - SF Mono matches JetBrains Mono style
     static func mono(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
@@ -392,227 +397,229 @@ struct LockScreenView: View {
     var displayBattery: Int { min(battery, 100) }
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Top row - Device ID + Battery
-            HStack {
-                // Status + Name
-                HStack(spacing: 6) {
-                    ZStack {
-                        Circle()
-                            .fill(isConnected ? Design.green.opacity(0.2) : Design.red.opacity(0.2))
-                            .frame(width: 18, height: 18)
-                        Circle()
-                            .fill(isConnected ? Design.green : Design.red)
-                            .frame(width: 8, height: 8)
+        ZStack {
+            // Sci-fi gradient background
+            RoundedRectangle(cornerRadius: 20)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Design.backgroundCard,
+                            Design.backgroundDark,
+                            Design.backgroundDark.opacity(0.95)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+            
+            // Subtle glow border
+            RoundedRectangle(cornerRadius: 20)
+                .strokeBorder(
+                    LinearGradient(
+                        colors: [
+                            Design.accent.opacity(0.4),
+                            Design.accent.opacity(0.1),
+                            Design.cyan.opacity(0.2),
+                            Design.accent.opacity(0.3)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1
+                )
+            
+            // Inner content
+            VStack(spacing: 0) {
+                // Top row - Device ID + Battery
+                HStack {
+                    // Status + Name
+                    HStack(spacing: 6) {
+                        ZStack {
+                            Circle()
+                                .fill(isConnected ? Design.green.opacity(0.2) : Design.red.opacity(0.2))
+                                .frame(width: 18, height: 18)
+                            Circle()
+                                .fill(isConnected ? Design.green : Design.red)
+                                .frame(width: 8, height: 8)
+                                .shadow(color: isConnected ? Design.green.opacity(0.6) : Design.red.opacity(0.6), radius: 4)
+                        }
+                        
+                        VStack(alignment: .leading, spacing: 0) {
+                            HStack(spacing: 4) {
+                                Text("MESH")
+                                    .font(Design.mono(11, weight: .heavy))
+                                    .foregroundColor(.white)
+                                    .tracking(1)
+                            }
+                            
+                            Text(deviceName.isEmpty ? shortName : deviceName)
+                                .font(Design.text(11, weight: .medium))
+                                .foregroundColor(Design.dim)
+                                .lineLimit(1)
+                        }
                     }
                     
-                    VStack(alignment: .leading, spacing: 0) {
-                        HStack(spacing: 6) {
-                            Text(shortName)
-                                .font(Design.mono(15, weight: .black))
-                                .foregroundColor(.white)
+                    Spacer()
+                    
+                    // Battery with glow
+                    HStack(spacing: 4) {
+                        if isCharging {
+                            Image(systemName: "bolt.fill")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(Design.green)
+                                .shadow(color: Design.green.opacity(0.6), radius: 3)
+                        }
+                        
+                        // Battery bar
+                        ZStack(alignment: .leading) {
+                            RoundedRectangle(cornerRadius: 3)
+                                .fill(Design.dimmer)
+                                .frame(width: 28, height: 12)
                             
-                            if !role.isEmpty {
-                                Text(role.uppercased())
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(batteryGradient)
+                                .frame(width: max(3, CGFloat(displayBattery) / 100 * 24), height: 8)
+                                .padding(.leading, 2)
+                                .shadow(color: batteryColor.opacity(0.4), radius: 2)
+                            
+                            RoundedRectangle(cornerRadius: 3)
+                                .strokeBorder(batteryColor.opacity(0.3), lineWidth: 0.5)
+                                .frame(width: 28, height: 12)
+                        }
+                        
+                        Rectangle()
+                            .fill(batteryColor.opacity(0.5))
+                            .frame(width: 2, height: 5)
+                            .cornerRadius(1)
+                        
+                        Text("\(displayBattery)%")
+                            .font(Design.mono(12, weight: .bold))
+                            .foregroundColor(batteryColor)
+                    }
+                }
+                .padding(.horizontal, 14)
+                .padding(.top, 12)
+                .padding(.bottom, 8)
+                
+                // Gradient separator with glow
+                ZStack {
+                    Rectangle()
+                        .fill(LinearGradient(colors: [Design.accent.opacity(0), Design.accent.opacity(0.5), Design.accent.opacity(0)], startPoint: .leading, endPoint: .trailing))
+                        .frame(height: 1)
+                        .blur(radius: 1)
+                    Rectangle()
+                        .fill(LinearGradient(colors: [Design.accent.opacity(0), Design.accent.opacity(0.8), Design.accent.opacity(0)], startPoint: .leading, endPoint: .trailing))
+                        .frame(height: 0.5)
+                }
+                .padding(.horizontal, 16)
+            
+                // Main content grid
+                HStack(spacing: 10) {
+                    // Left column - Signal meter with glow
+                    VStack(spacing: 4) {
+                        // Signal meter
+                        ZStack {
+                            // Glow effect
+                            Circle()
+                                .fill(signalColor.opacity(0.1))
+                                .frame(width: 60, height: 60)
+                                .blur(radius: 8)
+                            
+                            // Background arc
+                            Circle()
+                                .trim(from: 0.25, to: 0.75)
+                                .stroke(Design.dimmer, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                                .frame(width: 48, height: 48)
+                                .rotationEffect(.degrees(90))
+                            
+                            // Signal arc
+                            Circle()
+                                .trim(from: 0.25, to: 0.25 + signalPercent * 0.5)
+                                .stroke(
+                                    LinearGradient(colors: [signalColor, signalColor.opacity(0.4)], startPoint: .leading, endPoint: .trailing),
+                                    style: StrokeStyle(lineWidth: 4, lineCap: .round)
+                                )
+                                .frame(width: 48, height: 48)
+                                .rotationEffect(.degrees(90))
+                                .shadow(color: signalColor.opacity(0.5), radius: 3)
+                            
+                            VStack(spacing: -2) {
+                                Text("\(signal)")
+                                    .font(Design.mono(14, weight: .black))
+                                    .foregroundColor(.white)
+                                Text("dBm")
                                     .font(Design.mono(7, weight: .bold))
-                                    .foregroundColor(Design.accent)
-                                    .padding(.horizontal, 3)
-                                    .padding(.vertical, 1)
-                                    .background(Design.accent.opacity(0.2))
-                                    .cornerRadius(2)
+                                    .foregroundColor(Design.dim)
                             }
                         }
                         
-                        if !deviceName.isEmpty && deviceName != shortName {
-                            Text(deviceName)
-                                .font(Design.text(10, weight: .medium))
-                                .foregroundColor(Design.dim)
-                                .lineLimit(1)
-                        }
-                    }
-                }
-                
-                Spacer()
-                
-                // Battery
-                HStack(spacing: 4) {
-                    if isCharging {
-                        Image(systemName: "bolt.fill")
-                            .font(.system(size: 10, weight: .bold))
-                            .foregroundColor(Design.green)
-                    }
-                    
-                    // Battery bar
-                    ZStack(alignment: .leading) {
-                        RoundedRectangle(cornerRadius: 2)
-                            .fill(Design.dimmer)
-                            .frame(width: 26, height: 11)
-                        
-                        RoundedRectangle(cornerRadius: 1.5)
-                            .fill(batteryGradient)
-                            .frame(width: max(3, CGFloat(displayBattery) / 100 * 22), height: 7)
-                            .padding(.leading, 2)
-                        
-                        RoundedRectangle(cornerRadius: 2)
-                            .strokeBorder(batteryColor.opacity(0.5), lineWidth: 1)
-                            .frame(width: 26, height: 11)
-                    }
-                    
-                    Rectangle()
-                        .fill(batteryColor.opacity(0.5))
-                        .frame(width: 2, height: 5)
-                        .cornerRadius(1)
-                    
-                    Text("\(displayBattery)%")
-                        .font(Design.mono(13, weight: .bold))
-                        .foregroundColor(batteryColor)
-                }
-            }
-            .padding(.horizontal, 12)
-            .padding(.top, 10)
-            .padding(.bottom, 6)
-            
-            // Gradient separator
-            Rectangle()
-                .fill(LinearGradient(colors: [Design.accent.opacity(0), Design.accent.opacity(0.6), Design.accent.opacity(0)], startPoint: .leading, endPoint: .trailing))
-                .frame(height: 1)
-                .padding(.horizontal, 12)
-            
-            // Main content grid
-            HStack(spacing: 8) {
-                // Left column - Signal
-                VStack(spacing: 4) {
-                    // Signal meter
-                    ZStack {
-                        // Background arc
-                        Circle()
-                            .trim(from: 0.25, to: 0.75)
-                            .stroke(Design.dimmer, style: StrokeStyle(lineWidth: 5, lineCap: .round))
-                            .frame(width: 52, height: 52)
-                            .rotationEffect(.degrees(90))
-                        
-                        // Signal arc
-                        Circle()
-                            .trim(from: 0.25, to: 0.25 + signalPercent * 0.5)
-                            .stroke(
-                                LinearGradient(colors: [signalColor, signalColor.opacity(0.5)], startPoint: .leading, endPoint: .trailing),
-                                style: StrokeStyle(lineWidth: 5, lineCap: .round)
-                            )
-                            .frame(width: 52, height: 52)
-                            .rotationEffect(.degrees(90))
-                        
-                        VStack(spacing: -2) {
-                            Text("\(signal)")
-                                .font(Design.mono(15, weight: .black))
-                                .foregroundColor(.white)
-                            Text("dBm")
+                        // SNR badge
+                        HStack(spacing: 2) {
+                            Text("SNR")
                                 .font(Design.mono(7, weight: .bold))
                                 .foregroundColor(Design.dim)
+                            Text("\(snr >= 0 ? "+" : "")\(snr)")
+                                .font(Design.mono(10, weight: .bold))
+                                .foregroundColor(snrColor)
                         }
-                    }
-                    
-                    // SNR
-                    HStack(spacing: 2) {
-                        Text("SNR")
-                            .font(Design.mono(8, weight: .bold))
-                            .foregroundColor(Design.dim)
-                        Text("\(snr >= 0 ? "+" : "")\(snr)")
-                            .font(Design.mono(11, weight: .bold))
-                            .foregroundColor(snrColor)
-                    }
-                }
-                .frame(width: 60)
-                
-                // Center column - Mesh + Utilization
-                VStack(spacing: 4) {
-                    // Node count
-                    HStack(spacing: 0) {
-                        Text("\(nodes)")
-                            .font(Design.mono(28, weight: .black))
-                            .foregroundColor(Design.green)
-                        Text("/\(totalNodes)")
-                            .font(Design.mono(16, weight: .medium))
-                            .foregroundColor(Design.dim)
-                    }
-                    
-                    Text("NODES")
-                        .font(Design.mono(8, weight: .bold))
-                        .foregroundColor(Design.dim)
-                        .tracking(1.5)
-                    
-                    // Utilization bars - centered
-                    HStack(spacing: 6) {
-                        UtilBar(value: channel, label: "CH", color: Design.purple)
-                        UtilBar(value: airtime, label: "AIR", color: Design.cyan)
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-                .frame(maxWidth: .infinity, alignment: .center)
-                
-                // Right column - Stats grid
-                VStack(spacing: 3) {
-                    // TX/RX
-                    HStack(spacing: 4) {
-                        StatPill(icon: "arrow.up", value: "\(tx)", color: Design.accent)
-                        StatPill(icon: "arrow.down", value: "\(rx)", color: Design.green)
-                    }
-                    
-                    // Environment data
-                    HStack(spacing: 4) {
-                        if voltage > 0 {
-                            StatPill(icon: "bolt.fill", value: String(format: "%.1fV", voltage), color: Design.teal)
-                        }
-                        if temperature > 0 {
-                            StatPill(icon: "thermometer", value: String(format: "%.0f°", temperature), color: Design.orange)
-                        }
-                    }
-                    
-                    // Nearest node
-                    if nearestDistance > 0 && !nearestName.isEmpty {
-                        HStack(spacing: 3) {
-                            Image(systemName: "location.fill")
-                                .font(.system(size: 8))
-                                .foregroundColor(Design.blue)
-                            Text(nearestName)
-                                .font(Design.mono(9, weight: .semibold))
-                                .foregroundColor(.white)
-                                .lineLimit(1)
-                            Text(formatDistance(nearestDistance))
-                                .font(Design.mono(9, weight: .bold))
-                                .foregroundColor(Design.blue)
-                        }
-                        .padding(.horizontal, 5)
-                        .padding(.vertical, 3)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
                         .background(Design.dimmer)
                         .cornerRadius(4)
                     }
-                }
-                .frame(width: 90)
-            }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 8)
-            
-            // Bottom info bar
-            if !firmware.isEmpty || !hardware.isEmpty {
-                HStack(spacing: 8) {
-                    if !hardware.isEmpty {
-                        Text(hardware)
-                            .font(Design.mono(9, weight: .medium))
+                    .frame(width: 62)
+                    
+                    // Center column - Mesh + Utilization
+                    VStack(spacing: 6) {
+                        // Node count with glow
+                        ZStack {
+                            // Glow behind node count
+                            Text("\(nodes)")
+                                .font(Design.mono(32, weight: .black))
+                                .foregroundColor(Design.green)
+                                .blur(radius: 8)
+                                .opacity(0.4)
+                            
+                            HStack(alignment: .lastTextBaseline, spacing: 0) {
+                                Text("\(nodes)")
+                                    .font(Design.mono(32, weight: .black))
+                                    .foregroundColor(Design.green)
+                                Text("/\(totalNodes)")
+                                    .font(Design.mono(14, weight: .medium))
+                                    .foregroundColor(Design.dim)
+                            }
+                        }
+                        
+                        Text("NODES")
+                            .font(Design.mono(8, weight: .bold))
                             .foregroundColor(Design.dim)
+                            .tracking(2)
+                        
+                        // Utilization bars - glass card style
+                        HStack(spacing: 8) {
+                            UtilBar(value: channel, label: "CH", color: Design.purple)
+                            UtilBar(value: airtime, label: "AIR", color: Design.cyan)
+                        }
                     }
-                    if !firmware.isEmpty {
-                        Text("v\(firmware)")
-                            .font(Design.mono(9, weight: .medium))
-                            .foregroundColor(Design.dim)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    
+                    // Right column - Stats grid
+                    VStack(spacing: 4) {
+                        // TX/RX
+                        HStack(spacing: 4) {
+                            StatPill(icon: "arrow.up", value: "\(tx)", color: Design.accent)
+                            StatPill(icon: "arrow.down", value: "\(rx)", color: Design.green)
+                        }
+                        
+                        // Voltage
+                        if voltage > 0 {
+                            StatPill(icon: "bolt.fill", value: String(format: "%.1fV", voltage), color: Design.teal)
+                        }
                     }
-                    Spacer()
-                    Text(deviceName)
-                        .font(Design.text(9, weight: .medium))
-                        .foregroundColor(Design.dim)
-                        .lineLimit(1)
+                    .frame(width: 88)
                 }
                 .padding(.horizontal, 12)
-                .padding(.bottom, 8)
+                .padding(.vertical, 10)
             }
         }
     }
@@ -720,17 +727,19 @@ struct UtilBar: View {
     let color: Color
     
     var body: some View {
-        VStack(spacing: 2) {
+        VStack(spacing: 3) {
+            // Progress bar with glow
             ZStack(alignment: .leading) {
-                RoundedRectangle(cornerRadius: 3)
+                RoundedRectangle(cornerRadius: 4)
                     .fill(Design.dimmer)
-                    .frame(height: 8)
+                    .frame(height: 6)
                 
-                RoundedRectangle(cornerRadius: 3)
-                    .fill(LinearGradient(colors: [color, color.opacity(0.5)], startPoint: .leading, endPoint: .trailing))
-                    .frame(width: max(4, CGFloat(min(value, 100) / 100) * 50), height: 8)
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(LinearGradient(colors: [color, color.opacity(0.4)], startPoint: .leading, endPoint: .trailing))
+                    .frame(width: max(4, CGFloat(min(value, 100) / 100) * 44), height: 6)
+                    .shadow(color: color.opacity(0.5), radius: 2)
             }
-            .frame(width: 50)
+            .frame(width: 44)
             
             HStack(spacing: 2) {
                 Text(label)
@@ -750,17 +759,24 @@ struct StatPill: View {
     let color: Color
     
     var body: some View {
-        HStack(spacing: 2) {
+        HStack(spacing: 3) {
             Image(systemName: icon)
-                .font(.system(size: 8, weight: .bold))
+                .font(.system(size: 9, weight: .bold))
                 .foregroundColor(color)
+                .shadow(color: color.opacity(0.5), radius: 2)
             Text(value)
                 .font(Design.mono(10, weight: .bold))
                 .foregroundColor(.white)
         }
-        .padding(.horizontal, 5)
-        .padding(.vertical, 3)
-        .background(Design.dimmer)
-        .cornerRadius(4)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 4)
+        .background(
+            RoundedRectangle(cornerRadius: 6)
+                .fill(Design.dimmer)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6)
+                        .strokeBorder(color.opacity(0.2), lineWidth: 0.5)
+                )
+        )
     }
 }

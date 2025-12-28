@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
+import '../../models/user_profile.dart' show UserPreferences;
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/legal_document_sheet.dart';
 import '../../models/subscription_models.dart';
@@ -1540,6 +1541,11 @@ class _ThemeToggleButton extends ConsumerWidget {
         // Save to storage
         final settings = await ref.read(settingsServiceProvider.future);
         await settings.setThemeMode(newMode.index);
+
+        // Sync to cloud profile
+        ref
+            .read(userProfileProvider.notifier)
+            .updatePreferences(UserPreferences(themeModeIndex: newMode.index));
       },
       child: Container(
         width: 44,
