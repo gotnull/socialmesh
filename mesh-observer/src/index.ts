@@ -78,9 +78,16 @@ app.get('/', (req, res) => {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Socialmesh API — Real-time Meshtastic Mesh Data</title>
   <meta name="description" content="Real-time Meshtastic mesh network data API. Access global node positions, telemetry, and network statistics.">
+  
+  <!-- Smart App Banner (iOS Safari) -->
+  <meta name="apple-itunes-app" content="app-id=6742694642">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="https://socialmesh.app/favicon.png">
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg-primary: #1F2633;
@@ -98,7 +105,7 @@ app.get('/', (req, res) => {
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { 
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: 'JetBrains Mono', 'Inter', -apple-system, BlinkMacSystemFont, monospace;
       background: var(--bg-primary);
       color: var(--text-primary);
       min-height: 100vh;
@@ -139,29 +146,151 @@ app.get('/', (req, res) => {
       background-size: 80px 80px;
       mask-image: radial-gradient(ellipse at center, black 0%, transparent 75%);
     }
-    .container { max-width: 900px; margin: 0 auto; padding: 60px 24px; }
-    .header { text-align: center; margin-bottom: 60px; }
-    .logo { 
-      display: inline-flex; 
-      align-items: center; 
-      gap: 16px; 
-      margin-bottom: 24px;
+    /* Navigation */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 1000;
+      padding: 16px 0;
+      background: rgba(10, 10, 15, 0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(42, 42, 58, 0.5);
+    }
+    nav .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
       text-decoration: none;
     }
-    .logo-icon {
-      width: 56px; height: 56px;
-      background: var(--gradient-brand);
-      border-radius: 14px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 28px;
-      box-shadow: 0 8px 32px rgba(233, 30, 140, 0.3);
+    .logo-img {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(233, 30, 140, 0.3);
+      animation: logoGlow 3s ease-in-out infinite alternate;
+    }
+    @keyframes logoGlow {
+      0% { box-shadow: 0 4px 20px rgba(233, 30, 140, 0.3); }
+      100% { box-shadow: 0 4px 30px rgba(233, 30, 140, 0.5); }
     }
     .logo-text {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 28px;
+      font-size: 22px;
       font-weight: 700;
       color: var(--text-primary);
+      letter-spacing: -0.5px;
     }
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      list-style: none;
+      margin: 0; padding: 0;
+    }
+    .nav-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text-primary); }
+    .nav-cta { display: flex; gap: 12px; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+      border: none;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-icon { width: 18px; height: 18px; fill: currentColor; flex-shrink: 0; vertical-align: middle; display: inline-block; margin-top: -2px; margin-left: 8px; }
+    .btn-primary {
+      background: var(--gradient-brand);
+      color: white;
+      box-shadow: 0 4px 20px rgba(233, 30, 140, 0.3);
+    }
+    .btn-primary::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s;
+    }
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 35px rgba(233, 30, 140, 0.4);
+    }
+    .btn-primary:hover::before { left: 100%; }
+    
+    /* Mobile menu */
+    .menu-toggle {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 8px;
+      z-index: 1001;
+    }
+    .menu-toggle svg {
+      width: 24px; height: 24px;
+      fill: var(--text-primary);
+    }
+    
+    .mobile-menu {
+      position: fixed;
+      top: 73px; left: 0; right: 0;
+      background: var(--bg-primary);
+      border-bottom: 1px solid rgba(42, 42, 58, 0.5);
+      padding: 24px;
+      z-index: 999;
+      display: none;
+    }
+    .mobile-menu ul {
+      list-style: none;
+      margin: 0; padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .mobile-menu a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: 500;
+      display: block;
+      padding: 12px 0;
+      transition: color 0.2s;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .mobile-menu a:hover { color: var(--text-primary); }
+    .mobile-menu .btn {
+      margin-top: 16px;
+      justify-content: center;
+      width: 100%;
+    }
+    
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+      .nav-links, .nav-cta { display: none; }
+      .menu-toggle { display: block; }
+    }
+    
+    .main-container { max-width: 900px; margin: 0 auto; padding: 120px 24px 60px; }
+    .header { text-align: center; margin-bottom: 60px; }
     h1 { 
       font-size: 3rem; 
       font-weight: 700;
@@ -266,6 +395,11 @@ app.get('/', (req, res) => {
       margin-bottom: 8px; 
     }
     .example code { color: var(--text-secondary); }
+    .example pre { margin: 0; white-space: pre; line-height: 1.6; }
+    .example .key { color: var(--accent-magenta); }
+    .example .value { color: var(--accent-purple); }
+    .example .number { color: var(--accent-blue); }
+    .example .method-text { color: var(--accent-magenta); font-weight: 600; }
     .schema-section { margin-top: 48px; }
     .schema-code {
       background: var(--bg-card);
@@ -320,22 +454,64 @@ app.get('/', (req, res) => {
   <div class="mesh-bg"></div>
   <div class="grid-overlay"></div>
   
-  <div class="container">
-    <header class="header">
+  <!-- Navigation -->
+  <nav>
+    <div class="container">
       <a href="https://socialmesh.app" class="logo">
-        <div class="logo-icon">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-            <circle cx="12" cy="5" r="2"/>
-            <circle cx="5" cy="19" r="2"/>
-            <circle cx="19" cy="19" r="2"/>
-            <line x1="12" y1="7" x2="5" y2="17"/>
-            <line x1="12" y1="7" x2="19" y2="17"/>
-            <line x1="5" y1="19" x2="19" y2="19"/>
-          </svg>
-        </div>
+        <img src="https://socialmesh.app/images/app-icon.png" alt="Socialmesh" class="logo-img">
         <span class="logo-text">Socialmesh</span>
       </a>
       
+      <ul class="nav-links">
+        <li><a href="https://socialmesh.app#features">Features</a></li>
+        <li><a href="https://socialmesh.app#premium">Extras</a></li>
+        <li><a href="https://socialmesh.app#screenshots">Screenshots</a></li>
+        <li><a href="https://socialmesh.app#comparison">Compare</a></li>
+        <li><a href="https://socialmesh.app/docs">Docs</a></li>
+        <li><a href="https://socialmesh.app/faq">FAQ</a></li>
+      </ul>
+      
+      <div class="nav-cta">
+        <a href="https://socialmesh.app#download" class="btn btn-primary">
+          <svg class="btn-icon" viewBox="0 0 24 24">
+            <path d="M5 20h14v-2H5v2zM19 9h-4V3H9v6H5l7 7 7-7z" />
+          </svg>
+          Download
+        </a>
+      </div>
+      
+      <button class="menu-toggle" onclick="toggleMenu()" aria-label="Toggle menu">
+        <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+      </button>
+    </div>
+  </nav>
+  
+  <!-- Mobile Menu -->
+  <div class="mobile-menu" id="mobileMenu" style="display: none;">
+    <ul>
+      <li><a href="https://socialmesh.app#features" onclick="toggleMenu()">Features</a></li>
+      <li><a href="https://socialmesh.app#premium" onclick="toggleMenu()">Extras</a></li>
+      <li><a href="https://socialmesh.app#screenshots" onclick="toggleMenu()">Screenshots</a></li>
+      <li><a href="https://socialmesh.app#comparison" onclick="toggleMenu()">Compare</a></li>
+      <li><a href="https://socialmesh.app/docs" onclick="toggleMenu()">Docs</a></li>
+      <li><a href="https://socialmesh.app/faq" onclick="toggleMenu()">FAQ</a></li>
+    </ul>
+    <a href="https://socialmesh.app#download" class="btn btn-primary" onclick="toggleMenu()">
+      <svg class="btn-icon" viewBox="0 0 24 24"><path d="M5 20h14v-2H5v2zM19 9h-4V3H9v6H5l7 7 7-7z"/></svg>
+      Download
+    </a>
+  </div>
+  
+  <script>
+    function toggleMenu() {
+      var menu = document.getElementById('mobileMenu');
+      var isOpen = menu.style.display === 'block';
+      menu.style.display = isOpen ? 'none' : 'block';
+    }
+  </script>
+  
+  <div class="main-container">
+    <header class="header">
       <h1>Mesh Network <span class="gradient-text">API</span></h1>
       <p class="subtitle">Real-time Meshtastic mesh network data from the global MQTT feed. Access node positions, telemetry, battery levels, and network topology.</p>
       
@@ -356,7 +532,17 @@ app.get('/', (req, res) => {
         <p class="desc">Health check endpoint. Returns service status, MQTT connection state, node count, memory usage, and uptime. Returns HTTP 503 if service is degraded.</p>
         <div class="example">
           <div class="example-label">Response</div>
-          <code>{ "status": "ok", "mqttConnected": true, "nodeCount": ${nodeStore.getNodeCount()}, "uptime": ${Math.round(process.uptime())} }</code>
+          <pre><code>{
+  <span class="key">"status"</span>: <span class="value">"ok"</span>,
+  <span class="key">"mqttConnected"</span>: <span class="number">true</span>,
+  <span class="key">"nodeCount"</span>: <span class="number">${nodeStore.getNodeCount()}</span>,
+  <span class="key">"uptime"</span>: <span class="number">${Math.round(process.uptime())}</span>,
+  <span class="key">"memory"</span>: {
+    <span class="key">"heapUsed"</span>: <span class="value">"19MB"</span>,
+    <span class="key">"heapTotal"</span>: <span class="value">"20MB"</span>,
+    <span class="key">"rss"</span>: <span class="value">"64MB"</span>
+  }
+}</code></pre>
         </div>
       </div>
 
@@ -368,7 +554,18 @@ app.get('/', (req, res) => {
         <p class="desc">Get all tracked mesh nodes. Returns a map of node IDs to node objects containing position, telemetry, battery level, hardware info, neighbors, and more.</p>
         <div class="example">
           <div class="example-label">Response</div>
-          <code>{ "3677891234": { "nodeNum": 3677891234, "longName": "Base Station", "latitude": 37.77, ... } }</code>
+          <pre><code>{
+  <span class="key">"3677891234"</span>: {
+    <span class="key">"nodeNum"</span>: <span class="number">3677891234</span>,
+    <span class="key">"longName"</span>: <span class="value">"Base Station"</span>,
+    <span class="key">"shortName"</span>: <span class="value">"BASE"</span>,
+    <span class="key">"latitude"</span>: <span class="number">37.7749</span>,
+    <span class="key">"longitude"</span>: <span class="number">-122.4194</span>,
+    <span class="key">"batteryLevel"</span>: <span class="number">87</span>,
+    ...
+  },
+  ...
+}</code></pre>
         </div>
       </div>
 
@@ -379,8 +576,8 @@ app.get('/', (req, res) => {
         </div>
         <p class="desc">Get a single node by its numeric ID. Returns the full node object or HTTP 404 if not found.</p>
         <div class="example">
-          <div class="example-label">Example</div>
-          <code>GET /api/node/3677891234</code>
+          <div class="example-label">Request</div>
+          <pre><code><span class="method-text">GET</span> /api/node/<span class="number">3677891234</span></code></pre>
         </div>
       </div>
 
@@ -390,6 +587,16 @@ app.get('/', (req, res) => {
           <span class="path"><a href="/api/stats">/api/stats</a></span>
         </div>
         <p class="desc">Get detailed statistics about MQTT message processing, decode success rates, and node update counts by type (position, telemetry, nodeinfo, etc).</p>
+        <div class="example">
+          <div class="example-label">Response</div>
+          <pre><code>{
+  <span class="key">"totalNodes"</span>: <span class="number">${nodeStore.getNodeCount()}</span>,
+  <span class="key">"nodesWithPosition"</span>: <span class="number">${nodeStore.getNodesWithPositionCount()}</span>,
+  <span class="key">"onlineNodes"</span>: <span class="number">${nodeStore.getOnlineNodeCount()}</span>,
+  <span class="key">"decode"</span>: { ... },
+  <span class="key">"updates"</span>: { ... }
+}</code></pre>
+        </div>
       </div>
     </section>
 
@@ -421,9 +628,8 @@ app.get('/', (req, res) => {
 
     <footer class="footer">
       <div class="footer-links">
-        <a href="https://socialmesh.app">Socialmesh App</a>
+        <a href="https://socialmesh.app">Socialmesh</a>
         <a href="https://meshtastic.org">Meshtastic</a>
-        <a href="https://github.com/gotnull/socialmesh">GitHub</a>
       </div>
       <p>Powered by the global Meshtastic MQTT network</p>
       <div class="rate-limit">Rate limit: 100 requests/minute per IP</div>
