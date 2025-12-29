@@ -145,11 +145,16 @@ const appTaglines = [
 class AccentColorNotifier extends AsyncNotifier<Color> {
   @override
   Future<Color> build() async {
-    // Load saved accent color from SharedPreferences
-    final prefs = await SharedPreferences.getInstance();
-    final savedColorValue = prefs.getInt('accent_color');
-    if (savedColorValue != null) {
-      return Color(savedColorValue);
+    try {
+      // Load saved accent color from SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      final savedColorValue = prefs.getInt('accent_color');
+      if (savedColorValue != null) {
+        return Color(savedColorValue);
+      }
+    } catch (e) {
+      // If SharedPreferences fails, just use default color
+      debugPrint('Failed to load accent color from preferences: $e');
     }
     return AccentColors.magenta;
   }
@@ -159,8 +164,12 @@ class AccentColorNotifier extends AsyncNotifier<Color> {
   Future<void> setColor(Color color) async {
     state = AsyncData(color);
     // Save to SharedPreferences so it persists on restart
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('accent_color', color.toARGB32());
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('accent_color', color.toARGB32());
+    } catch (e) {
+      debugPrint('Failed to save accent color to preferences: $e');
+    }
   }
 }
 

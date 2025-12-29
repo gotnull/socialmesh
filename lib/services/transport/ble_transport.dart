@@ -588,6 +588,24 @@ class BleTransport implements DeviceTransport {
       _logger.d('Sent successfully');
     } catch (e) {
       _logger.e('Send error: $e');
+
+      // Check if this is a disconnection error and update state accordingly
+      final errorStr = e.toString().toLowerCase();
+      if (errorStr.contains('disconnect') ||
+          errorStr.contains('not connected') ||
+          errorStr.contains('connection') ||
+          errorStr.contains('invalid') ||
+          errorStr.contains('peripheral')) {
+        _logger.w('Device appears to have disconnected during send');
+        // Trigger disconnection cleanup if device disconnected mid-send
+        if (_state == DeviceConnectionState.connected) {
+          _txCharacteristic = null;
+          _rxCharacteristic = null;
+          _device = null;
+          _updateState(DeviceConnectionState.disconnected);
+        }
+      }
+
       rethrow;
     }
   }

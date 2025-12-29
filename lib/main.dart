@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:ui';
+import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -101,7 +103,7 @@ Future<void> _initializeFirebaseInBackground() async {
     initProfileCloudSyncService();
 
     // Set up async error handler
-    PlatformDispatcher.instance.onError = (error, stack) {
+    ui.PlatformDispatcher.instance.onError = (error, stack) {
       FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
       return true;
     };
@@ -654,8 +656,14 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
     ref.watch(telemetryLoggerProvider);
 
     // Watch accent color for dynamic theme (with default fallback)
-    final accentColorAsync = ref.watch(accentColorProvider);
-    final accentColor = accentColorAsync.asData?.value ?? AccentColors.magenta;
+    // Using when() to handle all states including errors gracefully
+    final accentColor = ref
+        .watch(accentColorProvider)
+        .when(
+          data: (color) => color,
+          loading: () => AccentColors.magenta,
+          error: (e, st) => AccentColors.magenta,
+        );
 
     // Watch theme mode for dark/light switching
     final themeMode = ref.watch(themeModeProvider);
@@ -907,14 +915,14 @@ class _AppleTVAngledGridState extends State<_AppleTVAngledGrid>
     final screenHeight = MediaQuery.of(context).size.height;
 
     // Card dimensions - portrait oriented like Apple TV movie posters
-    const cardWidth = 120.0;
-    const cardHeight = 160.0;
-    const horizontalGap = 14.0;
-    const verticalGap = 14.0;
+    const cardWidth = 140.0;
+    const cardHeight = 180.0;
+    const horizontalGap = 16.0;
+    const verticalGap = 16.0;
 
     // More columns and rows to fill the rotated space
-    const columns = 6;
-    const rows = 7;
+    const columns = 5;
+    const rows = 6;
 
     return AnimatedBuilder(
       animation: Listenable.merge([_scrollController, _fadeInController]),
@@ -930,15 +938,12 @@ class _AppleTVAngledGridState extends State<_AppleTVAngledGrid>
               child: Transform(
                 alignment: Alignment.center,
                 transform: Matrix4.identity()
-                  // Perspective - stronger for more depth
-                  ..setEntry(3, 2, 0.0008)
-                  // Rotate X to tilt the plane (looking down at it)
-                  ..rotateX(0.9)
-                  // Rotate Z for diagonal angle (matching Apple TV)
-                  ..rotateZ(-0.35)
-                  // Position the grid - offset to upper right
+                  // Just rotate Z for diagonal angle - NO perspective distortion
+                  // This keeps cards rectangular, just tilted
+                  ..rotateZ(-0.25)
+                  // Position the grid - offset to fill screen nicely
                   ..leftTranslateByVector3(
-                    Vector3(screenWidth * 0.3, -screenHeight * 0.1, 0),
+                    Vector3(screenWidth * 0.1, -screenHeight * 0.15, 0),
                   ),
                 child: SizedBox(
                   width: screenWidth * 3,
@@ -1102,16 +1107,34 @@ class _AppleTVGridCard extends StatefulWidget {
 }
 
 class _AppleTVGridCardState extends State<_AppleTVGridCard>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late AnimationController _controller;
+  late AnimationController _disintegrationController;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
+
+  // Disintegration state
+  bool _isDisintegrating = false;
+  bool _capturedImage = false;
+  ui.Image? _cardImage;
+  List<_SplashDisintegrationFragment>? _fragments;
+  final _repaintBoundaryKey = GlobalKey();
+  final _random = math.Random();
+
+  // Fragment grid configuration
+  static const int _fragmentsX = 24;
+  static const int _fragmentsY = 32;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
       duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+
+    _disintegrationController = AnimationController(
+      duration: const Duration(milliseconds: 2500),
       vsync: this,
     );
 
@@ -1131,11 +1154,110 @@ class _AppleTVGridCardState extends State<_AppleTVGridCard>
     Future.delayed(Duration(milliseconds: widget.staggerDelay), () {
       if (mounted) _controller.forward();
     });
+
+    // Schedule disintegration after display period
+    Future.delayed(Duration(milliseconds: widget.staggerDelay + 6000), () {
+      _startDisintegration();
+    });
+  }
+
+  Future<void> _startDisintegration() async {
+    if (!mounted || _isDisintegrating || widget.entry == null) return;
+
+    try {
+      final boundary =
+          _repaintBoundaryKey.currentContext?.findRenderObject()
+              as RenderRepaintBoundary?;
+      if (boundary == null) return;
+
+      final image = await boundary.toImage(pixelRatio: 2.0);
+      if (!mounted) return;
+
+      setState(() {
+        _cardImage = image;
+        _isDisintegrating = true;
+        _capturedImage = true;
+      });
+
+      _generateFragments(image.width.toDouble(), image.height.toDouble());
+      _disintegrationController.forward();
+    } catch (e) {
+      // Silently fail - card just stays
+    }
+  }
+
+  void _generateFragments(double imageWidth, double imageHeight) {
+    final fragmentWidth = imageWidth / _fragmentsX;
+    final fragmentHeight = imageHeight / _fragmentsY;
+
+    _fragments = [];
+
+    for (int y = 0; y < _fragmentsY; y++) {
+      for (int x = 0; x < _fragmentsX; x++) {
+        final normalizedX = x / _fragmentsX;
+        final normalizedY = y / _fragmentsY;
+
+        final centerDistX = (normalizedX - 0.5).abs();
+        final centerDistY = (normalizedY - 0.5).abs();
+        final centerDist = math.sqrt(
+          centerDistX * centerDistX + centerDistY * centerDistY,
+        );
+
+        // Disintegration wave from edges inward + random
+        final edgeFactor = centerDist * 0.4;
+        final sweepFactor = normalizedX * 0.3;
+        final randomFactor = _random.nextDouble() * 0.3;
+        final startDelay = (edgeFactor + sweepFactor + randomFactor).clamp(
+          0.0,
+          0.7,
+        );
+
+        final directionX = (normalizedX - 0.5) * 2;
+        final directionY = (normalizedY - 0.5) * 2;
+
+        final driftX =
+            directionX * (60 + _random.nextDouble() * 100) +
+            (_random.nextDouble() - 0.3) * 50;
+        final driftY =
+            directionY * (50 + _random.nextDouble() * 70) -
+            (30 + _random.nextDouble() * 80);
+        final driftZ = (_random.nextDouble() - 0.5) * 150;
+
+        final rotationX = (_random.nextDouble() - 0.5) * math.pi * 2.5;
+        final rotationY = (_random.nextDouble() - 0.5) * math.pi * 2.5;
+        final rotationZ = (_random.nextDouble() - 0.5) * math.pi * 3;
+
+        final scaleEnd = 0.1 + _random.nextDouble() * 0.3;
+        final curveIntensity = (_random.nextDouble() - 0.5) * 2;
+
+        _fragments!.add(
+          _SplashDisintegrationFragment(
+            srcRect: Rect.fromLTWH(
+              x * fragmentWidth,
+              y * fragmentHeight,
+              fragmentWidth,
+              fragmentHeight,
+            ),
+            startDelay: startDelay,
+            driftX: driftX,
+            driftY: driftY,
+            driftZ: driftZ,
+            rotationX: rotationX,
+            rotationY: rotationY,
+            rotationZ: rotationZ,
+            scaleEnd: scaleEnd,
+            curveIntensity: curveIntensity,
+          ),
+        );
+      }
+    }
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _disintegrationController.dispose();
+    _cardImage?.dispose();
     super.dispose();
   }
 
@@ -1184,160 +1306,322 @@ class _AppleTVGridCardState extends State<_AppleTVGridCard>
       );
     }
 
+    // Build the card content widget
+    final cardContent = _buildCardContent(
+      context,
+      shortName,
+      displayName,
+      nodeId,
+    );
+
     return Positioned(
       left: widget.x,
       top: widget.y,
       child: AnimatedBuilder(
-        animation: _controller,
+        animation: Listenable.merge([_controller, _disintegrationController]),
         builder: (context, child) {
+          // If disintegrating, show the fragment renderer
+          if (_capturedImage && _cardImage != null && _fragments != null) {
+            return Transform.scale(
+              scale: _scaleAnimation.value,
+              child: Opacity(
+                opacity: _fadeAnimation.value * 0.95,
+                child: SizedBox(
+                  width: widget.cardWidth,
+                  height: widget.cardHeight,
+                  child: CustomPaint(
+                    painter: _SplashDisintegrationPainter(
+                      image: _cardImage!,
+                      fragments: _fragments!,
+                      progress: _disintegrationController.value,
+                    ),
+                    size: Size(widget.cardWidth, widget.cardHeight),
+                  ),
+                ),
+              ),
+            );
+          }
+
+          // Normal card with entry animations
           return Transform.scale(
             scale: _scaleAnimation.value,
-            child: Opacity(opacity: _fadeAnimation.value * 0.95, child: child),
+            child: Opacity(
+              opacity: _fadeAnimation.value * 0.95,
+              child: RepaintBoundary(key: _repaintBoundaryKey, child: child),
+            ),
           );
         },
-        child: Container(
-          width: widget.cardWidth,
-          height: widget.cardHeight,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                context.card,
-                context.surface,
-                context.card.withValues(alpha: 0.9),
-              ],
-              stops: const [0.0, 0.5, 1.0],
-            ),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: context.accentColor.withValues(alpha: 0.4),
-              width: 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: context.accentColor.withValues(alpha: 0.25),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-                spreadRadius: -4,
-              ),
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.4),
-                blurRadius: 16,
-                offset: const Offset(4, 8),
-              ),
-            ],
+        child: cardContent,
+      ),
+    );
+  }
+
+  Widget _buildCardContent(
+    BuildContext context,
+    String shortName,
+    String displayName,
+    String nodeId,
+  ) {
+    return Container(
+      width: widget.cardWidth,
+      height: widget.cardHeight,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            context.card,
+            context.surface,
+            context.card.withValues(alpha: 0.9),
+          ],
+          stops: const [0.0, 0.5, 1.0],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: context.accentColor.withValues(alpha: 0.4),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: context.accentColor.withValues(alpha: 0.25),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+            spreadRadius: -4,
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: Stack(
-              children: [
-                // Subtle gradient overlay for depth
-                Positioned.fill(
-                  child: DecoratedBox(
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.4),
+            blurRadius: 16,
+            offset: const Offset(4, 8),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Stack(
+          children: [
+            // Subtle gradient overlay for depth
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.white.withValues(alpha: 0.05),
+                      Colors.transparent,
+                      Colors.black.withValues(alpha: 0.2),
+                    ],
+                    stops: const [0.0, 0.3, 1.0],
+                  ),
+                ),
+              ),
+            ),
+            // Content
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Discovered badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
                         colors: [
-                          Colors.white.withValues(alpha: 0.05),
-                          Colors.transparent,
-                          Colors.black.withValues(alpha: 0.2),
+                          context.accentColor.withValues(alpha: 0.5),
+                          context.accentColor.withValues(alpha: 0.25),
                         ],
-                        stops: const [0.0, 0.3, 1.0],
                       ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.wifi_tethering,
+                          color: context.accentColor,
+                          size: 10,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'DISCOVERED',
+                          style: TextStyle(
+                            color: context.accentColor,
+                            fontSize: 8,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                // Content
-                Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Discovered badge
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              context.accentColor.withValues(alpha: 0.5),
-                              context.accentColor.withValues(alpha: 0.25),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.wifi_tethering,
-                              color: context.accentColor,
-                              size: 10,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              'DISCOVERED',
-                              style: TextStyle(
-                                color: context.accentColor,
-                                fontSize: 8,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Spacer(),
-                      // Large short name as main visual
-                      if (shortName.isNotEmpty)
-                        Center(
-                          child: Text(
-                            shortName,
-                            style: TextStyle(
-                              color: context.accentColor,
-                              fontSize: 28,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 1,
-                            ),
-                          ),
-                        ),
-                      const Spacer(),
-                      // Node name
-                      Text(
-                        displayName,
+                  const Spacer(),
+                  // Large short name as main visual
+                  if (shortName.isNotEmpty)
+                    Center(
+                      child: Text(
+                        shortName,
                         style: TextStyle(
-                          color: context.textPrimary,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      // Node ID
-                      Text(
-                        '!$nodeId',
-                        style: TextStyle(
-                          color: context.textTertiary,
-                          fontSize: 10,
-                          fontFamily: 'monospace',
-                          fontWeight: FontWeight.w500,
+                          color: context.accentColor,
+                          fontSize: 28,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1,
                         ),
                       ),
-                    ],
+                    ),
+                  const Spacer(),
+                  // Node name
+                  Text(
+                    displayName,
+                    style: TextStyle(
+                      color: context.textPrimary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-              ],
+                  const SizedBox(height: 4),
+                  // Node ID
+                  Text(
+                    '!$nodeId',
+                    style: TextStyle(
+                      color: context.textTertiary,
+                      fontSize: 10,
+                      fontFamily: 'monospace',
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
   }
+}
+
+/// Fragment data for splash screen disintegration
+class _SplashDisintegrationFragment {
+  final Rect srcRect;
+  final double startDelay;
+  final double driftX;
+  final double driftY;
+  final double driftZ;
+  final double rotationX;
+  final double rotationY;
+  final double rotationZ;
+  final double scaleEnd;
+  final double curveIntensity;
+
+  const _SplashDisintegrationFragment({
+    required this.srcRect,
+    required this.startDelay,
+    required this.driftX,
+    required this.driftY,
+    required this.driftZ,
+    required this.rotationX,
+    required this.rotationY,
+    required this.rotationZ,
+    required this.scaleEnd,
+    required this.curveIntensity,
+  });
+}
+
+/// Custom painter for splash card disintegration
+class _SplashDisintegrationPainter extends CustomPainter {
+  final ui.Image image;
+  final List<_SplashDisintegrationFragment> fragments;
+  final double progress;
+
+  _SplashDisintegrationPainter({
+    required this.image,
+    required this.fragments,
+    required this.progress,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..filterQuality = FilterQuality.medium;
+
+    // Scale factor (captured at 2x)
+    final scaleX = size.width / image.width;
+    final scaleY = size.height / image.height;
+
+    for (final fragment in fragments) {
+      final fragmentProgress =
+          ((progress - fragment.startDelay) / (1.0 - fragment.startDelay))
+              .clamp(0.0, 1.0);
+
+      if (fragmentProgress <= 0) {
+        // Not started - draw in place
+        final dstRect = Rect.fromLTWH(
+          fragment.srcRect.left * scaleX,
+          fragment.srcRect.top * scaleY,
+          fragment.srcRect.width * scaleX,
+          fragment.srcRect.height * scaleY,
+        );
+        canvas.drawImageRect(image, fragment.srcRect, dstRect, paint);
+        continue;
+      }
+
+      final moveProgress = Curves.easeOutCubic.transform(fragmentProgress);
+      final fadeProgress = Curves.easeInQuad.transform(fragmentProgress);
+      final scaleProgress = Curves.easeInCubic.transform(fragmentProgress);
+
+      final curveOffset =
+          math.sin(moveProgress * math.pi) * fragment.curveIntensity * 20;
+      final currentX =
+          fragment.srcRect.center.dx * scaleX +
+          fragment.driftX * moveProgress +
+          curveOffset;
+      final currentY =
+          fragment.srcRect.center.dy * scaleY + fragment.driftY * moveProgress;
+      final currentZ = fragment.driftZ * moveProgress;
+
+      final currentScale = 1.0 - (1.0 - fragment.scaleEnd) * scaleProgress;
+      final opacity = (1.0 - fadeProgress).clamp(0.0, 1.0);
+
+      if (opacity <= 0 || currentScale <= 0) continue;
+
+      paint.color = Color.fromRGBO(255, 255, 255, opacity);
+
+      canvas.save();
+
+      final perspectiveFactor = 1.0 + currentZ * 0.001;
+      canvas.translate(currentX, currentY);
+
+      final scaleFactor = currentScale * perspectiveFactor;
+      final matrix = Matrix4.identity()
+        ..setEntry(3, 2, 0.002)
+        ..rotateX(fragment.rotationX * moveProgress)
+        ..rotateY(fragment.rotationY * moveProgress)
+        ..rotateZ(fragment.rotationZ * moveProgress)
+        ..scaleByVector3(Vector3(scaleFactor, scaleFactor, scaleFactor));
+
+      canvas.transform(matrix.storage);
+
+      final halfWidth = fragment.srcRect.width * scaleX / 2;
+      final halfHeight = fragment.srcRect.height * scaleY / 2;
+      final dstRect = Rect.fromLTWH(
+        -halfWidth,
+        -halfHeight,
+        fragment.srcRect.width * scaleX,
+        fragment.srcRect.height * scaleY,
+      );
+
+      canvas.drawImageRect(image, fragment.srcRect, dstRect, paint);
+      canvas.restore();
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _SplashDisintegrationPainter oldDelegate) =>
+      oldDelegate.progress != progress;
 }
 
 /// Animated node card for splash screen (legacy - kept for reference)

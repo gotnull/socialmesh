@@ -574,30 +574,63 @@ class ProtocolService {
         }
         _logger.i('==========================================');
 
-        // Request LoRa config to get current region, and Position config
-        Future.delayed(const Duration(milliseconds: 100), () {
-          getLoRaConfig();
-          // Also request Position config to see GPS settings
-          Future.delayed(const Duration(milliseconds: 200), () {
-            getPositionConfig();
-          });
-          // Request device metadata to get firmware version
-          Future.delayed(const Duration(milliseconds: 300), () {
-            getDeviceMetadata();
-          });
-          // Request full channel details (initial config dump doesn't include moduleSettings)
-          Future.delayed(const Duration(milliseconds: 400), () {
-            _requestAllChannelDetails();
-          });
-          // Request positions from all nodes including ourselves
-          Future.delayed(const Duration(milliseconds: 600), () {
-            requestAllPositions();
-          });
-        });
+        // Request additional config after initial sync
+        // Using unawaited calls with error handling to prevent crashes on disconnect
+        _requestPostConfigData();
       }
     } catch (e, stack) {
       _logger.e('Error processing packet: $e', error: e, stackTrace: stack);
     }
+  }
+
+  /// Request additional configuration data after initial config sync completes.
+  /// Uses staggered delays and error handling to prevent crashes if the device
+  /// disconnects during the process.
+  void _requestPostConfigData() {
+    Future.delayed(const Duration(milliseconds: 100), () async {
+      if (!_transport.isConnected) return;
+      try {
+        await getLoRaConfig();
+      } catch (e) {
+        _logger.w('Failed to get LoRa config: $e');
+      }
+    });
+
+    Future.delayed(const Duration(milliseconds: 300), () async {
+      if (!_transport.isConnected) return;
+      try {
+        await getPositionConfig();
+      } catch (e) {
+        _logger.w('Failed to get Position config: $e');
+      }
+    });
+
+    Future.delayed(const Duration(milliseconds: 500), () async {
+      if (!_transport.isConnected) return;
+      try {
+        await getDeviceMetadata();
+      } catch (e) {
+        _logger.w('Failed to get device metadata: $e');
+      }
+    });
+
+    Future.delayed(const Duration(milliseconds: 700), () async {
+      if (!_transport.isConnected) return;
+      try {
+        await _requestAllChannelDetails();
+      } catch (e) {
+        _logger.w('Failed to request channel details: $e');
+      }
+    });
+
+    Future.delayed(const Duration(milliseconds: 900), () async {
+      if (!_transport.isConnected) return;
+      try {
+        await requestAllPositions();
+      } catch (e) {
+        _logger.w('Failed to request positions: $e');
+      }
+    });
   }
 
   /// Handle incoming mesh packet
@@ -2385,8 +2418,11 @@ class ProtocolService {
 
   /// Request positions from all known nodes
   Future<void> requestAllPositions() async {
-    _logger.i('Requesting positions from all ${_nodes.length} known nodes');
-    for (final nodeNum in _nodes.keys) {
+    // Take a snapshot of node keys to avoid ConcurrentModificationError
+    // if _nodes is modified while iterating (e.g., by incoming packets)
+    final nodeNums = _nodes.keys.toList();
+    _logger.i('Requesting positions from all ${nodeNums.length} known nodes');
+    for (final nodeNum in nodeNums) {
       await requestPosition(nodeNum);
       // Small delay between requests to avoid flooding
       await Future.delayed(const Duration(milliseconds: 100));
