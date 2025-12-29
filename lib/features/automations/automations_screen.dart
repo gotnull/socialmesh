@@ -8,6 +8,7 @@ import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../../core/widgets/edge_fade.dart';
 import '../navigation/main_shell.dart';
 import 'automation_debug_service.dart';
 import 'automation_providers.dart';
@@ -132,34 +133,43 @@ class AutomationsScreen extends ConsumerWidget {
               ).textTheme.titleSmall?.copyWith(color: Colors.grey),
             ),
             const SizedBox(height: 16),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              alignment: WrapAlignment.center,
-              children: AutomationRepository.templates.map((template) {
-                return BouncyTap(
-                  onTap: () => _addFromTemplate(context, ref, template.id),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: context.card,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: context.border),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(template.icon, size: 20),
-                        const SizedBox(width: 8),
-                        Text(template.name),
-                      ],
-                    ),
-                  ),
-                );
-              }).toList(),
+            SizedBox(
+              height: 44,
+              child: EdgeFade.horizontal(
+                fadeSize: 24,
+                fadeColor: context.background,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: AutomationRepository.templates.length,
+                  separatorBuilder: (_, _) => const SizedBox(width: 8),
+                  itemBuilder: (context, index) {
+                    final template = AutomationRepository.templates[index];
+                    return BouncyTap(
+                      onTap: () => _addFromTemplate(context, ref, template.id),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: context.card,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: context.border),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(template.icon, size: 20),
+                            const SizedBox(width: 8),
+                            Text(template.name),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
             ),
           ],
         ),
@@ -801,41 +811,46 @@ class _AddAutomationSheet extends StatelessWidget {
                 // Templates in horizontal scroll
                 SizedBox(
                   height: 100,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: AutomationRepository.templates.length,
-                    separatorBuilder: (_, _) => const SizedBox(width: 8),
-                    itemBuilder: (context, index) {
-                      final template = AutomationRepository.templates[index];
-                      return BouncyTap(
-                        onTap: () => onSelectTemplate(template.id),
-                        child: Container(
-                          width: 140,
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: context.card,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: context.border),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Icon(template.icon, size: 24),
-                              const Spacer(),
-                              Text(
-                                template.name,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 13,
+                  child: EdgeFade.horizontal(
+                    fadeSize: 24,
+                    fadeColor: context.background,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: AutomationRepository.templates.length,
+                      separatorBuilder: (_, _) => const SizedBox(width: 8),
+                      itemBuilder: (context, index) {
+                        final template = AutomationRepository.templates[index];
+                        return BouncyTap(
+                          onTap: () => onSelectTemplate(template.id),
+                          child: Container(
+                            width: 140,
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: context.card,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: context.border),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(template.icon, size: 24),
+                                const Spacer(),
+                                Text(
+                                  template.name,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 13,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
                 ),
 

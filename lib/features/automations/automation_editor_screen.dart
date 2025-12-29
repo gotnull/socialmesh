@@ -103,13 +103,21 @@ class _AutomationEditorScreenState
           currentDesc.isEmpty ||
           allDefaultMessages.contains(currentDesc) ||
           allDefaultDescriptions.contains(currentDesc) ||
-          // Also match if description starts with "Triggered when" or "Alert when" or "Alert if"
+          // Also match if description starts with common automation description patterns
           currentDesc.startsWith('Triggered when') ||
           currentDesc.startsWith('Alert when') ||
           currentDesc.startsWith('Alert if') ||
+          currentDesc.startsWith('Notify when') ||
           // Match duration-based descriptions
           RegExp(
             r'Alert if no activity from node for \d+ minutes',
+          ).hasMatch(currentDesc) ||
+          // Match battery threshold descriptions
+          RegExp(
+            r'Notify when a node battery drops below \d+%',
+          ).hasMatch(currentDesc) ||
+          RegExp(
+            r'Triggered when battery drops below \d+%',
           ).hasMatch(currentDesc);
 
       if (shouldUpdateDesc) {
@@ -167,13 +175,26 @@ class _AutomationEditorScreenState
       });
     } else {
       // Config change within same trigger type
-      // Check if we should update description for nodeSilent duration changes
+      // Check if we should update description for config value changes
+      final currentDesc = _descriptionController.text.trim();
+
       if (newType == TriggerType.nodeSilent) {
-        final currentDesc = _descriptionController.text.trim();
         // Update if description matches the pattern "Alert if no activity..."
         if (currentDesc.startsWith('Alert if no activity') ||
             RegExp(
               r'Alert if no activity from node for \d+ minutes',
+            ).hasMatch(currentDesc)) {
+          _descriptionController.text = _getDescriptionForTrigger(newTrigger);
+        }
+      } else if (newType == TriggerType.batteryLow) {
+        // Update if description matches battery threshold pattern
+        if (currentDesc.startsWith('Triggered when battery drops below') ||
+            currentDesc.startsWith('Notify when a node battery drops below') ||
+            RegExp(
+              r'Triggered when battery drops below \d+%',
+            ).hasMatch(currentDesc) ||
+            RegExp(
+              r'Notify when a node battery drops below \d+%',
             ).hasMatch(currentDesc)) {
           _descriptionController.text = _getDescriptionForTrigger(newTrigger);
         }

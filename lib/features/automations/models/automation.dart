@@ -258,7 +258,7 @@ extension TriggerTypeExtension on TriggerType {
       case TriggerType.geofenceExit:
         return '{{node.name}} left the zone';
       case TriggerType.nodeSilent:
-        return '{{node.name}} hasn\\'t been heard from in {{silent.duration}}.';
+        return "{{node.name}} hasn't been heard from in {{silent.duration}}.";
       case TriggerType.scheduled:
         return 'Scheduled alert at {{time}}';
       case TriggerType.signalWeak:

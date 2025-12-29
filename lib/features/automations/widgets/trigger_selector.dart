@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
-import '../../../core/widgets/app_bottom_sheet.dart';
+import '../../../core/widgets/node_selector_sheet.dart';
 import '../../../models/mesh_models.dart';
-import '../../../utils/snackbar.dart';
 import '../../settings/geofence_picker_screen.dart';
 import '../models/automation.dart';
 
@@ -430,261 +429,21 @@ class _TriggerSelectorState extends State<TriggerSelector> {
     );
   }
 
-  void _showNodePicker(BuildContext context) {
-    if (widget.availableNodes.isEmpty) {
-      showWarningSnackBar(context, 'No nodes available');
-      return;
-    }
-
-    // Sort nodes: online first, then by name
-    final allNodes = widget.availableNodes.toList()
-      ..sort((a, b) {
-        if (a.isOnline != b.isOnline) return a.isOnline ? -1 : 1;
-        final aName = a.longName ?? a.shortName ?? '';
-        final bName = b.longName ?? b.shortName ?? '';
-        return aName.compareTo(bName);
-      });
-
-    var searchQuery = '';
-
-    AppBottomSheet.show(
-      context: context,
-      padding: EdgeInsets.zero,
-      child: StatefulBuilder(
-        builder: (context, setSheetState) {
-          // Filter nodes by search query
-          final nodes = searchQuery.isEmpty
-              ? allNodes
-              : allNodes.where((n) {
-                  final query = searchQuery.toLowerCase();
-                  final name = (n.longName ?? n.shortName ?? '').toLowerCase();
-                  final shortName = (n.shortName ?? '').toLowerCase();
-                  return name.contains(query) || shortName.contains(query);
-                }).toList();
-
-          return ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.6,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 16, 0),
-                  child: Row(
-                    children: [
-                      Text(
-                        'Select Node',
-                        style: TextStyle(
-                          color: context.textPrimary,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const Spacer(),
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: Text(
-                          'Done',
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Search bar
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  child: TextField(
-                    style: TextStyle(color: context.textPrimary, fontSize: 14),
-                    decoration: InputDecoration(
-                      hintText: 'Search nodes...',
-                      hintStyle: TextStyle(
-                        color: context.textTertiary,
-                        fontSize: 14,
-                      ),
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: context.textTertiary,
-                        size: 20,
-                      ),
-                      filled: true,
-                      fillColor: context.background,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
-                      ),
-                      isDense: true,
-                    ),
-                    onChanged: (value) =>
-                        setSheetState(() => searchQuery = value),
-                  ),
-                ),
-                Divider(height: 1, color: context.border),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  child: Row(
-                    children: [
-                      Text(
-                        searchQuery.isEmpty
-                            ? '${nodes.length} nodes'
-                            : '${nodes.length} of ${allNodes.length} nodes',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: context.textTertiary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Node list
-                Flexible(
-                  child: nodes.isEmpty
-                      ? Padding(
-                          padding: const EdgeInsets.all(32),
-                          child: Text(
-                            'No nodes match "$searchQuery"',
-                            style: TextStyle(color: context.textTertiary),
-                          ),
-                        )
-                      : ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: nodes.length,
-                          itemBuilder: (context, index) {
-                            final node = nodes[index];
-                            final isSelected =
-                                widget.trigger.nodeNum == node.nodeNum;
-                            return _buildNodeTile(
-                              context: context,
-                              node: node,
-                              isSelected: isSelected,
-                              onTap: () {
-                                widget.onChanged(
-                                  widget.trigger.copyWith(
-                                    config: {
-                                      ...widget.trigger.config,
-                                      'nodeNum': node.nodeNum,
-                                    },
-                                  ),
-                                );
-                                Navigator.pop(context);
-                              },
-                            );
-                          },
-                        ),
-                ),
-                SizedBox(height: MediaQuery.of(context).padding.bottom),
-              ],
-            ),
-          );
-        },
-      ),
+  Future<void> _showNodePicker(BuildContext context) async {
+    final selection = await NodeSelectorSheet.show(
+      context,
+      title: 'Select Node',
+      allowBroadcast: false,
+      initialSelection: widget.trigger.nodeNum,
     );
-  }
 
-  Widget _buildNodeTile({
-    required BuildContext context,
-    required MeshNode node,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    final iconColor = node.isOnline
-        ? Theme.of(context).colorScheme.primary
-        : context.textTertiary;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          color: isSelected
-              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.08)
-              : Colors.transparent,
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: iconColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Stack(
-                  children: [
-                    Center(
-                      child: Icon(Icons.person, color: iconColor, size: 22),
-                    ),
-                    if (node.isOnline)
-                      Positioned(
-                        right: 2,
-                        bottom: 2,
-                        child: Container(
-                          width: 10,
-                          height: 10,
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primary,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: context.surface,
-                              width: 2,
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      node.longName ?? node.shortName ?? 'Unknown',
-                      style: TextStyle(
-                        color: isSelected
-                            ? Theme.of(context).colorScheme.primary
-                            : context.textPrimary,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    Text(
-                      node.shortName ?? '!${node.nodeNum.toRadixString(16)}',
-                      style: TextStyle(
-                        color: context.textTertiary,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (isSelected)
-                Icon(
-                  Icons.check_circle,
-                  color: Theme.of(context).colorScheme.primary,
-                  size: 22,
-                ),
-            ],
-          ),
+    if (selection != null && selection.nodeNum != null) {
+      widget.onChanged(
+        widget.trigger.copyWith(
+          config: {...widget.trigger.config, 'nodeNum': selection.nodeNum},
         ),
-      ),
-    );
+      );
+    }
   }
 
   Widget _buildGeofenceConfig(BuildContext context) {
