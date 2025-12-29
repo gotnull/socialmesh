@@ -778,6 +778,9 @@ export function generateMapPage(): string {
     .marker-cluster {
       background: rgba(233, 30, 140, 0.3);
       border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     
     .marker-cluster div {
