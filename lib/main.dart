@@ -1121,9 +1121,9 @@ class _AppleTVGridCardState extends State<_AppleTVGridCard>
   final _repaintBoundaryKey = GlobalKey();
   final _random = math.Random();
 
-  // Fragment grid configuration - finer dust for premium effect
-  static const int _fragmentsX = 48;
-  static const int _fragmentsY = 64;
+  // Fragment grid - fewer, larger pieces for cinematic Endgame effect
+  static const int _fragmentsX = 12;
+  static const int _fragmentsY = 16;
 
   @override
   void initState() {
@@ -1134,7 +1134,7 @@ class _AppleTVGridCardState extends State<_AppleTVGridCard>
     );
 
     _disintegrationController = AnimationController(
-      duration: const Duration(milliseconds: 2500),
+      duration: const Duration(milliseconds: 3500), // Slower, more cinematic
       vsync: this,
     );
 
@@ -1197,46 +1197,41 @@ class _AppleTVGridCardState extends State<_AppleTVGridCard>
         final normalizedX = x / _fragmentsX;
         final normalizedY = y / _fragmentsY;
 
-        final centerDistX = (normalizedX - 0.5).abs();
-        final centerDistY = (normalizedY - 0.5).abs();
+        // Distance from center for radial dissolution
+        final centerDistX = (normalizedX - 0.5) * 2;
+        final centerDistY = (normalizedY - 0.5) * 2;
         final centerDist = math.sqrt(
           centerDistX * centerDistX + centerDistY * centerDistY,
         );
 
-        // Much more chaotic disintegration timing - heavily randomized
-        final edgeFactor = centerDist * 0.25;
-        final sweepAngle = math.atan2(normalizedY - 0.5, normalizedX - 0.5);
-        final spiralFactor = (sweepAngle / (2 * math.pi) + 0.5) * 0.2;
-        final randomFactor = _random.nextDouble() * 0.55; // Much more random
-        final startDelay = (edgeFactor + spiralFactor + randomFactor).clamp(
-          0.0,
-          0.75,
-        );
+        // Endgame-style: edges dissolve first, flows inward
+        // Start from corners and edges, work toward center
+        final edgeFactor = centerDist * 0.45; // Edges start earlier
+        final randomOffset = _random.nextDouble() * 0.25; // Subtle variation
+        final startDelay = (edgeFactor + randomOffset).clamp(0.0, 0.65);
 
-        // More chaotic direction - not just outward
-        final baseAngle = math.atan2(normalizedY - 0.5, normalizedX - 0.5);
-        final angleVariation = (_random.nextDouble() - 0.5) * math.pi * 0.8;
-        final finalAngle = baseAngle + angleVariation;
-        final distance = 80 + _random.nextDouble() * 180;
+        // Gentle outward drift - like ash floating away
+        final angle = math.atan2(centerDistY, centerDistX);
+        final gentleSpread =
+            _random.nextDouble() * 0.3 + 0.7; // 70-100% of base
+        final distance =
+            40 + _random.nextDouble() * 60; // Shorter, gentler drift
 
-        final driftX =
-            math.cos(finalAngle) * distance +
-            (_random.nextDouble() - 0.5) * 100;
-        final driftY =
-            math.sin(finalAngle) * distance -
-            (50 + _random.nextDouble() * 120); // Bias upward for dust rising
-        final driftZ = (_random.nextDouble() - 0.5) * 250;
+        // Smooth upward float with gentle outward spread
+        final driftX = math.cos(angle) * distance * gentleSpread * 0.5;
+        final driftY = -30 - _random.nextDouble() * 50; // Float upward gently
+        final driftZ = (_random.nextDouble() - 0.5) * 40; // Minimal depth
 
-        // More aggressive rotations for dust tumbling
-        final rotationX = (_random.nextDouble() - 0.5) * math.pi * 4;
-        final rotationY = (_random.nextDouble() - 0.5) * math.pi * 4;
-        final rotationZ = (_random.nextDouble() - 0.5) * math.pi * 5;
+        // Subtle rotation - ash doesn't tumble wildly
+        final rotationX = (_random.nextDouble() - 0.5) * math.pi * 0.3;
+        final rotationY = (_random.nextDouble() - 0.5) * math.pi * 0.3;
+        final rotationZ = (_random.nextDouble() - 0.5) * math.pi * 0.5;
 
-        // Smaller final scale for finer dust
-        final scaleEnd = 0.02 + _random.nextDouble() * 0.15;
+        // Fragments shrink and fade as they float away
+        final scaleEnd = 0.3 + _random.nextDouble() * 0.4; // Larger end scale
 
-        // More varied curve intensity for organic feel
-        final curveIntensity = (_random.nextDouble() - 0.5) * 3;
+        // Gentle curve for floating motion
+        final curveIntensity = (_random.nextDouble() - 0.5) * 0.8;
 
         _fragments!.add(
           _SplashDisintegrationFragment(
@@ -1540,7 +1535,7 @@ class _SplashDisintegrationFragment {
   });
 }
 
-/// Custom painter for splash card disintegration
+/// Custom painter for splash card disintegration - Endgame style
 class _SplashDisintegrationPainter extends CustomPainter {
   final ui.Image image;
   final List<_SplashDisintegrationFragment> fragments;
@@ -1554,7 +1549,7 @@ class _SplashDisintegrationPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..filterQuality = FilterQuality.medium;
+    final paint = Paint()..filterQuality = FilterQuality.high;
 
     // Scale factor (captured at 2x)
     final scaleX = size.width / image.width;
@@ -1577,12 +1572,14 @@ class _SplashDisintegrationPainter extends CustomPainter {
         continue;
       }
 
-      final moveProgress = Curves.easeOutCubic.transform(fragmentProgress);
-      final fadeProgress = Curves.easeInQuad.transform(fragmentProgress);
-      final scaleProgress = Curves.easeInCubic.transform(fragmentProgress);
+      // Smoother, more cinematic curves for Endgame effect
+      final moveProgress = Curves.easeOutSine.transform(fragmentProgress);
+      final fadeProgress = Curves.easeInCubic.transform(fragmentProgress);
+      final scaleProgress = Curves.easeInOutSine.transform(fragmentProgress);
 
+      // Gentle floating motion
       final curveOffset =
-          math.sin(moveProgress * math.pi) * fragment.curveIntensity * 20;
+          math.sin(moveProgress * math.pi * 0.5) * fragment.curveIntensity * 15;
       final currentX =
           fragment.srcRect.center.dx * scaleX +
           fragment.driftX * moveProgress +
@@ -1592,7 +1589,10 @@ class _SplashDisintegrationPainter extends CustomPainter {
       final currentZ = fragment.driftZ * moveProgress;
 
       final currentScale = 1.0 - (1.0 - fragment.scaleEnd) * scaleProgress;
-      final opacity = (1.0 - fadeProgress).clamp(0.0, 1.0);
+
+      // Fade starts later and is more gradual (Endgame style - pieces visible longer)
+      final adjustedFade = (fadeProgress * 1.3 - 0.1).clamp(0.0, 1.0);
+      final opacity = (1.0 - adjustedFade).clamp(0.0, 1.0);
 
       if (opacity <= 0 || currentScale <= 0) continue;
 
@@ -1600,12 +1600,12 @@ class _SplashDisintegrationPainter extends CustomPainter {
 
       canvas.save();
 
-      final perspectiveFactor = 1.0 + currentZ * 0.001;
+      final perspectiveFactor = 1.0 + currentZ * 0.0005; // Subtler depth
       canvas.translate(currentX, currentY);
 
       final scaleFactor = currentScale * perspectiveFactor;
       final matrix = Matrix4.identity()
-        ..setEntry(3, 2, 0.002)
+        ..setEntry(3, 2, 0.001) // Subtler perspective
         ..rotateX(fragment.rotationX * moveProgress)
         ..rotateY(fragment.rotationY * moveProgress)
         ..rotateZ(fragment.rotationZ * moveProgress)
