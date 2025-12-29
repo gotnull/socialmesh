@@ -137,6 +137,7 @@ railway up       # Deploy to Railway (persistent volume at /app/data)
 - `src/database.ts` - SQLite schema and queries
 
 ### API Endpoints
+- `GET /map` - Interactive world mesh map (web version of app's World Map)
 - `GET /api/nodes` - Returns valid nodes (with name + position). Use `?all=true` for raw data
 - `GET /api/node/:nodeNum` - Single node details
 - `GET /api/stats` - Node counts, decode stats, rate limit info

@@ -14,6 +14,7 @@ import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import { MqttObserver } from './mqtt-observer';
 import { NodeStore } from './node-store';
+import { generateMapPage } from './map-page';
 
 const PORT = parseInt(process.env.PORT || '3001', 10);
 const MQTT_BROKER = process.env.MQTT_BROKER || 'mqtt://mqtt.meshtastic.org';
@@ -662,6 +663,12 @@ app.get('/health', (req, res) => {
     },
     version: process.env.npm_package_version || '1.0.0',
   });
+});
+
+// World Mesh Map - Interactive web map
+app.get('/map', (_req, res) => {
+  const mapHtml = generateMapPage();
+  res.type('html').send(mapHtml);
 });
 
 // Get all nodes (filtered to valid nodes by default, ?all=true for raw)
