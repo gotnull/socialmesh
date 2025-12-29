@@ -119,9 +119,27 @@ Checks: empty stubs, resource cleanup, config screen patterns, subscription disp
 - Theme colors: `lib/core/theme.dart` - use `AccentColors` for app accent
 - Visual style: sci-fi aesthetics, glowing effects, animations
 
-## Restrictions
-- Never run the Flutter app
-- Never commit or push to git
+## Mesh Observer (Backend)
+The `mesh-observer/` directory contains a Node.js/TypeScript service that collects Meshtastic node data via MQTT.
+
+### Deployment
+After making changes to mesh-observer:
+```bash
+cd mesh-observer
+npm run build    # Verify TypeScript compiles
+railway up       # Deploy to Railway (persistent volume at /app/data)
+```
+
+### Key Files
+- `src/index.ts` - Express API server, MQTT topics config
+- `src/mqtt-observer.ts` - MQTT message handling, per-node rate limiting (300 msgs/min)
+- `src/node-store.ts` - In-memory cache + SQLite persistence, validity filtering, TTLs
+- `src/database.ts` - SQLite schema and queries
+
+### API Endpoints
+- `GET /api/nodes` - Returns valid nodes (with name + position). Use `?all=true` for raw data
+- `GET /api/node/:nodeNum` - Single node details
+- `GET /api/stats` - Node counts, decode stats, rate limit info
 
 ## Restrictions
 - Never run the Flutter app
