@@ -437,7 +437,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
     }
 
     // Sort nodes: online first, then by name
-    final nodes = widget.availableNodes.toList()
+    final allNodes = widget.availableNodes.toList()
       ..sort((a, b) {
         if (a.isOnline != b.isOnline) return a.isOnline ? -1 : 1;
         final aName = a.longName ?? a.shortName ?? '';
@@ -445,85 +445,153 @@ class _TriggerSelectorState extends State<TriggerSelector> {
         return aName.compareTo(bName);
       });
 
+    var searchQuery = '';
+
     AppBottomSheet.show(
       context: context,
       padding: EdgeInsets.zero,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.5,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Header
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 16, 0),
-              child: Row(
-                children: [
-                  Text(
-                    'Select Node',
-                    style: TextStyle(
-                      color: context.textPrimary,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const Spacer(),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text(
-                      'Done',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.w600,
+      child: StatefulBuilder(
+        builder: (context, setSheetState) {
+          // Filter nodes by search query
+          final nodes = searchQuery.isEmpty
+              ? allNodes
+              : allNodes.where((n) {
+                  final query = searchQuery.toLowerCase();
+                  final name = (n.longName ?? n.shortName ?? '').toLowerCase();
+                  final shortName = (n.shortName ?? '').toLowerCase();
+                  return name.contains(query) || shortName.contains(query);
+                }).toList();
+
+          return ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.6,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 0, 16, 0),
+                  child: Row(
+                    children: [
+                      Text(
+                        'Select Node',
+                        style: TextStyle(
+                          color: context.textPrimary,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
+                      const Spacer(),
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text(
+                          'Done',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Search bar
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: TextField(
+                    style: TextStyle(color: context.textPrimary, fontSize: 14),
+                    decoration: InputDecoration(
+                      hintText: 'Search nodes...',
+                      hintStyle: TextStyle(
+                        color: context.textTertiary,
+                        fontSize: 14,
+                      ),
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: context.textTertiary,
+                        size: 20,
+                      ),
+                      filled: true,
+                      fillColor: context.background,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      isDense: true,
                     ),
+                    onChanged: (value) =>
+                        setSheetState(() => searchQuery = value),
                   ),
-                ],
-              ),
-            ),
-            Divider(height: 1, color: context.border),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  Text(
-                    '${nodes.length} nodes',
-                    style: TextStyle(fontSize: 11, color: context.textTertiary),
+                ),
+                Divider(height: 1, color: context.border),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
                   ),
-                ],
-              ),
-            ),
-            // Node list
-            Flexible(
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: nodes.length,
-                itemBuilder: (context, index) {
-                  final node = nodes[index];
-                  final isSelected = widget.trigger.nodeNum == node.nodeNum;
-                  return _buildNodeTile(
-                    context: context,
-                    node: node,
-                    isSelected: isSelected,
-                    onTap: () {
-                      widget.onChanged(
-                        widget.trigger.copyWith(
-                          config: {
-                            ...widget.trigger.config,
-                            'nodeNum': node.nodeNum,
+                  child: Row(
+                    children: [
+                      Text(
+                        searchQuery.isEmpty
+                            ? '${nodes.length} nodes'
+                            : '${nodes.length} of ${allNodes.length} nodes',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: context.textTertiary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Node list
+                Flexible(
+                  child: nodes.isEmpty
+                      ? Padding(
+                          padding: const EdgeInsets.all(32),
+                          child: Text(
+                            'No nodes match "$searchQuery"',
+                            style: TextStyle(color: context.textTertiary),
+                          ),
+                        )
+                      : ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: nodes.length,
+                          itemBuilder: (context, index) {
+                            final node = nodes[index];
+                            final isSelected =
+                                widget.trigger.nodeNum == node.nodeNum;
+                            return _buildNodeTile(
+                              context: context,
+                              node: node,
+                              isSelected: isSelected,
+                              onTap: () {
+                                widget.onChanged(
+                                  widget.trigger.copyWith(
+                                    config: {
+                                      ...widget.trigger.config,
+                                      'nodeNum': node.nodeNum,
+                                    },
+                                  ),
+                                );
+                                Navigator.pop(context);
+                              },
+                            );
                           },
                         ),
-                      );
-                      Navigator.pop(context);
-                    },
-                  );
-                },
-              ),
+                ),
+                SizedBox(height: MediaQuery.of(context).padding.bottom),
+              ],
             ),
-            SizedBox(height: MediaQuery.of(context).padding.bottom),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

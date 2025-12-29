@@ -42,6 +42,7 @@ class AutomationEngine {
   final Map<int, bool> _nodeOnlineStatus = {};
   final Map<int, int> _nodeBatteryLevels = {};
   final Map<int, DateTime> _nodeLastHeard = {};
+  final Map<int, String> _nodeNames = {};
   final Map<int, (double, double)> _nodePositions = {};
 
   // Hysteresis: track which battery low alerts have fired per node+automation
@@ -94,6 +95,9 @@ class AutomationEngine {
     MeshNode node, {
     MeshNode? previousNode,
   }) async {
+    // Track node name for silent node lookups
+    _nodeNames[node.nodeNum] = node.displayName;
+
     final automations = _repository.automations
         .where((a) => a.enabled)
         .toList();
@@ -870,7 +874,11 @@ class AutomationEngine {
 
         if (DateTime.now().difference(lastHeard) > silentDuration) {
           await _processEvent(
-            AutomationEvent(type: TriggerType.nodeSilent, nodeNum: nodeNum),
+            AutomationEvent(
+              type: TriggerType.nodeSilent,
+              nodeNum: nodeNum,
+              nodeName: _nodeNames[nodeNum],
+            ),
           );
         }
       }

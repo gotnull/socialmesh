@@ -309,7 +309,7 @@ class AutomationRepository extends ChangeNotifier {
               config: {
                 'notificationTitle': 'Node Silent',
                 'notificationBody':
-                    '{{node.name}} hasn\'t been heard from in 30 minutes',
+                    '{{node.name}} hasn\'t been heard from in {{silent.duration}}.',
               },
             ),
           ],

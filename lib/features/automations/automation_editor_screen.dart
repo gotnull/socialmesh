@@ -73,7 +73,7 @@ class _AutomationEditorScreenState
     if (oldType != newType) {
       final newDefaultText = newType.defaultMessageText;
       final newDisplayName = newType.displayName;
-      final newDefaultDesc = newType.defaultDescription;
+      final newDefaultDesc = _getDescriptionForTrigger(newTrigger);
 
       // Collect all possible default values from any trigger type
       final allDefaultMessages = TriggerType.values
@@ -103,9 +103,14 @@ class _AutomationEditorScreenState
           currentDesc.isEmpty ||
           allDefaultMessages.contains(currentDesc) ||
           allDefaultDescriptions.contains(currentDesc) ||
-          // Also match if description starts with "Triggered when" or "Alert when"
+          // Also match if description starts with "Triggered when" or "Alert when" or "Alert if"
           currentDesc.startsWith('Triggered when') ||
-          currentDesc.startsWith('Alert when');
+          currentDesc.startsWith('Alert when') ||
+          currentDesc.startsWith('Alert if') ||
+          // Match duration-based descriptions
+          RegExp(
+            r'Alert if no activity from node for \d+ minutes',
+          ).hasMatch(currentDesc);
 
       if (shouldUpdateDesc) {
         _descriptionController.text = newDefaultDesc;
@@ -161,10 +166,34 @@ class _AutomationEditorScreenState
         _actions = updatedActions;
       });
     } else {
-      // Just update the trigger (e.g., config change within same type)
+      // Config change within same trigger type
+      // Check if we should update description for nodeSilent duration changes
+      if (newType == TriggerType.nodeSilent) {
+        final currentDesc = _descriptionController.text.trim();
+        // Update if description matches the pattern "Alert if no activity..."
+        if (currentDesc.startsWith('Alert if no activity') ||
+            RegExp(
+              r'Alert if no activity from node for \d+ minutes',
+            ).hasMatch(currentDesc)) {
+          _descriptionController.text = _getDescriptionForTrigger(newTrigger);
+        }
+      }
+
       setState(() {
         _trigger = newTrigger;
       });
+    }
+  }
+
+  /// Get description text for a trigger, with config values interpolated
+  String _getDescriptionForTrigger(AutomationTrigger trigger) {
+    switch (trigger.type) {
+      case TriggerType.nodeSilent:
+        return 'Alert if no activity from node for ${trigger.silentMinutes} minutes';
+      case TriggerType.batteryLow:
+        return 'Triggered when battery drops below ${trigger.batteryThreshold}%';
+      default:
+        return trigger.type.defaultDescription;
     }
   }
 
