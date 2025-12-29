@@ -8,6 +8,7 @@ import '../storage/widget_storage_service.dart';
 import '../widget_builder_screen.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/widget_preview_card.dart';
+import '../../../core/widgets/auto_scroll_text.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/profile_providers.dart';
 import '../../../providers/splash_mesh_provider.dart';
@@ -546,7 +547,7 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
       backgroundColor: context.background,
       appBar: AppBar(
         backgroundColor: context.background,
-        title: Text(
+        title: AutoScrollText(
           mWidget.name,
           style: TextStyle(
             fontSize: 18,
@@ -845,7 +846,7 @@ class _CategoryScreenState extends ConsumerState<_CategoryScreen> {
       backgroundColor: context.background,
       appBar: AppBar(
         backgroundColor: context.background,
-        title: Text(
+        title: AutoScrollText(
           WidgetCategories.getDisplayName(widget.category),
           style: TextStyle(
             fontSize: 18,

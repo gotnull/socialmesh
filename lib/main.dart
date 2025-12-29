@@ -1121,9 +1121,9 @@ class _AppleTVGridCardState extends State<_AppleTVGridCard>
   final _repaintBoundaryKey = GlobalKey();
   final _random = math.Random();
 
-  // Fragment grid configuration
-  static const int _fragmentsX = 24;
-  static const int _fragmentsY = 32;
+  // Fragment grid configuration - finer dust for premium effect
+  static const int _fragmentsX = 48;
+  static const int _fragmentsY = 64;
 
   @override
   void initState() {
@@ -1203,32 +1203,40 @@ class _AppleTVGridCardState extends State<_AppleTVGridCard>
           centerDistX * centerDistX + centerDistY * centerDistY,
         );
 
-        // Disintegration wave from edges inward + random
-        final edgeFactor = centerDist * 0.4;
-        final sweepFactor = normalizedX * 0.3;
-        final randomFactor = _random.nextDouble() * 0.3;
-        final startDelay = (edgeFactor + sweepFactor + randomFactor).clamp(
+        // Much more chaotic disintegration timing - heavily randomized
+        final edgeFactor = centerDist * 0.25;
+        final sweepAngle = math.atan2(normalizedY - 0.5, normalizedX - 0.5);
+        final spiralFactor = (sweepAngle / (2 * math.pi) + 0.5) * 0.2;
+        final randomFactor = _random.nextDouble() * 0.55; // Much more random
+        final startDelay = (edgeFactor + spiralFactor + randomFactor).clamp(
           0.0,
-          0.7,
+          0.75,
         );
 
-        final directionX = (normalizedX - 0.5) * 2;
-        final directionY = (normalizedY - 0.5) * 2;
+        // More chaotic direction - not just outward
+        final baseAngle = math.atan2(normalizedY - 0.5, normalizedX - 0.5);
+        final angleVariation = (_random.nextDouble() - 0.5) * math.pi * 0.8;
+        final finalAngle = baseAngle + angleVariation;
+        final distance = 80 + _random.nextDouble() * 180;
 
         final driftX =
-            directionX * (60 + _random.nextDouble() * 100) +
-            (_random.nextDouble() - 0.3) * 50;
+            math.cos(finalAngle) * distance +
+            (_random.nextDouble() - 0.5) * 100;
         final driftY =
-            directionY * (50 + _random.nextDouble() * 70) -
-            (30 + _random.nextDouble() * 80);
-        final driftZ = (_random.nextDouble() - 0.5) * 150;
+            math.sin(finalAngle) * distance -
+            (50 + _random.nextDouble() * 120); // Bias upward for dust rising
+        final driftZ = (_random.nextDouble() - 0.5) * 250;
 
-        final rotationX = (_random.nextDouble() - 0.5) * math.pi * 2.5;
-        final rotationY = (_random.nextDouble() - 0.5) * math.pi * 2.5;
-        final rotationZ = (_random.nextDouble() - 0.5) * math.pi * 3;
+        // More aggressive rotations for dust tumbling
+        final rotationX = (_random.nextDouble() - 0.5) * math.pi * 4;
+        final rotationY = (_random.nextDouble() - 0.5) * math.pi * 4;
+        final rotationZ = (_random.nextDouble() - 0.5) * math.pi * 5;
 
-        final scaleEnd = 0.1 + _random.nextDouble() * 0.3;
-        final curveIntensity = (_random.nextDouble() - 0.5) * 2;
+        // Smaller final scale for finer dust
+        final scaleEnd = 0.02 + _random.nextDouble() * 0.15;
+
+        // More varied curve intensity for organic feel
+        final curveIntensity = (_random.nextDouble() - 0.5) * 3;
 
         _fragments!.add(
           _SplashDisintegrationFragment(

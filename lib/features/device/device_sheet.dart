@@ -4,6 +4,7 @@ import '../../core/transport.dart' as transport;
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/info_table.dart';
+import '../../core/widgets/auto_scroll_text.dart';
 import '../../providers/app_providers.dart';
 
 /// Shows the device sheet as a modal bottom sheet
@@ -80,7 +81,7 @@ class _DeviceSheetContent extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    AutoScrollText(
                       displayName,
                       style: TextStyle(
                         fontSize: 20,

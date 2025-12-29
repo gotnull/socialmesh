@@ -5,6 +5,7 @@ import '../models/data_binding.dart';
 import '../renderer/widget_renderer.dart';
 import '../storage/widget_storage_service.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/auto_scroll_text.dart';
 import '../../../utils/snackbar.dart';
 import 'selectors/icon_selector.dart';
 import 'selectors/binding_selector.dart';
@@ -121,14 +122,13 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Flexible(
-              child: Text(
+              child: AutoScrollText(
                 _schema.name,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: context.textPrimary,
                 ),
-                overflow: TextOverflow.ellipsis,
               ),
             ),
             const SizedBox(width: 4),
@@ -1065,7 +1065,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
   AppBar _buildAppBar() {
     return AppBar(
       backgroundColor: context.background,
-      title: Text(
+      title: AutoScrollText(
         _schema.name,
         style: TextStyle(
           fontSize: 18,

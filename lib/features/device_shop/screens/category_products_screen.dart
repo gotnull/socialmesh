@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
+import '../../../core/widgets/auto_scroll_text.dart';
 import '../models/shop_models.dart';
 import '../providers/device_shop_providers.dart';
 import 'product_detail_screen.dart';
@@ -32,7 +33,7 @@ class _CategoryProductsScreenState
       backgroundColor: context.background,
       appBar: AppBar(
         backgroundColor: context.card,
-        title: Text(
+        title: AutoScrollText(
           widget.category.label,
           style: TextStyle(color: context.textPrimary),
         ),

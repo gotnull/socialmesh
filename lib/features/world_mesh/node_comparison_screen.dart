@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/theme.dart';
+import '../../core/widgets/auto_scroll_text.dart';
 import '../../models/world_mesh_node.dart';
 import '../../utils/snackbar.dart';
 
@@ -131,16 +132,13 @@ class NodeComparisonScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
+          AutoScrollText(
             node.displayName,
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
               color: context.textPrimary,
             ),
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 4),
           GestureDetector(

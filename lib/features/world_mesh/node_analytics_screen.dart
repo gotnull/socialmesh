@@ -9,6 +9,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../core/constants.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/auto_scroll_text.dart';
 import '../../core/widgets/info_table.dart';
 import '../../models/world_mesh_node.dart';
 import '../../services/world_mesh_map_service.dart';
@@ -481,7 +482,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
       backgroundColor: context.background,
       appBar: AppBar(
         backgroundColor: context.background,
-        title: Text(
+        title: AutoScrollText(
           node.longName.isNotEmpty ? node.longName : node.shortName,
           style: TextStyle(
             fontSize: 20,

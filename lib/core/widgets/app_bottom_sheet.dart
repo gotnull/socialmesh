@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme.dart';
+import 'auto_scroll_text.dart';
 
 /// Action item for bottom sheet action menus
 class BottomSheetAction<T> {
@@ -337,11 +338,13 @@ class DragPill extends StatelessWidget {
 }
 
 /// Standard bottom sheet header with icon and title
+/// Supports marquee scrolling for long titles
 class BottomSheetHeader extends StatelessWidget {
   final IconData? icon;
   final Color? iconColor;
   final String title;
   final String? subtitle;
+  final bool enableMarquee;
 
   const BottomSheetHeader({
     super.key,
@@ -349,6 +352,7 @@ class BottomSheetHeader extends StatelessWidget {
     this.iconColor,
     required this.title,
     this.subtitle,
+    this.enableMarquee = true,
   });
 
   @override
@@ -358,14 +362,24 @@ class BottomSheetHeader extends StatelessWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: context.textPrimary,
+          if (enableMarquee)
+            AutoScrollText(
+              title,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: context.textPrimary,
+              ),
+            )
+          else
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: context.textPrimary,
+              ),
             ),
-          ),
           if (subtitle != null) ...[
             const SizedBox(height: 8),
             Text(
@@ -394,14 +408,24 @@ class BottomSheetHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: context.textPrimary,
+              if (enableMarquee)
+                AutoScrollText(
+                  title,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: context.textPrimary,
+                  ),
+                )
+              else
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: context.textPrimary,
+                  ),
                 ),
-              ),
               if (subtitle != null) ...[
                 const SizedBox(height: 4),
                 Text(

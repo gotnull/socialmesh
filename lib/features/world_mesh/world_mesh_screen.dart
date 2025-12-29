@@ -810,10 +810,42 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
             _buildStatItem(theme, Icons.cloud_done, state.nodeCount, 'total'),
             const Spacer(),
             if (state.lastUpdated != null)
-              Text(
-                'Updated ${_formatLastUpdated(state.lastUpdated!)}',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+              GestureDetector(
+                onTap: () {
+                  ref.read(worldMeshMapProvider.notifier).forceRefresh();
+                  showInfoSnackBar(context, 'Refreshing world mesh data...');
+                },
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (state.isFromCache)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 4),
+                        child: Icon(
+                          Icons.cloud_off,
+                          size: 12,
+                          color: theme.colorScheme.error.withValues(alpha: 0.7),
+                        ),
+                      ),
+                    Text(
+                      state.isFromCache
+                          ? 'Cached ${_formatLastUpdated(state.lastUpdated!)}'
+                          : 'Updated ${_formatLastUpdated(state.lastUpdated!)}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: state.isFromCache
+                            ? theme.colorScheme.error.withValues(alpha: 0.6)
+                            : theme.colorScheme.onSurface.withValues(
+                                alpha: 0.5,
+                              ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Icon(
+                      Icons.refresh,
+                      size: 14,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                    ),
+                  ],
                 ),
               ),
           ],

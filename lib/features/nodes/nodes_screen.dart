@@ -14,6 +14,7 @@ import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/node_avatar.dart';
 import '../../core/widgets/edge_fade.dart';
+import '../../core/widgets/auto_scroll_text.dart';
 import '../../services/share_link_service.dart';
 import '../messaging/messaging_screen.dart';
 import '../map/map_screen.dart';
@@ -2200,7 +2201,7 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
                     Row(
                       children: [
                         Flexible(
-                          child: Text(
+                          child: AutoScrollText(
                             node.displayName,
                             style: TextStyle(
                               fontSize: 22,
