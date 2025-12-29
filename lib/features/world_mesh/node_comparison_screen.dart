@@ -388,20 +388,23 @@ class _ComparisonTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: context.border),
-      ),
-      child: Column(
-        children: [
-          for (var i = 0; i < rows.length; i++) ...[
-            _buildRow(context, rows[i]),
-            if (i < rows.length - 1)
-              Container(height: 1, color: context.border),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        decoration: BoxDecoration(
+          color: context.card,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: context.border),
+        ),
+        child: Column(
+          children: [
+            for (var i = 0; i < rows.length; i++) ...[
+              _buildRow(context, rows[i]),
+              if (i < rows.length - 1)
+                Container(height: 1, color: context.border),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

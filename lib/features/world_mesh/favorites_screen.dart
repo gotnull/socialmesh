@@ -432,13 +432,18 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
         _isCompareMode &&
         _selectedForCompare?.metadata.nodeId == item.metadata.nodeId;
 
+    const borderRadius = BorderRadius.all(Radius.circular(12));
+
     return Material(
       color: context.card,
+      borderRadius: borderRadius,
       child: InkWell(
+        borderRadius: borderRadius,
         onTap: () => _handleItemTap(item),
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
+            borderRadius: borderRadius,
             border: Border.all(
               color: isSelected
                   ? AccentColors.green
