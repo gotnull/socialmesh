@@ -30,6 +30,7 @@ interface DecodeStats {
   mapreportUpdates: number;
   nodesCreated: number;
   queueDropped: number;
+  nodeRateLimited: number;
 }
 
 // Message queue item
@@ -43,6 +44,15 @@ const QUEUE_MAX_SIZE = 10000; // Max messages to queue before dropping
 const BATCH_SIZE = 100; // Process this many messages per batch
 const BATCH_INTERVAL_MS = 50; // Process batches every 50ms (yields to event loop)
 
+// Per-node rate limiting (like meshmap.net: 300 msgs/min/node)
+const NODE_RATE_LIMIT_WINDOW_MS = 60000; // 1 minute
+const NODE_RATE_LIMIT_MAX = 300; // Max messages per node per window
+
+interface NodeRateLimit {
+  count: number;
+  windowStart: number;
+}
+
 export class MqttObserver {
   private client: MqttClient | null = null;
   private connected: boolean = false;
@@ -52,6 +62,8 @@ export class MqttObserver {
   private messageQueue: QueuedMessage[] = [];
   private processingQueue: boolean = false;
   private batchTimer: NodeJS.Timeout | null = null;
+  private nodeRateLimits: Map<number, NodeRateLimit> = new Map();
+  private rateLimitCleanupTimer: NodeJS.Timeout | null = null;
   private stats: DecodeStats = {
     totalMessages: 0,
     envelopesDecoded: 0,
@@ -66,6 +78,7 @@ export class MqttObserver {
     mapreportUpdates: 0,
     nodesCreated: 0,
     queueDropped: 0,
+    nodeRateLimited: 0,
   };
   private lastLogTime: number = 0;
 
@@ -133,6 +146,51 @@ export class MqttObserver {
 
     // Start the batch processing timer
     this.startBatchProcessing();
+
+    // Start periodic cleanup of old rate limit entries
+    this.rateLimitCleanupTimer = setInterval(() => {
+      this.cleanupRateLimits();
+    }, NODE_RATE_LIMIT_WINDOW_MS);
+  }
+
+  /**
+   * Check if a node has exceeded its rate limit
+   * Returns true if the message should be dropped
+   */
+  private isNodeRateLimited(nodeNum: number): boolean {
+    const now = Date.now();
+    const limit = this.nodeRateLimits.get(nodeNum);
+
+    if (!limit || now - limit.windowStart >= NODE_RATE_LIMIT_WINDOW_MS) {
+      // New window or no existing limit
+      this.nodeRateLimits.set(nodeNum, { count: 1, windowStart: now });
+      return false;
+    }
+
+    if (limit.count >= NODE_RATE_LIMIT_MAX) {
+      this.stats.nodeRateLimited++;
+      return true;
+    }
+
+    limit.count++;
+    return false;
+  }
+
+  /**
+   * Clean up old rate limit entries to prevent memory growth
+   */
+  private cleanupRateLimits(): void {
+    const now = Date.now();
+    let removed = 0;
+    for (const [nodeNum, limit] of this.nodeRateLimits) {
+      if (now - limit.windowStart >= NODE_RATE_LIMIT_WINDOW_MS * 2) {
+        this.nodeRateLimits.delete(nodeNum);
+        removed++;
+      }
+    }
+    if (removed > 0) {
+      console.log(`🧹 Cleaned ${removed} expired rate limit entries`);
+    }
   }
 
   /**
@@ -233,6 +291,9 @@ export class MqttObserver {
       const nodeNum = this.parseNodeId(json.sender || json.from);
       if (!nodeNum) return;
 
+      // Per-node rate limiting (like meshmap.net: 300 msgs/min/node)
+      if (this.isNodeRateLimited(nodeNum)) return;
+
       const update: Partial<MeshNode> = {};
 
       // Extract region and modemPreset from topic
@@ -304,6 +365,9 @@ export class MqttObserver {
     const fromNode = packet.from;
     if (!fromNode) return;
     this.stats.packetsWithFrom++;
+
+    // Per-node rate limiting (like meshmap.net: 300 msgs/min/node)
+    if (this.isNodeRateLimited(fromNode)) return;
 
     // Try to decode the payload based on port number
     const decoded = this.decoder.decodePayload(packet);
@@ -448,7 +512,7 @@ export class MqttObserver {
     const s = this.stats;
     console.log(`📊 Stats: msgs=${s.totalMessages} envelopes=${s.envelopesDecoded} packets=${s.packetsWithFrom} decoded=${s.decryptedSuccess} failed=${s.decryptedFailed} json=${s.jsonMessages}`);
     console.log(`   Updates: position=${s.positionUpdates} nodeinfo=${s.nodeinfoUpdates} telemetry=${s.telemetryUpdates} neighbors=${s.neighborinfoUpdates} mapreport=${s.mapreportUpdates}`);
-    console.log(`   Nodes: total=${this.nodeStore.getNodeCount()} new=${s.nodesCreated} | Queue: ${this.messageQueue.length} dropped=${s.queueDropped}`);
+    console.log(`   Nodes: total=${this.nodeStore.getNodeCount()} new=${s.nodesCreated} | Queue: ${this.messageQueue.length} dropped=${s.queueDropped} rateLimited=${s.nodeRateLimited}`);
   }
 
   /**
@@ -477,6 +541,10 @@ export class MqttObserver {
    */
   disconnect(): void {
     this.stopBatchProcessing();
+    if (this.rateLimitCleanupTimer) {
+      clearInterval(this.rateLimitCleanupTimer);
+      this.rateLimitCleanupTimer = null;
+    }
     this.client?.end();
     this.connected = false;
   }

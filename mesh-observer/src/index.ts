@@ -17,8 +17,8 @@ import { NodeStore } from './node-store';
 
 const PORT = parseInt(process.env.PORT || '3001', 10);
 const MQTT_BROKER = process.env.MQTT_BROKER || 'mqtt://mqtt.meshtastic.org';
-// Subscribe to encrypted + json topics (msh/# causes disconnects on public broker)
-const MQTT_TOPICS = (process.env.MQTT_TOPICS || 'msh/+/2/e/#,msh/+/2/json/#').split(',');
+// Subscribe to encrypted + json + map topics (msh/# causes disconnects on public broker)
+const MQTT_TOPICS = (process.env.MQTT_TOPICS || 'msh/+/2/e/#,msh/+/2/json/#,msh/+/2/map/#').split(',');
 const MQTT_USERNAME = process.env.MQTT_USERNAME || 'meshdev';
 const MQTT_PASSWORD = process.env.MQTT_PASSWORD || 'large4cats';
 const NODE_EXPIRY_HOURS = parseInt(process.env.NODE_EXPIRY_HOURS || '24', 10);
@@ -664,9 +664,14 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Get all nodes
+// Get all nodes (filtered to valid nodes by default, ?all=true for raw)
 app.get('/api/nodes', (req, res) => {
-  res.json(nodeStore.getAllNodes());
+  const includeAll = req.query.all === 'true';
+  if (includeAll) {
+    res.json(nodeStore.getAllNodes());
+  } else {
+    res.json(nodeStore.getValidNodes());
+  }
 });
 
 // Get single node by nodeNum
@@ -689,6 +694,7 @@ app.get('/api/stats', (req, res) => {
   const decodeStats = mqttObserver.getStats();
   res.json({
     totalNodes: nodeStore.getNodeCount(),
+    validNodes: nodeStore.getValidNodeCount(),
     nodesWithPosition: nodeStore.getNodesWithPositionCount(),
     onlineNodes: nodeStore.getOnlineNodeCount(),
     messagesReceived: decodeStats.totalMessages,
@@ -707,6 +713,10 @@ app.get('/api/stats', (req, res) => {
       neighborinfo: decodeStats.neighborinfoUpdates,
       mapreport: decodeStats.mapreportUpdates,
       nodesCreated: decodeStats.nodesCreated,
+    },
+    rateLimit: {
+      droppedByQueue: decodeStats.queueDropped,
+      droppedByNodeLimit: decodeStats.nodeRateLimited || 0,
     },
   });
 });
