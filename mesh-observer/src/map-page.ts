@@ -48,12 +48,23 @@ export function generateMapPage(): string {
     
     * { box-sizing: border-box; margin: 0; padding: 0; }
     
+    html, body {
+      touch-action: none;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    
     body {
       font-family: 'JetBrains Mono', 'Inter', -apple-system, BlinkMacSystemFont, monospace;
       background: var(--bg-primary);
       color: var(--text-primary);
       height: 100vh;
       overflow: hidden;
+    }
+    
+    #map {
+      touch-action: manipulation;
     }
     
     /* Navigation */
@@ -97,9 +108,15 @@ export function generateMapPage(): string {
     }
     
     .nav-stats {
-      display: flex;
+      display: none;
       gap: 16px;
       align-items: center;
+    }
+    
+    @media (min-width: 768px) {
+      .nav-stats {
+        display: flex;
+      }
     }
     
     .stat-item {
@@ -114,6 +131,12 @@ export function generateMapPage(): string {
       font-family: 'JetBrains Mono', monospace;
       font-weight: 600;
       color: var(--accent-magenta);
+      transition: transform 0.3s ease, color 0.3s ease;
+    }
+    
+    .stat-value.updating {
+      transform: scale(1.15);
+      color: var(--success);
     }
     
     .stat-dot {
@@ -778,12 +801,13 @@ export function generateMapPage(): string {
     .marker-cluster {
       background: rgba(233, 30, 140, 0.3);
       border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
     }
     
     .marker-cluster div {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
       background: var(--accent-magenta);
       color: white;
       font-weight: 700;
@@ -961,6 +985,79 @@ export function generateMapPage(): string {
       width: 16px; height: 16px;
       fill: currentColor;
     }
+    
+    /* Bottom Stats Bar (Mobile) */
+    .bottom-stats {
+      display: flex;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 999;
+      background: rgba(31, 38, 51, 0.98);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border-color);
+      padding: 14px 16px 20px 16px;
+      padding-bottom: max(20px, env(safe-area-inset-bottom));
+      justify-content: space-around;
+    }
+    
+    @media (min-width: 768px) {
+      .bottom-stats {
+        display: none;
+      }
+    }
+    
+    /* Hide Leaflet attribution on mobile to avoid overlap */
+    @media (max-width: 767px) {
+      .leaflet-control-attribution {
+        display: none !important;
+      }
+    }
+    
+    .bottom-stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    
+    .bottom-stat-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent-magenta);
+      transition: transform 0.3s ease, color 0.3s ease;
+    }
+    
+    .bottom-stat-value.updating {
+      transform: scale(1.15);
+      color: var(--success);
+    }
+    
+    .bottom-stat-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+    }
+    
+    .bottom-stat .stat-dot {
+      width: 6px;
+      height: 6px;
+      display: inline-block;
+      margin-right: 4px;
+    }
+    
+    /* Adjust node panel for bottom bar */
+    @media (max-width: 767px) {
+      .node-panel {
+        bottom: 70px !important;
+      }
+      .map-controls {
+        bottom: 80px !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1082,6 +1179,24 @@ export function generateMapPage(): string {
     </div>
   </div>
   
+  <!-- Bottom Stats Bar (Mobile) -->
+  <div class="bottom-stats">
+    <div class="bottom-stat">
+      <div class="bottom-stat-value" id="bottomNodeCount">—</div>
+      <div class="bottom-stat-label">Total Nodes</div>
+    </div>
+    <div class="bottom-stat">
+      <div class="bottom-stat-value" id="bottomOnlineCount">
+        <span class="stat-dot" style="background: var(--success);"></span>—
+      </div>
+      <div class="bottom-stat-label">Online</div>
+    </div>
+    <div class="bottom-stat">
+      <div class="bottom-stat-value" id="bottomIdleCount" style="color: var(--warning);">—</div>
+      <div class="bottom-stat-label">Idle</div>
+    </div>
+  </div>
+  
   <!-- Node Info Panel -->
   <div class="node-panel" id="nodePanel">
     <div class="node-panel-header">
@@ -1177,18 +1292,43 @@ export function generateMapPage(): string {
       loadNodes();
     }
     
+    // Animate counter update
+    function animateCounter(elementId, newValue, format = true) {
+      const el = document.getElementById(elementId);
+      if (!el) return;
+      
+      const displayValue = format ? newValue.toLocaleString() : newValue;
+      const oldValue = el.textContent;
+      
+      // Only animate if value changed
+      if (oldValue !== displayValue && oldValue !== '—') {
+        el.classList.add('updating');
+        setTimeout(() => el.classList.remove('updating'), 400);
+      }
+      
+      el.textContent = displayValue;
+    }
+    
     // Load nodes from API
     async function loadNodes() {
       try {
         const response = await fetch('/api/nodes');
         allNodes = await response.json();
         
-        // Update stats
+        // Calculate stats
         const nodeCount = Object.keys(allNodes).length;
-        const onlineCount = Object.values(allNodes).filter(n => getNodeStatus(n) === 'online').length;
+        const nodes = Object.values(allNodes);
+        const onlineCount = nodes.filter(n => getNodeStatus(n) === 'online').length;
+        const idleCount = nodes.filter(n => getNodeStatus(n) === 'idle').length;
         
-        document.getElementById('nodeCount').textContent = nodeCount.toLocaleString();
-        document.getElementById('onlineCount').textContent = onlineCount.toLocaleString();
+        // Update nav stats (desktop)
+        animateCounter('nodeCount', nodeCount);
+        animateCounter('onlineCount', onlineCount);
+        
+        // Update bottom stats (mobile)
+        animateCounter('bottomNodeCount', nodeCount);
+        document.getElementById('bottomOnlineCount').innerHTML = '<span class="stat-dot" style="background: var(--success);"></span>' + onlineCount.toLocaleString();
+        animateCounter('bottomIdleCount', idleCount);
         
         // Apply filters and render
         applyFilters();
@@ -1512,8 +1652,8 @@ export function generateMapPage(): string {
       }
     }
     
-    // Auto-refresh every 5 minutes
-    setInterval(loadNodes, 5 * 60 * 1000);
+    // Auto-refresh every 60 seconds
+    setInterval(loadNodes, 60 * 1000);
     
     // Initialize
     initMap();
