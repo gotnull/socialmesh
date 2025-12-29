@@ -9,6 +9,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:vector_math/vector_math_64.dart' show Vector3;
 import 'package:socialmesh/features/scanner/widgets/connecting_animation.dart';
 import 'firebase_options.dart';
 import 'core/theme.dart';
@@ -790,44 +791,30 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
       extendBodyBehindAppBar: true,
       body: Stack(
         children: [
+          // Apple TV style angled grid of discovered nodes - BEHIND EVERYTHING
+          if (discoveredNodes.isNotEmpty)
+            Positioned.fill(
+              child: _AppleTVAngledGrid(
+                entries: discoveredNodes.take(20).toList(),
+                onDismiss: (id) {
+                  ref
+                      .read(discoveredNodesQueueProvider.notifier)
+                      .removeNode(id);
+                },
+              ),
+            ),
           // Random intro animation as background - replaces floating icons
           // Positioned.fill(child: _buildRandomBackground()),
           // Beautiful parallax floating icons background - full screen
           const Positioned.fill(child: ConnectingAnimationBackground()),
           // Content with SafeArea
           SafeArea(
-            child: Stack(
-              children: [
-                // Main centered content - unaffected by node cards
-                Center(
-                  child: ConnectingContent(
-                    statusInfo: statusInfo,
-                    showMeshNode: true, // Show mesh node on splash
-                    pulseAnimation: _pulseAnimation,
-                  ),
-                ),
-                // Node discovery cards - absolutely positioned at bottom
-                if (discoveredNodes.isNotEmpty)
-                  Positioned(
-                    left: 16,
-                    right: 16,
-                    bottom: 24,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: discoveredNodes.take(4).map((entry) {
-                        return _SplashNodeCard(
-                          key: ValueKey(entry.id),
-                          entry: entry,
-                          onDismiss: () {
-                            ref
-                                .read(discoveredNodesQueueProvider.notifier)
-                                .removeNode(entry.id);
-                          },
-                        );
-                      }).toList(),
-                    ),
-                  ),
-              ],
+            child: Center(
+              child: ConnectingContent(
+                statusInfo: statusInfo,
+                showMeshNode: true, // Show mesh node on splash
+                pulseAnimation: _pulseAnimation,
+              ),
             ),
           ),
         ],
@@ -866,16 +853,499 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
   }
 }
 
-/// Animated node card for splash screen
+/// Apple TV style full-screen angled grid of discovered nodes
+/// Matches the Apple TV+ promotional image with diagonal scrolling grid
+class _AppleTVAngledGrid extends StatefulWidget {
+  final List<DiscoveredNodeEntry> entries;
+  final void Function(String id) onDismiss;
+
+  const _AppleTVAngledGrid({required this.entries, required this.onDismiss});
+
+  @override
+  State<_AppleTVAngledGrid> createState() => _AppleTVAngledGridState();
+}
+
+class _AppleTVAngledGridState extends State<_AppleTVAngledGrid>
+    with TickerProviderStateMixin {
+  late AnimationController _scrollController;
+  late AnimationController _fadeInController;
+  late Animation<double> _fadeInAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Continuous scrolling animation
+    _scrollController = AnimationController(
+      duration: const Duration(seconds: 60),
+      vsync: this,
+    )..repeat();
+
+    // Initial fade in
+    _fadeInController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    );
+
+    _fadeInAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _fadeInController, curve: Curves.easeOut),
+    );
+
+    _fadeInController.forward();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _fadeInController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    // Card dimensions - portrait oriented like Apple TV movie posters
+    const cardWidth = 120.0;
+    const cardHeight = 160.0;
+    const horizontalGap = 14.0;
+    const verticalGap = 14.0;
+
+    // More columns and rows to fill the rotated space
+    const columns = 6;
+    const rows = 7;
+
+    return AnimatedBuilder(
+      animation: Listenable.merge([_scrollController, _fadeInController]),
+      builder: (context, child) {
+        // Scroll offset for continuous motion
+        final scrollOffset = _scrollController.value * 500;
+
+        return Stack(
+          children: [
+            // The angled grid
+            Opacity(
+              opacity: _fadeInAnimation.value,
+              child: Transform(
+                alignment: Alignment.center,
+                transform: Matrix4.identity()
+                  // Perspective - stronger for more depth
+                  ..setEntry(3, 2, 0.0008)
+                  // Rotate X to tilt the plane (looking down at it)
+                  ..rotateX(0.9)
+                  // Rotate Z for diagonal angle (matching Apple TV)
+                  ..rotateZ(-0.35)
+                  // Position the grid - offset to upper right
+                  ..leftTranslateByVector3(
+                    Vector3(screenWidth * 0.3, -screenHeight * 0.1, 0),
+                  ),
+                child: SizedBox(
+                  width: screenWidth * 3,
+                  height: screenHeight * 3,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      for (var row = 0; row < rows; row++)
+                        for (var col = 0; col < columns; col++)
+                          _buildCard(
+                            row: row,
+                            col: col,
+                            columns: columns,
+                            cardWidth: cardWidth,
+                            cardHeight: cardHeight,
+                            horizontalGap: horizontalGap,
+                            verticalGap: verticalGap,
+                            scrollOffset: scrollOffset,
+                          ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            // Gradient fade on bottom-left corner (like Apple TV)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomLeft,
+                      end: Alignment.topRight,
+                      colors: [
+                        context.background,
+                        context.background.withValues(alpha: 0.95),
+                        context.background.withValues(alpha: 0.7),
+                        context.background.withValues(alpha: 0.3),
+                        Colors.transparent,
+                        Colors.transparent,
+                      ],
+                      stops: const [0.0, 0.15, 0.3, 0.45, 0.6, 1.0],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            // Additional fade on bottom edge
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: screenHeight * 0.4,
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                      colors: [
+                        context.background,
+                        context.background.withValues(alpha: 0.8),
+                        Colors.transparent,
+                      ],
+                      stops: const [0.0, 0.5, 1.0],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            // Fade on left edge
+            Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: screenWidth * 0.3,
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: [
+                        context.background,
+                        context.background.withValues(alpha: 0.6),
+                        Colors.transparent,
+                      ],
+                      stops: const [0.0, 0.4, 1.0],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildCard({
+    required int row,
+    required int col,
+    required int columns,
+    required double cardWidth,
+    required double cardHeight,
+    required double horizontalGap,
+    required double verticalGap,
+    required double scrollOffset,
+  }) {
+    // Only show actual discovered nodes, no repeats
+    final index = row * columns + col;
+    final entry = index < widget.entries.length ? widget.entries[index] : null;
+
+    // Stagger offset for alternating rows (brick pattern)
+    final rowOffset = (row.isOdd) ? (cardWidth + horizontalGap) * 0.5 : 0.0;
+
+    // Base position with scroll offset
+    final x = col * (cardWidth + horizontalGap) + rowOffset + scrollOffset;
+    final y = row * (cardHeight + verticalGap);
+
+    // Wrap position for infinite scroll effect
+    final totalWidth =
+        columns * (cardWidth + horizontalGap) +
+        (cardWidth + horizontalGap) * 0.5;
+    final wrappedX = (x % totalWidth) - cardWidth;
+
+    // Stagger animation delay
+    final staggerDelay = (row * 80) + (col * 60);
+
+    return _AppleTVGridCard(
+      key: ValueKey('grid_${row}_$col'),
+      entry: entry,
+      x: wrappedX,
+      y: y,
+      cardWidth: cardWidth,
+      cardHeight: cardHeight,
+      staggerDelay: staggerDelay,
+    );
+  }
+}
+
+class _AppleTVGridCard extends StatefulWidget {
+  final DiscoveredNodeEntry? entry;
+  final double x;
+  final double y;
+  final double cardWidth;
+  final double cardHeight;
+  final int staggerDelay;
+
+  const _AppleTVGridCard({
+    super.key,
+    required this.entry,
+    required this.x,
+    required this.y,
+    required this.cardWidth,
+    required this.cardHeight,
+    required this.staggerDelay,
+  });
+
+  @override
+  State<_AppleTVGridCard> createState() => _AppleTVGridCardState();
+}
+
+class _AppleTVGridCardState extends State<_AppleTVGridCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+
+    _scaleAnimation = Tween<double>(
+      begin: 0.5,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.7, curve: Curves.easeOut),
+      ),
+    );
+
+    // Staggered start
+    Future.delayed(Duration(milliseconds: widget.staggerDelay), () {
+      if (mounted) _controller.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final node = widget.entry?.node;
+    final shortName = node?.shortName ?? '';
+    final longName = node?.longName ?? '';
+    final displayName = longName.isNotEmpty
+        ? longName
+        : shortName.isNotEmpty
+        ? shortName
+        : '';
+    final nodeId =
+        node?.nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0') ?? '';
+
+    // Don't render empty placeholder cards - only render discovered nodes
+    if (widget.entry == null) {
+      return Positioned(
+        left: widget.x,
+        top: widget.y,
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            return Transform.scale(
+              scale: _scaleAnimation.value,
+              child: Opacity(
+                opacity: _fadeAnimation.value * 0.15,
+                child: child,
+              ),
+            );
+          },
+          child: Container(
+            width: widget.cardWidth,
+            height: widget.cardHeight,
+            decoration: BoxDecoration(
+              color: context.surface.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: context.accentColor.withValues(alpha: 0.1),
+                width: 1,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Positioned(
+      left: widget.x,
+      top: widget.y,
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: _scaleAnimation.value,
+            child: Opacity(opacity: _fadeAnimation.value * 0.95, child: child),
+          );
+        },
+        child: Container(
+          width: widget.cardWidth,
+          height: widget.cardHeight,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                context.card,
+                context.surface,
+                context.card.withValues(alpha: 0.9),
+              ],
+              stops: const [0.0, 0.5, 1.0],
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: context.accentColor.withValues(alpha: 0.4),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: context.accentColor.withValues(alpha: 0.25),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+                spreadRadius: -4,
+              ),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.4),
+                blurRadius: 16,
+                offset: const Offset(4, 8),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Stack(
+              children: [
+                // Subtle gradient overlay for depth
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.white.withValues(alpha: 0.05),
+                          Colors.transparent,
+                          Colors.black.withValues(alpha: 0.2),
+                        ],
+                        stops: const [0.0, 0.3, 1.0],
+                      ),
+                    ),
+                  ),
+                ),
+                // Content
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Discovered badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              context.accentColor.withValues(alpha: 0.5),
+                              context.accentColor.withValues(alpha: 0.25),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.wifi_tethering,
+                              color: context.accentColor,
+                              size: 10,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'DISCOVERED',
+                              style: TextStyle(
+                                color: context.accentColor,
+                                fontSize: 8,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Spacer(),
+                      // Large short name as main visual
+                      if (shortName.isNotEmpty)
+                        Center(
+                          child: Text(
+                            shortName,
+                            style: TextStyle(
+                              color: context.accentColor,
+                              fontSize: 28,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                        ),
+                      const Spacer(),
+                      // Node name
+                      Text(
+                        displayName,
+                        style: TextStyle(
+                          color: context.textPrimary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      // Node ID
+                      Text(
+                        '!$nodeId',
+                        style: TextStyle(
+                          color: context.textTertiary,
+                          fontSize: 10,
+                          fontFamily: 'monospace',
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Animated node card for splash screen (legacy - kept for reference)
 class _SplashNodeCard extends StatefulWidget {
   final DiscoveredNodeEntry entry;
   final VoidCallback onDismiss;
 
-  const _SplashNodeCard({
-    super.key,
-    required this.entry,
-    required this.onDismiss,
-  });
+  const _SplashNodeCard({required this.entry, required this.onDismiss});
 
   @override
   State<_SplashNodeCard> createState() => _SplashNodeCardState();
