@@ -1110,6 +1110,8 @@ class _AppleTVGridCardState extends State<_AppleTVGridCard>
     with TickerProviderStateMixin {
   late AnimationController _controller;
   late AnimationController _disintegrationController;
+  late AnimationController _textAnimationController;
+  late AnimationController _shimmerController;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
 
@@ -1122,8 +1124,8 @@ class _AppleTVGridCardState extends State<_AppleTVGridCard>
   final _random = math.Random();
 
   // Fragment grid - fewer, larger pieces for cinematic Endgame effect
-  static const int _fragmentsX = 12;
-  static const int _fragmentsY = 16;
+  static const int _fragmentsX = 24;
+  static const int _fragmentsY = 32;
 
   @override
   void initState() {
@@ -1134,7 +1136,17 @@ class _AppleTVGridCardState extends State<_AppleTVGridCard>
     );
 
     _disintegrationController = AnimationController(
-      duration: const Duration(milliseconds: 3500), // Slower, more cinematic
+      duration: const Duration(milliseconds: 1200), // Slower, more cinematic
+      vsync: this,
+    );
+
+    _textAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    );
+
+    _shimmerController = AnimationController(
+      duration: const Duration(milliseconds: 2000),
       vsync: this,
     );
 
@@ -1152,7 +1164,16 @@ class _AppleTVGridCardState extends State<_AppleTVGridCard>
 
     // Staggered start
     Future.delayed(Duration(milliseconds: widget.staggerDelay), () {
-      if (mounted) _controller.forward();
+      if (mounted) {
+        _controller.forward();
+        // Start text animation slightly after card appears
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted) {
+            _textAnimationController.forward();
+            _shimmerController.repeat();
+          }
+        });
+      }
     });
 
     // Schedule disintegration after display period
@@ -1260,6 +1281,8 @@ class _AppleTVGridCardState extends State<_AppleTVGridCard>
   void dispose() {
     _controller.dispose();
     _disintegrationController.dispose();
+    _textAnimationController.dispose();
+    _shimmerController.dispose();
     _cardImage?.dispose();
     super.dispose();
   }
@@ -1419,84 +1442,145 @@ class _AppleTVGridCardState extends State<_AppleTVGridCard>
                 ),
               ),
             ),
+            // Animated shimmer overlay
+            AnimatedBuilder(
+              animation: _shimmerController,
+              builder: (context, _) {
+                return Positioned.fill(
+                  child: IgnorePointer(
+                    child: ShaderMask(
+                      shaderCallback: (bounds) {
+                        return LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Colors.transparent,
+                            context.accentColor.withValues(alpha: 0.15),
+                            Colors.transparent,
+                          ],
+                          stops: [
+                            (_shimmerController.value - 0.3).clamp(0.0, 1.0),
+                            _shimmerController.value,
+                            (_shimmerController.value + 0.3).clamp(0.0, 1.0),
+                          ],
+                        ).createShader(bounds);
+                      },
+                      blendMode: BlendMode.srcATop,
+                      child: Container(color: Colors.white),
+                    ),
+                  ),
+                );
+              },
+            ),
             // Content
             Padding(
               padding: const EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Discovered badge
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          context.accentColor.withValues(alpha: 0.5),
-                          context.accentColor.withValues(alpha: 0.25),
+                  // Discovered badge with pulse animation
+                  AnimatedBuilder(
+                    animation: _textAnimationController,
+                    builder: (context, child) {
+                      final slideValue = Curves.easeOutBack.transform(
+                        _textAnimationController.value.clamp(0.0, 1.0),
+                      );
+                      return Transform.translate(
+                        offset: Offset(-20 * (1 - slideValue), 0),
+                        child: Opacity(opacity: slideValue, child: child),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            context.accentColor.withValues(alpha: 0.5),
+                            context.accentColor.withValues(alpha: 0.25),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.wifi_tethering,
+                            color: context.accentColor,
+                            size: 10,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'DISCOVERED',
+                            style: TextStyle(
+                              color: context.accentColor,
+                              fontSize: 8,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
                         ],
                       ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.wifi_tethering,
-                          color: context.accentColor,
-                          size: 10,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'DISCOVERED',
-                          style: TextStyle(
-                            color: context.accentColor,
-                            fontSize: 8,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ],
                     ),
                   ),
                   const Spacer(),
-                  // Large short name as main visual
+                  // Large short name with character-by-character reveal
                   if (shortName.isNotEmpty)
                     Center(
-                      child: Text(
-                        shortName,
-                        style: TextStyle(
-                          color: context.accentColor,
-                          fontSize: 28,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1,
-                        ),
+                      child: AnimatedBuilder(
+                        animation: _textAnimationController,
+                        builder: (context, _) {
+                          return _buildAnimatedShortName(
+                            context,
+                            shortName,
+                            _textAnimationController.value,
+                          );
+                        },
                       ),
                     ),
                   const Spacer(),
-                  // Node name
-                  Text(
-                    displayName,
-                    style: TextStyle(
-                      color: context.textPrimary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  // Node name with typewriter effect
+                  AnimatedBuilder(
+                    animation: _textAnimationController,
+                    builder: (context, _) {
+                      final progress = Curves.easeOut.transform(
+                        ((_textAnimationController.value - 0.3) / 0.5).clamp(
+                          0.0,
+                          1.0,
+                        ),
+                      );
+                      final visibleChars = (displayName.length * progress)
+                          .round();
+                      final displayText = displayName.substring(
+                        0,
+                        visibleChars,
+                      );
+                      return Text(
+                        displayText,
+                        style: TextStyle(
+                          color: context.textPrimary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      );
+                    },
                   ),
                   const SizedBox(height: 4),
-                  // Node ID
-                  Text(
-                    '!$nodeId',
-                    style: TextStyle(
-                      color: context.textTertiary,
-                      fontSize: 10,
-                      fontFamily: 'monospace',
-                      fontWeight: FontWeight.w500,
-                    ),
+                  // Node ID with glitch/scan effect
+                  AnimatedBuilder(
+                    animation: _textAnimationController,
+                    builder: (context, _) {
+                      return _buildGlitchNodeId(
+                        context,
+                        nodeId,
+                        _textAnimationController.value,
+                      );
+                    },
                   ),
                 ],
               ),
@@ -1504,6 +1588,115 @@ class _AppleTVGridCardState extends State<_AppleTVGridCard>
           ],
         ),
       ),
+    );
+  }
+
+  /// Build animated short name with per-character effects
+  Widget _buildAnimatedShortName(
+    BuildContext context,
+    String shortName,
+    double progress,
+  ) {
+    final chars = shortName.split('');
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(chars.length, (index) {
+        // Stagger each character
+        final charProgress = ((progress - (index * 0.1)) / 0.6).clamp(0.0, 1.0);
+        final scale = Curves.elasticOut.transform(charProgress);
+        final opacity = Curves.easeOut.transform(charProgress);
+
+        // Random glitch offset that settles
+        final glitchFactor = (1 - charProgress) * (1 - charProgress);
+        final glitchX = ((_random.nextDouble() - 0.5) * 10 * glitchFactor);
+        final glitchY = ((_random.nextDouble() - 0.5) * 10 * glitchFactor);
+
+        return Transform.translate(
+          offset: Offset(glitchX, glitchY),
+          child: Transform.scale(
+            scale: 0.5 + (scale * 0.5),
+            child: Opacity(
+              opacity: opacity,
+              child: Text(
+                chars[index],
+                style: TextStyle(
+                  color: context.accentColor,
+                  fontSize: 28,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1,
+                  shadows: [
+                    Shadow(
+                      color: context.accentColor.withValues(
+                        alpha: 0.5 * opacity,
+                      ),
+                      blurRadius: 8 * (1 - charProgress) + 2,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      }),
+    );
+  }
+
+  /// Build glitchy node ID with scanning effect
+  Widget _buildGlitchNodeId(
+    BuildContext context,
+    String nodeId,
+    double progress,
+  ) {
+    // Delayed start for node ID
+    final adjustedProgress = ((progress - 0.5) / 0.5).clamp(0.0, 1.0);
+
+    if (adjustedProgress <= 0) {
+      return const SizedBox(height: 12);
+    }
+
+    final fullId = '!$nodeId';
+    final scanPosition = (adjustedProgress * 1.5).clamp(0.0, 1.0);
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(fullId.length, (index) {
+        final charPosition = index / fullId.length;
+        final isRevealed = charPosition < scanPosition;
+        final isAtScanLine = (charPosition - scanPosition).abs() < 0.15;
+
+        // Glitch characters near scan line
+        String displayChar = fullId[index];
+        if (isAtScanLine && adjustedProgress < 0.95) {
+          final glitchChars = '0123456789abcdef!@#%&';
+          displayChar = glitchChars[_random.nextInt(glitchChars.length)];
+        }
+
+        return AnimatedOpacity(
+          duration: const Duration(milliseconds: 50),
+          opacity: isRevealed ? 1.0 : 0.0,
+          child: Text(
+            isRevealed
+                ? (isAtScanLine && adjustedProgress < 0.95
+                      ? displayChar
+                      : fullId[index])
+                : ' ',
+            style: TextStyle(
+              color: isAtScanLine ? context.accentColor : context.textTertiary,
+              fontSize: 10,
+              fontFamily: 'monospace',
+              fontWeight: FontWeight.w500,
+              shadows: isAtScanLine
+                  ? [
+                      Shadow(
+                        color: context.accentColor.withValues(alpha: 0.8),
+                        blurRadius: 4,
+                      ),
+                    ]
+                  : null,
+            ),
+          ),
+        );
+      }),
     );
   }
 }
