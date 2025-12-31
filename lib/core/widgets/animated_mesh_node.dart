@@ -868,49 +868,29 @@ class _IcosahedronPainter extends CustomPainter {
       ep2 = Offset(p2.dx + jitter2X, p2.dy + jitter2Y);
     }
 
-    // === ENHANCED MULTI-LAYER GLOW ===
+    // Draw glow
     if (glowIntensity > 0) {
-      // Outer bloom - very soft and wide
-      final bloomPaint = Paint()
-        ..color = color.withAlpha((18 * glowIntensity * depthFactor).round())
-        ..strokeWidth = baseWidth * 8
-        ..strokeCap = StrokeCap.round
-        ..style = PaintingStyle.stroke
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, baseWidth * 4);
-
-      if (isMouthEdge) {
-        _drawCurvedLine(canvas, ep1, ep2, bloomPaint, size);
-      } else if (edgeElectricity > 0.3) {
-        _drawElectricLine(canvas, ep1, ep2, bloomPaint, edgeIndex);
-      } else {
-        canvas.drawLine(ep1, ep2, bloomPaint);
-      }
-
-      // Mid glow
       final glowPaint = Paint()
-        ..color = color.withAlpha((40 * glowIntensity * depthFactor).round())
-        ..strokeWidth = baseWidth * 4
+        ..color = color.withAlpha((35 * glowIntensity * depthFactor).round())
+        ..strokeWidth = baseWidth * 5
         ..strokeCap = StrokeCap.round
         ..style = PaintingStyle.stroke
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, baseWidth * 2);
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, baseWidth * 2.5);
 
       if (isMouthEdge) {
         _drawCurvedLine(canvas, ep1, ep2, glowPaint, size);
       } else if (edgeElectricity > 0.3) {
+        // Draw jagged lightning-style line for high electricity
         _drawElectricLine(canvas, ep1, ep2, glowPaint, edgeIndex);
       } else {
         canvas.drawLine(ep1, ep2, glowPaint);
       }
     }
 
-    // === MAIN LINE WITH GRADIENT ===
-    // Calculate width based on depth
-    final lineWidth = baseWidth * (0.5 + 0.5 * depthFactor);
-
-    // Draw main colored line
+    // Draw main line
     final linePaint = Paint()
       ..color = color.withAlpha((255 * depthFactor).round())
-      ..strokeWidth = lineWidth
+      ..strokeWidth = baseWidth * (0.5 + 0.5 * depthFactor)
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
 
@@ -920,28 +900,6 @@ class _IcosahedronPainter extends CustomPainter {
       _drawElectricLine(canvas, ep1, ep2, linePaint, edgeIndex);
     } else {
       canvas.drawLine(ep1, ep2, linePaint);
-    }
-
-    // === CRISP BRIGHT CORE LINE ===
-    // Add a thin bright core for that sharp neon look
-    if (glowIntensity > 0.2 && lineWidth > 1) {
-      final corePaint = Paint()
-        ..color = Color.lerp(
-          color,
-          Colors.white,
-          0.5,
-        )!.withAlpha((180 * depthFactor * glowIntensity).round())
-        ..strokeWidth = lineWidth * 0.35
-        ..strokeCap = StrokeCap.round
-        ..style = PaintingStyle.stroke;
-
-      if (isMouthEdge) {
-        _drawCurvedLine(canvas, ep1, ep2, corePaint, size);
-      } else if (edgeElectricity > 0.3) {
-        _drawElectricLine(canvas, ep1, ep2, corePaint, edgeIndex);
-      } else {
-        canvas.drawLine(ep1, ep2, corePaint);
-      }
     }
 
     // === SHIMMER EFFECT ===
@@ -955,26 +913,18 @@ class _IcosahedronPainter extends CustomPainter {
       // Lerp between endpoints
       final shimmerPoint = Offset.lerp(ep1, ep2, shimmerPos)!;
 
-      // Draw outer shimmer glow
-      final shimmerGlowPaint = Paint()
-        ..color = Colors.white.withAlpha(
-          (80 * edgeShimmer * depthFactor).round(),
-        )
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, baseWidth * 3);
-      canvas.drawCircle(shimmerPoint, baseWidth * 2.5, shimmerGlowPaint);
-
       // Draw bright shimmer dot
       final shimmerPaint = Paint()
         ..color = SemanticColors.onBrand.withAlpha(
           (200 * edgeShimmer * depthFactor).round(),
         )
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, baseWidth * 1.5);
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, baseWidth * 2);
       canvas.drawCircle(shimmerPoint, baseWidth * 1.5, shimmerPaint);
 
       // Inner bright core
       final shimmerCorePaint = Paint()
-        ..color = Colors.white.withAlpha((255 * edgeShimmer).round());
-      canvas.drawCircle(shimmerPoint, baseWidth * 0.6, shimmerCorePaint);
+        ..color = color.withAlpha((255 * edgeShimmer).round());
+      canvas.drawCircle(shimmerPoint, baseWidth * 0.8, shimmerCorePaint);
     }
   }
 
@@ -1103,98 +1053,36 @@ class _IcosahedronPainter extends CustomPainter {
       final pulseGlowBoost = nodePulseIntensity > 0
           ? (pulseScale - 0.85) * 2
           : 0;
-
-      // Outer bloom glow - softer, larger
-      final bloomPaint = Paint()
-        ..color = color.withAlpha(
-          ((25 + pulseGlowBoost * 20) * glowIntensity * opacity).round().clamp(
-            0,
-            255,
-          ),
-        )
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, baseRadius * 4);
-      canvas.drawCircle(point, baseRadius * 3.5, bloomPaint);
-
-      // Main glow
       final glowPaint = Paint()
         ..color = color.withAlpha(
-          ((70 + pulseGlowBoost * 50) * glowIntensity * opacity).round().clamp(
+          ((60 + pulseGlowBoost * 40) * glowIntensity * opacity).round().clamp(
             0,
             255,
           ),
         )
         ..maskFilter = MaskFilter.blur(
           BlurStyle.normal,
-          baseRadius * (1.8 + pulseGlowBoost),
+          baseRadius * (2.0 + pulseGlowBoost),
         );
-      canvas.drawCircle(point, baseRadius * 2.2, glowPaint);
+      canvas.drawCircle(point, baseRadius * 2.5, glowPaint);
     }
 
-    // === CRISP NODE WITH GRADIENT FILL ===
-    // Draw node fill with radial gradient for 3D sphere look
-    final rect = Rect.fromCircle(center: point, radius: baseRadius);
-    final gradientPaint = Paint()
-      ..shader = RadialGradient(
-        center: const Alignment(-0.4, -0.4), // Light from top-left
-        radius: 1.2,
-        colors: [
-          Color.lerp(
-            color,
-            Colors.white,
-            0.35,
-          )!.withAlpha((255 * opacity).round()),
-          color.withAlpha((255 * opacity).round()),
-          Color.lerp(
-            color,
-            Colors.black,
-            0.3,
-          )!.withAlpha((255 * opacity).round()),
-        ],
-        stops: const [0.0, 0.5, 1.0],
-      ).createShader(rect)
+    // Draw node fill
+    final fillPaint = Paint()
+      ..color = color.withAlpha((255 * opacity).round())
       ..style = PaintingStyle.fill;
-    canvas.drawCircle(point, baseRadius, gradientPaint);
+    canvas.drawCircle(point, baseRadius, fillPaint);
 
-    // === CRISP WHITE HIGHLIGHT ===
-    // Sharp specular highlight for that glossy look
+    // Draw subtle inner highlight for 3D spherical effect
     if (baseRadius > 2) {
       final highlightOffset = Offset(
-        point.dx - baseRadius * 0.35,
-        point.dy - baseRadius * 0.35,
+        point.dx - baseRadius * 0.3,
+        point.dy - baseRadius * 0.3,
       );
-      // Outer soft highlight
-      final softHighlight = Paint()
-        ..color = Colors.white.withAlpha((60 * opacity).round())
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, baseRadius * 0.3);
-      canvas.drawCircle(highlightOffset, baseRadius * 0.4, softHighlight);
-
-      // Inner sharp highlight
-      final sharpHighlight = Paint()
-        ..color = Colors.white.withAlpha((180 * opacity).round())
+      final highlightPaint = Paint()
+        ..color = SemanticColors.glow(0.27 * opacity)
         ..style = PaintingStyle.fill;
-      canvas.drawCircle(
-        Offset(point.dx - baseRadius * 0.3, point.dy - baseRadius * 0.3),
-        baseRadius * 0.2,
-        sharpHighlight,
-      );
-    }
-
-    // === RIM LIGHT ===
-    // Subtle rim/edge light for extra definition
-    if (glowIntensity > 0.3 && baseRadius > 3) {
-      final rimPaint = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = baseRadius * 0.12
-        ..color = Colors.white.withAlpha(
-          (35 * opacity * glowIntensity).round(),
-        );
-      canvas.drawArc(
-        Rect.fromCircle(center: point, radius: baseRadius * 0.85),
-        -2.5, // Start angle (bottom right)
-        1.8, // Sweep angle
-        false,
-        rimPaint,
-      );
+      canvas.drawCircle(highlightOffset, baseRadius * 0.35, highlightPaint);
     }
   }
 
