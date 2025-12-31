@@ -31,9 +31,9 @@ class SplashMeshConfig {
   const SplashMeshConfig({
     this.size = 372,
     this.animationType = MeshNodeAnimationType.tumble,
-    this.glowIntensity = 0.7145593869731794,
-    this.lineThickness = 0.7,
-    this.nodeSize = 0.8,
+    this.glowIntensity = 0.85,
+    this.lineThickness = 0.75,
+    this.nodeSize = 0.85,
     this.gradientColors = const [
       Color(0xFFFF6B4A),
       Color(0xFFE91E8C),

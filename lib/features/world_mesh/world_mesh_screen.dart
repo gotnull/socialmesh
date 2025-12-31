@@ -6,6 +6,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/map_config.dart';
 import '../../core/theme.dart';
@@ -660,13 +661,6 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                   },
                 ),
               ),
-              // Attribution
-              RichAttributionWidget(
-                alignment: AttributionAlignment.bottomLeft,
-                attributions: [
-                  TextSourceAttribution('Socialmesh', onTap: () {}),
-                ],
-              ),
             ],
           ),
         ),
@@ -799,6 +793,30 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
         top: false,
         child: Row(
           children: [
+            // Map attribution
+            GestureDetector(
+              onTap: () => launchUrl(
+                Uri.parse(
+                  _mapStyle == MapTileStyle.satellite
+                      ? 'https://www.esri.com'
+                      : _mapStyle == MapTileStyle.terrain
+                      ? 'https://opentopomap.org'
+                      : 'https://carto.com/attributions',
+                ),
+              ),
+              child: Text(
+                _mapStyle == MapTileStyle.satellite
+                    ? '© Esri'
+                    : _mapStyle == MapTileStyle.terrain
+                    ? '© OpenTopoMap'
+                    : '© CARTO',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                  fontSize: 10,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
             _buildStatItem(
               theme,
               hasFilters ? Icons.filter_alt : Icons.public,
