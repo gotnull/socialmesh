@@ -58,8 +58,8 @@ class WorldMeshMapService {
   /// Check if using self-hosted server
   static bool get isSelfHosted => _apiBaseUrl != defaultApiUrl;
 
-  /// Get the nodes URL
-  String get _nodesUrl => '$_apiBaseUrl/api/nodes';
+  /// Get the nodes URL (uses /internal/nodes - no auth required)
+  String get _nodesUrl => '$_apiBaseUrl/internal/nodes';
 
   /// Get Firebase auth headers if user is logged in
   Future<Map<String, String>> _getAuthHeaders() async {
