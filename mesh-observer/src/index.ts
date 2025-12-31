@@ -19,22 +19,17 @@ import { generateMapPage } from './map-page';
 
 const PORT = parseInt(process.env.PORT || '3001', 10);
 const MQTT_BROKER = process.env.MQTT_BROKER || 'mqtt://mqtt.meshtastic.org';
-// Subscribe to all topic depth variations like meshmap.net does
-// Covers: msh/<region>/2/..., msh/<region>/<channel>/2/..., etc.
+// Subscribe ONLY to map topics to reduce volume - these contain pre-processed node data
+// The 'e/' (encrypted) topics are extremely high volume and would overwhelm the service
 const MQTT_TOPICS = (process.env.MQTT_TOPICS || [
-  // Standard depth: msh/<region>/2/...
+  // Map reports contain node position and info already decoded
   'msh/+/2/map/#',
-  'msh/+/2/e/#',
-  'msh/+/2/json/#',
-  // Extra depth: msh/<region>/<channel>/2/...
   'msh/+/+/2/map/#',
-  'msh/+/+/2/e/#',
-  'msh/+/+/2/json/#',
-  // More depth variations
   'msh/+/+/+/2/map/#',
-  'msh/+/+/+/2/e/#',
   'msh/+/+/+/+/2/map/#',
-  'msh/+/+/+/+/2/e/#',
+  // JSON topics have decoded data (lower volume than encrypted)
+  'msh/+/2/json/+/+',
+  'msh/+/+/2/json/+/+',
 ].join(',')).split(',');
 const MQTT_USERNAME = process.env.MQTT_USERNAME || 'meshdev';
 const MQTT_PASSWORD = process.env.MQTT_PASSWORD || 'large4cats';

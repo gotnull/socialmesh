@@ -44,7 +44,7 @@ const QUEUE_MAX_SIZE = 10000; // Max messages to queue before dropping
 const BATCH_SIZE = 100; // Process this many messages per batch
 const BATCH_INTERVAL_MS = 50; // Process batches every 50ms (yields to event loop)
 
-// Per-node rate limiting (like meshmap.net: 300 msgs/min/node)
+// Per-node rate limiting (300 msgs/min/node)
 const NODE_RATE_LIMIT_WINDOW_MS = 60000; // 1 minute
 const NODE_RATE_LIMIT_MAX = 300; // Max messages per node per window
 
@@ -151,6 +151,11 @@ export class MqttObserver {
     this.rateLimitCleanupTimer = setInterval(() => {
       this.cleanupRateLimits();
     }, NODE_RATE_LIMIT_WINDOW_MS);
+
+    // Log stats every 30 seconds independently
+    setInterval(() => {
+      this.logStats();
+    }, 30000);
   }
 
   /**
@@ -239,15 +244,21 @@ export class MqttObserver {
 
     this.processingQueue = true;
 
-    // Take a batch of messages from the queue
-    const batch = this.messageQueue.splice(0, BATCH_SIZE);
+    try {
+      // Take a batch of messages from the queue
+      const batch = this.messageQueue.splice(0, BATCH_SIZE);
 
-    // Process each message in the batch
-    for (const { topic, message } of batch) {
-      this.handleMessage(topic, message);
+      // Process each message in the batch
+      for (const { topic, message } of batch) {
+        try {
+          this.handleMessage(topic, message);
+        } catch (err) {
+          // Continue processing other messages
+        }
+      }
+    } finally {
+      this.processingQueue = false;
     }
-
-    this.processingQueue = false;
   }
 
   /**
@@ -255,13 +266,6 @@ export class MqttObserver {
    */
   private handleMessage(topic: string, message: Buffer): void {
     this.stats.totalMessages++;
-
-    // Log stats every 30 seconds
-    const now = Date.now();
-    if (now - this.lastLogTime > 30000) {
-      this.logStats();
-      this.lastLogTime = now;
-    }
 
     try {
       // Check if JSON topic
@@ -291,7 +295,7 @@ export class MqttObserver {
       const nodeNum = this.parseNodeId(json.sender || json.from);
       if (!nodeNum) return;
 
-      // Per-node rate limiting (like meshmap.net: 300 msgs/min/node)
+      // Per-node rate limiting
       if (this.isNodeRateLimited(nodeNum)) return;
 
       const update: Partial<MeshNode> = {};
@@ -366,7 +370,7 @@ export class MqttObserver {
     if (!fromNode) return;
     this.stats.packetsWithFrom++;
 
-    // Per-node rate limiting (like meshmap.net: 300 msgs/min/node)
+    // Per-node rate limiting
     if (this.isNodeRateLimited(fromNode)) return;
 
     // Try to decode the payload based on port number

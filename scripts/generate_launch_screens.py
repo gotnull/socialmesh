@@ -14,11 +14,10 @@ from pathlib import Path
 
 
 # iOS launch screen sizes (width x height)
-# All render at same viewport size - iOS picks the right one by pixel density
 IOS_SIZES = {
-    "LaunchImage": (414, 896),
-    "LaunchImage@2x": (414, 896),
-    "LaunchImage@3x": (414, 896),
+    "LaunchImage": (414, 896),       # 1x
+    "LaunchImage@2x": (828, 1792),   # 2x
+    "LaunchImage@3x": (1242, 2688),  # 3x
 }
 
 # Paths

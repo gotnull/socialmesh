@@ -13,9 +13,13 @@ import * as protobuf from 'protobufjs';
 import * as crypto from 'crypto';
 import * as path from 'path';
 
-// Default Meshtastic encryption key (base64 "AQ==")
-const DEFAULT_KEY = Buffer.from([0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+// Default Meshtastic encryption key (the actual default key used by Meshtastic)
+const DEFAULT_KEY = Buffer.from([
+  0xd4, 0xf1, 0xbb, 0x3a,
+  0x20, 0x29, 0x07, 0x59,
+  0xf0, 0xbc, 0xff, 0xab,
+  0xcf, 0x4e, 0x69, 0x01,
+]);
 
 // Meshtastic port numbers
 const PortNum = {
@@ -100,14 +104,10 @@ export class MeshtasticDecoder {
     if (!data || data.length === 0) return null;
 
     try {
-      if (this.serviceEnvelopeType) {
-        const decoded = this.serviceEnvelopeType.decode(data);
-        return decoded as unknown as ServiceEnvelope;
-      }
-
-      // Manual parsing fallback
+      // Always use manual parsing (protobuf library has issues)
       return this.manualDecodeServiceEnvelope(data);
     } catch (err) {
+      // Silently ignore decode errors
       return null;
     }
   }
@@ -133,14 +133,16 @@ export class MeshtasticDecoder {
       if (wireType === 2) { // Length-delimited
         let length = 0;
         let shift = 0;
-        while (data[offset] & 0x80) {
+        while (offset < data.length && data[offset] & 0x80) {
           length |= (data[offset] & 0x7f) << shift;
           shift += 7;
           offset++;
         }
+        if (offset >= data.length) break;
         length |= data[offset] << shift;
         offset++;
 
+        if (offset + length > data.length) break;
         const fieldData = data.slice(offset, offset + length);
         offset += length;
 
@@ -155,8 +157,20 @@ export class MeshtasticDecoder {
             result.gatewayId = fieldData.toString('utf8');
             break;
         }
+      } else if (wireType === 0) {
+        // Varint - skip it
+        while (offset < data.length && data[offset] & 0x80) {
+          offset++;
+        }
+        offset++;
+      } else if (wireType === 5) {
+        // 32-bit fixed - skip
+        offset += 4;
+      } else if (wireType === 1) {
+        // 64-bit fixed - skip
+        offset += 8;
       } else {
-        // Skip other wire types
+        // Unknown wire type, stop parsing
         break;
       }
     }
@@ -191,10 +205,9 @@ export class MeshtasticDecoder {
         }
 
         switch (fieldNum) {
-          case 1: packet.from = value >>> 0; break;
-          case 2: packet.to = value >>> 0; break;
-          case 6: packet.id = value >>> 0; break;
-          case 10: packet.hopLimit = value; break;
+          case 3: packet.channel = value; break;
+          case 9: packet.hopLimit = value; break;
+          case 10: packet.wantAck = value !== 0; break;
         }
       } else if (wireType === 2) { // Length-delimited
         let length = 0;
@@ -209,21 +222,35 @@ export class MeshtasticDecoder {
           offset++;
         }
 
+        if (offset + length > data.length) break; // Bounds check
         const fieldData = data.slice(offset, offset + length);
         offset += length;
 
-        if (fieldNum === 3) {
-          packet.encrypted = fieldData;
-        } else if (fieldNum === 4) {
+        if (fieldNum === 4) {
           packet.decoded = this.manualDecodeData(fieldData);
+        } else if (fieldNum === 5) {
+          packet.encrypted = fieldData;
         }
-      } else if (wireType === 5) { // 32-bit
-        if (fieldNum === 11) {
-          packet.rxTime = data.readUInt32LE(offset);
-        }
+        // Skip other length-delimited fields (payload_variant, etc)
+      } else if (wireType === 5) { // 32-bit fixed
+        if (offset + 4 > data.length) break; // Bounds check
+        const value = data.readUInt32LE(offset);
         offset += 4;
+
+        switch (fieldNum) {
+          case 1: packet.from = value; break;
+          case 2: packet.to = value; break;
+          case 6: packet.id = value; break;
+          case 7: packet.rxTime = value; break;
+        }
       } else {
-        break;
+        // Skip unknown wire types - try to continue
+        if (wireType === 1) { // 64-bit
+          if (offset + 8 > data.length) break; // Bounds check
+          offset += 8;
+        } else {
+          break;
+        }
       }
     }
 
@@ -904,9 +931,11 @@ export interface MeshPacket {
   from?: number;
   to?: number;
   id?: number;
+  channel?: number;
   encrypted?: Buffer;
   decoded?: DataPayload;
   hopLimit?: number;
+  wantAck?: boolean;
   rxTime?: number;
 }
 

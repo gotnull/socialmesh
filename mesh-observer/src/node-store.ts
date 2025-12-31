@@ -240,7 +240,7 @@ export class NodeStore {
 
   /**
    * Get all valid nodes (with longName AND non-zero position)
-   * This matches meshmap.net behavior - only show nodes that have identifying info and location
+   * Only show nodes that have identifying info and location
    */
   getValidNodes(): Record<string, MeshNode> {
     const result: Record<string, MeshNode> = {};
