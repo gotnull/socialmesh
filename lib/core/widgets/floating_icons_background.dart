@@ -231,27 +231,30 @@ class _FloatingIconsBackgroundState extends State<FloatingIconsBackground>
 
         // Calculate continuous parallax drift (no reset, wraps around)
         final time = _floatController.value;
-        
+
         // Each icon drifts slowly in its own direction based on parallaxFactor
         // Use different speeds and directions for variety
         final driftSpeedX = iconData.floatSpeed * 0.5 * iconData.parallaxFactor;
-        final driftSpeedY = iconData.floatSpeed * 0.3 * (1.5 - iconData.parallaxFactor);
-        
+        final driftSpeedY =
+            iconData.floatSpeed * 0.3 * (1.5 - iconData.parallaxFactor);
+
         // Calculate drift with wrapping (continuous loop)
         final totalDriftX = time * screenSize.width * driftSpeedX * 0.15;
         final totalDriftY = time * screenSize.height * driftSpeedY * 0.1;
-        
+
         // Wrap position so icons loop seamlessly
         final wrapWidth = screenSize.width + iconData.size * 2;
         final wrapHeight = screenSize.height + iconData.size * 2;
-        
-        var wrappedX = (iconData.startX * screenSize.width + totalDriftX) % wrapWidth;
-        var wrappedY = (iconData.startY * screenSize.height + totalDriftY) % wrapHeight;
-        
+
+        var wrappedX =
+            (iconData.startX * screenSize.width + totalDriftX) % wrapWidth;
+        var wrappedY =
+            (iconData.startY * screenSize.height + totalDriftY) % wrapHeight;
+
         // Adjust for negative wrapping
         if (wrappedX < -iconData.size) wrappedX += wrapWidth;
         if (wrappedY < -iconData.size) wrappedY += wrapHeight;
-        
+
         // Add gentle bobbing motion on top of drift
         final bobTime = time * 2 * math.pi * iconData.floatSpeed;
         final bobX = math.sin(bobTime) * iconData.floatAmplitude * 0.3;
