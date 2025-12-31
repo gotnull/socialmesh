@@ -115,9 +115,8 @@ class WorldMeshMapService {
     if (!isSelfHosted) return null;
 
     try {
-      final headers = await _getAuthHeaders();
       final response = await _client
-          .get(Uri.parse('$_apiBaseUrl/api/stats'), headers: headers)
+          .get(Uri.parse('$_apiBaseUrl/api/stats'))
           .timeout(_timeout);
 
       if (response.statusCode != 200) return null;
