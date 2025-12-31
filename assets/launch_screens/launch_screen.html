@@ -1,16 +1,30 @@
 <!DOCTYPE html>
+<!-- saved from url=(0084)file:///Users/fulvio/development/socialmesh/assets/launch_screens/launch_screen.html -->
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#1F2633">
   <title>Socialmesh</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com/">
+  <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+  <link href="./Socialmesh_files/css2" rel="stylesheet">
   <style>
+    :root {
+      --bg-primary: #1F2633;
+      --bg-secondary: #29303D;
+      --accent-magenta: #E91E8C;
+      --accent-purple: #8B5CF6;
+      --accent-blue: #4F6AF6;
+      --text-primary: #FFFFFF;
+      --text-secondary: #9CA3AF;
+      --text-muted: #6B7280;
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -21,10 +35,12 @@
     body {
       height: 100%;
       overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
     body {
-      background: #1F2633;
+      background: var(--bg-primary);
       min-height: 100vh;
       min-height: -webkit-fill-available;
       display: flex;
@@ -33,54 +49,145 @@
       justify-content: center;
       font-family: 'JetBrains Mono', monospace;
       padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+      position: relative;
     }
 
+    /* Ambient background particles */
+    .particles {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      opacity: 0;
+      animation: particleFade 8s ease-in-out infinite;
+    }
+
+    .particle:nth-child(1) {
+      left: 10%;
+      top: 20%;
+      background: var(--accent-magenta);
+      animation-delay: 0s;
+    }
+
+    .particle:nth-child(2) {
+      left: 20%;
+      top: 80%;
+      background: var(--accent-purple);
+      animation-delay: 1s;
+    }
+
+    .particle:nth-child(3) {
+      left: 80%;
+      top: 30%;
+      background: var(--accent-blue);
+      animation-delay: 2s;
+    }
+
+    .particle:nth-child(4) {
+      left: 70%;
+      top: 70%;
+      background: var(--accent-magenta);
+      animation-delay: 3s;
+    }
+
+    .particle:nth-child(5) {
+      left: 30%;
+      top: 50%;
+      background: var(--accent-purple);
+      animation-delay: 4s;
+    }
+
+    .particle:nth-child(6) {
+      left: 90%;
+      top: 60%;
+      background: var(--accent-blue);
+      animation-delay: 5s;
+    }
+
+    .particle:nth-child(7) {
+      left: 5%;
+      top: 40%;
+      background: var(--accent-purple);
+      animation-delay: 6s;
+    }
+
+    .particle:nth-child(8) {
+      left: 60%;
+      top: 10%;
+      background: var(--accent-magenta);
+      animation-delay: 7s;
+    }
+
+    @keyframes particleFade {
+
+      0%,
+      100% {
+        opacity: 0;
+        transform: translateY(0) scale(1);
+      }
+
+      50% {
+        opacity: 0.6;
+        transform: translateY(-20px) scale(1.5);
+      }
+    }
+
+    /* Main container */
     .container {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 48px;
-      animation: fadeIn 0.8s ease-out;
+      gap: 40px;
+      z-index: 1;
+      animation: containerFadeIn 1.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    @keyframes fadeIn {
+    @keyframes containerFadeIn {
       from {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(30px) scale(0.95);
       }
 
       to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(0) scale(1);
       }
     }
 
     /* Mesh Node */
     .mesh-container {
       position: relative;
-      width: 200px;
-      height: 200px;
+      width: 180px;
+      height: 180px;
     }
 
     .mesh-glow {
       position: absolute;
-      inset: -40px;
-      background: radial-gradient(circle, rgba(139, 92, 246, 0.35) 0%, rgba(233, 30, 140, 0.15) 40%, transparent 70%);
-      filter: blur(20px);
-      animation: pulse 3s ease-in-out infinite;
+      inset: -60px;
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.4) 0%, rgba(233, 30, 140, 0.2) 35%, transparent 65%);
+      filter: blur(30px);
+      animation: glowPulse 4s ease-in-out infinite;
     }
 
-    @keyframes pulse {
+    @keyframes glowPulse {
 
       0%,
       100% {
-        opacity: 0.8;
+        opacity: 0.7;
         transform: scale(1);
       }
 
       50% {
         opacity: 1;
-        transform: scale(1.08);
+        transform: scale(1.15);
       }
     }
 
@@ -89,132 +196,294 @@
       width: 100%;
       height: 100%;
       z-index: 1;
-      animation: float 6s ease-in-out infinite;
+      animation: meshFloat 8s ease-in-out infinite;
     }
 
-    @keyframes float {
+    @keyframes meshFloat {
 
       0%,
       100% {
-        transform: translateY(0) rotate(0deg);
+        transform: translateY(0) rotateZ(0deg);
+      }
+
+      25% {
+        transform: translateY(-6px) rotateZ(1deg);
       }
 
       50% {
-        transform: translateY(-8px) rotate(2deg);
+        transform: translateY(-10px) rotateZ(0deg);
+      }
+
+      75% {
+        transform: translateY(-6px) rotateZ(-1deg);
       }
     }
 
-    /* Logo Text */
+    /* Logo section */
+    .logo-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
     .logo-text {
-      font-size: 56px;
+      font-size: 48px;
       font-weight: 700;
       letter-spacing: -2px;
       background: linear-gradient(135deg, #E91E8C 0%, #8B5CF6 50%, #4F6AF6 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      filter: drop-shadow(0 0 30px rgba(139, 92, 246, 0.4));
-      animation: textGlow 3s ease-in-out infinite;
+      animation: textReveal 1s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
     }
 
-    @keyframes textGlow {
+    @keyframes textReveal {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+        filter: blur(10px);
+      }
 
-      0%,
+      to {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+      }
+    }
+
+    .tagline {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      animation: textReveal 1s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both;
+    }
+
+    /* Loading section */
+    .loading-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      margin-top: 20px;
+      animation: textReveal 1s cubic-bezier(0.16, 1, 0.3, 1) 0.7s both;
+    }
+
+    .loading-bar {
+      width: 120px;
+      height: 3px;
+      background: var(--bg-secondary);
+      border-radius: 3px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .loading-bar::after {
+      content: '';
+      position: absolute;
+      left: -40%;
+      width: 40%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, var(--accent-purple), transparent);
+      animation: loadingSlide 1.5s ease-in-out infinite;
+    }
+
+    @keyframes loadingSlide {
+      0% {
+        left: -40%;
+      }
+
       100% {
-        filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.3));
+        left: 100%;
+      }
+    }
+
+    .loading-text {
+      font-size: 11px;
+      font-weight: 400;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+    }
+
+    /* Footer */
+    .footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 24px;
+      padding-bottom: calc(24px + env(safe-area-inset-bottom));
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      animation: footerFadeIn 1s cubic-bezier(0.16, 1, 0.3, 1) 1s both;
+    }
+
+    @keyframes footerFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
       }
 
-      50% {
-        filter: drop-shadow(0 0 40px rgba(139, 92, 246, 0.5));
+      to {
+        opacity: 1;
+        transform: translateY(0);
       }
+    }
+
+    .version {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+    }
+
+    .copyright {
+      font-size: 10px;
+      color: var(--text-muted);
+      opacity: 0.6;
     }
 
     /* Responsive */
-    @media (max-width: 400px) {
+    @media (max-width: 380px) {
       .mesh-container {
-        width: 160px;
-        height: 160px;
+        width: 140px;
+        height: 140px;
       }
 
       .logo-text {
-        font-size: 44px;
+        font-size: 36px;
+      }
+
+      .tagline {
+        font-size: 11px;
+        letter-spacing: 2px;
       }
     }
 
     @media (min-width: 768px) {
       .mesh-container {
-        width: 240px;
-        height: 240px;
+        width: 220px;
+        height: 220px;
       }
 
       .logo-text {
-        font-size: 72px;
+        font-size: 64px;
       }
 
       .container {
-        gap: 60px;
+        gap: 50px;
+      }
+    }
+
+    @media (min-height: 800px) {
+      .container {
+        gap: 50px;
+      }
+
+      .loading-section {
+        margin-top: 40px;
+      }
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
       }
     }
   </style>
 </head>
 
 <body>
+  <!-- Ambient particles -->
+  <div class="particles">
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+  </div>
+
   <div class="container">
+    <!-- Mesh Node -->
     <div class="mesh-container">
       <div class="mesh-glow"></div>
       <svg class="mesh-node" viewBox="-150 -150 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
-          <linearGradient id="meshGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stop-color="#E91E8C" />
-            <stop offset="50%" stop-color="#8B5CF6" />
-            <stop offset="100%" stop-color="#4F6AF6" />
-          </linearGradient>
+          <lineargradient id="meshGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#E91E8C"></stop>
+            <stop offset="50%" stop-color="#8B5CF6"></stop>
+            <stop offset="100%" stop-color="#4F6AF6"></stop>
+          </lineargradient>
         </defs>
 
         <!-- Back edges (depth faded) -->
         <g opacity="0.25" stroke-width="3" stroke-linecap="round" stroke="url(#meshGradient)">
-          <line x1="-80" y1="-40" x2="0" y2="-120" />
-          <line x1="80" y1="-40" x2="0" y2="-120" />
-          <line x1="-100" y1="30" x2="-80" y2="-40" />
-          <line x1="100" y1="30" x2="80" y2="-40" />
-          <line x1="-80" y1="-40" x2="80" y2="-40" />
+          <line x1="-80" y1="-40" x2="0" y2="-120"></line>
+          <line x1="80" y1="-40" x2="0" y2="-120"></line>
+          <line x1="-100" y1="30" x2="-80" y2="-40"></line>
+          <line x1="100" y1="30" x2="80" y2="-40"></line>
+          <line x1="-80" y1="-40" x2="80" y2="-40"></line>
         </g>
 
         <!-- Front edges -->
         <g stroke-width="4" stroke-linecap="round" stroke="url(#meshGradient)">
-          <line x1="0" y1="120" x2="-100" y2="30" />
-          <line x1="0" y1="120" x2="100" y2="30" />
-          <line x1="-100" y1="30" x2="100" y2="30" />
-          <line x1="-100" y1="30" x2="-50" y2="-70" />
-          <line x1="100" y1="30" x2="50" y2="-70" />
-          <line x1="-50" y1="-70" x2="50" y2="-70" />
-          <line x1="0" y1="120" x2="-50" y2="-70" />
-          <line x1="0" y1="120" x2="50" y2="-70" />
-          <line x1="-50" y1="-70" x2="0" y2="-20" />
-          <line x1="50" y1="-70" x2="0" y2="-20" />
-          <line x1="-100" y1="30" x2="0" y2="-20" />
-          <line x1="100" y1="30" x2="0" y2="-20" />
+          <line x1="0" y1="120" x2="-100" y2="30"></line>
+          <line x1="0" y1="120" x2="100" y2="30"></line>
+          <line x1="-100" y1="30" x2="100" y2="30"></line>
+          <line x1="-100" y1="30" x2="-50" y2="-70"></line>
+          <line x1="100" y1="30" x2="50" y2="-70"></line>
+          <line x1="-50" y1="-70" x2="50" y2="-70"></line>
+          <line x1="0" y1="120" x2="-50" y2="-70"></line>
+          <line x1="0" y1="120" x2="50" y2="-70"></line>
+          <line x1="-50" y1="-70" x2="0" y2="-20"></line>
+          <line x1="50" y1="-70" x2="0" y2="-20"></line>
+          <line x1="-100" y1="30" x2="0" y2="-20"></line>
+          <line x1="100" y1="30" x2="0" y2="-20"></line>
         </g>
 
         <!-- Back nodes (depth faded) -->
         <g opacity="0.3">
-          <circle cx="-80" cy="-40" r="8" fill="#E91E8C" />
-          <circle cx="80" cy="-40" r="8" fill="#4F6AF6" />
-          <circle cx="0" cy="-120" r="7" fill="#8B5CF6" />
+          <circle cx="-80" cy="-40" r="8" fill="#E91E8C"></circle>
+          <circle cx="80" cy="-40" r="8" fill="#4F6AF6"></circle>
+          <circle cx="0" cy="-120" r="7" fill="#8B5CF6"></circle>
         </g>
 
         <!-- Front nodes -->
-        <circle cx="-100" cy="30" r="12" fill="#E91E8C" />
-        <circle cx="-50" cy="-70" r="11" fill="#C44AAE" />
-        <circle cx="0" cy="120" r="14" fill="#8B5CF6" />
-        <circle cx="0" cy="-20" r="13" fill="#8B5CF6" />
-        <circle cx="50" cy="-70" r="11" fill="#6D7CF6" />
-        <circle cx="100" cy="30" r="12" fill="#4F6AF6" />
+        <circle cx="-100" cy="30" r="12" fill="#E91E8C"></circle>
+        <circle cx="-50" cy="-70" r="11" fill="#C44AAE"></circle>
+        <circle cx="0" cy="120" r="14" fill="#8B5CF6"></circle>
+        <circle cx="0" cy="-20" r="13" fill="#8B5CF6"></circle>
+        <circle cx="50" cy="-70" r="11" fill="#6D7CF6"></circle>
+        <circle cx="100" cy="30" r="12" fill="#4F6AF6"></circle>
       </svg>
     </div>
 
-    <div class="logo-text">Socialmesh</div>
-  </div>
+    <!-- Logo -->
+    <div class="logo-section">
+      <div class="logo-text">Socialmesh</div>
+      <div class="tagline">Off-Grid Communication</div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <div class="version">Version 1.0.2</div>
+      <div class="copyright">© 2025 Socialmesh. All rights reserved.</div>
+    </div>
+
+
+
 </body>
 
 </html>
