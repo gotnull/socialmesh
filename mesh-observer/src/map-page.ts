@@ -1295,7 +1295,7 @@ export function generateMapPage(): string {
     // Load nodes from API
     async function loadNodes() {
       try {
-        const response = await fetch('/api/nodes');
+        const response = await fetch('/internal/nodes');
         allNodes = await response.json();
         
         // Calculate stats

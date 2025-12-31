@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
@@ -60,13 +61,40 @@ class WorldMeshMapService {
   /// Get the nodes URL
   String get _nodesUrl => '$_apiBaseUrl/api/nodes';
 
+  /// Get Firebase auth headers if user is logged in
+  Future<Map<String, String>> _getAuthHeaders() async {
+    final headers = <String, String>{'Content-Type': 'application/json'};
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final token = await user.getIdToken();
+        if (token != null) {
+          headers['Authorization'] = 'Bearer $token';
+        }
+      }
+    } catch (e) {
+      // Firebase not initialized or user not logged in - continue without auth
+      debugPrint('WorldMeshMapService: Could not get auth token: $e');
+    }
+
+    return headers;
+  }
+
   /// Fetch all nodes from API
   /// Returns a map of nodeNum -> WorldMeshNode
   Future<Map<int, WorldMeshNode>> fetchNodes() async {
     try {
+      final headers = await _getAuthHeaders();
       final response = await _client
-          .get(Uri.parse(_nodesUrl))
+          .get(Uri.parse(_nodesUrl), headers: headers)
           .timeout(_timeout);
+
+      if (response.statusCode == 401) {
+        throw WorldMeshMapException(
+          'Authentication required. Please sign in to access the World Mesh.',
+        );
+      }
 
       if (response.statusCode != 200) {
         throw WorldMeshMapException(
@@ -115,8 +143,9 @@ class WorldMeshMapService {
     if (!isSelfHosted) return null;
 
     try {
+      final headers = await _getAuthHeaders();
       final response = await _client
-          .get(Uri.parse('$_apiBaseUrl/stats'))
+          .get(Uri.parse('$_apiBaseUrl/api/stats'), headers: headers)
           .timeout(_timeout);
 
       if (response.statusCode != 200) return null;

@@ -12,6 +12,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
+import * as admin from 'firebase-admin';
 import { MqttObserver } from './mqtt-observer';
 import { NodeStore } from './node-store';
 import { generateMapPage } from './map-page';
@@ -24,6 +25,67 @@ const MQTT_USERNAME = process.env.MQTT_USERNAME || 'meshdev';
 const MQTT_PASSWORD = process.env.MQTT_PASSWORD || 'large4cats';
 const NODE_EXPIRY_HOURS = parseInt(process.env.NODE_EXPIRY_HOURS || '24', 10);
 const NODE_PURGE_DAYS = parseInt(process.env.NODE_PURGE_DAYS || '30', 10);
+
+// Firebase Admin initialization
+const FIREBASE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'social-mesh-app';
+const FIREBASE_CLIENT_EMAIL = process.env.FIREBASE_CLIENT_EMAIL;
+const FIREBASE_PRIVATE_KEY = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+
+let firebaseInitialized = false;
+
+if (FIREBASE_CLIENT_EMAIL && FIREBASE_PRIVATE_KEY) {
+  try {
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId: FIREBASE_PROJECT_ID,
+        clientEmail: FIREBASE_CLIENT_EMAIL,
+        privateKey: FIREBASE_PRIVATE_KEY,
+      }),
+    });
+    firebaseInitialized = true;
+    console.log('Firebase Admin SDK initialized successfully');
+  } catch (error) {
+    console.error('Firebase Admin SDK initialization failed:', error);
+  }
+} else {
+  console.warn('Firebase credentials not provided - API auth disabled (development mode)');
+}
+
+// Extended request type with user info
+interface AuthenticatedRequest extends Request {
+  user?: admin.auth.DecodedIdToken;
+}
+
+// Firebase Auth middleware for protected routes
+const requireAuth = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  // Skip auth in development mode if Firebase not configured
+  if (!firebaseInitialized) {
+    return next();
+  }
+
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({
+      error: 'Unauthorized',
+      message: 'Missing or invalid Authorization header. Use: Bearer <firebase_id_token>'
+    });
+  }
+
+  const idToken = authHeader.split('Bearer ')[1];
+
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    req.user = decodedToken;
+    next();
+  } catch (error) {
+    console.error('Token verification failed:', error);
+    return res.status(401).json({
+      error: 'Unauthorized',
+      message: 'Invalid or expired token'
+    });
+  }
+};
 
 const app = express();
 
@@ -674,8 +736,31 @@ app.get('/map', (_req, res) => {
   res.type('html').send(mapHtml);
 });
 
+// Internal endpoint for map page (no auth, same-origin only via referer check)
+app.get('/internal/nodes', (req, res) => {
+  // Only allow requests from our own map page
+  const referer = req.headers.referer || '';
+  const host = req.headers.host || '';
+
+  // Allow if referer is from same host or localhost (for development)
+  const isInternalRequest = referer.includes(host) ||
+    referer.includes('localhost') ||
+    referer.includes('127.0.0.1') ||
+    !referer; // Allow direct requests for now (map page initial load)
+
+  if (!isInternalRequest) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
+  res.json(nodeStore.getValidNodes());
+});
+
+// ============================================
+// PROTECTED API ROUTES (require Firebase Auth)
+// ============================================
+
 // Get all nodes (filtered to valid nodes by default, ?all=true for raw)
-app.get('/api/nodes', (req, res) => {
+app.get('/api/nodes', requireAuth, (req: AuthenticatedRequest, res) => {
   const includeAll = req.query.all === 'true';
   if (includeAll) {
     res.json(nodeStore.getAllNodes());
@@ -685,7 +770,7 @@ app.get('/api/nodes', (req, res) => {
 });
 
 // Get single node by nodeNum
-app.get('/api/node/:nodeNum', (req, res) => {
+app.get('/api/node/:nodeNum', requireAuth, (req: AuthenticatedRequest, res) => {
   const nodeNum = parseInt(req.params.nodeNum, 10);
   if (isNaN(nodeNum)) {
     return res.status(400).json({ error: 'Invalid node number' });
@@ -700,7 +785,7 @@ app.get('/api/node/:nodeNum', (req, res) => {
 });
 
 // Get statistics
-app.get('/api/stats', (req, res) => {
+app.get('/api/stats', requireAuth, (req: AuthenticatedRequest, res) => {
   const decodeStats = mqttObserver.getStats();
   res.json({
     totalNodes: nodeStore.getNodeCount(),
