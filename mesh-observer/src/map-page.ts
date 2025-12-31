@@ -798,50 +798,14 @@ export function generateMapPage(): string {
       color: var(--accent-magenta) !important;
     }
     
-    .marker-cluster {
+    .marker-cluster-custom {
       background: rgba(233, 30, 140, 0.3);
       border-radius: 50%;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
     }
-    
-    .marker-cluster div {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: var(--accent-magenta);
-      color: white;
-      font-weight: 700;
-      font-size: 12px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 2px solid white;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    }
-    
-    .marker-cluster-small {
-      width: 36px; height: 36px;
-    }
-    .marker-cluster-small div {
-      width: 30px; height: 30px;
-    }
-    
-    .marker-cluster-medium {
-      width: 44px; height: 44px;
-    }
-    .marker-cluster-medium div {
-      width: 36px; height: 36px;
-    }
-    
-    .marker-cluster-large {
-      width: 52px; height: 52px;
-    }
-    .marker-cluster-large div {
-      width: 44px; height: 44px;
-      font-size: 14px;
-    }
-    
+
     .node-marker {
       border-radius: 50%;
       border: 2px solid rgba(255, 255, 255, 0.8);
@@ -1272,16 +1236,35 @@ export function generateMapPage(): string {
         showCoverageOnHover: false,
         iconCreateFunction: function(cluster) {
           const count = cluster.getChildCount();
-          let size = 'small';
-          if (count > 100) size = 'large';
-          else if (count > 10) size = 'medium';
+          let outerSize = 36;
+          let innerSize = 30;
+          let fontSize = 12;
+          if (count > 100) { outerSize = 52; innerSize = 44; fontSize = 14; }
+          else if (count > 10) { outerSize = 44; innerSize = 36; fontSize = 13; }
           
           const displayCount = count > 999 ? (count / 1000).toFixed(1) + 'k' : count;
           
+          // All styles inline to avoid CSS conflicts
+          const html = '<div style="' +
+            'width:' + innerSize + 'px;' +
+            'height:' + innerSize + 'px;' +
+            'background:#E91E8C;' +
+            'color:white;' +
+            'font-weight:700;' +
+            'font-size:' + fontSize + 'px;' +
+            'border-radius:50%;' +
+            'display:flex;' +
+            'align-items:center;' +
+            'justify-content:center;' +
+            'border:2px solid white;' +
+            'box-shadow:0 2px 8px rgba(0,0,0,0.3);' +
+            '">' + displayCount + '</div>';
+          
           return L.divIcon({
-            html: '<div>' + displayCount + '</div>',
-            className: 'marker-cluster marker-cluster-' + size,
-            iconSize: L.point(40, 40)
+            html: html,
+            className: 'marker-cluster-custom',
+            iconSize: L.point(outerSize, outerSize),
+            iconAnchor: L.point(outerSize / 2, outerSize / 2)
           });
         }
       });

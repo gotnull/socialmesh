@@ -647,12 +647,15 @@ app.get('/health', (req, res) => {
   const memUsage = process.memoryUsage();
   const mqttConnected = mqttObserver.isConnected();
   const nodeCount = nodeStore.getNodeCount();
+  const uptimeSeconds = process.uptime();
 
-  // Consider unhealthy if MQTT disconnected or memory > 500MB
-  const isHealthy = mqttConnected && memUsage.heapUsed < 500 * 1024 * 1024;
+  // Allow 60 seconds for MQTT to connect on startup
+  // After that, consider unhealthy if MQTT disconnected or memory > 500MB
+  const stillStarting = uptimeSeconds < 60;
+  const isHealthy = stillStarting || (mqttConnected && memUsage.heapUsed < 500 * 1024 * 1024);
 
   res.status(isHealthy ? 200 : 503).json({
-    status: isHealthy ? 'ok' : 'degraded',
+    status: stillStarting ? 'starting' : (mqttConnected ? 'ok' : 'degraded'),
     mqttConnected,
     nodeCount,
     uptime: process.uptime(),
