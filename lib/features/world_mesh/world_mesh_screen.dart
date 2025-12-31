@@ -753,8 +753,8 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                       _mapStyle == MapTileStyle.satellite
                           ? '© Esri'
                           : _mapStyle == MapTileStyle.terrain
-                          ? '© OpenTopoMap'
-                          : '© CARTO',
+                          ? '© OpenTopoMap © OSM'
+                          : '© OSM © CARTO',
                       style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 10,
