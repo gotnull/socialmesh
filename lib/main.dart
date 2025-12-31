@@ -1124,8 +1124,8 @@ class _AppleTVGridCardState extends State<_AppleTVGridCard>
   final _random = math.Random();
 
   // Fragment grid - fewer, larger pieces for cinematic Endgame effect
-  static const int _fragmentsX = 24;
-  static const int _fragmentsY = 32;
+  static const int _fragmentsX = 6;
+  static const int _fragmentsY = 8;
 
   @override
   void initState() {
@@ -1136,7 +1136,7 @@ class _AppleTVGridCardState extends State<_AppleTVGridCard>
     );
 
     _disintegrationController = AnimationController(
-      duration: const Duration(milliseconds: 1200), // Slower, more cinematic
+      duration: const Duration(milliseconds: 3000), // Slower, more cinematic
       vsync: this,
     );
 
@@ -1442,20 +1442,20 @@ class _AppleTVGridCardState extends State<_AppleTVGridCard>
                 ),
               ),
             ),
-            // Animated shimmer overlay
+            // Animated shimmer overlay - subtle highlight sweep
             AnimatedBuilder(
               animation: _shimmerController,
               builder: (context, _) {
                 return Positioned.fill(
                   child: IgnorePointer(
-                    child: ShaderMask(
-                      shaderCallback: (bounds) {
-                        return LinearGradient(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
                             Colors.transparent,
-                            context.accentColor.withValues(alpha: 0.15),
+                            context.accentColor.withValues(alpha: 0.08),
                             Colors.transparent,
                           ],
                           stops: [
@@ -1463,10 +1463,8 @@ class _AppleTVGridCardState extends State<_AppleTVGridCard>
                             _shimmerController.value,
                             (_shimmerController.value + 0.3).clamp(0.0, 1.0),
                           ],
-                        ).createShader(bounds);
-                      },
-                      blendMode: BlendMode.srcATop,
-                      child: Container(color: Colors.white),
+                        ),
+                      ),
                     ),
                   ),
                 );
