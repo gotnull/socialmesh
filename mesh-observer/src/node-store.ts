@@ -300,13 +300,17 @@ export class NodeStore {
 
   /**
    * Get count of online nodes (seen within 1 hour)
+   * Only counts VALID nodes (with name and position) to match map display
    */
   getOnlineNodeCount(): number {
     const oneHourAgo = Math.floor(Date.now() / 1000) - 3600;
     let count = 0;
 
     for (const node of this.nodes.values()) {
-      if (node.lastHeard && node.lastHeard > oneHourAgo) {
+      // Must be valid (has name + position) AND seen recently
+      const isValid = node.longName && node.longName.trim() !== '' &&
+        (node.latitude !== 0 || node.longitude !== 0);
+      if (isValid && node.lastHeard && node.lastHeard > oneHourAgo) {
         count++;
       }
     }
