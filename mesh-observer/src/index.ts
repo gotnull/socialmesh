@@ -151,6 +151,7 @@ app.get('/', (req, res) => {
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <style>
     :root {
       --bg-primary: #1F2633;
@@ -575,96 +576,93 @@ app.get('/', (req, res) => {
   
   <div class="main-container">
     <header class="header">
-      <h1>Mesh Network <span class="gradient-text">API</span></h1>
-      <p class="subtitle">Real-time Meshtastic mesh network data from the global MQTT feed. Access node positions, telemetry, battery levels, and network topology.</p>
+      <h1>Mesh Network <span class="gradient-text">Backend</span></h1>
+      <p class="subtitle">This is the backend service powering the <a href="https://socialmesh.app" style="color: var(--accent-magenta);">Socialmesh app</a>. It collects real-time Meshtastic mesh network data from the global MQTT feed.</p>
       
       <div class="status">
         <span class="status-dot"></span>
-        <span>Live • ${nodeStore.getNodeCount()} nodes tracked</span>
+        <span>Live • ${nodeStore.getValidNodeCount()} nodes • ${nodeStore.getOnlineNodeCount()} online</span>
       </div>
     </header>
 
     <section class="endpoints">
-      <div class="section-title">Endpoints</div>
+      <div class="section-title" style="margin-bottom: 16px;"><span class="material-icons" style="font-size: 20px; vertical-align: middle; margin-right: 8px;">public</span>Public Access</div>
       
-      <div class="endpoint">
+      <div class="endpoint" style="border-left: 3px solid var(--success);">
         <div class="endpoint-header">
-          <span class="method">GET</span>
+          <span class="method" style="background: var(--success);">GET</span>
+          <span class="path"><a href="/map">/map</a></span>
+          <span style="color: var(--success); font-size: 12px; margin-left: auto; display: flex; align-items: center; gap: 4px;"><span class="material-icons" style="font-size: 14px;">check_circle</span>No auth required</span>
+        </div>
+        <p class="desc">Interactive world map showing all tracked mesh nodes. Explore the global Meshtastic network in real-time!</p>
+      </div>
+
+      <div class="endpoint" style="border-left: 3px solid var(--success);">
+        <div class="endpoint-header">
+          <span class="method" style="background: var(--success);">GET</span>
           <span class="path"><a href="/health">/health</a></span>
+          <span style="color: var(--success); font-size: 12px; margin-left: auto; display: flex; align-items: center; gap: 4px;"><span class="material-icons" style="font-size: 14px;">check_circle</span>No auth required</span>
         </div>
-        <p class="desc">Health check endpoint. Returns service status, MQTT connection state, node count, memory usage, and uptime. Returns HTTP 503 if service is degraded.</p>
-        <div class="example">
-          <div class="example-label">Response</div>
-          <pre><code>{
-  <span class="key">"status"</span>: <span class="value">"ok"</span>,
-  <span class="key">"mqttConnected"</span>: <span class="number">true</span>,
-  <span class="key">"nodeCount"</span>: <span class="number">${nodeStore.getNodeCount()}</span>,
-  <span class="key">"uptime"</span>: <span class="number">${Math.round(process.uptime())}</span>,
-  <span class="key">"memory"</span>: {
-    <span class="key">"heapUsed"</span>: <span class="value">"19MB"</span>,
-    <span class="key">"heapTotal"</span>: <span class="value">"20MB"</span>,
-    <span class="key">"rss"</span>: <span class="value">"64MB"</span>
-  }
-}</code></pre>
-        </div>
-      </div>
-
-      <div class="endpoint">
-        <div class="endpoint-header">
-          <span class="method">GET</span>
-          <span class="path"><a href="/api/nodes">/api/nodes</a></span>
-        </div>
-        <p class="desc">Get all tracked mesh nodes. Returns a map of node IDs to node objects containing position, telemetry, battery level, hardware info, neighbors, and more.</p>
-        <div class="example">
-          <div class="example-label">Response</div>
-          <pre><code>{
-  <span class="key">"3677891234"</span>: {
-    <span class="key">"nodeNum"</span>: <span class="number">3677891234</span>,
-    <span class="key">"longName"</span>: <span class="value">"Base Station"</span>,
-    <span class="key">"shortName"</span>: <span class="value">"BASE"</span>,
-    <span class="key">"latitude"</span>: <span class="number">37.7749</span>,
-    <span class="key">"longitude"</span>: <span class="number">-122.4194</span>,
-    <span class="key">"batteryLevel"</span>: <span class="number">87</span>,
-    ...
-  },
-  ...
-}</code></pre>
-        </div>
-      </div>
-
-      <div class="endpoint">
-        <div class="endpoint-header">
-          <span class="method">GET</span>
-          <span class="path">/api/node/:nodeNum</span>
-        </div>
-        <p class="desc">Get a single node by its numeric ID. Returns the full node object or HTTP 404 if not found.</p>
-        <div class="example">
-          <div class="example-label">Request</div>
-          <pre><code><span class="method-text">GET</span> /api/node/<span class="number">3677891234</span></code></pre>
-        </div>
-      </div>
-
-      <div class="endpoint">
-        <div class="endpoint-header">
-          <span class="method">GET</span>
-          <span class="path"><a href="/api/stats">/api/stats</a></span>
-        </div>
-        <p class="desc">Get detailed statistics about MQTT message processing, decode success rates, and node update counts by type (position, telemetry, nodeinfo, etc).</p>
-        <div class="example">
-          <div class="example-label">Response</div>
-          <pre><code>{
-  <span class="key">"totalNodes"</span>: <span class="number">${nodeStore.getNodeCount()}</span>,
-  <span class="key">"nodesWithPosition"</span>: <span class="number">${nodeStore.getNodesWithPositionCount()}</span>,
-  <span class="key">"onlineNodes"</span>: <span class="number">${nodeStore.getOnlineNodeCount()}</span>,
-  <span class="key">"decode"</span>: { ... },
-  <span class="key">"updates"</span>: { ... }
-}</code></pre>
-        </div>
+        <p class="desc">Health check endpoint. Returns service status, MQTT connection state, and node count.</p>
       </div>
     </section>
 
-    <section class="schema-section">
-      <div class="section-title">Node Schema</div>
+    <section class="endpoints">
+      <div class="section-title" style="margin-bottom: 16px;"><span class="material-icons" style="font-size: 20px; vertical-align: middle; margin-right: 8px;">lock</span>App-Only Endpoints</div>
+      <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px;">
+        These endpoints require authentication via the Socialmesh app. 
+        <a href="https://socialmesh.app#download" style="color: var(--accent-magenta);">Download the app</a> to access the World Mesh feature.
+      </p>
+      
+      <div class="endpoint" style="border-left: 3px solid var(--accent-magenta); opacity: 0.8;">
+        <div class="endpoint-header">
+          <span class="method">GET</span>
+          <span class="path">/api/nodes</span>
+          <span style="color: var(--accent-magenta); font-size: 12px; margin-left: auto; display: flex; align-items: center; gap: 4px;"><span class="material-icons" style="font-size: 14px;">vpn_key</span>Auth required</span>
+        </div>
+        <p class="desc">Get all tracked mesh nodes with position, telemetry, battery level, and hardware info.</p>
+      </div>
+
+      <div class="endpoint" style="border-left: 3px solid var(--accent-magenta); opacity: 0.8;">
+        <div class="endpoint-header">
+          <span class="method">GET</span>
+          <span class="path">/api/node/:nodeNum</span>
+          <span style="color: var(--accent-magenta); font-size: 12px; margin-left: auto; display: flex; align-items: center; gap: 4px;"><span class="material-icons" style="font-size: 14px;">vpn_key</span>Auth required</span>
+        </div>
+        <p class="desc">Get a single node by its numeric ID.</p>
+      </div>
+
+      <div class="endpoint" style="border-left: 3px solid var(--accent-magenta); opacity: 0.8;">
+        <div class="endpoint-header">
+          <span class="method">GET</span>
+          <span class="path">/api/stats</span>
+          <span style="color: var(--accent-magenta); font-size: 12px; margin-left: auto; display: flex; align-items: center; gap: 4px;"><span class="material-icons" style="font-size: 14px;">vpn_key</span>Auth required</span>
+        </div>
+        <p class="desc">Get detailed statistics about MQTT processing and node updates.</p>
+      </div>
+    </section>
+
+    <section class="endpoints">
+      <div class="section-title">How Authentication Works</div>
+      <div class="example">
+        <div class="example-label">For Developers</div>
+        <pre><code><span class="comment">// The Socialmesh app handles authentication automatically.</span>
+<span class="comment">// When you sign in to the app, it obtains a Firebase ID token</span>
+<span class="comment">// and includes it with API requests:</span>
+
+Authorization: Bearer &lt;firebase_id_token&gt;
+
+<span class="comment">// This API is not intended for third-party use.</span>
+<span class="comment">// If you're building a Meshtastic project, consider running</span>
+<span class="comment">// your own mesh-observer instance:</span>
+<span class="comment">// https://github.com/gotnull/socialmesh/tree/main/mesh-observer</span></code></pre>
+      </div>
+    </section>
+
+    <section class="endpoints" style="display: none;">
+      <div class="section-title">Legacy Endpoint Docs</div>
+      
+      <div class="endpoint">
       <div class="schema-code">
         <pre>{
   <span class="key">"nodeNum"</span>: <span class="number">3677891234</span>,       <span class="comment">// Unique node ID (from hardware)</span>
