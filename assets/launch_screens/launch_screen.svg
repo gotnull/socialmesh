@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1242" height="2688" viewBox="0 0 1242 2688" fill="none"
+  xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Brand gradient for mesh edges - horizontal -->
+    <linearGradient id="meshGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#E91E8C" />
+      <stop offset="50%" stop-color="#8B5CF6" />
+      <stop offset="100%" stop-color="#4F6AF6" />
+    </linearGradient>
+    <!-- Text gradient - matches web exactly: 135deg with 5 stops -->
+    <linearGradient id="textGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E91E8C" />
+      <stop offset="25%" stop-color="#8B5CF6" />
+      <stop offset="50%" stop-color="#4F6AF6" />
+      <stop offset="75%" stop-color="#8B5CF6" />
+      <stop offset="100%" stop-color="#E91E8C" />
+    </linearGradient>
+    <!-- Glow filter for mesh node -->
+    <filter id="nodeGlow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="12" result="coloredBlur" />
+      <feMerge>
+        <feMergeNode in="coloredBlur" />
+        <feMergeNode in="coloredBlur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Dark background - matches web app exactly -->
+  <rect width="1242" height="2688" fill="#1F2633" />
+
+  <!-- Icosahedron mesh node - matches app icon style -->
+  <g transform="translate(621, 1150)" filter="url(#nodeGlow)">
+    <!-- Back edges (dimmer for depth) -->
+    <g opacity="0.25" stroke-width="3" stroke-linecap="round" stroke="url(#meshGradient)">
+      <line x1="-80" y1="-40" x2="0" y2="-120" />
+      <line x1="80" y1="-40" x2="0" y2="-120" />
+      <line x1="-100" y1="30" x2="-80" y2="-40" />
+      <line x1="100" y1="30" x2="80" y2="-40" />
+      <line x1="-80" y1="-40" x2="80" y2="-40" />
+    </g>
+
+    <!-- Front edges (full opacity) -->
+    <g stroke-width="4" stroke-linecap="round" stroke="url(#meshGradient)">
+      <line x1="0" y1="120" x2="-100" y2="30" />
+      <line x1="0" y1="120" x2="100" y2="30" />
+      <line x1="-100" y1="30" x2="100" y2="30" />
+      <line x1="-100" y1="30" x2="-50" y2="-70" />
+      <line x1="100" y1="30" x2="50" y2="-70" />
+      <line x1="-50" y1="-70" x2="50" y2="-70" />
+      <line x1="0" y1="120" x2="-50" y2="-70" />
+      <line x1="0" y1="120" x2="50" y2="-70" />
+      <line x1="-50" y1="-70" x2="0" y2="-20" />
+      <line x1="50" y1="-70" x2="0" y2="-20" />
+      <line x1="-100" y1="30" x2="0" y2="-20" />
+      <line x1="100" y1="30" x2="0" y2="-20" />
+    </g>
+
+    <!-- Back nodes (dimmer, smaller) -->
+    <g opacity="0.3">
+      <circle cx="-80" cy="-40" r="8" fill="#E91E8C" />
+      <circle cx="80" cy="-40" r="8" fill="#4F6AF6" />
+      <circle cx="0" cy="-120" r="7" fill="#8B5CF6" />
+    </g>
+
+    <!-- Front nodes - gradient colors left to right -->
+    <circle cx="-100" cy="30" r="12" fill="#E91E8C" />
+    <circle cx="-50" cy="-70" r="11" fill="#C44AAE" />
+    <circle cx="0" cy="120" r="14" fill="#8B5CF6" />
+    <circle cx="0" cy="-20" r="13" fill="#8B5CF6" />
+    <circle cx="50" cy="-70" r="11" fill="#6D7CF6" />
+    <circle cx="100" cy="30" r="12" fill="#4F6AF6" />
+  </g>
+
+  <!-- "Socialmesh" text - JetBrains Mono font-weight 700 matching web -->
+  <text x="621" y="1420" text-anchor="middle" font-family="JetBrains Mono, monospace"
+    font-weight="700" font-size="72" letter-spacing="-2" fill="url(#textGradient)">Socialmesh</text>
+</svg>
