@@ -229,20 +229,39 @@ class _FloatingIconsBackgroundState extends State<FloatingIconsBackground>
         final topPadding = MediaQuery.paddingOf(context).top;
         final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-        // Calculate floating position with parallax
-        final time = _floatController.value * 2 * math.pi * iconData.floatSpeed;
-        final floatX =
-            math.sin(time) * iconData.floatAmplitude * iconData.parallaxFactor;
-        final floatY =
-            math.cos(time * 0.7) *
-            iconData.floatAmplitude *
-            iconData.parallaxFactor;
+        // Calculate continuous parallax drift (no reset, wraps around)
+        final time = _floatController.value;
+        
+        // Each icon drifts slowly in its own direction based on parallaxFactor
+        // Use different speeds and directions for variety
+        final driftSpeedX = iconData.floatSpeed * 0.5 * iconData.parallaxFactor;
+        final driftSpeedY = iconData.floatSpeed * 0.3 * (1.5 - iconData.parallaxFactor);
+        
+        // Calculate drift with wrapping (continuous loop)
+        final totalDriftX = time * screenSize.width * driftSpeedX * 0.15;
+        final totalDriftY = time * screenSize.height * driftSpeedY * 0.1;
+        
+        // Wrap position so icons loop seamlessly
+        final wrapWidth = screenSize.width + iconData.size * 2;
+        final wrapHeight = screenSize.height + iconData.size * 2;
+        
+        var wrappedX = (iconData.startX * screenSize.width + totalDriftX) % wrapWidth;
+        var wrappedY = (iconData.startY * screenSize.height + totalDriftY) % wrapHeight;
+        
+        // Adjust for negative wrapping
+        if (wrappedX < -iconData.size) wrappedX += wrapWidth;
+        if (wrappedY < -iconData.size) wrappedY += wrapHeight;
+        
+        // Add gentle bobbing motion on top of drift
+        final bobTime = time * 2 * math.pi * iconData.floatSpeed;
+        final bobX = math.sin(bobTime) * iconData.floatAmplitude * 0.3;
+        final bobY = math.cos(bobTime * 0.7) * iconData.floatAmplitude * 0.3;
 
         // Add page-based parallax movement
         final pageParallaxX = widget.pageOffset * 30 * iconData.parallaxFactor;
 
-        // Subtle rotation
-        final rotation = math.sin(time * 0.5) * 0.1;
+        // Subtle rotation that slowly changes
+        final rotation = math.sin(bobTime * 0.5) * 0.1;
 
         // Opacity pulse - higher opacity in light mode for visibility
         final baseOpacity = isDarkMode ? 0.3 : 0.5;
@@ -262,19 +281,10 @@ class _FloatingIconsBackgroundState extends State<FloatingIconsBackground>
 
         final colorWithAlpha = baseColor.withValues(alpha: effectiveAlpha);
 
-        // Position relative to screen, but Stack may start below status bar
-        // So subtract topPadding to compensate
+        // Final position with wrapping drift + bob + parallax
         return Positioned(
-          left:
-              screenSize.width * iconData.startX +
-              floatX -
-              pageParallaxX -
-              iconData.size / 2,
-          top:
-              screenSize.height * iconData.startY +
-              floatY -
-              iconData.size / 2 -
-              topPadding,
+          left: wrappedX + bobX - pageParallaxX - iconData.size / 2,
+          top: wrappedY + bobY - iconData.size / 2 - topPadding,
           child: Transform.rotate(
             angle: rotation,
             child: Icon(
