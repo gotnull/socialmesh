@@ -299,14 +299,14 @@ export class NodeStore {
   }
 
   /**
-   * Get count of online nodes (seen within 2 hours)
+   * Get count of online nodes (seen within 1 hour)
    */
   getOnlineNodeCount(): number {
-    const twoHoursAgo = Math.floor(Date.now() / 1000) - 7200;
+    const oneHourAgo = Math.floor(Date.now() / 1000) - 3600;
     let count = 0;
 
     for (const node of this.nodes.values()) {
-      if (node.lastHeard && node.lastHeard > twoHoursAgo) {
+      if (node.lastHeard && node.lastHeard > oneHourAgo) {
         count++;
       }
     }
