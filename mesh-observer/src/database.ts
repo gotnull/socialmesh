@@ -246,10 +246,10 @@ export class MeshDatabase {
   }
 
   /**
-   * Get count of recently active nodes (last 2 hours)
+   * Get count of recently active nodes (last 1 hour)
    */
   getOnlineNodeCount(): number {
-    const cutoff = Math.floor(Date.now() / 1000) - 7200; // 2 hours
+    const cutoff = Math.floor(Date.now() / 1000) - 3600; // 1 hour
     const result = this.db.prepare(
       'SELECT COUNT(*) as count FROM nodes WHERE last_heard > ?'
     ).get(cutoff) as { count: number };
