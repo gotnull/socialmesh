@@ -19,8 +19,23 @@ import { generateMapPage } from './map-page';
 
 const PORT = parseInt(process.env.PORT || '3001', 10);
 const MQTT_BROKER = process.env.MQTT_BROKER || 'mqtt://mqtt.meshtastic.org';
-// Subscribe to encrypted + json + map topics (msh/# causes disconnects on public broker)
-const MQTT_TOPICS = (process.env.MQTT_TOPICS || 'msh/+/2/e/#,msh/+/2/json/#,msh/+/2/map/#').split(',');
+// Subscribe to all topic depth variations like meshmap.net does
+// Covers: msh/<region>/2/..., msh/<region>/<channel>/2/..., etc.
+const MQTT_TOPICS = (process.env.MQTT_TOPICS || [
+  // Standard depth: msh/<region>/2/...
+  'msh/+/2/map/#',
+  'msh/+/2/e/#',
+  'msh/+/2/json/#',
+  // Extra depth: msh/<region>/<channel>/2/...
+  'msh/+/+/2/map/#',
+  'msh/+/+/2/e/#',
+  'msh/+/+/2/json/#',
+  // More depth variations
+  'msh/+/+/+/2/map/#',
+  'msh/+/+/+/2/e/#',
+  'msh/+/+/+/+/2/map/#',
+  'msh/+/+/+/+/2/e/#',
+].join(',')).split(',');
 const MQTT_USERNAME = process.env.MQTT_USERNAME || 'meshdev';
 const MQTT_PASSWORD = process.env.MQTT_PASSWORD || 'large4cats';
 const NODE_EXPIRY_HOURS = parseInt(process.env.NODE_EXPIRY_HOURS || '24', 10);
