@@ -8,7 +8,6 @@ import '../../core/logging.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animated_mesh_node.dart';
 import '../../core/widgets/animations.dart';
-import '../../core/widgets/secret_gesture_detector.dart';
 import '../../models/user_profile.dart';
 import '../../providers/profile_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
@@ -35,7 +34,6 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
   bool _introAnimationsExpanded = false;
   bool _notificationExpanded = false;
   bool _quickTestsExpanded = false;
-  bool _secretGestureExpanded = false;
   bool _adminToolsExpanded = false;
 
   // Mesh node playground state - defaults match user requirements
@@ -53,12 +51,6 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
   bool _enablePullToStretch = false;
   double _touchIntensity = 0.5; // Subtle
   double _stretchIntensity = 0.3;
-
-  // Secret gesture configuration
-  SecretGesturePattern _secretPattern = SecretGesturePattern.sevenTaps;
-  Duration _secretTimeWindow = const Duration(seconds: 3);
-  bool _secretShowFeedback = true;
-  bool _secretEnableHaptics = true;
 
   // Save location preference
   MeshConfigSaveLocation _saveLocation = MeshConfigSaveLocation.localDevice;
@@ -103,16 +95,6 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
           _enablePullToStretch = remoteConfig.enablePullToStretch;
           _touchIntensity = remoteConfig.touchIntensity;
           _stretchIntensity = remoteConfig.stretchIntensity;
-          // Load secret gesture config
-          _secretPattern = SecretGesturePattern.values.firstWhere(
-            (p) => p.name == remoteConfig.secretGesturePattern,
-            orElse: () => SecretGesturePattern.sevenTaps,
-          );
-          _secretTimeWindow = Duration(
-            milliseconds: remoteConfig.secretGestureTimeWindowMs,
-          );
-          _secretShowFeedback = remoteConfig.secretGestureShowFeedback;
-          _secretEnableHaptics = remoteConfig.secretGestureEnableHaptics;
           _hasUnsavedChanges = false;
           _saveLocation = MeshConfigSaveLocation.global;
         });
@@ -146,16 +128,6 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
       _enablePullToStretch = _settingsService!.splashMeshEnablePullToStretch;
       _touchIntensity = _settingsService!.splashMeshTouchIntensity;
       _stretchIntensity = _settingsService!.splashMeshStretchIntensity;
-      // Load secret gesture config
-      _secretPattern = SecretGesturePattern.values.firstWhere(
-        (p) => p.name == _settingsService!.secretGesturePattern,
-        orElse: () => SecretGesturePattern.sevenTaps,
-      );
-      _secretTimeWindow = Duration(
-        milliseconds: _settingsService!.secretGestureTimeWindowMs,
-      );
-      _secretShowFeedback = _settingsService!.secretGestureShowFeedback;
-      _secretEnableHaptics = _settingsService!.secretGestureEnableHaptics;
       _hasUnsavedChanges = false;
     });
   }
@@ -201,14 +173,6 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
           ),
         );
 
-    // Also save secret gesture config to local
-    await _settingsService!.setSecretGestureConfig(
-      pattern: _secretPattern.name,
-      timeWindowMs: _secretTimeWindow.inMilliseconds,
-      showFeedback: _secretShowFeedback,
-      enableHaptics: _secretEnableHaptics,
-    );
-
     // If global, also save to Firestore
     if (_saveLocation == MeshConfigSaveLocation.global) {
       final config = MeshConfigData(
@@ -226,10 +190,6 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
         enablePullToStretch: _enablePullToStretch,
         touchIntensity: _touchIntensity,
         stretchIntensity: _stretchIntensity,
-        secretGesturePattern: _secretPattern.name,
-        secretGestureTimeWindowMs: _secretTimeWindow.inMilliseconds,
-        secretGestureShowFeedback: _secretShowFeedback,
-        secretGestureEnableHaptics: _secretEnableHaptics,
       );
 
       await MeshFirestoreConfigService.instance.initialize();
@@ -247,7 +207,6 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
 
     // Invalidate providers so changes take effect immediately
     ref.invalidate(splashMeshConfigProvider);
-    ref.invalidate(secretGestureConfigProvider);
 
     final locationText = _saveLocation == MeshConfigSaveLocation.localDevice
         ? 'this device'
@@ -282,16 +241,6 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
           _enablePullToStretch = remoteConfig.enablePullToStretch;
           _touchIntensity = remoteConfig.touchIntensity;
           _stretchIntensity = remoteConfig.stretchIntensity;
-          // Load secret gesture config
-          _secretPattern = SecretGesturePattern.values.firstWhere(
-            (p) => p.name == remoteConfig.secretGesturePattern,
-            orElse: () => SecretGesturePattern.sevenTaps,
-          );
-          _secretTimeWindow = Duration(
-            milliseconds: remoteConfig.secretGestureTimeWindowMs,
-          );
-          _secretShowFeedback = remoteConfig.secretGestureShowFeedback;
-          _secretEnableHaptics = remoteConfig.secretGestureEnableHaptics;
           _hasUnsavedChanges = true;
         });
 
@@ -349,22 +298,19 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                   _meshNodeExpanded &&
                   _introAnimationsExpanded &&
                   _notificationExpanded &&
-                  _quickTestsExpanded &&
-                  _secretGestureExpanded;
+                  _quickTestsExpanded;
               setState(() {
                 _meshNodeExpanded = !allExpanded;
                 _introAnimationsExpanded = !allExpanded;
                 _notificationExpanded = !allExpanded;
                 _quickTestsExpanded = !allExpanded;
-                _secretGestureExpanded = !allExpanded;
               });
             },
             icon: Icon(
               _meshNodeExpanded &&
                       _introAnimationsExpanded &&
                       _notificationExpanded &&
-                      _quickTestsExpanded &&
-                      _secretGestureExpanded
+                      _quickTestsExpanded
                   ? Icons.unfold_less_rounded
                   : Icons.unfold_more_rounded,
               color: context.textSecondary,
@@ -425,18 +371,6 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                     () => _quickTestsExpanded = !_quickTestsExpanded,
                   ),
                   child: _buildQuickTestsContent(),
-                ),
-                const SizedBox(height: 12),
-                _buildCollapsibleSection(
-                  title: 'Secret Gesture Config',
-                  subtitle: 'Configure unlock gesture',
-                  icon: Icons.gesture_rounded,
-                  iconColor: AppTheme.primaryPurple,
-                  isExpanded: _secretGestureExpanded,
-                  onToggle: () => setState(
-                    () => _secretGestureExpanded = !_secretGestureExpanded,
-                  ),
-                  child: _buildSecretGestureContent(),
                 ),
                 const SizedBox(height: 12),
                 _buildCollapsibleSection(
@@ -1380,229 +1314,6 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
     );
   }
 
-  Widget _buildSecretGestureContent() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Divider
-        Container(
-          margin: const EdgeInsets.only(bottom: 16),
-          height: 1,
-          color: context.border.withAlpha(60),
-        ),
-
-        // Pattern selector
-        _buildSectionLabel('GESTURE PATTERN'),
-        SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            color: context.background,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: context.border),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<SecretGesturePattern>(
-              value: _secretPattern,
-              isExpanded: true,
-              dropdownColor: context.card,
-              style: TextStyle(color: context.textPrimary, fontSize: 14),
-              icon: Icon(
-                Icons.keyboard_arrow_down,
-                color: context.textSecondary,
-              ),
-              items: SecretGesturePattern.values.map((pattern) {
-                return DropdownMenuItem(
-                  value: pattern,
-                  child: Row(
-                    children: [
-                      Icon(
-                        _getPatternIcon(pattern),
-                        size: 18,
-                        color: AppTheme.primaryPurple,
-                      ),
-                      SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            pattern.name,
-                            style: const TextStyle(fontWeight: FontWeight.w500),
-                          ),
-                          Text(
-                            _getPatternDescription(pattern),
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: context.textTertiary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() {
-                    _secretPattern = value;
-                  });
-                }
-              },
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-
-        // Time window slider
-        _buildSliderRow(
-          label: 'Time Window',
-          value: _secretTimeWindow.inMilliseconds.toDouble(),
-          min: 1000,
-          max: 10000,
-          divisions: 18,
-          displayValue:
-              '${(_secretTimeWindow.inMilliseconds / 1000).toStringAsFixed(1)}s',
-          onChanged: (v) => setState(() {
-            _secretTimeWindow = Duration(milliseconds: v.toInt());
-          }),
-        ),
-        const SizedBox(height: 16),
-
-        // Toggle options
-        _buildToggle(
-          label: 'Show Feedback',
-          value: _secretShowFeedback,
-          onChanged: (v) => setState(() => _secretShowFeedback = v),
-        ),
-        const SizedBox(height: 8),
-        _buildToggle(
-          label: 'Enable Haptics',
-          value: _secretEnableHaptics,
-          onChanged: (v) => setState(() => _secretEnableHaptics = v),
-        ),
-        const SizedBox(height: 20),
-
-        // Test area
-        _buildSectionLabel('TEST GESTURE'),
-        const SizedBox(height: 8),
-        SecretGestureDetector(
-          pattern: _secretPattern,
-          timeWindow: _secretTimeWindow,
-          showFeedback: _secretShowFeedback,
-          enableHaptics: _secretEnableHaptics,
-          onSecretUnlocked: () {
-            showSuccessSnackBar(
-              context,
-              '✨ Secret gesture triggered! Pattern: ${_secretPattern.name}',
-            );
-          },
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  AppTheme.primaryPurple.withAlpha(20),
-                  AppTheme.primaryBlue.withAlpha(20),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppTheme.primaryPurple.withAlpha(60)),
-            ),
-            child: Column(
-              children: [
-                Icon(
-                  _getPatternIcon(_secretPattern),
-                  size: 32,
-                  color: AppTheme.primaryPurple.withAlpha(180),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'Test ${_secretPattern.name} here',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: context.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  _getPatternInstructions(_secretPattern),
-                  style: TextStyle(fontSize: 11, color: context.textTertiary),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-        ),
-        SizedBox(height: 16),
-
-        // Generated code snippet
-        _buildSectionLabel('CODE SNIPPET'),
-        const SizedBox(height: 8),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: const Color(0xFF1E1E2E),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: context.border.withAlpha(100)),
-          ),
-          child: SelectableText(
-            _generateGestureCodeSnippet(),
-            style: const TextStyle(
-              fontSize: 11,
-              fontFamily: 'monospace',
-              color: Color(0xFFA6E3A1),
-              height: 1.5,
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        BouncyTap(
-          onTap: () {
-            Clipboard.setData(
-              ClipboardData(text: _generateGestureCodeSnippet()),
-            );
-            showSuccessSnackBar(context, 'Code copied to clipboard');
-          },
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            decoration: BoxDecoration(
-              color: AppTheme.primaryPurple.withAlpha(20),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppTheme.primaryPurple.withAlpha(60)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.copy_rounded,
-                  size: 16,
-                  color: AppTheme.primaryPurple,
-                ),
-                SizedBox(width: 8),
-                Text(
-                  'Copy Code Snippet',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.primaryPurple,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildAdminToolsContent() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1710,56 +1421,6 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
         ),
       ),
     );
-  }
-
-  IconData _getPatternIcon(SecretGesturePattern pattern) {
-    return switch (pattern) {
-      SecretGesturePattern.sevenTaps => Icons.touch_app,
-      SecretGesturePattern.triforce => Icons.change_history,
-      SecretGesturePattern.konami => Icons.gamepad,
-      SecretGesturePattern.holdAndTap => Icons.pan_tool,
-      SecretGesturePattern.spiral => Icons.rotate_right,
-    };
-  }
-
-  String _getPatternDescription(SecretGesturePattern pattern) {
-    return switch (pattern) {
-      SecretGesturePattern.sevenTaps => 'Tap multiple times rapidly',
-      SecretGesturePattern.triforce => 'Draw a triangle pattern',
-      SecretGesturePattern.konami => '↑↑↓↓←→←→ swipe sequence',
-      SecretGesturePattern.holdAndTap => 'Hold + tap with another finger',
-      SecretGesturePattern.spiral => 'Draw a spiral gesture',
-    };
-  }
-
-  String _getPatternInstructions(SecretGesturePattern pattern) {
-    return switch (pattern) {
-      SecretGesturePattern.sevenTaps =>
-        'Tap 7 times within ${(_secretTimeWindow.inMilliseconds / 1000).toStringAsFixed(1)}s',
-      SecretGesturePattern.triforce =>
-        'Draw a triangle: tap 3 corners in order',
-      SecretGesturePattern.konami => 'Swipe: ↑ ↑ ↓ ↓ ← → ← → (like the code!)',
-      SecretGesturePattern.holdAndTap =>
-        'Hold with one finger, tap with another',
-      SecretGesturePattern.spiral => 'Draw a clockwise spiral from center',
-    };
-  }
-
-  String _generateGestureCodeSnippet() {
-    final buffer = StringBuffer();
-    buffer.writeln('SecretGestureDetector(');
-    buffer.writeln('  pattern: SecretGesturePattern.${_secretPattern.name},');
-    buffer.writeln(
-      '  timeWindow: Duration(milliseconds: ${_secretTimeWindow.inMilliseconds}),',
-    );
-    buffer.writeln('  showFeedback: $_secretShowFeedback,');
-    buffer.writeln('  enableHaptics: $_secretEnableHaptics,');
-    buffer.writeln('  onSecretUnlocked: () {');
-    buffer.writeln('    // Your secret action here');
-    buffer.writeln('  },');
-    buffer.writeln('  child: YourWidget(),');
-    buffer.writeln(')');
-    return buffer.toString();
   }
 
   Widget _buildSectionLabel(String label) {

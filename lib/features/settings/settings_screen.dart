@@ -2565,12 +2565,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
                             // About Section
                             _SectionHeader(title: 'ABOUT'),
-                            // Secret gesture to unlock debug settings - configurable!
+                            // Secret gesture to unlock debug settings - 7 taps with PIN
                             Consumer(
                               builder: (context, ref, child) {
-                                final gestureConfig = ref.watch(
-                                  secretGestureConfigProvider,
-                                );
                                 final appVersion = ref.watch(
                                   appVersionProvider,
                                 );
@@ -2580,36 +2577,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   loading: () => 'Meshtastic companion app',
                                   error: (_, _) => 'Meshtastic companion app',
                                 );
-                                return gestureConfig.when(
-                                  data: (config) => SecretGestureDetector(
-                                    pattern: config.pattern,
-                                    timeWindow: config.timeWindow,
-                                    showFeedback: config.showFeedback,
-                                    enableHaptics: config.enableHaptics,
-                                    onSecretUnlocked: _onSecretGestureUnlocked,
-                                    child: _SettingsTile(
-                                      icon: Icons.info,
-                                      title: 'Socialmesh',
-                                      subtitle: versionString,
-                                    ),
-                                  ),
-                                  loading: () => SecretGestureDetector(
-                                    pattern: SecretGesturePattern.sevenTaps,
-                                    onSecretUnlocked: _onSecretGestureUnlocked,
-                                    child: _SettingsTile(
-                                      icon: Icons.info,
-                                      title: 'Socialmesh',
-                                      subtitle: versionString,
-                                    ),
-                                  ),
-                                  error: (_, _) => SecretGestureDetector(
-                                    pattern: SecretGesturePattern.sevenTaps,
-                                    onSecretUnlocked: _onSecretGestureUnlocked,
-                                    child: _SettingsTile(
-                                      icon: Icons.info,
-                                      title: 'Socialmesh',
-                                      subtitle: versionString,
-                                    ),
+                                return SecretGestureDetector(
+                                  pattern: SecretGesturePattern.sevenTaps,
+                                  showFeedback: false,
+                                  enableHaptics: true,
+                                  onSecretUnlocked: _onSecretGestureUnlocked,
+                                  child: _SettingsTile(
+                                    icon: Icons.info,
+                                    title: 'Socialmesh',
+                                    subtitle: versionString,
                                   ),
                                 );
                               },

@@ -553,7 +553,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                   maxClusterRadius: 80,
                   size: const Size(40, 40),
                   alignment: Alignment.center,
-                  padding: const EdgeInsets.all(50),
+                  padding: EdgeInsets.zero,
                   maxZoom: 15,
                   // Disable animations for performance with 10k+ nodes
                   animationsOptions: const AnimationsOptions(
@@ -718,16 +718,59 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
             ),
           ),
 
-        // Stats bar
+        // Attribution + Stats bar
         Positioned(
           left: 0,
           right: 0,
           bottom: 0,
-          child: _buildStatsBar(
-            theme,
-            state,
-            displayNodes.length,
-            filters.hasActiveFilters,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Attribution floating above stats bar
+              Padding(
+                padding: const EdgeInsets.only(left: 8, bottom: 4),
+                child: GestureDetector(
+                  onTap: () => launchUrl(
+                    Uri.parse(
+                      _mapStyle == MapTileStyle.satellite
+                          ? 'https://www.esri.com'
+                          : _mapStyle == MapTileStyle.terrain
+                          ? 'https://opentopomap.org'
+                          : 'https://carto.com/attributions',
+                    ),
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      _mapStyle == MapTileStyle.satellite
+                          ? '© Esri'
+                          : _mapStyle == MapTileStyle.terrain
+                          ? '© OpenTopoMap'
+                          : '© CARTO',
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              // Stats bar
+              _buildStatsBar(
+                theme,
+                state,
+                displayNodes.length,
+                filters.hasActiveFilters,
+              ),
+            ],
           ),
         ),
       ],
@@ -793,30 +836,6 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
         top: false,
         child: Row(
           children: [
-            // Map attribution
-            GestureDetector(
-              onTap: () => launchUrl(
-                Uri.parse(
-                  _mapStyle == MapTileStyle.satellite
-                      ? 'https://www.esri.com'
-                      : _mapStyle == MapTileStyle.terrain
-                      ? 'https://opentopomap.org'
-                      : 'https://carto.com/attributions',
-                ),
-              ),
-              child: Text(
-                _mapStyle == MapTileStyle.satellite
-                    ? '© Esri'
-                    : _mapStyle == MapTileStyle.terrain
-                    ? '© OpenTopoMap'
-                    : '© CARTO',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-                  fontSize: 10,
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
             _buildStatItem(
               theme,
               hasFilters ? Icons.filter_alt : Icons.public,
@@ -824,7 +843,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
               hasFilters ? 'filtered' : 'visible',
               highlight: hasFilters,
             ),
-            const SizedBox(width: 24),
+            const SizedBox(width: 16),
             _buildStatItem(theme, Icons.cloud_done, state.nodeCount, 'total'),
             const Spacer(),
             if (state.lastUpdated != null)
@@ -846,9 +865,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                         ),
                       ),
                     Text(
-                      state.isFromCache
-                          ? 'Cached ${_formatLastUpdated(state.lastUpdated!)}'
-                          : 'Updated ${_formatLastUpdated(state.lastUpdated!)}',
+                      _formatLastUpdated(state.lastUpdated!),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: state.isFromCache
                             ? theme.colorScheme.error.withValues(alpha: 0.6)

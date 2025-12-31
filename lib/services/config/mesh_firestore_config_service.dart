@@ -213,12 +213,6 @@ class MeshConfigData {
       touchIntensity: touchIntensity,
       stretchIntensity: stretchIntensity,
     );
-    await settingsService.setSecretGestureConfig(
-      pattern: secretGesturePattern,
-      timeWindowMs: secretGestureTimeWindowMs,
-      showFeedback: secretGestureShowFeedback,
-      enableHaptics: secretGestureEnableHaptics,
-    );
   }
 
   MeshNodeAnimationType get animationTypeEnum {

@@ -6,7 +6,6 @@ import '../core/logging.dart';
 import '../core/theme.dart';
 import '../core/widgets/animated_mesh_node.dart';
 import '../core/widgets/node_names_mesh.dart';
-import '../core/widgets/secret_gesture_detector.dart';
 import '../features/onboarding/widgets/mesh_node_brain.dart';
 import '../main.dart' show firebaseReady;
 import '../services/config/mesh_firestore_config_service.dart';
@@ -398,51 +397,6 @@ class _ConfiguredSplashMeshNodeState
     );
   }
 }
-
-/// Configuration for secret gesture
-class SecretGestureConfig {
-  final SecretGesturePattern pattern;
-  final Duration timeWindow;
-  final bool showFeedback;
-  final bool enableHaptics;
-
-  const SecretGestureConfig({
-    this.pattern = SecretGesturePattern.sevenTaps,
-    this.timeWindow = const Duration(seconds: 3),
-    this.showFeedback = true,
-    this.enableHaptics = true,
-  });
-
-  static const SecretGestureConfig defaultConfig = SecretGestureConfig();
-}
-
-/// Provider that loads secret gesture config
-/// Priority: Firestore (with timeout) -> Local SharedPreferences -> Defaults
-/// Provider that loads secret gesture config from local SharedPreferences.
-/// The SharedPreferences are synced from user's cloud profile on app startup.
-final secretGestureConfigProvider = FutureProvider<SecretGestureConfig>((
-  ref,
-) async {
-  final prefs = await SharedPreferences.getInstance();
-
-  // Load from SharedPreferences (synced from user cloud profile on startup)
-  final patternName = prefs.getString('secret_gesture_pattern') ?? 'sevenTaps';
-  final timeWindowMs = prefs.getInt('secret_gesture_time_window') ?? 3000;
-  final showFeedback = prefs.getBool('secret_gesture_show_feedback') ?? true;
-  final enableHaptics = prefs.getBool('secret_gesture_enable_haptics') ?? true;
-
-  final pattern = SecretGesturePattern.values.firstWhere(
-    (p) => p.name == patternName,
-    orElse: () => SecretGesturePattern.sevenTaps,
-  );
-
-  return SecretGestureConfig(
-    pattern: pattern,
-    timeWindow: Duration(milliseconds: timeWindowMs),
-    showFeedback: showFeedback,
-    enableHaptics: enableHaptics,
-  );
-});
 
 /// A mini mesh node that replaces CircularProgressIndicator
 /// The app's mascot/brain - used for all loading states

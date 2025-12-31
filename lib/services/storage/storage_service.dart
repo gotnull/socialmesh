@@ -500,35 +500,6 @@ class SettingsService {
   double get splashMeshStretchIntensity =>
       _preferences.getDouble('splash_mesh_stretch_intensity') ?? 0.3;
 
-  // Secret Gesture Configuration
-  Future<void> setSecretGestureConfig({
-    required String pattern,
-    required int timeWindowMs,
-    required bool showFeedback,
-    required bool enableHaptics,
-  }) async {
-    await _preferences.setString('secret_gesture_pattern', pattern);
-    await _preferences.setInt('secret_gesture_time_window', timeWindowMs);
-    await _preferences.setBool('secret_gesture_show_feedback', showFeedback);
-    await _preferences.setBool('secret_gesture_enable_haptics', enableHaptics);
-  }
-
-  String get secretGesturePattern =>
-      _preferences.getString('secret_gesture_pattern') ?? 'sevenTaps';
-  int get secretGestureTimeWindowMs =>
-      _preferences.getInt('secret_gesture_time_window') ?? 3000;
-  bool get secretGestureShowFeedback =>
-      _preferences.getBool('secret_gesture_show_feedback') ?? true;
-  bool get secretGestureEnableHaptics =>
-      _preferences.getBool('secret_gesture_enable_haptics') ?? true;
-
-  Future<void> resetSecretGestureConfig() async {
-    await _preferences.remove('secret_gesture_pattern');
-    await _preferences.remove('secret_gesture_time_window');
-    await _preferences.remove('secret_gesture_show_feedback');
-    await _preferences.remove('secret_gesture_enable_haptics');
-  }
-
   Future<void> resetSplashMeshConfig() async {
     await _preferences.remove('splash_mesh_size');
     await _preferences.remove('splash_mesh_animation_type');
