@@ -1,7 +1,7 @@
-// AR Node Radar - Augmented Reality mesh node visualization
+// AR Node Radar - Production Augmented Reality mesh node visualization
 //
 // This module provides AR visualization of mesh nodes at their real-world
-// GPS positions using the device camera and sensors.
+// GPS positions using the device camera, sensors, and Kalman-filtered fusion.
 //
 // ## Architecture
 //
@@ -11,27 +11,28 @@
 // │  ┌─────────────────────────────────────────────────────┐    │
 // │  │                 Camera Preview                       │    │
 // │  │  ┌─────────────────────────────────────────────┐    │    │
-// │  │  │             AR Overlay Painter               │    │    │
-// │  │  │  • Node markers at 3D positions             │    │    │
-// │  │  │  • Off-screen indicators                    │    │    │
-// │  │  │  • Compass & horizon line                   │    │    │
-// │  │  │  • Distance & signal labels                 │    │    │
+// │  │  │              AR HUD Painter                  │    │    │
+// │  │  │  • Node markers with threat levels          │    │    │
+// │  │  │  • Compass tape & horizon line              │    │    │
+// │  │  │  • Altimeter & crosshair                    │    │    │
+// │  │  │  • Cluster visualization                    │    │    │
+// │  │  │  • Alert panels & scan effects              │    │    │
 // │  │  └─────────────────────────────────────────────┘    │    │
 // │  └─────────────────────────────────────────────────────┘    │
 // └─────────────────────────────────────────────────────────────┘
 //                              │
 //                              ▼
 // ┌─────────────────────────────────────────────────────────────┐
-// │                     AR PROVIDERS                             │
-// │  • arViewProvider - State management                        │
-// │  • arServiceProvider - Sensor service                       │
-// │  • sortedARNodesProvider - Sorted node list                │
+// │                       AR STATE                               │
+// │  • arStateProvider - Riverpod 3.x state management          │
+// │  • arEngineProvider - Sensor fusion engine                  │
+// │  • visibleARNodesProvider - Filtered node list              │
 // │  • arStatsProvider - Statistics                             │
 // └─────────────────────────────────────────────────────────────┘
 //                              │
 //                              ▼
 // ┌─────────────────────────────────────────────────────────────┐
-// │                      AR SERVICE                              │
+// │                      AR ENGINE                               │
 // │  ┌───────────┐  ┌───────────┐  ┌───────────┐               │
 // │  │Accelero-  │  │Magneto-   │  │Gyroscope  │               │
 // │  │meter      │  │meter      │  │           │               │
@@ -39,62 +40,32 @@
 // │        │              │              │                      │
 // │        └──────────────┼──────────────┘                      │
 // │                       ▼                                     │
-// │              Sensor Fusion                                  │
-// │              (Low-pass filter)                              │
+// │           Kalman Filter + Complementary Filter              │
+// │           (98% gyro / 2% accel-mag blending)                │
 // │                       │                                     │
 // │                       ▼                                     │
-// │           ARDeviceOrientation                               │
-// │           (heading, pitch, roll)                            │
-// └─────────────────────────────────────────────────────────────┘
-//                              │
-//                              ▼
-// ┌─────────────────────────────────────────────────────────────┐
-// │                      AR MODELS                               │
-// │  • ARNode - Node position in AR space                       │
-// │  • ARScreenPosition - Screen coordinates                    │
-// │  • ARDeviceOrientation - Sensor data                        │
-// │  • ARConfig - View configuration                            │
-// │  • calculateBearing/Distance/Elevation - Geo math          │
+// │              AROrientation                                  │
+// │              (heading, pitch, roll)                         │
 // └─────────────────────────────────────────────────────────────┘
 // ```
 //
 // ## Usage
 //
 // ```dart
-// // Navigate to AR view
 // Navigator.push(
 //   context,
 //   MaterialPageRoute(builder: (_) => const ARRadarScreen()),
 // );
 //
-// // Access AR state from anywhere
-// final arState = ref.watch(arViewProvider);
+// final arState = ref.watch(arStateProvider);
 // final visibleNodes = ref.watch(visibleARNodesProvider);
 // ```
-//
-// ## Extending the Framework
-//
-// ### Adding new AR elements
-//
-// 1. Add element type to `ARElementType` enum in ar_models.dart
-// 2. Create painter method in `AROverlayPainter`
-// 3. Add configuration options to `ARConfig`
-//
-// ### Adding new sensors
-//
-// 1. Add subscription in `ARService.start()`
-// 2. Create callback handler
-// 3. Integrate into sensor fusion in `_updateOrientation()`
-//
-// ### Adding new overlays
-//
-// 1. Create new CustomPainter or Widget
-// 2. Stack on top of AROverlay in ARRadarScreen
-// 3. Use arViewProvider for orientation/position data
 
-export 'ar_models.dart';
-export 'ar_mini_radar.dart';
-export 'ar_overlay_painter.dart';
-export 'ar_providers.dart';
+export 'ar_engine.dart';
+export 'ar_hud_painter.dart';
 export 'ar_radar_screen.dart';
-export 'ar_service.dart';
+export 'ar_state.dart';
+export 'widgets/ar_mini_radar.dart';
+export 'widgets/ar_node_detail_card.dart';
+export 'widgets/ar_settings_panel.dart';
+export 'widgets/ar_view_mode_selector.dart';

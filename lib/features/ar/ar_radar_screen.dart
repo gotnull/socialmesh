@@ -1,17 +1,23 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show DeviceOrientation, SystemChrome;
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/widgets/app_bottom_sheet.dart';
-import '../../models/mesh_models.dart';
-import 'ar_models.dart';
-import 'ar_overlay_painter.dart';
-import 'ar_providers.dart';
+import '../../utils/snackbar.dart';
+import 'ar_engine.dart';
+import 'ar_hud_painter.dart';
+import 'ar_state.dart';
+import 'widgets/ar_node_detail_card.dart';
+import 'widgets/ar_settings_panel.dart';
+import 'widgets/ar_view_mode_selector.dart';
 
-/// Main AR Node Radar screen
+/// Production-grade AR Node Radar screen with advanced HUD overlay
 class ARRadarScreen extends ConsumerStatefulWidget {
   const ARRadarScreen({super.key});
 
@@ -20,57 +26,75 @@ class ARRadarScreen extends ConsumerStatefulWidget {
 }
 
 class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
-    with WidgetsBindingObserver {
+    with TickerProviderStateMixin {
+  // Camera
   CameraController? _cameraController;
   bool _isCameraInitialized = false;
-  bool _isInitializing = true;
-  String? _errorMessage;
+  String? _cameraError;
+
+  // Animation
+  late AnimationController _pulseController;
+  late AnimationController _scanController;
+
+  // UI state
+  bool _isLocked = false;
+  bool _showDebug = false;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
+
+    // Lock to portrait for consistent experience
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+
+    // Hide status bar for immersion
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+
+    // Animation controllers
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat();
+
+    _scanController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat();
+
+    // Initialize
     _initializeCamera();
     _startAR();
   }
 
   @override
   void dispose() {
-    // Stop AR service before disposing - must be done first while ref is still valid
-    // Use try-catch in case the provider is already disposed
+    // Capture refs before dispose
+    final arNotifier = ref.read(arStateProvider.notifier);
+
+    // Stop AR first
     try {
-      ref.read(arViewProvider.notifier).stop();
-    } catch (_) {
-      // Provider may already be disposed
-    }
-    WidgetsBinding.instance.removeObserver(this);
-    SystemChrome.setPreferredOrientations(DeviceOrientation.values);
+      arNotifier.stop();
+    } catch (_) {}
+
+    // Clean up animations
+    _pulseController.dispose();
+    _scanController.dispose();
+
+    // Clean up camera
     _cameraController?.dispose();
+
+    // Restore system UI
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    SystemChrome.setPreferredOrientations(DeviceOrientation.values);
+
     super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (_cameraController == null || !_cameraController!.value.isInitialized) {
-      return;
-    }
-
-    if (state == AppLifecycleState.inactive) {
-      _cameraController?.dispose();
-    } else if (state == AppLifecycleState.resumed) {
-      _initializeCamera();
-    }
   }
 
   Future<void> _initializeCamera() async {
     try {
       final cameras = await availableCameras();
       if (cameras.isEmpty) {
-        setState(() {
-          _errorMessage = 'No cameras available';
-          _isInitializing = false;
-        });
+        setState(() => _cameraError = 'No cameras available');
         return;
       }
 
@@ -82,362 +106,381 @@ class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
 
       _cameraController = CameraController(
         backCamera,
-        ResolutionPreset.medium,
+        ResolutionPreset.high,
         enableAudio: false,
-        imageFormatGroup: ImageFormatGroup.jpeg,
+        imageFormatGroup: ImageFormatGroup.yuv420,
       );
 
       await _cameraController!.initialize();
 
+      // Lock exposure and focus for stability
+      if (_cameraController!.value.isInitialized) {
+        try {
+          await _cameraController!.setExposureMode(ExposureMode.auto);
+          await _cameraController!.setFocusMode(FocusMode.auto);
+        } catch (_) {}
+      }
+
       if (mounted) {
-        setState(() {
-          _isCameraInitialized = true;
-          _isInitializing = false;
-        });
+        setState(() => _isCameraInitialized = true);
       }
     } catch (e) {
-      debugPrint('[AR] Camera initialization failed: $e');
-      setState(() {
-        _errorMessage = 'Camera error: $e';
-        _isInitializing = false;
-      });
+      if (mounted) {
+        setState(() => _cameraError = 'Camera error: $e');
+      }
     }
   }
 
   Future<void> _startAR() async {
-    await ref.read(arViewProvider.notifier).start();
+    await ref.read(arStateProvider.notifier).start();
+  }
+
+  void _onTap(TapDownDetails details, Size size) {
+    if (_isLocked) return;
+
+    ref
+        .read(arStateProvider.notifier)
+        .selectNodeAt(
+          details.localPosition.dx,
+          details.localPosition.dy,
+          size.width,
+          size.height,
+        );
+  }
+
+  void _showSettings() {
+    AppBottomSheet.show(
+      context: context,
+      child: ARSettingsPanel(
+        state: ref.read(arStateProvider),
+        onViewModeChanged: (mode) {
+          ref.read(arStateProvider.notifier).setViewMode(mode);
+        },
+        onMaxDistanceChanged: (dist) {
+          ref.read(arStateProvider.notifier).setMaxDistance(dist);
+        },
+        onToggleElement: (element) {
+          ref.read(arStateProvider.notifier).toggleHudElement(element);
+        },
+        onToggleOfflineNodes: () {
+          ref.read(arStateProvider.notifier).toggleOfflineNodes();
+        },
+        onToggleFavoritesOnly: () {
+          ref.read(arStateProvider.notifier).toggleFavoritesOnly();
+        },
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final arState = ref.watch(arViewProvider);
+    final arState = ref.watch(arStateProvider);
     final stats = ref.watch(arStatsProvider);
 
     return Scaffold(
       backgroundColor: Colors.black,
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: const Text(
-          'AR NODE RADAR',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 2,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(
-              arState.config.showDistanceLabels
-                  ? Icons.straighten
-                  : Icons.straighten_outlined,
-              color: arState.config.showDistanceLabels
-                  ? Colors.cyan
-                  : Colors.white54,
-            ),
-            tooltip: 'Toggle distance labels',
-            onPressed: () {
-              ref.read(arViewProvider.notifier).toggleDistanceLabels();
-            },
-          ),
-          IconButton(
-            icon: Icon(
-              arState.config.showSignalStrength
-                  ? Icons.signal_cellular_alt
-                  : Icons.signal_cellular_alt_outlined,
-              color: arState.config.showSignalStrength
-                  ? Colors.cyan
-                  : Colors.white54,
-            ),
-            tooltip: 'Toggle signal strength',
-            onPressed: () {
-              ref.read(arViewProvider.notifier).toggleSignalStrength();
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.tune, color: Colors.white),
-            tooltip: 'Settings',
-            onPressed: () => _showSettingsSheet(arState),
-          ),
-        ],
-      ),
       body: Stack(
         fit: StackFit.expand,
         children: [
           // Camera preview
-          if (_isCameraInitialized && _cameraController != null)
-            CameraPreview(controller: _cameraController!)
-          else if (_isInitializing)
-            const Center(child: CircularProgressIndicator(color: Colors.cyan))
-          else
-            Container(
-              color: Colors.black,
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.camera_alt_outlined,
-                      size: 64,
-                      color: Colors.white24,
+          _buildCameraPreview(),
+
+          // AR HUD overlay
+          if (arState.isRunning)
+            GestureDetector(
+              onTapDown: (details) =>
+                  _onTap(details, MediaQuery.of(context).size),
+              child: AnimatedBuilder(
+                animation: _scanController,
+                builder: (context, _) {
+                  final padding = MediaQuery.of(context).padding;
+                  return CustomPaint(
+                    painter: ARHudPainter(
+                      orientation: arState.orientation,
+                      position: arState.position,
+                      nodes: arState.nodes,
+                      clusters: arState.clusters,
+                      alerts: arState.alerts,
+                      selectedNode: arState.selectedNode,
+                      config: arState.hudConfig.copyWith(
+                        safeAreaTop: padding.top,
+                        safeAreaBottom: padding.bottom,
+                      ),
+                      animationValue: _scanController.value,
                     ),
-                    const SizedBox(height: 16),
-                    Text(
-                      _errorMessage ?? 'Camera unavailable',
-                      style: const TextStyle(color: Colors.white54),
-                    ),
-                  ],
-                ),
+                    size: MediaQuery.of(context).size,
+                  );
+                },
               ),
             ),
 
-          // AR Overlay
-          if (arState.isActive)
-            AROverlay(
-              nodes: arState.arNodes,
-              orientation: arState.orientation,
-              config: arState.config,
-              selectedNode: arState.selectedNode != null
-                  ? arState.arNodes.cast<ARNode?>().firstWhere(
-                      (n) => n?.node.nodeNum == arState.selectedNode!.nodeNum,
-                      orElse: () => null,
-                    )
-                  : null,
-              onNodeTap: (arNode) {
-                ref.read(arViewProvider.notifier).selectNode(arNode.node);
-              },
-            ),
+          // Top controls
+          _buildTopControls(arState, stats),
 
-          // Error message
-          if (arState.errorMessage != null)
-            Positioned(
-              top: 100,
-              left: 20,
-              right: 20,
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.8),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  arState.errorMessage!,
-                  style: const TextStyle(color: Colors.white),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ),
-
-          // Stats panel
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: _buildStatsPanel(arState, stats),
-          ),
-
-          // Selected node detail
+          // Selected node detail card
           if (arState.selectedNode != null)
             Positioned(
-              bottom: 100,
+              bottom: MediaQuery.of(context).padding.bottom + 16,
               left: 16,
               right: 16,
-              child: _buildSelectedNodeCard(arState),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatsPanel(ARViewState arState, ARStats stats) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.bottomCenter,
-          end: Alignment.topCenter,
-          colors: [
-            Colors.black.withValues(alpha: 0.9),
-            Colors.black.withValues(alpha: 0.0),
-          ],
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildStatItem(
-            icon: Icons.radar,
-            label: 'NODES',
-            value: '${stats.totalNodes}',
-          ),
-          _buildStatItem(
-            icon: Icons.near_me,
-            label: 'NEAREST',
-            value: stats.totalNodes > 0
-                ? _formatDistance(stats.nearestDistance)
-                : '--',
-          ),
-          _buildStatItem(
-            icon: Icons.explore,
-            label: 'HEADING',
-            value: '${arState.orientation.heading.round()}°',
-          ),
-          _buildStatItem(
-            icon: Icons.gps_fixed,
-            label: 'GPS',
-            value: arState.userPosition != null ? 'LOCK' : 'NO FIX',
-            valueColor: arState.userPosition != null
-                ? Colors.green
-                : Colors.orange,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatItem({
-    required IconData icon,
-    required String label,
-    required String value,
-    Color? valueColor,
-  }) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, color: Colors.cyan.withValues(alpha: 0.7), size: 20),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.5),
-            fontSize: 10,
-            letterSpacing: 1,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          value,
-          style: TextStyle(
-            color: valueColor ?? Colors.white,
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
-    );
-  }
-
-  void _showSettingsSheet(ARViewState arState) {
-    AppBottomSheet.show(
-      context: context,
-      child: _ARSettingsContent(
-        arState: arState,
-        onMaxDistanceChanged: (value) {
-          ref.read(arViewProvider.notifier).setMaxDistance(value);
-        },
-        onToggleDistanceLabels: () {
-          ref.read(arViewProvider.notifier).toggleDistanceLabels();
-        },
-        onToggleSignalStrength: () {
-          ref.read(arViewProvider.notifier).toggleSignalStrength();
-        },
-      ),
-    );
-  }
-
-  Widget _buildSelectedNodeCard(ARViewState arState) {
-    final node = arState.selectedNode!;
-    final arNode = arState.arNodes.firstWhere(
-      (n) => n.node.nodeNum == node.nodeNum,
-      orElse: () => ARNode(
-        node: node,
-        distance: 0,
-        bearing: 0,
-        elevation: 0,
-        signalQuality: 0.5,
-      ),
-    );
-
-    return GestureDetector(
-      onTap: () {
-        // Dismiss card on tap - could be extended to show full node details
-        ref.read(arViewProvider.notifier).selectNode(null);
-      },
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.85),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.cyan.withValues(alpha: 0.5)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.cyan.withValues(alpha: 0.2),
-              blurRadius: 10,
-              spreadRadius: 2,
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            _buildNodeAvatar(node),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    node.longName ?? node.shortName ?? 'Unknown',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.near_me,
-                        size: 14,
-                        color: Colors.cyan.withValues(alpha: 0.7),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${arNode.formattedDistance} ${arNode.compassDirection}',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.7),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Icon(
-                        Icons.signal_cellular_alt,
-                        size: 14,
-                        color: Colors.cyan.withValues(alpha: 0.7),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${(arNode.signalQuality * 100).round()}%',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.7),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+              child: ARNodeDetailCard(
+                node: arState.selectedNode!,
+                onClose: () =>
+                    ref.read(arStateProvider.notifier).selectNode(null),
+                onNavigate: () => _navigateToNode(arState.selectedNode!),
+                onFavorite: () {
+                  final nodeNum = arState.selectedNode!.node.nodeNum;
+                  if (arState.favoriteNodeNums.contains(nodeNum)) {
+                    ref.read(arStateProvider.notifier).removeFavorite(nodeNum);
+                  } else {
+                    ref.read(arStateProvider.notifier).addFavorite(nodeNum);
+                  }
+                },
+                onShare: () => _shareNode(arState.selectedNode!),
+                isFavorite: arState.favoriteNodeNums.contains(
+                  arState.selectedNode!.node.nodeNum,
+                ),
               ),
             ),
-            IconButton(
-              icon: const Icon(Icons.close, color: Colors.white54),
-              onPressed: () {
-                ref.read(arViewProvider.notifier).selectNode(null);
+
+          // View mode selector (bottom left)
+          Positioned(
+            bottom: arState.selectedNode != null ? 180 : 100,
+            left: 16,
+            child: ARViewModeSelector(
+              currentMode: arState.viewMode,
+              onModeChanged: (mode) {
+                ref.read(arStateProvider.notifier).setViewMode(mode);
+                HapticFeedback.selectionClick();
               },
+            ),
+          ),
+
+          // Loading overlay
+          if (arState.isInitializing) _buildLoadingOverlay(),
+
+          // Error overlay
+          if (arState.error != null) _buildErrorOverlay(arState.error!),
+
+          // Debug info
+          if (_showDebug) _buildDebugInfo(arState, stats),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCameraPreview() {
+    if (_cameraError != null) {
+      return Container(
+        color: Colors.black,
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.camera_alt_outlined,
+                color: Colors.white24,
+                size: 64,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                _cameraError!,
+                style: const TextStyle(color: Colors.white54),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (!_isCameraInitialized || _cameraController == null) {
+      return Container(
+        color: Colors.black,
+        child: const Center(
+          child: CircularProgressIndicator(color: Color(0xFF00E5FF)),
+        ),
+      );
+    }
+
+    return SizedBox.expand(
+      child: FittedBox(
+        fit: BoxFit.cover,
+        child: SizedBox(
+          width: _cameraController!.value.previewSize?.height ?? 0,
+          height: _cameraController!.value.previewSize?.width ?? 0,
+          child: CameraPreview(_cameraController!),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopControls(ARState arState, ARStats stats) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          children: [
+            // Back button
+            _buildControlButton(
+              icon: Icons.arrow_back,
+              onTap: () => Navigator.of(context).pop(),
+            ),
+
+            const Spacer(),
+
+            // Status indicators
+            _buildStatusChip(
+              icon: Icons.blur_on,
+              label: '${stats.totalNodes}',
+              color: const Color(0xFF00E5FF),
+            ),
+            const SizedBox(width: 8),
+            _buildStatusChip(
+              icon: Icons.visibility,
+              label: '${stats.visibleNodes}',
+              color: const Color(0xFF00FF88),
+            ),
+            if (stats.warningNodes > 0) ...[
+              const SizedBox(width: 8),
+              _buildStatusChip(
+                icon: Icons.warning_amber,
+                label: '${stats.warningNodes}',
+                color: const Color(0xFFFFAB00),
+              ),
+            ],
+
+            const Spacer(),
+
+            // Lock button
+            _buildControlButton(
+              icon: _isLocked ? Icons.lock : Icons.lock_open,
+              isActive: _isLocked,
+              onTap: () {
+                setState(() => _isLocked = !_isLocked);
+                HapticFeedback.mediumImpact();
+                showInfoSnackBar(
+                  context,
+                  _isLocked ? 'Touch locked' : 'Touch unlocked',
+                );
+              },
+            ),
+            const SizedBox(width: 8),
+            // Debug button
+            _buildControlButton(
+              icon: Icons.bug_report,
+              isActive: _showDebug,
+              onTap: () => setState(() => _showDebug = !_showDebug),
+            ),
+            const SizedBox(width: 8),
+            // Settings button
+            _buildControlButton(icon: Icons.tune, onTap: _showSettings),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildControlButton({
+    required IconData icon,
+    required VoidCallback onTap,
+    bool isActive = false,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: isActive
+              ? const Color(0xFF00E5FF).withValues(alpha: 0.3)
+              : Colors.black.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isActive
+                ? const Color(0xFF00E5FF)
+                : Colors.white.withValues(alpha: 0.2),
+            width: 1,
+          ),
+        ),
+        child: Icon(
+          icon,
+          color: isActive ? const Color(0xFF00E5FF) : Colors.white,
+          size: 20,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusChip({
+    required IconData icon,
+    required String label,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 14),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'monospace',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoadingOverlay() {
+    return Container(
+      color: Colors.black87,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 80,
+              height: 80,
+              child: AnimatedBuilder(
+                animation: _pulseController,
+                builder: (context, child) {
+                  return CustomPaint(
+                    painter: _LoadingPainter(progress: _pulseController.value),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'INITIALIZING AR ENGINE',
+              style: TextStyle(
+                color: Color(0xFF00E5FF),
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'monospace',
+                letterSpacing: 2,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Calibrating sensors...',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.6),
+                fontSize: 12,
+                fontFamily: 'monospace',
+              ),
             ),
           ],
         ),
@@ -445,179 +488,268 @@ class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
     );
   }
 
-  Widget _buildNodeAvatar(MeshNode node) {
-    final text = node.shortName ?? node.nodeNum.toRadixString(16).toUpperCase();
-    final color = Color(node.avatarColor ?? 0xFF00BCD4);
-
+  Widget _buildErrorOverlay(String error) {
     return Container(
-      width: 50,
-      height: 50,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: color.withValues(alpha: 0.2),
-        border: Border.all(color: color, width: 2),
-      ),
+      color: Colors.black87,
       child: Center(
-        child: Text(
-          text.length > 4 ? text.substring(0, 4) : text,
-          style: TextStyle(
-            color: color,
-            fontWeight: FontWeight.bold,
-            fontSize: text.length > 2 ? 12 : 16,
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                color: Color(0xFFFF1744),
+                size: 64,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'AR ENGINE ERROR',
+                style: TextStyle(
+                  color: Color(0xFFFF1744),
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'monospace',
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                error,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.7),
+                  fontSize: 12,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _startAR,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF00E5FF),
+                  foregroundColor: Colors.black,
+                ),
+                child: const Text('RETRY'),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  String _formatDistance(double meters) {
-    if (meters < 1000) {
-      return '${meters.round()}m';
+  Widget _buildDebugInfo(ARState arState, ARStats stats) {
+    return Positioned(
+      top: MediaQuery.of(context).padding.top + 60,
+      right: 16,
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.8),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: const Color(0xFF00E5FF).withValues(alpha: 0.3),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _debugRow(
+              'HDG',
+              '${arState.orientation.heading.toStringAsFixed(1)}°',
+            ),
+            _debugRow(
+              'PIT',
+              '${arState.orientation.pitch.toStringAsFixed(1)}°',
+            ),
+            _debugRow('ROL', '${arState.orientation.roll.toStringAsFixed(1)}°'),
+            _debugRow(
+              'ACC',
+              '${(arState.orientation.accuracy * 100).toStringAsFixed(0)}%',
+            ),
+            const Divider(color: Color(0xFF00E5FF), height: 8),
+            if (arState.position != null) ...[
+              _debugRow('LAT', arState.position!.latitude.toStringAsFixed(6)),
+              _debugRow('LON', arState.position!.longitude.toStringAsFixed(6)),
+              _debugRow(
+                'ALT',
+                '${arState.position!.altitude.toStringAsFixed(1)}m',
+              ),
+              _debugRow(
+                'GPS',
+                '±${arState.position!.accuracy.toStringAsFixed(0)}m',
+              ),
+            ],
+            const Divider(color: Color(0xFF00E5FF), height: 8),
+            _debugRow('NOD', '${stats.totalNodes}'),
+            _debugRow('VIS', '${stats.visibleNodes}'),
+            _debugRow('CLU', '${stats.clusters}'),
+            _debugRow('MOV', '${stats.movingNodes}'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _debugRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 1),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '$label:',
+            style: TextStyle(
+              color: const Color(0xFF00E5FF).withValues(alpha: 0.6),
+              fontSize: 10,
+              fontFamily: 'monospace',
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Color(0xFF00E5FF),
+              fontSize: 10,
+              fontFamily: 'monospace',
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _navigateToNode(ARWorldNode node) async {
+    final meshNode = node.node;
+    if (meshNode.latitude == null || meshNode.longitude == null) {
+      showInfoSnackBar(context, 'Node has no GPS position');
+      return;
+    }
+
+    final lat = meshNode.latitude!;
+    final lon = meshNode.longitude!;
+    final name = meshNode.displayName;
+
+    final url = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=$lat,$lon',
+    );
+
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
     } else {
-      return '${(meters / 1000).toStringAsFixed(1)}km';
+      if (mounted) {
+        showInfoSnackBar(context, 'Could not open maps for $name');
+      }
     }
   }
-}
 
-/// Camera preview widget
-class CameraPreview extends StatelessWidget {
-  final CameraController controller;
+  void _shareNode(ARWorldNode arNode) {
+    final meshNode = arNode.node;
+    final name = meshNode.displayName;
+    final nodeId = '!${meshNode.nodeNum.toRadixString(16)}';
 
-  const CameraPreview({super.key, required this.controller});
+    final buffer = StringBuffer();
+    buffer.writeln('📡 $name');
+    buffer.writeln('Node ID: $nodeId');
 
-  @override
-  Widget build(BuildContext context) {
-    if (!controller.value.isInitialized) {
-      return Container(color: Colors.black);
+    if (meshNode.hasPosition) {
+      buffer.writeln(
+        'Position: ${meshNode.latitude!.toStringAsFixed(6)}, '
+        '${meshNode.longitude!.toStringAsFixed(6)}',
+      );
+      buffer.writeln(
+        'Distance: ${arNode.worldPosition.distance.toStringAsFixed(0)}m',
+      );
+      buffer.writeln(
+        'Bearing: ${arNode.worldPosition.bearing.toStringAsFixed(0)}°',
+      );
     }
 
-    return ClipRect(
-      child: OverflowBox(
-        alignment: Alignment.center,
-        child: FittedBox(
-          fit: BoxFit.cover,
-          child: SizedBox(
-            width: controller.value.previewSize?.height ?? 0,
-            height: controller.value.previewSize?.width ?? 0,
-            child: CameraPreview._raw(controller),
-          ),
-        ),
-      ),
-    );
-  }
+    if (meshNode.altitude != null) {
+      buffer.writeln('Altitude: ${meshNode.altitude!.toStringAsFixed(0)}m');
+    }
 
-  // Inner raw preview
-  static Widget _raw(CameraController controller) {
-    return controller.buildPreview();
+    if (meshNode.batteryLevel != null && meshNode.batteryLevel! > 0) {
+      buffer.writeln('Battery: ${meshNode.batteryLevel}%');
+    }
+
+    if (meshNode.snr != null) {
+      buffer.writeln('SNR: ${meshNode.snr!.toStringAsFixed(1)} dB');
+    }
+
+    buffer.writeln();
+    buffer.writeln('Shared via Socialmesh AR');
+
+    Share.share(buffer.toString(), subject: 'Mesh Node: $name');
   }
 }
 
-/// Settings content widget for AppBottomSheet
-class _ARSettingsContent extends StatefulWidget {
-  final ARViewState arState;
-  final ValueChanged<double> onMaxDistanceChanged;
-  final VoidCallback onToggleDistanceLabels;
-  final VoidCallback onToggleSignalStrength;
+// ═══════════════════════════════════════════════════════════════════════════
+// LOADING PAINTER
+// ═══════════════════════════════════════════════════════════════════════════
 
-  const _ARSettingsContent({
-    required this.arState,
-    required this.onMaxDistanceChanged,
-    required this.onToggleDistanceLabels,
-    required this.onToggleSignalStrength,
-  });
+class _LoadingPainter extends CustomPainter {
+  final double progress;
+
+  _LoadingPainter({required this.progress});
 
   @override
-  State<_ARSettingsContent> createState() => _ARSettingsContentState();
-}
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2 - 4;
 
-class _ARSettingsContentState extends State<_ARSettingsContent> {
-  late double _maxDistance;
-  late bool _showDistanceLabels;
-  late bool _showSignalStrength;
+    // Background circle
+    canvas.drawCircle(
+      center,
+      radius,
+      Paint()
+        ..color = const Color(0xFF00E5FF).withValues(alpha: 0.1)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2,
+    );
 
-  @override
-  void initState() {
-    super.initState();
-    _maxDistance = widget.arState.config.maxDisplayDistance;
-    _showDistanceLabels = widget.arState.config.showDistanceLabels;
-    _showSignalStrength = widget.arState.config.showSignalStrength;
-  }
+    // Animated arc
+    final sweepAngle = math.pi * 1.5;
+    final startAngle = progress * math.pi * 2 - math.pi / 2;
 
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const BottomSheetHeader(icon: Icons.tune, title: 'AR Settings'),
-        const SizedBox(height: 16),
-        Text(
-          'Max Distance: ${(_maxDistance / 1000).round()} km',
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
-        ),
-        const SizedBox(height: 8),
-        Slider(
-          value: _maxDistance,
-          min: 1000,
-          max: 100000,
-          divisions: 99,
-          activeColor: Colors.cyan,
-          inactiveColor: Colors.white24,
-          onChanged: (value) {
-            setState(() => _maxDistance = value);
-            widget.onMaxDistanceChanged(value);
-          },
-        ),
-        const SizedBox(height: 16),
-        _buildSwitch(
-          'Distance Labels',
-          'Show distance to each node',
-          _showDistanceLabels,
-          (value) {
-            setState(() => _showDistanceLabels = value);
-            widget.onToggleDistanceLabels();
-          },
-        ),
-        const SizedBox(height: 8),
-        _buildSwitch(
-          'Signal Strength',
-          'Show signal quality bars',
-          _showSignalStrength,
-          (value) {
-            setState(() => _showSignalStrength = value);
-            widget.onToggleSignalStrength();
-          },
-        ),
-        const SizedBox(height: 8),
-      ],
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      startAngle,
+      sweepAngle,
+      false,
+      Paint()
+        ..color = const Color(0xFF00E5FF)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3
+        ..strokeCap = StrokeCap.round,
+    );
+
+    // Inner hexagon
+    final hexRadius = radius * 0.5;
+    final hexPath = Path();
+    for (var i = 0; i < 6; i++) {
+      final angle = (i * 60 - 30 + progress * 360) * math.pi / 180;
+      final x = center.dx + hexRadius * math.cos(angle);
+      final y = center.dy + hexRadius * math.sin(angle);
+      if (i == 0) {
+        hexPath.moveTo(x, y);
+      } else {
+        hexPath.lineTo(x, y);
+      }
+    }
+    hexPath.close();
+
+    canvas.drawPath(
+      hexPath,
+      Paint()
+        ..color = const Color(0xFF00E5FF).withValues(alpha: 0.5)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5,
     );
   }
 
-  Widget _buildSwitch(
-    String title,
-    String subtitle,
-    bool value,
-    ValueChanged<bool> onChanged,
-  ) {
-    return SwitchListTile(
-      title: Text(title),
-      subtitle: Text(
-        subtitle,
-        style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
-      ),
-      value: value,
-      thumbColor: WidgetStateProperty.resolveWith(
-        (states) => states.contains(WidgetState.selected) ? Colors.cyan : null,
-      ),
-      trackColor: WidgetStateProperty.resolveWith(
-        (states) => states.contains(WidgetState.selected)
-            ? Colors.cyan.withValues(alpha: 0.5)
-            : null,
-      ),
-      onChanged: onChanged,
-      contentPadding: EdgeInsets.zero,
-    );
+  @override
+  bool shouldRepaint(_LoadingPainter oldDelegate) {
+    return oldDelegate.progress != progress;
   }
 }
