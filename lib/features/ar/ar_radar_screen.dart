@@ -37,10 +37,16 @@ class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
 
   @override
   void dispose() {
+    // Stop AR service before disposing - must be done first while ref is still valid
+    // Use try-catch in case the provider is already disposed
+    try {
+      ref.read(arViewProvider.notifier).stop();
+    } catch (_) {
+      // Provider may already be disposed
+    }
     WidgetsBinding.instance.removeObserver(this);
     SystemChrome.setPreferredOrientations(DeviceOrientation.values);
     _cameraController?.dispose();
-    ref.read(arViewProvider.notifier).stop();
     super.dispose();
   }
 

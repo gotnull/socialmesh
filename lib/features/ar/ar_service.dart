@@ -43,6 +43,7 @@ class ARService {
 
   // Current state
   bool _isRunning = false;
+  bool _isDisposed = false;
   bool get isRunning => _isRunning;
   Position? get userPosition => _userPosition;
   ARDeviceOrientation get currentOrientation =>
@@ -101,6 +102,7 @@ class ARService {
 
   /// Dispose of resources
   void dispose() {
+    _isDisposed = true;
     stop();
     _orientationController.close();
     _positionController.close();
@@ -139,17 +141,20 @@ class ARService {
             distanceFilter: 5, // Update every 5 meters
           ),
         ).listen((position) {
+          if (_isDisposed || !_isRunning) return;
           _userPosition = position;
           _positionController.add(position);
         });
   }
 
   void _onAccelerometer(AccelerometerEvent event) {
+    if (_isDisposed || !_isRunning) return;
     _accelerometer = [event.x, event.y, event.z];
     _updateOrientation();
   }
 
   void _onMagnetometer(MagnetometerEvent event) {
+    if (_isDisposed || !_isRunning) return;
     _magnetometer = [event.x, event.y, event.z];
     _updateOrientation();
   }
