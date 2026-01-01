@@ -235,12 +235,7 @@ class ARSettingsPanel extends StatelessWidget {
         _buildHudChip('Horizon', config.showHorizon, 'horizon'),
         _buildHudChip('Compass', config.showCompass, 'compass'),
         _buildHudChip('Altimeter', config.showAltimeter, 'altimeter'),
-        _buildHudChip('Crosshair', config.showCrosshair, 'crosshair'),
-        _buildHudChip('Tracks', config.showTracks, 'tracks'),
-        _buildHudChip('Velocity', config.showVelocity, 'velocity'),
         _buildHudChip('Alerts', config.showAlerts, 'alerts'),
-        _buildHudChip('Stats', config.showStats, 'stats'),
-        _buildHudChip('Scan Line', config.showScanLine, 'scanLine'),
       ],
     );
   }

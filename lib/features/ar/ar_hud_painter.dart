@@ -48,17 +48,6 @@ class ARHudPainter extends CustomPainter {
       _drawAltimeter(canvas, size);
     }
 
-    if (config.showCrosshair) {
-      _drawCrosshair(canvas, size);
-    }
-
-    // Draw node tracks first (behind markers)
-    if (config.showTracks) {
-      for (final node in nodes) {
-        _drawNodeTrack(canvas, size, node);
-      }
-    }
-
     // Draw clusters
     for (final cluster in clusters) {
       if (cluster.screenPosition.isInView) {
@@ -80,31 +69,9 @@ class ARHudPainter extends CustomPainter {
       }
     }
 
-    // Draw velocity vectors for moving nodes
-    if (config.showVelocity) {
-      for (final node in nodes.where(
-        (n) => n.isMoving && n.screenPosition.isInView,
-      )) {
-        _drawVelocityVector(canvas, size, node);
-      }
-    }
-
     // Draw alerts
     if (config.showAlerts && alerts.isNotEmpty) {
       _drawAlerts(canvas, size);
-    }
-
-    // Draw stats
-    if (config.showStats) {
-      _drawStats(canvas, size);
-    }
-
-    // Draw edge vignette
-    _drawVignette(canvas, size);
-
-    // Draw scan line animation
-    if (config.showScanLine) {
-      _drawScanLine(canvas, size);
     }
   }
 
@@ -546,109 +513,6 @@ class ARHudPainter extends CustomPainter {
   // CROSSHAIR
   // ═══════════════════════════════════════════════════════════════════════════
 
-  void _drawCrosshair(Canvas canvas, Size size) {
-    final centerX = size.width / 2;
-    final centerY = size.height / 2;
-
-    final paint = Paint()
-      ..color = _primaryColor.withValues(alpha: 0.6)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-
-    // Center dot
-    canvas.drawCircle(
-      Offset(centerX, centerY),
-      3,
-      Paint()..color = _primaryColor.withValues(alpha: 0.8),
-    );
-
-    // Crosshair lines with gap
-    const gap = 15.0;
-    const length = 25.0;
-
-    // Top
-    canvas.drawLine(
-      Offset(centerX, centerY - gap),
-      Offset(centerX, centerY - gap - length),
-      paint,
-    );
-    // Bottom
-    canvas.drawLine(
-      Offset(centerX, centerY + gap),
-      Offset(centerX, centerY + gap + length),
-      paint,
-    );
-    // Left
-    canvas.drawLine(
-      Offset(centerX - gap, centerY),
-      Offset(centerX - gap - length, centerY),
-      paint,
-    );
-    // Right
-    canvas.drawLine(
-      Offset(centerX + gap, centerY),
-      Offset(centerX + gap + length, centerY),
-      paint,
-    );
-
-    // Corner brackets
-    const bracketSize = 40.0;
-    const bracketOffset = 60.0;
-
-    final bracketPaint = Paint()
-      ..color = _primaryColor.withValues(alpha: 0.3)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
-
-    // Top-left
-    canvas.drawLine(
-      Offset(centerX - bracketOffset, centerY - bracketOffset + bracketSize),
-      Offset(centerX - bracketOffset, centerY - bracketOffset),
-      bracketPaint,
-    );
-    canvas.drawLine(
-      Offset(centerX - bracketOffset, centerY - bracketOffset),
-      Offset(centerX - bracketOffset + bracketSize, centerY - bracketOffset),
-      bracketPaint,
-    );
-
-    // Top-right
-    canvas.drawLine(
-      Offset(centerX + bracketOffset, centerY - bracketOffset + bracketSize),
-      Offset(centerX + bracketOffset, centerY - bracketOffset),
-      bracketPaint,
-    );
-    canvas.drawLine(
-      Offset(centerX + bracketOffset, centerY - bracketOffset),
-      Offset(centerX + bracketOffset - bracketSize, centerY - bracketOffset),
-      bracketPaint,
-    );
-
-    // Bottom-left
-    canvas.drawLine(
-      Offset(centerX - bracketOffset, centerY + bracketOffset - bracketSize),
-      Offset(centerX - bracketOffset, centerY + bracketOffset),
-      bracketPaint,
-    );
-    canvas.drawLine(
-      Offset(centerX - bracketOffset, centerY + bracketOffset),
-      Offset(centerX - bracketOffset + bracketSize, centerY + bracketOffset),
-      bracketPaint,
-    );
-
-    // Bottom-right
-    canvas.drawLine(
-      Offset(centerX + bracketOffset, centerY + bracketOffset - bracketSize),
-      Offset(centerX + bracketOffset, centerY + bracketOffset),
-      bracketPaint,
-    );
-    canvas.drawLine(
-      Offset(centerX + bracketOffset, centerY + bracketOffset),
-      Offset(centerX + bracketOffset - bracketSize, centerY + bracketOffset),
-      bracketPaint,
-    );
-  }
-
   // ═══════════════════════════════════════════════════════════════════════════
   // NODE RENDERING
   // ═══════════════════════════════════════════════════════════════════════════
@@ -667,32 +531,21 @@ class ARHudPainter extends CustomPainter {
     final baseColor = _getThreatColor(node.threatLevel);
     final color = baseColor.withValues(alpha: opacity);
 
-    // Draw glow for selected or new nodes
-    if (isSelected || node.isNew) {
-      final glowPaint = Paint()
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 15)
-        ..color = baseColor.withValues(alpha: 0.4 * opacity);
+    // Simple filled circle marker
+    final markerRadius = isSelected ? nodeSize * 0.4 : nodeSize * 0.3;
+    canvas.drawCircle(pos, markerRadius, Paint()..color = color);
 
-      canvas.drawCircle(pos, nodeSize * 0.6, glowPaint);
+    // Selection ring
+    if (isSelected) {
+      canvas.drawCircle(
+        pos,
+        markerRadius + 4,
+        Paint()
+          ..color = color
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2,
+      );
     }
-
-    // Outer ring (animated for selected)
-    final outerRadius = isSelected
-        ? nodeSize * 0.5 + math.sin(animationValue * math.pi * 2) * 3
-        : nodeSize * 0.45;
-
-    final outerPaint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = isSelected ? 2.5 : 1.5;
-
-    canvas.drawCircle(pos, outerRadius, outerPaint);
-
-    // Inner hexagon
-    _drawHexagon(canvas, pos, nodeSize * 0.25, color, filled: true);
-
-    // Signal quality indicator (top arc)
-    _drawSignalArc(canvas, pos, nodeSize * 0.35, node.signalQuality, color);
 
     // Distance text
     final distText = _formatDistance(node.worldPosition.distance);
@@ -711,11 +564,11 @@ class ARHudPainter extends CustomPainter {
 
     distPainter.paint(
       canvas,
-      Offset(pos.dx - distPainter.width / 2, pos.dy + nodeSize * 0.5 + 4),
+      Offset(pos.dx - distPainter.width / 2, pos.dy + markerRadius + 4),
     );
 
     // Node name (if selected or close)
-    if (isSelected || node.worldPosition.distance < 1000) {
+    if (isSelected || node.worldPosition.distance < 500) {
       final name = node.node.shortName ?? node.node.longName ?? 'Unknown';
       final namePainter = TextPainter(
         text: TextSpan(
@@ -733,8 +586,8 @@ class ARHudPainter extends CustomPainter {
       // Background for name
       final nameRect = RRect.fromRectAndRadius(
         Rect.fromCenter(
-          center: Offset(pos.dx, pos.dy - nodeSize * 0.5 - 14),
-          width: namePainter.width + 10,
+          center: Offset(pos.dx, pos.dy - markerRadius - 12),
+          width: namePainter.width + 8,
           height: namePainter.height + 4,
         ),
         const Radius.circular(3),
@@ -742,176 +595,26 @@ class ARHudPainter extends CustomPainter {
 
       canvas.drawRRect(
         nameRect,
-        Paint()..color = Colors.black.withValues(alpha: 0.6),
+        Paint()..color = Colors.black.withValues(alpha: 0.7),
       );
 
       namePainter.paint(
         canvas,
-        Offset(pos.dx - namePainter.width / 2, pos.dy - nodeSize * 0.5 - 16),
+        Offset(pos.dx - namePainter.width / 2, pos.dy - markerRadius - 14),
       );
     }
 
-    // Draw battery indicator if low
-    if (node.node.batteryLevel != null && node.node.batteryLevel! < 30) {
-      _drawBatteryIndicator(
-        canvas,
-        pos,
-        nodeSize,
-        node.node.batteryLevel!,
-        color,
+    // Low battery indicator (small icon, not elaborate)
+    if (node.node.batteryLevel != null && node.node.batteryLevel! < 20) {
+      final batteryColor = node.node.batteryLevel! < 10
+          ? _criticalColor
+          : _warningColor;
+      canvas.drawCircle(
+        Offset(pos.dx + markerRadius + 6, pos.dy - markerRadius),
+        4,
+        Paint()..color = batteryColor,
       );
     }
-
-    // Moving indicator
-    if (node.isMoving) {
-      _drawMovingIndicator(canvas, pos, nodeSize, color);
-    }
-
-    // New node indicator
-    if (node.isNew) {
-      _drawNewIndicator(canvas, pos, nodeSize);
-    }
-  }
-
-  void _drawHexagon(
-    Canvas canvas,
-    Offset center,
-    double radius,
-    Color color, {
-    bool filled = false,
-  }) {
-    final path = Path();
-    for (var i = 0; i < 6; i++) {
-      final angle = (i * 60 - 30) * math.pi / 180;
-      final x = center.dx + radius * math.cos(angle);
-      final y = center.dy + radius * math.sin(angle);
-      if (i == 0) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
-      }
-    }
-    path.close();
-
-    final paint = Paint()
-      ..color = color
-      ..style = filled ? PaintingStyle.fill : PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-
-    canvas.drawPath(path, paint);
-  }
-
-  void _drawSignalArc(
-    Canvas canvas,
-    Offset center,
-    double radius,
-    double quality,
-    Color color,
-  ) {
-    final startAngle = -math.pi * 0.75;
-    final sweepAngle = math.pi * 0.5 * quality;
-
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2
-      ..strokeCap = StrokeCap.round;
-
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
-      startAngle,
-      sweepAngle,
-      false,
-      paint,
-    );
-  }
-
-  void _drawBatteryIndicator(
-    Canvas canvas,
-    Offset pos,
-    double size,
-    int level,
-    Color color,
-  ) {
-    final batteryColor = level < 10 ? _criticalColor : _warningColor;
-    final x = pos.dx + size * 0.4;
-    final y = pos.dy - size * 0.3;
-
-    // Battery outline
-    final batteryPath = Path()
-      ..addRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromLTWH(x, y, 12, 7),
-          const Radius.circular(1),
-        ),
-      )
-      ..addRect(Rect.fromLTWH(x + 12, y + 2, 2, 3));
-
-    canvas.drawPath(
-      batteryPath,
-      Paint()
-        ..color = batteryColor
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1,
-    );
-
-    // Battery fill
-    final fillWidth = (level / 100) * 10;
-    canvas.drawRect(
-      Rect.fromLTWH(x + 1, y + 1, fillWidth, 5),
-      Paint()..color = batteryColor,
-    );
-  }
-
-  void _drawMovingIndicator(
-    Canvas canvas,
-    Offset pos,
-    double size,
-    Color color,
-  ) {
-    final x = pos.dx - size * 0.5;
-    final y = pos.dy + size * 0.3;
-
-    // Motion lines
-    for (var i = 0; i < 3; i++) {
-      final lineX = x - i * 4;
-      final opacity = 1.0 - i * 0.3;
-      canvas.drawLine(
-        Offset(lineX, y - 3),
-        Offset(lineX, y + 3),
-        Paint()
-          ..color = color.withValues(alpha: opacity)
-          ..strokeWidth = 1.5
-          ..strokeCap = StrokeCap.round,
-      );
-    }
-  }
-
-  void _drawNewIndicator(Canvas canvas, Offset pos, double size) {
-    final x = pos.dx + size * 0.4;
-    final y = pos.dy + size * 0.2;
-
-    // "NEW" badge
-    final textPainter = TextPainter(
-      text: const TextSpan(
-        text: 'NEW',
-        style: TextStyle(
-          color: Colors.black,
-          fontSize: 7,
-          fontWeight: FontWeight.bold,
-          fontFamily: 'monospace',
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-
-    final badgeRect = RRect.fromRectAndRadius(
-      Rect.fromLTWH(x, y, textPainter.width + 4, textPainter.height + 2),
-      const Radius.circular(2),
-    );
-
-    canvas.drawRRect(badgeRect, Paint()..color = _secondaryColor);
-    textPainter.paint(canvas, Offset(x + 2, y + 1));
   }
 
   Color _getThreatColor(ARThreatLevel level) {
@@ -935,64 +638,6 @@ class ARHudPainter extends CustomPainter {
     } else {
       return '${(meters / 1000).toStringAsFixed(1)}km';
     }
-  }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // NODE TRACKS
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  void _drawNodeTrack(Canvas canvas, Size size, ARWorldNode node) {
-    if (node.track.length < 2) return;
-    if (!node.screenPosition.isInView) return;
-
-    // Draw track as fading line
-    // (This would require converting all track points to screen space)
-    // Simplified: just show a small trail indicator
-  }
-
-  void _drawVelocityVector(Canvas canvas, Size size, ARWorldNode node) {
-    final pos = node.screenPosition.toPixels(size.width, size.height);
-    final vel = node.velocity;
-
-    // Scale velocity for display (1 m/s = 10 pixels)
-    final vx = vel.x * 10;
-    final vy = -vel.y * 10; // Flip Y
-
-    final magnitude = math.sqrt(vx * vx + vy * vy);
-    if (magnitude < 5) return;
-
-    // Normalize and clamp length
-    final length = magnitude.clamp(10.0, 50.0);
-    final nx = vx / magnitude * length;
-    final ny = vy / magnitude * length;
-
-    final end = Offset(pos.dx + nx, pos.dy + ny);
-
-    // Arrow line
-    final paint = Paint()
-      ..color = _secondaryColor.withValues(alpha: 0.7)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2
-      ..strokeCap = StrokeCap.round;
-
-    canvas.drawLine(pos, end, paint);
-
-    // Arrow head
-    final angle = math.atan2(ny, nx);
-    final headLength = 8.0;
-    final headAngle = math.pi * 0.8;
-
-    final head1 = Offset(
-      end.dx - headLength * math.cos(angle - headAngle / 2),
-      end.dy - headLength * math.sin(angle - headAngle / 2),
-    );
-    final head2 = Offset(
-      end.dx - headLength * math.cos(angle + headAngle / 2),
-      end.dy - headLength * math.sin(angle + headAngle / 2),
-    );
-
-    canvas.drawLine(end, head1, paint);
-    canvas.drawLine(end, head2, paint);
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -1307,93 +952,6 @@ class ARHudPainter extends CustomPainter {
     }
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // STATS DISPLAY
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  void _drawStats(Canvas canvas, Size size) {
-    // Only show nearest distance - node counts are in top toolbar
-    if (nodes.isEmpty) return;
-
-    final statY = size.height - config.safeAreaBottom - 100; // Above toolbar
-    const padding = 16.0;
-
-    // Just show nearest node distance (unique info not in toolbar)
-    final nearestDistance = _formatDistance(nodes.first.worldPosition.distance);
-
-    // Label
-    final labelPainter = TextPainter(
-      text: TextSpan(
-        text: 'NEAREST',
-        style: TextStyle(
-          color: _primaryColor.withValues(alpha: 0.6),
-          fontSize: 9,
-          fontFamily: 'monospace',
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-
-    labelPainter.paint(canvas, Offset(padding, statY));
-
-    // Value
-    final valuePainter = TextPainter(
-      text: TextSpan(
-        text: nearestDistance,
-        style: const TextStyle(
-          color: _primaryColor,
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
-          fontFamily: 'monospace',
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-
-    valuePainter.paint(canvas, Offset(padding, statY + 12));
-  }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // EFFECTS
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  void _drawVignette(Canvas canvas, Size size) {
-    final rect = Rect.fromLTWH(0, 0, size.width, size.height);
-
-    final gradient = RadialGradient(
-      center: Alignment.center,
-      radius: 1.0,
-      colors: [
-        Colors.transparent,
-        Colors.transparent,
-        Colors.black.withValues(alpha: 0.3),
-      ],
-      stops: const [0.0, 0.7, 1.0],
-    );
-
-    canvas.drawRect(rect, Paint()..shader = gradient.createShader(rect));
-  }
-
-  void _drawScanLine(Canvas canvas, Size size) {
-    final y = animationValue * size.height;
-
-    final gradient = LinearGradient(
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-      colors: [
-        Colors.transparent,
-        _primaryColor.withValues(alpha: 0.1),
-        _primaryColor.withValues(alpha: 0.2),
-        _primaryColor.withValues(alpha: 0.1),
-        Colors.transparent,
-      ],
-      stops: const [0.0, 0.3, 0.5, 0.7, 1.0],
-    );
-
-    final rect = Rect.fromLTWH(0, y - 50, size.width, 100);
-    canvas.drawRect(rect, Paint()..shader = gradient.createShader(rect));
-  }
-
   @override
   bool shouldRepaint(ARHudPainter oldDelegate) {
     return oldDelegate.orientation != orientation ||
@@ -1413,67 +971,37 @@ class ARHudConfig {
   final bool showHorizon;
   final bool showCompass;
   final bool showAltimeter;
-  final bool showCrosshair;
-  final bool showTracks;
-  final bool showVelocity;
   final bool showAlerts;
-  final bool showStats;
-  final bool showScanLine;
   final double horizontalFov;
   final double verticalFov;
   final double safeAreaTop;
   final double safeAreaBottom;
 
   const ARHudConfig({
-    this.showHorizon = true,
+    this.showHorizon = false,
     this.showCompass = true,
-    this.showAltimeter = true,
-    this.showCrosshair = true,
-    this.showTracks = true,
-    this.showVelocity = true,
+    this.showAltimeter = false,
     this.showAlerts = true,
-    this.showStats = true,
-    this.showScanLine = true,
     this.horizontalFov = 60,
     this.verticalFov = 90,
     this.safeAreaTop = 0,
     this.safeAreaBottom = 0,
   });
 
-  /// Tactical mode - full HUD
+  /// Tactical mode - compass and alerts
   static const tactical = ARHudConfig();
 
-  /// Explorer mode - minimal HUD
-  static const explorer = ARHudConfig(
-    showHorizon: false,
-    showAltimeter: false,
-    showCrosshair: false,
-    showTracks: false,
-    showScanLine: false,
-  );
+  /// Explorer mode - same as tactical
+  static const explorer = ARHudConfig();
 
   /// Minimal mode - just compass and nodes
-  static const minimal = ARHudConfig(
-    showHorizon: false,
-    showAltimeter: false,
-    showCrosshair: false,
-    showTracks: false,
-    showVelocity: false,
-    showAlerts: false,
-    showStats: false,
-    showScanLine: false,
-  );
+  static const minimal = ARHudConfig(showAlerts: false);
 
   ARHudConfig copyWith({
     bool? showHorizon,
     bool? showCompass,
     bool? showAltimeter,
-    bool? showCrosshair,
-    bool? showTracks,
-    bool? showVelocity,
     bool? showAlerts,
-    bool? showStats,
-    bool? showScanLine,
     double? horizontalFov,
     double? verticalFov,
     double? safeAreaTop,
@@ -1483,12 +1011,7 @@ class ARHudConfig {
       showHorizon: showHorizon ?? this.showHorizon,
       showCompass: showCompass ?? this.showCompass,
       showAltimeter: showAltimeter ?? this.showAltimeter,
-      showCrosshair: showCrosshair ?? this.showCrosshair,
-      showTracks: showTracks ?? this.showTracks,
-      showVelocity: showVelocity ?? this.showVelocity,
       showAlerts: showAlerts ?? this.showAlerts,
-      showStats: showStats ?? this.showStats,
-      showScanLine: showScanLine ?? this.showScanLine,
       horizontalFov: horizontalFov ?? this.horizontalFov,
       verticalFov: verticalFov ?? this.verticalFov,
       safeAreaTop: safeAreaTop ?? this.safeAreaTop,

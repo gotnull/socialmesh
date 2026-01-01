@@ -345,12 +345,7 @@ class ARNotifier extends Notifier<ARState> {
       'horizon' => config.copyWith(showHorizon: !config.showHorizon),
       'compass' => config.copyWith(showCompass: !config.showCompass),
       'altimeter' => config.copyWith(showAltimeter: !config.showAltimeter),
-      'crosshair' => config.copyWith(showCrosshair: !config.showCrosshair),
-      'tracks' => config.copyWith(showTracks: !config.showTracks),
-      'velocity' => config.copyWith(showVelocity: !config.showVelocity),
       'alerts' => config.copyWith(showAlerts: !config.showAlerts),
-      'stats' => config.copyWith(showStats: !config.showStats),
-      'scanLine' => config.copyWith(showScanLine: !config.showScanLine),
       _ => config,
     };
 
