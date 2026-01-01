@@ -176,7 +176,8 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
             DrawerAppBarAction(
               icon: Icons.layers,
               label: 'Satellite',
-              onPressed: () => setState(() => _mapStyle = MapTileStyle.satellite),
+              onPressed: () =>
+                  setState(() => _mapStyle = MapTileStyle.satellite),
               trailing: _mapStyle == MapTileStyle.satellite
                   ? Icon(Icons.check, size: 18, color: accentColor)
                   : null,
