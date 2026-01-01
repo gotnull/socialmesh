@@ -904,8 +904,12 @@ class _AccountSubscriptionsScreenState
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => _CloudSyncPaywallSheet(
-        onPurchaseStart: () => setState(() => _isPurchasing = true),
-        onPurchaseEnd: () => setState(() => _isPurchasing = false),
+        onPurchaseStart: () {
+          if (mounted) setState(() => _isPurchasing = true);
+        },
+        onPurchaseEnd: () {
+          if (mounted) setState(() => _isPurchasing = false);
+        },
       ),
     );
   }
@@ -1587,6 +1591,7 @@ class _CloudSyncPaywallSheetState
   }
 
   Future<void> _purchase(StoreProduct product) async {
+    if (!mounted) return;
     widget.onPurchaseStart();
     try {
       await Purchases.purchase(PurchaseParams.storeProduct(product));
@@ -1600,7 +1605,9 @@ class _CloudSyncPaywallSheetState
         showErrorSnackBar(context, 'Purchase failed');
       }
     } finally {
-      widget.onPurchaseEnd();
+      if (mounted) {
+        widget.onPurchaseEnd();
+      }
     }
   }
 
