@@ -19,6 +19,11 @@
     <!-- For Android 13+ notification permission -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- Camera permission for QR code scanning and AR Node Radar -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+
     <!-- For Android 14+ (API 34+) partial media access if needed -->
     <!-- <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" /> -->
     <!-- <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" /> -->

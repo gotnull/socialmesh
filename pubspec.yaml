@@ -87,6 +87,9 @@ dependencies:
   vector_math: ^2.2.0
   cryptography: ^2.9.0
   
+  # Camera for AR
+  camera: ^0.11.0
+  
   # Deep linking
   app_links: ^6.3.3
 

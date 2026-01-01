@@ -19,6 +19,7 @@ import '../../services/share_link_service.dart';
 import '../messaging/messaging_screen.dart';
 import '../map/map_screen.dart';
 import '../navigation/main_shell.dart';
+import '../ar/ar_radar_screen.dart';
 
 // Battery helper functions
 // Meshtastic uses 101 for charging, 100 for plugged in fully charged
@@ -115,6 +116,14 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
             ),
           ),
           actions: [
+            IconButton(
+              icon: const Icon(Icons.radar),
+              tooltip: 'AR Node Radar',
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ARRadarScreen()),
+              ),
+            ),
             IconButton(
               icon: const Icon(Icons.qr_code_scanner),
               tooltip: 'Scan Node QR',

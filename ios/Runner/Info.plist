@@ -50,7 +50,7 @@
 		<key>NSBluetoothPeripheralUsageDescription</key>
 		<string>This app needs Bluetooth to communicate with Meshtastic devices</string>
 		<key>NSCameraUsageDescription</key>
-		<string>This app needs camera access to scan QR codes for channel configuration</string>
+		<string>This app uses the camera for QR code scanning and AR Node Radar visualization</string>
 		<key>NSPhotoLibraryUsageDescription</key>
 		<string>This app needs photo library access to save and share exported data and images</string>
 		<key>NSLocationWhenInUseUsageDescription</key>

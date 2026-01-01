@@ -12,6 +12,7 @@ import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 import '../navigation/main_shell.dart';
 import '../presence/presence_screen.dart';
+import '../ar/ar_radar_screen.dart';
 
 /// View modes for the 3D mesh visualization
 enum Mesh3DViewMode {
@@ -332,6 +333,14 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
             icon: const Icon(Icons.view_carousel),
             tooltip: 'Change View',
             onPressed: () => _showViewSelector(context),
+          ),
+          IconButton(
+            icon: const Icon(Icons.radar),
+            tooltip: 'AR Node Radar',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ARRadarScreen()),
+            ),
           ),
         ],
       ),
