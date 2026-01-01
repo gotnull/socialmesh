@@ -97,9 +97,16 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
   Mesh3DViewMode _currentMode = Mesh3DViewMode.topology;
   bool _showLabels = true;
   bool _autoRotate = false;
+  bool _showConnections = true;
+  double _connectionQualityThreshold = 0.0; // 0.0 = show all, 1.0 = only best
   late AnimationController _rotationController;
   int? _selectedNodeNum;
   Timer? _signalUpdateTimer;
+
+  // Node list panel state
+  bool _showNodeList = false;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   // Channel utilization history for live updates
   final List<double> _channelUtilHistory = [];
@@ -115,6 +122,8 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
       rotationX: -30,
       rotationY: 30,
       light: vector.Vector3(1, 1, 1),
+      minUserScale: 0.3, // Allow zooming out more
+      maxUserScale: 15.0, // Allow zooming in much further
     );
 
     _rotationController = AnimationController(
@@ -173,6 +182,7 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
   void dispose() {
     _rotationController.dispose();
     _signalUpdateTimer?.cancel();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -183,6 +193,72 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
         _rotationController.repeat();
       } else {
         _rotationController.stop();
+      }
+    });
+  }
+
+  /// Handle tap on 3D view to select nodes
+  void _handleTap(Offset tapPosition, Size viewSize, Map<int, MeshNode> nodes) {
+    if (nodes.isEmpty) return;
+
+    // Calculate node positions in 3D space
+    final nodePositions = _calculateNodePositions(nodes);
+
+    // Convert tap position to normalized coordinates (-1 to 1)
+    final normalizedX = (tapPosition.dx / viewSize.width) * 2 - 1;
+    final normalizedY = -((tapPosition.dy / viewSize.height) * 2 - 1);
+
+    // Get camera rotation angles
+    final rotX = _controller.rotationX * math.pi / 180;
+    final rotY = _controller.rotationY * math.pi / 180;
+    final scale = _controller.scale;
+
+    // Find the nearest node to tap position
+    int? nearestNodeNum;
+    double nearestDistance = double.infinity;
+    const tapThreshold = 0.15; // Tap tolerance in normalized units
+
+    for (final entry in nodePositions.entries) {
+      final pos3D = entry.value;
+
+      // Apply rotation transformation (simplified projection)
+      // Rotate around Y axis
+      final cosY = math.cos(rotY);
+      final sinY = math.sin(rotY);
+      var x = pos3D.x * cosY - pos3D.z * sinY;
+      var z = pos3D.x * sinY + pos3D.z * cosY;
+      var y = pos3D.y;
+
+      // Rotate around X axis
+      final cosX = math.cos(rotX);
+      final sinX = math.sin(rotX);
+      final newY = y * cosX - z * sinX;
+      final newZ = y * sinX + z * cosX;
+      y = newY;
+      z = newZ;
+
+      // Simple orthographic projection with scale
+      final screenX = x * scale * 0.1;
+      final screenY = y * scale * 0.1;
+
+      // Calculate distance from tap to projected node position
+      final dx = normalizedX - screenX;
+      final dy = normalizedY - screenY;
+      final distance = math.sqrt(dx * dx + dy * dy);
+
+      if (distance < nearestDistance && distance < tapThreshold / scale * 10) {
+        nearestDistance = distance;
+        nearestNodeNum = entry.key;
+      }
+    }
+
+    setState(() {
+      if (nearestNodeNum != null) {
+        _selectedNodeNum = nearestNodeNum;
+        HapticFeedback.selectionClick();
+      } else {
+        // Tap on empty space - deselect
+        _selectedNodeNum = null;
       }
     });
   }
@@ -214,6 +290,26 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
           ),
         ),
         actions: [
+          // Connections toggle (topology mode only)
+          if (_currentMode == Mesh3DViewMode.topology)
+            IconButton(
+              icon: Icon(
+                _showConnections ? Icons.share : Icons.share_outlined,
+                color: _showConnections ? theme.colorScheme.primary : null,
+              ),
+              tooltip: _showConnections
+                  ? 'Hide Connections'
+                  : 'Show Connections',
+              onPressed: () =>
+                  setState(() => _showConnections = !_showConnections),
+            ),
+          // Connection quality filter (topology mode only, when connections visible)
+          if (_currentMode == Mesh3DViewMode.topology && _showConnections)
+            IconButton(
+              icon: const Icon(Icons.tune),
+              tooltip: 'Filter Connections',
+              onPressed: () => _showConnectionFilterSheet(context),
+            ),
           // Label toggle
           IconButton(
             icon: Icon(
@@ -246,99 +342,439 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
 
           // 3D View
           Expanded(
-            child: Stack(
-              children: [
-                // 3D Visualization
-                DiTreDiDraggable(
-                  controller: _controller,
-                  child: DiTreDi(
-                    figures: _buildFigures(nodes, myNodeNum),
-                    controller: _controller,
-                    config: const DiTreDiConfig(
-                      supportZIndex: true,
-                      defaultPointWidth: 8,
-                      defaultLineWidth: 2,
-                    ),
-                  ),
-                ),
-
-                // Legend
-                Positioned(left: 16, bottom: 16, child: _buildLegend(theme)),
-
-                // Node info card
-                if (_selectedNodeNum != null)
-                  Positioned(
-                    right: 16,
-                    top: 16,
-                    child: _buildNodeInfoCard(theme, nodes[_selectedNodeNum]),
-                  ),
-
-                // Mode description
-                Positioned(
-                  left: 16,
-                  top: 16,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface.withValues(alpha: 0.9),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: theme.dividerColor.withValues(alpha: 0.2),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return Stack(
+                  children: [
+                    // 3D Visualization with tap detection
+                    GestureDetector(
+                      onTapUp: (details) => _handleTap(
+                        details.localPosition,
+                        constraints.biggest,
+                        nodes,
+                      ),
+                      child: DiTreDiDraggable(
+                        controller: _controller,
+                        child: DiTreDi(
+                          figures: _buildFigures(nodes, myNodeNum),
+                          controller: _controller,
+                          config: const DiTreDiConfig(
+                            supportZIndex: true,
+                            defaultPointWidth: 8,
+                            defaultLineWidth: 2,
+                          ),
+                        ),
                       ),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          _currentMode.icon,
-                          size: 16,
-                          color: theme.colorScheme.primary,
+
+                    // Legend
+                    Positioned(
+                      left: 16,
+                      bottom: 16,
+                      child: _buildLegend(theme),
+                    ),
+
+                    // Node info card (when a node is selected)
+                    if (_selectedNodeNum != null)
+                      Positioned(
+                        right: 16,
+                        top: 16,
+                        child: _buildNodeInfoCard(
+                          theme,
+                          nodes[_selectedNodeNum],
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          _currentMode.description,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: theme.colorScheme.onSurface.withValues(
-                              alpha: 0.7,
+                      ),
+
+                    // Tap-to-dismiss overlay (when node list is open)
+                    if (_showNodeList)
+                      Positioned.fill(
+                        child: GestureDetector(
+                          onTap: () => setState(() => _showNodeList = false),
+                          child: Container(color: Colors.transparent),
+                        ),
+                      ),
+
+                    // Node list panel (sliding from left)
+                    AnimatedPositioned(
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeInOut,
+                      left: _showNodeList ? 0 : -300,
+                      top: 0,
+                      bottom: 0,
+                      width: 280,
+                      child: _buildNodeListPanel(theme, nodes, myNodeNum),
+                    ),
+
+                    // Node list toggle button (bottom right, compact)
+                    if (!_showNodeList)
+                      Positioned(
+                        right: 16,
+                        bottom: 16,
+                        child: Material(
+                          color: theme.colorScheme.surface.withValues(
+                            alpha: 0.9,
+                          ),
+                          borderRadius: BorderRadius.circular(28),
+                          elevation: 4,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(28),
+                            onTap: () => setState(() => _showNodeList = true),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.list,
+                                    size: 18,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    '${nodes.length}',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: context.textPrimary,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Controls hint
-                Positioned(
-                  right: 16,
-                  bottom: 16,
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface.withValues(alpha: 0.9),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _buildControlHint(Icons.pan_tool, 'Drag to rotate'),
-                        const SizedBox(height: 4),
-                        _buildControlHint(Icons.pinch, 'Pinch to zoom'),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+                      ),
+                  ],
+                );
+              },
             ),
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildNodeListPanel(
+    ThemeData theme,
+    Map<int, MeshNode> nodes,
+    int? myNodeNum,
+  ) {
+    // Filter nodes by search query
+    var filteredNodes = nodes.values.toList();
+    if (_searchQuery.isNotEmpty) {
+      final query = _searchQuery.toLowerCase();
+      filteredNodes = filteredNodes.where((node) {
+        return node.displayName.toLowerCase().contains(query) ||
+            node.shortName?.toLowerCase().contains(query) == true ||
+            node.nodeNum.toRadixString(16).contains(query);
+      }).toList();
+    }
+
+    // Sort: my node first, then online nodes, then by name
+    filteredNodes.sort((a, b) {
+      if (a.nodeNum == myNodeNum) return -1;
+      if (b.nodeNum == myNodeNum) return 1;
+      if (a.isOnline && !b.isOnline) return -1;
+      if (!a.isOnline && b.isOnline) return 1;
+      return a.displayName.compareTo(b.displayName);
+    });
+
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Container(
+        decoration: BoxDecoration(
+          color: context.card,
+          border: Border(
+            right: BorderSide(color: context.border.withValues(alpha: 0.5)),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.3),
+              blurRadius: 16,
+              offset: const Offset(4, 0),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: context.border.withValues(alpha: 0.5),
+                  ),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.hub, size: 20, color: context.accentColor),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Nodes',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: context.textPrimary,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '${filteredNodes.length}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: context.textTertiary,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, size: 20),
+                    color: context.textTertiary,
+                    onPressed: () => setState(() => _showNodeList = false),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ],
+              ),
+            ),
+            // Search field
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: TextField(
+                controller: _searchController,
+                style: TextStyle(color: context.textPrimary, fontSize: 14),
+                decoration: InputDecoration(
+                  hintText: 'Search nodes...',
+                  hintStyle: TextStyle(
+                    color: context.textTertiary,
+                    fontSize: 14,
+                  ),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    size: 20,
+                    color: context.textSecondary,
+                  ),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear, size: 18),
+                          color: context.textSecondary,
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() => _searchQuery = '');
+                          },
+                        )
+                      : null,
+                  filled: true,
+                  fillColor: context.background,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                onChanged: (value) => setState(() => _searchQuery = value),
+              ),
+            ),
+            // Node list
+            Expanded(
+              child: filteredNodes.isEmpty
+                  ? Center(
+                      child: Text(
+                        'No nodes found',
+                        style: TextStyle(color: context.textTertiary),
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      itemCount: filteredNodes.length,
+                      itemBuilder: (context, index) {
+                        final node = filteredNodes[index];
+                        final isMyNode = node.nodeNum == myNodeNum;
+                        final isSelected = _selectedNodeNum == node.nodeNum;
+
+                        return _buildNodeListItem(
+                          theme,
+                          node,
+                          isMyNode: isMyNode,
+                          isSelected: isSelected,
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNodeListItem(
+    ThemeData theme,
+    MeshNode node, {
+    required bool isMyNode,
+    required bool isSelected,
+  }) {
+    final status = _getPresenceStatus(node);
+    final baseColor = isMyNode
+        ? context.accentColor
+        : (status == PresenceStatus.active
+              ? AppTheme.primaryPurple
+              : (status == PresenceStatus.idle
+                    ? AppTheme.warningYellow
+                    : context.textTertiary));
+
+    return Material(
+      color: isSelected
+          ? context.accentColor.withValues(alpha: 0.15)
+          : Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            _selectedNodeNum = node.nodeNum;
+            _showNodeList = false;
+          });
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              // Node indicator
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: baseColor.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: baseColor.withValues(alpha: 0.6),
+                    width: 1.5,
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    node.shortName?.isNotEmpty == true
+                        ? node.shortName!.substring(0, 1).toUpperCase()
+                        : node.nodeNum
+                              .toRadixString(16)
+                              .characters
+                              .first
+                              .toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: baseColor,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Node info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        if (isMyNode)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            margin: const EdgeInsets.only(right: 6),
+                            decoration: BoxDecoration(
+                              color: context.accentColor.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              'ME',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: context.accentColor,
+                              ),
+                            ),
+                          ),
+                        Expanded(
+                          child: Text(
+                            node.displayName,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: context.textPrimary,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        // Status indicator
+                        Container(
+                          width: 8,
+                          height: 8,
+                          margin: const EdgeInsets.only(right: 6),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: status == PresenceStatus.active
+                                ? AppTheme.successGreen
+                                : (status == PresenceStatus.idle
+                                      ? AppTheme.warningYellow
+                                      : context.textTertiary),
+                          ),
+                        ),
+                        Text(
+                          _getStatusText(status, node.lastHeard),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: context.textSecondary,
+                          ),
+                        ),
+                        if (node.snr != null) ...[
+                          const SizedBox(width: 8),
+                          Icon(
+                            Icons.signal_cellular_alt,
+                            size: 12,
+                            color: _getSnrColor(node.snr!.toDouble()),
+                          ),
+                          const SizedBox(width: 2),
+                          Text(
+                            '${node.snr}dB',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: context.textTertiary,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              // Chevron
+              Icon(Icons.chevron_right, size: 20, color: context.textTertiary),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _getStatusText(PresenceStatus status, DateTime? lastHeard) {
+    if (lastHeard == null) return 'Never heard';
+    final diff = DateTime.now().difference(lastHeard);
+    if (diff.inMinutes < 5) return 'Just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    return '${diff.inDays}d ago';
   }
 
   Widget _buildViewModeChips(ThemeData theme) {
@@ -774,44 +1210,49 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
     }
 
     // Add connections between nodes based on SNR data
-    final connectedPairs = <String>{};
-    for (final node in nodeList) {
-      final nodePos = nodePositions[node.nodeNum];
-      if (nodePos == null) continue;
+    if (_showConnections) {
+      final connectedPairs = <String>{};
+      for (final node in nodeList) {
+        final nodePos = nodePositions[node.nodeNum];
+        if (nodePos == null) continue;
 
-      for (final otherNode in nodeList) {
-        if (otherNode.nodeNum == node.nodeNum) continue;
+        for (final otherNode in nodeList) {
+          if (otherNode.nodeNum == node.nodeNum) continue;
 
-        final otherPos = nodePositions[otherNode.nodeNum];
-        if (otherPos == null) continue;
+          final otherPos = nodePositions[otherNode.nodeNum];
+          if (otherPos == null) continue;
 
-        // Create unique pair key to avoid duplicate connections
-        final nodes = [node.nodeNum, otherNode.nodeNum]..sort();
-        final pairKey = '${nodes[0]}-${nodes[1]}';
-        if (connectedPairs.contains(pairKey)) continue;
+          // Create unique pair key to avoid duplicate connections
+          final nodePair = [node.nodeNum, otherNode.nodeNum]..sort();
+          final pairKey = '${nodePair[0]}-${nodePair[1]}';
+          if (connectedPairs.contains(pairKey)) continue;
 
-        // Draw connection if within view range
-        final distance = (nodePos - otherPos).length;
-        if (distance < 8) {
-          // Calculate line color based on signal quality
-          final snr = (node.snr ?? otherNode.snr ?? 0)
-              .clamp(-20, 10)
-              .toDouble();
-          final quality = (snr + 20) / 30; // 0 to 1
+          // Draw connection if within view range
+          final distance = (nodePos - otherPos).length;
+          if (distance < 8) {
+            // Calculate line color based on signal quality
+            final snr = (node.snr ?? otherNode.snr ?? 0)
+                .clamp(-20, 10)
+                .toDouble();
+            final quality = (snr + 20) / 30; // 0 to 1
 
-          figures.add(
-            Line3D(
-              nodePos,
-              otherPos,
-              color: Color.lerp(
-                Colors.red.withValues(alpha: 0.4),
-                Colors.green.withValues(alpha: 0.6),
-                quality,
-              )!,
-              width: 1 + quality * 2,
-            ),
-          );
-          connectedPairs.add(pairKey);
+            // Filter by quality threshold
+            if (quality < _connectionQualityThreshold) continue;
+
+            figures.add(
+              Line3D(
+                nodePos,
+                otherPos,
+                color: Color.lerp(
+                  Colors.red.withValues(alpha: 0.4),
+                  Colors.green.withValues(alpha: 0.6),
+                  quality,
+                )!,
+                width: 1 + quality * 2,
+              ),
+            );
+            connectedPairs.add(pairKey);
+          }
         }
       }
     }
@@ -1226,9 +1667,9 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
       );
     }
 
-    // Create a simulated traceroute path from my node
+    // Create traceroute path from my node to recently heard nodes
     if (myNodeNum != null && nodeList.length > 1) {
-      // Sort nodes by last heard to simulate recent communication path
+      // Sort nodes by last heard to show recent communication path
       final sortedNodes =
           nodeList
               .where((n) => n.nodeNum != myNodeNum && n.lastHeard != null)
@@ -1277,64 +1718,86 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
     return figures;
   }
 
-  /// Build activity heatmap as 3D bar chart
+  /// Build activity heatmap as 3D bar chart using REAL node activity data
   List<Model3D<Model3D>> _buildActivityHeatmapFigures(
     Map<int, MeshNode> nodes,
   ) {
     final figures = <Model3D<Model3D>>[];
     final nodeList = nodes.values.toList();
-    final nodeCount = nodeList.length;
 
-    // Create a grid of bars representing activity
-    const gridSize = 8;
-    const spacing = 0.6;
-    final random = math.Random(42); // Fixed seed for consistent visualization
+    if (nodeList.isEmpty) {
+      figures.addAll(_buildGridPlane());
+      return figures;
+    }
 
-    for (int x = 0; x < gridSize; x++) {
-      for (int z = 0; z < gridSize; z++) {
-        // Generate activity height (would use real data in production)
-        final nodeIndex = (x * gridSize + z) % math.max(1, nodeCount).toInt();
-        final node = nodeIndex < nodeList.length ? nodeList[nodeIndex] : null;
+    // Sort by activity (most recently heard first)
+    final sortedNodes = List<MeshNode>.from(nodeList)
+      ..sort((a, b) {
+        final aHeard = a.lastHeard ?? DateTime(1970);
+        final bHeard = b.lastHeard ?? DateTime(1970);
+        return bHeard.compareTo(aHeard);
+      });
 
-        // Calculate activity level (0-1)
-        double activity;
-        if (node != null) {
-          final status = _getPresenceStatus(node);
-          activity = switch (status) {
-            PresenceStatus.active => 0.7 + random.nextDouble() * 0.3,
-            PresenceStatus.idle => 0.3 + random.nextDouble() * 0.3,
-            PresenceStatus.offline => random.nextDouble() * 0.2,
-          };
+    // Arrange in a grid based on actual node count
+    final gridCols = math.sqrt(sortedNodes.length).ceil();
+    final gridRows = (sortedNodes.length / gridCols).ceil();
+    const spacing = 0.8;
+    final gridOffsetX = (gridCols - 1) * spacing / 2;
+    final gridOffsetZ = (gridRows - 1) * spacing / 2;
+
+    for (int i = 0; i < sortedNodes.length; i++) {
+      final node = sortedNodes[i];
+      final row = i ~/ gridCols;
+      final col = i % gridCols;
+      final x = col * spacing - gridOffsetX;
+      final z = row * spacing - gridOffsetZ;
+
+      // Calculate REAL activity level based on lastHeard recency
+      double activity = 0.0;
+      if (node.lastHeard != null) {
+        final minutesAgo = DateTime.now().difference(node.lastHeard!).inMinutes;
+        if (minutesAgo < 5) {
+          activity = 1.0; // Very active - heard in last 5 mins
+        } else if (minutesAgo < 30) {
+          activity = 0.8; // Active - heard in last 30 mins
+        } else if (minutesAgo < 120) {
+          activity = 0.6; // Recent - heard in last 2 hours
+        } else if (minutesAgo < 1440) {
+          activity = 0.3; // Idle - heard in last 24 hours
         } else {
-          activity = random.nextDouble() * 0.3;
+          activity = 0.1; // Stale - not heard in 24+ hours
         }
-
-        final height = activity * 2 + 0.1;
-        final position = vector.Vector3(
-          (x - gridSize / 2) * spacing,
-          height / 2,
-          (z - gridSize / 2) * spacing,
-        );
-
-        // Color based on activity level
-        final color = Color.lerp(Colors.blue, Colors.red, activity)!;
-
-        // Glowing sci-fi bar with octahedron cap
-        figures.addAll(
-          _buildGlowingBar(
-            vector.Vector3(position.x, 0, position.z),
-            0.15,
-            height,
-            color,
-          ),
-        );
       }
+
+      final height = activity * 2.5 + 0.1;
+
+      // Color based on activity level - blue (inactive) to red (active)
+      final color = Color.lerp(
+        Colors.blue.shade700,
+        AppTheme.errorRed,
+        activity,
+      )!;
+
+      // Glowing sci-fi bar with octahedron cap
+      figures.addAll(
+        _buildGlowingBar(vector.Vector3(x, 0, z), 0.2, height, color),
+      );
+
+      // Add node marker on top
+      figures.addAll(
+        _buildOctahedron(
+          vector.Vector3(x, height + 0.15, z),
+          0.15,
+          _getNodeColor(node),
+        ),
+      );
     }
 
     // Add base plane
+    final planeSize = math.max(gridCols, gridRows) * spacing + 1;
     figures.add(
       Plane3D(
-        gridSize * spacing,
+        planeSize,
         Axis3D.y,
         false,
         vector.Vector3(0, 0, 0),
@@ -1351,44 +1814,166 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
     int? myNodeNum,
   ) {
     final figures = <Model3D<Model3D>>[];
-    final nodePositions = _calculateNodePositions(nodes);
     final nodeList = nodes.values.toList();
 
-    // Create a simple terrain mesh using points
-    const gridSize = 10;
-    const spacing = 0.5;
-    final random = math.Random(123);
+    if (nodeList.isEmpty) {
+      figures.addAll(_buildGridPlane());
+      return figures;
+    }
 
-    // Generate height map for terrain
+    // Collect nodes with valid GPS data
+    final gpsNodes = nodeList
+        .where(
+          (n) =>
+              n.latitude != null &&
+              n.longitude != null &&
+              n.latitude != 0 &&
+              n.longitude != 0,
+        )
+        .toList();
+
+    if (gpsNodes.isEmpty) {
+      // Fall back to grid plane if no GPS data
+      figures.addAll(_buildGridPlane());
+      // Still show nodes in a circle
+      int index = 0;
+      for (final node in nodeList) {
+        final angle = (index / nodeList.length) * 2 * math.pi;
+        const radius = 3.0;
+        final position = vector.Vector3(
+          radius * math.cos(angle),
+          0.3,
+          radius * math.sin(angle),
+        );
+        final isMyNode = node.nodeNum == myNodeNum;
+        figures.addAll(
+          _buildSciFiNode(
+            position,
+            0.25,
+            isMyNode ? AppTheme.primaryBlue : _getNodeColor(node),
+            isHighlighted: isMyNode,
+            showRings: true,
+          ),
+        );
+        index++;
+      }
+      return figures;
+    }
+
+    // Calculate bounds from real GPS data
+    double minLat = double.infinity, maxLat = -double.infinity;
+    double minLon = double.infinity, maxLon = -double.infinity;
+    double minAlt = double.infinity, maxAlt = -double.infinity;
+
+    for (final node in gpsNodes) {
+      minLat = math.min(minLat, node.latitude!);
+      maxLat = math.max(maxLat, node.latitude!);
+      minLon = math.min(minLon, node.longitude!);
+      maxLon = math.max(maxLon, node.longitude!);
+      final alt = (node.altitude ?? 0).toDouble();
+      minAlt = math.min(minAlt, alt);
+      maxAlt = math.max(maxAlt, alt);
+    }
+
+    // Add padding to bounds
+    final latRange = maxLat - minLat;
+    final lonRange = maxLon - minLon;
+    final altRange = maxAlt - minAlt;
+    final padding = math.max(latRange, lonRange) * 0.1;
+    minLat -= padding;
+    maxLat += padding;
+    minLon -= padding;
+    maxLon += padding;
+
+    // Scale factors to fit in 3D space (-5 to 5 range)
+    const worldSize = 8.0;
+    final latScale = latRange > 0 ? worldSize / (maxLat - minLat) : 1.0;
+    final lonScale = lonRange > 0 ? worldSize / (maxLon - minLon) : 1.0;
+    final altScale = altRange > 50
+        ? 3.0 / altRange
+        : 0.01; // 3 units max height
+
+    // Helper to convert GPS to 3D position
+    vector.Vector3 gpsTo3D(double lat, double lon, double alt) {
+      final x = (lon - (minLon + maxLon) / 2) * lonScale;
+      final z = (lat - (minLat + maxLat) / 2) * latScale;
+      final y = (alt - minAlt) * altScale;
+      return vector.Vector3(x, y, z);
+    }
+
+    // Build terrain grid interpolated from node altitudes
+    const gridSize = 12;
     final heights = List.generate(
       gridSize + 1,
-      (x) => List.generate(
-        gridSize + 1,
-        (z) =>
-            math.sin(x * 0.5) * math.cos(z * 0.5) * 0.5 +
-            random.nextDouble() * 0.2,
-      ),
+      (_) => List.filled(gridSize + 1, 0.0),
+    );
+    final weights = List.generate(
+      gridSize + 1,
+      (_) => List.filled(gridSize + 1, 0.0),
     );
 
-    // Create terrain using lines to form a grid mesh
-    for (int x = 0; x < gridSize; x++) {
-      for (int z = 0; z < gridSize; z++) {
-        final x0 = (x - gridSize / 2) * spacing;
-        final z0 = (z - gridSize / 2) * spacing;
-        final x1 = (x + 1 - gridSize / 2) * spacing;
-        final z1 = (z + 1 - gridSize / 2) * spacing;
+    // Calculate grid cell positions
+    final gridMinX = (minLon - (minLon + maxLon) / 2) * lonScale;
+    final gridMaxX = (maxLon - (minLon + maxLon) / 2) * lonScale;
+    final gridMinZ = (minLat - (minLat + maxLat) / 2) * latScale;
+    final gridMaxZ = (maxLat - (minLat + maxLat) / 2) * latScale;
+    final cellWidth = (gridMaxX - gridMinX) / gridSize;
+    final cellDepth = (gridMaxZ - gridMinZ) / gridSize;
 
-        final h00 = heights[x][z];
-        final h10 = heights[x + 1][z];
-        final h01 = heights[x][z + 1];
-        final h11 = heights[x + 1][z + 1];
+    // Interpolate heights from node positions using inverse distance weighting
+    for (final node in gpsNodes) {
+      final pos = gpsTo3D(
+        node.latitude!,
+        node.longitude!,
+        (node.altitude ?? 0).toDouble(),
+      );
 
-        // Calculate color based on height
+      for (int gx = 0; gx <= gridSize; gx++) {
+        for (int gz = 0; gz <= gridSize; gz++) {
+          final gridX = gridMinX + gx * cellWidth;
+          final gridZ = gridMinZ + gz * cellDepth;
+          final dx = pos.x - gridX;
+          final dz = pos.z - gridZ;
+          final dist = math.sqrt(dx * dx + dz * dz);
+          // Inverse distance weighting (with small epsilon to avoid division by zero)
+          final weight = 1.0 / (dist * dist + 0.1);
+          heights[gx][gz] += pos.y * weight;
+          weights[gx][gz] += weight;
+        }
+      }
+    }
+
+    // Normalize heights by weights
+    for (int gx = 0; gx <= gridSize; gx++) {
+      for (int gz = 0; gz <= gridSize; gz++) {
+        if (weights[gx][gz] > 0) {
+          heights[gx][gz] /= weights[gx][gz];
+        }
+      }
+    }
+
+    // Draw terrain mesh
+    for (int gx = 0; gx < gridSize; gx++) {
+      for (int gz = 0; gz < gridSize; gz++) {
+        final x0 = gridMinX + gx * cellWidth;
+        final z0 = gridMinZ + gz * cellDepth;
+        final x1 = gridMinX + (gx + 1) * cellWidth;
+        final z1 = gridMinZ + (gz + 1) * cellDepth;
+
+        final h00 = heights[gx][gz];
+        final h10 = heights[gx + 1][gz];
+        final h01 = heights[gx][gz + 1];
+        final h11 = heights[gx + 1][gz + 1];
+
+        // Color based on height (green low, brown high)
         final avgHeight = (h00 + h10 + h01 + h11) / 4;
+        final heightNorm = altRange > 0
+            ? ((avgHeight / altScale) / altRange).clamp(0.0, 1.0)
+            : 0.5;
         final terrainColor = Color.lerp(
           Colors.green.shade800,
           Colors.brown.shade400,
-          (avgHeight + 0.5).clamp(0.0, 1.0),
+          heightNorm,
         )!;
 
         // Draw terrain grid lines
@@ -1420,54 +2005,77 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
       }
     }
 
-    // Add nodes on top of terrain
+    // Add nodes at their actual GPS positions and altitudes
     for (final node in nodeList) {
-      final position = nodePositions[node.nodeNum];
-      if (position == null) continue;
-
-      // Clamp position to terrain bounds
-      final x = position.x.clamp(
-        -gridSize * spacing / 2,
-        gridSize * spacing / 2 - spacing,
-      );
-      final z = position.z.clamp(
-        -gridSize * spacing / 2,
-        gridSize * spacing / 2 - spacing,
-      );
-
-      // Sample terrain height at node position
-      final gridX = ((x / spacing) + gridSize / 2)
-          .clamp(0, gridSize - 1)
-          .toInt();
-      final gridZ = ((z / spacing) + gridSize / 2)
-          .clamp(0, gridSize - 1)
-          .toInt();
-      final terrainHeight = heights[gridX][gridZ];
-
-      final nodePosition = vector.Vector3(x, terrainHeight + 0.3, z);
-
-      // Sci-fi floating node above terrain
       final isMyNode = node.nodeNum == myNodeNum;
+
+      vector.Vector3 nodePosition;
+      double groundHeight = 0;
+
+      if (node.latitude != null &&
+          node.longitude != null &&
+          node.latitude != 0 &&
+          node.longitude != 0) {
+        // Real GPS position
+        nodePosition = gpsTo3D(
+          node.latitude!,
+          node.longitude!,
+          (node.altitude ?? 0).toDouble(),
+        );
+
+        // Find terrain height at node position for ground line
+        final gxFloat = (nodePosition.x - gridMinX) / cellWidth;
+        final gzFloat = (nodePosition.z - gridMinZ) / cellDepth;
+        final gx = gxFloat.clamp(0, gridSize - 1).toInt();
+        final gz = gzFloat.clamp(0, gridSize - 1).toInt();
+        groundHeight = heights[gx][gz];
+      } else {
+        // No GPS - place at edge
+        final index = nodeList.indexOf(node);
+        final angle = (index / nodeList.length) * 2 * math.pi;
+        const radius = 4.5;
+        nodePosition = vector.Vector3(
+          radius * math.cos(angle),
+          0.3,
+          radius * math.sin(angle),
+        );
+      }
+
+      // Draw node
       figures.addAll(
         _buildSciFiNode(
-          nodePosition,
-          0.25,
+          nodePosition +
+              vector.Vector3(0, 0.2, 0), // Slight hover above terrain
+          isMyNode ? 0.35 : 0.25,
           isMyNode ? AppTheme.primaryBlue : _getNodeColor(node),
           isHighlighted: isMyNode,
           showRings: true,
         ),
       );
 
-      // Add vertical line from terrain to node
-      figures.add(
-        Line3D(
-          vector.Vector3(x, terrainHeight, z),
-          nodePosition,
-          color: Colors.white.withValues(alpha: 0.5),
-          width: 1,
-        ),
-      );
+      // Vertical line from ground to node (shows elevation)
+      if (node.altitude != null && node.altitude! > 0) {
+        figures.add(
+          Line3D(
+            vector.Vector3(nodePosition.x, groundHeight, nodePosition.z),
+            nodePosition + vector.Vector3(0, 0.1, 0),
+            color: Colors.white.withValues(alpha: 0.4),
+            width: 1,
+          ),
+        );
+      }
     }
+
+    // Add a subtle base plane
+    figures.add(
+      Plane3D(
+        worldSize + 2,
+        Axis3D.y,
+        false,
+        vector.Vector3(0, -0.01, 0),
+        color: context.surface.withValues(alpha: 0.2),
+      ),
+    );
 
     return figures;
   }
@@ -1530,27 +2138,30 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
     switch (_currentMode) {
       case Mesh3DViewMode.signalStrength:
         items.addAll([
-          (AppTheme.successGreen, 'RSSI: Excellent'),
-          (AppTheme.warningYellow, 'RSSI: Fair'),
-          (AppTheme.errorRed, 'RSSI: Poor'),
-          (AccentColors.cyan, 'SNR: Good'),
+          (AppTheme.successGreen, 'Excellent'),
+          (AppTheme.warningYellow, 'Fair'),
+          (AppTheme.errorRed, 'Poor'),
         ]);
       case Mesh3DViewMode.channelUtilization:
         items.addAll([
-          (AppTheme.successGreen, 'Low (<25%)'),
-          (AccentColors.cyan, 'Medium (<50%)'),
-          (AppTheme.warningYellow, 'High (<75%)'),
-          (AppTheme.errorRed, 'Critical (>75%)'),
+          (AppTheme.successGreen, '<25%'),
+          (AccentColors.cyan, '<50%'),
+          (AppTheme.warningYellow, '<75%'),
+          (AppTheme.errorRed, '>75%'),
         ]);
       case Mesh3DViewMode.traceroute:
         items.addAll([
-          (AppTheme.primaryBlue, 'My Node'),
-          (AccentColors.cyan, 'Route Path'),
-          (AccentColors.magenta, 'Hop Point'),
+          (AppTheme.primaryBlue, 'Me'),
+          (AccentColors.cyan, 'Route'),
+        ]);
+      case Mesh3DViewMode.activityHeatmap:
+        items.addAll([
+          (AppTheme.errorRed, 'Active'),
+          (Colors.blue.shade700, 'Stale'),
         ]);
       default:
         items.addAll([
-          (AppTheme.primaryBlue, 'My Node'),
+          (AppTheme.primaryBlue, 'Me'),
           (AppTheme.successGreen, 'Active'),
           (AppTheme.warningYellow, 'Idle'),
           (context.textTertiary, 'Offline'),
@@ -1558,62 +2169,40 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
     }
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.2)),
+        color: theme.colorScheme.surface.withValues(alpha: 0.85),
+        borderRadius: BorderRadius.circular(8),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            'Legend',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: theme.colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 8),
-          ...items.map((item) => _buildLegendItem(item.$1, item.$2)),
-        ],
+        children:
+            items
+                .map((item) => _buildLegendItem(item.$1, item.$2))
+                .expand((widget) => [widget, const SizedBox(width: 12)])
+                .toList()
+              ..removeLast(),
       ),
     );
   }
 
   Widget _buildLegendItem(Color color, String label) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 12,
-            height: 12,
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: TextStyle(fontSize: 11, color: context.textSecondary),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildControlHint(IconData icon, String text) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: context.textTertiary),
-        const SizedBox(width: 6),
-        Text(text, style: TextStyle(fontSize: 11, color: context.textTertiary)),
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: TextStyle(fontSize: 10, color: context.textSecondary),
+        ),
       ],
     );
   }
@@ -1697,6 +2286,152 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
         ],
       ),
     );
+  }
+
+  void _showConnectionFilterSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) => Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Drag handle
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const Text(
+                'Connection Quality Filter',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Show only connections above a minimum signal quality',
+                style: TextStyle(fontSize: 14, color: context.textSecondary),
+              ),
+              const SizedBox(height: 24),
+
+              // Quality threshold slider
+              Row(
+                children: [
+                  const Icon(Icons.signal_cellular_0_bar, size: 20),
+                  Expanded(
+                    child: Slider(
+                      value: _connectionQualityThreshold,
+                      min: 0.0,
+                      max: 1.0,
+                      divisions: 10,
+                      label: _getQualityLabel(_connectionQualityThreshold),
+                      onChanged: (value) {
+                        setSheetState(() {});
+                        setState(() => _connectionQualityThreshold = value);
+                      },
+                    ),
+                  ),
+                  const Icon(Icons.signal_cellular_4_bar, size: 20),
+                ],
+              ),
+
+              // Quality label
+              Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _getQualityColor(
+                      _connectionQualityThreshold,
+                    ).withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: _getQualityColor(_connectionQualityThreshold),
+                    ),
+                  ),
+                  child: Text(
+                    _getQualityLabel(_connectionQualityThreshold),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: _getQualityColor(_connectionQualityThreshold),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Preset buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        setSheetState(() {});
+                        setState(() => _connectionQualityThreshold = 0.0);
+                      },
+                      child: const Text('All'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        setSheetState(() {});
+                        setState(() => _connectionQualityThreshold = 0.33);
+                      },
+                      child: const Text('Fair+'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        setSheetState(() {});
+                        setState(() => _connectionQualityThreshold = 0.66);
+                      },
+                      child: const Text('Good+'),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _getQualityLabel(double threshold) {
+    if (threshold <= 0.1) return 'Show All Connections';
+    if (threshold <= 0.33) return 'Poor or Better';
+    if (threshold <= 0.5) return 'Fair or Better';
+    if (threshold <= 0.66) return 'Good or Better';
+    if (threshold <= 0.85) return 'Very Good or Better';
+    return 'Excellent Only';
+  }
+
+  Color _getQualityColor(double threshold) {
+    if (threshold <= 0.33) return Colors.red;
+    if (threshold <= 0.5) return Colors.orange;
+    if (threshold <= 0.66) return AppTheme.warningYellow;
+    return AppTheme.successGreen;
   }
 
   void _showViewSelector(BuildContext context) {
