@@ -11,13 +11,13 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/map_config.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/drawer_screen_app_bar.dart';
 import '../../core/widgets/map_controls.dart';
 import '../../models/world_mesh_node.dart';
 import '../../providers/node_favorites_provider.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../providers/world_mesh_map_provider.dart';
 import '../../utils/snackbar.dart';
-import '../navigation/main_shell.dart';
 import 'favorites_screen.dart';
 import 'widgets/node_intelligence_panel.dart';
 import 'world_mesh_filter_sheet.dart';
@@ -131,10 +131,8 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
     return GestureDetector(
       onTap: _dismissKeyboard,
       child: Scaffold(
-        appBar: AppBar(
-          leading: const HamburgerMenuButton(),
-          titleSpacing: 0,
-          title: const Text('World Map'),
+        appBar: DrawerScreenAppBar(
+          title: 'World Map',
           actions: [
             // Search toggle (only show when search is NOT active)
             if (!_showSearch)
@@ -164,36 +162,45 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
               tooltip: 'Favorites',
               onPressed: () => _openFavorites(context),
             ),
-            // Map style
-            PopupMenuButton<MapTileStyle>(
-              icon: const Icon(Icons.layers),
-              tooltip: 'Map style',
-              onSelected: (style) => setState(() => _mapStyle = style),
-              itemBuilder: (context) => MapTileStyle.values
-                  .map(
-                    (style) => PopupMenuItem(
-                      value: style,
-                      child: Row(
-                        children: [
-                          Icon(
-                            _mapStyle == style
-                                ? Icons.check_circle
-                                : Icons.circle_outlined,
-                            color: _mapStyle == style ? accentColor : null,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 12),
-                          Text(style.label),
-                        ],
-                      ),
-                    ),
-                  )
-                  .toList(),
+          ],
+          overflowActions: [
+            // Map style options
+            DrawerAppBarAction(
+              icon: Icons.layers,
+              label: 'Dark Map',
+              onPressed: () => setState(() => _mapStyle = MapTileStyle.dark),
+              trailing: _mapStyle == MapTileStyle.dark
+                  ? Icon(Icons.check, size: 18, color: accentColor)
+                  : null,
+            ),
+            DrawerAppBarAction(
+              icon: Icons.layers,
+              label: 'Satellite',
+              onPressed: () => setState(() => _mapStyle = MapTileStyle.satellite),
+              trailing: _mapStyle == MapTileStyle.satellite
+                  ? Icon(Icons.check, size: 18, color: accentColor)
+                  : null,
+            ),
+            DrawerAppBarAction(
+              icon: Icons.layers,
+              label: 'Light Map',
+              onPressed: () => setState(() => _mapStyle = MapTileStyle.light),
+              trailing: _mapStyle == MapTileStyle.light
+                  ? Icon(Icons.check, size: 18, color: accentColor)
+                  : null,
+            ),
+            DrawerAppBarAction(
+              icon: Icons.layers,
+              label: 'Terrain',
+              onPressed: () => setState(() => _mapStyle = MapTileStyle.terrain),
+              trailing: _mapStyle == MapTileStyle.terrain
+                  ? Icon(Icons.check, size: 18, color: accentColor)
+                  : null,
             ),
             // Refresh
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              tooltip: 'Refresh',
+            DrawerAppBarAction(
+              icon: Icons.refresh,
+              label: 'Refresh',
               onPressed: () {
                 HapticFeedback.lightImpact();
                 ref.read(worldMeshMapProvider.notifier).forceRefresh();

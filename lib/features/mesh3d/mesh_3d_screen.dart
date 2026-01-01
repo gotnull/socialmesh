@@ -7,10 +7,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vector_math/vector_math_64.dart' as vector;
 
 import '../../core/theme.dart';
+import '../../core/widgets/drawer_screen_app_bar.dart';
 import '../../core/widgets/edge_fade.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
-import '../navigation/main_shell.dart';
 import '../presence/presence_screen.dart';
 import '../ar/ar_radar_screen.dart';
 
@@ -278,65 +278,48 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
 
     return Scaffold(
       backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.background,
-        leading: const HamburgerMenuButton(),
-        centerTitle: true,
-        title: Text(
-          _currentMode.label,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: context.textPrimary,
-          ),
-        ),
+      appBar: DrawerScreenAppBar(
+        title: _currentMode.label,
         actions: [
-          // Connections toggle (topology mode only)
-          if (_currentMode == Mesh3DViewMode.topology)
-            IconButton(
-              icon: Icon(
-                _showConnections ? Icons.share : Icons.share_outlined,
-                color: _showConnections ? theme.colorScheme.primary : null,
-              ),
-              tooltip: _showConnections
-                  ? 'Hide Connections'
-                  : 'Show Connections',
-              onPressed: () =>
-                  setState(() => _showConnections = !_showConnections),
-            ),
-          // Connection quality filter (topology mode only, when connections visible)
-          if (_currentMode == Mesh3DViewMode.topology && _showConnections)
-            IconButton(
-              icon: const Icon(Icons.tune),
-              tooltip: 'Filter Connections',
-              onPressed: () => _showConnectionFilterSheet(context),
-            ),
-          // Label toggle
-          IconButton(
-            icon: Icon(
-              _showLabels ? Icons.label : Icons.label_off,
-              color: _showLabels ? theme.colorScheme.primary : null,
-            ),
-            tooltip: _showLabels ? 'Hide Labels' : 'Show Labels',
-            onPressed: () => setState(() => _showLabels = !_showLabels),
-          ),
-          // Auto rotate toggle
-          IconButton(
-            icon: Icon(
-              Icons.rotate_right,
-              color: _autoRotate ? theme.colorScheme.primary : null,
-            ),
-            tooltip: 'Auto Rotate',
-            onPressed: _toggleAutoRotate,
-          ),
+          // View selector - most important action
           IconButton(
             icon: const Icon(Icons.view_carousel),
             tooltip: 'Change View',
             onPressed: () => _showViewSelector(context),
           ),
-          IconButton(
-            icon: const Icon(Icons.radar),
-            tooltip: 'AR Node Radar',
+        ],
+        overflowActions: [
+          // Connections toggle (topology mode only)
+          if (_currentMode == Mesh3DViewMode.topology)
+            DrawerAppBarAction(
+              icon: _showConnections ? Icons.share : Icons.share_outlined,
+              label: _showConnections ? 'Hide Connections' : 'Show Connections',
+              onPressed: () =>
+                  setState(() => _showConnections = !_showConnections),
+            ),
+          // Connection quality filter
+          if (_currentMode == Mesh3DViewMode.topology && _showConnections)
+            DrawerAppBarAction(
+              icon: Icons.tune,
+              label: 'Filter Connections',
+              onPressed: () => _showConnectionFilterSheet(context),
+            ),
+          // Label toggle
+          DrawerAppBarAction(
+            icon: _showLabels ? Icons.label : Icons.label_off,
+            label: _showLabels ? 'Hide Labels' : 'Show Labels',
+            onPressed: () => setState(() => _showLabels = !_showLabels),
+          ),
+          // Auto rotate toggle
+          DrawerAppBarAction(
+            icon: Icons.rotate_right,
+            label: _autoRotate ? 'Stop Rotation' : 'Auto Rotate',
+            onPressed: _toggleAutoRotate,
+          ),
+          // AR Radar
+          DrawerAppBarAction(
+            icon: Icons.radar,
+            label: 'AR Node Radar',
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const ARRadarScreen()),
