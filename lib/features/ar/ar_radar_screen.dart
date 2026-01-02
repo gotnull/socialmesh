@@ -10,9 +10,11 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../utils/snackbar.dart';
+import 'ar_calibration.dart';
 import 'ar_engine.dart';
 import 'ar_hud_painter.dart';
 import 'ar_state.dart';
+import 'widgets/ar_calibration_screen.dart';
 import 'widgets/ar_node_detail_card.dart';
 import 'widgets/ar_settings_panel.dart';
 import 'widgets/ar_view_mode_selector.dart';
@@ -172,6 +174,17 @@ class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
     );
   }
 
+  void _showCalibrationScreen() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ARCalibrationScreen(
+          onComplete: () => Navigator.of(context).pop(),
+          onSkip: () => Navigator.of(context).pop(),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final arState = ref.watch(arStateProvider);
@@ -317,66 +330,86 @@ class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
 
   Widget _buildTopControls(ARState arState, ARStats stats) {
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Row(
-          children: [
-            // Back button
-            _buildControlButton(
-              icon: Icons.arrow_back,
-              onTap: () => Navigator.of(context).pop(),
-            ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                // Back button
+                _buildControlButton(
+                  icon: Icons.arrow_back,
+                  onTap: () => Navigator.of(context).pop(),
+                ),
 
-            const Spacer(),
+                const Spacer(),
 
-            // Status indicators
-            _buildStatusChip(
-              icon: Icons.blur_on,
-              label: '${stats.totalNodes}',
-              color: const Color(0xFF00E5FF),
-            ),
-            const SizedBox(width: 8),
-            _buildStatusChip(
-              icon: Icons.visibility,
-              label: '${stats.visibleNodes}',
-              color: const Color(0xFF00FF88),
-            ),
-            if (stats.warningNodes > 0) ...[
-              const SizedBox(width: 8),
-              _buildStatusChip(
-                icon: Icons.warning_amber,
-                label: '${stats.warningNodes}',
-                color: const Color(0xFFFFAB00),
-              ),
-            ],
+                // Status indicators
+                _buildStatusChip(
+                  icon: Icons.blur_on,
+                  label: '${stats.totalNodes}',
+                  color: const Color(0xFF00E5FF),
+                ),
+                const SizedBox(width: 8),
+                _buildStatusChip(
+                  icon: Icons.visibility,
+                  label: '${stats.visibleNodes}',
+                  color: const Color(0xFF00FF88),
+                ),
+                if (stats.warningNodes > 0) ...[
+                  const SizedBox(width: 8),
+                  _buildStatusChip(
+                    icon: Icons.warning_amber,
+                    label: '${stats.warningNodes}',
+                    color: const Color(0xFFFFAB00),
+                  ),
+                ],
 
-            const Spacer(),
+                const Spacer(),
 
-            // Lock button
-            _buildControlButton(
-              icon: _isLocked ? Icons.lock : Icons.lock_open,
-              isActive: _isLocked,
-              onTap: () {
-                setState(() => _isLocked = !_isLocked);
-                HapticFeedback.mediumImpact();
-                showInfoSnackBar(
-                  context,
-                  _isLocked ? 'Touch locked' : 'Touch unlocked',
-                );
-              },
+                // Lock button
+                _buildControlButton(
+                  icon: _isLocked ? Icons.lock : Icons.lock_open,
+                  isActive: _isLocked,
+                  onTap: () {
+                    setState(() => _isLocked = !_isLocked);
+                    HapticFeedback.mediumImpact();
+                    showInfoSnackBar(
+                      context,
+                      _isLocked ? 'Touch locked' : 'Touch unlocked',
+                    );
+                  },
+                ),
+                const SizedBox(width: 8),
+                // Debug button
+                _buildControlButton(
+                  icon: Icons.bug_report,
+                  isActive: _showDebug,
+                  onTap: () => setState(() => _showDebug = !_showDebug),
+                ),
+                const SizedBox(width: 8),
+                // Settings button
+                _buildControlButton(icon: Icons.tune, onTap: _showSettings),
+              ],
             ),
-            const SizedBox(width: 8),
-            // Debug button
-            _buildControlButton(
-              icon: Icons.bug_report,
-              isActive: _showDebug,
-              onTap: () => setState(() => _showDebug = !_showDebug),
+          ),
+
+          // GPS/Compass accuracy status bar
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: ARAccuracyStatusBar(
+              gpsAccuracy: arState.position?.accuracy,
+              hasGps: arState.position != null,
+              compassCalibrated:
+                  arState.calibration.compassStatus == CalibrationStatus.good ||
+                  arState.calibration.compassStatus ==
+                      CalibrationStatus.excellent,
+              needsCompassCalibration: arState.needsCalibration,
+              onCompassTap: _showCalibrationScreen,
             ),
-            const SizedBox(width: 8),
-            // Settings button
-            _buildControlButton(icon: Icons.tune, onTap: _showSettings),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

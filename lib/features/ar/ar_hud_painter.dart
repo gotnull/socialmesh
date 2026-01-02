@@ -36,16 +36,26 @@ class ARHudPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Draw horizon line (tactical mode)
     if (config.showHorizon) {
       _drawHorizonLine(canvas, size);
     }
 
+    // Draw compass (tactical/explorer) or compact heading (minimal)
     if (config.showCompass) {
       _drawCompass(canvas, size);
+    } else if (config.compactHeading) {
+      _drawCompactHeading(canvas, size);
     }
 
+    // Draw altimeter (tactical mode)
     if (config.showAltimeter) {
       _drawAltimeter(canvas, size);
+    }
+
+    // Draw distance rings (tactical mode)
+    if (config.showDistanceRings) {
+      _drawDistanceRings(canvas, size);
     }
 
     // Draw clusters
@@ -69,9 +79,143 @@ class ARHudPainter extends CustomPainter {
       }
     }
 
-    // Draw alerts
+    // Draw alerts (tactical/explorer mode)
     if (config.showAlerts && alerts.isNotEmpty) {
       _drawAlerts(canvas, size);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // COMPACT HEADING (MINIMAL MODE)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  void _drawCompactHeading(Canvas canvas, Size size) {
+    final heading = orientation.heading;
+    final headingText = '${heading.round().toString().padLeft(3, '0')}°';
+
+    // Get cardinal direction
+    String cardinal;
+    if (heading < 22.5 || heading >= 337.5) {
+      cardinal = 'N';
+    } else if (heading < 67.5) {
+      cardinal = 'NE';
+    } else if (heading < 112.5) {
+      cardinal = 'E';
+    } else if (heading < 157.5) {
+      cardinal = 'SE';
+    } else if (heading < 202.5) {
+      cardinal = 'S';
+    } else if (heading < 247.5) {
+      cardinal = 'SW';
+    } else if (heading < 292.5) {
+      cardinal = 'W';
+    } else {
+      cardinal = 'NW';
+    }
+
+    // Position in top-right corner
+    final x = size.width - 70;
+    final y = config.safeAreaTop + 60;
+
+    // Background
+    final bgRect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(x, y, 60, 40),
+      const Radius.circular(8),
+    );
+    canvas.drawRRect(
+      bgRect,
+      Paint()..color = Colors.black.withValues(alpha: 0.5 * config.opacity),
+    );
+    canvas.drawRRect(
+      bgRect,
+      Paint()
+        ..color = _primaryColor.withValues(alpha: 0.3 * config.opacity)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1,
+    );
+
+    // Heading text
+    final headingPainter = TextPainter(
+      text: TextSpan(
+        text: headingText,
+        style: TextStyle(
+          color: _primaryColor.withValues(alpha: config.opacity),
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+          fontFamily: 'monospace',
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+
+    headingPainter.paint(
+      canvas,
+      Offset(x + 30 - headingPainter.width / 2, y + 4),
+    );
+
+    // Cardinal direction
+    final cardinalPainter = TextPainter(
+      text: TextSpan(
+        text: cardinal,
+        style: TextStyle(
+          color: _primaryColor.withValues(alpha: config.opacity * 0.7),
+          fontSize: 12,
+          fontFamily: 'monospace',
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+
+    cardinalPainter.paint(
+      canvas,
+      Offset(x + 30 - cardinalPainter.width / 2, y + 22),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DISTANCE RINGS (TACTICAL MODE)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  void _drawDistanceRings(Canvas canvas, Size size) {
+    final centerX = size.width / 2;
+    final centerY = size.height / 2;
+    final maxRadius = size.width * 0.4;
+
+    // Draw concentric rings at different distances
+    final distances = [100, 500, 1000, 5000]; // meters
+
+    for (var i = 0; i < distances.length; i++) {
+      final distance = distances[i];
+      final radius = maxRadius * (i + 1) / distances.length;
+      final alpha = 0.1 - i * 0.02;
+
+      canvas.drawCircle(
+        Offset(centerX, centerY),
+        radius,
+        Paint()
+          ..color = _primaryColor.withValues(alpha: alpha)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 0.5,
+      );
+
+      // Distance label
+      final label = distance >= 1000 ? '${distance ~/ 1000}km' : '${distance}m';
+      final labelPainter = TextPainter(
+        text: TextSpan(
+          text: label,
+          style: TextStyle(
+            color: _primaryColor.withValues(alpha: alpha + 0.1),
+            fontSize: 8,
+            fontFamily: 'monospace',
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+
+      labelPainter.paint(
+        canvas,
+        Offset(centerX + radius + 4, centerY - labelPainter.height / 2),
+      );
     }
   }
 
@@ -146,8 +290,9 @@ class ARHudPainter extends CustomPainter {
 
   void _drawRollIndicator(Canvas canvas, Size size) {
     final centerX = size.width / 2;
-    final topY = config.safeAreaTop + 50.0; // Below dynamic island
-    final radius = 50.0;
+    // Position well below Dynamic Island (island is ~35pt tall + safe area)
+    final topY = config.safeAreaTop + 80.0;
+    final radius = 40.0; // Slightly smaller to fit better
 
     canvas.save();
     canvas.translate(centerX, topY);
@@ -204,7 +349,8 @@ class ARHudPainter extends CustomPainter {
   // ═══════════════════════════════════════════════════════════════════════════
 
   void _drawCompass(Canvas canvas, Size size) {
-    final compassY = config.safeAreaTop + 110.0; // Below roll indicator
+    // Position below Dynamic Island + status badges (approx 140pt for island + badges)
+    final compassY = config.safeAreaTop + 150.0;
     final compassWidth = size.width * 0.7;
     final centerX = size.width / 2;
     final left = centerX - compassWidth / 2;
@@ -375,7 +521,7 @@ class ARHudPainter extends CustomPainter {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // ALTIMETER
+  // ALTIMETER - Aviation style: fixed indicator, scrolling tape
   // ═══════════════════════════════════════════════════════════════════════════
 
   void _drawAltimeter(Canvas canvas, Size size) {
@@ -385,128 +531,166 @@ class ARHudPainter extends CustomPainter {
     final x = size.width - 50;
     final centerY = size.height / 2;
     final height = 200.0;
+    final top = centerY - height / 2;
+    final bottom = centerY + height / 2;
 
     // Background
-    final bgPaint = Paint()..color = Colors.black.withValues(alpha: 0.4);
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromLTRB(
-          x - 20,
-          centerY - height / 2,
-          x + 20,
-          centerY + height / 2,
-        ),
-        const Radius.circular(4),
+        Rect.fromLTRB(x - 30, top, x + 30, bottom),
+        const Radius.circular(6),
       ),
-      bgPaint,
+      Paint()..color = Colors.black.withValues(alpha: 0.6),
     );
 
     // Border
-    final borderPaint = Paint()
-      ..color = _primaryColor.withValues(alpha: 0.5)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
-
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromLTRB(
-          x - 20,
-          centerY - height / 2,
-          x + 20,
-          centerY + height / 2,
-        ),
+        Rect.fromLTRB(x - 30, top, x + 30, bottom),
+        const Radius.circular(6),
+      ),
+      Paint()
+        ..color = _primaryColor.withValues(alpha: 0.4)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1,
+    );
+
+    // Clip for scrolling tape
+    canvas.save();
+    canvas.clipRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTRB(x - 28, top + 2, x + 28, bottom - 2),
         const Radius.circular(4),
       ),
-      borderPaint,
     );
 
-    // Scale
-    final metersPerPixel = 100.0 / height; // Show 100m range
-    final textStyle = TextStyle(
-      color: _primaryColor.withValues(alpha: 0.7),
-      fontSize: 8,
-      fontFamily: 'monospace',
-    );
+    // Scrolling tape - numbers move, indicator stays at center
+    final pixelsPerMeter = 2.0; // 2 pixels per meter
 
-    canvas.save();
-    canvas.clipRect(
-      Rect.fromLTRB(
-        x - 18,
-        centerY - height / 2 + 2,
-        x + 18,
-        centerY + height / 2 - 2,
-      ),
-    );
+    // Draw altitude markers that scroll
+    final startAlt =
+        ((altitude - height / pixelsPerMeter / 2) / 20).floor() * 20;
+    final endAlt = ((altitude + height / pixelsPerMeter / 2) / 20).ceil() * 20;
 
-    for (
-      var alt = altitude.floor() - 60;
-      alt <= altitude.floor() + 60;
-      alt += 10
-    ) {
-      final pixelOffset = (altitude - alt) / metersPerPixel;
-      final y = centerY + pixelOffset;
+    for (var alt = startAlt; alt <= endAlt; alt += 20) {
+      // Y position relative to center (current altitude = centerY)
+      final y = centerY - (alt - altitude) * pixelsPerMeter;
 
-      if (y < centerY - height / 2 || y > centerY + height / 2) continue;
+      if (y < top - 20 || y > bottom + 20) continue;
 
-      // Draw tick
-      final tickPaint = Paint()
-        ..color = alt % 50 == 0
-            ? _primaryColor.withValues(alpha: 0.8)
-            : _primaryColor.withValues(alpha: 0.4)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1;
+      final isMajor = alt % 100 == 0;
 
-      final tickWidth = alt % 50 == 0 ? 8.0 : 4.0;
-
+      // Tick marks on left side
+      final tickWidth = isMajor ? 10.0 : 5.0;
       canvas.drawLine(
-        Offset(x - 18, y),
-        Offset(x - 18 + tickWidth, y),
-        tickPaint,
+        Offset(x - 28, y),
+        Offset(x - 28 + tickWidth, y),
+        Paint()
+          ..color = _primaryColor.withValues(alpha: isMajor ? 0.8 : 0.4)
+          ..strokeWidth = isMajor ? 1.5 : 1.0,
       );
 
-      // Labels for every 50m
-      if (alt % 50 == 0) {
-        final textPainter = TextPainter(
-          text: TextSpan(text: '${alt}m', style: textStyle),
-          textDirection: TextDirection.ltr,
-        )..layout();
+      // Altitude labels
+      final label = '${alt}';
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text: label,
+          style: TextStyle(
+            color: _primaryColor.withValues(alpha: isMajor ? 1.0 : 0.6),
+            fontSize: isMajor ? 11 : 9,
+            fontFamily: 'monospace',
+            fontWeight: isMajor ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
 
-        textPainter.paint(canvas, Offset(x - 5, y - textPainter.height / 2));
-      }
+      textPainter.paint(canvas, Offset(x - 15, y - textPainter.height / 2));
     }
 
     canvas.restore();
 
-    // Center indicator
+    // Fixed center indicator (green arrow pointing to current value)
     final indicatorPaint = Paint()
       ..color = _secondaryColor
       ..style = PaintingStyle.fill;
 
-    final indicatorPath = Path()
-      ..moveTo(x - 18, centerY)
-      ..lineTo(x - 28, centerY - 5)
-      ..lineTo(x - 28, centerY + 5)
-      ..close();
+    // Left arrow
+    canvas.drawPath(
+      Path()
+        ..moveTo(x - 30, centerY)
+        ..lineTo(x - 38, centerY - 8)
+        ..lineTo(x - 38, centerY + 8)
+        ..close(),
+      indicatorPaint,
+    );
 
-    canvas.drawPath(indicatorPath, indicatorPaint);
+    // Horizontal line at center
+    canvas.drawLine(
+      Offset(x - 30, centerY),
+      Offset(x - 18, centerY),
+      Paint()
+        ..color = _secondaryColor
+        ..strokeWidth = 2,
+    );
 
-    // ALT label
-    final altLabel = TextPainter(
+    // Current altitude readout box (fixed position, left of scale)
+    final altText = '${altitude.round()}m';
+    final altPainter = TextPainter(
       text: TextSpan(
-        text: 'ALT',
-        style: TextStyle(
-          color: _primaryColor.withValues(alpha: 0.6),
-          fontSize: 8,
+        text: altText,
+        style: const TextStyle(
+          color: Colors.black,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
           fontFamily: 'monospace',
         ),
       ),
       textDirection: TextDirection.ltr,
     )..layout();
 
-    altLabel.paint(
-      canvas,
-      Offset(x - altLabel.width / 2, centerY - height / 2 - 12),
+    final boxWidth = altPainter.width + 12;
+    final boxRect = RRect.fromRectAndRadius(
+      Rect.fromCenter(
+        center: Offset(x - 38 - boxWidth / 2 - 4, centerY),
+        width: boxWidth,
+        height: 22,
+      ),
+      const Radius.circular(4),
     );
+
+    canvas.drawRRect(boxRect, Paint()..color = _secondaryColor);
+    canvas.drawRRect(
+      boxRect,
+      Paint()
+        ..color = _secondaryColor.withValues(alpha: 0.8)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1,
+    );
+    altPainter.paint(
+      canvas,
+      Offset(
+        x - 38 - boxWidth / 2 - 4 - altPainter.width / 2,
+        centerY - altPainter.height / 2,
+      ),
+    );
+
+    // ALT label at top
+    final altLabel = TextPainter(
+      text: TextSpan(
+        text: 'ALT',
+        style: TextStyle(
+          color: _primaryColor.withValues(alpha: 0.7),
+          fontSize: 9,
+          fontWeight: FontWeight.bold,
+          fontFamily: 'monospace',
+          letterSpacing: 1,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+
+    altLabel.paint(canvas, Offset(x - altLabel.width / 2, top - 16));
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -524,58 +708,101 @@ class ARHudPainter extends CustomPainter {
     bool isSelected = false,
   }) {
     final pos = node.screenPosition.toPixels(size.width, size.height);
-    final nodeSize = node.screenPosition.size;
-    final opacity = node.screenPosition.opacity;
+    final baseNodeSize = node.screenPosition.size * config.markerScale;
+    final opacity = node.screenPosition.opacity * config.opacity;
 
-    // Get color based on threat level
-    final baseColor = _getThreatColor(node.threatLevel);
+    // Get color based on threat level and signal strength
+    final baseColor = config.showSignalStrength
+        ? _getSignalColor(node.signalQuality)
+        : _getThreatColor(node.threatLevel);
     final color = baseColor.withValues(alpha: opacity);
 
-    // Simple filled circle marker
-    final markerRadius = isSelected ? nodeSize * 0.4 : nodeSize * 0.3;
+    // Draw movement trail if enabled and node has track
+    if (config.showTrails && node.track.length > 1) {
+      _drawNodeTrail(canvas, size, node, color);
+    }
+
+    // Marker size based on config
+    final markerRadius = isSelected ? baseNodeSize * 0.4 : baseNodeSize * 0.3;
+
+    // Draw glow effect for explorer mode (larger markers)
+    if (config.markerScale > 1.0) {
+      final glowPaint = Paint()
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8)
+        ..color = color.withValues(alpha: opacity * 0.4);
+      canvas.drawCircle(pos, markerRadius + 4, glowPaint);
+    }
+
+    // Main marker
     canvas.drawCircle(pos, markerRadius, Paint()..color = color);
 
-    // Selection ring
+    // Selection ring with animation
     if (isSelected) {
+      final pulseRadius =
+          markerRadius + 4 + math.sin(animationValue * math.pi * 2) * 2;
       canvas.drawCircle(
         pos,
-        markerRadius + 4,
+        pulseRadius,
         Paint()
           ..color = color
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2,
       );
+
+      // Second outer ring for emphasis
+      canvas.drawCircle(
+        pos,
+        pulseRadius + 8,
+        Paint()
+          ..color = color.withValues(alpha: opacity * 0.3)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1,
+      );
     }
 
-    // Distance text
-    final distText = _formatDistance(node.worldPosition.distance);
-    final distPainter = TextPainter(
-      text: TextSpan(
-        text: distText,
-        style: TextStyle(
-          color: color,
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
-          fontFamily: 'monospace',
+    // Signal strength indicator (small arc around marker)
+    if (config.showSignalStrength && !isSelected) {
+      _drawSignalIndicator(
+        canvas,
+        pos,
+        markerRadius,
+        node.signalQuality,
+        opacity,
+      );
+    }
+
+    // Distance text (if enabled)
+    if (config.showNodeDistance) {
+      final distText = _formatDistance(node.worldPosition.distance);
+      final distPainter = TextPainter(
+        text: TextSpan(
+          text: distText,
+          style: TextStyle(
+            color: color,
+            fontSize: 10 * config.markerScale,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'monospace',
+          ),
         ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
+        textDirection: TextDirection.ltr,
+      )..layout();
 
-    distPainter.paint(
-      canvas,
-      Offset(pos.dx - distPainter.width / 2, pos.dy + markerRadius + 4),
-    );
+      distPainter.paint(
+        canvas,
+        Offset(pos.dx - distPainter.width / 2, pos.dy + markerRadius + 4),
+      );
+    }
 
-    // Node name (if selected or close)
-    if (isSelected || node.worldPosition.distance < 500) {
+    // Node name (if enabled, or always show when selected)
+    final showName = config.showNodeNames || isSelected;
+    if (showName && (isSelected || node.worldPosition.distance < 1000)) {
       final name = node.node.shortName ?? node.node.longName ?? 'Unknown';
       final namePainter = TextPainter(
         text: TextSpan(
           text: name,
           style: TextStyle(
             color: color,
-            fontSize: isSelected ? 12 : 10,
+            fontSize: (isSelected ? 12 : 10) * config.markerScale,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             fontFamily: 'monospace',
           ),
@@ -615,6 +842,154 @@ class ARHudPainter extends CustomPainter {
         Paint()..color = batteryColor,
       );
     }
+
+    // Moving indicator (animated arrows for nodes in motion)
+    if (node.isMoving && config.showTrails) {
+      _drawMovingIndicator(canvas, pos, markerRadius, node, color);
+    }
+  }
+
+  /// Draw signal strength indicator arc around marker
+  void _drawSignalIndicator(
+    Canvas canvas,
+    Offset pos,
+    double radius,
+    double signalQuality,
+    double opacity,
+  ) {
+    final color = _getSignalColor(
+      signalQuality,
+    ).withValues(alpha: opacity * 0.8);
+    final arcRadius = radius + 6;
+    final sweepAngle =
+        signalQuality * math.pi * 1.5; // 0-270 degrees based on quality
+
+    canvas.drawArc(
+      Rect.fromCircle(center: pos, radius: arcRadius),
+      -math.pi / 2, // Start from top
+      sweepAngle,
+      false,
+      Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..strokeCap = StrokeCap.round,
+    );
+  }
+
+  /// Draw movement trail behind a node
+  void _drawNodeTrail(
+    Canvas canvas,
+    Size size,
+    ARWorldNode node,
+    Color baseColor,
+  ) {
+    if (node.track.length < 2) return;
+
+    // Only draw recent track points (last 8)
+    final recentTrack = node.track.length > 8
+        ? node.track.sublist(node.track.length - 8)
+        : node.track;
+
+    // Get current node screen position
+    final currentPos = node.screenPosition.toPixels(size.width, size.height);
+
+    // Draw trail segments with fading effect
+    final path = Path();
+    path.moveTo(currentPos.dx, currentPos.dy);
+
+    // Calculate velocity direction for trail offset
+    final velMagnitude = node.velocity.length;
+    if (velMagnitude < 0.1) return; // No trail for stationary nodes
+
+    // Normalize velocity direction
+    final velDirX = node.velocity.x / velMagnitude;
+    final velDirY = node.velocity.y / velMagnitude;
+
+    // Draw trail points extending backward from current position
+    for (var i = recentTrack.length - 1; i >= 0; i--) {
+      final age = recentTrack.length - 1 - i;
+      final trailLength = (age + 1) * 6.0 * config.markerScale;
+
+      // Trail point in opposite direction of velocity
+      final trailX = currentPos.dx - velDirX * trailLength;
+      final trailY = currentPos.dy + velDirY * trailLength;
+
+      path.lineTo(trailX, trailY);
+    }
+
+    // Draw trail with gradient-like fading using multiple strokes
+    for (var layer = 3; layer >= 0; layer--) {
+      final alpha = (0.4 - layer * 0.1) * config.opacity;
+      final width = (4 - layer) * 0.8;
+
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = baseColor.withValues(alpha: alpha)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = width
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round,
+      );
+    }
+
+    // Draw small dots along the trail for emphasis
+    for (var i = 1; i <= 4; i++) {
+      final dotProgress = i / 5.0;
+      final dotX =
+          currentPos.dx - velDirX * dotProgress * 30 * config.markerScale;
+      final dotY =
+          currentPos.dy + velDirY * dotProgress * 30 * config.markerScale;
+      final dotAlpha = (1.0 - dotProgress) * 0.5 * config.opacity;
+      final dotRadius = (3 - i * 0.5) * config.markerScale * 0.5;
+
+      canvas.drawCircle(
+        Offset(dotX, dotY),
+        dotRadius,
+        Paint()..color = baseColor.withValues(alpha: dotAlpha),
+      );
+    }
+  }
+
+  /// Draw animated indicator for moving nodes
+  void _drawMovingIndicator(
+    Canvas canvas,
+    Offset pos,
+    double radius,
+    ARWorldNode node,
+    Color color,
+  ) {
+    // Draw small direction chevrons
+    final angle = math.atan2(node.velocity.y, node.velocity.x);
+    final indicatorDist = radius + 12;
+
+    canvas.save();
+    canvas.translate(pos.dx, pos.dy);
+    canvas.rotate(angle);
+
+    // Animated chevrons
+    final chevronOffset = (animationValue * 6).toInt();
+    for (var i = 0; i < 2; i++) {
+      final dist = indicatorDist + i * 6 + chevronOffset;
+      final alpha = 0.8 - i * 0.3;
+
+      final chevronPath = Path()
+        ..moveTo(dist, -3)
+        ..lineTo(dist + 4, 0)
+        ..lineTo(dist, 3);
+
+      canvas.drawPath(
+        chevronPath,
+        Paint()
+          ..color = color.withValues(alpha: alpha)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.5
+          ..strokeCap = StrokeCap.round,
+      );
+    }
+
+    canvas.restore();
   }
 
   Color _getThreatColor(ARThreatLevel level) {
@@ -630,6 +1005,14 @@ class ARHudPainter extends CustomPainter {
       case ARThreatLevel.offline:
         return _offlineColor;
     }
+  }
+
+  /// Get color based on signal quality (0-1)
+  Color _getSignalColor(double quality) {
+    if (quality >= 0.8) return _secondaryColor; // Excellent - green
+    if (quality >= 0.6) return _primaryColor; // Good - cyan
+    if (quality >= 0.4) return _warningColor; // Fair - amber
+    return _criticalColor; // Poor - red
   }
 
   String _formatDistance(double meters) {
@@ -972,6 +1355,14 @@ class ARHudConfig {
   final bool showCompass;
   final bool showAltimeter;
   final bool showAlerts;
+  final bool showNodeNames;
+  final bool showNodeDistance;
+  final bool showSignalStrength;
+  final bool showTrails;
+  final bool showDistanceRings;
+  final bool compactHeading;
+  final double markerScale;
+  final double opacity;
   final double horizontalFov;
   final double verticalFov;
   final double safeAreaTop;
@@ -982,26 +1373,100 @@ class ARHudConfig {
     this.showCompass = true,
     this.showAltimeter = false,
     this.showAlerts = true,
+    this.showNodeNames = true,
+    this.showNodeDistance = true,
+    this.showSignalStrength = false,
+    this.showTrails = false,
+    this.showDistanceRings = false,
+    this.compactHeading = false,
+    this.markerScale = 1.0,
+    this.opacity = 1.0,
     this.horizontalFov = 60,
     this.verticalFov = 90,
     this.safeAreaTop = 0,
     this.safeAreaBottom = 0,
   });
 
-  /// Tactical mode - compass and alerts
-  static const tactical = ARHudConfig();
+  /// Tactical mode - Full HUD with all tactical features
+  /// - Complete compass tape with heading
+  /// - Horizon line with pitch ladder
+  /// - Altimeter scale
+  /// - All node info with signal strength
+  /// - Alert system
+  /// - Distance rings on radar
+  static const tactical = ARHudConfig(
+    showHorizon: true,
+    showCompass: true,
+    showAltimeter: true,
+    showAlerts: true,
+    showNodeNames: true,
+    showNodeDistance: true,
+    showSignalStrength: true,
+    showTrails: false,
+    showDistanceRings: true,
+    compactHeading: false,
+    markerScale: 1.0,
+    opacity: 1.0,
+  );
 
-  /// Explorer mode - same as tactical
-  static const explorer = ARHudConfig();
+  /// Explorer mode - Simplified navigation-focused HUD
+  /// - No horizon/pitch (cleaner view)
+  /// - Simple compass card (not tape)
+  /// - No altimeter
+  /// - Large markers with names
+  /// - Color-coded signal strength
+  /// - Movement trails for nodes
+  /// - POI-style markers
+  static const explorer = ARHudConfig(
+    showHorizon: false,
+    showCompass: true,
+    showAltimeter: false,
+    showAlerts: true,
+    showNodeNames: true,
+    showNodeDistance: true,
+    showSignalStrength: true,
+    showTrails: true,
+    showDistanceRings: false,
+    compactHeading: false,
+    markerScale: 1.3,
+    opacity: 1.0,
+  );
 
-  /// Minimal mode - just compass and nodes
-  static const minimal = ARHudConfig(showAlerts: false);
+  /// Minimal mode - Clean distraction-free view
+  /// - No compass tape (small corner heading only)
+  /// - No horizon/altimeter
+  /// - Simple dot markers
+  /// - Distance only (no names unless selected)
+  /// - No alerts
+  /// - Translucent overlay
+  static const minimal = ARHudConfig(
+    showHorizon: false,
+    showCompass: false,
+    showAltimeter: false,
+    showAlerts: false,
+    showNodeNames: false,
+    showNodeDistance: true,
+    showSignalStrength: false,
+    showTrails: false,
+    showDistanceRings: false,
+    compactHeading: true,
+    markerScale: 0.7,
+    opacity: 0.8,
+  );
 
   ARHudConfig copyWith({
     bool? showHorizon,
     bool? showCompass,
     bool? showAltimeter,
     bool? showAlerts,
+    bool? showNodeNames,
+    bool? showNodeDistance,
+    bool? showSignalStrength,
+    bool? showTrails,
+    bool? showDistanceRings,
+    bool? compactHeading,
+    double? markerScale,
+    double? opacity,
     double? horizontalFov,
     double? verticalFov,
     double? safeAreaTop,
@@ -1012,6 +1477,14 @@ class ARHudConfig {
       showCompass: showCompass ?? this.showCompass,
       showAltimeter: showAltimeter ?? this.showAltimeter,
       showAlerts: showAlerts ?? this.showAlerts,
+      showNodeNames: showNodeNames ?? this.showNodeNames,
+      showNodeDistance: showNodeDistance ?? this.showNodeDistance,
+      showSignalStrength: showSignalStrength ?? this.showSignalStrength,
+      showTrails: showTrails ?? this.showTrails,
+      showDistanceRings: showDistanceRings ?? this.showDistanceRings,
+      compactHeading: compactHeading ?? this.compactHeading,
+      markerScale: markerScale ?? this.markerScale,
+      opacity: opacity ?? this.opacity,
       horizontalFov: horizontalFov ?? this.horizontalFov,
       verticalFov: verticalFov ?? this.verticalFov,
       safeAreaTop: safeAreaTop ?? this.safeAreaTop,

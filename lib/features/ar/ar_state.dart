@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/app_providers.dart';
+import 'ar_calibration.dart';
 import 'ar_engine.dart';
 import 'ar_hud_painter.dart';
 
@@ -20,14 +21,62 @@ final arEngineProvider = Provider<AREngine>((ref) {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// AR STATE
+// AR VIEW MODES - DISTINCT CONFIGURATIONS
 // ═══════════════════════════════════════════════════════════════════════════
 
+/// View modes with truly distinct visual styles and features
 enum ARViewMode {
-  tactical, // Full HUD with all features
-  explorer, // Minimal HUD for exploration
-  minimal, // Just nodes and compass
+  /// Full tactical HUD with all features:
+  /// - Complete compass with heading tape
+  /// - Horizon line with pitch ladder
+  /// - Altimeter scale
+  /// - Full node information with trails
+  /// - Alert system active
+  /// - Distance rings on radar
+  tactical,
+
+  /// Explorer mode for outdoor navigation:
+  /// - Simplified compass (card only)
+  /// - No horizon/pitch display
+  /// - Larger node markers with names
+  /// - Color-coded signal strength
+  /// - Trail breadcrumbs for moving nodes
+  /// - POI-style markers
+  explorer,
+
+  /// Minimal distraction-free mode:
+  /// - No compass (heading in corner only)
+  /// - No horizon/altimeter
+  /// - Simple dot markers
+  /// - Distance only (no names)
+  /// - No alerts
+  /// - Translucent overlay
+  minimal,
 }
+
+extension ARViewModeExtension on ARViewMode {
+  String get displayName => switch (this) {
+    ARViewMode.tactical => 'Tactical',
+    ARViewMode.explorer => 'Explorer',
+    ARViewMode.minimal => 'Minimal',
+  };
+
+  String get description => switch (this) {
+    ARViewMode.tactical => 'Full HUD with compass, horizon, and detailed info',
+    ARViewMode.explorer => 'Navigation-focused with large markers and trails',
+    ARViewMode.minimal => 'Clean view with simple markers only',
+  };
+
+  String get iconName => switch (this) {
+    ARViewMode.tactical => 'grid_view',
+    ARViewMode.explorer => 'explore',
+    ARViewMode.minimal => 'radio_button_unchecked',
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AR STATE
+// ═══════════════════════════════════════════════════════════════════════════
 
 class ARState {
   final bool isRunning;
@@ -44,11 +93,18 @@ class ARState {
   final AREngineConfig engineConfig;
   final double animationValue;
 
+  // Calibration state
+  final ARCalibrationState calibration;
+
   // Filtering
   final double maxDistance;
   final bool showOfflineNodes;
   final bool showOnlyFavorites;
   final Set<int> favoriteNodeNums;
+
+  // Visual options
+  final bool showTrails;
+  final bool showSignalStrength;
 
   ARState({
     this.isRunning = false,
@@ -64,10 +120,13 @@ class ARState {
     this.hudConfig = ARHudConfig.tactical,
     this.engineConfig = const AREngineConfig(),
     this.animationValue = 0,
+    this.calibration = const ARCalibrationState(),
     this.maxDistance = 50000,
     this.showOfflineNodes = true,
     this.showOnlyFavorites = false,
     this.favoriteNodeNums = const {},
+    this.showTrails = true,
+    this.showSignalStrength = true,
   }) : orientation = orientation ?? AROrientation.initial();
 
   factory ARState.initial() => ARState();
@@ -88,10 +147,13 @@ class ARState {
     ARHudConfig? hudConfig,
     AREngineConfig? engineConfig,
     double? animationValue,
+    ARCalibrationState? calibration,
     double? maxDistance,
     bool? showOfflineNodes,
     bool? showOnlyFavorites,
     Set<int>? favoriteNodeNums,
+    bool? showTrails,
+    bool? showSignalStrength,
   }) {
     return ARState(
       isRunning: isRunning ?? this.isRunning,
@@ -109,10 +171,13 @@ class ARState {
       hudConfig: hudConfig ?? this.hudConfig,
       engineConfig: engineConfig ?? this.engineConfig,
       animationValue: animationValue ?? this.animationValue,
+      calibration: calibration ?? this.calibration,
       maxDistance: maxDistance ?? this.maxDistance,
       showOfflineNodes: showOfflineNodes ?? this.showOfflineNodes,
       showOnlyFavorites: showOnlyFavorites ?? this.showOnlyFavorites,
       favoriteNodeNums: favoriteNodeNums ?? this.favoriteNodeNums,
+      showTrails: showTrails ?? this.showTrails,
+      showSignalStrength: showSignalStrength ?? this.showSignalStrength,
     );
   }
 
@@ -128,6 +193,12 @@ class ARState {
       alerts.where((a) => a.severity == ARAlertSeverity.critical).toList();
   List<ARAlert> get warningAlerts =>
       alerts.where((a) => a.severity == ARAlertSeverity.warning).toList();
+
+  /// Check if calibration is needed
+  bool get needsCalibration =>
+      calibration.needsCompassCalibration ||
+      calibration.compassStatus == CalibrationStatus.unknown ||
+      calibration.compassStatus == CalibrationStatus.poor;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -141,6 +212,7 @@ class ARNotifier extends Notifier<ARState> {
   StreamSubscription<List<ARWorldNode>>? _nodesSub;
   StreamSubscription<List<ARNodeCluster>>? _clustersSub;
   StreamSubscription<List<ARAlert>>? _alertsSub;
+  StreamSubscription<ARCalibrationState>? _calibrationSub;
   Timer? _animationTimer;
   Timer? _processTimer;
 
@@ -156,6 +228,13 @@ class ARNotifier extends Notifier<ARState> {
     try {
       _engine = ref.read(arEngineProvider);
       await _engine!.start();
+
+      // Subscribe to calibration state updates
+      _calibrationSub = _engine!.calibrationStream.listen((calibration) {
+        if (state.isRunning || state.isInitializing) {
+          state = state.copyWith(calibration: calibration);
+        }
+      });
 
       // Subscribe to streams
       _orientationSub = _engine!.orientationStream.listen((orientation) {
@@ -218,6 +297,7 @@ class ARNotifier extends Notifier<ARState> {
     _nodesSub?.cancel();
     _clustersSub?.cancel();
     _alertsSub?.cancel();
+    _calibrationSub?.cancel();
     _animationTimer?.cancel();
     _processTimer?.cancel();
 
@@ -226,6 +306,7 @@ class ARNotifier extends Notifier<ARState> {
     _nodesSub = null;
     _clustersSub = null;
     _alertsSub = null;
+    _calibrationSub = null;
     _animationTimer = null;
     _processTimer = null;
 
@@ -388,6 +469,26 @@ class ARNotifier extends Notifier<ARState> {
   void dismissAlert(ARAlert alert) {
     final alerts = state.alerts.where((a) => a != alert).toList();
     state = state.copyWith(alerts: alerts);
+  }
+
+  /// Start compass calibration
+  void startCompassCalibration() {
+    _engine?.startCompassCalibration();
+  }
+
+  /// Cancel compass calibration
+  void cancelCompassCalibration() {
+    _engine?.cancelCompassCalibration();
+  }
+
+  /// Toggle visual trails
+  void toggleTrails() {
+    state = state.copyWith(showTrails: !state.showTrails);
+  }
+
+  /// Toggle signal strength indicators
+  void toggleSignalStrength() {
+    state = state.copyWith(showSignalStrength: !state.showSignalStrength);
   }
 }
 

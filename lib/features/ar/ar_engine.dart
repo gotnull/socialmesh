@@ -8,10 +8,20 @@ import 'package:sensors_plus/sensors_plus.dart';
 import 'package:vector_math/vector_math_64.dart' as vm;
 
 import '../../models/mesh_models.dart';
+import 'ar_calibration.dart';
 
 /// Production-grade AR Engine with advanced sensor fusion,
 /// Kalman filtering, and predictive tracking
 class AREngine {
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CALIBRATION & SMOOTHING
+  // ═══════════════════════════════════════════════════════════════════════════
+  final ARCalibrationService _calibration = ARCalibrationService();
+  final HeadingStabilizer _headingStabilizer = HeadingStabilizer();
+  final Map<int, MarkerSmoother> _markerSmoothers = {};
+
+  ARCalibrationState get calibrationState => _calibration.state;
+
   // ═══════════════════════════════════════════════════════════════════════════
   // SENSOR SUBSCRIPTIONS
   // ═══════════════════════════════════════════════════════════════════════════
@@ -92,6 +102,7 @@ class AREngine {
   Stream<List<ARWorldNode>> get nodesStream => _nodesController.stream;
   Stream<List<ARNodeCluster>> get clustersStream => _clustersController.stream;
   Stream<List<ARAlert>> get alertsStream => _alertsController.stream;
+  Stream<ARCalibrationState> get calibrationStream => _calibration.stateStream;
 
   // ═══════════════════════════════════════════════════════════════════════════
   // STATE
@@ -122,6 +133,12 @@ class AREngine {
     debugPrint('[AREngine] Starting...');
 
     try {
+      // Initialize calibration service
+      await _calibration.initialize();
+      debugPrint(
+        '[AREngine] Calibration initialized - FOV: ${_calibration.state.horizontalFov.toStringAsFixed(1)}°×${_calibration.state.verticalFov.toStringAsFixed(1)}°',
+      );
+
       // Start high-frequency sensor streams
       _accelerometerSub = accelerometerEventStream(
         samplingPeriod: const Duration(milliseconds: 16), // ~60Hz
@@ -184,11 +201,23 @@ class AREngine {
   void dispose() {
     _isDisposed = true;
     stop();
+    _calibration.dispose();
     _orientationController.close();
     _positionController.close();
     _nodesController.close();
     _clustersController.close();
     _alertsController.close();
+  }
+
+  /// Start compass calibration process
+  void startCompassCalibration() {
+    if (!_isRunning) return;
+    _calibration.startCompassCalibration();
+  }
+
+  /// Cancel compass calibration
+  void cancelCompassCalibration() {
+    _calibration.cancelCompassCalibration();
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -265,9 +294,12 @@ class AREngine {
     _gyroRoll = blendedRoll;
 
     // Apply Kalman filter for final output
-    _heading = _headingKalman.update(blendedHeading);
+    var filteredHeading = _headingKalman.update(blendedHeading);
     _pitch = _pitchKalman.update(blendedPitch);
     _roll = _rollKalman.update(blendedRoll);
+
+    // Apply heading stabilization to prevent jitter
+    _heading = _headingStabilizer.stabilize(filteredHeading);
 
     // Normalize heading
     while (_heading >= 360) {
@@ -443,6 +475,15 @@ class AREngine {
     _userPosition = position;
     _lastPositionUpdate = now;
 
+    // Update magnetic declination for this location
+    _calibration.updateMagneticDeclination(
+      position.latitude,
+      position.longitude,
+    );
+
+    // Update GPS accuracy status
+    _calibration.updateGpsStatus(position.accuracy);
+
     // Store in history
     _positionHistory.add(_PositionSample(position: position, timestamp: now));
 
@@ -465,6 +506,17 @@ class AREngine {
 
     final cfg = config ?? const AREngineConfig();
     final result = <ARWorldNode>[];
+
+    // Use calibrated FOV if available and config uses defaults
+    final hFov = cfg.horizontalFov == 60
+        ? _calibration.state.horizontalFov
+        : cfg.horizontalFov;
+    final vFov = cfg.verticalFov == 90
+        ? _calibration.state.verticalFov
+        : cfg.verticalFov;
+
+    // Apply magnetic declination to heading for accurate bearing calculations
+    final correctedHeading = _heading + _calibration.state.magneticDeclination;
 
     for (final node in nodes) {
       if (node.latitude == null ||
@@ -494,12 +546,26 @@ class AREngine {
       // Apply distance filter
       if (worldPos.distance > cfg.maxDistance) continue;
 
-      // Calculate screen position
-      final screenPos = _calculateScreenPosition(
+      // Calculate screen position with calibrated FOV
+      var screenPos = _calculateScreenPositionWithHeading(
         worldPos,
-        cfg.horizontalFov,
-        cfg.verticalFov,
+        hFov,
+        vFov,
+        correctedHeading,
       );
+
+      // Apply marker smoothing to reduce jitter
+      var smoother = _markerSmoothers[node.nodeNum];
+      if (smoother == null) {
+        smoother = MarkerSmoother();
+        _markerSmoothers[node.nodeNum] = smoother;
+      }
+      final smoothed = smoother.smooth(
+        node.nodeNum,
+        screenPos.normalizedX,
+        screenPos.normalizedY,
+      );
+      screenPos = screenPos.copyWithPosition(smoothed.x, smoothed.y);
 
       // Calculate threat level
       final threatLevel = _calculateThreatLevel(node, tracked);
@@ -610,6 +676,61 @@ class AREngine {
     final size = (baseSize * depthFactor).clamp(20.0, 150.0);
 
     // Calculate opacity
+    final opacity = (1.0 - worldPos.distance / 50000).clamp(0.3, 1.0);
+
+    return ARScreenPosition(
+      normalizedX: normalizedX,
+      normalizedY: normalizedY,
+      isInView: isInView,
+      isOnLeft: relativeAngle < -halfFovH,
+      isOnRight: relativeAngle > halfFovH,
+      isAbove: relativeElevation > halfFovV,
+      isBelow: relativeElevation < -halfFovV,
+      relativeAngle: relativeAngle,
+      relativeElevation: relativeElevation,
+      depthFactor: depthFactor,
+      size: size,
+      opacity: opacity,
+    );
+  }
+
+  /// Calculate screen position with explicit heading (for magnetic declination correction)
+  ARScreenPosition _calculateScreenPositionWithHeading(
+    ARWorldPosition worldPos,
+    double fovH,
+    double fovV,
+    double heading,
+  ) {
+    // Calculate relative angle from corrected heading
+    var relativeAngle = worldPos.bearing - heading;
+    while (relativeAngle > 180) {
+      relativeAngle -= 360;
+    }
+    while (relativeAngle < -180) {
+      relativeAngle += 360;
+    }
+
+    // Calculate relative elevation from current pitch
+    final relativeElevation = worldPos.elevation - _pitch;
+
+    // Check if in view
+    final halfFovH = fovH / 2;
+    final halfFovV = fovV / 2;
+    final isInView =
+        relativeAngle.abs() <= halfFovH && relativeElevation.abs() <= halfFovV;
+
+    // Normalized screen position (-1 to 1)
+    final normalizedX = relativeAngle / halfFovH;
+    final normalizedY = -relativeElevation / halfFovV;
+
+    // Calculate depth factor for perspective
+    final depthFactor = 1.0 / (1.0 + worldPos.distance / 1000);
+
+    // Calculate visual size based on distance with better curve
+    final baseSize = 80.0;
+    final size = (baseSize * depthFactor).clamp(20.0, 150.0);
+
+    // Calculate opacity based on distance
     final opacity = (1.0 - worldPos.distance / 50000).clamp(0.3, 1.0);
 
     return ARScreenPosition(
@@ -1058,6 +1179,24 @@ class ARScreenPosition {
     required this.size,
     required this.opacity,
   });
+
+  /// Create a copy with updated smoothed position
+  ARScreenPosition copyWithPosition(double newX, double newY) {
+    return ARScreenPosition(
+      normalizedX: newX,
+      normalizedY: newY,
+      isInView: isInView,
+      isOnLeft: isOnLeft,
+      isOnRight: isOnRight,
+      isAbove: isAbove,
+      isBelow: isBelow,
+      relativeAngle: relativeAngle,
+      relativeElevation: relativeElevation,
+      depthFactor: depthFactor,
+      size: size,
+      opacity: opacity,
+    );
+  }
 
   /// Convert to pixel coordinates
   Offset toPixels(double screenWidth, double screenHeight) {

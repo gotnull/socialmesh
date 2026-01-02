@@ -61,10 +61,12 @@
 // final visibleNodes = ref.watch(visibleARNodesProvider);
 // ```
 
+export 'ar_calibration.dart';
 export 'ar_engine.dart';
 export 'ar_hud_painter.dart';
 export 'ar_radar_screen.dart';
 export 'ar_state.dart';
+export 'widgets/ar_calibration_screen.dart';
 export 'widgets/ar_mini_radar.dart';
 export 'widgets/ar_node_detail_card.dart';
 export 'widgets/ar_settings_panel.dart';
