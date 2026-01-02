@@ -13,8 +13,10 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"
         android:maxSdkVersion="30" />
 
-    <!-- Location permission for Bluetooth scanning on older devices and for map features -->
+    <!-- Location permissions for map features and GPS sharing -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
     <!-- For Android 13+ notification permission -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
@@ -23,6 +25,25 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+
+    <!-- Network permissions for WiFi-based nodes -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+
+    <!-- USB permissions for serial devices -->
+    <uses-feature android:name="android.hardware.usb.host" android:required="false" />
+
+    <!-- Foreground service for background location tracking -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+
+    <!-- Vibration for haptic feedback -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!-- Wake lock for keeping device awake during mesh operations -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <!-- For Android 14+ (API 34+) partial media access if needed -->
     <!-- <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" /> -->
@@ -69,6 +90,30 @@
                 <data android:scheme="https"
                     android:host="socialmesh.app"
                     android:pathPrefix="/share" />
+            </intent-filter>
+            <!-- File type handlers for map data imports -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="content" />
+                <data android:mimeType="application/vnd.mapbox-vector-tile" />
+                <data android:mimeType="application/geo+json" />
+                <data android:mimeType="application/vnd.google-earth.kml+xml" />
+                <data android:mimeType="application/vnd.google-earth.kmz" />
+                <data android:mimeType="application/gpx+xml" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="file" />
+                <data android:host="*" />
+                <data android:pathPattern=".*\\.mbtiles" />
+                <data android:pathPattern=".*\\.geojson" />
+                <data android:pathPattern=".*\\.kml" />
+                <data android:pathPattern=".*\\.kmz" />
+                <data android:pathPattern=".*\\.gpx" />
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

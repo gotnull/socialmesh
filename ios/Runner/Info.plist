@@ -6,6 +6,63 @@
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
 		<key>CFBundleDisplayName</key>
 		<string>Socialmesh</string>
+		<key>CFBundleDocumentTypes</key>
+		<array>
+			<dict>
+				<key>CFBundleTypeName</key>
+				<string>MBTiles Map</string>
+				<key>LSHandlerRank</key>
+				<string>Default</string>
+				<key>LSItemContentTypes</key>
+				<array>
+					<string>com.socialmesh.mbtiles</string>
+				</array>
+			</dict>
+			<dict>
+				<key>CFBundleTypeName</key>
+				<string>GeoJSON Map Data</string>
+				<key>LSHandlerRank</key>
+				<string>Default</string>
+				<key>LSItemContentTypes</key>
+				<array>
+					<string>public.json</string>
+					<string>com.socialmesh.geojson</string>
+				</array>
+			</dict>
+			<dict>
+				<key>CFBundleTypeName</key>
+				<string>KML Map Data</string>
+				<key>LSHandlerRank</key>
+				<string>Default</string>
+				<key>LSItemContentTypes</key>
+				<array>
+					<string>public.xml</string>
+					<string>com.socialmesh.kml</string>
+				</array>
+			</dict>
+			<dict>
+				<key>CFBundleTypeName</key>
+				<string>KMZ Map Data</string>
+				<key>LSHandlerRank</key>
+				<string>Default</string>
+				<key>LSItemContentTypes</key>
+				<array>
+					<string>public.zip-archive</string>
+					<string>com.socialmesh.kmz</string>
+				</array>
+			</dict>
+			<dict>
+				<key>CFBundleTypeName</key>
+				<string>GPX Track Data</string>
+				<key>LSHandlerRank</key>
+				<string>Default</string>
+				<key>LSItemContentTypes</key>
+				<array>
+					<string>public.xml</string>
+					<string>com.socialmesh.gpx</string>
+				</array>
+			</dict>
+		</array>
 		<key>CFBundleExecutable</key>
 		<string>$(EXECUTABLE_NAME)</string>
 		<key>CFBundleIdentifier</key>
@@ -22,7 +79,13 @@
 		<string>????</string>
 		<key>CFBundleVersion</key>
 		<string>$(FLUTTER_BUILD_NUMBER)</string>
+		<key>ITSAppUsesNonExemptEncryption</key>
+		<false />
+		<key>LSApplicationCategoryType</key>
+		<string>public.app-category.utilities</string>
 		<key>LSRequiresIPhoneOS</key>
+		<true />
+		<key>LSSupportsOpeningDocumentsInPlace</key>
 		<true />
 		<key>UILaunchStoryboardName</key>
 		<string>LaunchScreen</string>
@@ -41,30 +104,48 @@
 			<string>UIInterfaceOrientationLandscapeLeft</string>
 			<string>UIInterfaceOrientationLandscapeRight</string>
 		</array>
+		<key>UISupportsDocumentBrowser</key>
+		<true />
 		<key>CADisableMinimumFrameDurationOnPhone</key>
 		<true />
 		<key>UIApplicationSupportsIndirectInputEvents</key>
 		<true />
+		<key>UIRequiresPersistentWiFi</key>
+		<true />
 		<key>NSBluetoothAlwaysUsageDescription</key>
-		<string>This app needs Bluetooth to communicate with Meshtastic devices</string>
+		<string>Socialmesh uses Bluetooth to connect to nearby Meshtastic devices for mesh communication</string>
 		<key>NSBluetoothPeripheralUsageDescription</key>
-		<string>This app needs Bluetooth to communicate with Meshtastic devices</string>
+		<string>Bluetooth is used to connect to your Meshtastic device for text messaging and location
+			sharing on the mesh network</string>
+		<key>NSBonjourServices</key>
+		<array>
+			<string>_meshtastic._tcp</string>
+		</array>
 		<key>NSCameraUsageDescription</key>
-		<string>This app uses the camera for QR code scanning and AR Node Radar visualization</string>
-		<key>NSPhotoLibraryUsageDescription</key>
-		<string>This app needs photo library access to save and share exported data and images</string>
-		<key>NSLocationWhenInUseUsageDescription</key>
-		<string>This app needs location access to show your position on the map and share it with mesh
-			nodes</string>
+		<string>Socialmesh uses the camera for QR code scanning and AR Node Radar visualization</string>
+		<key>NSLocalNetworkUsageDescription</key>
+		<string>Socialmesh uses local networking to connect to WiFi-based Meshtastic nodes</string>
 		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-		<string>This app needs location access to show your position on the map and share it with mesh
-			nodes even when in background</string>
+		<string>Socialmesh uses your location to display on the mesh map, filter nodes by distance, and
+			share GPS coordinates. Route Recording uses location in the background.</string>
+		<key>NSLocationAlwaysUsageDescription</key>
+		<string>Socialmesh uses your location to display on the mesh map and share GPS coordinates with
+			your Meshtastic device</string>
+		<key>NSLocationUsageDescription</key>
+		<string>Socialmesh uses your location to display on the mesh map and share GPS coordinates with
+			mesh nodes</string>
+		<key>NSLocationWhenInUseUsageDescription</key>
+		<string>Socialmesh uses your location to display on the mesh map, filter nodes by distance, and
+			share GPS coordinates. Route Recording uses location in the background.</string>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>Socialmesh needs photo library access to save and share exported data and images</string>
 		<key>NSSupportsLiveActivities</key>
 		<true />
 		<key>UIBackgroundModes</key>
 		<array>
 			<string>bluetooth-central</string>
 			<string>fetch</string>
+			<string>location</string>
 			<string>remote-notification</string>
 		</array>
 		<key>NSAppTransportSecurity</key>
@@ -76,7 +157,7 @@
 		<array>
 			<dict>
 				<key>CFBundleTypeRole</key>
-				<string>Viewer</string>
+				<string>Editor</string>
 				<key>CFBundleURLName</key>
 				<string>com.socialmesh.app</string>
 				<key>CFBundleURLSchemes</key>
@@ -91,6 +172,104 @@
 				<array>
 					<string>com.googleusercontent.apps.571509151050-7fa2c8p7b88ibpkd3hcpgr85v5kl7cjf</string>
 				</array>
+			</dict>
+		</array>
+		<key>UTImportedTypeDeclarations</key>
+		<array>
+			<dict>
+				<key>UTTypeConformsTo</key>
+				<array>
+					<string>public.data</string>
+				</array>
+				<key>UTTypeDescription</key>
+				<string>MBTiles Map</string>
+				<key>UTTypeIconFiles</key>
+				<array />
+				<key>UTTypeIdentifier</key>
+				<string>com.socialmesh.mbtiles</string>
+				<key>UTTypeTagSpecification</key>
+				<dict>
+					<key>public.filename-extension</key>
+					<array>
+						<string>mbtiles</string>
+					</array>
+				</dict>
+			</dict>
+			<dict>
+				<key>UTTypeConformsTo</key>
+				<array>
+					<string>public.json</string>
+				</array>
+				<key>UTTypeDescription</key>
+				<string>GeoJSON Map Data</string>
+				<key>UTTypeIconFiles</key>
+				<array />
+				<key>UTTypeIdentifier</key>
+				<string>com.socialmesh.geojson</string>
+				<key>UTTypeTagSpecification</key>
+				<dict>
+					<key>public.filename-extension</key>
+					<array>
+						<string>geojson</string>
+					</array>
+				</dict>
+			</dict>
+			<dict>
+				<key>UTTypeConformsTo</key>
+				<array>
+					<string>public.xml</string>
+				</array>
+				<key>UTTypeDescription</key>
+				<string>KML Map Data</string>
+				<key>UTTypeIconFiles</key>
+				<array />
+				<key>UTTypeIdentifier</key>
+				<string>com.socialmesh.kml</string>
+				<key>UTTypeTagSpecification</key>
+				<dict>
+					<key>public.filename-extension</key>
+					<array>
+						<string>kml</string>
+					</array>
+				</dict>
+			</dict>
+			<dict>
+				<key>UTTypeConformsTo</key>
+				<array>
+					<string>public.zip-archive</string>
+				</array>
+				<key>UTTypeDescription</key>
+				<string>KMZ Map Data</string>
+				<key>UTTypeIconFiles</key>
+				<array />
+				<key>UTTypeIdentifier</key>
+				<string>com.socialmesh.kmz</string>
+				<key>UTTypeTagSpecification</key>
+				<dict>
+					<key>public.filename-extension</key>
+					<array>
+						<string>kmz</string>
+					</array>
+				</dict>
+			</dict>
+			<dict>
+				<key>UTTypeConformsTo</key>
+				<array>
+					<string>public.xml</string>
+				</array>
+				<key>UTTypeDescription</key>
+				<string>GPX Track Data</string>
+				<key>UTTypeIconFiles</key>
+				<array />
+				<key>UTTypeIdentifier</key>
+				<string>com.socialmesh.gpx</string>
+				<key>UTTypeTagSpecification</key>
+				<dict>
+					<key>public.filename-extension</key>
+					<array>
+						<string>gpx</string>
+					</array>
+				</dict>
 			</dict>
 		</array>
 	</dict>
