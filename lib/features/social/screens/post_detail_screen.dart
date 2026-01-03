@@ -525,7 +525,7 @@ class _CommentDisplayItem {
 }
 
 /// Individual comment tile with threading support.
-class _CommentTile extends ConsumerWidget {
+class _CommentTile extends ConsumerStatefulWidget {
   const _CommentTile({
     required this.comment,
     required this.depth,
@@ -543,11 +543,79 @@ class _CommentTile extends ConsumerWidget {
   final bool isDeleting;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_CommentTile> createState() => _CommentTileState();
+}
+
+class _CommentTileState extends ConsumerState<_CommentTile> {
+  bool _isLiked = false;
+  int _likeCount = 0;
+  bool _isLiking = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _likeCount = widget.comment.comment.likeCount;
+    _checkLikeStatus();
+  }
+
+  Future<void> _checkLikeStatus() async {
+    final socialService = ref.read(socialServiceProvider);
+    final isLiked = await socialService.isCommentLiked(
+      widget.comment.comment.id,
+    );
+    if (mounted) {
+      setState(() => _isLiked = isLiked);
+    }
+  }
+
+  Future<void> _toggleLike() async {
+    if (_isLiking) return;
+
+    final currentUser = ref.read(currentUserProvider);
+    if (currentUser == null) return;
+
+    setState(() {
+      _isLiking = true;
+      // Optimistic update
+      if (_isLiked) {
+        _isLiked = false;
+        _likeCount = (_likeCount - 1).clamp(0, 999999);
+      } else {
+        _isLiked = true;
+        _likeCount += 1;
+      }
+    });
+
+    try {
+      final socialService = ref.read(socialServiceProvider);
+      if (_isLiked) {
+        await socialService.likeComment(widget.comment.comment.id);
+      } else {
+        await socialService.unlikeComment(widget.comment.comment.id);
+      }
+    } catch (e) {
+      // Revert on error
+      if (mounted) {
+        setState(() {
+          _isLiked = !_isLiked;
+          _likeCount = _isLiked
+              ? _likeCount + 1
+              : (_likeCount - 1).clamp(0, 999999);
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLiking = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final currentUser = ref.watch(currentUserProvider);
-    final isOwnComment = currentUser?.uid == comment.comment.authorId;
-    final isReply = depth > 0;
+    final isOwnComment = currentUser?.uid == widget.comment.comment.authorId;
+    final isReply = widget.depth > 0;
 
     // Instagram-style: replies have smaller indent
     final leftPadding = isReply ? 54.0 : 16.0; // Align with parent content
@@ -557,7 +625,7 @@ class _CommentTile extends ConsumerWidget {
       child: Container(
         padding: EdgeInsets.only(
           left: leftPadding,
-          right: 16,
+          right: 12,
           top: isReply ? 8 : 12,
           bottom: isReply ? 8 : 12,
         ),
@@ -566,15 +634,16 @@ class _CommentTile extends ConsumerWidget {
           children: [
             // Avatar - smaller for replies
             GestureDetector(
-              onTap: onAuthorTap,
+              onTap: widget.onAuthorTap,
               child: CircleAvatar(
                 radius: isReply ? 12 : 16,
-                backgroundImage: comment.author?.avatarUrl != null
-                    ? NetworkImage(comment.author!.avatarUrl!)
+                backgroundImage: widget.comment.author?.avatarUrl != null
+                    ? NetworkImage(widget.comment.author!.avatarUrl!)
                     : null,
-                child: comment.author?.avatarUrl == null
+                child: widget.comment.author?.avatarUrl == null
                     ? Text(
-                        (comment.author?.displayName ?? 'U')[0].toUpperCase(),
+                        (widget.comment.author?.displayName ?? 'U')[0]
+                            .toUpperCase(),
                         style: TextStyle(
                           fontSize: isReply ? 10 : 12,
                           fontWeight: FontWeight.bold,
@@ -597,14 +666,14 @@ class _CommentTile extends ConsumerWidget {
                       style: theme.textTheme.bodyMedium,
                       children: [
                         TextSpan(
-                          text: comment.author?.displayName ?? 'Unknown',
+                          text: widget.comment.author?.displayName ?? 'Unknown',
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: isReply ? 13 : 14,
                             color: theme.textTheme.bodyMedium?.color,
                           ),
                         ),
-                        if (comment.author?.isVerified == true)
+                        if (widget.comment.author?.isVerified == true)
                           WidgetSpan(
                             alignment: PlaceholderAlignment.middle,
                             child: Padding(
@@ -618,7 +687,7 @@ class _CommentTile extends ConsumerWidget {
                           ),
                         TextSpan(
                           text:
-                              ' ${comment.comment.content.replaceAll(RegExp(r'\s+'), ' ')}',
+                              ' ${widget.comment.comment.content.replaceAll(RegExp(r'\s+'), ' ')}',
                           style: TextStyle(
                             fontSize: isReply ? 13 : 14,
                             color: theme.textTheme.bodyMedium?.color,
@@ -635,18 +704,31 @@ class _CommentTile extends ConsumerWidget {
                     children: [
                       // Time - short format
                       Text(
-                        _shortTimeAgo(comment.comment.createdAt),
+                        _shortTimeAgo(widget.comment.comment.createdAt),
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.hintColor,
                           fontSize: 12,
                         ),
                       ),
 
+                      // Like count text (if > 0)
+                      if (_likeCount > 0) ...[
+                        const SizedBox(width: 16),
+                        Text(
+                          '$_likeCount ${_likeCount == 1 ? 'like' : 'likes'}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.hintColor,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+
                       // Reply button - text only like Instagram
-                      if (depth < 3) ...[
+                      if (widget.depth < 3) ...[
                         const SizedBox(width: 16),
                         GestureDetector(
-                          onTap: onReplyTap,
+                          onTap: widget.onReplyTap,
                           child: Text(
                             'Reply',
                             style: theme.textTheme.bodySmall?.copyWith(
@@ -659,7 +741,7 @@ class _CommentTile extends ConsumerWidget {
                       ],
 
                       // Show deleting indicator
-                      if (isDeleting) ...[
+                      if (widget.isDeleting) ...[
                         const SizedBox(width: 16),
                         const SizedBox(
                           width: 14,
@@ -670,6 +752,19 @@ class _CommentTile extends ConsumerWidget {
                     ],
                   ),
                 ],
+              ),
+            ),
+
+            // Like button on right - Instagram style
+            GestureDetector(
+              onTap: currentUser != null ? _toggleLike : null,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 8, top: 4),
+                child: Icon(
+                  _isLiked ? Icons.favorite : Icons.favorite_border,
+                  size: isReply ? 14 : 16,
+                  color: _isLiked ? Colors.red : theme.hintColor.withAlpha(150),
+                ),
               ),
             ),
           ],
@@ -746,8 +841,8 @@ class _CommentTile extends ConsumerWidget {
       ),
     );
 
-    if (confirmed == true && onDelete != null) {
-      onDelete!();
+    if (confirmed == true && widget.onDelete != null) {
+      widget.onDelete!();
     }
   }
 }
