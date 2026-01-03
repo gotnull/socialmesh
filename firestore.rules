@@ -34,10 +34,17 @@ service cloud.firestore {
       allow read, write: if isOwner(userId);
     }
     
-    // User profiles - public read, owner write
+    // User profiles - public read, owner write (except counters)
     match /profiles/{userId} {
       allow read: if true;
-      allow write: if isOwner(userId) && isValidSize();
+      // Owner can write but cannot modify counter fields (Cloud Functions only)
+      allow create: if isOwner(userId) && isValidSize() &&
+        (!('followerCount' in request.resource.data) || request.resource.data.followerCount == 0) &&
+        (!('followingCount' in request.resource.data) || request.resource.data.followingCount == 0) &&
+        (!('postCount' in request.resource.data) || request.resource.data.postCount == 0);
+      allow update: if isOwner(userId) && isValidSize() &&
+        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['followerCount', 'followingCount', 'postCount']));
+      allow delete: if isOwner(userId);
     }
     
     // Admin list - only readable by admins
@@ -195,6 +202,121 @@ service cloud.firestore {
       match /_rate_limit/{limitId} {
         allow read, write: if false; // Cloud Functions only
       }
+    }
+
+    // =============================================================================
+    // SOCIAL FEATURES (Instagram-style follows, posts, feeds, comments)
+    // =============================================================================
+
+    // Follow relationships
+    // Document ID format: {followerId}_{followeeId} for idempotent operations
+    match /follows/{followId} {
+      allow read: if true; // Public - anyone can see follow relationships
+      
+      // Create: authenticated, must be following as yourself, cannot self-follow
+      allow create: if isAuthenticated() &&
+        request.resource.data.followerId == request.auth.uid &&
+        request.resource.data.followerId != request.resource.data.followeeId &&
+        followId == request.resource.data.followerId + '_' + request.resource.data.followeeId;
+      
+      // Delete: only the follower can unfollow
+      allow delete: if isAuthenticated() &&
+        resource.data.followerId == request.auth.uid;
+      
+      // No updates allowed - delete and recreate
+      allow update: if false;
+    }
+
+    // Posts - user-created content
+    match /posts/{postId} {
+      allow read: if true; // Public posts
+      
+      // Create: authenticated, must be author, content required
+      allow create: if isAuthenticated() &&
+        request.resource.data.authorId == request.auth.uid &&
+        request.resource.data.content is string &&
+        request.resource.data.content.size() > 0 &&
+        request.resource.data.content.size() <= 2000 &&
+        isValidSize();
+      
+      // Delete: only author can delete their post
+      allow delete: if isAuthenticated() &&
+        resource.data.authorId == request.auth.uid;
+      
+      // Allow authenticated users to update only commentCount and likeCount
+      allow update: if isAuthenticated() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['commentCount', 'likeCount']);
+    }
+
+    // Feeds - precomputed personalized feeds (Cloud Functions write only)
+    match /feeds/{userId} {
+      allow read: if isOwner(userId);
+      allow write: if false; // Cloud Functions only
+      
+      // Feed items subcollection
+      match /items/{itemId} {
+        allow read: if isOwner(userId);
+        allow write: if false; // Cloud Functions only
+      }
+    }
+
+    // Comments - threaded comments on posts
+    match /comments/{commentId} {
+      allow read: if true; // Public comments
+      
+      // Create: authenticated, must be author, content required, max depth check
+      allow create: if isAuthenticated() &&
+        request.resource.data.authorId == request.auth.uid &&
+        request.resource.data.content is string &&
+        request.resource.data.content.size() > 0 &&
+        request.resource.data.content.size() <= 1000 &&
+        request.resource.data.postId is string &&
+        isValidSize();
+      
+      // Delete: only author can delete their comment
+      allow delete: if isAuthenticated() &&
+        resource.data.authorId == request.auth.uid;
+      
+      // Allow authenticated users to update only replyCount
+      allow update: if isAuthenticated() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['replyCount']);
+    }
+
+    // Likes - user likes on posts
+    // Document ID format: {userId}_{postId} for idempotent operations
+    match /likes/{likeId} {
+      allow read: if true; // Public likes
+      
+      // Create: authenticated, must be liking as yourself
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid &&
+        likeId == request.resource.data.userId + '_' + request.resource.data.postId;
+      
+      // Delete: only the liker can unlike
+      allow delete: if isAuthenticated() &&
+        resource.data.userId == request.auth.uid;
+      
+      // No updates allowed
+      allow update: if false;
+    }
+
+    // Block list - users can block other users
+    match /blocks/{blockId} {
+      // Only the blocker can read their own blocks
+      allow read: if isAuthenticated() &&
+        resource.data.blockerId == request.auth.uid;
+      
+      // Create: authenticated, must be blocking as yourself, cannot self-block
+      allow create: if isAuthenticated() &&
+        request.resource.data.blockerId == request.auth.uid &&
+        request.resource.data.blockerId != request.resource.data.blockedId &&
+        blockId == request.resource.data.blockerId + '_' + request.resource.data.blockedId;
+      
+      // Delete: only the blocker can unblock
+      allow delete: if isAuthenticated() &&
+        resource.data.blockerId == request.auth.uid;
+      
+      allow update: if false;
     }
   }
 }

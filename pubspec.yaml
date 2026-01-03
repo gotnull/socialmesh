@@ -44,6 +44,7 @@ dependencies:
   intl: ^0.19.0
   collection: ^1.18.0
   geolocator: ^14.0.2
+  geocoding: ^3.0.0
   share_plus: ^10.1.4
   
   # Utilities
@@ -92,6 +93,7 @@ dependencies:
   
   # Deep linking
   app_links: ^6.3.3
+  timeago: ^3.7.1
 
 dev_dependencies:
   flutter_test:

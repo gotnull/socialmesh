@@ -246,6 +246,9 @@ class ProfileCloudSyncService {
   // --- Helper Methods ---
 
   /// Convert UserProfile to Firestore-compatible map
+  /// Note: Social counters (followerCount, followingCount, postCount) are NOT included
+  /// because they are managed by Cloud Functions triggers and should never be
+  /// overwritten by the client.
   Map<String, dynamic> _profileToFirestore(UserProfile profile) {
     return {
       'displayName': profile.displayName,
@@ -262,10 +265,13 @@ class ProfileCloudSyncService {
       'isVerified': profile.isVerified,
       'createdAt': profile.createdAt.toIso8601String(),
       'updatedAt': FieldValue.serverTimestamp(),
+      // Do NOT include: followerCount, followingCount, postCount
+      // These are managed by Cloud Functions
     };
   }
 
   /// Create UserProfile from Firestore document
+  /// Note: Social counters are read from cloud but never written back by client
   UserProfile _profileFromFirestore(String uid, Map<String, dynamic> data) {
     debugPrint(
       '[ProfileSync] Parsing Firestore data: displayName=${data['displayName']}, avatarUrl=${data['avatarUrl']}, accentColorIndex=${data['accentColorIndex']}',
@@ -297,6 +303,10 @@ class ProfileCloudSyncService {
           : null,
       isVerified: data['isVerified'] as bool? ?? false,
       isSynced: true,
+      // Social counters (read-only from cloud, managed by Cloud Functions)
+      followerCount: data['followerCount'] as int? ?? 0,
+      followingCount: data['followingCount'] as int? ?? 0,
+      postCount: data['postCount'] as int? ?? 0,
       createdAt: data['createdAt'] != null
           ? DateTime.parse(data['createdAt'] as String)
           : DateTime.now(),

@@ -1,0 +1,997 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:timeago/timeago.dart' as timeago;
+
+import '../../../models/social.dart';
+import '../../../providers/auth_providers.dart';
+import '../../../providers/social_providers.dart';
+import '../../../services/social_service.dart';
+import '../widgets/post_actions_bar.dart';
+import 'profile_social_screen.dart';
+
+/// Screen showing a single post with its comments.
+class PostDetailScreen extends ConsumerStatefulWidget {
+  const PostDetailScreen({
+    super.key,
+    required this.postId,
+    this.focusCommentInput = false,
+  });
+
+  final String postId;
+  final bool focusCommentInput;
+
+  @override
+  ConsumerState<PostDetailScreen> createState() => _PostDetailScreenState();
+}
+
+class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
+  final TextEditingController _commentController = TextEditingController();
+  final FocusNode _commentFocusNode = FocusNode();
+  String? _replyingToId;
+  String? _replyingToAuthor;
+  bool _isSubmitting = false;
+  final Set<String> _deletingCommentIds = {};
+  final Set<String> _deletedCommentIds = {};
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.focusCommentInput) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _commentFocusNode.requestFocus();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    _commentFocusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final currentUser = ref.watch(currentUserProvider);
+    final postAsync = ref.watch(postStreamProvider(widget.postId));
+    final commentsAsync = ref.watch(commentsStreamProvider(widget.postId));
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Post')),
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: postAsync.when(
+          data: (post) {
+            if (post == null) {
+              return const Center(child: Text('Post not found'));
+            }
+
+            return Column(
+              children: [
+                Expanded(
+                  child: CustomScrollView(
+                    slivers: [
+                      // Post content
+                      SliverToBoxAdapter(
+                        child: _PostContent(
+                          post: post,
+                          onAuthorTap: () => _navigateToProfile(post.authorId),
+                          onCommentTap: () => _commentFocusNode.requestFocus(),
+                          onShareTap: () => _sharePost(post),
+                          onMoreTap: () => _showPostOptions(post),
+                        ),
+                      ),
+
+                      const SliverToBoxAdapter(child: Divider(height: 1)),
+
+                      // Comments header
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Text(
+                            'Comments',
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+
+                      // Comments list
+                      commentsAsync.when(
+                        data: (comments) => _buildCommentsSliver(comments),
+                        loading: () => const SliverToBoxAdapter(
+                          child: Padding(
+                            padding: EdgeInsets.all(32),
+                            child: Center(child: CircularProgressIndicator()),
+                          ),
+                        ),
+                        error: (e, _) => SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.all(32),
+                            child: Center(child: Text('Error: $e')),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Comment input
+                if (currentUser != null)
+                  _CommentInput(
+                    controller: _commentController,
+                    focusNode: _commentFocusNode,
+                    replyingTo: _replyingToAuthor,
+                    isSubmitting: _isSubmitting,
+                    onCancelReply: _cancelReply,
+                    onSubmit: () => _submitComment(post.id),
+                  ),
+              ],
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => Center(child: Text('Error: $e')),
+        ),
+      ),
+    );
+  }
+
+  /// Build a sliver list of comments with threaded replies.
+  Widget _buildCommentsSliver(List<CommentWithAuthor> allComments) {
+    // Filter out deleted comments (optimistic deletion)
+    final visibleComments = allComments
+        .where((c) => !_deletedCommentIds.contains(c.comment.id))
+        .toList();
+
+    if (visibleComments.isEmpty) {
+      return SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Center(
+            child: Text(
+              'No comments yet. Be the first!',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.color?.withAlpha(150),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Organize comments into tree structure
+    final rootComments = visibleComments
+        .where((c) => c.comment.parentId == null)
+        .toList();
+    final repliesMap = <String, List<CommentWithAuthor>>{};
+
+    for (final c in visibleComments) {
+      if (c.comment.parentId != null) {
+        repliesMap.putIfAbsent(c.comment.parentId!, () => []).add(c);
+      }
+    }
+
+    // Flatten tree into display list with depth info
+    final displayList = <_CommentDisplayItem>[];
+    void addWithReplies(CommentWithAuthor comment, int depth) {
+      displayList.add(_CommentDisplayItem(comment: comment, depth: depth));
+      final replies = repliesMap[comment.comment.id] ?? [];
+      for (final reply in replies) {
+        addWithReplies(reply, depth + 1);
+      }
+    }
+
+    for (final root in rootComments) {
+      addWithReplies(root, 0);
+    }
+
+    return SliverList(
+      delegate: SliverChildBuilderDelegate((context, index) {
+        final item = displayList[index];
+        final commentId = item.comment.comment.id;
+        return _CommentTile(
+          comment: item.comment,
+          depth: item.depth,
+          onReplyTap: () => _handleReplyTo(item.comment),
+          onAuthorTap: () => _navigateToProfile(item.comment.comment.authorId),
+          isDeleting: _deletingCommentIds.contains(commentId),
+          onDelete: () => _deleteComment(commentId),
+        );
+      }, childCount: displayList.length),
+    );
+  }
+
+  Future<void> _deleteComment(String commentId) async {
+    if (_deletingCommentIds.contains(commentId) ||
+        _deletedCommentIds.contains(commentId)) {
+      return; // Already deleting or deleted
+    }
+
+    // Immediately hide the comment (optimistic)
+    setState(() {
+      _deletingCommentIds.add(commentId);
+      _deletedCommentIds.add(commentId); // Hide immediately
+    });
+
+    try {
+      await ref.read(socialServiceProvider).deleteComment(commentId);
+      if (mounted) {
+        setState(() {
+          _deletingCommentIds.remove(commentId);
+          // Keep in _deletedCommentIds to filter stream results
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        // Deletion failed - restore the comment
+        setState(() {
+          _deletingCommentIds.remove(commentId);
+          _deletedCommentIds.remove(commentId);
+        });
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to delete: $e')));
+      }
+    }
+  }
+
+  void _handleReplyTo(CommentWithAuthor comment) {
+    setState(() {
+      _replyingToId = comment.comment.id;
+      _replyingToAuthor = comment.author?.displayName ?? 'Unknown';
+    });
+    _commentFocusNode.requestFocus();
+  }
+
+  void _cancelReply() {
+    setState(() {
+      _replyingToId = null;
+      _replyingToAuthor = null;
+    });
+  }
+
+  Future<void> _submitComment(String postId) async {
+    final content = _commentController.text.trim();
+    if (content.isEmpty) return;
+
+    setState(() => _isSubmitting = true);
+
+    try {
+      await addComment(ref, postId, content, parentId: _replyingToId);
+      _commentController.clear();
+      _cancelReply();
+      // Stream will automatically update - no need to invalidate
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to post comment: $e')));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
+  }
+
+  void _navigateToProfile(String userId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProfileSocialScreen(userId: userId),
+      ),
+    );
+  }
+
+  void _sharePost(Post post) {
+    Share.share(
+      'Check out this post on Socialmesh!\nhttps://socialmesh.app/post/${post.id}',
+      subject: 'Socialmesh Post',
+    );
+  }
+
+  void _showPostOptions(Post post) {
+    final currentUser = ref.read(currentUserProvider);
+    final isOwnPost = currentUser?.uid == post.authorId;
+
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isOwnPost)
+              ListTile(
+                leading: const Icon(Icons.delete_outline, color: Colors.red),
+                title: const Text(
+                  'Delete Post',
+                  style: TextStyle(color: Colors.red),
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _confirmDeletePost(post);
+                },
+              ),
+            if (!isOwnPost) ...[
+              ListTile(
+                leading: const Icon(Icons.person_off_outlined),
+                title: const Text('Block User'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _confirmBlockUser(post.authorId);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.flag_outlined),
+                title: const Text('Report Post'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _reportPost(post.id, post.authorId);
+                },
+              ),
+            ],
+            ListTile(
+              leading: const Icon(Icons.share_outlined),
+              title: const Text('Share'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _sharePost(post);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.close),
+              title: const Text('Cancel'),
+              onTap: () => Navigator.pop(ctx),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _confirmDeletePost(Post post) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Post'),
+        content: const Text('Are you sure you want to delete this post?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(ctx).colorScheme.error,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        final socialService = ref.read(socialServiceProvider);
+        await socialService.deletePost(post.id);
+        if (mounted) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Post deleted')));
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Failed to delete: $e')));
+        }
+      }
+    }
+  }
+
+  Future<void> _confirmBlockUser(String userId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Block User'),
+        content: const Text(
+          'You will no longer see posts from this user. You can unblock them later in settings.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(ctx).colorScheme.error,
+            ),
+            child: const Text('Block'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        await blockUser(ref, userId);
+        if (mounted) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('User blocked')));
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Failed to block: $e')));
+        }
+      }
+    }
+  }
+
+  Future<void> _reportPost(String postId, String authorId) async {
+    final reasonController = TextEditingController();
+    final reason = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Report Post'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Why are you reporting this post?'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: reasonController,
+              decoration: const InputDecoration(
+                hintText: 'Describe the issue...',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, reasonController.text.trim()),
+            child: const Text('Report'),
+          ),
+        ],
+      ),
+    );
+
+    if (reason != null && reason.isNotEmpty && mounted) {
+      try {
+        final socialService = ref.read(socialServiceProvider);
+        await socialService.reportPost(postId, reason);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Report submitted. Thank you.')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Failed to report: $e')));
+        }
+      }
+    }
+  }
+}
+
+/// Helper class for displaying comments with depth.
+class _CommentDisplayItem {
+  final CommentWithAuthor comment;
+  final int depth;
+
+  _CommentDisplayItem({required this.comment, required this.depth});
+}
+
+/// Individual comment tile with threading support.
+class _CommentTile extends ConsumerWidget {
+  const _CommentTile({
+    required this.comment,
+    required this.depth,
+    this.onReplyTap,
+    this.onAuthorTap,
+    this.onDelete,
+    this.isDeleting = false,
+  });
+
+  final CommentWithAuthor comment;
+  final int depth;
+  final VoidCallback? onReplyTap;
+  final VoidCallback? onAuthorTap;
+  final VoidCallback? onDelete;
+  final bool isDeleting;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final currentUser = ref.watch(currentUserProvider);
+    final isOwnComment = currentUser?.uid == comment.comment.authorId;
+
+    // Max indent at depth 3
+    final indentDepth = depth.clamp(0, 3);
+    final leftPadding = 16.0 + (indentDepth * 24.0);
+
+    return Container(
+      padding: EdgeInsets.only(
+        left: leftPadding,
+        right: 16,
+        top: 12,
+        bottom: 12,
+      ),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: theme.dividerColor.withAlpha(50)),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Thread indicator for replies
+          if (depth > 0)
+            Container(
+              width: 2,
+              height: 40,
+              margin: const EdgeInsets.only(right: 12),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withAlpha(100),
+                borderRadius: BorderRadius.circular(1),
+              ),
+            ),
+
+          // Avatar
+          GestureDetector(
+            onTap: onAuthorTap,
+            child: CircleAvatar(
+              radius: depth == 0 ? 18 : 14,
+              backgroundImage: comment.author?.avatarUrl != null
+                  ? NetworkImage(comment.author!.avatarUrl!)
+                  : null,
+              child: comment.author?.avatarUrl == null
+                  ? Text(
+                      (comment.author?.displayName ?? 'U')[0].toUpperCase(),
+                      style: TextStyle(
+                        fontSize: depth == 0 ? 14 : 11,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    )
+                  : null,
+            ),
+          ),
+          const SizedBox(width: 12),
+
+          // Content
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Author name and time
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: onAuthorTap,
+                      child: Text(
+                        comment.author?.displayName ?? 'Unknown',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    if (comment.author?.isVerified == true) ...[
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.verified,
+                        size: 14,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ],
+                    const SizedBox(width: 8),
+                    Text(
+                      timeago.format(comment.comment.createdAt),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.textTheme.bodySmall?.color?.withAlpha(150),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+
+                // Comment text
+                Text(
+                  comment.comment.content,
+                  style: theme.textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 8),
+
+                // Actions
+                Row(
+                  children: [
+                    // Reply button
+                    if (depth < 3)
+                      InkWell(
+                        onTap: onReplyTap,
+                        borderRadius: BorderRadius.circular(4),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.reply,
+                                size: 16,
+                                color: theme.colorScheme.primary,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Reply',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.primary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                    const Spacer(),
+
+                    // Delete for own comments
+                    if (isOwnComment)
+                      isDeleting
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : IconButton(
+                              icon: Icon(
+                                Icons.delete_outline,
+                                size: 18,
+                                color: theme.colorScheme.error.withAlpha(180),
+                              ),
+                              onPressed: () => _confirmDelete(context),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _confirmDelete(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Comment'),
+        content: const Text('Are you sure you want to delete this comment?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(ctx).colorScheme.error,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && onDelete != null) {
+      onDelete!();
+    }
+  }
+}
+
+class _PostContent extends StatelessWidget {
+  const _PostContent({
+    required this.post,
+    this.onAuthorTap,
+    this.onCommentTap,
+    this.onShareTap,
+    this.onMoreTap,
+  });
+
+  final Post post;
+  final VoidCallback? onAuthorTap;
+  final VoidCallback? onCommentTap;
+  final VoidCallback? onShareTap;
+  final VoidCallback? onMoreTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final snapshot = post.authorSnapshot;
+
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Author header
+          Row(
+            children: [
+              GestureDetector(
+                onTap: onAuthorTap,
+                child: CircleAvatar(
+                  radius: 24,
+                  backgroundImage: snapshot?.avatarUrl != null
+                      ? NetworkImage(snapshot!.avatarUrl!)
+                      : null,
+                  child: snapshot?.avatarUrl == null
+                      ? Text(
+                          (snapshot?.displayName ?? 'U')[0].toUpperCase(),
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        )
+                      : null,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: GestureDetector(
+                  onTap: onAuthorTap,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            snapshot?.displayName ?? 'Unknown User',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          if (snapshot?.isVerified == true) ...[
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.verified,
+                              size: 18,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ],
+                        ],
+                      ),
+                      Text(
+                        timeago.format(post.createdAt),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.textTheme.bodySmall?.color?.withAlpha(
+                            150,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.more_vert),
+                onPressed: onMoreTap,
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Content
+          if (post.content.isNotEmpty)
+            Text(post.content, style: theme.textTheme.bodyLarge),
+
+          // Images
+          if (post.imageUrls.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            _buildImages(context),
+          ],
+
+          // Location
+          if (post.location != null) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Icon(
+                  Icons.location_on,
+                  size: 16,
+                  color: theme.colorScheme.primary.withAlpha(180),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  post.location!.name ?? 'Location',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.primary.withAlpha(180),
+                  ),
+                ),
+              ],
+            ),
+          ],
+
+          const SizedBox(height: 16),
+
+          // Actions
+          PostActionsBar(
+            post: post,
+            onCommentTap: onCommentTap,
+            onShareTap: onShareTap,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildImages(BuildContext context) {
+    if (post.imageUrls.length == 1) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Image.network(
+          post.imageUrls.first,
+          fit: BoxFit.cover,
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return Container(
+              height: 200,
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              child: const Center(child: CircularProgressIndicator()),
+            );
+          },
+        ),
+      );
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: AspectRatio(
+        aspectRatio: 1,
+        child: GridView.count(
+          crossAxisCount: 2,
+          mainAxisSpacing: 2,
+          crossAxisSpacing: 2,
+          physics: const NeverScrollableScrollPhysics(),
+          children: post.imageUrls.take(4).map((url) {
+            return Image.network(url, fit: BoxFit.cover);
+          }).toList(),
+        ),
+      ),
+    );
+  }
+}
+
+class _CommentInput extends StatelessWidget {
+  const _CommentInput({
+    required this.controller,
+    required this.focusNode,
+    this.replyingTo,
+    required this.isSubmitting,
+    this.onCancelReply,
+    required this.onSubmit,
+  });
+
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final String? replyingTo;
+  final bool isSubmitting;
+  final VoidCallback? onCancelReply;
+  final VoidCallback onSubmit;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        border: Border(top: BorderSide(color: theme.dividerColor)),
+      ),
+      child: SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Reply indicator
+            if (replyingTo != null)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                color: theme.colorScheme.surfaceContainerHighest,
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.reply,
+                      size: 16,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Replying to $replyingTo',
+                      style: theme.textTheme.bodySmall,
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.close, size: 18),
+                      onPressed: onCancelReply,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
+                ),
+              ),
+
+            // Input field
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: controller,
+                      focusNode: focusNode,
+                      decoration: InputDecoration(
+                        hintText: replyingTo != null
+                            ? 'Write a reply...'
+                            : 'Add a comment...',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                      ),
+                      maxLines: null,
+                      textCapitalization: TextCapitalization.sentences,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  isSubmitting
+                      ? const SizedBox(
+                          width: 48,
+                          height: 48,
+                          child: Center(
+                            child: SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                        )
+                      : IconButton(
+                          icon: Icon(
+                            Icons.send,
+                            color: theme.colorScheme.primary,
+                          ),
+                          onPressed: onSubmit,
+                        ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

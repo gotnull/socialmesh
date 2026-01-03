@@ -1723,3 +1723,30 @@ export {
   checkCloudSyncEntitlement,
   grandfatherExistingUsers,
 } from './cloud_sync_entitlements';
+
+// =============================================================================
+// SOCIAL FEATURES
+// =============================================================================
+
+export {
+  // Follow system
+  onFollowCreated,
+  onFollowDeleted,
+  getFollowers,
+  getFollowing,
+  getMutualFollows,
+  checkFollowStatus,
+  // Posts & Feed
+  onPostCreated,
+  onPostDeleted,
+  getFeed,
+  getUserPosts,
+  // Comments
+  onCommentCreated,
+  onCommentDeleted,
+  getComments,
+  // Likes
+  onLikeCreated,
+  onLikeDeleted,
+  checkLikeStatus,
+} from './social';

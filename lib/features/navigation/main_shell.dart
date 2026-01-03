@@ -38,6 +38,7 @@ import '../device_shop/screens/device_shop_screen.dart';
 import '../device_shop/screens/shop_admin_dashboard.dart';
 import '../device_shop/providers/admin_shop_providers.dart';
 import '../mesh_health/widgets/mesh_health_dashboard.dart';
+import '../social/social.dart';
 
 /// Notifier to expose the main shell's scaffold key for drawer access
 class MainShellScaffoldKeyNotifier extends Notifier<GlobalKey<ScaffoldState>?> {
@@ -390,6 +391,11 @@ class _MainShellState extends ConsumerState<MainShell> {
       icon: Icons.store,
       label: 'Device Shop',
       screen: DeviceShopScreen(),
+    ),
+    const _DrawerMenuItem(
+      icon: Icons.forum_outlined,
+      label: 'Social Feed',
+      screen: FeedScreen(),
     ),
     // Premium features
     const _DrawerMenuItem(

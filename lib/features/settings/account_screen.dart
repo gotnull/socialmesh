@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
+import '../social/social.dart';
 
 /// Screen for managing user account and authentication
 class AccountScreen extends ConsumerStatefulWidget {
@@ -267,6 +268,19 @@ class _SignedInView extends ConsumerWidget {
               title: const Text('Change Password'),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => _sendPasswordReset(context, ref),
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.forum_outlined),
+              title: const Text('Social Profile'),
+              subtitle: const Text('View your posts and followers'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ProfileSocialScreen(userId: user.uid),
+                ),
+              ),
             ),
             const Divider(),
           ],

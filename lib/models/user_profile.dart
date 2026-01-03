@@ -345,6 +345,17 @@ class UserProfile {
   /// Whether the user is verified (e.g., email verified, identity confirmed)
   final bool isVerified;
 
+  // === Social counters (read-only, managed by Cloud Functions) ===
+
+  /// Number of users following this profile
+  final int followerCount;
+
+  /// Number of users this profile follows
+  final int followingCount;
+
+  /// Number of posts created by this user
+  final int postCount;
+
   const UserProfile({
     required this.id,
     required this.displayName,
@@ -362,6 +373,9 @@ class UserProfile {
     required this.updatedAt,
     this.isSynced = false,
     this.isVerified = false,
+    this.followerCount = 0,
+    this.followingCount = 0,
+    this.postCount = 0,
   });
 
   /// Create an empty/guest profile
@@ -425,6 +439,9 @@ class UserProfile {
       updatedAt: DateTime.parse(json['updatedAt'] as String),
       isSynced: json['isSynced'] as bool? ?? false,
       isVerified: json['isVerified'] as bool? ?? false,
+      followerCount: json['followerCount'] as int? ?? 0,
+      followingCount: json['followingCount'] as int? ?? 0,
+      postCount: json['postCount'] as int? ?? 0,
     );
   }
 
@@ -447,6 +464,9 @@ class UserProfile {
       'updatedAt': updatedAt.toIso8601String(),
       'isSynced': isSynced,
       'isVerified': isVerified,
+      'followerCount': followerCount,
+      'followingCount': followingCount,
+      'postCount': postCount,
     };
   }
 
@@ -476,6 +496,9 @@ class UserProfile {
     DateTime? updatedAt,
     bool? isSynced,
     bool? isVerified,
+    int? followerCount,
+    int? followingCount,
+    int? postCount,
     bool clearAvatarUrl = false,
     bool clearBio = false,
     bool clearCallsign = false,
@@ -502,6 +525,9 @@ class UserProfile {
       updatedAt: updatedAt ?? DateTime.now(),
       isSynced: isSynced ?? this.isSynced,
       isVerified: isVerified ?? this.isVerified,
+      followerCount: followerCount ?? this.followerCount,
+      followingCount: followingCount ?? this.followingCount,
+      postCount: postCount ?? this.postCount,
     );
   }
 
