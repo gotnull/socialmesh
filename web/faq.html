@@ -512,16 +512,16 @@
     </div>
   </main>
 
-  <footer class="footer">
-    <div class="footer-container">
-      <div class="footer-links">
+  <footer class="page-footer">
+    <div class="container">
+      <div class="page-footer-links">
         <a href="/privacy">Privacy Policy</a>
         <a href="/terms">Terms of Service</a>
         <a href="/support">Support</a>
         <a href="/docs">Documentation</a>
         <a href="/faq">FAQ</a>
       </div>
-      <p class="copyright">© 2025 Socialmesh. All rights reserved.</p>
+      <p class="page-footer-copyright">© 2025 Socialmesh. All rights reserved.</p>
     </div>
   </footer>
 
@@ -529,6 +529,11 @@
     function toggleFaq(element) {
       const item = element.parentElement;
       item.classList.toggle('open');
+    }
+
+    // In-app mode detection - hide navigation when accessed from app webview
+    if (window.location.search.includes('inapp=true') || window.location.search.includes('inapp=1')) {
+      document.body.classList.add('inapp-mode');
     }
   </script>
 </body>

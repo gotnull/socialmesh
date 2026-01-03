@@ -358,6 +358,12 @@ nav .container {
   fill: currentColor;
 }
 
+.btn .material-icons.btn-icon {
+  font-size: 18px;
+  color: currentColor;
+  margin-right: 6px;
+}
+
 .btn-primary {
   background: var(--gradient-brand);
   color: white;
@@ -689,6 +695,11 @@ nav .container {
   fill: white;
 }
 
+.floating-icon .material-icons {
+  font-size: 20px;
+  color: white;
+}
+
 .floating-label {
   font-size: 11px;
   color: var(--text-muted);
@@ -844,6 +855,11 @@ section {
   fill: white;
 }
 
+.feature-icon .material-icons {
+  font-size: 28px;
+  color: white;
+}
+
 .feature-card:hover .feature-icon {
   transform: scale(1.1) rotate(5deg);
   box-shadow: 0 12px 32px rgba(233, 30, 140, 0.4);
@@ -959,6 +975,11 @@ section {
   fill: currentColor;
 }
 
+.premium-feature-badge .material-icons {
+  font-size: 14px;
+  color: currentColor;
+}
+
 .premium-feature-title {
   font-size: 32px;
   font-weight: 800;
@@ -992,6 +1013,13 @@ section {
   width: 20px;
   height: 20px;
   fill: var(--success);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.premium-feature-benefits li .material-icons {
+  font-size: 20px;
+  color: var(--success);
   flex-shrink: 0;
   margin-top: 2px;
 }
@@ -1239,6 +1267,11 @@ section {
   fill: var(--success);
 }
 
+.check-icon .material-icons {
+  font-size: 18px;
+  color: var(--success);
+}
+
 .x-icon {
   color: var(--text-muted);
   display: inline-flex;
@@ -1250,6 +1283,11 @@ section {
   width: 18px;
   height: 18px;
   fill: var(--text-muted);
+}
+
+.x-icon .material-icons {
+  font-size: 18px;
+  color: var(--text-muted);
 }
 
 .partial-icon {
@@ -1291,6 +1329,11 @@ section {
   width: 28px;
   height: 28px;
   fill: var(--accent-magenta);
+}
+
+.tech-icon .material-icons {
+  font-size: 28px;
+  color: var(--accent-magenta);
 }
 
 .tech-name {
@@ -1710,4 +1753,68 @@ footer::before {
   .store-badge img {
     height: 40px;
   }
+}
+
+/* ================================ */
+/* Secondary Page Footer Styles     */
+/* ================================ */
+.page-footer {
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+  padding: 32px 0;
+  margin-top: auto;
+}
+
+.page-footer .container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.page-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.page-footer-links a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.2s;
+}
+
+.page-footer-links a:hover {
+  color: var(--accent);
+}
+
+.page-footer-copyright {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  margin: 0;
+}
+
+/* ================================ */
+/* In-App Mode (hide navigation)    */
+/* ================================ */
+body.inapp-mode nav {
+  display: none !important;
+}
+
+body.inapp-mode .docs-content,
+body.inapp-mode .faq-content,
+body.inapp-mode .support-content,
+body.inapp-mode .legal-content {
+  padding-top: 40px;
+}
+
+body.inapp-mode .page-footer-links a[href="/"],
+body.inapp-mode .page-footer-links a[href="/#features"],
+body.inapp-mode .page-footer-links a[href="/#premium"],
+body.inapp-mode .page-footer-links a[href="/#screenshots"],
+body.inapp-mode .page-footer-links a[href="/#comparison"] {
+  display: none;
 }

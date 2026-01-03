@@ -10,32 +10,32 @@ class LegalDocumentSheet {
 
   /// Show Terms of Service
   static void showTerms(BuildContext context) {
-    _showWebView(context, 'Terms of Service', AppUrls.termsUrl);
+    _showWebView(context, 'Terms of Service', AppUrls.termsUrlInApp);
   }
 
   /// Show Privacy Policy
   static void showPrivacy(BuildContext context) {
-    _showWebView(context, 'Privacy Policy', AppUrls.privacyUrl);
+    _showWebView(context, 'Privacy Policy', AppUrls.privacyUrlInApp);
   }
 
   /// Show Support / FAQ
   static void showSupport(BuildContext context) {
-    _showWebView(context, 'Help & Support', AppUrls.supportUrl);
+    _showWebView(context, 'Help & Support', AppUrls.supportUrlInApp);
   }
 
   /// Show Documentation
   static void showDocs(BuildContext context) {
-    _showWebView(context, 'Documentation', AppUrls.docsUrl);
+    _showWebView(context, 'Documentation', AppUrls.docsUrlInApp);
   }
 
   /// Show FAQ
   static void showFAQ(BuildContext context) {
-    _showWebView(context, 'FAQ', AppUrls.faqUrl);
+    _showWebView(context, 'FAQ', AppUrls.faqUrlInApp);
   }
 
   /// Show Delete Account page
   static void showDeleteAccount(BuildContext context) {
-    _showWebView(context, 'Delete Account', AppUrls.deleteAccountUrl);
+    _showWebView(context, 'Delete Account', AppUrls.deleteAccountUrlInApp);
   }
 
   static void _showWebView(BuildContext context, String title, String url) {

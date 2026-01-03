@@ -29,6 +29,15 @@ class AppUrls {
   static String get faqUrl => '$baseUrl/faq';
   static String get deleteAccountUrl => '$baseUrl/delete-account';
 
+  // In-app versions (hide navigation when viewed in webview)
+  static String get termsUrlInApp => '$baseUrl/terms?inapp=true';
+  static String get privacyUrlInApp => '$baseUrl/privacy?inapp=true';
+  static String get supportUrlInApp => '$baseUrl/support?inapp=true';
+  static String get docsUrlInApp => '$baseUrl/docs?inapp=true';
+  static String get faqUrlInApp => '$baseUrl/faq?inapp=true';
+  static String get deleteAccountUrlInApp =>
+      '$baseUrl/delete-account?inapp=true';
+
   // Share link URLs
   static String shareNodeUrl(String id) => '$baseUrl/share/node/$id';
   static String shareProfileUrl(String id) => '$baseUrl/share/profile/$id';
