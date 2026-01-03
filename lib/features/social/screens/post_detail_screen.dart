@@ -67,6 +67,15 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
               return const Center(child: Text('Post not found'));
             }
 
+            // Get actual comment count from stream (excluding deleted)
+            final actualCommentCount = commentsAsync.when(
+              data: (comments) => comments
+                  .where((c) => !_deletedCommentIds.contains(c.comment.id))
+                  .length,
+              loading: () => post.commentCount,
+              error: (e, s) => post.commentCount,
+            );
+
             return Column(
               children: [
                 Expanded(
@@ -80,6 +89,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                           onCommentTap: () => _commentFocusNode.requestFocus(),
                           onShareTap: () => _sharePost(post),
                           onMoreTap: () => _showPostOptions(post),
+                          commentCount: actualCommentCount,
                         ),
                       ),
 
@@ -718,6 +728,7 @@ class _PostContent extends StatelessWidget {
     this.onCommentTap,
     this.onShareTap,
     this.onMoreTap,
+    this.commentCount,
   });
 
   final Post post;
@@ -725,6 +736,7 @@ class _PostContent extends StatelessWidget {
   final VoidCallback? onCommentTap;
   final VoidCallback? onShareTap;
   final VoidCallback? onMoreTap;
+  final int? commentCount;
 
   @override
   Widget build(BuildContext context) {
@@ -837,6 +849,7 @@ class _PostContent extends StatelessWidget {
             post: post,
             onCommentTap: onCommentTap,
             onShareTap: onShareTap,
+            commentCountOverride: commentCount,
           ),
         ],
       ),

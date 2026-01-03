@@ -14,6 +14,7 @@ class PostActionsBar extends ConsumerWidget {
     this.onShareTap,
     this.showCounts = true,
     this.iconSize = 24,
+    this.commentCountOverride,
   });
 
   final Post post;
@@ -22,10 +23,14 @@ class PostActionsBar extends ConsumerWidget {
   final bool showCounts;
   final double iconSize;
 
+  /// Override the comment count (use actual count from comments stream)
+  final int? commentCountOverride;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final currentUser = ref.watch(currentUserProvider);
+    final commentCount = commentCountOverride ?? post.commentCount;
 
     return Row(
       children: [
@@ -41,7 +46,7 @@ class PostActionsBar extends ConsumerWidget {
         // Comment button
         _ActionButton(
           icon: Icons.chat_bubble_outline,
-          count: showCounts ? post.commentCount : null,
+          count: showCounts ? commentCount : null,
           onTap: onCommentTap,
           iconSize: iconSize,
           color: theme.colorScheme.onSurface.withAlpha(180),

@@ -451,6 +451,7 @@ class SocialService {
   // ===========================================================================
 
   /// Create a comment on a post.
+  /// Note: commentCount is updated by Cloud Function onCommentCreated
   Future<Comment> createComment({
     required String postId,
     required String content,
@@ -472,27 +473,12 @@ class SocialService {
       replyCount: 0,
     );
 
-    // Use batch to atomically create comment and update count
-    final batch = _firestore.batch();
-    batch.set(docRef, comment.toFirestore());
-
-    // Increment post's comment count
-    batch.update(_firestore.collection('posts').doc(postId), {
-      'commentCount': FieldValue.increment(1),
-    });
-
-    // If this is a reply, increment parent's reply count
-    if (parentId != null) {
-      batch.update(_firestore.collection('comments').doc(parentId), {
-        'replyCount': FieldValue.increment(1),
-      });
-    }
-
-    await batch.commit();
+    await docRef.set(comment.toFirestore());
     return comment;
   }
 
   /// Delete a comment. Only the author can delete.
+  /// Note: commentCount is updated by Cloud Function onCommentDeleted
   Future<void> deleteComment(String commentId) async {
     final currentUserId = _currentUserId;
     if (currentUserId == null) {
@@ -508,26 +494,7 @@ class SocialService {
       throw StateError('Only the author can delete this comment');
     }
 
-    final postId = data['postId'] as String;
-    final parentId = data['parentId'] as String?;
-
-    // Use batch to atomically delete comment and update counts
-    final batch = _firestore.batch();
-    batch.delete(doc.reference);
-
-    // Decrement post's comment count
-    batch.update(_firestore.collection('posts').doc(postId), {
-      'commentCount': FieldValue.increment(-1),
-    });
-
-    // If this was a reply, decrement parent's reply count
-    if (parentId != null) {
-      batch.update(_firestore.collection('comments').doc(parentId), {
-        'replyCount': FieldValue.increment(-1),
-      });
-    }
-
-    await batch.commit();
+    await doc.reference.delete();
   }
 
   /// Get paginated comments for a post (root level or replies to a parent).
