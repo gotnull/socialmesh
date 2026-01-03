@@ -502,6 +502,20 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   }
 }
 
+/// Short time ago format like Instagram (1h, 2d, 3w)
+String _shortTimeAgo(DateTime dateTime) {
+  final now = DateTime.now();
+  final diff = now.difference(dateTime);
+
+  if (diff.inSeconds < 60) return '${diff.inSeconds}s';
+  if (diff.inMinutes < 60) return '${diff.inMinutes}m';
+  if (diff.inHours < 24) return '${diff.inHours}h';
+  if (diff.inDays < 7) return '${diff.inDays}d';
+  if (diff.inDays < 30) return '${(diff.inDays / 7).floor()}w';
+  if (diff.inDays < 365) return '${(diff.inDays / 30).floor()}mo';
+  return '${(diff.inDays / 365).floor()}y';
+}
+
 /// Helper class for displaying comments with depth.
 class _CommentDisplayItem {
   final CommentWithAuthor comment;
@@ -533,162 +547,179 @@ class _CommentTile extends ConsumerWidget {
     final theme = Theme.of(context);
     final currentUser = ref.watch(currentUserProvider);
     final isOwnComment = currentUser?.uid == comment.comment.authorId;
+    final isReply = depth > 0;
 
-    // Max indent at depth 3
-    final indentDepth = depth.clamp(0, 3);
-    final leftPadding = 16.0 + (indentDepth * 24.0);
+    // Instagram-style: replies have smaller indent
+    final leftPadding = isReply ? 54.0 : 16.0; // Align with parent content
 
-    return Container(
-      padding: EdgeInsets.only(
-        left: leftPadding,
-        right: 16,
-        top: 12,
-        bottom: 12,
-      ),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: theme.dividerColor.withAlpha(50)),
+    return GestureDetector(
+      onLongPress: isOwnComment ? () => _showOptionsMenu(context) : null,
+      child: Container(
+        padding: EdgeInsets.only(
+          left: leftPadding,
+          right: 16,
+          top: isReply ? 8 : 12,
+          bottom: isReply ? 8 : 12,
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Avatar - smaller for replies
+            GestureDetector(
+              onTap: onAuthorTap,
+              child: CircleAvatar(
+                radius: isReply ? 12 : 16,
+                backgroundImage: comment.author?.avatarUrl != null
+                    ? NetworkImage(comment.author!.avatarUrl!)
+                    : null,
+                child: comment.author?.avatarUrl == null
+                    ? Text(
+                        (comment.author?.displayName ?? 'U')[0].toUpperCase(),
+                        style: TextStyle(
+                          fontSize: isReply ? 10 : 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
+                    : null,
+              ),
+            ),
+            const SizedBox(width: 10),
+
+            // Content
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Instagram-style: name + comment on same line for short comments
+                  RichText(
+                    text: TextSpan(
+                      style: theme.textTheme.bodyMedium,
+                      children: [
+                        TextSpan(
+                          text: comment.author?.displayName ?? 'Unknown',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: isReply ? 13 : 14,
+                            color: theme.textTheme.bodyMedium?.color,
+                          ),
+                        ),
+                        if (comment.author?.isVerified == true)
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.middle,
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 4),
+                              child: Icon(
+                                Icons.verified,
+                                size: 12,
+                                color: theme.colorScheme.primary,
+                              ),
+                            ),
+                          ),
+                        TextSpan(
+                          text:
+                              ' ${comment.comment.content.replaceAll(RegExp(r'\s+'), ' ')}',
+                          style: TextStyle(
+                            fontSize: isReply ? 13 : 14,
+                            color: theme.textTheme.bodyMedium?.color,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 4),
+
+                  // Actions row - compact
+                  Row(
+                    children: [
+                      // Time - short format
+                      Text(
+                        _shortTimeAgo(comment.comment.createdAt),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.hintColor,
+                          fontSize: 12,
+                        ),
+                      ),
+
+                      // Reply button - text only like Instagram
+                      if (depth < 3) ...[
+                        const SizedBox(width: 16),
+                        GestureDetector(
+                          onTap: onReplyTap,
+                          child: Text(
+                            'Reply',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.hintColor,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+
+                      // Show deleting indicator
+                      if (isDeleting) ...[
+                        const SizedBox(width: 16),
+                        const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(strokeWidth: 1.5),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Thread indicator for replies
-          if (depth > 0)
+    );
+  }
+
+  void _showOptionsMenu(BuildContext context) {
+    final theme = Theme.of(context);
+
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
             Container(
-              width: 2,
-              height: 40,
-              margin: const EdgeInsets.only(right: 12),
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(top: 12, bottom: 8),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withAlpha(100),
-                borderRadius: BorderRadius.circular(1),
+                color: theme.hintColor.withAlpha(80),
+                borderRadius: BorderRadius.circular(2),
               ),
             ),
 
-          // Avatar
-          GestureDetector(
-            onTap: onAuthorTap,
-            child: CircleAvatar(
-              radius: depth == 0 ? 18 : 14,
-              backgroundImage: comment.author?.avatarUrl != null
-                  ? NetworkImage(comment.author!.avatarUrl!)
-                  : null,
-              child: comment.author?.avatarUrl == null
-                  ? Text(
-                      (comment.author?.displayName ?? 'U')[0].toUpperCase(),
-                      style: TextStyle(
-                        fontSize: depth == 0 ? 14 : 11,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    )
-                  : null,
+            // Delete option
+            ListTile(
+              leading: Icon(
+                Icons.delete_outline,
+                color: theme.colorScheme.error,
+              ),
+              title: Text(
+                'Delete',
+                style: TextStyle(
+                  color: theme.colorScheme.error,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              onTap: () {
+                Navigator.pop(ctx);
+                _confirmDelete(context);
+              },
             ),
-          ),
-          const SizedBox(width: 12),
 
-          // Content
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Author name and time
-                Row(
-                  children: [
-                    GestureDetector(
-                      onTap: onAuthorTap,
-                      child: Text(
-                        comment.author?.displayName ?? 'Unknown',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    if (comment.author?.isVerified == true) ...[
-                      const SizedBox(width: 4),
-                      Icon(
-                        Icons.verified,
-                        size: 14,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ],
-                    const SizedBox(width: 8),
-                    Text(
-                      timeago.format(comment.comment.createdAt),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.textTheme.bodySmall?.color?.withAlpha(150),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-
-                // Comment text
-                Text(
-                  comment.comment.content,
-                  style: theme.textTheme.bodyMedium,
-                ),
-                const SizedBox(height: 8),
-
-                // Actions
-                Row(
-                  children: [
-                    // Reply button
-                    if (depth < 3)
-                      InkWell(
-                        onTap: onReplyTap,
-                        borderRadius: BorderRadius.circular(4),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.reply,
-                                size: 16,
-                                color: theme.colorScheme.primary,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'Reply',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.primary,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                    const Spacer(),
-
-                    // Delete for own comments
-                    if (isOwnComment)
-                      isDeleting
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : IconButton(
-                              icon: Icon(
-                                Icons.delete_outline,
-                                size: 18,
-                                color: theme.colorScheme.error.withAlpha(180),
-                              ),
-                              onPressed: () => _confirmDelete(context),
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
-                            ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
+            const SizedBox(height: 8),
+          ],
+        ),
       ),
     );
   }
@@ -975,7 +1006,9 @@ class _CommentInput extends StatelessWidget {
                           vertical: 12,
                         ),
                       ),
-                      maxLines: null,
+                      maxLines: 1,
+                      textInputAction: TextInputAction.send,
+                      onSubmitted: (_) => onSubmit(),
                       textCapitalization: TextCapitalization.sentences,
                     ),
                   ),
