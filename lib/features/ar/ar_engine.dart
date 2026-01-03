@@ -440,12 +440,19 @@ class AREngine {
     }
 
     // High-accuracy position stream
-    _positionSub = Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.bestForNavigation,
-        distanceFilter: 1, // Update every meter
-      ),
-    ).listen(_onPosition);
+    _positionSub =
+        Geolocator.getPositionStream(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.bestForNavigation,
+            distanceFilter: 1, // Update every meter
+          ),
+        ).listen(
+          _onPosition,
+          onError: (error) {
+            debugPrint('[AREngine] Position stream error: $error');
+          },
+          cancelOnError: false,
+        );
   }
 
   void _onPosition(Position position) {

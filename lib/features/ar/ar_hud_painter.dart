@@ -591,7 +591,7 @@ class ARHudPainter extends CustomPainter {
       );
 
       // Altitude labels
-      final label = '${alt}';
+      final label = '$alt';
       final textPainter = TextPainter(
         text: TextSpan(
           text: label,

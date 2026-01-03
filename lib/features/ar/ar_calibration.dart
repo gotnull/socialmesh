@@ -137,12 +137,15 @@ class ARCalibrationState {
   /// Human-readable GPS status
   String get gpsStatusText {
     if (gpsStatus == CalibrationStatus.unknown) return 'Acquiring...';
-    if (gpsAccuracyMeters < 5)
+    if (gpsAccuracyMeters < 5) {
       return '±${gpsAccuracyMeters.toStringAsFixed(1)}m (Excellent)';
-    if (gpsAccuracyMeters < 10)
+    }
+    if (gpsAccuracyMeters < 10) {
       return '±${gpsAccuracyMeters.toStringAsFixed(1)}m (Good)';
-    if (gpsAccuracyMeters < 25)
+    }
+    if (gpsAccuracyMeters < 25) {
       return '±${gpsAccuracyMeters.toStringAsFixed(1)}m (Fair)';
+    }
     return '±${gpsAccuracyMeters.toStringAsFixed(0)}m (Poor)';
   }
 }
