@@ -430,6 +430,12 @@
     // In-app mode detection - hide navigation when accessed from app webview
     if (window.location.search.includes('inapp=true') || window.location.search.includes('inapp=1')) {
       document.body.classList.add('inapp-mode');
+      // Preserve inapp parameter on footer links
+      document.querySelectorAll('.page-footer-links a').forEach(function (a) {
+        if (a.href && !a.href.includes('inapp=')) {
+          a.href = a.href + (a.href.includes('?') ? '&' : '?') + 'inapp=true';
+        }
+      });
     }
   </script>
 </body>

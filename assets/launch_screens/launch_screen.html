@@ -62,8 +62,8 @@
 
     .particle {
       position: absolute;
-      width: 4px;
-      height: 4px;
+      width: 1vmin;
+      height: 1vmin;
       border-radius: 50%;
       opacity: 0;
       animation: particleFade 8s ease-in-out infinite;
@@ -135,7 +135,7 @@
 
       50% {
         opacity: 0.6;
-        transform: translateY(-20px) scale(1.5);
+        transform: translateY(-4vmin) scale(1.5);
       }
     }
 
@@ -144,7 +144,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 40px;
+      gap: 8vmin;
       z-index: 1;
       animation: containerFadeIn 1.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
@@ -152,7 +152,7 @@
     @keyframes containerFadeIn {
       from {
         opacity: 0;
-        transform: translateY(30px) scale(0.95);
+        transform: translateY(6vmin) scale(0.95);
       }
 
       to {
@@ -164,15 +164,15 @@
     /* Mesh Node */
     .mesh-container {
       position: relative;
-      width: 180px;
-      height: 180px;
+      width: 40vmin;
+      height: 40vmin;
     }
 
     .mesh-glow {
       position: absolute;
-      inset: -60px;
+      inset: -12vmin;
       background: radial-gradient(circle, rgba(139, 92, 246, 0.4) 0%, rgba(233, 30, 140, 0.2) 35%, transparent 65%);
-      filter: blur(30px);
+      filter: blur(6vmin);
       animation: glowPulse 4s ease-in-out infinite;
     }
 
@@ -206,15 +206,15 @@
       }
 
       25% {
-        transform: translateY(-6px) rotateZ(1deg);
+        transform: translateY(-1.2vmin) rotateZ(1deg);
       }
 
       50% {
-        transform: translateY(-10px) rotateZ(0deg);
+        transform: translateY(-2vmin) rotateZ(0deg);
       }
 
       75% {
-        transform: translateY(-6px) rotateZ(-1deg);
+        transform: translateY(-1.2vmin) rotateZ(-1deg);
       }
     }
 
@@ -223,13 +223,13 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 12px;
+      gap: 2.5vmin;
     }
 
     .logo-text {
-      font-size: 48px;
+      font-size: 10vmin;
       font-weight: 700;
-      letter-spacing: -2px;
+      letter-spacing: -0.4vmin;
       background: linear-gradient(135deg, #E91E8C 0%, #8B5CF6 50%, #4F6AF6 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -240,8 +240,8 @@
     @keyframes textReveal {
       from {
         opacity: 0;
-        transform: translateY(10px);
-        filter: blur(10px);
+        transform: translateY(2vmin);
+        filter: blur(2vmin);
       }
 
       to {
@@ -252,10 +252,10 @@
     }
 
     .tagline {
-      font-size: 13px;
+      font-size: 2.8vmin;
       font-weight: 500;
       color: var(--text-secondary);
-      letter-spacing: 3px;
+      letter-spacing: 0.6vmin;
       text-transform: uppercase;
       animation: textReveal 1s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both;
     }
@@ -265,16 +265,16 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 16px;
-      margin-top: 20px;
+      gap: 3vmin;
+      margin-top: 4vmin;
       animation: textReveal 1s cubic-bezier(0.16, 1, 0.3, 1) 0.7s both;
     }
 
     .loading-bar {
-      width: 120px;
-      height: 3px;
+      width: 26vmin;
+      height: 0.6vmin;
       background: var(--bg-secondary);
-      border-radius: 3px;
+      border-radius: 0.6vmin;
       overflow: hidden;
       position: relative;
     }
@@ -300,10 +300,10 @@
     }
 
     .loading-text {
-      font-size: 11px;
+      font-size: 2.4vmin;
       font-weight: 400;
       color: var(--text-muted);
-      letter-spacing: 1px;
+      letter-spacing: 0.2vmin;
     }
 
     /* Footer */
@@ -312,19 +312,19 @@
       bottom: 0;
       left: 0;
       right: 0;
-      padding: 24px;
-      padding-bottom: calc(24px + env(safe-area-inset-bottom));
+      padding: 5vmin;
+      padding-bottom: calc(5vmin + env(safe-area-inset-bottom));
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 8px;
+      gap: 1.5vmin;
       animation: footerFadeIn 1s cubic-bezier(0.16, 1, 0.3, 1) 1s both;
     }
 
     @keyframes footerFadeIn {
       from {
         opacity: 0;
-        transform: translateY(10px);
+        transform: translateY(2vmin);
       }
 
       to {
@@ -334,57 +334,33 @@
     }
 
     .version {
-      font-size: 11px;
+      font-size: 2.4vmin;
       font-weight: 500;
       color: var(--text-muted);
-      letter-spacing: 0.5px;
+      letter-spacing: 0.1vmin;
     }
 
     .copyright {
-      font-size: 10px;
+      font-size: 2.2vmin;
       color: var(--text-muted);
       opacity: 0.6;
     }
 
-    /* Responsive */
-    @media (max-width: 380px) {
+    /* Responsive - vmin handles most scaling, these are for extreme aspect ratios */
+    @media (max-aspect-ratio: 9/16) {
+
+      /* Extra tall/narrow screens - reduce slightly */
       .mesh-container {
-        width: 140px;
-        height: 140px;
-      }
-
-      .logo-text {
-        font-size: 36px;
-      }
-
-      .tagline {
-        font-size: 11px;
-        letter-spacing: 2px;
+        width: 35vmin;
+        height: 35vmin;
       }
     }
 
-    @media (min-width: 768px) {
-      .mesh-container {
-        width: 220px;
-        height: 220px;
-      }
+    @media (min-aspect-ratio: 3/4) {
 
-      .logo-text {
-        font-size: 64px;
-      }
-
+      /* Wider screens (iPad-like) - adjust spacing */
       .container {
-        gap: 50px;
-      }
-    }
-
-    @media (min-height: 800px) {
-      .container {
-        gap: 50px;
-      }
-
-      .loading-section {
-        margin-top: 40px;
+        gap: 6vmin;
       }
     }
 
