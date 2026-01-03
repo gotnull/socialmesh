@@ -721,6 +721,7 @@ export const getComments = onRequest({ cors: true }, async (req, res) => {
 
 /**
  * Triggered when a like is created.
+ * Handles both post likes and comment likes.
  */
 export const onLikeCreated = onDocumentCreated(
   'likes/{likeId}',
@@ -728,22 +729,36 @@ export const onLikeCreated = onDocumentCreated(
     const data = event.data?.data();
     if (!data) return;
 
-    const { postId } = data;
+    const { targetId, targetType, postId } = data;
+
+    // Handle comment likes
+    if (targetType === 'comment' && targetId) {
+      await db.collection('comments').doc(targetId).update({
+        likeCount: FieldValue.increment(1),
+      });
+      console.log(`Like added to comment ${targetId}`);
+      return;
+    }
+
+    // Handle post likes (legacy format uses postId directly)
+    const actualPostId = postId || targetId;
+    if (!actualPostId) return;
 
     // Increment like count on post
-    await db.collection('posts').doc(postId).update({
+    await db.collection('posts').doc(actualPostId).update({
       likeCount: FieldValue.increment(1),
     });
 
     // Update feed items
-    await updateFeedItemCount(postId, 'likeCount', 1);
+    await updateFeedItemCount(actualPostId, 'likeCount', 1);
 
-    console.log(`Like added to post ${postId}`);
+    console.log(`Like added to post ${actualPostId}`);
   }
 );
 
 /**
  * Triggered when a like is deleted.
+ * Handles both post likes and comment likes.
  */
 export const onLikeDeleted = onDocumentDeleted(
   'likes/{likeId}',
@@ -751,17 +766,30 @@ export const onLikeDeleted = onDocumentDeleted(
     const data = event.data?.data();
     if (!data) return;
 
-    const { postId } = data;
+    const { targetId, targetType, postId } = data;
+
+    // Handle comment likes
+    if (targetType === 'comment' && targetId) {
+      await db.collection('comments').doc(targetId).update({
+        likeCount: FieldValue.increment(-1),
+      });
+      console.log(`Like removed from comment ${targetId}`);
+      return;
+    }
+
+    // Handle post likes (legacy format uses postId directly)
+    const actualPostId = postId || targetId;
+    if (!actualPostId) return;
 
     // Decrement like count on post
-    await db.collection('posts').doc(postId).update({
+    await db.collection('posts').doc(actualPostId).update({
       likeCount: FieldValue.increment(-1),
     });
 
     // Update feed items
-    await updateFeedItemCount(postId, 'likeCount', -1);
+    await updateFeedItemCount(actualPostId, 'likeCount', -1);
 
-    console.log(`Like removed from post ${postId}`);
+    console.log(`Like removed from post ${actualPostId}`);
   }
 );
 

@@ -203,6 +203,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
         final item = displayList[index];
         final commentId = item.comment.comment.id;
         return _CommentTile(
+          key: ValueKey(commentId),
           comment: item.comment,
           depth: item.depth,
           onReplyTap: () => _handleReplyTo(item.comment),
@@ -527,6 +528,7 @@ class _CommentDisplayItem {
 /// Individual comment tile with threading support.
 class _CommentTile extends ConsumerStatefulWidget {
   const _CommentTile({
+    super.key,
     required this.comment,
     required this.depth,
     this.onReplyTap,
@@ -621,7 +623,7 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
     final leftPadding = isReply ? 54.0 : 16.0; // Align with parent content
 
     return GestureDetector(
-      onLongPress: isOwnComment ? () => _showOptionsMenu(context) : null,
+      onLongPress: () => _showOptionsMenu(context, isOwnComment),
       child: Container(
         padding: EdgeInsets.only(
           left: leftPadding,
@@ -773,7 +775,7 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
     );
   }
 
-  void _showOptionsMenu(BuildContext context) {
+  void _showOptionsMenu(BuildContext context, bool isOwnComment) {
     final theme = Theme.of(context);
 
     showModalBottomSheet(
@@ -793,30 +795,81 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
               ),
             ),
 
-            // Delete option
-            ListTile(
-              leading: Icon(
-                Icons.delete_outline,
-                color: theme.colorScheme.error,
-              ),
-              title: Text(
-                'Delete',
-                style: TextStyle(
+            // Delete option - only for own comments
+            if (isOwnComment)
+              ListTile(
+                leading: Icon(
+                  Icons.delete_outline,
                   color: theme.colorScheme.error,
-                  fontWeight: FontWeight.w500,
                 ),
+                title: Text(
+                  'Delete',
+                  style: TextStyle(
+                    color: theme.colorScheme.error,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _confirmDelete(context);
+                },
               ),
-              onTap: () {
-                Navigator.pop(ctx);
-                _confirmDelete(context);
-              },
-            ),
+
+            // Report option - only for others' comments
+            if (!isOwnComment)
+              ListTile(
+                leading: Icon(
+                  Icons.flag_outlined,
+                  color: theme.colorScheme.error,
+                ),
+                title: Text(
+                  'Report',
+                  style: TextStyle(
+                    color: theme.colorScheme.error,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _reportComment(context);
+                },
+              ),
 
             const SizedBox(height: 8),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _reportComment(BuildContext context) async {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+    final reason = await showDialog<String>(
+      context: context,
+      builder: (ctx) => _ReportReasonDialog(),
+    );
+
+    if (reason != null && reason.isNotEmpty && mounted) {
+      try {
+        final socialService = ref.read(socialServiceProvider);
+        await socialService.reportComment(
+          commentId: widget.comment.comment.id,
+          reason: reason,
+        );
+        if (mounted) {
+          scaffoldMessenger.showSnackBar(
+            const SnackBar(content: Text('Comment reported')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          scaffoldMessenger.showSnackBar(
+            SnackBar(content: Text('Failed to report: $e')),
+          );
+        }
+      }
+    }
   }
 
   Future<void> _confirmDelete(BuildContext context) async {
@@ -1133,6 +1186,81 @@ class _CommentInput extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Dialog for selecting a report reason
+class _ReportReasonDialog extends StatefulWidget {
+  @override
+  State<_ReportReasonDialog> createState() => _ReportReasonDialogState();
+}
+
+class _ReportReasonDialogState extends State<_ReportReasonDialog> {
+  String? _selectedReason;
+
+  static const _reasons = [
+    'Spam',
+    'Harassment or bullying',
+    'Hate speech',
+    'Violence or threats',
+    'Nudity or sexual content',
+    'False information',
+    'Other',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return AlertDialog(
+      title: const Text('Report Comment'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Why are you reporting this comment?',
+            style: theme.textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 16),
+          ..._reasons.map(
+            (reason) => InkWell(
+              onTap: () => setState(() => _selectedReason = reason),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(
+                  children: [
+                    Icon(
+                      _selectedReason == reason
+                          ? Icons.radio_button_checked
+                          : Icons.radio_button_unchecked,
+                      size: 20,
+                      color: _selectedReason == reason
+                          ? theme.colorScheme.primary
+                          : theme.hintColor,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(reason, style: theme.textTheme.bodyMedium),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: _selectedReason != null
+              ? () => Navigator.pop(context, _selectedReason)
+              : null,
+          child: const Text('Report'),
+        ),
+      ],
     );
   }
 }

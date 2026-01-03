@@ -657,6 +657,98 @@ class SocialService {
   }
 
   // ===========================================================================
+  // REPORTS
+  // ===========================================================================
+
+  /// Report a comment for review by admins.
+  Future<void> reportComment({
+    required String commentId,
+    required String reason,
+  }) async {
+    final currentUserId = _currentUserId;
+    if (currentUserId == null) {
+      throw StateError('Must be signed in to report comments');
+    }
+
+    // Get the comment to include context in the report
+    final commentDoc = await _firestore
+        .collection('comments')
+        .doc(commentId)
+        .get();
+    if (!commentDoc.exists) {
+      throw StateError('Comment not found');
+    }
+
+    final commentData = commentDoc.data()!;
+
+    await _firestore.collection('reports').add({
+      'type': 'comment',
+      'targetId': commentId,
+      'reporterId': currentUserId,
+      'reason': reason,
+      'status': 'pending',
+      'createdAt': FieldValue.serverTimestamp(),
+      // Include context for admin review
+      'context': {
+        'content': commentData['content'],
+        'authorId': commentData['authorId'],
+        'postId': commentData['postId'],
+      },
+    });
+  }
+
+  /// Get all pending reports (admin only).
+  Stream<List<Map<String, dynamic>>> watchPendingReports() {
+    return _firestore
+        .collection('reports')
+        .where('status', isEqualTo: 'pending')
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map(
+          (snap) => snap.docs.map((doc) {
+            final data = doc.data();
+            return {'id': doc.id, ...data};
+          }).toList(),
+        );
+  }
+
+  /// Dismiss a report (admin only).
+  Future<void> dismissReport(String reportId) async {
+    await _firestore.collection('reports').doc(reportId).update({
+      'status': 'dismissed',
+      'resolvedAt': FieldValue.serverTimestamp(),
+      'resolvedBy': _currentUserId,
+    });
+  }
+
+  /// Delete reported content and resolve the report (admin only).
+  Future<void> deleteReportedContent(String reportId) async {
+    final reportDoc = await _firestore
+        .collection('reports')
+        .doc(reportId)
+        .get();
+    if (!reportDoc.exists) return;
+
+    final data = reportDoc.data()!;
+    final type = data['type'] as String;
+    final targetId = data['targetId'] as String;
+
+    // Delete the content based on type
+    if (type == 'comment') {
+      await _firestore.collection('comments').doc(targetId).delete();
+    } else if (type == 'post') {
+      await _firestore.collection('posts').doc(targetId).delete();
+    }
+
+    // Mark report as resolved
+    await _firestore.collection('reports').doc(reportId).update({
+      'status': 'deleted',
+      'resolvedAt': FieldValue.serverTimestamp(),
+      'resolvedBy': _currentUserId,
+    });
+  }
+
+  // ===========================================================================
   // PUBLIC PROFILES
   // ===========================================================================
 
@@ -896,23 +988,6 @@ class SocialService {
     await _firestore.collection('reports').add({
       'type': 'user',
       'targetId': userId,
-      'reporterId': currentUserId,
-      'reason': reason,
-      'status': 'pending',
-      'createdAt': FieldValue.serverTimestamp(),
-    });
-  }
-
-  /// Report a comment for moderation.
-  Future<void> reportComment(String commentId, String reason) async {
-    final currentUserId = _currentUserId;
-    if (currentUserId == null) {
-      throw StateError('Must be signed in to report comments');
-    }
-
-    await _firestore.collection('reports').add({
-      'type': 'comment',
-      'targetId': commentId,
       'reporterId': currentUserId,
       'reason': reason,
       'status': 'pending',

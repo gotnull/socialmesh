@@ -98,6 +98,10 @@ class _LikeButtonState extends ConsumerState<_LikeButton>
   late Animation<double> _scaleAnimation;
   bool _isLiking = false;
 
+  // Optimistic state
+  bool? _optimisticIsLiked;
+  int? _optimisticLikeCount;
+
   @override
   void initState() {
     super.initState();
@@ -117,7 +121,7 @@ class _LikeButtonState extends ConsumerState<_LikeButton>
     super.dispose();
   }
 
-  Future<void> _handleLike() async {
+  Future<void> _handleLike(bool currentlyLiked) async {
     if (widget.currentUserId == null) {
       ScaffoldMessenger.of(
         context,
@@ -127,23 +131,51 @@ class _LikeButtonState extends ConsumerState<_LikeButton>
 
     if (_isLiking) return;
 
-    setState(() => _isLiking = true);
+    setState(() {
+      _isLiking = true;
+      // Optimistic update
+      _optimisticIsLiked = !currentlyLiked;
+      _optimisticLikeCount =
+          (widget.post.likeCount + (_optimisticIsLiked! ? 1 : -1)).clamp(
+            0,
+            999999,
+          );
+    });
 
     // Play animation
     await _controller.forward();
     _controller.reverse();
 
     try {
-      await toggleLike(ref, widget.post.id);
+      final service = ref.read(socialServiceProvider);
+      if (_optimisticIsLiked!) {
+        await service.likePost(widget.post.id);
+      } else {
+        await service.unlikePost(widget.post.id);
+      }
     } catch (e) {
+      // Revert optimistic update on error
       if (mounted) {
+        setState(() {
+          _optimisticIsLiked = currentlyLiked;
+          _optimisticLikeCount = widget.post.likeCount;
+        });
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Failed to like: $e')));
       }
     } finally {
       if (mounted) {
-        setState(() => _isLiking = false);
+        // Clear optimistic state after a delay to let Firestore update
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) {
+            setState(() {
+              _isLiking = false;
+              _optimisticIsLiked = null;
+              _optimisticLikeCount = null;
+            });
+          }
+        });
       }
     }
   }
@@ -156,7 +188,7 @@ class _LikeButtonState extends ConsumerState<_LikeButton>
       return _ActionButton(
         icon: Icons.favorite_border,
         count: widget.showCount ? widget.post.likeCount : null,
-        onTap: _handleLike,
+        onTap: () => _handleLike(false),
         iconSize: widget.iconSize,
         color: theme.colorScheme.onSurface.withAlpha(180),
       );
@@ -165,18 +197,24 @@ class _LikeButtonState extends ConsumerState<_LikeButton>
     final likeStatus = ref.watch(likeStatusStreamProvider(widget.post.id));
 
     return likeStatus.when(
-      data: (isLiked) => ScaleTransition(
-        scale: _scaleAnimation,
-        child: _ActionButton(
-          icon: isLiked ? Icons.favorite : Icons.favorite_border,
-          count: widget.showCount ? widget.post.likeCount : null,
-          onTap: _handleLike,
-          iconSize: widget.iconSize,
-          color: isLiked
-              ? Colors.red
-              : theme.colorScheme.onSurface.withAlpha(180),
-        ),
-      ),
+      data: (serverIsLiked) {
+        // Use optimistic state if available, otherwise use server state
+        final isLiked = _optimisticIsLiked ?? serverIsLiked;
+        final likeCount = _optimisticLikeCount ?? widget.post.likeCount;
+
+        return ScaleTransition(
+          scale: _scaleAnimation,
+          child: _ActionButton(
+            icon: isLiked ? Icons.favorite : Icons.favorite_border,
+            count: widget.showCount ? likeCount : null,
+            onTap: _isLiking ? null : () => _handleLike(isLiked),
+            iconSize: widget.iconSize,
+            color: isLiked
+                ? Colors.red
+                : theme.colorScheme.onSurface.withAlpha(180),
+          ),
+        );
+      },
       loading: () => _ActionButton(
         icon: Icons.favorite_border,
         count: widget.showCount ? widget.post.likeCount : null,
@@ -187,7 +225,7 @@ class _LikeButtonState extends ConsumerState<_LikeButton>
       error: (_, _) => _ActionButton(
         icon: Icons.favorite_border,
         count: widget.showCount ? widget.post.likeCount : null,
-        onTap: _handleLike,
+        onTap: () => _handleLike(false),
         iconSize: widget.iconSize,
         color: theme.colorScheme.onSurface.withAlpha(180),
       ),
