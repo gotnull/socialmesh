@@ -161,17 +161,17 @@
       }
     }
 
-    /* Mesh Node */
-    .mesh-container {
+    /* App Icon */
+    .icon-container {
       position: relative;
       width: 40vmin;
       height: 40vmin;
     }
 
-    .mesh-glow {
+    .icon-glow {
       position: absolute;
       inset: -12vmin;
-      background: radial-gradient(circle, rgba(139, 92, 246, 0.4) 0%, rgba(233, 30, 140, 0.2) 35%, transparent 65%);
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.5) 0%, rgba(233, 30, 140, 0.3) 40%, transparent 70%);
       filter: blur(6vmin);
       animation: glowPulse 4s ease-in-out infinite;
     }
@@ -190,31 +190,26 @@
       }
     }
 
-    .mesh-node {
+    .app-icon {
       position: relative;
       width: 100%;
       height: 100%;
       z-index: 1;
-      animation: meshFloat 8s ease-in-out infinite;
+      border-radius: 22%;
+      box-shadow: 0 2vmin 6vmin rgba(0, 0, 0, 0.4),
+        0 0 0 0.3vmin rgba(255, 255, 255, 0.1);
+      animation: iconFloat 8s ease-in-out infinite;
     }
 
-    @keyframes meshFloat {
+    @keyframes iconFloat {
 
       0%,
       100% {
-        transform: translateY(0) rotateZ(0deg);
-      }
-
-      25% {
-        transform: translateY(-1.2vmin) rotateZ(1deg);
+        transform: translateY(0);
       }
 
       50% {
-        transform: translateY(-2vmin) rotateZ(0deg);
-      }
-
-      75% {
-        transform: translateY(-1.2vmin) rotateZ(-1deg);
+        transform: translateY(-2vmin);
       }
     }
 
@@ -391,58 +386,10 @@
   </div>
 
   <div class="container">
-    <!-- Mesh Node -->
-    <div class="mesh-container">
-      <div class="mesh-glow"></div>
-      <svg class="mesh-node" viewBox="-150 -150 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <lineargradient id="meshGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stop-color="#E91E8C"></stop>
-            <stop offset="50%" stop-color="#8B5CF6"></stop>
-            <stop offset="100%" stop-color="#4F6AF6"></stop>
-          </lineargradient>
-        </defs>
-
-        <!-- Back edges (depth faded) -->
-        <g opacity="0.25" stroke-width="3" stroke-linecap="round" stroke="url(#meshGradient)">
-          <line x1="-80" y1="-40" x2="0" y2="-120"></line>
-          <line x1="80" y1="-40" x2="0" y2="-120"></line>
-          <line x1="-100" y1="30" x2="-80" y2="-40"></line>
-          <line x1="100" y1="30" x2="80" y2="-40"></line>
-          <line x1="-80" y1="-40" x2="80" y2="-40"></line>
-        </g>
-
-        <!-- Front edges -->
-        <g stroke-width="4" stroke-linecap="round" stroke="url(#meshGradient)">
-          <line x1="0" y1="120" x2="-100" y2="30"></line>
-          <line x1="0" y1="120" x2="100" y2="30"></line>
-          <line x1="-100" y1="30" x2="100" y2="30"></line>
-          <line x1="-100" y1="30" x2="-50" y2="-70"></line>
-          <line x1="100" y1="30" x2="50" y2="-70"></line>
-          <line x1="-50" y1="-70" x2="50" y2="-70"></line>
-          <line x1="0" y1="120" x2="-50" y2="-70"></line>
-          <line x1="0" y1="120" x2="50" y2="-70"></line>
-          <line x1="-50" y1="-70" x2="0" y2="-20"></line>
-          <line x1="50" y1="-70" x2="0" y2="-20"></line>
-          <line x1="-100" y1="30" x2="0" y2="-20"></line>
-          <line x1="100" y1="30" x2="0" y2="-20"></line>
-        </g>
-
-        <!-- Back nodes (depth faded) -->
-        <g opacity="0.3">
-          <circle cx="-80" cy="-40" r="8" fill="#E91E8C"></circle>
-          <circle cx="80" cy="-40" r="8" fill="#4F6AF6"></circle>
-          <circle cx="0" cy="-120" r="7" fill="#8B5CF6"></circle>
-        </g>
-
-        <!-- Front nodes -->
-        <circle cx="-100" cy="30" r="12" fill="#E91E8C"></circle>
-        <circle cx="-50" cy="-70" r="11" fill="#C44AAE"></circle>
-        <circle cx="0" cy="120" r="14" fill="#8B5CF6"></circle>
-        <circle cx="0" cy="-20" r="13" fill="#8B5CF6"></circle>
-        <circle cx="50" cy="-70" r="11" fill="#6D7CF6"></circle>
-        <circle cx="100" cy="30" r="12" fill="#4F6AF6"></circle>
-      </svg>
+    <!-- App Icon -->
+    <div class="icon-container">
+      <div class="icon-glow"></div>
+      <img class="app-icon" src="../app_icons/socialmesh_icon_512.png" alt="Socialmesh">
     </div>
 
     <!-- Logo -->
