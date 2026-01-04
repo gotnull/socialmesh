@@ -443,6 +443,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       try {
         ref.read(exploreProvider.notifier).removePost(post.id);
         await ref.read(socialServiceProvider).deletePost(post.id);
+        // Profile stream will auto-update when Cloud Function updates postCount
         if (mounted) {
           ScaffoldMessenger.of(
             context,

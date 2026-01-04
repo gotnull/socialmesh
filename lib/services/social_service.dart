@@ -201,7 +201,6 @@ class SocialService {
         : null;
 
     final docRef = _firestore.collection('posts').doc();
-    final profileRef = _firestore.collection('profiles').doc(currentUserId);
 
     final post = Post(
       id: docRef.id,
@@ -220,11 +219,8 @@ class SocialService {
     final data = post.toFirestore();
     data['visibility'] = visibility.name;
 
-    // Use a batch to ensure atomicity of post creation + count increment
-    final batch = _firestore.batch();
-    batch.set(docRef, data);
-    batch.update(profileRef, {'postCount': FieldValue.increment(1)});
-    await batch.commit();
+    // Create the post - Cloud Functions handle postCount increment
+    await docRef.set(data);
 
     return post;
   }
@@ -237,22 +233,18 @@ class SocialService {
     }
 
     final postRef = _firestore.collection('posts').doc(postId);
-    final profileRef = _firestore.collection('profiles').doc(currentUserId);
 
-    // Use a transaction to ensure atomicity
-    await _firestore.runTransaction((transaction) async {
-      final doc = await transaction.get(postRef);
-      if (!doc.exists) {
-        throw StateError('Post not found');
-      }
-      if (doc.data()?['authorId'] != currentUserId) {
-        throw StateError('Only the author can delete this post');
-      }
+    // Verify ownership before deleting
+    final doc = await postRef.get();
+    if (!doc.exists) {
+      throw StateError('Post not found');
+    }
+    if (doc.data()?['authorId'] != currentUserId) {
+      throw StateError('Only the author can delete this post');
+    }
 
-      // Delete post and decrement count atomically
-      transaction.delete(postRef);
-      transaction.update(profileRef, {'postCount': FieldValue.increment(-1)});
-    });
+    // Delete post - Cloud Functions handle postCount decrement
+    await postRef.delete();
   }
 
   /// Get a single post by ID.

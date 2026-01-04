@@ -389,6 +389,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
       try {
         final socialService = ref.read(socialServiceProvider);
         await socialService.deletePost(post.id);
+        // Profile stream will auto-update when Cloud Function updates postCount
         if (mounted) {
           Navigator.pop(context);
           ScaffoldMessenger.of(

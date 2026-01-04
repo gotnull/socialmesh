@@ -520,6 +520,7 @@ class CreatePostNotifier extends Notifier<CreatePostState> {
         nodeId: nodeId,
       );
       state = CreatePostState(createdPost: post);
+      // Profile stream provider will auto-update when Cloud Function updates postCount
       return post;
     } catch (e) {
       state = CreatePostState(error: e.toString());

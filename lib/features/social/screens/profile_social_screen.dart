@@ -36,7 +36,8 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
   Widget build(BuildContext context) {
     final currentUser = ref.watch(currentUserProvider);
     final isOwnProfile = currentUser?.uid == widget.userId;
-    final profileAsync = ref.watch(publicProfileProvider(widget.userId));
+    // Use stream provider for real-time profile updates (e.g., postCount changes)
+    final profileAsync = ref.watch(publicProfileStreamProvider(widget.userId));
     final postsStream = ref.watch(userPostsStreamProvider(widget.userId));
     final followStateAsync = isOwnProfile
         ? null
@@ -56,7 +57,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
 
           return RefreshIndicator(
             onRefresh: () async {
-              ref.invalidate(publicProfileProvider(widget.userId));
+              ref.invalidate(publicProfileStreamProvider(widget.userId));
               ref.invalidate(userPostsStreamProvider(widget.userId));
               if (!isOwnProfile) {
                 ref.invalidate(followStateProvider(widget.userId));
@@ -164,7 +165,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
             const SizedBox(height: 16),
             OutlinedButton(
               onPressed: () =>
-                  ref.invalidate(publicProfileProvider(widget.userId)),
+                  ref.invalidate(publicProfileStreamProvider(widget.userId)),
               child: const Text('Retry'),
             ),
           ],
@@ -755,6 +756,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
         final socialService = ref.read(socialServiceProvider);
         await socialService.deletePost(post.id);
         ref.invalidate(userPostsStreamProvider(widget.userId));
+        // Profile stream will auto-update when Cloud Function updates postCount
         if (mounted) {
           ScaffoldMessenger.of(
             context,
