@@ -1181,16 +1181,18 @@ class _LinkedDeviceChip extends StatelessWidget {
             const SizedBox(height: 6),
             SizedBox(
               width: 72,
-              child: AutoScrollText(
-                node?.longName ?? '!${nodeId.toRadixString(16)}',
-                style: TextStyle(
-                  color: context.textSecondary,
-                  fontSize: 11,
-                  fontFamily: node?.longName != null ? null : 'monospace',
+              child: Center(
+                child: AutoScrollText(
+                  node?.longName ?? '!${nodeId.toRadixString(16)}',
+                  style: TextStyle(
+                    color: context.textSecondary,
+                    fontSize: 11,
+                    fontFamily: node?.longName != null ? null : 'monospace',
+                  ),
+                  maxLines: 1,
+                  velocity: 25.0,
+                  fadeWidth: 10.0,
                 ),
-                maxLines: 1,
-                velocity: 25.0,
-                fadeWidth: 10.0,
               ),
             ),
           ],
