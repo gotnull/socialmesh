@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../../core/theme.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
@@ -9,6 +8,7 @@ import '../../../models/social.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/social_providers.dart';
+import '../../../services/share_link_service.dart';
 import '../../../utils/snackbar.dart';
 import '../../map/map_screen.dart';
 import '../../messaging/messaging_screen.dart'
@@ -329,10 +329,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   }
 
   void _sharePost(String postId) {
-    Share.share(
-      'Check out this post on Socialmesh!\nsocialmesh://post/$postId',
-      subject: 'Socialmesh Post',
-    );
+    ref.read(shareLinkServiceProvider).sharePost(postId: postId);
   }
 
   void _handleLocationTap(PostLocation location) {

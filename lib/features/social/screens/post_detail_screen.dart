@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:share_plus/share_plus.dart';
+import '../../../services/share_link_service.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 import '../../../core/theme.dart';
@@ -303,10 +303,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   }
 
   void _sharePost(Post post) {
-    Share.share(
-      'Check out this post on Socialmesh!\nsocialmesh://post/${post.id}',
-      subject: 'Socialmesh Post',
-    );
+    ref.read(shareLinkServiceProvider).sharePost(postId: post.id);
   }
 
   void _handleLocationTap(PostLocation location) {

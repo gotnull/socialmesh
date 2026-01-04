@@ -134,6 +134,20 @@ class ShareLinkService {
     );
   }
 
+  /// Share a post with rich preview
+  Future<void> sharePost({
+    required String postId,
+    Rect? sharePositionOrigin,
+  }) async {
+    final shareUrl = AppUrls.sharePostUrl(postId);
+
+    await Share.share(
+      'Check out this post on Socialmesh!\n$shareUrl',
+      subject: 'Socialmesh Post',
+      sharePositionOrigin: sharePositionOrigin,
+    );
+  }
+
   /// Share plain text (fallback, no rich preview)
   Future<void> shareText({
     required String text,

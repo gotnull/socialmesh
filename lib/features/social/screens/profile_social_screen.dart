@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:share_plus/share_plus.dart';
+import '../../../services/share_link_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme.dart';
@@ -451,9 +451,12 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
                 ),
                 const SizedBox(width: 8),
                 OutlinedButton(
-                  onPressed: () => Share.share(
-                    'Check out my profile on Socialmesh!\nhttps://socialmesh.app/user/${widget.userId}',
-                  ),
+                  onPressed: () => ref
+                      .read(shareLinkServiceProvider)
+                      .shareProfile(
+                        userId: widget.userId,
+                        displayName: profile.displayName,
+                      ),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: context.textPrimary,
                     side: BorderSide(color: context.border),
@@ -632,17 +635,13 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
   }
 
   void _shareProfile(PublicProfile profile) {
-    Share.share(
-      'Check out ${profile.displayName} on Socialmesh!\nhttps://socialmesh.app/user/${profile.id}',
-      subject: '${profile.displayName} on Socialmesh',
-    );
+    ref
+        .read(shareLinkServiceProvider)
+        .shareProfile(userId: profile.id, displayName: profile.displayName);
   }
 
   void _sharePost(Post post) {
-    Share.share(
-      'Check out this post on Socialmesh!\nsocialmesh://post/${post.id}',
-      subject: 'Socialmesh Post',
-    );
+    ref.read(shareLinkServiceProvider).sharePost(postId: post.id);
   }
 
   void _handleLocationTap(PostLocation location) {

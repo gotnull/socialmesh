@@ -53,6 +53,7 @@ import 'features/discovery/node_discovery_overlay.dart';
 import 'features/routes/route_detail_screen.dart';
 import 'features/globe/globe_screen.dart';
 import 'features/reachability/mesh_reachability_screen.dart';
+import 'features/social/screens/post_detail_screen.dart';
 // import 'features/intro/intro_screen.dart';
 import 'models/route.dart' as route_model;
 
@@ -331,6 +332,8 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
         _handleWidgetDeepLink(link);
       case LocationDeepLink():
         _handleLocationDeepLink(link);
+      case PostDeepLink():
+        _handlePostDeepLink(link);
     }
   }
 
@@ -420,6 +423,16 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
           'label': link.label,
         },
       );
+    }
+  }
+
+  void _handlePostDeepLink(PostDeepLink link) {
+    AppLogging.debug('🔗 Post deep link: ${link.postId}');
+    // Navigate to post detail screen
+    if (mounted) {
+      Navigator.of(
+        context,
+      ).pushNamed('/post-detail', arguments: {'postId': link.postId});
     }
   }
 
@@ -717,6 +730,15 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
               initialLocationLabel: args?['label'] as String?,
             ),
           );
+        }
+        if (settings.name == '/post-detail') {
+          final args = settings.arguments as Map<String, dynamic>?;
+          final postId = args?['postId'] as String?;
+          if (postId != null) {
+            return MaterialPageRoute(
+              builder: (context) => PostDetailScreen(postId: postId),
+            );
+          }
         }
         return null;
       },

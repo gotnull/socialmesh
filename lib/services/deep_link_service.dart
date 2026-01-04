@@ -59,6 +59,13 @@ class WidgetDeepLink extends DeepLinkData {
   const WidgetDeepLink({required this.widgetId});
 }
 
+/// Post deep link
+class PostDeepLink extends DeepLinkData {
+  final String postId;
+
+  const PostDeepLink({required this.postId});
+}
+
 /// Location deep link
 class LocationDeepLink extends DeepLinkData {
   final double latitude;
@@ -168,6 +175,12 @@ class DeepLinkService {
           }
           return null;
 
+        case 'post':
+          if (data != null) {
+            return PostDeepLink(postId: data);
+          }
+          return null;
+
         case 'location':
           return _parseLocationLink(uri.queryParameters);
 
@@ -211,6 +224,12 @@ class DeepLinkService {
       case 'widget':
         if (id != null) {
           return WidgetDeepLink(widgetId: id);
+        }
+        return null;
+
+      case 'post':
+        if (id != null) {
+          return PostDeepLink(postId: id);
         }
         return null;
 
