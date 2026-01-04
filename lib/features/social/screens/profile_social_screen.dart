@@ -40,6 +40,19 @@ class ProfileSocialScreen extends ConsumerStatefulWidget {
 
 class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
   @override
+  void initState() {
+    super.initState();
+    // Force refresh streams to get latest data from server
+    // DON'T reset optimistic adjustments here - the Firestore write may not have
+    // synced yet. Keep the adjustment so the UI shows correct count until stream updates.
+    // Adjustments are only reset on explicit pull-to-refresh.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.invalidate(publicProfileStreamProvider(widget.userId));
+      ref.invalidate(userPostsStreamProvider(widget.userId));
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final currentUser = ref.watch(currentUserProvider);
     final isOwnProfile = currentUser?.uid == widget.userId;
@@ -770,9 +783,13 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
         ref.invalidate(userPostsStreamProvider(widget.userId));
 
         // Apply optimistic post count decrement for instant UI feedback
+        final currentProfile = ref
+            .read(publicProfileStreamProvider(post.authorId))
+            .value;
+        final currentCount = currentProfile?.postCount ?? 0;
         ref
             .read(profileCountAdjustmentsProvider.notifier)
-            .decrement(post.authorId);
+            .decrement(post.authorId, currentCount);
 
         if (mounted) {
           ScaffoldMessenger.of(

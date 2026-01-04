@@ -522,10 +522,15 @@ class CreatePostNotifier extends Notifier<CreatePostState> {
       state = CreatePostState(createdPost: post);
 
       // Apply optimistic post count increment immediately
-      // The stream will eventually sync but this gives instant feedback
+      // Get current server count from stream (or 0 if not loaded)
+      final currentProfile = ref
+          .read(publicProfileStreamProvider(post.authorId))
+          .value;
+      final currentCount = currentProfile?.postCount ?? 0;
+
       ref
           .read(profileCountAdjustmentsProvider.notifier)
-          .increment(post.authorId);
+          .increment(post.authorId, currentCount);
 
       return post;
     } catch (e) {
@@ -629,34 +634,99 @@ Future<void> toggleLike(WidgetRef ref, String postId) async {
 // PUBLIC PROFILE
 // ===========================================================================
 
-/// Notifier to hold optimistic post count adjustments for all users.
-/// Maps userId to adjustment delta (+1 for create, -1 for delete).
-class ProfileCountAdjustmentsNotifier extends Notifier<Map<String, int>> {
+/// Tracks optimistic post count updates.
+/// Stores the expected post count after optimistic updates.
+/// When stream emits the expected count, we know server has synced.
+class ProfileCountAdjustmentsNotifier
+    extends Notifier<Map<String, OptimisticCount>> {
   @override
-  Map<String, int> build() => {};
+  Map<String, OptimisticCount> build() => {};
 
-  void increment(String userId) {
-    state = {...state, userId: (state[userId] ?? 0) + 1};
+  /// Record an optimistic increment. Stores the baseline and expected count.
+  void increment(String userId, int currentServerCount) {
+    final existing = state[userId];
+    final baseline = existing?.baselineCount ?? currentServerCount;
+    final newExpected = (existing?.expectedCount ?? currentServerCount) + 1;
+    state = {
+      ...state,
+      userId: OptimisticCount(
+        baselineCount: baseline,
+        expectedCount: newExpected,
+      ),
+    };
   }
 
-  void decrement(String userId) {
-    state = {...state, userId: (state[userId] ?? 0) - 1};
+  /// Record an optimistic decrement.
+  void decrement(String userId, int currentServerCount) {
+    final existing = state[userId];
+    final baseline = existing?.baselineCount ?? currentServerCount;
+    final newExpected = (existing?.expectedCount ?? currentServerCount) - 1;
+    state = {
+      ...state,
+      userId: OptimisticCount(
+        baselineCount: baseline,
+        expectedCount: newExpected.clamp(0, 999999),
+      ),
+    };
   }
 
   void reset(String userId) {
-    final newState = Map<String, int>.from(state);
+    final newState = Map<String, OptimisticCount>.from(state);
     newState.remove(userId);
     state = newState;
   }
 
-  int getAdjustment(String userId) => state[userId] ?? 0;
+  /// Get the adjustment to apply given the current server count.
+  /// Returns 0 if server has caught up to expected count.
+  int getAdjustment(String userId, int serverCount) {
+    final optimistic = state[userId];
+    if (optimistic == null) return 0;
+
+    // Server has synced when it matches the expected count
+    if (serverCount == optimistic.expectedCount) {
+      // Auto-clear the optimistic state since server caught up
+      Future.microtask(() => reset(userId));
+      return 0;
+    }
+
+    // If server moved past our baseline in the expected direction, it synced
+    // For increments: baseline=5, expected=6, server becomes 6+ means synced
+    // For decrements: baseline=5, expected=4, server becomes 4 or less means synced
+    final isIncrement = optimistic.expectedCount > optimistic.baselineCount;
+    if (isIncrement && serverCount >= optimistic.expectedCount) {
+      Future.microtask(() => reset(userId));
+      return 0;
+    }
+    if (!isIncrement && serverCount <= optimistic.expectedCount) {
+      Future.microtask(() => reset(userId));
+      return 0;
+    }
+
+    // Server hasn't caught up yet, apply the difference
+    return optimistic.expectedCount - serverCount;
+  }
+}
+
+/// Class to track optimistic counts for post count updates.
+class OptimisticCount {
+  /// The server count when we started tracking.
+  final int baselineCount;
+
+  /// The expected count after optimistic updates.
+  final int expectedCount;
+
+  const OptimisticCount({
+    required this.baselineCount,
+    required this.expectedCount,
+  });
 }
 
 /// Global provider for all profile count adjustments.
 final profileCountAdjustmentsProvider =
-    NotifierProvider<ProfileCountAdjustmentsNotifier, Map<String, int>>(
-      ProfileCountAdjustmentsNotifier.new,
-    );
+    NotifierProvider<
+      ProfileCountAdjustmentsNotifier,
+      Map<String, OptimisticCount>
+    >(ProfileCountAdjustmentsNotifier.new);
 
 /// Provider for a public profile (async).
 final publicProfileProvider = FutureProvider.autoDispose
@@ -678,11 +748,18 @@ final publicProfileStreamProvider =
 final optimisticProfileProvider =
     Provider.family<AsyncValue<PublicProfile?>, String>((ref, userId) {
       final profileAsync = ref.watch(publicProfileStreamProvider(userId));
-      final adjustments = ref.watch(profileCountAdjustmentsProvider);
-      final adjustment = adjustments[userId] ?? 0;
+      // Watch the adjustments map to trigger rebuilds
+      ref.watch(profileCountAdjustmentsProvider);
 
       return profileAsync.whenData((profile) {
-        if (profile == null || adjustment == 0) return profile;
+        if (profile == null) return profile;
+
+        // Get dynamic adjustment based on current server count
+        final adjustment = ref
+            .read(profileCountAdjustmentsProvider.notifier)
+            .getAdjustment(userId, profile.postCount);
+
+        if (adjustment == 0) return profile;
 
         // Apply optimistic adjustment to post count
         return profile.copyWith(

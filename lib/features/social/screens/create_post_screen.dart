@@ -607,6 +607,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         ref.read(exploreProvider.notifier).refresh();
 
         // Invalidate user posts stream for when profile is viewed
+        // DON'T invalidate publicProfileStreamProvider here - let optimistic update show
+        // Profile screen's initState will reset adjustment and fetch fresh data
         final currentUser = ref.read(currentUserProvider);
         if (currentUser != null) {
           ref.invalidate(userPostsStreamProvider(currentUser.uid));

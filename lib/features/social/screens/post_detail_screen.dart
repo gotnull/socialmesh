@@ -391,9 +391,13 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
         await socialService.deletePost(post.id);
 
         // Apply optimistic post count decrement for instant UI feedback
+        final currentProfile = ref
+            .read(publicProfileStreamProvider(post.authorId))
+            .value;
+        final currentCount = currentProfile?.postCount ?? 0;
         ref
             .read(profileCountAdjustmentsProvider.notifier)
-            .decrement(post.authorId);
+            .decrement(post.authorId, currentCount);
 
         if (mounted) {
           Navigator.pop(context);
