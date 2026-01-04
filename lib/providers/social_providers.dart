@@ -520,7 +520,13 @@ class CreatePostNotifier extends Notifier<CreatePostState> {
         nodeId: nodeId,
       );
       state = CreatePostState(createdPost: post);
-      // Profile stream provider will auto-update when Cloud Function updates postCount
+
+      // Apply optimistic post count increment immediately
+      // The stream will eventually sync but this gives instant feedback
+      ref
+          .read(profileCountAdjustmentsProvider.notifier)
+          .increment(post.authorId);
+
       return post;
     } catch (e) {
       state = CreatePostState(error: e.toString());
@@ -623,6 +629,35 @@ Future<void> toggleLike(WidgetRef ref, String postId) async {
 // PUBLIC PROFILE
 // ===========================================================================
 
+/// Notifier to hold optimistic post count adjustments for all users.
+/// Maps userId to adjustment delta (+1 for create, -1 for delete).
+class ProfileCountAdjustmentsNotifier extends Notifier<Map<String, int>> {
+  @override
+  Map<String, int> build() => {};
+
+  void increment(String userId) {
+    state = {...state, userId: (state[userId] ?? 0) + 1};
+  }
+
+  void decrement(String userId) {
+    state = {...state, userId: (state[userId] ?? 0) - 1};
+  }
+
+  void reset(String userId) {
+    final newState = Map<String, int>.from(state);
+    newState.remove(userId);
+    state = newState;
+  }
+
+  int getAdjustment(String userId) => state[userId] ?? 0;
+}
+
+/// Global provider for all profile count adjustments.
+final profileCountAdjustmentsProvider =
+    NotifierProvider<ProfileCountAdjustmentsNotifier, Map<String, int>>(
+      ProfileCountAdjustmentsNotifier.new,
+    );
+
 /// Provider for a public profile (async).
 final publicProfileProvider = FutureProvider.autoDispose
     .family<PublicProfile?, String>((ref, userId) async {
@@ -631,10 +666,29 @@ final publicProfileProvider = FutureProvider.autoDispose
     });
 
 /// Stream provider for real-time public profile updates.
-final publicProfileStreamProvider = StreamProvider.autoDispose
-    .family<PublicProfile?, String>((ref, userId) {
+/// Not auto-disposed to keep stream active across navigation.
+final publicProfileStreamProvider =
+    StreamProvider.family<PublicProfile?, String>((ref, userId) {
       final service = ref.watch(socialServiceProvider);
       return service.watchPublicProfile(userId);
+    });
+
+/// Combined provider that merges stream data with optimistic adjustments.
+/// Use this instead of publicProfileStreamProvider for UI that needs instant updates.
+final optimisticProfileProvider =
+    Provider.family<AsyncValue<PublicProfile?>, String>((ref, userId) {
+      final profileAsync = ref.watch(publicProfileStreamProvider(userId));
+      final adjustments = ref.watch(profileCountAdjustmentsProvider);
+      final adjustment = adjustments[userId] ?? 0;
+
+      return profileAsync.whenData((profile) {
+        if (profile == null || adjustment == 0) return profile;
+
+        // Apply optimistic adjustment to post count
+        return profile.copyWith(
+          postCount: (profile.postCount + adjustment).clamp(0, 999999),
+        );
+      });
     });
 
 // ===========================================================================

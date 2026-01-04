@@ -591,16 +591,17 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     setState(() => _isSubmitting = true);
 
     try {
-      final socialService = ref.read(socialServiceProvider);
-      await socialService.createPost(
-        content: content,
-        imageUrls: _imageUrls,
-        visibility: _visibility,
-        location: _location,
-        nodeId: _nodeId,
-      );
+      // Use createPostProvider to get optimistic post count updates
+      final post = await ref
+          .read(createPostProvider.notifier)
+          .createPost(
+            content: content,
+            mediaUrls: _imageUrls,
+            location: _location,
+            nodeId: _nodeId,
+          );
 
-      if (mounted) {
+      if (post != null && mounted) {
         // Refresh feed and explore providers
         ref.read(feedProvider.notifier).refresh();
         ref.read(exploreProvider.notifier).refresh();
@@ -615,6 +616,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('Post created!')));
+      } else if (mounted) {
+        final createState = ref.read(createPostProvider);
+        throw Exception(createState.error ?? 'Failed to create post');
       }
     } catch (e) {
       if (mounted) {

@@ -14,7 +14,11 @@ import '../widgets/post_card.dart';
 
 /// The main social screen showing the current user's profile header with an explore feed.
 class FeedScreen extends ConsumerStatefulWidget {
-  const FeedScreen({super.key});
+  const FeedScreen({super.key, this.showProfileHeader = true});
+
+  /// Whether to show the profile summary card at the top.
+  /// Set to false when used in a tab where profile is shown separately.
+  final bool showProfileHeader;
 
   @override
   ConsumerState<FeedScreen> createState() => _FeedScreenState();
@@ -77,60 +81,69 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   }
 
   Widget _buildSocialContent(BuildContext context, String userId) {
-    // Use stream provider for real-time profile updates (e.g., postCount changes)
-    final profileAsync = ref.watch(publicProfileStreamProvider(userId));
+    // Use optimistic provider for instant post count updates
+    final profileAsync = ref.watch(optimisticProfileProvider(userId));
     final exploreState = ref.watch(exploreProvider);
 
     return RefreshIndicator(
       onRefresh: () async {
+        // Reset optimistic adjustments on refresh (stream will have latest)
+        ref.read(profileCountAdjustmentsProvider.notifier).reset(userId);
         ref.invalidate(publicProfileStreamProvider(userId));
         await ref.read(exploreProvider.notifier).refresh();
       },
       child: CustomScrollView(
         controller: _scrollController,
         slivers: [
-          // App bar
-          SliverAppBar(
-            backgroundColor: context.background,
-            floating: true,
-            snap: true,
-            title: Text(
-              'Social',
-              style: TextStyle(
-                color: context.textPrimary,
-                fontWeight: FontWeight.w600,
+          // App bar - only show when in standalone mode (with profile header)
+          if (widget.showProfileHeader)
+            SliverAppBar(
+              backgroundColor: context.background,
+              floating: true,
+              snap: true,
+              title: Text(
+                'Social',
+                style: TextStyle(
+                  color: context.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
+              actions: [
+                IconButton(
+                  icon: Icon(Icons.person_outline, color: context.textPrimary),
+                  onPressed: () => _navigateToProfile(userId),
+                  tooltip: 'My Profile',
+                ),
+              ],
             ),
-            actions: [
-              IconButton(
-                icon: Icon(Icons.person_outline, color: context.textPrimary),
-                onPressed: () => _navigateToProfile(userId),
-                tooltip: 'My Profile',
-              ),
-            ],
-          ),
 
-          // Profile summary card
-          SliverToBoxAdapter(
-            child: profileAsync.when(
-              data: (profile) => profile != null
-                  ? _ProfileSummaryCard(
-                      profile: profile,
-                      onTap: () => _navigateToProfile(userId),
-                    )
-                  : const SizedBox.shrink(),
-              loading: () => const Padding(
-                padding: EdgeInsets.all(16),
-                child: Center(child: CircularProgressIndicator()),
+          // Profile summary card - only show if showProfileHeader is true
+          if (widget.showProfileHeader)
+            SliverToBoxAdapter(
+              child: profileAsync.when(
+                data: (profile) => profile != null
+                    ? _ProfileSummaryCard(
+                        profile: profile,
+                        onTap: () => _navigateToProfile(userId),
+                      )
+                    : const SizedBox.shrink(),
+                loading: () => const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+                error: (error, stackTrace) => const SizedBox.shrink(),
               ),
-              error: (error, stackTrace) => const SizedBox.shrink(),
             ),
-          ),
 
           // Section header
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+              padding: EdgeInsets.fromLTRB(
+                16,
+                widget.showProfileHeader ? 24 : 16,
+                16,
+                8,
+              ),
               child: Row(
                 children: [
                   Icon(Icons.explore, size: 20, color: context.textSecondary),
@@ -444,7 +457,12 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       try {
         ref.read(exploreProvider.notifier).removePost(post.id);
         await ref.read(socialServiceProvider).deletePost(post.id);
-        // Profile stream will auto-update when Cloud Function updates postCount
+
+        // Apply optimistic post count decrement for instant UI feedback
+        ref
+            .read(profileCountAdjustmentsProvider.notifier)
+            .decrement(post.authorId);
+
         if (mounted) {
           ScaffoldMessenger.of(
             context,

@@ -8,6 +8,7 @@ export 'screens/profile_social_screen.dart';
 export 'screens/post_detail_screen.dart';
 export 'screens/create_post_screen.dart';
 export 'screens/followers_screen.dart';
+export 'screens/social_hub_screen.dart';
 
 // Widgets
 export 'widgets/follow_button.dart';

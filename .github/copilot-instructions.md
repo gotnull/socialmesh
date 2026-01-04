@@ -37,19 +37,80 @@ TypeScript functions for widget marketplace API, share link Open Graph, admin op
 Profile avatars in `profile_avatars/{uid}.jpg`. Widget assets in respective folders.
 
 ## Riverpod 3.x Patterns (CRITICAL)
+This project uses **Riverpod 3.x** (riverpod_annotation NOT used). Follow these patterns strictly:
+
+### Basic Notifier (synchronous state)
 ```dart
-// ✅ Correct: Notifier with build()
 class MyNotifier extends Notifier<MyState> {
   @override
-  MyState build() => MyState.initial();
+  MyState build() => MyState.initial(); // Initial state
+  
   void update(MyState s) => state = s;
+  void doSomething() {
+    final service = ref.read(someServiceProvider);
+    state = state.copyWith(loading: true);
+  }
 }
 final myProvider = NotifierProvider<MyNotifier, MyState>(MyNotifier.new);
-
-// ❌ Wrong: StateNotifier (Riverpod 2.x) - NEVER USE
 ```
-- `AsyncNotifier`/`AsyncNotifierProvider` for async loading
-- `ref.watch()` for reactive, `ref.read()` for one-time actions
+
+### AsyncNotifier (async loading)
+```dart
+class MyAsyncNotifier extends AsyncNotifier<MyData> {
+  @override
+  Future<MyData> build() async {
+    return await ref.read(serviceProvider).fetchData();
+  }
+  
+  Future<void> refresh() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() => build());
+  }
+}
+final myAsyncProvider = AsyncNotifierProvider<MyAsyncNotifier, MyData>(MyAsyncNotifier.new);
+```
+
+### DEPRECATED - Never use these (Riverpod 2.x):
+- ❌ `StateNotifier` / `StateNotifierProvider`
+- ❌ `StateProvider` (use `NotifierProvider` instead)
+- ❌ `ChangeNotifierProvider`
+
+### Provider types still valid:
+- ✅ `Provider` - computed/derived values
+- ✅ `FutureProvider` - one-shot async
+- ✅ `StreamProvider` - reactive streams
+- ✅ `NotifierProvider` - mutable state with methods
+- ✅ `AsyncNotifierProvider` - async mutable state
+- ✅ `.family` modifier for parameterized providers
+- ✅ `.autoDispose` modifier for auto-cleanup
+
+### Family Providers (no FamilyNotifier in Riverpod 3)
+```dart
+// For family with Notifier, use a global notifier with Map state:
+class CountAdjustmentsNotifier extends Notifier<Map<String, int>> {
+  @override
+  Map<String, int> build() => {};
+  
+  void increment(String key) {
+    state = {...state, key: (state[key] ?? 0) + 1};
+  }
+}
+final adjustmentsProvider = NotifierProvider<CountAdjustmentsNotifier, Map<String, int>>(
+  CountAdjustmentsNotifier.new,
+);
+
+// Or use simple Provider.family for derived values:
+final itemProvider = Provider.family<Item?, String>((ref, id) {
+  final items = ref.watch(itemsProvider);
+  return items.firstWhereOrNull((i) => i.id == id);
+});
+```
+
+### Usage patterns:
+- `ref.watch()` - reactive rebuilds (use in build methods)
+- `ref.read()` - one-time reads (use in callbacks/methods)
+- `ref.invalidate(provider)` - force refresh
+- `ref.listen()` - side effects on changes
 
 ## Config Screen Pattern
 All device config screens follow this structure:

@@ -22,9 +22,16 @@ import 'post_detail_screen.dart';
 
 /// Instagram-style profile screen with followers, following, posts, and linked devices.
 class ProfileSocialScreen extends ConsumerStatefulWidget {
-  const ProfileSocialScreen({super.key, required this.userId});
+  const ProfileSocialScreen({
+    super.key,
+    required this.userId,
+    this.showAppBar = true,
+  });
 
   final String userId;
+
+  /// Whether to show the SliverAppBar. Set to false when embedding in tabs.
+  final bool showAppBar;
 
   @override
   ConsumerState<ProfileSocialScreen> createState() =>
@@ -36,8 +43,8 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
   Widget build(BuildContext context) {
     final currentUser = ref.watch(currentUserProvider);
     final isOwnProfile = currentUser?.uid == widget.userId;
-    // Use stream provider for real-time profile updates (e.g., postCount changes)
-    final profileAsync = ref.watch(publicProfileStreamProvider(widget.userId));
+    // Use optimistic provider for instant post count updates
+    final profileAsync = ref.watch(optimisticProfileProvider(widget.userId));
     final postsStream = ref.watch(userPostsStreamProvider(widget.userId));
     final followStateAsync = isOwnProfile
         ? null
@@ -57,6 +64,10 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
 
           return RefreshIndicator(
             onRefresh: () async {
+              // Reset optimistic adjustments on refresh (stream will have latest)
+              ref
+                  .read(profileCountAdjustmentsProvider.notifier)
+                  .reset(widget.userId);
               ref.invalidate(publicProfileStreamProvider(widget.userId));
               ref.invalidate(userPostsStreamProvider(widget.userId));
               if (!isOwnProfile) {
@@ -65,7 +76,8 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
             },
             child: CustomScrollView(
               slivers: [
-                _buildSliverAppBar(context, profile, isOwnProfile),
+                if (widget.showAppBar)
+                  _buildSliverAppBar(context, profile, isOwnProfile),
                 SliverToBoxAdapter(
                   child: _buildProfileHeader(
                     context,
@@ -756,7 +768,12 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
         final socialService = ref.read(socialServiceProvider);
         await socialService.deletePost(post.id);
         ref.invalidate(userPostsStreamProvider(widget.userId));
-        // Profile stream will auto-update when Cloud Function updates postCount
+
+        // Apply optimistic post count decrement for instant UI feedback
+        ref
+            .read(profileCountAdjustmentsProvider.notifier)
+            .decrement(post.authorId);
+
         if (mounted) {
           ScaffoldMessenger.of(
             context,

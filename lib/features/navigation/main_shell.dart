@@ -395,8 +395,8 @@ class _MainShellState extends ConsumerState<MainShell> {
     ),
     const _DrawerMenuItem(
       icon: Icons.forum_outlined,
-      label: 'Social Feed',
-      screen: FeedScreen(),
+      label: 'Social',
+      screen: SocialHubScreen(),
     ),
     // Premium features
     const _DrawerMenuItem(
