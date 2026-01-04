@@ -349,7 +349,8 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   }
 
   void _handleNodeTap(String nodeId) {
-    final nodeNum = int.tryParse(nodeId);
+    // nodeId is stored as hex string (e.g., "A1B2C3D4")
+    final nodeNum = int.tryParse(nodeId, radix: 16);
     if (nodeNum == null) {
       showErrorSnackBar(context, 'Invalid node ID');
       return;
