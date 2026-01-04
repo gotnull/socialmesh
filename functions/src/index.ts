@@ -978,18 +978,24 @@ export const share = onRequest(async (req, res) => {
   </style>
   
   <script>
-    // Try to open the app directly
-    window.location.href = '${deepLink}';
+    // Only attempt deep link redirect on mobile devices
+    var ua = navigator.userAgent.toLowerCase();
+    var isMobile = ua.indexOf('iphone') > -1 || ua.indexOf('ipad') > -1 || ua.indexOf('android') > -1;
     
-    // Fallback to store after delay
-    setTimeout(function() {
-      var ua = navigator.userAgent.toLowerCase();
-      if (ua.indexOf('iphone') > -1 || ua.indexOf('ipad') > -1) {
-        window.location.href = '${APP_STORE_URL}';
-      } else if (ua.indexOf('android') > -1) {
-        window.location.href = '${PLAY_STORE_URL}';
-      }
-    }, 2500);
+    if (isMobile) {
+      // Try to open the app directly on mobile
+      window.location.href = '${deepLink}';
+      
+      // Fallback to app store after delay if app didn't open
+      setTimeout(function() {
+        if (ua.indexOf('iphone') > -1 || ua.indexOf('ipad') > -1) {
+          window.location.href = '${APP_STORE_URL}';
+        } else if (ua.indexOf('android') > -1) {
+          window.location.href = '${PLAY_STORE_URL}';
+        }
+      }, 2500);
+    }
+    // Desktop users see the landing page with buttons
   </script>
 </head>
 <body>
