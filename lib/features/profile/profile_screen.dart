@@ -12,6 +12,7 @@ import '../../providers/auth_providers.dart';
 import '../../providers/profile_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
+import '../../utils/validation.dart';
 import '../navigation/main_shell.dart';
 import '../settings/widgets/cloud_sync_paywall.dart';
 
@@ -2018,10 +2019,13 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                               icon: Icons.person_outline,
                               maxLength: 50,
                               validator: (value) {
-                                if (value == null || value.trim().isEmpty) {
-                                  return 'Display name is required';
-                                }
-                                return null;
+                                final currentUser = ref.read(
+                                  currentUserProvider,
+                                );
+                                return validateDisplayName(
+                                  value ?? '',
+                                  userId: currentUser?.uid,
+                                );
                               },
                             ),
                             const SizedBox(height: 12),

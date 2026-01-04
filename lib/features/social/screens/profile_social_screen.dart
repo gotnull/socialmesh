@@ -25,7 +25,7 @@ import 'create_post_screen.dart';
 import 'followers_screen.dart';
 import 'post_detail_screen.dart';
 
-/// Instagram-style profile screen with followers, following, posts, and linked devices.
+/// Social profile screen with followers, following, posts, and linked devices.
 class ProfileSocialScreen extends ConsumerStatefulWidget {
   const ProfileSocialScreen({
     super.key,

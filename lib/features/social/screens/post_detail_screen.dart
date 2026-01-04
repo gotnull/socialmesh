@@ -568,7 +568,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
   }
 }
 
-/// Short time ago format like Instagram (1h, 2d, 3w)
+/// Short time ago format (1h, 2d, 3w)
 String _shortTimeAgo(DateTime dateTime) {
   final now = DateTime.now();
   final diff = now.difference(dateTime);
@@ -684,7 +684,7 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
     final isOwnComment = currentUser?.uid == widget.comment.comment.authorId;
     final isReply = widget.depth > 0;
 
-    // Instagram-style: replies have smaller indent
+    // Replies have smaller indent
     final leftPadding = isReply ? 54.0 : 16.0; // Align with parent content
 
     return GestureDetector(
@@ -727,7 +727,7 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Instagram-style: name + comment on same line for short comments
+                  // Name + comment on same line for short comments
                   RichText(
                     text: TextSpan(
                       style: theme.textTheme.bodyMedium,
@@ -791,7 +791,7 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
                         ),
                       ],
 
-                      // Reply button - text only like Instagram
+                      // Reply button - text only
                       if (widget.depth < 3) ...[
                         const SizedBox(width: 16),
                         GestureDetector(
@@ -822,7 +822,7 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
               ),
             ),
 
-            // Like button on right - Instagram style
+            // Like button on right
             GestureDetector(
               onTap: currentUser != null ? _toggleLike : null,
               child: Padding(

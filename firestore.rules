@@ -25,25 +25,92 @@ service cloud.firestore {
       return request.resource.size() < 500 * 1024;
     }
     
+    // Owner UID - can use any display name
+    function isOwner_displayName() {
+      return request.auth.uid == 'rAHv8sx4UeTajyeBurx9ZjjBzWn1';
+    }
+    
+    // Reserved exact usernames - blocked for everyone except owner
+    function isReservedExactName(displayName) {
+      let reserved = [
+        'gotnull', 'socialmesh', 'admin', 'administrator', 'support', 'help',
+        'info', 'contact', 'official', 'verified', 'mod', 'moderator', 'staff',
+        'team', 'root', 'system', 'bot', 'api', 'dev', 'developer', 'meshtastic', 'mesh'
+      ];
+      return displayName.lower() in reserved;
+    }
+    
+    // Check if display name contains blocked substrings
+    // Note: Firestore rules don't support regex, so we use contains() for patterns
+    function containsBlockedPattern(displayName) {
+      let lowerName = displayName.lower();
+      // Block socialmesh variations
+      return lowerName.matches('.*socialmesh.*') ||
+             lowerName.matches('social.?mesh.*') ||
+             // Block gotnull variations
+             lowerName.matches('.*gotnull.*') ||
+             lowerName.matches('got.?null.*') ||
+             // Block admin/mod impersonation
+             lowerName.matches('.*admin.*') ||
+             lowerName.matches('.*moderator.*') ||
+             // Block support impersonation
+             lowerName.matches('.*support.*') ||
+             // Block official/verified impersonation
+             lowerName.matches('.*official.*') ||
+             lowerName.matches('.*verified.*') ||
+             lowerName.matches('thereal.*') ||
+             lowerName.matches('real.*') ||
+             // Block meshtastic brand
+             lowerName.matches('meshtastic.*');
+    }
+    
+    // Validate display name format
+    function isValidDisplayNameFormat(displayName) {
+      // Only letters, numbers, periods, underscores (2-30 chars)
+      // Cannot start/end with period, no consecutive periods
+      return displayName.size() >= 2 &&
+             displayName.size() <= 30 &&
+             displayName.matches('^[a-zA-Z0-9._]+$') &&
+             !displayName.matches('^\\..*') &&
+             !displayName.matches('.*\\.$') &&
+             !displayName.matches('.*\\.\\..*') &&
+             !displayName.matches('^[0-9]+$');
+    }
+    
+    // Main validation function for display names
+    function canUseDisplayName(displayName) {
+      // Owner can use any name
+      return isOwner_displayName() ||
+             (isValidDisplayNameFormat(displayName) &&
+              !isReservedExactName(displayName) &&
+              !containsBlockedPattern(displayName));
+    }
+    
     // =============================================================================
     // USER DATA COLLECTIONS
     // =============================================================================
     
-    // User data - owner read/write
+    // User data - owner read/write (with reserved name enforcement)
     match /users/{userId} {
-      allow read, write: if isOwner(userId);
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId) && 
+        (!('displayName' in request.resource.data) || canUseDisplayName(request.resource.data.displayName));
     }
     
     // User profiles - public read, owner write (except counters)
     match /profiles/{userId} {
       allow read: if true;
       // Owner can write but cannot modify counter fields (Cloud Functions only)
+      // Also enforce reserved display name restrictions
       allow create: if isOwner(userId) && isValidSize() &&
         (!('followerCount' in request.resource.data) || request.resource.data.followerCount == 0) &&
         (!('followingCount' in request.resource.data) || request.resource.data.followingCount == 0) &&
-        (!('postCount' in request.resource.data) || request.resource.data.postCount == 0);
+        (!('postCount' in request.resource.data) || request.resource.data.postCount == 0) &&
+        (!('displayName' in request.resource.data) || canUseDisplayName(request.resource.data.displayName));
       // Allow owner to update non-counter fields, OR allow counter increments only
+      // Also enforce reserved display name restrictions on updates
       allow update: if isOwner(userId) && isValidSize() &&
+        (!('displayName' in request.resource.data) || canUseDisplayName(request.resource.data.displayName)) &&
         (
           // Option 1: Non-counter field updates (displayName, bio, avatarUrl, etc.)
           (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['followerCount', 'followingCount', 'postCount']))
@@ -212,7 +279,7 @@ service cloud.firestore {
     }
 
     // =============================================================================
-    // SOCIAL FEATURES (Instagram-style follows, posts, feeds, comments)
+    // SOCIAL FEATURES (follows, posts, feeds, comments)
     // =============================================================================
 
     // Follow relationships

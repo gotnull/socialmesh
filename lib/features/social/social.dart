@@ -1,5 +1,5 @@
 /// Social features module
-/// Instagram-style social features: follow, feed, posts, comments
+/// Social features: follow, feed, posts, comments
 library;
 
 // Screens

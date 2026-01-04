@@ -131,3 +131,144 @@ class UpperCaseTextFormatter extends TextInputFormatter {
     );
   }
 }
+
+// =============================================================================
+// DISPLAY NAME / USERNAME VALIDATION
+// =============================================================================
+
+/// The owner's Firebase UID - only this user can use reserved names
+const String _ownerUid = 'rAHv8sx4UeTajyeBurx9ZjjBzWn1';
+
+/// Reserved display names that only the owner can claim
+const Set<String> _reservedExactNames = {
+  'gotnull',
+  'socialmesh',
+  'admin',
+  'administrator',
+  'support',
+  'help',
+  'info',
+  'contact',
+  'official',
+  'verified',
+  'mod',
+  'moderator',
+  'staff',
+  'team',
+  'root',
+  'system',
+  'bot',
+  'api',
+  'dev',
+  'developer',
+  'meshtastic',
+  'mesh',
+};
+
+/// Blocked patterns - names matching these regexes are never allowed (except by owner)
+final List<RegExp> _blockedPatterns = [
+  // socialmesh variations
+  RegExp(r'^social[-_.]?mesh', caseSensitive: false),
+  RegExp(r'^socialmesh', caseSensitive: false),
+  // gotnull variations
+  RegExp(r'^got[-_.]?null', caseSensitive: false),
+  // Official/verified impersonation
+  RegExp(r'[-_.]?official$', caseSensitive: false),
+  RegExp(r'[-_.]?verified$', caseSensitive: false),
+  RegExp(r'[-_.]?real$', caseSensitive: false),
+  RegExp(r'^real[-_.]?', caseSensitive: false),
+  RegExp(r'^the[-_.]?real[-_.]?', caseSensitive: false),
+  RegExp(r'^official[-_.]?', caseSensitive: false),
+  // Admin/mod impersonation
+  RegExp(r'[-_.]?admin', caseSensitive: false),
+  RegExp(r'[-_.]?mod(?:erator)?$', caseSensitive: false),
+  RegExp(r'^admin[-_.]?', caseSensitive: false),
+  RegExp(r'^mod[-_.]?', caseSensitive: false),
+  // Support impersonation
+  RegExp(r'[-_.]?support$', caseSensitive: false),
+  RegExp(r'^support[-_.]?', caseSensitive: false),
+  RegExp(r'[-_.]?help$', caseSensitive: false),
+  RegExp(r'^help[-_.]?', caseSensitive: false),
+  // Meshtastic brand
+  RegExp(r'^meshtastic', caseSensitive: false),
+];
+
+/// Allowed characters: letters, numbers, periods, underscores
+final RegExp _validUsernameChars = RegExp(r'^[a-zA-Z0-9._]+$');
+
+/// Check if a display name is reserved (exact match)
+bool isReservedDisplayName(String displayName) {
+  return _reservedExactNames.contains(displayName.toLowerCase());
+}
+
+/// Check if a display name matches any blocked pattern
+bool matchesBlockedPattern(String displayName) {
+  final lowerName = displayName.toLowerCase();
+  return _blockedPatterns.any((pattern) => pattern.hasMatch(lowerName));
+}
+
+/// Check if a user can use a specific display name
+/// Returns true if the name is allowed for this user
+bool canUseDisplayName(String displayName, String? userId) {
+  // Owner can use any name
+  if (userId == _ownerUid) return true;
+
+  final lowerName = displayName.toLowerCase();
+
+  // Check exact reserved names
+  if (_reservedExactNames.contains(lowerName)) {
+    return false;
+  }
+
+  // Check blocked patterns
+  if (matchesBlockedPattern(lowerName)) {
+    return false;
+  }
+
+  return true;
+}
+
+/// Validates a display name for the social profile
+/// Returns null if valid, error message if invalid
+String? validateDisplayName(String name, {String? userId}) {
+  final trimmed = name.trim();
+
+  if (trimmed.isEmpty) {
+    return 'Display name is required';
+  }
+
+  if (trimmed.length < 2) {
+    return 'Display name must be at least 2 characters';
+  }
+
+  if (trimmed.length > 30) {
+    return 'Display name must be 30 characters or less';
+  }
+
+  // Only letters, numbers, periods, underscores allowed
+  if (!_validUsernameChars.hasMatch(trimmed)) {
+    return 'Only letters, numbers, periods, and underscores allowed';
+  }
+
+  // Cannot start or end with a period
+  if (trimmed.startsWith('.') || trimmed.endsWith('.')) {
+    return 'Display name cannot start or end with a period';
+  }
+
+  // Cannot have consecutive periods
+  if (trimmed.contains('..')) {
+    return 'Display name cannot have consecutive periods';
+  }
+
+  // Cannot be only numbers
+  if (RegExp(r'^[0-9]+$').hasMatch(trimmed)) {
+    return 'Display name cannot be only numbers';
+  }
+
+  // Check reserved/blocked names
+  if (!canUseDisplayName(trimmed, userId)) {
+    return 'This display name is not available';
+  }
+
+  return null;
+}
