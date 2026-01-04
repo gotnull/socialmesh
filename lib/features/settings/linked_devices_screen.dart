@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../../core/widgets/auto_scroll_text.dart';
 import '../../core/widgets/node_avatar.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
@@ -545,7 +546,7 @@ class _LinkedDeviceCard extends StatelessWidget {
                         Row(
                           children: [
                             Flexible(
-                              child: Text(
+                              child: AutoScrollText(
                                 node?.displayName ??
                                     '!${nodeId.toRadixString(16)}',
                                 style: TextStyle(
@@ -553,7 +554,6 @@ class _LinkedDeviceCard extends StatelessWidget {
                                   fontWeight: FontWeight.w600,
                                   fontSize: 15,
                                 ),
-                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             if (isPrimary) ...[
@@ -583,14 +583,16 @@ class _LinkedDeviceCard extends StatelessWidget {
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            Text(
-                              node?.longName ?? '!${nodeId.toRadixString(16)}',
-                              style: TextStyle(
-                                color: context.textTertiary,
-                                fontSize: 12,
-                                fontFamily: node?.longName != null
-                                    ? null
-                                    : 'monospace',
+                            Flexible(
+                              child: AutoScrollText(
+                                node?.longName ?? '!${nodeId.toRadixString(16)}',
+                                style: TextStyle(
+                                  color: context.textTertiary,
+                                  fontSize: 12,
+                                  fontFamily: node?.longName != null
+                                      ? null
+                                      : 'monospace',
+                                ),
                               ),
                             ),
                             if (node?.hardwareModel != null) ...[
