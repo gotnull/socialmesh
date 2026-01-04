@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
+import '../../../core/widgets/edge_fade.dart';
 import '../../../providers/auth_providers.dart';
 import '../models/shop_models.dart';
 import '../providers/device_shop_providers.dart';
@@ -150,17 +151,21 @@ class _CategoriesSection extends StatelessWidget {
         ),
         SizedBox(
           height: 100,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            itemCount: DeviceCategory.values.length,
-            itemBuilder: (context, index) {
-              final category = DeviceCategory.values[index];
-              return _CategoryCard(
-                category: category,
-                onTap: () => onCategoryTap(category),
-              );
-            },
+          child: EdgeFade.end(
+            fadeSize: 32,
+            fadeColor: context.background,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              itemCount: DeviceCategory.values.length,
+              itemBuilder: (context, index) {
+                final category = DeviceCategory.values[index];
+                return _CategoryCard(
+                  category: category,
+                  onTap: () => onCategoryTap(category),
+                );
+              },
+            ),
           ),
         ),
       ],
@@ -292,13 +297,17 @@ class _PartnersSection extends ConsumerWidget {
             ),
             SizedBox(
               height: 80,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                itemCount: partners.length,
-                itemBuilder: (context, index) {
-                  return _PartnerCard(seller: partners[index]);
-                },
+              child: EdgeFade.end(
+                fadeSize: 32,
+                fadeColor: context.background,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  itemCount: partners.length,
+                  itemBuilder: (context, index) {
+                    return _PartnerCard(seller: partners[index]);
+                  },
+                ),
               ),
             ),
           ],
@@ -488,16 +497,20 @@ class _ProductSection extends StatelessWidget {
         ),
         SizedBox(
           height: 240,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            itemCount: products.length,
-            itemBuilder: (context, index) {
-              return ProductCard(
-                product: products[index],
-                highlightColor: highlightColor,
-              );
-            },
+          child: EdgeFade.end(
+            fadeSize: 32,
+            fadeColor: context.background,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              itemCount: products.length,
+              itemBuilder: (context, index) {
+                return ProductCard(
+                  product: products[index],
+                  highlightColor: highlightColor,
+                );
+              },
+            ),
           ),
         ),
       ],
@@ -770,23 +783,27 @@ class _SectionLoading extends StatelessWidget {
         ),
         SizedBox(
           height: 240,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            itemCount: 3,
-            itemBuilder: (context, index) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Container(
-                  width: 160,
-                  decoration: BoxDecoration(
-                    color: context.card,
-                    borderRadius: BorderRadius.circular(12),
+          child: EdgeFade.end(
+            fadeSize: 32,
+            fadeColor: context.background,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              itemCount: 3,
+              itemBuilder: (context, index) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Container(
+                    width: 160,
+                    decoration: BoxDecoration(
+                      color: context.card,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Center(child: CircularProgressIndicator()),
                   ),
-                  child: const Center(child: CircularProgressIndicator()),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
         ),
       ],

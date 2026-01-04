@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
+import '../../../core/widgets/auto_scroll_text.dart';
 import '../../../core/widgets/node_avatar.dart';
 import '../../../models/mesh_models.dart';
 import '../../../models/social.dart';
@@ -1126,58 +1127,119 @@ class _LinkedDeviceChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final isOnline = node?.isOnline ?? false;
 
-    return Container(
-      width: 72,
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Column(
-        children: [
-          Stack(
-            children: [
-              NodeAvatar(
-                text: node?.avatarName ?? nodeId.toRadixString(16)[0],
-                color: _getNodeColor(nodeId),
-                size: 44,
-              ),
-              // Online indicator
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: Container(
-                  width: 14,
-                  height: 14,
-                  decoration: BoxDecoration(
-                    color: isOnline ? AccentColors.green : context.textTertiary,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: context.background, width: 2),
-                  ),
+    return GestureDetector(
+      onTap: () => _showNodeBottomSheet(context),
+      child: Container(
+        width: 72,
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Column(
+          children: [
+            Stack(
+              children: [
+                NodeAvatar(
+                  text: node?.avatarName ?? nodeId.toRadixString(16)[0],
+                  color: _getNodeColor(nodeId),
+                  size: 44,
                 ),
-              ),
-              // Primary badge
-              if (isPrimary)
+                // Online indicator
                 Positioned(
-                  top: -2,
-                  right: -2,
+                  bottom: 0,
+                  right: 0,
                   child: Container(
-                    padding: const EdgeInsets.all(2),
+                    width: 14,
+                    height: 14,
                     decoration: BoxDecoration(
-                      color: context.accentColor,
+                      color: isOnline
+                          ? AccentColors.green
+                          : context.textTertiary,
                       shape: BoxShape.circle,
                       border: Border.all(color: context.background, width: 2),
                     ),
-                    child: const Icon(Icons.star, color: Colors.white, size: 8),
                   ),
                 ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            node?.shortName ?? '!${nodeId.toRadixString(16).substring(0, 4)}',
-            style: TextStyle(color: context.textSecondary, fontSize: 11),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+                // Primary badge
+                if (isPrimary)
+                  Positioned(
+                    top: -2,
+                    right: -2,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: context.accentColor,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: context.background, width: 2),
+                      ),
+                      child: const Icon(
+                        Icons.star,
+                        color: Colors.white,
+                        size: 8,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            SizedBox(
+              width: 72,
+              child: AutoScrollText(
+                node?.longName ?? '!${nodeId.toRadixString(16)}',
+                style: TextStyle(
+                  color: context.textSecondary,
+                  fontSize: 11,
+                  fontFamily: node?.longName != null ? null : 'monospace',
+                ),
+                maxLines: 1,
+                velocity: 25.0,
+                fadeWidth: 10.0,
+              ),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+
+  void _showNodeBottomSheet(BuildContext context) {
+    HapticFeedback.lightImpact();
+
+    AppBottomSheet.showActions(
+      context: context,
+      header: Text(
+        node?.displayName ?? '!${nodeId.toRadixString(16)}',
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: context.textPrimary,
+        ),
+      ),
+      actions: [
+        BottomSheetAction(
+          icon: Icons.message_outlined,
+          iconColor: context.accentColor,
+          label: 'Send Message',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ChatScreen(
+                type: ConversationType.directMessage,
+                nodeNum: nodeId,
+                title: node?.displayName ?? '!${nodeId.toRadixString(16)}',
+              ),
+            ),
+          ),
+        ),
+        if (node?.hasPosition == true)
+          BottomSheetAction(
+            icon: Icons.map_outlined,
+            label: 'View on Map',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => MapScreen(initialNodeNum: nodeId),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
