@@ -42,8 +42,15 @@ service cloud.firestore {
         (!('followerCount' in request.resource.data) || request.resource.data.followerCount == 0) &&
         (!('followingCount' in request.resource.data) || request.resource.data.followingCount == 0) &&
         (!('postCount' in request.resource.data) || request.resource.data.postCount == 0);
+      // Allow owner to update non-counter fields, OR allow counter increments only
       allow update: if isOwner(userId) && isValidSize() &&
-        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['followerCount', 'followingCount', 'postCount']));
+        (
+          // Option 1: Non-counter field updates (displayName, bio, avatarUrl, etc.)
+          (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['followerCount', 'followingCount', 'postCount']))
+          ||
+          // Option 2: Counter-only updates (for post create/delete, follow/unfollow)
+          (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['postCount', 'followerCount', 'followingCount']))
+        );
       allow delete: if isOwner(userId);
     }
     
