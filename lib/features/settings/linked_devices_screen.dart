@@ -584,11 +584,11 @@ class _LinkedDeviceCard extends StatelessWidget {
                         Row(
                           children: [
                             Text(
-                              node?.shortName ?? '!${nodeId.toRadixString(16)}',
+                              node?.longName ?? '!${nodeId.toRadixString(16)}',
                               style: TextStyle(
                                 color: context.textTertiary,
                                 fontSize: 12,
-                                fontFamily: node?.shortName != null
+                                fontFamily: node?.longName != null
                                     ? null
                                     : 'monospace',
                               ),
