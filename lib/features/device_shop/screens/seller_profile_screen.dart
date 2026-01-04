@@ -3,20 +3,56 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme.dart';
+import '../../../core/widgets/auto_scroll_text.dart';
 import '../models/shop_models.dart';
 import '../providers/device_shop_providers.dart';
 import 'device_shop_screen.dart';
 
 /// Seller profile screen showing seller info and their products
-class SellerProfileScreen extends ConsumerWidget {
+class SellerProfileScreen extends ConsumerStatefulWidget {
   final String sellerId;
 
   const SellerProfileScreen({super.key, required this.sellerId});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final sellerAsync = ref.watch(singleSellerProvider(sellerId));
-    final productsAsync = ref.watch(sellerProductsProvider(sellerId));
+  ConsumerState<SellerProfileScreen> createState() =>
+      _SellerProfileScreenState();
+}
+
+class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen> {
+  late ScrollController _scrollController;
+  bool _showTitle = false;
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    // Show title when scrolled past header (200px expandedHeight)
+    final shouldShowTitle =
+        _scrollController.hasClients && _scrollController.offset > 150;
+    if (shouldShowTitle != _showTitle) {
+      setState(() => _showTitle = shouldShowTitle);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sellerAsync = ref.watch(singleSellerProvider(widget.sellerId));
+    final productsAsync = ref.watch(sellerProductsProvider(widget.sellerId));
 
     return Scaffold(
       backgroundColor: context.background,
@@ -65,9 +101,29 @@ class SellerProfileScreen extends ConsumerWidget {
           }
 
           return CustomScrollView(
+            controller: _scrollController,
             slivers: [
               // App Bar with seller header
               _buildHeader(context, seller),
+
+              // Search bar - pinned below app bar
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _SearchBarDelegate(
+                  searchController: _searchController,
+                  searchQuery: _searchQuery,
+                  onChanged: (value) => setState(() => _searchQuery = value),
+                  onClear: () {
+                    _searchController.clear();
+                    setState(() => _searchQuery = '');
+                  },
+                  hintText: 'Search products...',
+                  backgroundColor: context.background,
+                  cardColor: context.card,
+                  textPrimary: context.textPrimary,
+                  textTertiary: context.textTertiary,
+                ),
+              ),
 
               // Seller stats
               SliverToBoxAdapter(child: _SellerStats(seller: seller)),
@@ -142,6 +198,44 @@ class SellerProfileScreen extends ConsumerWidget {
                     );
                   }
 
+                  // Filter products by search query
+                  final filteredProducts = _searchQuery.isEmpty
+                      ? products
+                      : products.where((p) {
+                          final query = _searchQuery.toLowerCase();
+                          return p.name.toLowerCase().contains(query) ||
+                              (p.description.toLowerCase().contains(query)) ||
+                              (p.shortDescription?.toLowerCase().contains(
+                                    query,
+                                  ) ??
+                                  false) ||
+                              p.category.label.toLowerCase().contains(query);
+                        }).toList();
+
+                  if (filteredProducts.isEmpty) {
+                    return SliverToBoxAdapter(
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(32),
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.search_off,
+                                color: context.textTertiary,
+                                size: 48,
+                              ),
+                              SizedBox(height: 12),
+                              Text(
+                                'No products match "$_searchQuery"',
+                                style: TextStyle(color: context.textSecondary),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+
                   return SliverPadding(
                     padding: const EdgeInsets.all(12),
                     sliver: SliverGrid(
@@ -153,8 +247,8 @@ class SellerProfileScreen extends ConsumerWidget {
                             mainAxisSpacing: 12,
                           ),
                       delegate: SliverChildBuilderDelegate((context, index) {
-                        return ProductCard(product: products[index]);
-                      }, childCount: products.length),
+                        return ProductCard(product: filteredProducts[index]);
+                      }, childCount: filteredProducts.length),
                     ),
                   );
                 },
@@ -174,6 +268,25 @@ class SellerProfileScreen extends ConsumerWidget {
       backgroundColor: context.card,
       expandedHeight: 200,
       pinned: true,
+      title: _showTitle
+          ? Row(
+              children: [
+                Expanded(
+                  child: AutoScrollText(
+                    seller.name,
+                    style: TextStyle(
+                      color: context.textPrimary,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 1,
+                    velocity: 30.0,
+                    fadeWidth: 20.0,
+                  ),
+                ),
+              ],
+            )
+          : null,
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
           decoration: BoxDecoration(
@@ -540,5 +653,80 @@ class _ContactRow extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// Search bar persistent header delegate
+class _SearchBarDelegate extends SliverPersistentHeaderDelegate {
+  final TextEditingController searchController;
+  final String searchQuery;
+  final Function(String) onChanged;
+  final VoidCallback onClear;
+  final String hintText;
+  final Color backgroundColor;
+  final Color cardColor;
+  final Color textPrimary;
+  final Color textTertiary;
+
+  _SearchBarDelegate({
+    required this.searchController,
+    required this.searchQuery,
+    required this.onChanged,
+    required this.onClear,
+    required this.hintText,
+    required this.backgroundColor,
+    required this.cardColor,
+    required this.textPrimary,
+    required this.textTertiary,
+  });
+
+  @override
+  double get minExtent => 72.0;
+
+  @override
+  double get maxExtent => 72.0;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return Container(
+      color: backgroundColor,
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: cardColor,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: TextField(
+          controller: searchController,
+          onChanged: onChanged,
+          style: TextStyle(color: textPrimary),
+          decoration: InputDecoration(
+            hintText: hintText,
+            hintStyle: TextStyle(color: textTertiary),
+            prefixIcon: Icon(Icons.search, color: textTertiary),
+            suffixIcon: searchQuery.isNotEmpty
+                ? IconButton(
+                    icon: Icon(Icons.clear, color: textTertiary),
+                    onPressed: onClear,
+                  )
+                : null,
+            border: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  bool shouldRebuild(_SearchBarDelegate oldDelegate) {
+    return searchQuery != oldDelegate.searchQuery;
   }
 }
