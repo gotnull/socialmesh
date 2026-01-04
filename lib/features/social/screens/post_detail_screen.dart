@@ -3,10 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
+import '../../../core/theme.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../models/social.dart';
+import '../../../providers/app_providers.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/social_providers.dart';
 import '../../../services/social_service.dart';
+import '../../../utils/snackbar.dart';
+import '../../map/map_screen.dart';
+import '../../messaging/messaging_screen.dart'
+    show ChatScreen, ConversationType;
 import '../widgets/post_actions_bar.dart';
 import 'profile_social_screen.dart';
 
@@ -89,6 +96,8 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                           onCommentTap: () => _commentFocusNode.requestFocus(),
                           onShareTap: () => _sharePost(post),
                           onMoreTap: () => _showPostOptions(post),
+                          onLocationTap: _handleLocationTap,
+                          onNodeTap: _handleNodeTap,
                           commentCount: actualCommentCount,
                         ),
                       ),
@@ -242,9 +251,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
           _deletingCommentIds.remove(commentId);
           _deletedCommentIds.remove(commentId);
         });
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to delete: $e')));
+        showErrorSnackBar(context, 'Failed to delete: $e');
       }
     }
   }
@@ -277,9 +284,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
       // Stream will automatically update - no need to invalidate
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to post comment: $e')));
+        showErrorSnackBar(context, 'Failed to post comment: $e');
       }
     } finally {
       if (mounted) {
@@ -299,8 +304,72 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
 
   void _sharePost(Post post) {
     Share.share(
-      'Check out this post on Socialmesh!\nhttps://socialmesh.app/post/${post.id}',
+      'Check out this post on Socialmesh!\nsocialmesh://post/${post.id}',
       subject: 'Socialmesh Post',
+    );
+  }
+
+  void _handleLocationTap(PostLocation location) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MapScreen(
+          initialLatitude: location.latitude,
+          initialLongitude: location.longitude,
+          initialLocationLabel: location.name,
+        ),
+      ),
+    );
+  }
+
+  void _handleNodeTap(String nodeId) {
+    final nodeNum = int.tryParse(nodeId);
+    if (nodeNum == null) {
+      showErrorSnackBar(context, 'Invalid node ID');
+      return;
+    }
+
+    final nodes = ref.read(nodesProvider);
+    final node = nodes[nodeNum];
+
+    AppBottomSheet.showActions(
+      context: context,
+      header: Text(
+        node?.longName ?? 'Node $nodeId',
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: context.textPrimary,
+        ),
+      ),
+      actions: [
+        BottomSheetAction(
+          icon: Icons.message_outlined,
+          iconColor: context.accentColor,
+          label: 'Send Message',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ChatScreen(
+                type: ConversationType.directMessage,
+                nodeNum: nodeNum,
+                title: node?.longName ?? 'Node $nodeId',
+              ),
+            ),
+          ),
+        ),
+        if (node?.hasPosition == true)
+          BottomSheetAction(
+            icon: Icons.map_outlined,
+            label: 'View on Map',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => MapScreen(initialNodeNum: nodeNum),
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -401,15 +470,11 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
 
         if (mounted) {
           Navigator.pop(context);
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Post deleted')));
+          showSuccessSnackBar(context, 'Post deleted');
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Failed to delete: $e')));
+          showErrorSnackBar(context, 'Failed to delete: $e');
         }
       }
     }
@@ -444,15 +509,11 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
         await blockUser(ref, userId);
         if (mounted) {
           Navigator.pop(context);
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('User blocked')));
+          showSuccessSnackBar(context, 'User blocked');
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Failed to block: $e')));
+          showErrorSnackBar(context, 'Failed to block: $e');
         }
       }
     }
@@ -498,15 +559,11 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
         final socialService = ref.read(socialServiceProvider);
         await socialService.reportPost(postId, reason);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Report submitted. Thank you.')),
-          );
+          showSuccessSnackBar(context, 'Report submitted. Thank you.');
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Failed to report: $e')));
+          showErrorSnackBar(context, 'Failed to report: $e');
         }
       }
     }
@@ -853,30 +910,25 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
   }
 
   Future<void> _reportComment(BuildContext context) async {
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
-
+    final ctx = context;
     final reason = await showDialog<String>(
       context: context,
-      builder: (ctx) => _ReportReasonDialog(),
+      builder: (dialogCtx) => _ReportReasonDialog(),
     );
 
-    if (reason != null && reason.isNotEmpty && mounted) {
+    if (reason != null && reason.isNotEmpty && ctx.mounted) {
       try {
         final socialService = ref.read(socialServiceProvider);
         await socialService.reportComment(
           commentId: widget.comment.comment.id,
           reason: reason,
         );
-        if (mounted) {
-          scaffoldMessenger.showSnackBar(
-            const SnackBar(content: Text('Comment reported')),
-          );
+        if (ctx.mounted) {
+          showSuccessSnackBar(ctx, 'Comment reported');
         }
       } catch (e) {
-        if (mounted) {
-          scaffoldMessenger.showSnackBar(
-            SnackBar(content: Text('Failed to report: $e')),
-          );
+        if (ctx.mounted) {
+          showErrorSnackBar(ctx, 'Failed to report: $e');
         }
       }
     }
@@ -917,6 +969,8 @@ class _PostContent extends StatelessWidget {
     this.onCommentTap,
     this.onShareTap,
     this.onMoreTap,
+    this.onLocationTap,
+    this.onNodeTap,
     this.commentCount,
   });
 
@@ -925,6 +979,8 @@ class _PostContent extends StatelessWidget {
   final VoidCallback? onCommentTap;
   final VoidCallback? onShareTap;
   final VoidCallback? onMoreTap;
+  final void Function(PostLocation location)? onLocationTap;
+  final void Function(String nodeId)? onNodeTap;
   final int? commentCount;
 
   @override
@@ -1013,21 +1069,30 @@ class _PostContent extends StatelessWidget {
           // Location
           if (post.location != null) ...[
             const SizedBox(height: 12),
-            Row(
-              children: [
-                Icon(
-                  Icons.location_on,
-                  size: 16,
-                  color: theme.colorScheme.primary.withAlpha(180),
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  post.location!.name ?? 'Location',
-                  style: theme.textTheme.bodySmall?.copyWith(
+            GestureDetector(
+              onTap: onLocationTap != null
+                  ? () => onLocationTap!(post.location!)
+                  : null,
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.location_on,
+                    size: 16,
                     color: theme.colorScheme.primary.withAlpha(180),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 4),
+                  Text(
+                    post.location!.name ?? 'Location',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.primary.withAlpha(180),
+                      decoration: onLocationTap != null
+                          ? TextDecoration.underline
+                          : null,
+                      decorationColor: theme.colorScheme.primary.withAlpha(180),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
 

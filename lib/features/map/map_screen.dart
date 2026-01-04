@@ -34,8 +34,17 @@ enum NodeFilter {
 /// Map screen showing all mesh nodes with GPS positions
 class MapScreen extends ConsumerStatefulWidget {
   final int? initialNodeNum;
+  final double? initialLatitude;
+  final double? initialLongitude;
+  final String? initialLocationLabel;
 
-  const MapScreen({super.key, this.initialNodeNum});
+  const MapScreen({
+    super.key,
+    this.initialNodeNum,
+    this.initialLatitude,
+    this.initialLongitude,
+    this.initialLocationLabel,
+  });
 
   @override
   ConsumerState<MapScreen> createState() => _MapScreenState();
@@ -340,13 +349,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
     HapticFeedback.selectionClick();
   }
 
-  void _addWaypoint(LatLng point) {
+  void _addWaypoint(LatLng point, {String? label}) {
     setState(() {
       _waypoints.add(
         _Waypoint(
           id: DateTime.now().millisecondsSinceEpoch,
           position: point,
-          label: 'WP ${_waypoints.length + 1}',
+          label: label ?? 'WP ${_waypoints.length + 1}',
         ),
       );
     });
@@ -408,6 +417,26 @@ class _MapScreenState extends ConsumerState<MapScreen>
           setState(() => _selectedNode = targetNode.node);
         });
       }
+    }
+
+    // Handle initial location centering (from post location tap or deep link)
+    if (!_initialCenteringDone &&
+        widget.initialLatitude != null &&
+        widget.initialLongitude != null) {
+      _initialCenteringDone = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _animatedMove(
+          LatLng(widget.initialLatitude!, widget.initialLongitude!),
+          15.0,
+        );
+        // Add a temporary waypoint to show the location
+        if (widget.initialLocationLabel != null) {
+          _addWaypoint(
+            LatLng(widget.initialLatitude!, widget.initialLongitude!),
+            label: widget.initialLocationLabel,
+          );
+        }
+      });
     }
 
     // Calculate center point

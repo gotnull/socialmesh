@@ -11,6 +11,7 @@ import '../../../models/social.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/social_providers.dart';
+import '../../../utils/snackbar.dart';
 
 /// Screen for creating a new post.
 class CreatePostScreen extends ConsumerStatefulWidget {
@@ -394,9 +395,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to upload image: $e')));
+        showErrorSnackBar(context, 'Failed to upload image: $e');
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -445,9 +444,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         if (requested == LocationPermission.denied ||
             requested == LocationPermission.deniedForever) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Location permission denied')),
-            );
+            showWarningSnackBar(context, 'Location permission denied');
           }
           return;
         }
@@ -480,9 +477,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to get location: $e')));
+        showErrorSnackBar(context, 'Failed to get location: $e');
       }
     }
   }
@@ -531,11 +526,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     final nodes = ref.read(nodesProvider);
 
     if (nodes.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No nodes available. Connect to a mesh first.'),
-        ),
-      );
+      showInfoSnackBar(context, 'No nodes available. Connect to a mesh first.');
       return;
     }
 
@@ -615,18 +606,14 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         }
 
         Navigator.pop(context);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Post created!')));
+        showSuccessSnackBar(context, 'Post created!');
       } else if (mounted) {
         final createState = ref.read(createPostProvider);
         throw Exception(createState.error ?? 'Failed to create post');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to create post: $e')));
+        showErrorSnackBar(context, 'Failed to create post: $e');
         setState(() => _isSubmitting = false);
       }
     }

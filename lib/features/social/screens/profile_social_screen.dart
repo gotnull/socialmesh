@@ -5,12 +5,17 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/node_avatar.dart';
 import '../../../models/mesh_models.dart';
 import '../../../models/social.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/social_providers.dart';
+import '../../../utils/snackbar.dart';
+import '../../map/map_screen.dart';
+import '../../messaging/messaging_screen.dart'
+    show ChatScreen, ConversationType;
 import '../../profile/profile_screen.dart';
 import '../../settings/linked_devices_screen.dart';
 import '../../settings/settings_screen.dart';
@@ -106,6 +111,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
                       linkedNodeIds: profile.linkedNodeIds,
                       primaryNodeId: profile.primaryNodeId,
                       isOwnProfile: isOwnProfile,
+                      onManageDevices: () => _navigateToLinkedDevices(),
                     ),
                   ),
                 // Posts section header
@@ -491,6 +497,8 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
               onCommentTap: () => _navigateToPost(post, focusComment: true),
               onShareTap: () => _sharePost(post),
               onMoreTap: () => _showPostOptions(post, isOwnProfile),
+              onLocationTap: _handleLocationTap,
+              onNodeTap: _handleNodeTap,
             );
           }, childCount: posts.length),
         );
@@ -598,6 +606,15 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
     );
   }
 
+  void _navigateToLinkedDevices() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const LinkedDevicesScreen()),
+    );
+    // Refresh the profile stream when returning to pick up new linked devices
+    ref.invalidate(publicProfileStreamProvider(widget.userId));
+  }
+
   String _formatUrl(String url) {
     return url
         .replaceAll('https://', '')
@@ -623,8 +640,72 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
 
   void _sharePost(Post post) {
     Share.share(
-      'Check out this post on Socialmesh!\nhttps://socialmesh.app/post/${post.id}',
+      'Check out this post on Socialmesh!\nsocialmesh://post/${post.id}',
       subject: 'Socialmesh Post',
+    );
+  }
+
+  void _handleLocationTap(PostLocation location) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MapScreen(
+          initialLatitude: location.latitude,
+          initialLongitude: location.longitude,
+          initialLocationLabel: location.name,
+        ),
+      ),
+    );
+  }
+
+  void _handleNodeTap(String nodeId) {
+    final nodeNum = int.tryParse(nodeId);
+    if (nodeNum == null) {
+      showErrorSnackBar(context, 'Invalid node ID');
+      return;
+    }
+
+    final nodes = ref.read(nodesProvider);
+    final node = nodes[nodeNum];
+
+    AppBottomSheet.showActions(
+      context: context,
+      header: Text(
+        node?.longName ?? 'Node $nodeId',
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: context.textPrimary,
+        ),
+      ),
+      actions: [
+        BottomSheetAction(
+          icon: Icons.message_outlined,
+          iconColor: context.accentColor,
+          label: 'Send Message',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ChatScreen(
+                type: ConversationType.directMessage,
+                nodeNum: nodeNum,
+                title: node?.longName ?? 'Node $nodeId',
+              ),
+            ),
+          ),
+        ),
+        if (node?.hasPosition == true)
+          BottomSheetAction(
+            icon: Icons.map_outlined,
+            label: 'View on Map',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => MapScreen(initialNodeNum: nodeNum),
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -734,15 +815,11 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
   }
 
   void _reportProfile(PublicProfile profile) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Report submitted')));
+    showSuccessSnackBar(context, 'Report submitted');
   }
 
   void _blockUser(PublicProfile profile) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('${profile.displayName} blocked')));
+    showSuccessSnackBar(context, '${profile.displayName} blocked');
   }
 
   Future<void> _confirmDeletePost(Post post) async {
@@ -792,15 +869,11 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
             .decrement(post.authorId, currentCount);
 
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Post deleted')));
+          showSuccessSnackBar(context, 'Post deleted');
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Failed to delete: $e')));
+          showErrorSnackBar(context, 'Failed to delete: $e');
         }
       }
     }
@@ -860,11 +933,13 @@ class _LinkedDevicesSection extends ConsumerWidget {
     required this.linkedNodeIds,
     required this.primaryNodeId,
     required this.isOwnProfile,
+    this.onManageDevices,
   });
 
   final List<int> linkedNodeIds;
   final int? primaryNodeId;
   final bool isOwnProfile;
+  final VoidCallback? onManageDevices;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -875,10 +950,7 @@ class _LinkedDevicesSection extends ConsumerWidget {
       return Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         child: OutlinedButton.icon(
-          onPressed: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const LinkedDevicesScreen()),
-          ),
+          onPressed: onManageDevices,
           icon: const Icon(Icons.add_link, size: 18),
           label: const Text('Link a Meshtastic device'),
           style: OutlinedButton.styleFrom(
@@ -916,12 +988,7 @@ class _LinkedDevicesSection extends ConsumerWidget {
               const Spacer(),
               if (isOwnProfile)
                 GestureDetector(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const LinkedDevicesScreen(),
-                    ),
-                  ),
+                  onTap: onManageDevices,
                   child: Text(
                     'Manage',
                     style: TextStyle(

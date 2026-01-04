@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../providers/auth_providers.dart';
 import '../../../providers/social_providers.dart';
+import '../../../utils/snackbar.dart';
 
 /// A button that toggles follow/unfollow state for a user.
 ///
@@ -43,9 +44,7 @@ class FollowButton extends ConsumerWidget {
         isFollowing: false,
         isLoading: false,
         onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Sign in to follow users')),
-          );
+          showInfoSnackBar(context, 'Sign in to follow users');
         },
       );
     }
@@ -84,9 +83,7 @@ class FollowButton extends ConsumerWidget {
       onFollowChanged?.call(!currentlyFollowing);
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to update follow: $e')));
+        showErrorSnackBar(context, 'Failed to update follow: $e');
       }
     }
   }
@@ -201,9 +198,7 @@ class FollowTextButton extends ConsumerWidget {
             onFollowChanged?.call(!state.isFollowing);
           } catch (e) {
             if (context.mounted) {
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text('Failed: $e')));
+              showErrorSnackBar(context, 'Failed: $e');
             }
           }
         },

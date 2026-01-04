@@ -18,6 +18,8 @@ class PostCard extends ConsumerWidget {
     this.onShareTap,
     this.onMoreTap,
     this.showFollowButton = false,
+    this.onLocationTap,
+    this.onNodeTap,
   });
 
   final Post post;
@@ -27,6 +29,8 @@ class PostCard extends ConsumerWidget {
   final VoidCallback? onShareTap;
   final VoidCallback? onMoreTap;
   final bool showFollowButton;
+  final void Function(PostLocation location)? onLocationTap;
+  final void Function(String nodeId)? onNodeTap;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -75,13 +79,23 @@ class PostCard extends ConsumerWidget {
               // Location tag
               if (post.location != null) ...[
                 const SizedBox(height: 8),
-                _LocationTag(location: post.location!),
+                _LocationTag(
+                  location: post.location!,
+                  onTap: onLocationTap != null
+                      ? () => onLocationTap!(post.location!)
+                      : null,
+                ),
               ],
 
               // Node reference
               if (post.nodeId != null) ...[
                 const SizedBox(height: 8),
-                _NodeTag(nodeId: post.nodeId!),
+                _NodeTag(
+                  nodeId: post.nodeId!,
+                  onTap: onNodeTap != null
+                      ? () => onNodeTap!(post.nodeId!)
+                      : null,
+                ),
               ],
 
               const SizedBox(height: 12),
@@ -266,61 +280,73 @@ class _PostImages extends StatelessWidget {
 }
 
 class _LocationTag extends StatelessWidget {
-  const _LocationTag({required this.location});
+  const _LocationTag({required this.location, this.onTap});
 
   final PostLocation location;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          Icons.location_on,
-          size: 14,
-          color: theme.colorScheme.primary.withAlpha(180),
-        ),
-        const SizedBox(width: 4),
-        Text(
-          location.name ?? 'Location',
-          style: theme.textTheme.bodySmall?.copyWith(
+    return GestureDetector(
+      onTap: onTap,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.location_on,
+            size: 14,
             color: theme.colorScheme.primary.withAlpha(180),
           ),
-        ),
-      ],
+          const SizedBox(width: 4),
+          Text(
+            location.name ?? 'Location',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.primary.withAlpha(180),
+              decoration: onTap != null ? TextDecoration.underline : null,
+              decorationColor: theme.colorScheme.primary.withAlpha(180),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
 
 class _NodeTag extends StatelessWidget {
-  const _NodeTag({required this.nodeId});
+  const _NodeTag({required this.nodeId, this.onTap});
 
   final String nodeId;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.secondaryContainer.withAlpha(100),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.router, size: 14, color: theme.colorScheme.secondary),
-          const SizedBox(width: 4),
-          Text(
-            'Node $nodeId',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.secondary,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.secondaryContainer.withAlpha(100),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.router, size: 14, color: theme.colorScheme.secondary),
+            const SizedBox(width: 4),
+            Text(
+              'Node $nodeId',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.secondary,
+                decoration: onTap != null ? TextDecoration.underline : null,
+                decorationColor: theme.colorScheme.secondary,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

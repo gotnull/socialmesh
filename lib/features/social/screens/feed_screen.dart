@@ -4,9 +4,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../core/theme.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../models/social.dart';
+import '../../../providers/app_providers.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/social_providers.dart';
+import '../../../utils/snackbar.dart';
+import '../../map/map_screen.dart';
+import '../../messaging/messaging_screen.dart'
+    show ChatScreen, ConversationType;
 import '../screens/create_post_screen.dart';
 import '../screens/post_detail_screen.dart';
 import '../screens/profile_social_screen.dart';
@@ -189,6 +195,8 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                         _navigateToPost(post, focusComment: true),
                     onShareTap: () => _sharePost(post.id),
                     onMoreTap: () => _showPostOptions(post),
+                    onLocationTap: _handleLocationTap,
+                    onNodeTap: _handleNodeTap,
                   );
                 },
                 childCount:
@@ -322,8 +330,72 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
   void _sharePost(String postId) {
     Share.share(
-      'Check out this post on Socialmesh!\nhttps://socialmesh.app/post/$postId',
+      'Check out this post on Socialmesh!\nsocialmesh://post/$postId',
       subject: 'Socialmesh Post',
+    );
+  }
+
+  void _handleLocationTap(PostLocation location) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MapScreen(
+          initialLatitude: location.latitude,
+          initialLongitude: location.longitude,
+          initialLocationLabel: location.name,
+        ),
+      ),
+    );
+  }
+
+  void _handleNodeTap(String nodeId) {
+    final nodeNum = int.tryParse(nodeId);
+    if (nodeNum == null) {
+      showErrorSnackBar(context, 'Invalid node ID');
+      return;
+    }
+
+    final nodes = ref.read(nodesProvider);
+    final node = nodes[nodeNum];
+
+    AppBottomSheet.showActions(
+      context: context,
+      header: Text(
+        node?.longName ?? 'Node $nodeId',
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: context.textPrimary,
+        ),
+      ),
+      actions: [
+        BottomSheetAction(
+          icon: Icons.message_outlined,
+          iconColor: context.accentColor,
+          label: 'Send Message',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ChatScreen(
+                type: ConversationType.directMessage,
+                nodeNum: nodeNum,
+                title: node?.longName ?? 'Node $nodeId',
+              ),
+            ),
+          ),
+        ),
+        if (node?.hasPosition == true)
+          BottomSheetAction(
+            icon: Icons.map_outlined,
+            label: 'View on Map',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => MapScreen(initialNodeNum: nodeNum),
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -372,20 +444,16 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                 leading: const Icon(Icons.person_add_outlined),
                 title: const Text('Follow User'),
                 onTap: () async {
-                  final messenger = ScaffoldMessenger.of(context);
+                  final ctx = context;
                   Navigator.pop(context);
                   try {
                     await toggleFollow(ref, post.authorId);
-                    if (mounted) {
-                      messenger.showSnackBar(
-                        const SnackBar(content: Text('Following user')),
-                      );
+                    if (ctx.mounted) {
+                      showSuccessSnackBar(ctx, 'Following user');
                     }
                   } catch (e) {
-                    if (mounted) {
-                      messenger.showSnackBar(
-                        SnackBar(content: Text('Failed: $e')),
-                      );
+                    if (ctx.mounted) {
+                      showErrorSnackBar(ctx, 'Failed: $e');
                     }
                   }
                 },
@@ -468,15 +536,11 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
             .decrement(post.authorId, currentCount);
 
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Post deleted')));
+          showSuccessSnackBar(context, 'Post deleted');
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Failed to delete: $e')));
+          showErrorSnackBar(context, 'Failed to delete: $e');
         }
       }
     }
@@ -515,15 +579,11 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         await blockUser(ref, userId);
         ref.read(exploreProvider.notifier).refresh();
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('User blocked')));
+          showSuccessSnackBar(context, 'User blocked');
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Failed to block: $e')));
+          showErrorSnackBar(context, 'Failed to block: $e');
         }
       }
     }
@@ -583,15 +643,11 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         final socialService = ref.read(socialServiceProvider);
         await socialService.reportPost(postId, reason);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Report submitted. Thank you.')),
-          );
+          showSuccessSnackBar(context, 'Report submitted. Thank you.');
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Failed to report: $e')));
+          showErrorSnackBar(context, 'Failed to report: $e');
         }
       }
     }

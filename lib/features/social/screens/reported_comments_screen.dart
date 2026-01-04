@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 import '../../../providers/social_providers.dart';
+import '../../../utils/snackbar.dart';
 
 /// Admin screen for reviewing reported comments.
 class ReportedCommentsScreen extends ConsumerWidget {
@@ -75,15 +76,11 @@ class ReportedCommentsScreen extends ConsumerWidget {
     try {
       await ref.read(socialServiceProvider).dismissReport(reportId);
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Report dismissed')));
+        showSuccessSnackBar(context, 'Report dismissed');
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        showErrorSnackBar(context, 'Error: $e');
       }
     }
   }
@@ -120,15 +117,11 @@ class ReportedCommentsScreen extends ConsumerWidget {
       try {
         await ref.read(socialServiceProvider).deleteReportedContent(reportId);
         if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Content deleted')));
+          showSuccessSnackBar(context, 'Content deleted');
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Error: $e')));
+          showErrorSnackBar(context, 'Error: $e');
         }
       }
     }

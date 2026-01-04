@@ -219,19 +219,19 @@ void main() {
   group('Share URL Generation', () {
     test('generates correct share URL format', () {
       const postId = 'abc123';
-      const url = 'https://socialmesh.app/post/$postId';
+      const url = 'socialmesh://post/$postId';
 
-      expect(url, contains('socialmesh.app'));
+      expect(url, contains('socialmesh://'));
       expect(url, contains(postId));
-      expect(url, startsWith('https://'));
+      expect(url, startsWith('socialmesh://'));
     });
 
     test('share message contains URL', () {
       const postId = 'test-post-id';
       final message =
-          'Check out this post on Socialmesh!\nhttps://socialmesh.app/post/$postId';
+          'Check out this post on Socialmesh!\nsocialmesh://post/$postId';
 
-      expect(message, contains('https://socialmesh.app/post/test-post-id'));
+      expect(message, contains('socialmesh://post/test-post-id'));
     });
   });
 

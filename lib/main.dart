@@ -708,6 +708,16 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
             builder: (context) => RouteDetailScreen(route: route),
           );
         }
+        if (settings.name == '/map') {
+          final args = settings.arguments as Map<String, dynamic>?;
+          return MaterialPageRoute(
+            builder: (context) => MapScreen(
+              initialLatitude: args?['latitude'] as double?,
+              initialLongitude: args?['longitude'] as double?,
+              initialLocationLabel: args?['label'] as String?,
+            ),
+          );
+        }
         return null;
       },
     );

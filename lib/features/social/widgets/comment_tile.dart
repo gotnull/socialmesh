@@ -5,6 +5,7 @@ import 'package:timeago/timeago.dart' as timeago;
 import '../../../providers/auth_providers.dart';
 import '../../../providers/social_providers.dart';
 import '../../../services/social_service.dart';
+import '../../../utils/snackbar.dart';
 
 /// A tile displaying a comment with reply capability.
 class CommentTile extends ConsumerWidget {
@@ -202,9 +203,7 @@ class CommentTile extends ConsumerWidget {
         await deleteComment(ref, comment.comment.id);
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Failed to delete: $e')));
+          showErrorSnackBar(context, 'Failed to delete: $e');
         }
       }
     }
@@ -246,9 +245,7 @@ class _CommentLikeButtonState extends ConsumerState<_CommentLikeButton> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed: $e')));
+        showErrorSnackBar(context, 'Failed: $e');
       }
     } finally {
       if (mounted) {

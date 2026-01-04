@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/social.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/social_providers.dart';
+import '../../../utils/snackbar.dart';
 
 /// Action bar for posts showing like, comment, and share buttons.
 class PostActionsBar extends ConsumerWidget {
@@ -123,9 +124,7 @@ class _LikeButtonState extends ConsumerState<_LikeButton>
 
   Future<void> _handleLike(bool currentlyLiked) async {
     if (widget.currentUserId == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Sign in to like posts')));
+      showInfoSnackBar(context, 'Sign in to like posts');
       return;
     }
 
@@ -160,9 +159,7 @@ class _LikeButtonState extends ConsumerState<_LikeButton>
           _optimisticIsLiked = currentlyLiked;
           _optimisticLikeCount = widget.post.likeCount;
         });
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to like: $e')));
+        showErrorSnackBar(context, 'Failed to like: $e');
       }
     } finally {
       if (mounted) {
