@@ -566,7 +566,8 @@ class _FeaturedSection extends ConsumerWidget {
         if (products.isEmpty) return const SizedBox.shrink();
 
         return _ProductSection(
-          title: '⭐ Featured',
+          title: 'Featured',
+          titleIcon: Icons.star,
           products: products,
           onSeeAll: null,
         );
@@ -713,7 +714,8 @@ class _NewArrivalsSection extends ConsumerWidget {
         if (products.isEmpty) return const SizedBox.shrink();
 
         return _ProductSection(
-          title: '🆕 New Arrivals',
+          title: 'New Arrivals',
+          titleIcon: Icons.fiber_new,
           products: products.take(10).toList(),
           onSeeAll: null,
         );
@@ -737,7 +739,8 @@ class _BestSellersSection extends ConsumerWidget {
         if (products.isEmpty) return const SizedBox.shrink();
 
         return _ProductSection(
-          title: '🔥 Best Sellers',
+          title: 'Best Sellers',
+          titleIcon: Icons.local_fire_department,
           products: products.take(10).toList(),
           onSeeAll: null,
         );
@@ -761,7 +764,8 @@ class _OnSaleSection extends ConsumerWidget {
         if (products.isEmpty) return const SizedBox.shrink();
 
         return _ProductSection(
-          title: '💰 On Sale',
+          title: 'On Sale',
+          titleIcon: Icons.local_offer,
           products: products.take(10).toList(),
           onSeeAll: null,
           highlightColor: Colors.red,
@@ -774,12 +778,14 @@ class _OnSaleSection extends ConsumerWidget {
 /// Generic product section
 class _ProductSection extends StatelessWidget {
   final String title;
+  final IconData? titleIcon;
   final List<ShopProduct> products;
   final VoidCallback? onSeeAll;
   final Color? highlightColor;
 
   const _ProductSection({
     required this.title,
+    this.titleIcon,
     required this.products,
     this.onSeeAll,
     this.highlightColor,
@@ -795,13 +801,22 @@ class _ProductSection extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                title,
-                style: TextStyle(
-                  color: context.textPrimary,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (titleIcon != null) ...[
+                    Icon(titleIcon, color: context.accentColor, size: 20),
+                    const SizedBox(width: 8),
+                  ],
+                  Text(
+                    title,
+                    style: TextStyle(
+                      color: context.textPrimary,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
               if (onSeeAll != null)
                 TextButton(
