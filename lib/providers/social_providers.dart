@@ -16,6 +16,12 @@ final socialServiceProvider = Provider<SocialService>((ref) {
   return SocialService();
 });
 
+/// Provider for pending reported content count (for badge)
+final pendingReportCountProvider = StreamProvider<int>((ref) {
+  final service = ref.watch(socialServiceProvider);
+  return service.watchPendingReports().map((reports) => reports.length);
+});
+
 // ===========================================================================
 // FOLLOW STATE
 // ===========================================================================

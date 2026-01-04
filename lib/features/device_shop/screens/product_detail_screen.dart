@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
 import '../../../providers/auth_providers.dart';
+import '../../../providers/profile_providers.dart';
 import '../../../utils/share_utils.dart';
 import '../models/shop_models.dart';
 import '../providers/device_shop_providers.dart';
@@ -1015,6 +1016,10 @@ class _ReviewsSection extends ConsumerWidget {
       return;
     }
 
+    // Use profile display name, not Firebase Auth displayName
+    final displayName = ref.read(profileDisplayNameProvider);
+    final profile = ref.read(userProfileProvider).value;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -1025,8 +1030,8 @@ class _ReviewsSection extends ConsumerWidget {
       builder: (context) => _WriteReviewSheet(
         productId: productId,
         userId: user.uid,
-        userName: user.displayName,
-        userPhotoUrl: user.photoURL,
+        userName: displayName,
+        userPhotoUrl: profile?.avatarUrl ?? user.photoURL,
       ),
     );
   }
@@ -1216,12 +1221,16 @@ class _WriteReviewSheetState extends ConsumerState<_WriteReviewSheet> {
   int _rating = 5;
   final _titleController = TextEditingController();
   final _bodyController = TextEditingController();
+  final _bodyFocusNode = FocusNode();
+  final _formKey = GlobalKey<FormState>();
   bool _isSubmitting = false;
+  bool _showValidation = false;
 
   @override
   void dispose() {
     _titleController.dispose();
     _bodyController.dispose();
+    _bodyFocusNode.dispose();
     super.dispose();
   }
 
@@ -1233,167 +1242,216 @@ class _WriteReviewSheetState extends ConsumerState<_WriteReviewSheet> {
       ),
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: context.border,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            SizedBox(height: 20),
-            Text(
-              'Write a Review',
-              style: TextStyle(
-                color: context.textPrimary,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-
-            // Privacy notice
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: context.accentColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: context.accentColor.withValues(alpha: 0.3),
-                ),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    Icons.info_outline,
-                    size: 20,
-                    color: context.accentColor,
+        child: Form(
+          key: _formKey,
+          autovalidateMode: _showValidation
+              ? AutovalidateMode.always
+              : AutovalidateMode.disabled,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: context.border,
+                    borderRadius: BorderRadius.circular(2),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Your review will be public and posted as "${widget.userName ?? 'Anonymous'}". Reviews are moderated before appearing on the product page.',
-                      style: TextStyle(
-                        color: context.textSecondary,
-                        fontSize: 12,
+                ),
+              ),
+              SizedBox(height: 20),
+              Text(
+                'Write a Review',
+                style: TextStyle(
+                  color: context.textPrimary,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // Privacy notice
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: context.accentColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: context.accentColor.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      size: 20,
+                      color: context.accentColor,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Your review will be public and posted as "${widget.userName ?? 'Anonymous'}". Reviews are moderated before appearing on the product page.',
+                        style: TextStyle(
+                          color: context.textSecondary,
+                          fontSize: 12,
+                        ),
                       ),
                     ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Rating
+              Text(
+                'Your Rating',
+                style: TextStyle(color: context.textSecondary),
+              ),
+              SizedBox(height: 8),
+              Row(
+                children: List.generate(
+                  5,
+                  (i) => IconButton(
+                    icon: Icon(
+                      i < _rating ? Icons.star : Icons.star_outline,
+                      color: Colors.amber,
+                      size: 32,
+                    ),
+                    onPressed: () => setState(() => _rating = i + 1),
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Rating
-            Text('Your Rating', style: TextStyle(color: context.textSecondary)),
-            SizedBox(height: 8),
-            Row(
-              children: List.generate(
-                5,
-                (i) => IconButton(
-                  icon: Icon(
-                    i < _rating ? Icons.star : Icons.star_outline,
-                    color: Colors.amber,
-                    size: 32,
-                  ),
-                  onPressed: () => setState(() => _rating = i + 1),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-            // Title
-            TextField(
-              controller: _titleController,
-              style: TextStyle(color: context.textPrimary),
-              decoration: InputDecoration(
-                labelText: 'Title (optional)',
-                labelStyle: TextStyle(color: context.textSecondary),
-                filled: true,
-                fillColor: context.background,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-            ),
-            SizedBox(height: 16),
-
-            // Body
-            TextField(
-              controller: _bodyController,
-              style: TextStyle(color: context.textPrimary),
-              maxLines: 4,
-              decoration: InputDecoration(
-                labelText: 'Your Review *',
-                labelStyle: TextStyle(color: context.textSecondary),
-                hintText: 'Share your experience with this product...',
-                hintStyle: TextStyle(color: context.textTertiary),
-                alignLabelWithHint: true,
-                filled: true,
-                fillColor: context.background,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-            ),
-            SizedBox(height: 24),
-
-            // Submit button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _isSubmitting ? null : _submitReview,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: context.accentColor,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
+              // Title
+              TextField(
+                controller: _titleController,
+                style: TextStyle(color: context.textPrimary),
+                decoration: InputDecoration(
+                  labelText: 'Title (optional)',
+                  labelStyle: TextStyle(color: context.textSecondary),
+                  filled: true,
+                  fillColor: context.background,
+                  border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
                   ),
                 ),
-                child: _isSubmitting
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text(
-                        'Submit Review',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
               ),
-            ),
-            const SizedBox(height: 16),
-          ],
+              SizedBox(height: 16),
+
+              // Body
+              TextFormField(
+                controller: _bodyController,
+                focusNode: _bodyFocusNode,
+                style: TextStyle(color: context.textPrimary),
+                maxLines: 4,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Please write a review description';
+                  }
+                  return null;
+                },
+                decoration: InputDecoration(
+                  labelText: 'Your Review *',
+                  labelStyle: TextStyle(color: context.textSecondary),
+                  hintText: 'Share your experience with this product...',
+                  hintStyle: TextStyle(color: context.textTertiary),
+                  alignLabelWithHint: true,
+                  filled: true,
+                  fillColor: context.background,
+                  errorStyle: TextStyle(
+                    color: Theme.of(context).colorScheme.error,
+                    fontSize: 12,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: context.accentColor,
+                      width: 2,
+                    ),
+                  ),
+                  errorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.error,
+                      width: 2,
+                    ),
+                  ),
+                  focusedErrorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.error,
+                      width: 2,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: 24),
+
+              // Submit button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isSubmitting ? null : _submitReview,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: context.accentColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text(
+                          'Submit Review',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
       ),
     );
   }
 
   Future<void> _submitReview() async {
-    // Validate review body
-    final reviewText = _bodyController.text.trim();
-    if (reviewText.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please write a review')));
+    // Enable validation display
+    setState(() => _showValidation = true);
+
+    // Validate form
+    if (!_formKey.currentState!.validate()) {
+      // Form is invalid, validation errors are now visible
+      // Focus the review field to draw attention to the error
+      _bodyFocusNode.requestFocus();
       return;
     }
+
+    final reviewText = _bodyController.text.trim();
 
     setState(() => _isSubmitting = true);
 
@@ -1415,14 +1473,30 @@ class _WriteReviewSheetState extends ConsumerState<_WriteReviewSheet> {
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Review submitted successfully!')),
+          SnackBar(
+            content: const Text('Review submitted for moderation. Thank you!'),
+            backgroundColor: context.accentColor,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.all(16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to submit review: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to submit review: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.all(16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        );
       }
     } finally {
       if (mounted) {

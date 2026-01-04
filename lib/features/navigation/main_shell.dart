@@ -13,6 +13,7 @@ import '../../models/subscription_models.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/profile_providers.dart';
+import '../../providers/social_providers.dart';
 import '../../providers/subscription_providers.dart';
 import '../../services/haptic_service.dart';
 import '../channels/channels_screen.dart';
@@ -42,6 +43,17 @@ import '../mesh_health/widgets/mesh_health_dashboard.dart';
 import '../social/social.dart';
 import '../social/screens/reported_content_screen.dart';
 
+/// Combined admin notification count provider
+final adminNotificationCountProvider = Provider<int>((ref) {
+  final reviewCount = ref
+      .watch(pendingReviewCountProvider)
+      .when(data: (count) => count, loading: () => 0, error: (_, __) => 0);
+  final reportCount = ref
+      .watch(pendingReportCountProvider)
+      .when(data: (count) => count, loading: () => 0, error: (_, __) => 0);
+  return reviewCount + reportCount;
+});
+
 /// Notifier to expose the main shell's scaffold key for drawer access
 class MainShellScaffoldKeyNotifier extends Notifier<GlobalKey<ScaffoldState>?> {
   @override
@@ -67,6 +79,7 @@ class HamburgerMenuButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final scaffoldKey = ref.watch(mainShellScaffoldKeyProvider);
     final theme = Theme.of(context);
+    final adminNotificationCount = ref.watch(adminNotificationCountProvider);
 
     // Check if we're NOT at the first route (meaning we were pushed onto the stack)
     // Using ModalRoute.of(context)?.isFirst is more reliable than canPop()
@@ -89,22 +102,53 @@ class HamburgerMenuButton extends ConsumerWidget {
       );
     }
 
-    return IconButton(
-      icon: Icon(
-        Icons.menu,
-        color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-      ),
-      onPressed: () {
-        HapticFeedback.lightImpact();
-        // Try to open the drawer from MainShell
-        // If drawer couldn't be opened (e.g., context issue), show as bottom sheet
-        if (scaffoldKey?.currentState != null) {
-          scaffoldKey!.currentState!.openDrawer();
-        } else {
-          _showQuickAccessSheet(context, ref);
-        }
-      },
-      tooltip: 'Menu',
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        IconButton(
+          icon: Icon(
+            Icons.menu,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+          ),
+          onPressed: () {
+            HapticFeedback.lightImpact();
+            // Try to open the drawer from MainShell
+            // If drawer couldn't be opened (e.g., context issue), show as bottom sheet
+            if (scaffoldKey?.currentState != null) {
+              scaffoldKey!.currentState!.openDrawer();
+            } else {
+              _showQuickAccessSheet(context, ref);
+            }
+          },
+          tooltip: 'Menu',
+        ),
+        if (adminNotificationCount > 0)
+          Positioned(
+            right: 8,
+            top: 8,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: theme.scaffoldBackgroundColor,
+                  width: 2,
+                ),
+              ),
+              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+              child: Text(
+                adminNotificationCount > 99 ? '99+' : '$adminNotificationCount',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -990,6 +1034,7 @@ class _DrawerMenuTile extends StatelessWidget {
   final bool isPremium;
   final bool isLocked;
   final VoidCallback onTap;
+  final int? badgeCount;
 
   const _DrawerMenuTile({
     required this.icon,
@@ -998,6 +1043,7 @@ class _DrawerMenuTile extends StatelessWidget {
     required this.onTap,
     this.isPremium = false,
     this.isLocked = false,
+    this.badgeCount,
   });
 
   @override
@@ -1065,6 +1111,27 @@ class _DrawerMenuTile extends StatelessWidget {
                 ),
               ),
             ),
+            // Show notification badge if count > 0
+            if (badgeCount != null && badgeCount! > 0) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                constraints: const BoxConstraints(minWidth: 24),
+                child: Text(
+                  badgeCount! > 99 ? '99+' : '$badgeCount',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(width: 8),
+            ],
             // Show lock icon and PRO badge for locked premium features
             if (isLocked) ...[
               Container(
@@ -1702,6 +1769,13 @@ class _DrawerAdminSection extends ConsumerWidget {
                     icon: Icons.rate_review_outlined,
                     label: 'Review Moderation',
                     isSelected: false,
+                    badgeCount: ref
+                        .watch(pendingReviewCountProvider)
+                        .when(
+                          data: (count) => count,
+                          loading: () => null,
+                          error: (_, __) => null,
+                        ),
                     onTap: () {
                       ref.haptics.tabChange();
                       onNavigate(const ReviewModerationScreen());
@@ -1713,6 +1787,13 @@ class _DrawerAdminSection extends ConsumerWidget {
                     icon: Icons.flag_outlined,
                     label: 'Reported Content',
                     isSelected: false,
+                    badgeCount: ref
+                        .watch(pendingReportCountProvider)
+                        .when(
+                          data: (count) => count,
+                          loading: () => null,
+                          error: (_, __) => null,
+                        ),
                     onTap: () {
                       ref.haptics.tabChange();
                       onNavigate(const ReportedContentScreen());

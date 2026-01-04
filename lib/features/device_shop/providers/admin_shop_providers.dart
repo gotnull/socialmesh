@@ -14,6 +14,12 @@ final isShopAdminProvider = FutureProvider<bool>((ref) async {
   return service.isAdmin(user.uid);
 });
 
+/// Provider for pending review count (for badge)
+final pendingReviewCountProvider = StreamProvider<int>((ref) {
+  final service = ref.watch(deviceShopServiceProvider);
+  return service.watchPendingReviews().map((reviews) => reviews.length);
+});
+
 /// Provider for admin statistics
 final adminShopStatisticsProvider = FutureProvider<AdminShopStatistics>((ref) {
   final service = ref.watch(deviceShopServiceProvider);
