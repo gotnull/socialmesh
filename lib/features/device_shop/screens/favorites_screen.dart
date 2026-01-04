@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
+import '../../../core/widgets/auto_scroll_text.dart';
 import '../../../providers/auth_providers.dart';
 import '../models/shop_models.dart';
 import '../providers/device_shop_providers.dart';
@@ -20,9 +21,12 @@ class FavoritesScreen extends ConsumerWidget {
         backgroundColor: context.background,
         appBar: AppBar(
           backgroundColor: context.card,
-          title: Text(
+          title: AutoScrollText(
             'Favorites',
             style: TextStyle(color: context.textPrimary),
+            maxLines: 1,
+            velocity: 30.0,
+            fadeWidth: 20.0,
           ),
         ),
         body: Center(
@@ -56,7 +60,13 @@ class FavoritesScreen extends ConsumerWidget {
       backgroundColor: context.background,
       appBar: AppBar(
         backgroundColor: context.card,
-        title: Text('Favorites', style: TextStyle(color: context.textPrimary)),
+        title: AutoScrollText(
+          'Favorites',
+          style: TextStyle(color: context.textPrimary),
+          maxLines: 1,
+          velocity: 30.0,
+          fadeWidth: 20.0,
+        ),
       ),
       body: favoritesAsync.when(
         loading: () => Center(child: CircularProgressIndicator()),

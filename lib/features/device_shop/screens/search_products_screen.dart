@@ -70,25 +70,28 @@ class _SearchProductsScreenState extends ConsumerState<SearchProductsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.card,
-        titleSpacing: 0,
-        title: _buildSearchField(),
-        actions: [
-          if (_query.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.clear),
-              onPressed: () {
-                _searchController.clear();
-                setState(() => _query = '');
-                _focusNode.requestFocus();
-              },
-            ),
-        ],
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        backgroundColor: context.background,
+        appBar: AppBar(
+          backgroundColor: context.card,
+          titleSpacing: 0,
+          title: _buildSearchField(),
+          actions: [
+            if (_query.isNotEmpty)
+              IconButton(
+                icon: const Icon(Icons.clear),
+                onPressed: () {
+                  _searchController.clear();
+                  setState(() => _query = '');
+                  _focusNode.requestFocus();
+                },
+              ),
+          ],
+        ),
+        body: _query.isEmpty ? _buildSuggestions() : _buildResults(),
       ),
-      body: _query.isEmpty ? _buildSuggestions() : _buildResults(),
     );
   }
 

@@ -36,6 +36,9 @@ class _CategoryProductsScreenState
         title: AutoScrollText(
           widget.category.label,
           style: TextStyle(color: context.textPrimary),
+          maxLines: 1,
+          velocity: 30.0,
+          fadeWidth: 20.0,
         ),
         actions: [
           IconButton(

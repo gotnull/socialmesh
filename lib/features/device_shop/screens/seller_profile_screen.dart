@@ -269,22 +269,16 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen> {
       expandedHeight: 200,
       pinned: true,
       title: _showTitle
-          ? Row(
-              children: [
-                Expanded(
-                  child: AutoScrollText(
-                    seller.name,
-                    style: TextStyle(
-                      color: context.textPrimary,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 1,
-                    velocity: 30.0,
-                    fadeWidth: 20.0,
-                  ),
-                ),
-              ],
+          ? AutoScrollText(
+              seller.name,
+              style: TextStyle(
+                color: context.textPrimary,
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+              ),
+              maxLines: 1,
+              velocity: 30.0,
+              fadeWidth: 20.0,
             )
           : null,
       flexibleSpace: FlexibleSpaceBar(

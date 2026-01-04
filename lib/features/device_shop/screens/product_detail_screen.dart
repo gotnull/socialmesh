@@ -153,22 +153,16 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
       expandedHeight: 350,
       pinned: true,
       title: _showTitle
-          ? Row(
-              children: [
-                Expanded(
-                  child: AutoScrollText(
-                    product.name,
-                    style: TextStyle(
-                      color: context.textPrimary,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 1,
-                    velocity: 30.0,
-                    fadeWidth: 20.0,
-                  ),
-                ),
-              ],
+          ? AutoScrollText(
+              product.name,
+              style: TextStyle(
+                color: context.textPrimary,
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+              ),
+              maxLines: 1,
+              velocity: 30.0,
+              fadeWidth: 20.0,
             )
           : null,
       actions: [
