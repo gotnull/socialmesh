@@ -11,6 +11,7 @@ import '../../providers/auth_providers.dart';
 import '../../providers/profile_providers.dart';
 import '../../providers/social_providers.dart';
 import '../../utils/snackbar.dart';
+import '../nodes/widgets/link_device_banner.dart';
 
 /// Screen for managing linked mesh devices on the user's social profile.
 class LinkedDevicesScreen extends ConsumerStatefulWidget {
@@ -376,6 +377,8 @@ class _LinkedDevicesScreenState extends ConsumerState<LinkedDevicesScreen> {
 
     try {
       await unlinkNode(ref, nodeId);
+      // Reset banner dismissed state so it can show again
+      await resetLinkDeviceBannerDismissState();
       if (mounted) {
         showSuccessSnackBar(context, 'Device unlinked');
       }
