@@ -601,8 +601,16 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       );
 
       if (mounted) {
-        // Refresh feed
+        // Refresh feed and explore providers
         ref.read(feedProvider.notifier).refresh();
+        ref.read(exploreProvider.notifier).refresh();
+
+        // Invalidate user posts stream for when profile is viewed
+        final currentUser = ref.read(currentUserProvider);
+        if (currentUser != null) {
+          ref.invalidate(userPostsStreamProvider(currentUser.uid));
+        }
+
         Navigator.pop(context);
         ScaffoldMessenger.of(
           context,

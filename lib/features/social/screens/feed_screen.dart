@@ -77,12 +77,13 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   }
 
   Widget _buildSocialContent(BuildContext context, String userId) {
-    final profileAsync = ref.watch(publicProfileProvider(userId));
+    // Use stream provider for real-time profile updates (e.g., postCount changes)
+    final profileAsync = ref.watch(publicProfileStreamProvider(userId));
     final exploreState = ref.watch(exploreProvider);
 
     return RefreshIndicator(
       onRefresh: () async {
-        ref.invalidate(publicProfileProvider(userId));
+        ref.invalidate(publicProfileStreamProvider(userId));
         await ref.read(exploreProvider.notifier).refresh();
       },
       child: CustomScrollView(

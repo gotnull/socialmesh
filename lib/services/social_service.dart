@@ -993,12 +993,17 @@ class SocialService {
     return linkedNodes.contains(nodeId);
   }
 
-  /// Stream a user's public profile.
+  /// Stream a user's public profile with real-time updates from server.
   Stream<PublicProfile?> watchPublicProfile(String userId) {
-    return _firestore.collection('profiles').doc(userId).snapshots().map((doc) {
-      if (!doc.exists) return null;
-      return PublicProfile.fromFirestore(doc);
-    });
+    // Use includeMetadataChanges to ensure we get updates when data syncs from server
+    return _firestore
+        .collection('profiles')
+        .doc(userId)
+        .snapshots(includeMetadataChanges: true)
+        .map((doc) {
+          if (!doc.exists) return null;
+          return PublicProfile.fromFirestore(doc);
+        });
   }
 
   /// Update the current user's public profile.
