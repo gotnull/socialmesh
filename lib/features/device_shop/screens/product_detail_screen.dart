@@ -26,8 +26,6 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   bool _showFullDescription = false;
   late ScrollController _scrollController;
   bool _showTitle = false;
-  String _searchQuery = '';
-  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -44,7 +42,6 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   void dispose() {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
-    _searchController.dispose();
     super.dispose();
   }
 
@@ -117,25 +114,6 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
             slivers: [
               // App Bar with Image Gallery
               _buildImageGallery(product, isFavorite, user?.uid),
-
-              // Search bar - pinned below app bar
-              SliverPersistentHeader(
-                pinned: true,
-                delegate: _SearchBarDelegate(
-                  searchController: _searchController,
-                  searchQuery: _searchQuery,
-                  onChanged: (value) => setState(() => _searchQuery = value),
-                  onClear: () {
-                    _searchController.clear();
-                    setState(() => _searchQuery = '');
-                  },
-                  hintText: 'Search product details...',
-                  backgroundColor: context.background,
-                  cardColor: context.card,
-                  textPrimary: context.textPrimary,
-                  textTertiary: context.textTertiary,
-                ),
-              ),
 
               // Product Info
               SliverToBoxAdapter(child: _buildProductInfo(product)),
@@ -1476,80 +1454,5 @@ class _FullscreenGalleryState extends State<_FullscreenGallery> {
         },
       ),
     );
-  }
-}
-
-/// Search bar persistent header delegate
-class _SearchBarDelegate extends SliverPersistentHeaderDelegate {
-  final TextEditingController searchController;
-  final String searchQuery;
-  final Function(String) onChanged;
-  final VoidCallback onClear;
-  final String hintText;
-  final Color backgroundColor;
-  final Color cardColor;
-  final Color textPrimary;
-  final Color textTertiary;
-
-  _SearchBarDelegate({
-    required this.searchController,
-    required this.searchQuery,
-    required this.onChanged,
-    required this.onClear,
-    required this.hintText,
-    required this.backgroundColor,
-    required this.cardColor,
-    required this.textPrimary,
-    required this.textTertiary,
-  });
-
-  @override
-  double get minExtent => 72.0;
-
-  @override
-  double get maxExtent => 72.0;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return Container(
-      color: backgroundColor,
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      child: Container(
-        decoration: BoxDecoration(
-          color: cardColor,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: TextField(
-          controller: searchController,
-          onChanged: onChanged,
-          style: TextStyle(color: textPrimary),
-          decoration: InputDecoration(
-            hintText: hintText,
-            hintStyle: TextStyle(color: textTertiary),
-            prefixIcon: Icon(Icons.search, color: textTertiary),
-            suffixIcon: searchQuery.isNotEmpty
-                ? IconButton(
-                    icon: Icon(Icons.clear, color: textTertiary),
-                    onPressed: onClear,
-                  )
-                : null,
-            border: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 14,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
-  bool shouldRebuild(_SearchBarDelegate oldDelegate) {
-    return searchQuery != oldDelegate.searchQuery;
   }
 }

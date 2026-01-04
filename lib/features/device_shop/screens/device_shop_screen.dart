@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -25,12 +27,29 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
   bool _showTitle = false;
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+  Timer? _debounce;
+  bool _isSearchFocused = false;
+  final List<String> _recentSearches = [];
+  final List<String> _popularSearches = [
+    'T-Beam',
+    'LoRa',
+    'SenseCAP',
+    'RAK',
+    'Solar',
+    'Antenna',
+    'ESP32',
+    'nRF52',
+  ];
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
+    _searchFocusNode.addListener(() {
+      setState(() => _isSearchFocused = _searchFocusNode.hasFocus);
+    });
   }
 
   @override
@@ -38,6 +57,8 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     _searchController.dispose();
+    _searchFocusNode.dispose();
+    _debounce?.cancel();
     super.dispose();
   }
 
@@ -48,6 +69,25 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
     if (shouldShowTitle != _showTitle) {
       setState(() => _showTitle = shouldShowTitle);
     }
+  }
+
+  void _onSearchChanged(String value) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      setState(() => _searchQuery = value.trim());
+    });
+  }
+
+  void _performSearch(String query) {
+    _searchController.text = query;
+    setState(() => _searchQuery = query.trim());
+    if (query.isNotEmpty && !_recentSearches.contains(query)) {
+      _recentSearches.insert(0, query);
+      if (_recentSearches.length > 10) {
+        _recentSearches.removeLast();
+      }
+    }
+    _searchFocusNode.unfocus();
   }
 
   @override
@@ -126,12 +166,13 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
             delegate: _SearchBarDelegate(
               searchController: _searchController,
               searchQuery: _searchQuery,
-              onChanged: (value) => setState(() => _searchQuery = value),
+              focusNode: _searchFocusNode,
+              onChanged: _onSearchChanged,
               onClear: () {
                 _searchController.clear();
                 setState(() => _searchQuery = '');
               },
-              hintText: 'Search products...',
+              hintText: 'Search devices, modules, antennas...',
               backgroundColor: context.background,
               cardColor: context.card,
               textPrimary: context.textPrimary,
@@ -139,25 +180,32 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
             ),
           ),
 
-          // Categories
-          SliverToBoxAdapter(
-            child: _CategoriesSection(onCategoryTap: _openCategory),
-          ),
+          // Show search suggestions, search results, or regular content
+          if (_isSearchFocused && _searchQuery.isEmpty)
+            _buildSearchSuggestions()
+          else if (_searchQuery.isNotEmpty)
+            _buildSearchResults()
+          else ...[
+            // Categories
+            SliverToBoxAdapter(
+              child: _CategoriesSection(onCategoryTap: _openCategory),
+            ),
 
-          // Featured Products
-          const SliverToBoxAdapter(child: _FeaturedSection()),
+            // Featured Products
+            const SliverToBoxAdapter(child: _FeaturedSection()),
 
-          // Official Partners
-          const SliverToBoxAdapter(child: _PartnersSection()),
+            // Official Partners
+            const SliverToBoxAdapter(child: _PartnersSection()),
 
-          // New Arrivals
-          const SliverToBoxAdapter(child: _NewArrivalsSection()),
+            // New Arrivals
+            const SliverToBoxAdapter(child: _NewArrivalsSection()),
 
-          // Best Sellers
-          const SliverToBoxAdapter(child: _BestSellersSection()),
+            // Best Sellers
+            const SliverToBoxAdapter(child: _BestSellersSection()),
 
-          // On Sale
-          const SliverToBoxAdapter(child: _OnSaleSection()),
+            // On Sale
+            const SliverToBoxAdapter(child: _OnSaleSection()),
+          ],
 
           // Bottom padding
           const SliverPadding(padding: EdgeInsets.only(bottom: 100)),
@@ -179,6 +227,223 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
       MaterialPageRoute(
         builder: (_) => CategoryProductsScreen(category: category),
       ),
+    );
+  }
+
+  Widget _buildSearchSuggestions() {
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Recent searches
+            if (_recentSearches.isNotEmpty) ...[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Recent Searches',
+                    style: TextStyle(
+                      color: context.textPrimary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => setState(() => _recentSearches.clear()),
+                    child: Text('Clear'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _recentSearches
+                    .map(
+                      (s) => _SearchChip(
+                        label: s,
+                        icon: Icons.history,
+                        onTap: () => _performSearch(s),
+                        onDelete: () {
+                          setState(() => _recentSearches.remove(s));
+                        },
+                      ),
+                    )
+                    .toList(),
+              ),
+              const SizedBox(height: 24),
+            ],
+
+            // Popular searches
+            Text(
+              'Popular Searches',
+              style: TextStyle(
+                color: context.textPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _popularSearches
+                  .map(
+                    (s) => _SearchChip(
+                      label: s,
+                      icon: Icons.trending_up,
+                      onTap: () => _performSearch(s),
+                    ),
+                  )
+                  .toList(),
+            ),
+            const SizedBox(height: 24),
+
+            // Browse by category
+            Text(
+              'Browse by Category',
+              style: TextStyle(
+                color: context.textPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            ...DeviceCategory.values.map(
+              (cat) => ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: context.accentColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    _categoryIcon(cat),
+                    color: context.accentColor,
+                    size: 20,
+                  ),
+                ),
+                title: Text(
+                  cat.label,
+                  style: TextStyle(color: context.textPrimary),
+                ),
+                subtitle: Text(
+                  cat.description,
+                  style: TextStyle(color: context.textTertiary, fontSize: 12),
+                ),
+                trailing: Icon(
+                  Icons.chevron_right,
+                  color: context.textTertiary,
+                ),
+                onTap: () => _openCategory(cat),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  IconData _categoryIcon(DeviceCategory category) {
+    switch (category) {
+      case DeviceCategory.node:
+        return Icons.router;
+      case DeviceCategory.module:
+        return Icons.memory;
+      case DeviceCategory.antenna:
+        return Icons.cell_tower;
+      case DeviceCategory.enclosure:
+        return Icons.inventory_2;
+      case DeviceCategory.accessory:
+        return Icons.cable;
+      case DeviceCategory.kit:
+        return Icons.build;
+      case DeviceCategory.solar:
+        return Icons.solar_power;
+    }
+  }
+
+  Widget _buildSearchResults() {
+    return Consumer(
+      builder: (context, ref, _) {
+        final productsAsync = ref.watch(shopProductsProvider);
+
+        return productsAsync.when(
+          data: (products) {
+            final filteredProducts = products.where((product) {
+              final query = _searchQuery.toLowerCase();
+              return product.name.toLowerCase().contains(query) ||
+                  product.description.toLowerCase().contains(query) ||
+                  product.category.label.toLowerCase().contains(query) ||
+                  product.tags.any((tag) => tag.toLowerCase().contains(query));
+            }).toList();
+
+            if (filteredProducts.isEmpty) {
+              return SliverFillRemaining(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.search_off,
+                        size: 64,
+                        color: context.textTertiary,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'No results for "$_searchQuery"',
+                        style: TextStyle(
+                          color: context.textSecondary,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Try different keywords',
+                        style: TextStyle(
+                          color: context.textTertiary,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            return SliverPadding(
+              padding: const EdgeInsets.all(16),
+              sliver: SliverGrid(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  childAspectRatio: 0.75,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                ),
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final product = filteredProducts[index];
+                  return ProductCard(product: product);
+                }, childCount: filteredProducts.length),
+              ),
+            );
+          },
+          loading: () => const SliverFillRemaining(
+            child: Center(child: CircularProgressIndicator()),
+          ),
+          error: (error, stack) => SliverFillRemaining(
+            child: Center(
+              child: Text(
+                'Error loading products',
+                style: TextStyle(color: context.textSecondary),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -881,6 +1146,7 @@ class _SectionLoading extends StatelessWidget {
 class _SearchBarDelegate extends SliverPersistentHeaderDelegate {
   final TextEditingController searchController;
   final String searchQuery;
+  final FocusNode focusNode;
   final Function(String) onChanged;
   final VoidCallback onClear;
   final String hintText;
@@ -892,6 +1158,7 @@ class _SearchBarDelegate extends SliverPersistentHeaderDelegate {
   _SearchBarDelegate({
     required this.searchController,
     required this.searchQuery,
+    required this.focusNode,
     required this.onChanged,
     required this.onClear,
     required this.hintText,
@@ -923,6 +1190,7 @@ class _SearchBarDelegate extends SliverPersistentHeaderDelegate {
         ),
         child: TextField(
           controller: searchController,
+          focusNode: focusNode,
           onChanged: onChanged,
           style: TextStyle(color: textPrimary),
           decoration: InputDecoration(
@@ -949,5 +1217,57 @@ class _SearchBarDelegate extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(_SearchBarDelegate oldDelegate) {
     return searchQuery != oldDelegate.searchQuery;
+  }
+}
+
+/// Search chip widget for suggestions
+class _SearchChip extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+  final VoidCallback? onDelete;
+
+  const _SearchChip({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+    this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: context.card,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: context.textTertiary, size: 16),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(color: context.textPrimary, fontSize: 13),
+              ),
+              if (onDelete != null) ...[
+                const SizedBox(width: 4),
+                GestureDetector(
+                  onTap: onDelete,
+                  child: Icon(
+                    Icons.close,
+                    color: context.textTertiary,
+                    size: 16,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
