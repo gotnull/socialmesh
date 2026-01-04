@@ -23,10 +23,10 @@ const db = admin.firestore();
 // ENVIRONMENT CONFIG - Replaces functions.config()
 // =============================================================================
 const APP_BASE_URL = process.env.APP_BASE_URL || 'https://socialmesh.app';
-const APP_STORE_URL = process.env.APP_STORE_URL || 'https://apps.apple.com/app/socialmesh/id6739187207';
-const PLAY_STORE_URL = process.env.PLAY_STORE_URL || 'https://play.google.com/store/apps/details?id=app.socialmesh';
-const IOS_APP_STORE_ID = process.env.IOS_APP_STORE_ID || '6739187207';
-const ANDROID_PACKAGE = process.env.ANDROID_PACKAGE || 'app.socialmesh';
+const APP_STORE_URL = process.env.APP_STORE_URL || 'https://apps.apple.com/app/id6742694642';
+const PLAY_STORE_URL = process.env.PLAY_STORE_URL || 'https://play.google.com/store/apps/details?id=com.gotnull.socialmesh';
+const IOS_APP_STORE_ID = process.env.IOS_APP_STORE_ID || '6742694642';
+const ANDROID_PACKAGE = process.env.ANDROID_PACKAGE || 'com.gotnull.socialmesh';
 
 // =============================================================================
 // TYPES & SCHEMAS
@@ -818,7 +818,7 @@ export const onFirstWidget = onDocumentCreated('widgets/{widgetId}', async () =>
 
 /**
  * Generate HTML page with Open Graph meta tags for rich sharing
- * Supports: /share/node/:id, /share/profile/:id, /share/widget/:id, /share/location
+ * Supports: /share/node/:id, /share/profile/:id, /share/widget/:id, /share/post/:id, /share/location
  */
 export const share = onRequest(async (req, res) => {
   const path = req.path;
@@ -889,6 +889,33 @@ export const share = onRequest(async (req, res) => {
         break;
       }
 
+      case 'post': {
+        // Shared social post
+        if (id) {
+          const postDoc = await db.collection('posts').doc(id).get();
+          if (postDoc.exists) {
+            const post = postDoc.data();
+            // Get author name
+            let authorName = 'Someone';
+            if (post?.authorId) {
+              const authorDoc = await db.collection('profiles').doc(post.authorId).get();
+              if (authorDoc.exists) {
+                authorName = authorDoc.data()?.displayName || 'Someone';
+              }
+            }
+            title = `${authorName} on Socialmesh`;
+            // Truncate content for description
+            const content = post?.content || '';
+            description = content.length > 150 ? content.substring(0, 147) + '...' : content || 'View this post on Socialmesh';
+            if (post?.imageUrl) {
+              image = post.imageUrl;
+            }
+            deepLink = `socialmesh://post/${id}`;
+          }
+        }
+        break;
+      }
+
       case 'location': {
         // Shared location/waypoint
         const lat = req.query.lat as string;
@@ -911,7 +938,7 @@ export const share = onRequest(async (req, res) => {
     console.error('Share link error:', error);
   }
 
-  // Generate HTML with Open Graph tags
+  // Generate HTML with Open Graph tags - matching socialmesh.app website design
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -941,12 +968,30 @@ export const share = onRequest(async (req, res) => {
   <meta property="al:android:app_name" content="Socialmesh">
   <meta property="al:android:url" content="${deepLink}">
   
+  <!-- Fonts (matching main website) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
   <style>
+    :root {
+      --bg-primary: #1F2633;
+      --accent-magenta: #E91E8C;
+      --accent-purple: #8B5CF6;
+      --accent-blue: #4F6AF6;
+      --accent-glow: rgba(233, 30, 140, 0.4);
+      --text-primary: #FFFFFF;
+      --text-secondary: #D1D5DB;
+      --text-muted: #9CA3AF;
+      --gradient-brand: linear-gradient(135deg, #E91E8C 0%, #8B5CF6 50%, #4F6AF6 100%);
+    }
+    
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
-      color: white;
+      font-family: 'JetBrains Mono', 'Inter', -apple-system, BlinkMacSystemFont, monospace;
+      background: var(--bg-primary);
+      color: var(--text-primary);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -954,27 +999,192 @@ export const share = onRequest(async (req, res) => {
       justify-content: center;
       padding: 24px;
       text-align: center;
+      position: relative;
+      overflow: hidden;
     }
-    .logo { width: 80px; height: 80px; border-radius: 20px; margin-bottom: 24px; }
-    h1 { font-size: 24px; margin-bottom: 12px; }
-    p { color: rgba(255,255,255,0.7); margin-bottom: 32px; max-width: 400px; }
+    
+    /* Animated mesh background */
+    .mesh-bg {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: -1;
+      overflow: hidden;
+    }
+    
+    .mesh-bg::before {
+      content: '';
+      position: absolute;
+      top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(233, 30, 140, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 60% 30%, rgba(79, 106, 246, 0.1) 0%, transparent 35%);
+      animation: meshFloat 25s ease-in-out infinite;
+    }
+    
+    .mesh-bg::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background:
+        radial-gradient(ellipse at 50% 0%, rgba(233, 30, 140, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 100% 50%, rgba(139, 92, 246, 0.06) 0%, transparent 40%);
+      animation: meshPulse 8s ease-in-out infinite alternate;
+    }
+    
+    @keyframes meshFloat {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      25% { transform: translate(3%, 2%) rotate(2deg); }
+      50% { transform: translate(1%, -2%) rotate(-1deg); }
+      75% { transform: translate(-2%, 1%) rotate(1deg); }
+    }
+    
+    @keyframes meshPulse {
+      0% { opacity: 0.6; }
+      100% { opacity: 1; }
+    }
+    
+    /* Grid overlay */
+    .grid-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: -1;
+      background-image:
+        linear-gradient(rgba(233, 30, 140, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(233, 30, 140, 0.03) 1px, transparent 1px);
+      background-size: 80px 80px;
+      mask-image: radial-gradient(ellipse at center, black 0%, transparent 75%);
+    }
+    
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 480px;
+      animation: fadeIn 0.8s ease-out;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .logo {
+      width: 100px;
+      height: 100px;
+      border-radius: 24px;
+      margin-bottom: 32px;
+      box-shadow: 0 8px 40px var(--accent-glow);
+      animation: logoGlow 3s ease-in-out infinite alternate;
+    }
+    
+    @keyframes logoGlow {
+      0% { box-shadow: 0 8px 40px rgba(233, 30, 140, 0.3); }
+      100% { box-shadow: 0 8px 60px rgba(233, 30, 140, 0.5); }
+    }
+    
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      letter-spacing: -0.5px;
+    }
+    
+    .subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    p {
+      color: var(--text-secondary);
+      margin-bottom: 40px;
+      max-width: 400px;
+      line-height: 1.6;
+      font-size: 15px;
+    }
+    
     .btn {
-      display: inline-block;
-      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: var(--gradient-brand);
       color: white;
-      padding: 16px 32px;
-      border-radius: 12px;
+      padding: 18px 40px;
+      border-radius: 14px;
       text-decoration: none;
       font-weight: 600;
-      margin: 8px;
-      transition: transform 0.2s;
+      font-size: 16px;
+      margin-bottom: 32px;
+      box-shadow: 0 4px 24px var(--accent-glow);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
     }
-    .btn:hover { transform: scale(1.05); }
-    .btn-secondary {
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.2);
+    
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s;
     }
-    .stores { margin-top: 24px; display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+    
+    .btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 40px var(--accent-glow);
+    }
+    
+    .btn:hover::before {
+      left: 100%;
+    }
+    
+    .store-badges {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    
+    .store-badge {
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+    
+    .store-badge:hover {
+      transform: translateY(-3px);
+      opacity: 0.9;
+    }
+    
+    .store-badge img {
+      height: 44px;
+      width: auto;
+    }
+    
+    .divider {
+      width: 60px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent-magenta), transparent);
+      margin: 0 auto 24px;
+    }
+    
+    .footer-text {
+      margin-top: 48px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    
+    .footer-text a {
+      color: var(--accent-magenta);
+      text-decoration: none;
+    }
+    
+    .footer-text a:hover {
+      text-decoration: underline;
+    }
   </style>
   
   <script>
@@ -995,19 +1205,35 @@ export const share = onRequest(async (req, res) => {
         }
       }, 2500);
     }
-    // Desktop users see the landing page with buttons
   </script>
 </head>
 <body>
-  <img src="${appIcon}" alt="Socialmesh" class="logo">
-  <h1>${escapeHtml(title)}</h1>
-  <p>${escapeHtml(description)}</p>
+  <div class="mesh-bg"></div>
+  <div class="grid-overlay"></div>
   
-  <a href="${deepLink}" class="btn">Open in Socialmesh</a>
-  
-  <div class="stores">
-    <a href="${APP_STORE_URL}" class="btn btn-secondary">App Store</a>
-    <a href="${PLAY_STORE_URL}" class="btn btn-secondary">Google Play</a>
+  <div class="container">
+    <img src="${appIcon}" alt="Socialmesh" class="logo">
+    <h1>${escapeHtml(title)}</h1>
+    <p class="subtitle">${type === 'node' ? 'MESH NODE' : type === 'profile' ? 'USER PROFILE' : type === 'widget' ? 'CUSTOM WIDGET' : type === 'post' ? 'SOCIAL POST' : type === 'location' ? 'SHARED LOCATION' : 'SOCIALMESH'}</p>
+    <p>${escapeHtml(description)}</p>
+    
+    <a href="${deepLink}" class="btn">Open in Socialmesh</a>
+    
+    <div class="divider"></div>
+    
+    <div class="store-badges">
+      <a href="${APP_STORE_URL}" class="store-badge" target="_blank" rel="noopener">
+        <img src="${baseUrl}/images/app-store-badge.svg" alt="Download on the App Store">
+      </a>
+      <a href="${PLAY_STORE_URL}" class="store-badge" target="_blank" rel="noopener">
+        <img src="${baseUrl}/images/google-play-badge.svg" alt="Get it on Google Play">
+      </a>
+    </div>
+    
+    <p class="footer-text">
+      The most advanced Meshtastic client<br>
+      <a href="${baseUrl}">socialmesh.app</a>
+    </p>
   </div>
 </body>
 </html>`;
