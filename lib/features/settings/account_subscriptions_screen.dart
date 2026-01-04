@@ -950,6 +950,11 @@ class _AccountSubscriptionsScreenState
       await cloudService.refreshEntitlement();
       debugPrint('✅ [RESTORE] CloudSyncEntitlementService refreshed');
 
+      // Invalidate the stream provider to force UI rebuild with latest state
+      // This ensures the UI picks up the refreshed entitlement immediately
+      ref.invalidate(cloudSyncEntitlementProvider);
+      debugPrint('✅ [RESTORE] Invalidated cloudSyncEntitlementProvider');
+
       // Log final state
       final purchaseState = ref.read(purchaseStateProvider);
       debugPrint(
