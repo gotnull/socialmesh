@@ -337,6 +337,31 @@ class _FavoriteProductCard extends ConsumerWidget {
                           ),
                         ],
                       ),
+                      // Reviews
+                      if (product.reviewCount > 0) ...[
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Icon(Icons.star, color: Colors.amber, size: 14),
+                            const SizedBox(width: 4),
+                            Text(
+                              product.rating.toStringAsFixed(1),
+                              style: TextStyle(
+                                color: context.textSecondary,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            Text(
+                              ' (${product.reviewCount} review${product.reviewCount == 1 ? '' : 's'})',
+                              style: TextStyle(
+                                color: context.textTertiary,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),

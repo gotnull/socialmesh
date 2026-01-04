@@ -3,6 +3,13 @@
 /**
  * Comprehensive seed script for Device Shop
  * Seeds all mock data (sellers, products, reviews) to Firebase Firestore
+ * 
+ * ⚠️ WARNING: Products have hardcoded fake rating/reviewCount values for demo purposes.
+ * After seeding reviews, run fix-product-ratings.js to calculate real ratings from actual reviews.
+ * 
+ * Usage:
+ * 1. node scripts/seed-all-shop-data.js (seeds products with fake ratings)
+ * 2. node scripts/fix-product-ratings.js (recalculates ratings from actual reviews)
  */
 
 const admin = require('firebase-admin');
