@@ -11,6 +11,8 @@ import '../../providers/auth_providers.dart';
 import '../../providers/profile_providers.dart';
 import '../../providers/social_providers.dart';
 import '../../utils/snackbar.dart';
+import '../map/map_screen.dart';
+import '../messaging/messaging_screen.dart' show ChatScreen, ConversationType;
 import '../nodes/widgets/link_device_banner.dart';
 
 /// Screen for managing linked mesh devices on the user's social profile.
@@ -582,11 +584,13 @@ class _LinkedDeviceCard extends StatelessWidget {
                         Row(
                           children: [
                             Text(
-                              '!${nodeId.toRadixString(16)}',
+                              node?.shortName ?? '!${nodeId.toRadixString(16)}',
                               style: TextStyle(
                                 color: context.textTertiary,
                                 fontSize: 12,
-                                fontFamily: 'monospace',
+                                fontFamily: node?.shortName != null
+                                    ? null
+                                    : 'monospace',
                               ),
                             ),
                             if (node?.hardwareModel != null) ...[
@@ -625,89 +629,66 @@ class _LinkedDeviceCard extends StatelessWidget {
   void _showOptionsSheet(BuildContext context) {
     HapticFeedback.lightImpact();
 
-    AppBottomSheet.show(
-      context: context,
-      padding: const EdgeInsets.fromLTRB(0, 0, 0, 16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Header
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                NodeAvatar(
-                  text: node?.avatarName ?? nodeId.toRadixString(16)[0],
-                  color: _getNodeColor(nodeId),
-                  size: 40,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        node?.displayName ?? '!${nodeId.toRadixString(16)}',
-                        style: TextStyle(
-                          color: context.textPrimary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Text(
-                        isPrimary ? 'Primary Device' : 'Linked Device',
-                        style: TextStyle(
-                          color: isPrimary
-                              ? context.accentColor
-                              : context.textTertiary,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+    final actions = <BottomSheetAction>[
+      BottomSheetAction(
+        icon: Icons.message_outlined,
+        iconColor: context.accentColor,
+        label: 'Send Message',
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ChatScreen(
+              type: ConversationType.directMessage,
+              nodeNum: nodeId,
+              title: node?.displayName ?? '!${nodeId.toRadixString(16)}',
             ),
           ),
-          Divider(color: context.border),
-
-          // Set as primary
-          if (!isPrimary)
-            ListTile(
-              leading: Icon(Icons.star_outline, color: context.accentColor),
-              title: Text(
-                'Set as Primary',
-                style: TextStyle(
-                  color: context.textPrimary,
-                  fontFamily: 'JetBrainsMono',
-                ),
-              ),
-              subtitle: Text(
-                'Show this device on your profile',
-                style: TextStyle(color: context.textTertiary, fontSize: 12),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                onSetPrimary();
-              },
-            ),
-
-          // Unlink
-          ListTile(
-            leading: const Icon(Icons.link_off, color: AppTheme.errorRed),
-            title: const Text(
-              'Unlink Device',
-              style: TextStyle(
-                color: AppTheme.errorRed,
-                fontFamily: 'JetBrainsMono',
-              ),
-            ),
-            onTap: () {
-              Navigator.pop(context);
-              onUnlink();
-            },
-          ),
-        ],
+        ),
       ),
+      if (node?.hasPosition == true)
+        BottomSheetAction(
+          icon: Icons.map_outlined,
+          label: 'View on Map',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => MapScreen(initialNodeNum: nodeId),
+            ),
+          ),
+        ),
+      if (!isPrimary)
+        BottomSheetAction(
+          icon: Icons.star_outline,
+          iconColor: context.accentColor,
+          label: 'Set as Primary',
+          subtitle: 'Show this device on your profile',
+          onTap: () {
+            Navigator.pop(context);
+            onSetPrimary();
+          },
+        ),
+      BottomSheetAction(
+        icon: Icons.link_off,
+        label: 'Unlink Device',
+        isDestructive: true,
+        onTap: () {
+          Navigator.pop(context);
+          onUnlink();
+        },
+      ),
+    ];
+
+    AppBottomSheet.showActions(
+      context: context,
+      header: Text(
+        node?.displayName ?? '!${nodeId.toRadixString(16)}',
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: context.textPrimary,
+        ),
+      ),
+      actions: actions,
     );
   }
 }
