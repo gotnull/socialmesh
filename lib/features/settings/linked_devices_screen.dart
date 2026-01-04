@@ -585,7 +585,8 @@ class _LinkedDeviceCard extends StatelessWidget {
                           children: [
                             Flexible(
                               child: AutoScrollText(
-                                node?.longName ?? '!${nodeId.toRadixString(16)}',
+                                node?.longName ??
+                                    '!${nodeId.toRadixString(16)}',
                                 style: TextStyle(
                                   color: context.textTertiary,
                                   fontSize: 12,
