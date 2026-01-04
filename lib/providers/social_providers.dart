@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/social.dart';
 import '../services/social_service.dart';
 import 'auth_providers.dart';
+import 'profile_providers.dart';
 
 // ===========================================================================
 // SERVICE PROVIDER
@@ -89,11 +90,18 @@ final profileByNodeIdProvider = FutureProvider.autoDispose
     });
 
 /// Provider for current user's linked node IDs.
+/// Uses local profile data as fallback when Firestore is unavailable.
 final linkedNodeIdsProvider = FutureProvider.autoDispose<List<int>>((
   ref,
 ) async {
   final service = ref.watch(socialServiceProvider);
-  return service.getLinkedNodeIds();
+  try {
+    return await service.getLinkedNodeIds();
+  } catch (e) {
+    // Fallback to local profile if Firestore is unavailable
+    final localProfile = ref.read(userProfileProvider).value;
+    return localProfile?.linkedNodeIds ?? [];
+  }
 });
 
 /// Provider to check if a specific node is linked to current user's profile.
@@ -113,6 +121,23 @@ Future<void> linkNode(
 }) async {
   final service = ref.read(socialServiceProvider);
   await service.linkNodeToProfile(nodeId, setPrimary: setPrimary);
+
+  // Update local profile storage to persist linked nodes across app restarts
+  final userProfileNotifier = ref.read(userProfileProvider.notifier);
+  final currentProfile = ref.read(userProfileProvider).value;
+  if (currentProfile != null) {
+    final updatedLinkedNodes = [...currentProfile.linkedNodeIds];
+    if (!updatedLinkedNodes.contains(nodeId)) {
+      updatedLinkedNodes.add(nodeId);
+    }
+    await userProfileNotifier.updateLinkedNodes(
+      updatedLinkedNodes,
+      primaryNodeId: setPrimary || updatedLinkedNodes.length == 1
+          ? nodeId
+          : currentProfile.primaryNodeId,
+    );
+  }
+
   // Invalidate providers to refresh state
   ref.invalidate(linkedNodeIdsProvider);
   ref.invalidate(isNodeLinkedProvider(nodeId));
@@ -128,6 +153,23 @@ Future<void> linkNode(
 Future<void> unlinkNode(WidgetRef ref, int nodeId) async {
   final service = ref.read(socialServiceProvider);
   await service.unlinkNodeFromProfile(nodeId);
+
+  // Update local profile storage to persist linked nodes across app restarts
+  final userProfileNotifier = ref.read(userProfileProvider.notifier);
+  final currentProfile = ref.read(userProfileProvider).value;
+  if (currentProfile != null) {
+    final updatedLinkedNodes = [...currentProfile.linkedNodeIds]
+      ..remove(nodeId);
+    final newPrimaryId = currentProfile.primaryNodeId == nodeId
+        ? (updatedLinkedNodes.isNotEmpty ? updatedLinkedNodes.first : null)
+        : currentProfile.primaryNodeId;
+    await userProfileNotifier.updateLinkedNodes(
+      updatedLinkedNodes,
+      primaryNodeId: newPrimaryId,
+      clearPrimaryNodeId: newPrimaryId == null,
+    );
+  }
+
   // Invalidate providers to refresh state
   ref.invalidate(linkedNodeIdsProvider);
   ref.invalidate(isNodeLinkedProvider(nodeId));
@@ -143,6 +185,17 @@ Future<void> unlinkNode(WidgetRef ref, int nodeId) async {
 Future<void> setPrimaryNode(WidgetRef ref, int nodeId) async {
   final service = ref.read(socialServiceProvider);
   await service.setPrimaryNode(nodeId);
+
+  // Update local profile storage to persist primary node across app restarts
+  final userProfileNotifier = ref.read(userProfileProvider.notifier);
+  final currentProfile = ref.read(userProfileProvider).value;
+  if (currentProfile != null) {
+    await userProfileNotifier.updateLinkedNodes(
+      currentProfile.linkedNodeIds,
+      primaryNodeId: nodeId,
+    );
+  }
+
   // Invalidate providers to refresh state
   ref.invalidate(linkedNodeIdsProvider);
   // Also invalidate the user's public profile so UI updates

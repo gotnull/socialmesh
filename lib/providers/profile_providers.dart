@@ -131,6 +131,41 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
     }
   }
 
+  /// Update linked nodes and optionally the primary node ID.
+  /// This persists the linked nodes locally and syncs to cloud.
+  Future<void> updateLinkedNodes(
+    List<int> linkedNodeIds, {
+    int? primaryNodeId,
+    bool clearPrimaryNodeId = false,
+  }) async {
+    final profile = state.value;
+    if (profile == null) return;
+
+    try {
+      final updated = profile.copyWith(
+        linkedNodeIds: linkedNodeIds,
+        primaryNodeId: primaryNodeId,
+        clearPrimaryNodeId: clearPrimaryNodeId,
+      );
+      await profileService.saveProfile(updated);
+      state = AsyncValue.data(updated);
+
+      // Sync to cloud if signed in
+      final user = ref.read(currentUserProvider);
+      if (user != null) {
+        try {
+          await profileCloudSyncService.syncToCloud(user.uid);
+          debugPrint('[UserProfile] Linked nodes synced to cloud');
+        } catch (syncError) {
+          debugPrint('[UserProfile] Cloud sync failed: $syncError');
+        }
+      }
+    } catch (e, st) {
+      debugPrint('[UserProfile] Error updating linked nodes: $e');
+      state = AsyncValue.error(e, st);
+    }
+  }
+
   /// Update user preferences (settings that sync to cloud)
   Future<void> updatePreferences(UserPreferences newPreferences) async {
     final profile = state.value;
