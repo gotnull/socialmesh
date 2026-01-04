@@ -1178,6 +1178,18 @@ class SocialService {
       throw StateError('Must be signed in to report posts');
     }
 
+    // Get the post to include context in the report
+    final postDoc = await _firestore.collection('posts').doc(postId).get();
+    Map<String, dynamic>? context;
+    if (postDoc.exists) {
+      final postData = postDoc.data()!;
+      context = {
+        'content': postData['content'],
+        'authorId': postData['authorId'],
+        'imageUrl': postData['imageUrl'],
+      };
+    }
+
     await _firestore.collection('reports').add({
       'type': 'post',
       'targetId': postId,
@@ -1185,6 +1197,7 @@ class SocialService {
       'reason': reason,
       'status': 'pending',
       'createdAt': FieldValue.serverTimestamp(),
+      if (context != null) 'context': context,
     });
   }
 

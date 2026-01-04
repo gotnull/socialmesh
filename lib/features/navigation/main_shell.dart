@@ -39,7 +39,7 @@ import '../device_shop/screens/shop_admin_dashboard.dart';
 import '../device_shop/providers/admin_shop_providers.dart';
 import '../mesh_health/widgets/mesh_health_dashboard.dart';
 import '../social/social.dart';
-import '../social/screens/reported_comments_screen.dart';
+import '../social/screens/reported_content_screen.dart';
 
 /// Notifier to expose the main shell's scaffold key for drawer access
 class MainShellScaffoldKeyNotifier extends Notifier<GlobalKey<ScaffoldState>?> {
@@ -1646,14 +1646,14 @@ class _DrawerAdminSection extends ConsumerWidget {
                     },
                   ),
 
-                  // Reported Comments
+                  // Reported Content
                   _DrawerMenuTile(
                     icon: Icons.flag_outlined,
-                    label: 'Reported Comments',
+                    label: 'Reported Content',
                     isSelected: false,
                     onTap: () {
                       ref.haptics.tabChange();
-                      onNavigate(const ReportedCommentsScreen());
+                      onNavigate(const ReportedContentScreen());
                     },
                   ),
                 ],

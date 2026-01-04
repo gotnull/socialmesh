@@ -799,6 +799,15 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
                   _confirmDeletePost(post);
                 },
               ),
+            if (!isOwnPost)
+              ListTile(
+                leading: const Icon(Icons.flag_outlined),
+                title: const Text('Report Post'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _reportPost(post.id, post.authorId);
+                },
+              ),
             ListTile(
               leading: const Icon(Icons.share_outlined),
               title: const Text('Share'),
@@ -820,6 +829,70 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
 
   void _blockUser(PublicProfile profile) {
     showSuccessSnackBar(context, '${profile.displayName} blocked');
+  }
+
+  Future<void> _reportPost(String postId, String authorId) async {
+    final reasonController = TextEditingController();
+    final reason = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: context.card,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Report Post',
+          style: TextStyle(color: context.textPrimary),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Why are you reporting this post?',
+              style: TextStyle(color: context.textSecondary),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: reasonController,
+              decoration: InputDecoration(
+                hintText: 'Describe the issue...',
+                border: const OutlineInputBorder(),
+                hintStyle: TextStyle(color: context.textTertiary),
+              ),
+              style: TextStyle(color: context.textPrimary),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: context.textSecondary),
+            ),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, reasonController.text.trim()),
+            style: FilledButton.styleFrom(backgroundColor: context.accentColor),
+            child: const Text('Report'),
+          ),
+        ],
+      ),
+    );
+
+    if (reason != null && reason.isNotEmpty && mounted) {
+      try {
+        final socialService = ref.read(socialServiceProvider);
+        await socialService.reportPost(postId, reason);
+        if (mounted) {
+          showSuccessSnackBar(context, 'Report submitted. Thank you.');
+        }
+      } catch (e) {
+        if (mounted) {
+          showErrorSnackBar(context, 'Failed to report: $e');
+        }
+      }
+    }
   }
 
   Future<void> _confirmDeletePost(Post post) async {
