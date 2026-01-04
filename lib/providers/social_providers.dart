@@ -109,9 +109,9 @@ final isNodeLinkedProvider = StreamProvider.autoDispose.family<bool, int>((
   nodeId,
 ) {
   final service = ref.watch(socialServiceProvider);
-  return service
-      .watchLinkedNodeIds()
-      .map((linkedNodes) => linkedNodes.contains(nodeId));
+  return service.watchLinkedNodeIds().map(
+    (linkedNodes) => linkedNodes.contains(nodeId),
+  );
 });
 
 /// Link a node to current user's profile
