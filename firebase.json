@@ -74,6 +74,13 @@
         ]
       }
     ],
+    "redirects": [
+      {
+        "source": "/map",
+        "destination": "https://api.socialmesh.app/map",
+        "type": 302
+      }
+    ],
     "rewrites": [
       {
         "source": "/privacy",
