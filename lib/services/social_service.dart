@@ -993,6 +993,24 @@ class SocialService {
     return linkedNodes.contains(nodeId);
   }
 
+  /// Watch the current user's linked node IDs with real-time updates.
+  Stream<List<int>> watchLinkedNodeIds() {
+    final currentUserId = _currentUserId;
+    if (currentUserId == null) {
+      return Stream.value([]);
+    }
+
+    return _firestore.collection('profiles').doc(currentUserId).snapshots().map(
+      (doc) {
+        if (!doc.exists) return <int>[];
+        return (doc.data()?['linkedNodeIds'] as List<dynamic>?)
+                ?.map((e) => e as int)
+                .toList() ??
+            <int>[];
+      },
+    );
+  }
+
   /// Stream a user's public profile with real-time updates from server.
   Stream<PublicProfile?> watchPublicProfile(String userId) {
     return _firestore.collection('profiles').doc(userId).snapshots().map((doc) {

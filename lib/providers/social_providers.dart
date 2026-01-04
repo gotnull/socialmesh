@@ -89,28 +89,29 @@ final profileByNodeIdProvider = FutureProvider.autoDispose
       return service.getProfileByNodeId(nodeId);
     });
 
-/// Provider for current user's linked node IDs.
+/// Provider for current user's linked node IDs with real-time updates.
 /// Uses local profile data as fallback when Firestore is unavailable.
-final linkedNodeIdsProvider = FutureProvider.autoDispose<List<int>>((
-  ref,
-) async {
+final linkedNodeIdsProvider = StreamProvider.autoDispose<List<int>>((ref) {
   final service = ref.watch(socialServiceProvider);
   try {
-    return await service.getLinkedNodeIds();
+    return service.watchLinkedNodeIds();
   } catch (e) {
     // Fallback to local profile if Firestore is unavailable
     final localProfile = ref.read(userProfileProvider).value;
-    return localProfile?.linkedNodeIds ?? [];
+    return Stream.value(localProfile?.linkedNodeIds ?? []);
   }
 });
 
 /// Provider to check if a specific node is linked to current user's profile.
-final isNodeLinkedProvider = FutureProvider.autoDispose.family<bool, int>((
+/// Now watches the linkedNodeIds stream for real-time updates.
+final isNodeLinkedProvider = StreamProvider.autoDispose.family<bool, int>((
   ref,
   nodeId,
-) async {
+) {
   final service = ref.watch(socialServiceProvider);
-  return service.isNodeLinked(nodeId);
+  return service
+      .watchLinkedNodeIds()
+      .map((linkedNodes) => linkedNodes.contains(nodeId));
 });
 
 /// Link a node to current user's profile

@@ -57,8 +57,24 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
         }
       } catch (e) {
         debugPrint('[UserProfile] Cloud sync failed: $e');
-        ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.error);
-        ref.read(syncErrorProvider.notifier).setError(e.toString());
+        final errorString = e.toString();
+
+        // Check if this is a transient network error
+        final isTransientError =
+            errorString.contains('unavailable') ||
+            errorString.contains('UNAVAILABLE') ||
+            errorString.contains('network') ||
+            errorString.contains('timeout');
+
+        if (isTransientError) {
+          // For transient errors, treat as idle - user is logged in, just offline
+          debugPrint('[UserProfile] Transient network error, treating as idle');
+          ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.idle);
+        } else {
+          // For actual errors (permissions, etc), show error state
+          ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.error);
+          ref.read(syncErrorProvider.notifier).setError(errorString);
+        }
         // Fall back to local profile on error
       }
     } else {
