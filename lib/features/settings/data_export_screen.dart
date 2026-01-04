@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:share_plus/share_plus.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../providers/splash_mesh_provider.dart';
+import '../../utils/share_utils.dart';
 import '../../utils/snackbar.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
@@ -24,18 +24,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
 
   /// Helper to share with proper iPad support
   Future<void> _shareText(String text, {String? subject}) async {
-    // Use screen center for iPad popover positioning
-    final size = MediaQuery.of(context).size;
-    final sharePositionOrigin = Rect.fromCenter(
-      center: Offset(size.width / 2, size.height / 2),
-      width: 1,
-      height: 1,
-    );
-    await Share.share(
-      text,
-      subject: subject,
-      sharePositionOrigin: sharePositionOrigin,
-    );
+    await shareText(text, subject: subject, context: context);
   }
 
   @override

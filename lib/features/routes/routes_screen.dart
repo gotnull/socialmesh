@@ -12,6 +12,7 @@ import '../../core/widgets/app_bottom_sheet.dart';
 import '../../models/route.dart' as route_model;
 import '../../providers/app_providers.dart';
 import '../../providers/telemetry_providers.dart';
+import '../../utils/share_utils.dart';
 import '../../utils/snackbar.dart';
 import '../navigation/main_shell.dart';
 
@@ -167,6 +168,9 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen> {
     final fileName =
         '${route.name.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}.gpx';
 
+    // Capture share position before async gap
+    final safePosition = getSafeSharePosition(context, sharePositionOrigin);
+
     try {
       // Save to temp file and share as file for proper save-to-files behavior
       final tempDir = await getTemporaryDirectory();
@@ -177,7 +181,7 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen> {
         [XFile(file.path)],
         subject: fileName,
         text: 'Route: ${route.name}',
-        sharePositionOrigin: sharePositionOrigin,
+        sharePositionOrigin: safePosition,
       );
     } catch (e) {
       if (mounted) {

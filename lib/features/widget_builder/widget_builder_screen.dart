@@ -12,6 +12,7 @@ import '../../core/widgets/widget_preview_card.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/profile_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
+import '../../utils/share_utils.dart';
 import '../../utils/snackbar.dart';
 import '../dashboard/models/dashboard_widget_config.dart';
 import '../dashboard/providers/dashboard_providers.dart';
@@ -577,8 +578,14 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
         break;
       case 'export':
         debugPrint('[WidgetBuilder] Exporting widget: ${schema.id}');
+        // Capture share position before async gap
+        final sharePosition = getSafeSharePosition(context);
         final json = await _storageService.exportWidget(schema.id);
-        await Share.share(json, subject: '${schema.name} Widget');
+        await Share.share(
+          json,
+          subject: '${schema.name} Widget',
+          sharePositionOrigin: sharePosition,
+        );
         break;
       case 'submit_marketplace':
         _submitToMarketplace(schema);

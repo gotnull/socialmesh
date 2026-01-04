@@ -13,6 +13,7 @@ import '../../core/widgets/auto_scroll_text.dart';
 import '../../core/widgets/info_table.dart';
 import '../../models/world_mesh_node.dart';
 import '../../services/world_mesh_map_service.dart';
+import '../../utils/share_utils.dart';
 import '../../utils/snackbar.dart';
 import 'services/node_favorites_service.dart';
 import 'services/node_history_service.dart';
@@ -266,6 +267,9 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
   Future<void> _shareNodeAsLink() async {
     final node = _node;
 
+    // Capture share position before async gap
+    final sharePosition = getSafeSharePosition(context);
+
     // Create a shareable record in Firestore
     final docRef = await FirebaseFirestore.instance.collection('shared_nodes').add({
       'nodeId': _nodeId,
@@ -277,9 +281,10 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
 
     final shareUrl = AppUrls.shareNodeUrl(docRef.id);
 
-    Share.share(
+    await Share.share(
       'Check out ${node.displayName} on Socialmesh!\n$shareUrl',
       subject: 'Mesh Node: ${node.displayName}',
+      sharePositionOrigin: sharePosition,
     );
   }
 
@@ -317,7 +322,11 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
     buffer.writeln('Neighbors: ${node.neighbors?.length ?? 0}');
     buffer.writeln('Gateways: ${node.seenBy.length}');
 
-    Share.share(buffer.toString(), subject: 'Mesh Node: ${node.displayName}');
+    shareText(
+      buffer.toString(),
+      subject: 'Mesh Node: ${node.displayName}',
+      context: context,
+    );
   }
 
   void _showOnMap() {
@@ -430,7 +439,11 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
     };
 
     final jsonString = const JsonEncoder.withIndent('  ').convert(data);
-    Share.share(jsonString, subject: 'Node ${node.displayName} History (JSON)');
+    shareText(
+      jsonString,
+      subject: 'Node ${node.displayName} History (JSON)',
+      context: context,
+    );
     showSuccessSnackBar(context, 'JSON data shared');
   }
 
@@ -460,9 +473,10 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
       );
     }
 
-    Share.share(
+    shareText(
       buffer.toString(),
       subject: 'Node ${node.displayName} History (CSV)',
+      context: context,
     );
     showSuccessSnackBar(context, 'CSV data shared');
   }

@@ -15,6 +15,7 @@ import '../../models/mesh_models.dart';
 import '../../models/route.dart' as route_model;
 import '../../providers/app_providers.dart';
 import '../../providers/telemetry_providers.dart';
+import '../../utils/share_utils.dart';
 import '../../utils/snackbar.dart';
 
 /// Screen showing route details with map view and mesh nodes
@@ -496,7 +497,7 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
         [XFile(file.path)],
         subject: fileName,
         text: 'Route: ${widget.route.name}',
-        sharePositionOrigin: sharePositionOrigin,
+        sharePositionOrigin: getSafeSharePosition(null, sharePositionOrigin),
       );
     } catch (e) {
       if (mounted) {

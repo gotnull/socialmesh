@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme.dart';
 import '../../../providers/auth_providers.dart';
+import '../../../utils/share_utils.dart';
 import '../models/shop_models.dart';
 import '../providers/device_shop_providers.dart';
 import 'seller_profile_screen.dart';
@@ -792,7 +792,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
 ${product.shortDescription ?? product.description}
 
 Price: ${product.formattedPrice}${product.purchaseUrl != null ? '\n\n${product.purchaseUrl}' : ''}''';
-    Share.share(text, subject: product.name);
+    shareText(text, subject: product.name, context: context);
   }
 
   Future<void> _buyProduct(ShopProduct product) async {

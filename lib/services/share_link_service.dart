@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -16,6 +17,21 @@ class ShareLinkService {
   ShareLinkService({FirebaseFirestore? firestore, FirebaseAuth? auth})
     : _firestore = firestore ?? FirebaseFirestore.instance,
       _auth = auth ?? FirebaseAuth.instance;
+
+  /// Get a safe share position for iOS/iPadOS
+  /// Returns a centered rect that works for popover positioning
+  Rect _getSafeSharePosition(Rect? origin) {
+    if (origin != null && origin.width > 0 && origin.height > 0) {
+      return origin;
+    }
+    // Default to center of screen - safe fallback for iPad popover
+    // Using a reasonable default that works for most devices
+    if (Platform.isIOS) {
+      return const Rect.fromLTWH(100, 100, 200, 100);
+    }
+    // Android doesn't need sharePositionOrigin
+    return Rect.zero;
+  }
 
   /// Share a mesh node with rich preview
   /// Stores complete node data in Firestore for proper deep link handling
@@ -50,7 +66,7 @@ class ShareLinkService {
     await Share.share(
       'Check out ${node.displayName} on Socialmesh!\n$shareUrl',
       subject: '${node.displayName} - Socialmesh Node',
-      sharePositionOrigin: sharePositionOrigin,
+      sharePositionOrigin: _getSafeSharePosition(sharePositionOrigin),
     );
   }
 
@@ -76,7 +92,7 @@ class ShareLinkService {
     await Share.share(
       'Check out $nodeName on Socialmesh!\n$shareUrl',
       subject: '$nodeName - Socialmesh Node',
-      sharePositionOrigin: sharePositionOrigin,
+      sharePositionOrigin: _getSafeSharePosition(sharePositionOrigin),
     );
   }
 
@@ -91,7 +107,7 @@ class ShareLinkService {
     await Share.share(
       'Check out $displayName on Socialmesh!\n$shareUrl',
       subject: '$displayName - Socialmesh Profile',
-      sharePositionOrigin: sharePositionOrigin,
+      sharePositionOrigin: _getSafeSharePosition(sharePositionOrigin),
     );
   }
 
@@ -106,7 +122,7 @@ class ShareLinkService {
     await Share.share(
       'Check out $widgetName on Socialmesh!\n$shareUrl',
       subject: '$widgetName - Socialmesh Widget',
-      sharePositionOrigin: sharePositionOrigin,
+      sharePositionOrigin: _getSafeSharePosition(sharePositionOrigin),
     );
   }
 
@@ -130,7 +146,7 @@ class ShareLinkService {
     await Share.share(
       text,
       subject: label ?? 'Socialmesh Location',
-      sharePositionOrigin: sharePositionOrigin,
+      sharePositionOrigin: _getSafeSharePosition(sharePositionOrigin),
     );
   }
 
@@ -144,7 +160,7 @@ class ShareLinkService {
     await Share.share(
       'Check out this post on Socialmesh!\n$shareUrl',
       subject: 'Socialmesh Post',
-      sharePositionOrigin: sharePositionOrigin,
+      sharePositionOrigin: _getSafeSharePosition(sharePositionOrigin),
     );
   }
 
@@ -157,7 +173,7 @@ class ShareLinkService {
     await Share.share(
       text,
       subject: subject,
-      sharePositionOrigin: sharePositionOrigin,
+      sharePositionOrigin: _getSafeSharePosition(sharePositionOrigin),
     );
   }
 }

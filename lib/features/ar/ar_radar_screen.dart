@@ -5,10 +5,10 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../../utils/share_utils.dart';
 import '../../utils/snackbar.dart';
 import 'ar_calibration.dart';
 import 'ar_engine.dart';
@@ -713,7 +713,7 @@ class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
     buffer.writeln();
     buffer.writeln('Shared via Socialmesh AR');
 
-    Share.share(buffer.toString(), subject: 'Mesh Node: $name');
+    shareText(buffer.toString(), subject: 'Mesh Node: $name', context: context);
   }
 }
 

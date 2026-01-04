@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:share_plus/share_plus.dart';
 import '../../core/theme.dart';
 import '../../services/debug/debug_export_service.dart';
+import '../../utils/share_utils.dart';
 import '../../utils/snackbar.dart';
 
 /// Log entry with level and timestamp
@@ -230,16 +230,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
   void _shareLog() {
     final logger = ref.read(appLoggerProvider);
     final content = logger.export();
-    // Get share position for iPad support
-    final box = context.findRenderObject() as RenderBox?;
-    final sharePositionOrigin = box != null
-        ? box.localToGlobal(Offset.zero) & box.size
-        : const Rect.fromLTWH(0, 0, 100, 100);
-    Share.share(
-      content,
-      subject: 'Socialmesh App Log',
-      sharePositionOrigin: sharePositionOrigin,
-    );
+    shareText(content, subject: 'Socialmesh App Log', context: context);
   }
 
   Future<void> _exportDebug() async {

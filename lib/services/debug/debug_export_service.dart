@@ -10,6 +10,7 @@ import '../../features/debug/app_log_screen.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/telemetry_providers.dart';
+import '../../utils/share_utils.dart';
 
 /// Service to export comprehensive debug information as JSON
 class DebugExportService {
@@ -309,7 +310,7 @@ class DebugExportService {
     await Share.shareXFiles(
       [XFile(file.path)],
       subject: 'Socialmesh Debug Export $timestamp',
-      sharePositionOrigin: sharePositionOrigin,
+      sharePositionOrigin: getSafeSharePosition(null, sharePositionOrigin),
     );
   }
 }

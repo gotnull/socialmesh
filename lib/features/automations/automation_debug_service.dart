@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
-import 'package:share_plus/share_plus.dart';
 
+import '../../utils/share_utils.dart';
 import 'automation_repository.dart';
 import 'models/automation.dart';
 
@@ -196,6 +196,6 @@ class AutomationDebugService {
   /// Share debug data
   Future<void> shareDebugJson(AutomationRepository repository) async {
     final jsonStr = exportDebugJson(repository);
-    await Share.share(jsonStr, subject: 'Socialmesh Automation Debug Export');
+    await shareText(jsonStr, subject: 'Socialmesh Automation Debug Export');
   }
 }
