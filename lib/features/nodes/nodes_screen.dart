@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'dart:convert';
 import '../../providers/app_providers.dart';
+import '../../providers/social_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
@@ -20,6 +21,8 @@ import '../messaging/messaging_screen.dart';
 import '../map/map_screen.dart';
 import '../navigation/main_shell.dart';
 import '../ar/ar_radar_screen.dart';
+import '../social/screens/profile_social_screen.dart';
+import 'widgets/link_device_banner.dart';
 
 // Battery helper functions
 // Meshtastic uses 101 for charging, 100 for plugged in fully charged
@@ -175,6 +178,8 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
                 ),
               ),
             ),
+            // Link device banner (shows when connected to unlinked device)
+            const LinkDeviceBanner(),
             // Filter chips row with static controls at end
             SizedBox(
               height: 44,
@@ -2373,6 +2378,9 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
 
           SizedBox(height: 20),
 
+          // Linked Social Profile section (shows if user has linked this node)
+          if (!isMyNode) _LinkedProfileSection(nodeNum: node.nodeNum),
+
           // Remote Administration button (only for nodes with PKI)
           if (!isMyNode && node.hasPublicKey)
             Padding(
@@ -2629,6 +2637,139 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
             ),
         ],
       ),
+    );
+  }
+}
+
+/// Widget to show linked social profile if a user has linked this node
+class _LinkedProfileSection extends ConsumerWidget {
+  const _LinkedProfileSection({required this.nodeNum});
+
+  final int nodeNum;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profileAsync = ref.watch(profileByNodeIdProvider(nodeNum));
+
+    return profileAsync.when(
+      data: (profile) {
+        if (profile == null) return const SizedBox.shrink();
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: Container(
+            decoration: BoxDecoration(
+              color: context.accentColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: context.accentColor.withValues(alpha: 0.3),
+              ),
+            ),
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                // Avatar
+                CircleAvatar(
+                  radius: 24,
+                  backgroundImage: profile.avatarUrl != null
+                      ? NetworkImage(profile.avatarUrl!)
+                      : null,
+                  backgroundColor: context.accentColor.withValues(alpha: 0.2),
+                  child: profile.avatarUrl == null
+                      ? Text(
+                          profile.displayName[0].toUpperCase(),
+                          style: TextStyle(
+                            color: context.accentColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        )
+                      : null,
+                ),
+                const SizedBox(width: 12),
+                // Profile info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              profile.displayName,
+                              style: TextStyle(
+                                color: context.textPrimary,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 15,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (profile.isVerified) ...[
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.verified,
+                              color: context.accentColor,
+                              size: 16,
+                            ),
+                          ],
+                        ],
+                      ),
+                      if (profile.callsign != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          profile.callsign!,
+                          style: TextStyle(
+                            color: context.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 4),
+                      Text(
+                        '${profile.followerCount} followers • ${profile.postCount} posts',
+                        style: TextStyle(
+                          color: context.textTertiary,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // View Profile button
+                FilledButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ProfileSocialScreen(userId: profile.id),
+                      ),
+                    );
+                  },
+                  style: FilledButton.styleFrom(
+                    backgroundColor: context.accentColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                  child: const Text(
+                    'View',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
     );
   }
 }

@@ -259,6 +259,7 @@ class ProfileCloudSyncService {
       'avatarUrl': profile.avatarUrl,
       'socialLinks': profile.socialLinks?.toJson(),
       'primaryNodeId': profile.primaryNodeId,
+      'linkedNodeIds': profile.linkedNodeIds,
       'accentColorIndex': profile.accentColorIndex,
       'installedWidgetIds': profile.installedWidgetIds,
       'preferences': profile.preferences?.toJson(),
@@ -290,6 +291,11 @@ class ProfileCloudSyncService {
             )
           : null,
       primaryNodeId: data['primaryNodeId'] as int?,
+      linkedNodeIds:
+          (data['linkedNodeIds'] as List<dynamic>?)
+              ?.map((e) => e as int)
+              .toList() ??
+          const [],
       accentColorIndex: data['accentColorIndex'] as int?,
       installedWidgetIds:
           (data['installedWidgetIds'] as List<dynamic>?)
@@ -318,7 +324,7 @@ class ProfileCloudSyncService {
 
   /// Merge local and cloud profiles with conflict resolution
   /// Strategy: Use cloud values for synced fields, preserve local customizations
-  /// For installedWidgetIds: use the newer profile's list (NOT union) to respect deletions
+  /// For installedWidgetIds and linkedNodeIds: use the newer profile's list (NOT union) to respect deletions
   UserProfile _mergeProfiles(UserProfile? local, UserProfile cloud) {
     debugPrint(
       '[ProfileSync] Merging profiles - local.isSynced: ${local?.isSynced}, cloud.avatarUrl: ${cloud.avatarUrl}',
@@ -334,6 +340,11 @@ class ProfileCloudSyncService {
         ...local.installedWidgetIds,
         ...cloud.installedWidgetIds,
       }.toList();
+      // Merge linked nodes (union for first sync)
+      final mergedLinkedNodes = <int>{
+        ...local.linkedNodeIds,
+        ...cloud.linkedNodeIds,
+      }.toList();
       debugPrint(
         '[ProfileSync] First sync - merging widget IDs: local=${local.installedWidgetIds}, cloud=${cloud.installedWidgetIds}, merged=$mergedWidgetIds',
       );
@@ -344,6 +355,7 @@ class ProfileCloudSyncService {
         website: cloud.website ?? local.website,
         socialLinks: cloud.socialLinks ?? local.socialLinks,
         primaryNodeId: cloud.primaryNodeId ?? local.primaryNodeId,
+        linkedNodeIds: mergedLinkedNodes,
         accentColorIndex: cloud.accentColorIndex ?? local.accentColorIndex,
         installedWidgetIds: mergedWidgetIds,
         preferences: cloud.preferences ?? local.preferences,
@@ -351,7 +363,7 @@ class ProfileCloudSyncService {
     }
 
     // Both synced - use most recently updated
-    // IMPORTANT: Use the newer profile's installedWidgetIds (NOT union) to respect deletions
+    // IMPORTANT: Use the newer profile's installedWidgetIds and linkedNodeIds (NOT union) to respect deletions
     debugPrint(
       '[ProfileSync] Both synced - local.updatedAt: ${local.updatedAt}, cloud.updatedAt: ${cloud.updatedAt}',
     );

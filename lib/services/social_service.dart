@@ -833,6 +833,157 @@ class SocialService {
     return _getPublicProfile(userId);
   }
 
+  /// Find a user by their linked mesh node ID.
+  /// Returns null if no user has this node in their linkedNodeIds.
+  Future<PublicProfile?> getProfileByNodeId(int nodeId) async {
+    try {
+      // Query using array-contains on linkedNodeIds
+      final query = await _firestore
+          .collection('profiles')
+          .where('linkedNodeIds', arrayContains: nodeId)
+          .limit(1)
+          .get();
+
+      if (query.docs.isEmpty) return null;
+      return PublicProfile.fromFirestore(query.docs.first);
+    } catch (e) {
+      debugPrint('Error finding profile by nodeId: $e');
+      return null;
+    }
+  }
+
+  /// Link a mesh node to the current user's profile.
+  /// If setPrimary is true, also sets it as the primary node.
+  Future<void> linkNodeToProfile(int nodeId, {bool setPrimary = false}) async {
+    final currentUserId = _currentUserId;
+    if (currentUserId == null) {
+      throw StateError('Must be signed in to link nodes');
+    }
+
+    await ensureProfileExists();
+
+    final docRef = _firestore.collection('profiles').doc(currentUserId);
+    final doc = await docRef.get();
+
+    if (!doc.exists) {
+      throw StateError('Profile does not exist');
+    }
+
+    final currentLinkedNodes =
+        (doc.data()?['linkedNodeIds'] as List<dynamic>?)
+            ?.map((e) => e as int)
+            .toList() ??
+        [];
+
+    // Add node if not already linked
+    if (!currentLinkedNodes.contains(nodeId)) {
+      currentLinkedNodes.add(nodeId);
+    }
+
+    final updates = <String, dynamic>{
+      'linkedNodeIds': currentLinkedNodes,
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+
+    // Also update primary if requested or if this is the first node
+    if (setPrimary || currentLinkedNodes.length == 1) {
+      updates['primaryNodeId'] = nodeId;
+    }
+
+    await docRef.update(updates);
+  }
+
+  /// Unlink a mesh node from the current user's profile.
+  Future<void> unlinkNodeFromProfile(int nodeId) async {
+    final currentUserId = _currentUserId;
+    if (currentUserId == null) {
+      throw StateError('Must be signed in to unlink nodes');
+    }
+
+    final docRef = _firestore.collection('profiles').doc(currentUserId);
+    final doc = await docRef.get();
+
+    if (!doc.exists) return;
+
+    final currentLinkedNodes =
+        (doc.data()?['linkedNodeIds'] as List<dynamic>?)
+            ?.map((e) => e as int)
+            .toList() ??
+        [];
+    final currentPrimaryId = doc.data()?['primaryNodeId'] as int?;
+
+    // Remove the node
+    currentLinkedNodes.remove(nodeId);
+
+    final updates = <String, dynamic>{
+      'linkedNodeIds': currentLinkedNodes,
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+
+    // If we removed the primary node, set a new one or clear it
+    if (currentPrimaryId == nodeId) {
+      updates['primaryNodeId'] = currentLinkedNodes.isNotEmpty
+          ? currentLinkedNodes.first
+          : null;
+    }
+
+    await docRef.update(updates);
+  }
+
+  /// Set a linked node as the primary node.
+  Future<void> setPrimaryNode(int nodeId) async {
+    final currentUserId = _currentUserId;
+    if (currentUserId == null) {
+      throw StateError('Must be signed in to set primary node');
+    }
+
+    final docRef = _firestore.collection('profiles').doc(currentUserId);
+    final doc = await docRef.get();
+
+    if (!doc.exists) {
+      throw StateError('Profile does not exist');
+    }
+
+    final currentLinkedNodes =
+        (doc.data()?['linkedNodeIds'] as List<dynamic>?)
+            ?.map((e) => e as int)
+            .toList() ??
+        [];
+
+    // Only allow setting primary if node is already linked
+    if (!currentLinkedNodes.contains(nodeId)) {
+      throw ArgumentError('Node must be linked before setting as primary');
+    }
+
+    await docRef.update({
+      'primaryNodeId': nodeId,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  /// Get the current user's linked node IDs.
+  Future<List<int>> getLinkedNodeIds() async {
+    final currentUserId = _currentUserId;
+    if (currentUserId == null) return [];
+
+    final doc = await _firestore
+        .collection('profiles')
+        .doc(currentUserId)
+        .get();
+    if (!doc.exists) return [];
+
+    return (doc.data()?['linkedNodeIds'] as List<dynamic>?)
+            ?.map((e) => e as int)
+            .toList() ??
+        [];
+  }
+
+  /// Check if current user has a specific node linked.
+  Future<bool> isNodeLinked(int nodeId) async {
+    final linkedNodes = await getLinkedNodeIds();
+    return linkedNodes.contains(nodeId);
+  }
+
   /// Stream a user's public profile.
   Stream<PublicProfile?> watchPublicProfile(String userId) {
     return _firestore.collection('profiles').doc(userId).snapshots().map((doc) {

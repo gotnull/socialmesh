@@ -577,6 +577,8 @@ class PublicProfile {
   final String? avatarUrl;
   final String? bio;
   final String? callsign;
+  final int? primaryNodeId;
+  final List<int> linkedNodeIds;
   final int followerCount;
   final int followingCount;
   final int postCount;
@@ -589,6 +591,8 @@ class PublicProfile {
     this.avatarUrl,
     this.bio,
     this.callsign,
+    this.primaryNodeId,
+    this.linkedNodeIds = const [],
     this.followerCount = 0,
     this.followingCount = 0,
     this.postCount = 0,
@@ -604,6 +608,12 @@ class PublicProfile {
       avatarUrl: data['avatarUrl'] as String?,
       bio: data['bio'] as String?,
       callsign: data['callsign'] as String?,
+      primaryNodeId: data['primaryNodeId'] as int?,
+      linkedNodeIds:
+          (data['linkedNodeIds'] as List<dynamic>?)
+              ?.map((e) => e as int)
+              .toList() ??
+          const [],
       followerCount: data['followerCount'] as int? ?? 0,
       followingCount: data['followingCount'] as int? ?? 0,
       postCount: data['postCount'] as int? ?? 0,
@@ -613,6 +623,9 @@ class PublicProfile {
           : null,
     );
   }
+
+  /// Check if this profile has a specific node linked
+  bool hasNodeLinked(int nodeId) => linkedNodeIds.contains(nodeId);
 
   /// Convert to FeedAuthorSnapshot for embedding in feed items
   FeedAuthorSnapshot toAuthorSnapshot() {

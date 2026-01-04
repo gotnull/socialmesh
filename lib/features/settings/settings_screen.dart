@@ -50,6 +50,7 @@ import 'store_forward_config_screen.dart';
 import 'detection_sensor_config_screen.dart';
 import 'external_notification_config_screen.dart';
 import 'account_subscriptions_screen.dart';
+import 'linked_devices_screen.dart';
 import '../map/offline_maps_screen.dart';
 import 'data_export_screen.dart';
 import '../device/serial_config_screen.dart';
@@ -242,6 +243,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             MaterialPageRoute(
               builder: (_) => const AccountSubscriptionsScreen(),
             ),
+          ),
+        ),
+        _SearchableSettingItem(
+          icon: Icons.devices,
+          title: 'Linked Devices',
+          subtitle: 'Meshtastic devices connected to your profile',
+          keywords: ['device', 'node', 'link', 'mesh', 'meshtastic', 'connect'],
+          section: 'PROFILE',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const LinkedDevicesScreen()),
           ),
         ),
 

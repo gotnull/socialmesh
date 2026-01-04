@@ -89,18 +89,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen>
           labelColor: theme.colorScheme.primary,
           unselectedLabelColor: theme.colorScheme.onSurface.withAlpha(150),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () {
-              if (_tabController.index == 0) {
-                ref.read(feedProvider.notifier).refresh();
-              } else {
-                ref.read(exploreProvider.notifier).refresh();
-              }
-            },
-          ),
-        ],
       ),
       body: currentUser == null
           ? _buildSignInPrompt(context)

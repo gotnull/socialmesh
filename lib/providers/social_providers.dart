@@ -76,6 +76,67 @@ Future<void> toggleFollow(WidgetRef ref, String targetUserId) async {
 }
 
 // ===========================================================================
+// PROFILE BY NODE ID & LINKED NODES
+// ===========================================================================
+
+/// Provider to find a user's public profile by their linked mesh node ID.
+/// Returns null if no user has this node in their linkedNodeIds.
+final profileByNodeIdProvider = FutureProvider.autoDispose
+    .family<PublicProfile?, int>((ref, nodeId) async {
+      final service = ref.watch(socialServiceProvider);
+      return service.getProfileByNodeId(nodeId);
+    });
+
+/// Provider for current user's linked node IDs.
+final linkedNodeIdsProvider = FutureProvider.autoDispose<List<int>>((
+  ref,
+) async {
+  final service = ref.watch(socialServiceProvider);
+  return service.getLinkedNodeIds();
+});
+
+/// Provider to check if a specific node is linked to current user's profile.
+final isNodeLinkedProvider = FutureProvider.autoDispose.family<bool, int>((
+  ref,
+  nodeId,
+) async {
+  final service = ref.watch(socialServiceProvider);
+  return service.isNodeLinked(nodeId);
+});
+
+/// Link a node to current user's profile
+Future<void> linkNode(
+  WidgetRef ref,
+  int nodeId, {
+  bool setPrimary = false,
+}) async {
+  final service = ref.read(socialServiceProvider);
+  await service.linkNodeToProfile(nodeId, setPrimary: setPrimary);
+  // Invalidate providers to refresh state
+  ref.invalidate(linkedNodeIdsProvider);
+  ref.invalidate(isNodeLinkedProvider(nodeId));
+  ref.invalidate(profileByNodeIdProvider(nodeId));
+}
+
+/// Unlink a node from current user's profile
+Future<void> unlinkNode(WidgetRef ref, int nodeId) async {
+  final service = ref.read(socialServiceProvider);
+  await service.unlinkNodeFromProfile(nodeId);
+  // Invalidate providers to refresh state
+  ref.invalidate(linkedNodeIdsProvider);
+  ref.invalidate(isNodeLinkedProvider(nodeId));
+  ref.invalidate(profileByNodeIdProvider(nodeId));
+}
+
+/// Set a linked node as the primary node
+Future<void> setPrimaryNode(WidgetRef ref, int nodeId) async {
+  final service = ref.read(socialServiceProvider);
+  await service.setPrimaryNode(nodeId);
+  // Invalidate providers to refresh state
+  ref.invalidate(linkedNodeIdsProvider);
+}
+
+// ===========================================================================
 // FOLLOWERS/FOLLOWING LISTS
 // ===========================================================================
 

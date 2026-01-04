@@ -324,6 +324,9 @@ class UserProfile {
   /// Favorite Meshtastic node ID (their primary device)
   final int? primaryNodeId;
 
+  /// All Meshtastic node IDs linked to this profile
+  final List<int> linkedNodeIds;
+
   /// User's preferred accent color index
   final int? accentColorIndex;
 
@@ -366,6 +369,7 @@ class UserProfile {
     this.website,
     this.socialLinks,
     this.primaryNodeId,
+    this.linkedNodeIds = const [],
     this.accentColorIndex,
     this.installedWidgetIds = const [],
     this.preferences,
@@ -424,6 +428,11 @@ class UserProfile {
             )
           : null,
       primaryNodeId: json['primaryNodeId'] as int?,
+      linkedNodeIds:
+          (json['linkedNodeIds'] as List<dynamic>?)
+              ?.map((e) => e as int)
+              .toList() ??
+          const [],
       accentColorIndex: json['accentColorIndex'] as int?,
       installedWidgetIds:
           (json['installedWidgetIds'] as List<dynamic>?)
@@ -457,6 +466,7 @@ class UserProfile {
       'website': website,
       'socialLinks': socialLinks?.toJson(),
       'primaryNodeId': primaryNodeId,
+      'linkedNodeIds': linkedNodeIds,
       'accentColorIndex': accentColorIndex,
       'installedWidgetIds': installedWidgetIds,
       'preferences': preferences?.toJson(),
@@ -489,6 +499,7 @@ class UserProfile {
     String? website,
     ProfileSocialLinks? socialLinks,
     int? primaryNodeId,
+    List<int>? linkedNodeIds,
     int? accentColorIndex,
     List<String>? installedWidgetIds,
     UserPreferences? preferences,
@@ -518,6 +529,7 @@ class UserProfile {
       primaryNodeId: clearPrimaryNodeId
           ? null
           : (primaryNodeId ?? this.primaryNodeId),
+      linkedNodeIds: linkedNodeIds ?? this.linkedNodeIds,
       accentColorIndex: accentColorIndex ?? this.accentColorIndex,
       installedWidgetIds: installedWidgetIds ?? this.installedWidgetIds,
       preferences: preferences ?? this.preferences,
