@@ -1256,6 +1256,39 @@ class _WriteReviewSheetState extends ConsumerState<_WriteReviewSheet> {
                 fontWeight: FontWeight.bold,
               ),
             ),
+            const SizedBox(height: 8),
+
+            // Privacy notice
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: context.accentColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: context.accentColor.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    size: 20,
+                    color: context.accentColor,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Your review will be public and posted as "${widget.userName ?? 'Anonymous'}". Reviews are moderated before appearing on the product page.',
+                      style: TextStyle(
+                        color: context.textSecondary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 24),
 
             // Rating
@@ -1299,8 +1332,10 @@ class _WriteReviewSheetState extends ConsumerState<_WriteReviewSheet> {
               style: TextStyle(color: context.textPrimary),
               maxLines: 4,
               decoration: InputDecoration(
-                labelText: 'Your Review',
+                labelText: 'Your Review *',
                 labelStyle: TextStyle(color: context.textSecondary),
+                hintText: 'Share your experience with this product...',
+                hintStyle: TextStyle(color: context.textTertiary),
                 alignLabelWithHint: true,
                 filled: true,
                 fillColor: context.background,
@@ -1351,6 +1386,15 @@ class _WriteReviewSheetState extends ConsumerState<_WriteReviewSheet> {
   }
 
   Future<void> _submitReview() async {
+    // Validate review body
+    final reviewText = _bodyController.text.trim();
+    if (reviewText.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please write a review')));
+      return;
+    }
+
     setState(() => _isSubmitting = true);
 
     try {
@@ -1362,14 +1406,16 @@ class _WriteReviewSheetState extends ConsumerState<_WriteReviewSheet> {
             userName: widget.userName,
             userPhotoUrl: widget.userPhotoUrl,
             rating: _rating,
-            title: _titleController.text.isEmpty ? null : _titleController.text,
-            body: _bodyController.text.isEmpty ? null : _bodyController.text,
+            title: _titleController.text.trim().isEmpty
+                ? null
+                : _titleController.text.trim(),
+            body: reviewText,
           );
 
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Review submitted successfully!')),
+          const SnackBar(content: Text('Review submitted successfully!')),
         );
       }
     } catch (e) {

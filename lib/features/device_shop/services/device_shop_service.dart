@@ -349,11 +349,45 @@ class DeviceShopService {
 
   // ============ REVIEW OPERATIONS ============
 
-  /// Watch reviews for a product
+  /// Watch reviews for a product (only approved reviews for public view)
+  /// Note: Reviews without a status field (created before moderation) are treated as approved
   Stream<List<ProductReview>> watchProductReviews(String productId) {
     return _reviewsCollection
         .where('productId', isEqualTo: productId)
         .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .where((doc) {
+                // Show reviews that are approved OR don't have a status field (backward compatibility)
+                final data = doc.data() as Map<String, dynamic>?;
+                final hasStatusField = data?.containsKey('status') ?? false;
+                final status = data?['status'] as String?;
+                return !hasStatusField || status == 'approved';
+              })
+              .map((doc) => ProductReview.fromFirestore(doc))
+              .toList(),
+        );
+  }
+
+  /// Watch ALL reviews for a product (admin only, includes pending/rejected)
+  Stream<List<ProductReview>> watchAllProductReviews(String productId) {
+    return _reviewsCollection
+        .where('productId', isEqualTo: productId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => ProductReview.fromFirestore(doc))
+              .toList(),
+        );
+  }
+
+  /// Watch all pending reviews (admin moderation)
+  Stream<List<ProductReview>> watchPendingReviews() {
+    return _reviewsCollection
+        .where('status', isEqualTo: 'pending')
+        .orderBy('createdAt', descending: false)
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
@@ -411,9 +445,17 @@ class DeviceShopService {
   Future<void> _updateProductRating(String productId) async {
     final snapshot = await _reviewsCollection
         .where('productId', isEqualTo: productId)
+        .where('status', isEqualTo: 'approved')
         .get();
 
-    if (snapshot.docs.isEmpty) return;
+    if (snapshot.docs.isEmpty) {
+      // No approved reviews, reset to defaults
+      await _productsCollection.doc(productId).update({
+        'rating': 0.0,
+        'reviewCount': 0,
+      });
+      return;
+    }
 
     final totalRating = snapshot.docs.fold<int>(
       0,
@@ -432,6 +474,48 @@ class DeviceShopService {
     await _reviewsCollection.doc(reviewId).update({
       'helpfulCount': FieldValue.increment(1),
     });
+  }
+
+  /// Approve a review (admin only)
+  Future<void> approveReview(String reviewId, String adminId) async {
+    await _reviewsCollection.doc(reviewId).update({
+      'status': 'approved',
+      'reviewedAt': FieldValue.serverTimestamp(),
+      'reviewedBy': adminId,
+    });
+
+    // Update product rating after approval
+    final review = await _reviewsCollection.doc(reviewId).get();
+    final productId = review.data()?['productId'] as String?;
+    if (productId != null) {
+      await _updateProductRating(productId);
+    }
+  }
+
+  /// Reject a review (admin only)
+  Future<void> rejectReview(
+    String reviewId,
+    String adminId,
+    String reason,
+  ) async {
+    await _reviewsCollection.doc(reviewId).update({
+      'status': 'rejected',
+      'rejectionReason': reason,
+      'reviewedAt': FieldValue.serverTimestamp(),
+      'reviewedBy': adminId,
+    });
+  }
+
+  /// Delete a review (admin only)
+  Future<void> deleteReview(String reviewId) async {
+    final review = await _reviewsCollection.doc(reviewId).get();
+    await _reviewsCollection.doc(reviewId).delete();
+
+    // Update product rating after deletion
+    final productId = review.data()?['productId'] as String?;
+    if (productId != null) {
+      await _updateProductRating(productId);
+    }
   }
 
   // ============ FAVORITES OPERATIONS ============

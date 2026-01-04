@@ -529,6 +529,12 @@ class ProductReview {
   final String? sellerResponse;
   final DateTime? sellerResponseAt;
 
+  // Moderation fields
+  final String status; // 'pending', 'approved', 'rejected'
+  final String? rejectionReason;
+  final DateTime? reviewedAt;
+  final String? reviewedBy;
+
   const ProductReview({
     required this.id,
     required this.productId,
@@ -544,6 +550,10 @@ class ProductReview {
     required this.createdAt,
     this.sellerResponse,
     this.sellerResponseAt,
+    this.status = 'pending',
+    this.rejectionReason,
+    this.reviewedAt,
+    this.reviewedBy,
   });
 
   factory ProductReview.fromFirestore(DocumentSnapshot doc) {
@@ -567,6 +577,12 @@ class ProductReview {
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       sellerResponse: data['sellerResponse'],
       sellerResponseAt: (data['sellerResponseAt'] as Timestamp?)?.toDate(),
+      status:
+          data['status'] ??
+          'approved', // Default to approved for backward compatibility
+      rejectionReason: data['rejectionReason'],
+      reviewedAt: (data['reviewedAt'] as Timestamp?)?.toDate(),
+      reviewedBy: data['reviewedBy'],
     );
   }
 
@@ -587,6 +603,10 @@ class ProductReview {
       'sellerResponseAt': sellerResponseAt != null
           ? Timestamp.fromDate(sellerResponseAt!)
           : null,
+      'status': status,
+      'rejectionReason': rejectionReason,
+      'reviewedAt': reviewedAt != null ? Timestamp.fromDate(reviewedAt!) : null,
+      'reviewedBy': reviewedBy,
     };
   }
 }

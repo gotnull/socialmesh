@@ -36,6 +36,7 @@ import '../reachability/mesh_reachability_screen.dart';
 import '../sky_tracker/screens/sky_tracker_screen.dart';
 import '../device_shop/screens/device_shop_screen.dart';
 import '../device_shop/screens/shop_admin_dashboard.dart';
+import '../device_shop/screens/review_moderation_screen.dart';
 import '../device_shop/providers/admin_shop_providers.dart';
 import '../mesh_health/widgets/mesh_health_dashboard.dart';
 import '../social/social.dart';
@@ -312,12 +313,14 @@ class _DrawerMenuItem {
   final String label;
   final Widget screen;
   final PremiumFeature? premiumFeature;
+  final String? sectionHeader;
 
   const _DrawerMenuItem({
     required this.icon,
     required this.label,
     required this.screen,
     this.premiumFeature,
+    this.sectionHeader,
   });
 }
 
@@ -345,28 +348,19 @@ class _MainShellState extends ConsumerState<MainShell> {
   }
 
   /// Drawer menu items for quick access screens not in bottom nav
-  /// Organized into: Features (free) and Premium Features
+  /// Organized into logical sections with headers
   final List<_DrawerMenuItem> _drawerMenuItems = [
-    // Free features
+    // Mesh Features
     const _DrawerMenuItem(
       icon: Icons.public,
       label: 'World Map',
       screen: WorldMeshScreen(),
+      sectionHeader: 'MESH FEATURES',
     ),
     const _DrawerMenuItem(
       icon: Icons.view_in_ar,
       label: '3D Mesh View',
       screen: Mesh3DScreen(),
-    ),
-    const _DrawerMenuItem(
-      icon: Icons.timeline,
-      label: 'Timeline',
-      screen: TimelineScreen(),
-    ),
-    const _DrawerMenuItem(
-      icon: Icons.people_alt_outlined,
-      label: 'Presence',
-      screen: PresenceScreen(),
     ),
     const _DrawerMenuItem(
       icon: Icons.route,
@@ -383,27 +377,45 @@ class _MainShellState extends ConsumerState<MainShell> {
       label: 'Mesh Health',
       screen: MeshHealthDashboard(),
     ),
+
+    // Activity & Social
     const _DrawerMenuItem(
-      icon: Icons.flight,
-      label: 'Sky Tracker',
-      screen: SkyTrackerScreen(),
+      icon: Icons.timeline,
+      label: 'Timeline',
+      screen: TimelineScreen(),
+      sectionHeader: 'ACTIVITY & SOCIAL',
     ),
     const _DrawerMenuItem(
-      icon: Icons.store,
-      label: 'Device Shop',
-      screen: DeviceShopScreen(),
+      icon: Icons.people_alt_outlined,
+      label: 'Presence',
+      screen: PresenceScreen(),
     ),
     const _DrawerMenuItem(
       icon: Icons.forum_outlined,
       label: 'Social',
       screen: SocialHubScreen(),
     ),
-    // Premium features
+
+    // Tools & Tracking
+    const _DrawerMenuItem(
+      icon: Icons.flight,
+      label: 'Sky Tracker',
+      screen: SkyTrackerScreen(),
+      sectionHeader: 'TOOLS & TRACKING',
+    ),
+    const _DrawerMenuItem(
+      icon: Icons.store,
+      label: 'Device Shop',
+      screen: DeviceShopScreen(),
+    ),
+
+    // Premium Features
     const _DrawerMenuItem(
       icon: Icons.widgets_outlined,
       label: 'Widgets',
       screen: WidgetBuilderScreen(),
       premiumFeature: PremiumFeature.homeWidgets,
+      sectionHeader: 'PREMIUM FEATURES',
     ),
     const _DrawerMenuItem(
       icon: Icons.auto_awesome,
@@ -492,6 +504,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: _drawerMenuItems.asMap().entries.map((entry) {
                         final index = entry.key;
                         final item = entry.value;
@@ -503,33 +516,71 @@ class _MainShellState extends ConsumerState<MainShell> {
                             !isPremium ||
                             ref.watch(hasFeatureProvider(item.premiumFeature!));
 
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 4),
-                          child: _DrawerMenuTile(
-                            icon: item.icon,
-                            label: item.label,
-                            isSelected: isSelected,
-                            isPremium: isPremium,
-                            isLocked: isPremium && !hasAccess,
-                            onTap: () {
-                              ref.haptics.tabChange();
-                              Navigator.of(context).pop(); // Close drawer
-
-                              if (isPremium && !hasAccess) {
-                                // Show subscription screen for locked features
-                                Navigator.of(context).push(
-                                  MaterialPageRoute<void>(
-                                    builder: (context) =>
-                                        const SubscriptionScreen(),
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Section header if this item has one
+                            if (item.sectionHeader != null) ...[
+                              if (index > 0)
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                    top: 8,
+                                    bottom: 8,
                                   ),
-                                );
-                              } else {
-                                setState(() {
-                                  _selectedDrawerItem = index;
-                                });
-                              }
-                            },
-                          ),
+                                  child: Divider(
+                                    color: theme.dividerColor.withValues(
+                                      alpha: 0.1,
+                                    ),
+                                  ),
+                                ),
+                              Padding(
+                                padding: EdgeInsets.only(
+                                  left: 12,
+                                  bottom: 8,
+                                  top: index == 0 ? 0 : 8,
+                                ),
+                                child: Text(
+                                  item.sectionHeader!,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 1.2,
+                                    color: theme.colorScheme.onSurface
+                                        .withValues(alpha: 0.5),
+                                  ),
+                                ),
+                              ),
+                            ],
+                            // Menu tile
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 4),
+                              child: _DrawerMenuTile(
+                                icon: item.icon,
+                                label: item.label,
+                                isSelected: isSelected,
+                                isPremium: isPremium,
+                                isLocked: isPremium && !hasAccess,
+                                onTap: () {
+                                  ref.haptics.tabChange();
+                                  Navigator.of(context).pop(); // Close drawer
+
+                                  if (isPremium && !hasAccess) {
+                                    // Show subscription screen for locked features
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute<void>(
+                                        builder: (context) =>
+                                            const SubscriptionScreen(),
+                                      ),
+                                    );
+                                  } else {
+                                    setState(() {
+                                      _selectedDrawerItem = index;
+                                    });
+                                  }
+                                },
+                              ),
+                            ),
+                          ],
                         );
                       }).toList(),
                     ),
@@ -1643,6 +1694,17 @@ class _DrawerAdminSection extends ConsumerWidget {
                     onTap: () {
                       ref.haptics.tabChange();
                       onNavigate(const ShopAdminDashboard());
+                    },
+                  ),
+
+                  // Review Moderation
+                  _DrawerMenuTile(
+                    icon: Icons.rate_review_outlined,
+                    label: 'Review Moderation',
+                    isSelected: false,
+                    onTap: () {
+                      ref.haptics.tabChange();
+                      onNavigate(const ReviewModerationScreen());
                     },
                   ),
 
