@@ -853,19 +853,48 @@ class _ProductSection extends StatelessWidget {
 }
 
 /// Product card widget
-class ProductCard extends ConsumerWidget {
+class ProductCard extends ConsumerStatefulWidget {
   final ShopProduct product;
   final Color? highlightColor;
 
   const ProductCard({super.key, required this.product, this.highlightColor});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProductCard> createState() => _ProductCardState();
+}
+
+class _ProductCardState extends ConsumerState<ProductCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _heartController;
+  late Animation<double> _heartScale;
+
+  @override
+  void initState() {
+    super.initState();
+    _heartController = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
+    _heartScale = Tween<double>(
+      begin: 1.0,
+      end: 1.3,
+    ).animate(CurvedAnimation(parent: _heartController, curve: Curves.easeOut));
+  }
+
+  @override
+  void dispose() {
+    _heartController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
     final favoriteIdsAsync = user != null
         ? ref.watch(userFavoriteIdsProvider(user.uid))
         : const AsyncValue<Set<String>>.data({});
-    final isFavorite = favoriteIdsAsync.value?.contains(product.id) ?? false;
+    final isFavorite =
+        favoriteIdsAsync.value?.contains(widget.product.id) ?? false;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -876,7 +905,7 @@ class ProductCard extends ConsumerWidget {
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => ProductDetailScreen(productId: product.id),
+              builder: (_) => ProductDetailScreen(productId: widget.product.id),
             ),
           ),
           borderRadius: BorderRadius.circular(12),
@@ -885,8 +914,10 @@ class ProductCard extends ConsumerWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: product.isOnSale
-                    ? (highlightColor ?? Colors.red).withValues(alpha: 0.5)
+                color: widget.product.isOnSale
+                    ? (widget.highlightColor ?? Colors.red).withValues(
+                        alpha: 0.5,
+                      )
                     : context.border,
               ),
             ),
@@ -900,9 +931,9 @@ class ProductCard extends ConsumerWidget {
                       borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(12),
                       ),
-                      child: product.primaryImage != null
+                      child: widget.product.primaryImage != null
                           ? Image.network(
-                              product.primaryImage!,
+                              widget.product.primaryImage!,
                               height: 120,
                               width: double.infinity,
                               fit: BoxFit.cover,
@@ -938,8 +969,30 @@ class ProductCard extends ConsumerWidget {
                               ),
                             ),
                     ),
+                    // Gradient overlay for icon visibility
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        height: 60,
+                        decoration: BoxDecoration(
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(12),
+                          ),
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.black.withValues(alpha: 0.4),
+                              Colors.transparent,
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                     // Sale badge
-                    if (product.isOnSale)
+                    if (widget.product.isOnSale)
                       Positioned(
                         top: 8,
                         left: 8,
@@ -949,11 +1002,11 @@ class ProductCard extends ConsumerWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: highlightColor ?? Colors.red,
+                            color: widget.highlightColor ?? Colors.red,
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
-                            '-${product.discountPercent}%',
+                            '-${widget.product.discountPercent}%',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 10,
@@ -966,17 +1019,22 @@ class ProductCard extends ConsumerWidget {
                     Positioned(
                       top: 4,
                       right: 4,
-                      child: IconButton(
-                        icon: Icon(
-                          isFavorite ? Icons.favorite : Icons.favorite_outline,
-                          color: isFavorite ? Colors.red : Colors.white,
-                          size: 20,
+                      child: ScaleTransition(
+                        scale: _heartScale,
+                        child: IconButton(
+                          icon: Icon(
+                            isFavorite
+                                ? Icons.favorite
+                                : Icons.favorite_outline,
+                            color: isFavorite ? Colors.red : Colors.white,
+                            size: 20,
+                          ),
+                          onPressed: () => _toggleFavorite(user?.uid),
                         ),
-                        onPressed: () => _toggleFavorite(ref, user?.uid),
                       ),
                     ),
                     // Out of stock overlay
-                    if (!product.isInStock)
+                    if (!widget.product.isInStock)
                       Positioned.fill(
                         child: Container(
                           decoration: BoxDecoration(
@@ -1007,7 +1065,7 @@ class ProductCard extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          product.name,
+                          widget.product.name,
                           style: TextStyle(
                             color: context.textPrimary,
                             fontSize: 13,
@@ -1018,7 +1076,7 @@ class ProductCard extends ConsumerWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          product.sellerName,
+                          widget.product.sellerName,
                           style: TextStyle(
                             color: context.textSecondary,
                             fontSize: 11,
@@ -1031,17 +1089,17 @@ class ProductCard extends ConsumerWidget {
                         Row(
                           children: [
                             Text(
-                              product.formattedPrice,
+                              widget.product.formattedPrice,
                               style: TextStyle(
                                 color: context.accentColor,
                                 fontSize: 15,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            if (product.isOnSale) ...[
+                            if (widget.product.isOnSale) ...[
                               SizedBox(width: 6),
                               Text(
-                                product.formattedComparePrice!,
+                                widget.product.formattedComparePrice!,
                                 style: TextStyle(
                                   color: context.textTertiary,
                                   fontSize: 11,
@@ -1052,21 +1110,21 @@ class ProductCard extends ConsumerWidget {
                           ],
                         ),
                         // Rating
-                        if (product.reviewCount > 0) ...[
+                        if (widget.product.reviewCount > 0) ...[
                           SizedBox(height: 4),
                           Row(
                             children: [
                               Icon(Icons.star, color: Colors.amber, size: 14),
                               const SizedBox(width: 2),
                               Text(
-                                product.rating.toStringAsFixed(1),
+                                widget.product.rating.toStringAsFixed(1),
                                 style: TextStyle(
                                   color: context.textSecondary,
                                   fontSize: 11,
                                 ),
                               ),
                               Text(
-                                ' (${product.reviewCount})',
+                                ' (${widget.product.reviewCount})',
                                 style: TextStyle(
                                   color: context.textTertiary,
                                   fontSize: 11,
@@ -1087,9 +1145,17 @@ class ProductCard extends ConsumerWidget {
     );
   }
 
-  void _toggleFavorite(WidgetRef ref, String? oderId) {
+  void _toggleFavorite(String? oderId) async {
     if (oderId == null) return;
-    ref.read(deviceShopServiceProvider).toggleFavorite(oderId, product.id);
+
+    // Animate heart
+    await _heartController.forward();
+    await _heartController.reverse();
+
+    // Toggle favorite
+    ref
+        .read(deviceShopServiceProvider)
+        .toggleFavorite(oderId, widget.product.id);
   }
 }
 

@@ -305,6 +305,20 @@
       ]
     },
     {
+      "collectionGroup": "shopProducts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "isActive",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "compareAtPrice",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "productReviews",
       "queryScope": "COLLECTION",
       "fields": [
@@ -314,6 +328,20 @@
         },
         {
           "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "productFavorites",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "addedAt",
           "order": "DESCENDING"
         }
       ]

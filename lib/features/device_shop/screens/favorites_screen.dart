@@ -138,7 +138,9 @@ class _FavoriteProductCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final productAsync = ref.watch(singleProductProvider(favorite.productId));
+    final productAsync = ref.watch(
+      singleProductFutureProvider(favorite.productId),
+    );
 
     return productAsync.when(
       loading: () => _buildLoadingCard(context),

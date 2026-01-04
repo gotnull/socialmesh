@@ -54,6 +54,14 @@ final singleProductProvider = StreamProvider.family<ShopProduct?, String>((
   return service.watchProduct(productId);
 });
 
+/// Provider for single product by ID (future, for one-time reads in favorites)
+final singleProductFutureProvider = FutureProvider.family<ShopProduct?, String>(
+  (ref, productId) async {
+    final service = ref.read(deviceShopServiceProvider);
+    return service.getProduct(productId);
+  },
+);
+
 /// Provider for product search
 final productSearchProvider = FutureProvider.family<List<ShopProduct>, String>((
   ref,

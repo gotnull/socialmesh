@@ -250,7 +250,6 @@ class DeviceShopService {
               .toList(),
         );
   }
-  }
 
   /// Get a single product
   Future<ShopProduct?> getProduct(String productId) async {
