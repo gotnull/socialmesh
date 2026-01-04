@@ -11,11 +11,13 @@ import 'profile_service.dart';
 /// Service for syncing user profile data with Firebase.
 ///
 /// Handles:
-/// - Firestore document sync for profile data
+/// - Firestore document sync for profile data (`users` collection)
+/// - Firestore public profile sync (`profiles` collection for social features)
 /// - Firebase Storage for avatar images
 /// - Conflict resolution (local-first with server merge)
 class ProfileCloudSyncService {
   static const String _usersCollection = 'users';
+  static const String _profilesCollection = 'profiles';
   static const String _avatarsFolder = 'profile_avatars';
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -29,6 +31,11 @@ class ProfileCloudSyncService {
     return _firestore.collection(_usersCollection).doc(uid);
   }
 
+  /// Reference to the public profile document (for social features)
+  DocumentReference<Map<String, dynamic>> _publicProfileDoc(String uid) {
+    return _firestore.collection(_profilesCollection).doc(uid);
+  }
+
   /// Reference to avatar storage path
   Reference _avatarRef(String uid) {
     return _storage.ref().child(_avatarsFolder).child('$uid.jpg');
@@ -36,7 +43,7 @@ class ProfileCloudSyncService {
 
   // --- Firestore Profile Sync ---
 
-  /// Sync local profile to Firestore
+  /// Sync local profile to Firestore (both `users` and `profiles` collections)
   Future<void> syncToCloud(String uid) async {
     debugPrint('[ProfileSync] Syncing to cloud for uid: $uid');
 
@@ -56,6 +63,9 @@ class ProfileCloudSyncService {
       // Use merge to avoid overwriting fields we don't manage
       await _userDoc(uid).set(data, SetOptions(merge: true));
 
+      // Also sync public fields to `profiles` collection for social features
+      await _syncPublicProfile(uid, profileForCloud);
+
       // Update local profile with synced status
       await _localService.saveProfile(profileForCloud);
 
@@ -63,6 +73,43 @@ class ProfileCloudSyncService {
     } catch (e) {
       debugPrint('[ProfileSync] Error syncing to cloud: $e');
       rethrow;
+    }
+  }
+
+  /// Sync only the public-facing profile fields to `profiles` collection
+  /// This is the collection used by social features (followers, posts, etc.)
+  Future<void> _syncPublicProfile(String uid, UserProfile profile) async {
+    debugPrint('[ProfileSync] Syncing public profile for uid: $uid');
+
+    final docRef = _publicProfileDoc(uid);
+    final doc = await docRef.get();
+
+    final publicData = <String, dynamic>{
+      'displayName': profile.displayName,
+      'displayNameLower': profile.displayName.toLowerCase(),
+      'avatarUrl': profile.avatarUrl,
+      'bio': profile.bio,
+      'callsign': profile.callsign,
+      'website': profile.website,
+      'socialLinks': profile.socialLinks?.toJson(),
+      'primaryNodeId': profile.primaryNodeId,
+      'linkedNodeIds': profile.linkedNodeIds,
+      'isVerified': profile.isVerified,
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+
+    if (!doc.exists) {
+      // Document doesn't exist - create with counter fields set to 0
+      publicData['followerCount'] = 0;
+      publicData['followingCount'] = 0;
+      publicData['postCount'] = 0;
+      publicData['createdAt'] = FieldValue.serverTimestamp();
+      await docRef.set(publicData);
+      debugPrint('[ProfileSync] Created new public profile');
+    } else {
+      // Document exists - update without touching counter fields
+      await docRef.update(publicData);
+      debugPrint('[ProfileSync] Updated existing public profile');
     }
   }
 
@@ -111,6 +158,8 @@ class ProfileCloudSyncService {
         debugPrint('[ProfileSync] No cloud profile, pushing local');
         final profileForCloud = localProfile.copyWith(id: uid, isSynced: true);
         await _userDoc(uid).set(_profileToFirestore(profileForCloud));
+        // Also sync to public profiles collection
+        await _syncPublicProfile(uid, profileForCloud);
         finalProfile = profileForCloud;
       } else {
         // Cloud profile exists - merge with local
@@ -121,6 +170,8 @@ class ProfileCloudSyncService {
         await _userDoc(
           uid,
         ).set(_profileToFirestore(finalProfile), SetOptions(merge: true));
+        // Also sync to public profiles collection
+        await _syncPublicProfile(uid, finalProfile);
       }
 
       // Save final profile locally
@@ -134,13 +185,14 @@ class ProfileCloudSyncService {
     }
   }
 
-  /// Delete cloud profile data
+  /// Delete cloud profile data (from both `users` and `profiles` collections)
   Future<void> deleteCloudProfile(String uid) async {
     debugPrint('[ProfileSync] Deleting cloud profile for uid: $uid');
 
     try {
-      // Delete Firestore document
+      // Delete from both collections
       await _userDoc(uid).delete();
+      await _publicProfileDoc(uid).delete();
 
       // Delete avatar from storage
       try {

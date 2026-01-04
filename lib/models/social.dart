@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'user_profile.dart';
+
 /// Post visibility options
 enum PostVisibility {
   /// Visible to everyone
@@ -577,6 +579,8 @@ class PublicProfile {
   final String? avatarUrl;
   final String? bio;
   final String? callsign;
+  final String? website;
+  final ProfileSocialLinks? socialLinks;
   final int? primaryNodeId;
   final List<int> linkedNodeIds;
   final int followerCount;
@@ -591,6 +595,8 @@ class PublicProfile {
     this.avatarUrl,
     this.bio,
     this.callsign,
+    this.website,
+    this.socialLinks,
     this.primaryNodeId,
     this.linkedNodeIds = const [],
     this.followerCount = 0,
@@ -608,6 +614,12 @@ class PublicProfile {
       avatarUrl: data['avatarUrl'] as String?,
       bio: data['bio'] as String?,
       callsign: data['callsign'] as String?,
+      website: data['website'] as String?,
+      socialLinks: data['socialLinks'] != null
+          ? ProfileSocialLinks.fromJson(
+              data['socialLinks'] as Map<String, dynamic>,
+            )
+          : null,
       primaryNodeId: data['primaryNodeId'] as int?,
       linkedNodeIds:
           (data['linkedNodeIds'] as List<dynamic>?)
@@ -634,6 +646,41 @@ class PublicProfile {
       avatarUrl: avatarUrl,
       callsign: callsign,
       isVerified: isVerified,
+    );
+  }
+
+  /// Create a copy with updated fields
+  PublicProfile copyWith({
+    String? id,
+    String? displayName,
+    String? avatarUrl,
+    String? bio,
+    String? callsign,
+    String? website,
+    ProfileSocialLinks? socialLinks,
+    int? primaryNodeId,
+    List<int>? linkedNodeIds,
+    int? followerCount,
+    int? followingCount,
+    int? postCount,
+    bool? isVerified,
+    DateTime? createdAt,
+  }) {
+    return PublicProfile(
+      id: id ?? this.id,
+      displayName: displayName ?? this.displayName,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      bio: bio ?? this.bio,
+      callsign: callsign ?? this.callsign,
+      website: website ?? this.website,
+      socialLinks: socialLinks ?? this.socialLinks,
+      primaryNodeId: primaryNodeId ?? this.primaryNodeId,
+      linkedNodeIds: linkedNodeIds ?? this.linkedNodeIds,
+      followerCount: followerCount ?? this.followerCount,
+      followingCount: followingCount ?? this.followingCount,
+      postCount: postCount ?? this.postCount,
+      isVerified: isVerified ?? this.isVerified,
+      createdAt: createdAt ?? this.createdAt,
     );
   }
 

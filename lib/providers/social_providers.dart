@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/social.dart';
 import '../services/social_service.dart';
+import 'auth_providers.dart';
 
 // ===========================================================================
 // SERVICE PROVIDER
@@ -116,6 +117,11 @@ Future<void> linkNode(
   ref.invalidate(linkedNodeIdsProvider);
   ref.invalidate(isNodeLinkedProvider(nodeId));
   ref.invalidate(profileByNodeIdProvider(nodeId));
+  // Also invalidate the user's public profile so UI updates
+  final currentUser = ref.read(currentUserProvider);
+  if (currentUser != null) {
+    ref.invalidate(publicProfileProvider(currentUser.uid));
+  }
 }
 
 /// Unlink a node from current user's profile
@@ -126,6 +132,11 @@ Future<void> unlinkNode(WidgetRef ref, int nodeId) async {
   ref.invalidate(linkedNodeIdsProvider);
   ref.invalidate(isNodeLinkedProvider(nodeId));
   ref.invalidate(profileByNodeIdProvider(nodeId));
+  // Also invalidate the user's public profile so UI updates
+  final currentUser = ref.read(currentUserProvider);
+  if (currentUser != null) {
+    ref.invalidate(publicProfileProvider(currentUser.uid));
+  }
 }
 
 /// Set a linked node as the primary node
@@ -134,6 +145,11 @@ Future<void> setPrimaryNode(WidgetRef ref, int nodeId) async {
   await service.setPrimaryNode(nodeId);
   // Invalidate providers to refresh state
   ref.invalidate(linkedNodeIdsProvider);
+  // Also invalidate the user's public profile so UI updates
+  final currentUser = ref.read(currentUserProvider);
+  if (currentUser != null) {
+    ref.invalidate(publicProfileProvider(currentUser.uid));
+  }
 }
 
 // ===========================================================================

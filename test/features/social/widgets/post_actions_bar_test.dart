@@ -14,7 +14,6 @@ void main() {
         authorId: 'user-1',
         content: 'Test post content',
         createdAt: DateTime(2024, 1, 1),
-        visibility: PostVisibility.public,
         likeCount: 10,
         commentCount: 5,
       );
@@ -159,7 +158,6 @@ void main() {
         authorId: 'user-1',
         content: 'Test post',
         createdAt: DateTime(2024, 1, 1),
-        visibility: PostVisibility.public,
         likeCount: 0,
         commentCount: 0,
       );
@@ -186,7 +184,6 @@ void main() {
         authorId: 'user-1',
         content: 'Viral post',
         createdAt: DateTime(2024, 1, 1),
-        visibility: PostVisibility.public,
         likeCount: 1500,
         commentCount: 2500,
       );

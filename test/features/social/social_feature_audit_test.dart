@@ -308,20 +308,18 @@ void main() {
 
       final content = readFile(file);
 
+      // We now navigate to ProfileScreen (Settings) for editing instead of a duplicate EditProfileScreen
       expect(
-        content.contains('EditProfileScreen'),
+        content.contains('ProfileScreen'),
         true,
-        reason: 'Should navigate to EditProfileScreen',
+        reason: 'Should navigate to ProfileScreen for editing',
       );
     });
 
-    test('edit_profile_screen exists and has required fields', () {
-      final file = File('lib/features/social/screens/edit_profile_screen.dart');
-      expect(
-        file.existsSync(),
-        true,
-        reason: 'edit_profile_screen.dart must exist',
-      );
+    test('profile_screen exists and has required fields', () {
+      // Profile editing is now done in the Settings ProfileScreen
+      final file = File('lib/features/profile/profile_screen.dart');
+      expect(file.existsSync(), true, reason: 'profile_screen.dart must exist');
 
       final content = readFile(file);
 

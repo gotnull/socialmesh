@@ -12,16 +12,14 @@ void main() {
           authorId: 'user-1',
           content: 'Hello world!',
           createdAt: DateTime(2024, 1, 1),
-          visibility: PostVisibility.public,
         );
 
         expect(post.id, 'post-1');
         expect(post.authorId, 'user-1');
         expect(post.content, 'Hello world!');
-        expect(post.visibility, PostVisibility.public);
         expect(post.likeCount, 0);
         expect(post.commentCount, 0);
-        expect(post.imageUrls, isEmpty);
+        expect(post.mediaUrls, isEmpty);
       });
 
       test('creates Post with all fields', () {
@@ -36,14 +34,13 @@ void main() {
           authorId: 'user-2',
           content: 'Post with images',
           createdAt: DateTime(2024, 1, 1),
-          visibility: PostVisibility.followersOnly,
-          imageUrls: ['https://example.com/img1.jpg'],
+          mediaUrls: ['https://example.com/img1.jpg'],
           likeCount: 10,
           commentCount: 5,
           authorSnapshot: authorSnapshot,
         );
 
-        expect(post.imageUrls, hasLength(1));
+        expect(post.mediaUrls, hasLength(1));
         expect(post.likeCount, 10);
         expect(post.commentCount, 5);
         expect(post.authorSnapshot?.displayName, 'Test User');
@@ -56,7 +53,6 @@ void main() {
           authorId: 'user-1',
           content: 'Original content',
           createdAt: DateTime(2024, 1, 1),
-          visibility: PostVisibility.public,
           likeCount: 5,
         );
 
@@ -72,13 +68,12 @@ void main() {
         expect(original.likeCount, 5);
       });
 
-      test('hasImages returns correct value', () {
+      test('mediaUrls isEmpty/isNotEmpty works correctly', () {
         final noImages = Post(
           id: 'post-1',
           authorId: 'user-1',
           content: 'No images',
           createdAt: DateTime(2024, 1, 1),
-          visibility: PostVisibility.public,
         );
 
         final withImages = Post(
@@ -86,12 +81,11 @@ void main() {
           authorId: 'user-1',
           content: 'With images',
           createdAt: DateTime(2024, 1, 1),
-          visibility: PostVisibility.public,
-          imageUrls: ['https://example.com/img.jpg'],
+          mediaUrls: ['https://example.com/img.jpg'],
         );
 
-        expect(noImages.hasImages, false);
-        expect(withImages.hasImages, true);
+        expect(noImages.mediaUrls.isEmpty, true);
+        expect(withImages.mediaUrls.isNotEmpty, true);
       });
     });
 
@@ -467,21 +461,18 @@ void main() {
             authorId: 'u1',
             content: 'First',
             createdAt: DateTime(2024, 1, 1),
-            visibility: PostVisibility.public,
           ),
           Post(
             id: 'p2',
             authorId: 'u1',
             content: 'Third',
             createdAt: DateTime(2024, 1, 3),
-            visibility: PostVisibility.public,
           ),
           Post(
             id: 'p3',
             authorId: 'u1',
             content: 'Second',
             createdAt: DateTime(2024, 1, 2),
-            visibility: PostVisibility.public,
           ),
         ];
 

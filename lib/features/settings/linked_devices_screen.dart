@@ -239,43 +239,39 @@ class _LinkedDevicesScreenState extends ConsumerState<LinkedDevicesScreen> {
                     }, childCount: linkedNodeIds.length),
                   ),
 
-                // Add from nodes section
+                // Tip at bottom
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-                    child: Text(
-                      'Link Another Device',
-                      style: TextStyle(
-                        color: context.textPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 32),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: context.card,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: context.border),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.lightbulb_outline,
+                            color: context.textTertiary,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'To link another device, disconnect from your current device and connect to the new one.',
+                              style: TextStyle(
+                                color: context.textTertiary,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ),
-
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: OutlinedButton.icon(
-                      onPressed: () => _showLinkFromNodesSheet(linkedNodeIds),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: context.accentColor,
-                        side: BorderSide(
-                          color: context.accentColor.withValues(alpha: 0.5),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      icon: const Icon(Icons.add, size: 20),
-                      label: const Text('Select from Known Nodes'),
-                    ),
-                  ),
-                ),
-
-                const SliverToBoxAdapter(child: SizedBox(height: 32)),
               ],
             ),
           );
@@ -392,99 +388,6 @@ class _LinkedDevicesScreenState extends ConsumerState<LinkedDevicesScreen> {
         setState(() => _isUnlinking = false);
       }
     }
-  }
-
-  void _showLinkFromNodesSheet(List<int> alreadyLinked) {
-    final allNodes = ref.read(nodesProvider);
-    final availableNodes =
-        allNodes.values
-            .where((node) => !alreadyLinked.contains(node.nodeNum))
-            .toList()
-          ..sort((a, b) => a.displayName.compareTo(b.displayName));
-
-    if (availableNodes.isEmpty) {
-      showInfoSnackBar(context, 'No more nodes available to link');
-      return;
-    }
-
-    AppBottomSheet.show(
-      context: context,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const BottomSheetHeader(
-            icon: Icons.add_link,
-            title: 'Link a Node',
-            subtitle: 'Select a node to link to your profile',
-          ),
-          const SizedBox(height: 8),
-          ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.5,
-            ),
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: availableNodes.length,
-              itemBuilder: (context, index) {
-                final node = availableNodes[index];
-                return ListTile(
-                  leading: NodeAvatar(
-                    text: node.avatarName,
-                    color: _getNodeColor(node.nodeNum),
-                    size: 40,
-                  ),
-                  title: Text(
-                    node.displayName,
-                    style: TextStyle(
-                      color: context.textPrimary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  subtitle: Text(
-                    '!${node.nodeNum.toRadixString(16)}',
-                    style: TextStyle(
-                      color: context.textTertiary,
-                      fontSize: 12,
-                      fontFamily: 'monospace',
-                    ),
-                  ),
-                  trailing: Icon(Icons.add, color: context.accentColor),
-                  onTap: () async {
-                    Navigator.pop(context);
-                    await _linkNode(node.nodeNum);
-                  },
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _linkNode(int nodeId) async {
-    try {
-      await linkNode(ref, nodeId);
-      if (mounted) {
-        showSuccessSnackBar(context, 'Device linked');
-      }
-    } catch (e) {
-      if (mounted) {
-        showErrorSnackBar(context, 'Failed to link: $e');
-      }
-    }
-  }
-
-  Color _getNodeColor(int nodeNum) {
-    final colors = [
-      const Color(0xFF5B4FCE),
-      const Color(0xFFD946A6),
-      const Color(0xFF3B82F6),
-      const Color(0xFFF59E0B),
-      const Color(0xFFEF4444),
-      const Color(0xFF10B981),
-    ];
-    return colors[nodeNum % colors.length];
   }
 }
 

@@ -6,6 +6,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 
 import '../models/social.dart';
+import '../models/user_profile.dart';
 
 /// Service for social features: follows, posts, comments, likes.
 ///
@@ -200,6 +201,8 @@ class SocialService {
         : null;
 
     final docRef = _firestore.collection('posts').doc();
+    final profileRef = _firestore.collection('profiles').doc(currentUserId);
+
     final post = Post(
       id: docRef.id,
       authorId: currentUserId,
@@ -217,7 +220,12 @@ class SocialService {
     final data = post.toFirestore();
     data['visibility'] = visibility.name;
 
-    await docRef.set(data);
+    // Use a batch to ensure atomicity of post creation + count increment
+    final batch = _firestore.batch();
+    batch.set(docRef, data);
+    batch.update(profileRef, {'postCount': FieldValue.increment(1)});
+    await batch.commit();
+
     return post;
   }
 
@@ -228,15 +236,23 @@ class SocialService {
       throw StateError('Must be signed in to delete posts');
     }
 
-    final doc = await _firestore.collection('posts').doc(postId).get();
-    if (!doc.exists) {
-      throw StateError('Post not found');
-    }
-    if (doc.data()?['authorId'] != currentUserId) {
-      throw StateError('Only the author can delete this post');
-    }
+    final postRef = _firestore.collection('posts').doc(postId);
+    final profileRef = _firestore.collection('profiles').doc(currentUserId);
 
-    await _firestore.collection('posts').doc(postId).delete();
+    // Use a transaction to ensure atomicity
+    await _firestore.runTransaction((transaction) async {
+      final doc = await transaction.get(postRef);
+      if (!doc.exists) {
+        throw StateError('Post not found');
+      }
+      if (doc.data()?['authorId'] != currentUserId) {
+        throw StateError('Only the author can delete this post');
+      }
+
+      // Delete post and decrement count atomically
+      transaction.delete(postRef);
+      transaction.update(profileRef, {'postCount': FieldValue.increment(-1)});
+    });
   }
 
   /// Get a single post by ID.
@@ -799,6 +815,7 @@ class SocialService {
 
       await docRef.set({
         'displayName': displayName,
+        'displayNameLower': displayName.toLowerCase(),
         'avatarUrl': avatarUrl,
         'bio': null,
         'callsign': null,
@@ -998,6 +1015,8 @@ class SocialService {
     String? bio,
     String? callsign,
     String? avatarUrl,
+    String? website,
+    ProfileSocialLinks? socialLinks,
   }) async {
     final currentUserId = _currentUserId;
     if (currentUserId == null) {
@@ -1007,6 +1026,14 @@ class SocialService {
     // Ensure profile exists first
     await ensureProfileExists();
 
+    // Check display name uniqueness if being changed
+    if (displayName != null && displayName.isNotEmpty) {
+      final isTaken = await isDisplayNameTaken(displayName, currentUserId);
+      if (isTaken) {
+        throw DisplayNameTakenException(displayName);
+      }
+    }
+
     final updates = <String, dynamic>{
       'updatedAt': FieldValue.serverTimestamp(),
     };
@@ -1014,6 +1041,7 @@ class SocialService {
     // Always include displayName if provided (even if same as before)
     if (displayName != null && displayName.isNotEmpty) {
       updates['displayName'] = displayName;
+      updates['displayNameLower'] = displayName.toLowerCase();
     }
     // Bio can be empty string to clear it
     if (bio != null) updates['bio'] = bio.isEmpty ? null : bio;
@@ -1023,8 +1051,47 @@ class SocialService {
     }
     if (avatarUrl != null) updates['avatarUrl'] = avatarUrl;
 
+    // Website can be null to clear it
+    if (website != null) {
+      updates['website'] = website.isEmpty ? null : website;
+    }
+    // Social links
+    if (socialLinks != null) {
+      if (socialLinks.isEmpty) {
+        updates['socialLinks'] = null;
+      } else {
+        updates['socialLinks'] = socialLinks.toJson();
+      }
+    }
+
     debugPrint('SocialService.updateProfile: updating with $updates');
     await _firestore.collection('profiles').doc(currentUserId).update(updates);
+  }
+
+  /// Check if a display name is already taken by another user.
+  /// Returns true if the name is taken, false if available.
+  Future<bool> isDisplayNameTaken(
+    String displayName, [
+    String? excludeUserId,
+  ]) async {
+    final normalizedName = displayName.trim().toLowerCase();
+    if (normalizedName.isEmpty) return false;
+
+    // Query for profiles with this display name (case-insensitive via lowercase field)
+    // We store displayNameLower for efficient querying
+    final query = await _firestore
+        .collection('profiles')
+        .where('displayNameLower', isEqualTo: normalizedName)
+        .limit(2) // Only need to find one other user
+        .get();
+
+    // Check if any results belong to a different user
+    for (final doc in query.docs) {
+      if (excludeUserId == null || doc.id != excludeUserId) {
+        return true; // Found another user with this name
+      }
+    }
+    return false;
   }
 
   /// Upload a profile avatar image.
@@ -1202,4 +1269,15 @@ class CommentWithAuthor {
 
   final Comment comment;
   final PublicProfile? author;
+}
+
+/// Exception thrown when a display name is already taken.
+class DisplayNameTakenException implements Exception {
+  DisplayNameTakenException(this.displayName);
+
+  final String displayName;
+
+  @override
+  String toString() =>
+      'The display name "$displayName" is already taken. Please choose a different name.';
 }
