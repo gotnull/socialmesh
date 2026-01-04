@@ -376,6 +376,7 @@ class _LinkedDevicesScreenState extends ConsumerState<LinkedDevicesScreen> {
 
     if (confirmed != true) return;
 
+    if (!mounted) return;
     setState(() => _isUnlinking = true);
 
     try {
