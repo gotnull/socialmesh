@@ -1175,12 +1175,24 @@ class MessagesNotifier extends Notifier<List<Message>> {
         AppLogging.messages(
           'Loaded ${savedMessages.length} messages from storage',
         );
+        // Debug: Log channel messages details
+        for (final m in savedMessages.where((m) => m.isBroadcast)) {
+          AppLogging.messages(
+            '📨 Stored broadcast: from=${m.from}, to=${m.to.toRadixString(16)}, '
+            'channel=${m.channel}, text="${m.text.substring(0, m.text.length.clamp(0, 20))}"',
+          );
+        }
       }
     }
 
     // Listen for new messages
     _messageSubscription = protocol.messageStream.listen((message) {
       if (!ref.mounted) return;
+      // Debug: Log incoming message details
+      AppLogging.messages(
+        '📨 New message: from=${message.from}, to=${message.to.toRadixString(16)}, '
+        'channel=${message.channel}, isBroadcast=${message.isBroadcast}, sent=${message.sent}',
+      );
       // For sent messages, check if they're already in state (from optimistic UI)
       // If not (e.g., from automations, app intents, reactions), we need to add them
       if (message.sent) {

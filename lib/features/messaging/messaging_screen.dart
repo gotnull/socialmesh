@@ -1299,9 +1299,23 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     // Filter messages for this conversation
     List<Message> filteredMessages;
     if (widget.type == ConversationType.channel) {
+      // Debug: Log all messages and their channel/broadcast status
+      AppLogging.messages(
+        '📨 Channel ${widget.channelIndex}: Total messages=${messages.length}, '
+        'filtering for channel=${widget.channelIndex}',
+      );
+      for (final m in messages.where((m) => m.channel == widget.channelIndex)) {
+        AppLogging.messages(
+          '📨   Message: from=${m.from}, to=${m.to.toRadixString(16)}, '
+          'channel=${m.channel}, isBroadcast=${m.isBroadcast}, sent=${m.sent}',
+        );
+      }
       filteredMessages = messages
           .where((m) => m.channel == widget.channelIndex && m.isBroadcast)
           .toList();
+      AppLogging.messages(
+        '📨 After filter: ${filteredMessages.length} messages',
+      );
     } else {
       filteredMessages = messages
           .where(
