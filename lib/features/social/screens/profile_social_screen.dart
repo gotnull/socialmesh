@@ -23,8 +23,6 @@ import '../../profile/profile_screen.dart';
 import '../../settings/linked_devices_screen.dart';
 import '../../settings/settings_screen.dart';
 import '../widgets/follow_button.dart';
-import '../widgets/post_card.dart';
-import '../widgets/post_skeleton.dart';
 import 'create_post_screen.dart';
 import 'follow_requests_screen.dart';
 import 'followers_screen.dart';
@@ -96,8 +94,12 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
           }
 
           final followState = followStateAsync?.value;
-          final isFollower = followState?.isFollowedBy ?? false;
           final isFollowing = followState?.isFollowing ?? false;
+
+          // Check if we can see this profile's content
+          // Private profiles only show content to followers
+          final canViewContent =
+              isOwnProfile || !profile.isPrivate || isFollowing;
 
           return RefreshIndicator(
             edgeOffset: widget.showAppBar
@@ -108,9 +110,11 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
                   .read(profileCountAdjustmentsProvider.notifier)
                   .reset(widget.userId);
               ref.invalidate(publicProfileStreamProvider(widget.userId));
-              await ref
-                  .read(userPostsNotifierProvider.notifier)
-                  .refresh(widget.userId);
+              if (canViewContent) {
+                await ref
+                    .read(userPostsNotifierProvider.notifier)
+                    .refresh(widget.userId);
+              }
               if (!isOwnProfile) {
                 ref.invalidate(followStateProvider(widget.userId));
               }
@@ -128,7 +132,8 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
                     isFollowing,
                   ),
                 ),
-                if (isOwnProfile || isFollower)
+                // Linked devices - only visible to self or followers
+                if (canViewContent)
                   SliverToBoxAdapter(
                     child: _LinkedDevicesSection(
                       linkedNodeIds: profile.linkedNodeIds,
@@ -137,30 +142,34 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
                       onManageDevices: () => _navigateToLinkedDevices(),
                     ),
                   ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.grid_on_outlined,
-                          size: 16,
-                          color: context.textSecondary,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Posts',
-                          style: TextStyle(
+                // Posts section - only visible if allowed
+                if (canViewContent) ...[
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.grid_on_outlined,
+                            size: 16,
                             color: context.textSecondary,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 6),
+                          Text(
+                            'Posts',
+                            style: TextStyle(
+                              color: context.textSecondary,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                _buildPostsSliver(context, postsState, isOwnProfile),
+                  _buildPostsGrid(context, postsState, isOwnProfile),
+                ] else
+                  _buildPrivateAccountSliver(context, profile),
               ],
             ),
           );
@@ -239,6 +248,10 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
       title: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (profile.isPrivate && !isOwnProfile) ...[
+            Icon(Icons.lock_outline, color: context.textSecondary, size: 16),
+            const SizedBox(width: 4),
+          ],
           Text(
             profile.displayName,
             style: TextStyle(
@@ -619,16 +632,33 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
     );
   }
 
-  Widget _buildPostsSliver(
+  Widget _buildPostsGrid(
     BuildContext context,
     UserPostsState postsState,
     bool isOwnProfile,
   ) {
     if (postsState.posts.isEmpty && postsState.isLoading) {
-      return const SliverToBoxAdapter(
-        child: Padding(
-          padding: EdgeInsets.only(top: 16),
-          child: PostSkeletonList(count: 3),
+      return SliverPadding(
+        padding: const EdgeInsets.symmetric(horizontal: 2),
+        sliver: SliverGrid(
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            mainAxisSpacing: 2,
+            crossAxisSpacing: 2,
+          ),
+          delegate: SliverChildBuilderDelegate(
+            (context, index) => Container(
+              color: context.surface,
+              child: const Center(
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            ),
+            childCount: 9,
+          ),
         ),
       );
     }
@@ -640,35 +670,80 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
       );
     }
 
-    return SliverList(
-      delegate: SliverChildBuilderDelegate((context, index) {
-        if (index >= postsState.posts.length) {
-          return postsState.hasMore
-              ? const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Center(
-                    child: SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      sliver: SliverGrid(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          mainAxisSpacing: 2,
+          crossAxisSpacing: 2,
+        ),
+        delegate: SliverChildBuilderDelegate((context, index) {
+          if (index >= postsState.posts.length) {
+            return postsState.hasMore
+                ? Container(
+                    color: context.surface,
+                    child: const Center(
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
                     ),
-                  ),
-                )
-              : const SizedBox.shrink();
-        }
+                  )
+                : const SizedBox.shrink();
+          }
 
-        final post = postsState.posts[index];
-        return PostCard(
-          post: post,
-          onTap: () => _navigateToPost(post),
-          onAuthorTap: () {},
-          onCommentTap: () => _navigateToPost(post, focusComment: true),
-          onShareTap: () => _sharePost(post),
-          onMoreTap: () => _showPostOptions(post, isOwnProfile),
-          onLocationTap: _handleLocationTap,
-          onNodeTap: _handleNodeTap,
-        );
-      }, childCount: postsState.posts.length + (postsState.hasMore ? 1 : 0)),
+          final post = postsState.posts[index];
+          return _PostGridTile(post: post, onTap: () => _navigateToPost(post));
+        }, childCount: postsState.posts.length + (postsState.hasMore ? 1 : 0)),
+      ),
+    );
+  }
+
+  Widget _buildPrivateAccountSliver(
+    BuildContext context,
+    PublicProfile profile,
+  ) {
+    return SliverFillRemaining(
+      hasScrollBody: false,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: context.textTertiary, width: 2),
+                ),
+                child: Icon(
+                  Icons.lock_outline,
+                  size: 48,
+                  color: context.textTertiary,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'This Account is Private',
+                style: TextStyle(
+                  color: context.textPrimary,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Follow ${profile.displayName} to see their posts and linked devices.',
+                style: TextStyle(color: context.textSecondary, fontSize: 14),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -804,75 +879,6 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
         .shareProfile(userId: profile.id, displayName: profile.displayName);
   }
 
-  void _sharePost(Post post) {
-    ref.read(shareLinkServiceProvider).sharePost(postId: post.id);
-  }
-
-  void _handleLocationTap(PostLocation location) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => MapScreen(
-          initialLatitude: location.latitude,
-          initialLongitude: location.longitude,
-          initialLocationLabel: location.name,
-        ),
-      ),
-    );
-  }
-
-  void _handleNodeTap(String nodeId) {
-    // nodeId is stored as hex string (e.g., "A1B2C3D4")
-    final nodeNum = int.tryParse(nodeId, radix: 16);
-    if (nodeNum == null) {
-      showErrorSnackBar(context, 'Invalid node ID');
-      return;
-    }
-
-    final nodes = ref.read(nodesProvider);
-    final node = nodes[nodeNum];
-
-    AppBottomSheet.showActions(
-      context: context,
-      header: Text(
-        node?.longName ?? 'Node $nodeId',
-        style: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: context.textPrimary,
-        ),
-      ),
-      actions: [
-        BottomSheetAction(
-          icon: Icons.message_outlined,
-          iconColor: context.accentColor,
-          label: 'Send Message',
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => ChatScreen(
-                type: ConversationType.directMessage,
-                nodeNum: nodeNum,
-                title: node?.longName ?? 'Node $nodeId',
-              ),
-            ),
-          ),
-        ),
-        if (node?.hasPosition == true)
-          BottomSheetAction(
-            icon: Icons.map_outlined,
-            label: 'View on Map',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => MapScreen(initialNodeNum: nodeNum),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
   void _showProfileOptions(PublicProfile profile) {
     HapticFeedback.lightImpact();
     showModalBottomSheet(
@@ -926,195 +932,12 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
     );
   }
 
-  void _showPostOptions(Post post, bool isOwnPost) {
-    HapticFeedback.lightImpact();
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: context.card,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 8),
-            Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: context.textTertiary.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 16),
-            if (isOwnPost)
-              ListTile(
-                leading: const Icon(
-                  Icons.delete_outline,
-                  color: AppTheme.errorRed,
-                ),
-                title: const Text(
-                  'Delete Post',
-                  style: TextStyle(color: AppTheme.errorRed),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _confirmDeletePost(post);
-                },
-              ),
-            if (!isOwnPost)
-              ListTile(
-                leading: const Icon(Icons.flag_outlined),
-                title: const Text('Report Post'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _reportPost(post.id, post.authorId);
-                },
-              ),
-            ListTile(
-              leading: const Icon(Icons.share_outlined),
-              title: const Text('Share'),
-              onTap: () {
-                Navigator.pop(context);
-                _sharePost(post);
-              },
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
-    );
-  }
-
   void _reportProfile(PublicProfile profile) {
     showSuccessSnackBar(context, 'Report submitted');
   }
 
   void _blockUser(PublicProfile profile) {
     showSuccessSnackBar(context, '${profile.displayName} blocked');
-  }
-
-  Future<void> _reportPost(String postId, String authorId) async {
-    final reasonController = TextEditingController();
-    final reason = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: context.card,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          'Report Post',
-          style: TextStyle(color: context.textPrimary),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Why are you reporting this post?',
-              style: TextStyle(color: context.textSecondary),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: reasonController,
-              decoration: InputDecoration(
-                hintText: 'Describe the issue...',
-                border: const OutlineInputBorder(),
-                hintStyle: TextStyle(color: context.textTertiary),
-              ),
-              style: TextStyle(color: context.textPrimary),
-              maxLines: 3,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: context.textSecondary),
-            ),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, reasonController.text.trim()),
-            style: FilledButton.styleFrom(backgroundColor: context.accentColor),
-            child: const Text('Report'),
-          ),
-        ],
-      ),
-    );
-
-    if (reason != null && reason.isNotEmpty && mounted) {
-      try {
-        final socialService = ref.read(socialServiceProvider);
-        await socialService.reportPost(postId, reason);
-        if (mounted) {
-          showSuccessSnackBar(context, 'Report submitted. Thank you.');
-        }
-      } catch (e) {
-        if (mounted) {
-          showErrorSnackBar(context, 'Failed to report: $e');
-        }
-      }
-    }
-  }
-
-  Future<void> _confirmDeletePost(Post post) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.card,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          'Delete Post',
-          style: TextStyle(color: context.textPrimary),
-        ),
-        content: Text(
-          'Are you sure you want to delete this post?',
-          style: TextStyle(color: context.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: context.textSecondary),
-            ),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(backgroundColor: AppTheme.errorRed),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true && mounted) {
-      try {
-        final socialService = ref.read(socialServiceProvider);
-        ref
-            .read(userPostsNotifierProvider.notifier)
-            .removePost(widget.userId, post.id);
-        await socialService.deletePost(post.id);
-
-        final currentProfile = ref
-            .read(publicProfileStreamProvider(post.authorId))
-            .value;
-        final currentCount = currentProfile?.postCount ?? 0;
-        ref
-            .read(profileCountAdjustmentsProvider.notifier)
-            .decrement(post.authorId, currentCount);
-
-        if (mounted) {
-          showSuccessSnackBar(context, 'Post deleted');
-        }
-      } catch (e) {
-        if (mounted) {
-          showErrorSnackBar(context, 'Failed to delete: $e');
-        }
-      }
-    }
   }
 }
 
@@ -1446,6 +1269,131 @@ class _FollowRequestsBadge extends ConsumerWidget {
       },
       loading: () => child,
       error: (_, _) => child,
+    );
+  }
+}
+
+/// Grid tile for a post in the profile grid.
+class _PostGridTile extends StatelessWidget {
+  const _PostGridTile({required this.post, required this.onTap});
+
+  final Post post;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Background - image or content preview
+          if (post.imageUrls.isNotEmpty)
+            Image.network(
+              post.imageUrls.first,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) =>
+                  _buildTextPreview(context),
+            )
+          else
+            _buildTextPreview(context),
+
+          // Overlay with stats (shown on hover/tap for images)
+          if (post.imageUrls.isNotEmpty)
+            Positioned.fill(
+              child: Container(color: Colors.black.withValues(alpha: 0.0)),
+            ),
+
+          // Multi-image indicator
+          if (post.imageUrls.length > 1)
+            Positioned(
+              top: 8,
+              right: 8,
+              child: Icon(
+                Icons.collections,
+                color: Colors.white,
+                size: 16,
+                shadows: [
+                  Shadow(
+                    blurRadius: 4,
+                    color: Colors.black.withValues(alpha: 0.5),
+                  ),
+                ],
+              ),
+            ),
+
+          // Stats overlay at bottom for text posts
+          if (post.imageUrls.isEmpty)
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withValues(alpha: 0.6),
+                    ],
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.favorite, color: Colors.white, size: 14),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${post.likeCount}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Icon(
+                      Icons.chat_bubble_outline,
+                      color: Colors.white,
+                      size: 14,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${post.commentCount}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextPreview(BuildContext context) {
+    return Container(
+      color: context.surface,
+      padding: const EdgeInsets.all(8),
+      child: Center(
+        child: Text(
+          post.content.isNotEmpty ? post.content : 'No content',
+          style: TextStyle(
+            color: context.textPrimary,
+            fontSize: 11,
+            height: 1.3,
+          ),
+          maxLines: 5,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+        ),
+      ),
     );
   }
 }
