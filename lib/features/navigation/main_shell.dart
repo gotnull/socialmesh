@@ -566,7 +566,7 @@ class _MainShellState extends ConsumerState<MainShell> {
       child: SafeArea(
         child: Column(
           children: [
-            // FIXED: Node Info Header
+            // Node Info Header
             const _DrawerNodeHeader(),
 
             // Divider after header
@@ -575,7 +575,16 @@ class _MainShellState extends ConsumerState<MainShell> {
               child: Divider(color: theme.dividerColor.withValues(alpha: 0.1)),
             ),
 
-            // SCROLLABLE: Menu items in the middle
+            // Account section (right after node header)
+            const _DrawerProfileSection(),
+
+            // Divider after account
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Divider(color: theme.dividerColor.withValues(alpha: 0.1)),
+            ),
+
+            // Menu items
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.symmetric(vertical: 8),
@@ -667,20 +676,6 @@ class _MainShellState extends ConsumerState<MainShell> {
                     ),
                   ),
 
-                  // Divider before Profile/Account
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    child: Divider(
-                      color: theme.dividerColor.withValues(alpha: 0.1),
-                    ),
-                  ),
-
-                  // Profile & Account section
-                  const _DrawerProfileSection(),
-
                   // Admin section (only visible to shop admins)
                   _DrawerAdminSection(
                     onNavigate: (screen) {
@@ -747,13 +742,13 @@ class _MainShellState extends ConsumerState<MainShell> {
               ),
             ),
 
-            // FIXED: Divider before theme toggle
+            // Divider before theme toggle
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Divider(color: theme.dividerColor.withValues(alpha: 0.1)),
             ),
 
-            // FIXED: Theme toggle at bottom
+            // Theme toggle
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
               child: Row(

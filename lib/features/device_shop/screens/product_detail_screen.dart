@@ -149,7 +149,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
         },
       ),
       bottomNavigationBar: productAsync.whenOrNull(
-        data: (product) => product != null ? _buildBottomBar(product) : null,
+        data: (product) => product != null
+            ? _buildBottomBar(product, isAdminAsync.value ?? false)
+            : null,
       ),
     );
   }
@@ -178,15 +180,6 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
             )
           : null,
       actions: [
-        if (isAdmin)
-          IconButton(
-            icon: Icon(Icons.edit, color: context.accentColor),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const AdminProductsScreen()),
-            ).then((_) => ref.invalidate(singleProductProvider(product.id))),
-            tooltip: 'Edit Product',
-          ),
         IconButton(
           icon: Icon(
             isFavorite ? Icons.favorite : Icons.favorite_outline,
@@ -779,7 +772,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     );
   }
 
-  Widget _buildBottomBar(ShopProduct product) {
+  Widget _buildBottomBar(ShopProduct product, bool isAdmin) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -813,6 +806,37 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                 ],
               ),
             ),
+            // Admin edit button
+            if (isAdmin) ...[
+              const SizedBox(width: 8),
+              OutlinedButton.icon(
+                onPressed: () {
+                  ref.read(productFormProvider.notifier).loadProduct(product);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => AdminProductEditScreen(product: product),
+                    ),
+                  ).then(
+                    (_) => ref.invalidate(singleProductProvider(product.id)),
+                  );
+                },
+                icon: Icon(Icons.edit, size: 18),
+                label: const Text('Edit'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: context.accentColor,
+                  side: BorderSide(color: context.accentColor),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 16,
+                    horizontal: 16,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(width: 8),
             // Buy button
             Expanded(
               child: ElevatedButton(

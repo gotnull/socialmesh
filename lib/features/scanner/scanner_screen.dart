@@ -164,7 +164,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       try {
         await FlutterBluePlus.stopScan();
       } catch (_) {
-        // Ignore errors - just ensuring clean state
+        // Continue - just ensuring clean state
       }
 
       final transport = ref.read(transportProvider);
@@ -379,14 +379,14 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
         final transport = ref.read(transportProvider);
         await transport.disconnect();
       } catch (_) {
-        // Ignore cleanup errors
+        // Continue on cleanup errors
       }
 
       // Also stop any active BLE scan
       try {
         await FlutterBluePlus.stopScan();
       } catch (_) {
-        // Ignore
+        // Continue
       }
 
       if (!mounted) return;
@@ -641,6 +641,34 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
               ),
             ),
         ],
+      ),
+      bottomNavigationBar: Container(
+        color: context.background,
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Socialmesh v1.0.3',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: context.textTertiary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                '© 2025 Socialmesh. All rights reserved.',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: context.textTertiary.withValues(alpha: 0.7),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

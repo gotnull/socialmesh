@@ -711,7 +711,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
         });
       }
     } catch (e) {
-      // Ignore - will use defaults
+      // Continue with defaults
     } finally {
       if (mounted) {
         setState(() => _loading = false);
