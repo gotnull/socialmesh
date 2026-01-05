@@ -11,6 +11,8 @@ import '../models/shop_models.dart';
 import '../providers/admin_shop_providers.dart';
 import '../providers/device_shop_providers.dart';
 import 'category_products_screen.dart';
+import 'admin_products_screen.dart';
+
 import 'seller_profile_screen.dart';
 
 /// Product detail screen with full specs, images, and reviews
@@ -181,9 +183,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
             icon: Icon(Icons.edit, color: context.accentColor),
             onPressed: () => Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (_) => const AdminProductsScreen(),
-              ),
+              MaterialPageRoute(builder: (_) => const AdminProductsScreen()),
             ).then((_) => ref.invalidate(singleProductProvider(product.id))),
             tooltip: 'Edit Product',
           ),
