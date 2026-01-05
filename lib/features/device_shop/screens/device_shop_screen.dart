@@ -7,6 +7,7 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
 import '../../../core/widgets/edge_fade.dart';
 import '../../../providers/auth_providers.dart';
+import '../../navigation/main_shell.dart';
 import '../models/shop_models.dart';
 import '../providers/device_shop_providers.dart';
 import 'product_detail_screen.dart';
@@ -105,10 +106,7 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
               floating: true,
               pinned: true,
               expandedHeight: 120,
-              leading: IconButton(
-                icon: const Icon(Icons.menu),
-                onPressed: () => Scaffold.of(context).openDrawer(),
-              ),
+              leading: const HamburgerMenuButton(),
               flexibleSpace: FlexibleSpaceBar(
                 background: Container(
                   decoration: BoxDecoration(

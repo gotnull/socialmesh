@@ -35,7 +35,6 @@ import '../presence/presence_screen.dart';
 import '../mesh3d/mesh_3d_screen.dart';
 import '../world_mesh/world_mesh_screen.dart';
 import '../settings/subscription_screen.dart';
-import '../settings/account_subscriptions_screen.dart';
 import '../widget_builder/widget_builder_screen.dart';
 import '../reachability/mesh_reachability_screen.dart';
 // Removed: import '../sky_tracker/screens/sky_tracker_screen.dart';
@@ -404,20 +403,12 @@ class _MainShellState extends ConsumerState<MainShell> {
   /// Drawer menu items for quick access screens not in bottom nav
   /// Organized into logical sections with headers
   final List<_DrawerMenuItem> _drawerMenuItems = [
-    // Social - First item after ACCOUNT section
-    _DrawerMenuItem(
-      icon: Icons.forum_outlined,
-      label: 'Social',
-      screen: const SocialHubScreen(),
-      iconColor: Colors.deepPurple.shade400,
-    ),
-
-    // Activity & Social
+    // Activity
     _DrawerMenuItem(
       icon: Icons.timeline,
       label: 'Timeline',
       screen: const TimelineScreen(),
-      sectionHeader: 'ACTIVITY & SOCIAL',
+      sectionHeader: 'ACTIVITY',
       iconColor: Colors.indigo.shade400,
     ),
     _DrawerMenuItem(
@@ -737,46 +728,20 @@ class _MainShellState extends ConsumerState<MainShell> {
                     ),
                   ),
 
-                  // Settings & Help
+                  // Help & Support
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Column(
-                        children: [
-                          // Settings
-                          _DrawerMenuTile(
-                            icon: Icons.settings_outlined,
-                            label: 'Settings',
-                            isSelected: false,
-                            iconColor: Colors.grey.shade600,
-                            onTap: () {
-                              ref.haptics.tabChange();
-                              Navigator.of(context).pop();
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => const SettingsScreen(),
-                                ),
-                              );
-                            },
-                          ),
-                          Divider(
-                            height: 17,
-                            thickness: 1,
-                            color: theme.dividerColor.withValues(alpha: 0.1),
-                          ),
-                          // Help & Support
-                          _DrawerMenuTile(
-                            icon: Icons.help_outline,
-                            label: 'Help & Support',
-                            isSelected: false,
-                            iconColor: Colors.blue.shade400,
-                            onTap: () {
-                              ref.haptics.tabChange();
-                              Navigator.of(context).pop();
-                              LegalDocumentSheet.showSupport(context);
-                            },
-                          ),
-                        ],
+                      child: _DrawerMenuTile(
+                        icon: Icons.help_outline,
+                        label: 'Help & Support',
+                        isSelected: false,
+                        iconColor: Colors.blue.shade400,
+                        onTap: () {
+                          ref.haptics.tabChange();
+                          Navigator.of(context).pop();
+                          LegalDocumentSheet.showSupport(context);
+                        },
                       ),
                     ),
                   ),
@@ -790,11 +755,24 @@ class _MainShellState extends ConsumerState<MainShell> {
               child: Divider(color: theme.dividerColor.withValues(alpha: 0.1)),
             ),
 
-            // Theme toggle
+            // Theme toggle & Settings
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
               child: Row(
-                children: [const _ThemeToggleButton(), const Spacer()],
+                children: [
+                  const _ThemeToggleButton(),
+                  const Spacer(),
+                  _SettingsButton(
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const SettingsScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
           ],
@@ -1506,7 +1484,7 @@ class _DrawerProfileSection extends ConsumerWidget {
             ),
           ),
 
-          // Account tile with avatar - unified destination for profile, account & subscriptions
+          // Account tile with avatar - navigates to Social hub
           profileAsync.when(
             data: (profile) => _ProfileTile(
               profile: profile,
@@ -1515,9 +1493,7 @@ class _DrawerProfileSection extends ConsumerWidget {
                 ref.haptics.tabChange();
                 Navigator.of(context).pop();
                 Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const AccountSubscriptionsScreen(),
-                  ),
+                  MaterialPageRoute(builder: (_) => const SocialHubScreen()),
                 );
               },
             ),
@@ -1533,9 +1509,7 @@ class _DrawerProfileSection extends ConsumerWidget {
                 ref.haptics.tabChange();
                 Navigator.of(context).pop();
                 Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const AccountSubscriptionsScreen(),
-                  ),
+                  MaterialPageRoute(builder: (_) => const SocialHubScreen()),
                 );
               },
             ),
@@ -1764,6 +1738,41 @@ class _ThemeToggleButton extends ConsumerWidget {
         ),
         child: Icon(
           isDark ? Icons.dark_mode_outlined : Icons.light_mode_outlined,
+          size: 22,
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+        ),
+      ),
+    );
+  }
+}
+
+/// Settings button for the drawer footer
+class _SettingsButton extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _SettingsButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: theme.dividerColor.withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
+        child: Icon(
+          Icons.settings_outlined,
           size: 22,
           color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
         ),
