@@ -362,6 +362,7 @@ class _DrawerMenuItem {
   final Widget screen;
   final PremiumFeature? premiumFeature;
   final String? sectionHeader;
+  final Color? iconColor;
 
   const _DrawerMenuItem({
     required this.icon,
@@ -369,6 +370,7 @@ class _DrawerMenuItem {
     required this.screen,
     this.premiumFeature,
     this.sectionHeader,
+    this.iconColor,
   });
 }
 
@@ -399,77 +401,89 @@ class _MainShellState extends ConsumerState<MainShell> {
   /// Organized into logical sections with headers
   final List<_DrawerMenuItem> _drawerMenuItems = [
     // Mesh Features
-    const _DrawerMenuItem(
+    _DrawerMenuItem(
       icon: Icons.public,
       label: 'World Map',
-      screen: WorldMeshScreen(),
+      screen: const WorldMeshScreen(),
       sectionHeader: 'MESH FEATURES',
+      iconColor: Colors.blue.shade400,
     ),
-    const _DrawerMenuItem(
+    _DrawerMenuItem(
       icon: Icons.view_in_ar,
       label: '3D Mesh View',
-      screen: Mesh3DScreen(),
+      screen: const Mesh3DScreen(),
+      iconColor: Colors.cyan.shade400,
     ),
-    const _DrawerMenuItem(
+    _DrawerMenuItem(
       icon: Icons.route,
       label: 'Routes',
-      screen: RoutesScreen(),
+      screen: const RoutesScreen(),
+      iconColor: Colors.purple.shade400,
     ),
-    const _DrawerMenuItem(
+    _DrawerMenuItem(
       icon: Icons.wifi_find,
       label: 'Reachability',
-      screen: MeshReachabilityScreen(),
+      screen: const MeshReachabilityScreen(),
+      iconColor: Colors.teal.shade400,
     ),
-    const _DrawerMenuItem(
+    _DrawerMenuItem(
       icon: Icons.monitor_heart_outlined,
       label: 'Mesh Health',
-      screen: MeshHealthDashboard(),
+      screen: const MeshHealthDashboard(),
+      iconColor: Colors.pink.shade400,
     ),
 
     // Activity & Social
-    const _DrawerMenuItem(
+    _DrawerMenuItem(
       icon: Icons.timeline,
       label: 'Timeline',
-      screen: TimelineScreen(),
+      screen: const TimelineScreen(),
       sectionHeader: 'ACTIVITY & SOCIAL',
+      iconColor: Colors.indigo.shade400,
     ),
-    const _DrawerMenuItem(
+    _DrawerMenuItem(
       icon: Icons.people_alt_outlined,
       label: 'Presence',
-      screen: PresenceScreen(),
+      screen: const PresenceScreen(),
+      iconColor: Colors.green.shade400,
     ),
-    const _DrawerMenuItem(
+    _DrawerMenuItem(
       icon: Icons.forum_outlined,
       label: 'Social',
-      screen: SocialHubScreen(),
+      screen: const SocialHubScreen(),
+      iconColor: Colors.deepPurple.shade400,
     ),
 
     // Tools & Tracking
-    const _DrawerMenuItem(
+    _DrawerMenuItem(
       icon: Icons.flight,
       label: 'Sky Tracker',
-      screen: SkyTrackerScreen(),
+      screen: const SkyTrackerScreen(),
       sectionHeader: 'TOOLS & TRACKING',
+      iconColor: Colors.lightBlue.shade400,
     ),
-    const _DrawerMenuItem(
+    _DrawerMenuItem(
       icon: Icons.store,
       label: 'Device Shop',
-      screen: DeviceShopScreen(),
+      screen: const DeviceShopScreen(),
+      iconColor: Colors.amber.shade600,
     ),
 
     // Premium Features
-    const _DrawerMenuItem(
+    _DrawerMenuItem(
       icon: Icons.widgets_outlined,
       label: 'Widgets',
-      screen: WidgetBuilderScreen(),
+      screen: const WidgetBuilderScreen(),
       premiumFeature: PremiumFeature.homeWidgets,
       sectionHeader: 'PREMIUM FEATURES',
+      iconColor: Colors.deepOrange.shade400,
     ),
-    const _DrawerMenuItem(
+    _DrawerMenuItem(
       icon: Icons.auto_awesome,
       label: 'Automations',
-      screen: AutomationsScreen(),
+      screen: const AutomationsScreen(),
       premiumFeature: PremiumFeature.automations,
+      iconColor: Colors.yellow.shade700,
     ),
   ];
 
@@ -608,6 +622,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                                 isSelected: isSelected,
                                 isPremium: isPremium,
                                 isLocked: isPremium && !hasAccess,
+                                iconColor: item.iconColor,
                                 onTap: () {
                                   ref.haptics.tabChange();
                                   Navigator.of(context).pop(); // Close drawer
@@ -1103,7 +1118,10 @@ class _DrawerMenuTile extends StatelessWidget {
                         ? accentColor
                         : isLocked
                         ? goldColor
-                        : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                        : iconColor ??
+                              theme.colorScheme.onSurface.withValues(
+                                alpha: 0.6,
+                              ),
                   ),
                   // Badge overlay on icon
                   if (badgeCount != null && badgeCount! > 0)
