@@ -275,6 +275,9 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     final content = _commentController.text.trim();
     if (content.isEmpty) return;
 
+    // Dismiss keyboard immediately
+    FocusScope.of(context).unfocus();
+
     setState(() => _isSubmitting = true);
 
     try {

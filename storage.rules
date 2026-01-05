@@ -62,6 +62,15 @@ service firebase.storage {
     }
     
     // =============================================================================
+    // POST IMAGES
+    // =============================================================================
+    match /post_images/{fileName} {
+      allow read: if true;
+      allow write: if isAuthenticated() && isValidImage();
+      allow delete: if isAuthenticated();
+    }
+    
+    // =============================================================================
     // WIDGET ASSETS
     // =============================================================================
     match /widget_assets/{widgetId}/{fileName} {

@@ -7,6 +7,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 
+import '../../../core/theme.dart';
+import '../../../core/widgets/animations.dart';
+import '../../../core/widgets/edge_fade.dart';
+import '../../../core/widgets/node_selector_sheet.dart';
 import '../../../models/social.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/auth_providers.dart';
@@ -52,37 +56,84 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final currentUser = ref.watch(currentUserProvider);
+    final profileAsync = ref.watch(
+      publicProfileStreamProvider(currentUser?.uid ?? ''),
+    );
+    final profile = profileAsync.value;
 
     if (currentUser == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Create Post')),
-        body: const Center(child: Text('Sign in to create posts')),
+        backgroundColor: context.background,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          title: Text(
+            'Create Post',
+            style: TextStyle(color: context.textPrimary),
+          ),
+        ),
+        body: Center(
+          child: Text(
+            'Sign in to create posts',
+            style: TextStyle(color: context.textSecondary),
+          ),
+        ),
       );
     }
 
     return Scaffold(
+      backgroundColor: context.background,
       appBar: AppBar(
-        title: const Text('Create Post'),
+        backgroundColor: Colors.transparent,
+        leading: IconButton(
+          icon: Icon(Icons.close, color: context.textPrimary),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          'Create Post',
+          style: TextStyle(
+            color: context.textPrimary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         actions: [
-          TextButton(
-            onPressed: _canPost && !_isSubmitting ? _submitPost : null,
-            child: _isSubmitting
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(
-                    'Post',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: _canPost
-                          ? theme.colorScheme.primary
-                          : theme.disabledColor,
-                    ),
-                  ),
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: BouncyTap(
+              onTap: _canPost && !_isSubmitting ? _submitPost : null,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  gradient: _canPost && !_isSubmitting
+                      ? AppTheme.brandGradientHorizontal
+                      : null,
+                  color: _canPost && !_isSubmitting
+                      ? null
+                      : context.border.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: _isSubmitting
+                    ? SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Text(
+                        'Post',
+                        style: TextStyle(
+                          color: _canPost ? Colors.white : context.textTertiary,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+              ),
+            ),
           ),
         ],
       ),
@@ -96,18 +147,82 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Content input
-                    TextField(
-                      controller: _contentController,
-                      focusNode: _contentFocusNode,
-                      decoration: const InputDecoration(
-                        hintText: 'What\'s happening on the mesh?',
-                        border: InputBorder.none,
+                    // User info row
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 22,
+                          backgroundColor: context.accentColor.withValues(
+                            alpha: 0.2,
+                          ),
+                          backgroundImage: profile?.avatarUrl != null
+                              ? NetworkImage(profile!.avatarUrl!)
+                              : null,
+                          child: profile?.avatarUrl == null
+                              ? Text(
+                                  (profile?.displayName ?? 'U')[0]
+                                      .toUpperCase(),
+                                  style: TextStyle(
+                                    color: context.accentColor,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                )
+                              : null,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                profile?.displayName ?? 'Anonymous',
+                                style: TextStyle(
+                                  color: context.textPrimary,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 15,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              _buildVisibilityChip(),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Content input card
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: context.card,
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      maxLines: null,
-                      minLines: 5,
-                      textCapitalization: TextCapitalization.sentences,
-                      onChanged: (_) => setState(() {}),
+                      child: TextField(
+                        controller: _contentController,
+                        focusNode: _contentFocusNode,
+                        style: TextStyle(
+                          color: context.textPrimary,
+                          fontSize: 16,
+                          height: 1.5,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'What\'s happening on the mesh?',
+                          hintStyle: TextStyle(
+                            color: context.textTertiary,
+                            fontSize: 16,
+                          ),
+                          border: InputBorder.none,
+                          isDense: true,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                        maxLines: null,
+                        minLines: 6,
+                        textCapitalization: TextCapitalization.sentences,
+                        onChanged: (_) => setState(() {}),
+                      ),
                     ),
 
                     // Image previews
@@ -116,16 +231,17 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                       _buildImagePreviews(),
                     ],
 
-                    // Location tag
-                    if (_location != null) ...[
+                    // Tags section
+                    if (_location != null || _nodeId != null) ...[
                       const SizedBox(height: 16),
-                      _buildLocationTag(),
-                    ],
-
-                    // Node tag
-                    if (_nodeId != null) ...[
-                      const SizedBox(height: 16),
-                      _buildNodeTag(),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          if (_location != null) _buildLocationTag(),
+                          if (_nodeId != null) _buildNodeTag(),
+                        ],
+                      ),
                     ],
                   ],
                 ),
@@ -135,20 +251,61 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
             // Bottom toolbar
             Container(
               decoration: BoxDecoration(
-                border: Border(top: BorderSide(color: theme.dividerColor)),
+                color: context.card,
+                border: Border(
+                  top: BorderSide(color: context.border.withValues(alpha: 0.3)),
+                ),
               ),
               child: SafeArea(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Visibility selector
-                    _buildVisibilitySelector(theme),
-
-                    const Divider(height: 1),
-
-                    // Action buttons
-                    _buildActionButtons(theme),
-                  ],
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  child: Row(
+                    children: [
+                      _buildToolbarButton(
+                        icon: Icons.image_outlined,
+                        isActive: _imageUrls.isNotEmpty,
+                        onTap: _addImage,
+                        tooltip: 'Add image',
+                      ),
+                      const SizedBox(width: 4),
+                      _buildToolbarButton(
+                        icon: Icons.location_on_outlined,
+                        isActive: _location != null,
+                        onTap: _addLocation,
+                        tooltip: 'Add location',
+                      ),
+                      const SizedBox(width: 4),
+                      _buildToolbarButton(
+                        icon: Icons.router_outlined,
+                        isActive: _nodeId != null,
+                        onTap: _tagNode,
+                        tooltip: 'Tag node',
+                      ),
+                      const Spacer(),
+                      // Character count
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: context.background,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '${_contentController.text.length}',
+                          style: TextStyle(
+                            color: context.textTertiary,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -158,83 +315,301 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     );
   }
 
+  Widget _buildVisibilityChip() {
+    final IconData icon;
+    final String label;
+
+    switch (_visibility) {
+      case PostVisibility.public:
+        icon = Icons.public;
+        label = 'Public';
+      case PostVisibility.followersOnly:
+        icon = Icons.people;
+        label = 'Followers';
+      case PostVisibility.private:
+        icon = Icons.lock;
+        label = 'Only me';
+    }
+
+    return BouncyTap(
+      onTap: _showVisibilityPicker,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: context.accentColor.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: context.accentColor),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: context.accentColor,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(width: 2),
+            Icon(
+              Icons.keyboard_arrow_down,
+              size: 16,
+              color: context.accentColor,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showVisibilityPicker() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: context.card,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: context.border,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                'Who can see this?',
+                style: TextStyle(
+                  color: context.textPrimary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            _buildVisibilityOption(
+              ctx,
+              PostVisibility.public,
+              Icons.public,
+              'Public',
+              'Anyone can see this post',
+            ),
+            _buildVisibilityOption(
+              ctx,
+              PostVisibility.followersOnly,
+              Icons.people,
+              'Followers',
+              'Only your followers can see this',
+            ),
+            _buildVisibilityOption(
+              ctx,
+              PostVisibility.private,
+              Icons.lock,
+              'Only me',
+              'Only you can see this post',
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVisibilityOption(
+    BuildContext ctx,
+    PostVisibility visibility,
+    IconData icon,
+    String title,
+    String subtitle,
+  ) {
+    final isSelected = _visibility == visibility;
+
+    return BouncyTap(
+      onTap: () {
+        setState(() => _visibility = visibility);
+        Navigator.pop(ctx);
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? context.accentColor.withValues(alpha: 0.1)
+              : context.background,
+          borderRadius: BorderRadius.circular(12),
+          border: isSelected
+              ? Border.all(color: context.accentColor.withValues(alpha: 0.5))
+              : null,
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? context.accentColor.withValues(alpha: 0.2)
+                    : context.border.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                icon,
+                size: 20,
+                color: isSelected ? context.accentColor : context.textSecondary,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      color: context.textPrimary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: TextStyle(color: context.textTertiary, fontSize: 13),
+                  ),
+                ],
+              ),
+            ),
+            if (isSelected)
+              Icon(Icons.check_circle, color: context.accentColor, size: 22),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildToolbarButton({
+    required IconData icon,
+    required bool isActive,
+    required VoidCallback onTap,
+    required String tooltip,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: BouncyTap(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: isActive
+                ? context.accentColor.withValues(alpha: 0.15)
+                : context.background,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(
+            icon,
+            size: 22,
+            color: isActive ? context.accentColor : context.textSecondary,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildImagePreviews() {
     return SizedBox(
-      height: 100,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: _imageUrls.length,
-        itemBuilder: (context, index) {
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    _imageUrls[index],
-                    width: 100,
-                    height: 100,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                Positioned(
-                  top: 4,
-                  right: 4,
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _imageUrls.removeAt(index);
-                      });
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(
-                        color: Colors.black54,
-                        shape: BoxShape.circle,
+      height: 120,
+      child: EdgeFade.horizontal(
+        fadeSize: 16,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          itemCount: _imageUrls.length,
+          itemBuilder: (context, index) {
+            return Padding(
+              padding: EdgeInsets.only(
+                right: index < _imageUrls.length - 1 ? 12 : 0,
+              ),
+              child: Stack(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: context.border.withValues(alpha: 0.3),
                       ),
-                      child: const Icon(
-                        Icons.close,
-                        size: 16,
-                        color: Colors.white,
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.network(
+                        _imageUrls[index],
+                        width: 120,
+                        height: 120,
+                        fit: BoxFit.cover,
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          );
-        },
+                  Positioned(
+                    top: 6,
+                    right: 6,
+                    child: BouncyTap(
+                      onTap: () {
+                        setState(() {
+                          _imageUrls.removeAt(index);
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.7),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.close,
+                          size: 14,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
 
   Widget _buildLocationTag() {
-    final theme = Theme.of(context);
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer.withAlpha(50),
+        color: AppTheme.successGreen.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppTheme.successGreen.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.location_on, size: 16, color: theme.colorScheme.primary),
-          const SizedBox(width: 4),
+          Icon(Icons.location_on, size: 16, color: AppTheme.successGreen),
+          const SizedBox(width: 6),
           Text(
             _location!.name ?? 'Location',
-            style: TextStyle(color: theme.colorScheme.primary),
+            style: TextStyle(
+              color: AppTheme.successGreen,
+              fontWeight: FontWeight.w500,
+              fontSize: 13,
+            ),
           ),
           const SizedBox(width: 8),
-          GestureDetector(
+          BouncyTap(
             onTap: () => setState(() => _location = null),
-            child: Icon(
-              Icons.close,
-              size: 16,
-              color: theme.colorScheme.primary,
-            ),
+            child: Icon(Icons.close, size: 16, color: AppTheme.successGreen),
           ),
         ],
       ),
@@ -242,124 +617,30 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   }
 
   Widget _buildNodeTag() {
-    final theme = Theme.of(context);
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: theme.colorScheme.secondaryContainer.withAlpha(50),
+        color: AccentColors.cyan.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AccentColors.cyan.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.router, size: 16, color: theme.colorScheme.secondary),
-          const SizedBox(width: 4),
+          Icon(Icons.router, size: 16, color: AccentColors.cyan),
+          const SizedBox(width: 6),
           Text(
             'Node $_nodeId',
-            style: TextStyle(color: theme.colorScheme.secondary),
+            style: TextStyle(
+              color: AccentColors.cyan,
+              fontWeight: FontWeight.w500,
+              fontSize: 13,
+            ),
           ),
           const SizedBox(width: 8),
-          GestureDetector(
+          BouncyTap(
             onTap: () => setState(() => _nodeId = null),
-            child: Icon(
-              Icons.close,
-              size: 16,
-              color: theme.colorScheme.secondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildVisibilitySelector(ThemeData theme) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: [
-          Icon(
-            _visibility == PostVisibility.public
-                ? Icons.public
-                : _visibility == PostVisibility.followersOnly
-                ? Icons.people
-                : Icons.lock,
-            size: 20,
-            color: theme.colorScheme.primary,
-          ),
-          const SizedBox(width: 8),
-          DropdownButton<PostVisibility>(
-            value: _visibility,
-            underline: const SizedBox(),
-            items: const [
-              DropdownMenuItem(
-                value: PostVisibility.public,
-                child: Text('Public'),
-              ),
-              DropdownMenuItem(
-                value: PostVisibility.followersOnly,
-                child: Text('Followers only'),
-              ),
-              DropdownMenuItem(
-                value: PostVisibility.private,
-                child: Text('Only me'),
-              ),
-            ],
-            onChanged: (value) {
-              if (value != null) {
-                setState(() => _visibility = value);
-              }
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActionButtons(ThemeData theme) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      child: Row(
-        children: [
-          // Add image
-          IconButton(
-            icon: Icon(Icons.image_outlined, color: theme.colorScheme.primary),
-            onPressed: _addImage,
-            tooltip: 'Add image',
-          ),
-
-          // Add location
-          IconButton(
-            icon: Icon(
-              Icons.location_on_outlined,
-              color: _location != null
-                  ? theme.colorScheme.primary
-                  : theme.iconTheme.color,
-            ),
-            onPressed: _addLocation,
-            tooltip: 'Add location',
-          ),
-
-          // Tag node
-          IconButton(
-            icon: Icon(
-              Icons.router_outlined,
-              color: _nodeId != null
-                  ? theme.colorScheme.secondary
-                  : theme.iconTheme.color,
-            ),
-            onPressed: _tagNode,
-            tooltip: 'Tag node',
-          ),
-
-          const Spacer(),
-
-          // Character count (optional)
-          Text(
-            '${_contentController.text.length}',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.textTheme.bodySmall?.color?.withAlpha(100),
-            ),
+            child: Icon(Icons.close, size: 16, color: AccentColors.cyan),
           ),
         ],
       ),
@@ -405,31 +686,143 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   Future<void> _addLocation() async {
     showModalBottomSheet(
       context: context,
+      backgroundColor: context.card,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (ctx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(
-              leading: const Icon(Icons.my_location),
-              title: const Text('Use Current Location'),
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: context.border,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                'Add Location',
+                style: TextStyle(
+                  color: context.textPrimary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            BouncyTap(
               onTap: () async {
                 Navigator.pop(ctx);
                 await _useCurrentLocation();
               },
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: context.background,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppTheme.successGreen.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        Icons.my_location,
+                        size: 20,
+                        color: AppTheme.successGreen,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Use Current Location',
+                            style: TextStyle(
+                              color: context.textPrimary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                          ),
+                          Text(
+                            'Share your GPS coordinates',
+                            style: TextStyle(
+                              color: context.textTertiary,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(Icons.chevron_right, color: context.textTertiary),
+                  ],
+                ),
+              ),
             ),
-            ListTile(
-              leading: const Icon(Icons.edit_location),
-              title: const Text('Enter Location Manually'),
+            BouncyTap(
               onTap: () {
                 Navigator.pop(ctx);
                 _enterLocationManually();
               },
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: context.background,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AccentColors.blue.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        Icons.edit_location_alt,
+                        size: 20,
+                        color: AccentColors.blue,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Enter Location Manually',
+                            style: TextStyle(
+                              color: context.textPrimary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                          ),
+                          Text(
+                            'Type in a place name',
+                            style: TextStyle(
+                              color: context.textTertiary,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(Icons.chevron_right, color: context.textTertiary),
+                  ],
+                ),
+              ),
             ),
-            ListTile(
-              leading: const Icon(Icons.close),
-              title: const Text('Cancel'),
-              onTap: () => Navigator.pop(ctx),
-            ),
+            const SizedBox(height: 16),
           ],
         ),
       ),
@@ -487,19 +880,42 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Enter Location'),
+        backgroundColor: context.card,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Enter Location',
+          style: TextStyle(color: context.textPrimary),
+        ),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(
+          style: TextStyle(color: context.textPrimary),
+          decoration: InputDecoration(
             hintText: 'e.g., San Francisco, CA',
-            border: OutlineInputBorder(),
+            hintStyle: TextStyle(color: context.textTertiary),
+            filled: true,
+            fillColor: context.background,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: context.border),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: context.border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: context.accentColor, width: 2),
+            ),
           ),
           autofocus: true,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: context.textSecondary),
+            ),
           ),
           FilledButton(
             onPressed: () {
@@ -522,7 +938,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     );
   }
 
-  void _tagNode() {
+  Future<void> _tagNode() async {
     final nodes = ref.read(nodesProvider);
 
     if (nodes.isEmpty) {
@@ -530,54 +946,25 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       return;
     }
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (ctx) => DraggableScrollableSheet(
-        initialChildSize: 0.5,
-        minChildSize: 0.3,
-        maxChildSize: 0.8,
-        expand: false,
-        builder: (_, scrollController) => Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                'Tag a Node',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-            ),
-            const Divider(height: 1),
-            Expanded(
-              child: ListView.builder(
-                controller: scrollController,
-                itemCount: nodes.length,
-                itemBuilder: (context, index) {
-                  final node = nodes.values.elementAt(index);
-                  final nodeNum = node.nodeNum.toRadixString(16).toUpperCase();
-                  final longName = node.longName ?? '';
-                  final shortName = node.shortName ?? '';
-                  return ListTile(
-                    leading: const Icon(Icons.router),
-                    title: Text(longName.isNotEmpty ? longName : '!$nodeNum'),
-                    subtitle: Text(shortName.isNotEmpty ? shortName : nodeNum),
-                    onTap: () {
-                      setState(() => _nodeId = nodeNum);
-                      Navigator.pop(ctx);
-                    },
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
+    final selection = await NodeSelectorSheet.show(
+      context,
+      title: 'Tag a Node',
+      allowBroadcast: false,
     );
+
+    if (selection != null && selection.nodeNum != null && mounted) {
+      setState(
+        () => _nodeId = selection.nodeNum!.toRadixString(16).toUpperCase(),
+      );
+    }
   }
 
   Future<void> _submitPost() async {
     final content = _contentController.text.trim();
     if (content.isEmpty && _imageUrls.isEmpty) return;
+
+    // Dismiss keyboard immediately
+    FocusScope.of(context).unfocus();
 
     setState(() => _isSubmitting = true);
 

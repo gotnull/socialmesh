@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:social_media_buttons/social_media_icons.dart';
 import '../../../services/share_link_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme.dart';
+import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
 import '../../../core/widgets/node_avatar.dart';
@@ -533,58 +535,75 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
             ),
           ],
 
-          // Website & Social Links
+          // Website & Social Links - Horizontal scrollable circular icons
           if (profile.website != null ||
               (profile.socialLinks != null &&
                   !profile.socialLinks!.isEmpty)) ...[
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 12,
-              runSpacing: 6,
-              children: [
-                if (profile.website != null)
-                  _ProfileLinkChip(
-                    icon: Icons.link,
-                    text: _formatUrl(profile.website!),
-                    onTap: () => _launchUrl(profile.website!),
-                  ),
-                if (profile.socialLinks?.twitter != null)
-                  _ProfileLinkChip(
-                    icon: Icons.alternate_email,
-                    text: '@${profile.socialLinks!.twitter}',
-                    onTap: () => _launchUrl(
-                      'https://twitter.com/${profile.socialLinks!.twitter}',
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 44,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: [
+                  if (profile.website != null)
+                    _SocialIconButton(
+                      icon: Icons.language,
+                      color: context.accentColor,
+                      onTap: () => _launchUrl(profile.website!),
+                      tooltip: _formatUrl(profile.website!),
                     ),
-                  ),
-                if (profile.socialLinks?.mastodon != null)
-                  _ProfileLinkChip(
-                    icon: Icons.tag,
-                    text: profile.socialLinks!.mastodon!,
-                    onTap: null,
-                  ),
-                if (profile.socialLinks?.github != null)
-                  _ProfileLinkChip(
-                    icon: Icons.code,
-                    text: profile.socialLinks!.github!,
-                    onTap: () => _launchUrl(
-                      'https://github.com/${profile.socialLinks!.github}',
+                  if (profile.socialLinks?.twitter != null)
+                    _SocialIconButton(
+                      icon: SocialMediaIcons.twitter,
+                      color: context.textPrimary,
+                      onTap: () => _launchUrl(
+                        'https://x.com/${profile.socialLinks!.twitter}',
+                      ),
+                      tooltip: '@${profile.socialLinks!.twitter}',
                     ),
-                  ),
-                if (profile.socialLinks?.discord != null)
-                  _ProfileLinkChip(
-                    icon: Icons.discord,
-                    text: profile.socialLinks!.discord!,
-                    onTap: null,
-                  ),
-                if (profile.socialLinks?.telegram != null)
-                  _ProfileLinkChip(
-                    icon: Icons.send,
-                    text: '@${profile.socialLinks!.telegram}',
-                    onTap: () => _launchUrl(
-                      'https://t.me/${profile.socialLinks!.telegram}',
+                  if (profile.socialLinks?.github != null)
+                    _SocialIconButton(
+                      icon: SocialMediaIcons.github_circled,
+                      color: const Color(0xFF6E5494),
+                      onTap: () => _launchUrl(
+                        'https://github.com/${profile.socialLinks!.github}',
+                      ),
+                      tooltip: profile.socialLinks!.github!,
                     ),
-                  ),
-              ],
+                  if (profile.socialLinks?.discord != null)
+                    _SocialIconButton(
+                      icon: Icons.discord,
+                      color: const Color(0xFF5865F2),
+                      onTap: null,
+                      tooltip: profile.socialLinks!.discord!,
+                    ),
+                  if (profile.socialLinks?.telegram != null)
+                    _SocialIconButton(
+                      icon: Icons.telegram,
+                      color: const Color(0xFF0088CC),
+                      onTap: () => _launchUrl(
+                        'https://t.me/${profile.socialLinks!.telegram}',
+                      ),
+                      tooltip: '@${profile.socialLinks!.telegram}',
+                    ),
+                  if (profile.socialLinks?.linkedin != null)
+                    _SocialIconButton(
+                      icon: SocialMediaIcons.linkedin,
+                      color: const Color(0xFF0A66C2),
+                      onTap: () => _launchUrl(
+                        'https://linkedin.com/in/${profile.socialLinks!.linkedin}',
+                      ),
+                      tooltip: profile.socialLinks!.linkedin!,
+                    ),
+                  if (profile.socialLinks?.mastodon != null)
+                    _SocialIconButton(
+                      icon: Icons.tag,
+                      color: const Color(0xFF6364FF),
+                      onTap: null,
+                      tooltip: profile.socialLinks!.mastodon!,
+                    ),
+                ],
+              ),
             ),
           ],
 
@@ -1218,32 +1237,38 @@ class _LinkedDeviceChip extends StatelessWidget {
 }
 
 /// Compact chip showing a social/website link.
-class _ProfileLinkChip extends StatelessWidget {
-  const _ProfileLinkChip({required this.icon, required this.text, this.onTap});
+/// Sexy circular social icon button with brand color
+class _SocialIconButton extends StatelessWidget {
+  const _SocialIconButton({
+    required this.icon,
+    required this.color,
+    required this.tooltip,
+    this.onTap,
+  });
 
   final IconData icon;
-  final String text;
+  final Color color;
+  final String tooltip;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: context.accentColor),
-          const SizedBox(width: 4),
-          Text(
-            text,
-            style: TextStyle(
-              color: onTap != null
-                  ? context.accentColor
-                  : context.textSecondary,
-              fontSize: 12,
+    return Padding(
+      padding: const EdgeInsets.only(right: 10),
+      child: Tooltip(
+        message: tooltip,
+        child: BouncyTap(
+          onTap: onTap,
+          child: Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: onTap != null ? color : context.textTertiary,
+              shape: BoxShape.circle,
             ),
+            child: Icon(icon, size: 20, color: Colors.white),
           ),
-        ],
+        ),
       ),
     );
   }
