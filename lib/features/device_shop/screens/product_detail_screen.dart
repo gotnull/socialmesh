@@ -154,17 +154,24 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
       backgroundColor: context.card,
       expandedHeight: 350,
       pinned: true,
+      titleSpacing: 0,
       title: _showTitle
-          ? AutoScrollText(
-              product.name,
-              style: TextStyle(
-                color: context.textPrimary,
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
-              ),
-              maxLines: 1,
-              velocity: 40.0,
-              fadeWidth: 30.0,
+          ? Row(
+              children: [
+                Expanded(
+                  child: AutoScrollText(
+                    product.name,
+                    style: TextStyle(
+                      color: context.textPrimary,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 1,
+                    velocity: 40.0,
+                    fadeWidth: 30.0,
+                  ),
+                ),
+              ],
             )
           : null,
       actions: [
@@ -263,7 +270,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
             // Sale badge
             if (product.isOnSale)
               Positioned(
-                top: 100,
+                top: 150,
                 left: 16,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
