@@ -18,6 +18,7 @@ import '../../../utils/snackbar.dart';
 import '../../map/map_screen.dart';
 import '../../messaging/messaging_screen.dart'
     show ChatScreen, ConversationType;
+import '../../navigation/main_shell.dart';
 import '../../profile/profile_screen.dart';
 import '../../settings/linked_devices_screen.dart';
 import '../../settings/settings_screen.dart';
@@ -234,12 +235,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
       backgroundColor: context.background,
       floating: true,
       snap: true,
-      leading: isOwnProfile
-          ? IconButton(
-              icon: const Icon(Icons.menu),
-              onPressed: () => Scaffold.of(context).openDrawer(),
-            )
-          : null,
+      leading: isOwnProfile ? const HamburgerMenuButton() : null,
       title: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
