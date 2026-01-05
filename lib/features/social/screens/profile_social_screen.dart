@@ -1464,6 +1464,40 @@ class _PostGridTile extends StatelessWidget {
               ),
             ),
 
+          // Node indicator
+          if (post.nodeId != null)
+            Positioned(
+              top: 8,
+              left: 8,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: const Icon(Icons.router, color: Colors.white, size: 14),
+              ),
+            ),
+
+          // Location indicator
+          if (post.location != null)
+            Positioned(
+              top: 8,
+              left: post.nodeId != null ? 36 : 8,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: const Icon(
+                  Icons.location_on,
+                  color: Colors.white,
+                  size: 14,
+                ),
+              ),
+            ),
+
           // Stats overlay at bottom for text posts
           if (post.imageUrls.isEmpty)
             Positioned(

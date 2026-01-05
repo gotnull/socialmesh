@@ -1098,6 +1098,42 @@ class _PostContent extends StatelessWidget {
             ),
           ],
 
+          // Tagged node
+          if (post.nodeId != null) ...[
+            const SizedBox(height: 12),
+            GestureDetector(
+              onTap: onNodeTap != null ? () => onNodeTap!(post.nodeId!) : null,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.secondaryContainer.withAlpha(100),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.router,
+                      size: 14,
+                      color: theme.colorScheme.secondary,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Node ${post.nodeId}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.secondary,
+                        decoration: onNodeTap != null
+                            ? TextDecoration.underline
+                            : null,
+                        decorationColor: theme.colorScheme.secondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+
           const SizedBox(height: 16),
 
           // Actions
