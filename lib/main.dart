@@ -53,6 +53,7 @@ import 'features/routes/route_detail_screen.dart';
 import 'features/globe/globe_screen.dart';
 import 'features/reachability/mesh_reachability_screen.dart';
 import 'features/social/screens/post_detail_screen.dart';
+import 'services/user_presence_service.dart';
 // import 'features/intro/intro_screen.dart';
 import 'models/route.dart' as route_model;
 
@@ -136,6 +137,8 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       ref.read(appInitProvider.notifier).initialize();
       // Load accent color from settings
       _loadAccentColor();
+      // Set user online presence
+      _initializePresence();
       // Setup App Intents for iOS Shortcuts integration
       ref.read(appIntentsServiceProvider).setup();
       // Initialize RevenueCat for purchases
@@ -156,6 +159,13 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) {
       _handleAppResumed();
+      // Set user online when app returns to foreground
+      ref.read(userPresenceServiceProvider).setOnline();
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.detached) {
+      // Set user offline when app goes to background
+      ref.read(userPresenceServiceProvider).setOffline();
     }
   }
 
@@ -514,6 +524,23 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       }
     } catch (e) {
       AppLogging.debug('☁️ Cloud sync failed, using local settings: $e');
+    }
+  }
+
+  /// Initialize user presence tracking
+  Future<void> _initializePresence() async {
+    // Wait for Firebase to be ready
+    final isFirebaseReady = await firebaseReady.timeout(
+      const Duration(seconds: 5),
+      onTimeout: () => false,
+    );
+
+    if (!isFirebaseReady) return;
+
+    // Wait for user to be signed in
+    final authState = await ref.read(authStateProvider.future);
+    if (authState != null) {
+      ref.read(userPresenceServiceProvider).setOnline();
     }
   }
 

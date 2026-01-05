@@ -97,6 +97,9 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
           final isFollowing = followState?.isFollowing ?? false;
 
           return RefreshIndicator(
+            edgeOffset: widget.showAppBar
+                ? 0
+                : MediaQuery.of(context).padding.top,
             onRefresh: () async {
               ref
                   .read(profileCountAdjustmentsProvider.notifier)
