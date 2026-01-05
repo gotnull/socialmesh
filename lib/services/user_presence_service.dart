@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_providers.dart';
 
@@ -11,15 +12,20 @@ class UserPresenceService {
 
   /// Start tracking user presence (call when app becomes active)
   Future<void> setOnline() async {
-    if (_userId == null) return;
+    if (_userId == null) {
+      debugPrint('🟢 setOnline: No user ID, skipping');
+      return;
+    }
 
+    debugPrint('🟢 setOnline: Setting user $_userId online...');
     try {
       await _firestore.collection('presence').doc(_userId).set({
         'isOnline': true,
         'lastSeen': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
+      debugPrint('🟢 setOnline: Success for $_userId');
     } catch (e) {
-      // Silent fail - presence is not critical
+      debugPrint('🟢 setOnline: Error - $e');
     }
   }
 
@@ -27,13 +33,15 @@ class UserPresenceService {
   Future<void> setOffline() async {
     if (_userId == null) return;
 
+    debugPrint('🔴 setOffline: Setting user $_userId offline...');
     try {
       await _firestore.collection('presence').doc(_userId).set({
         'isOnline': false,
         'lastSeen': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
+      debugPrint('🔴 setOffline: Success for $_userId');
     } catch (e) {
-      // Silent fail
+      debugPrint('🔴 setOffline: Error - $e');
     }
   }
 
