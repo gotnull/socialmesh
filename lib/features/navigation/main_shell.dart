@@ -47,13 +47,24 @@ import '../social/social.dart';
 import '../social/screens/reported_content_screen.dart';
 
 /// Combined admin notification count provider
+/// Uses FutureProvider to properly handle the async stream states
 final adminNotificationCountProvider = Provider<int>((ref) {
-  final reviewCount = ref
-      .watch(pendingReviewCountProvider)
-      .when(data: (count) => count, loading: () => 0, error: (e, stack) => 0);
-  final reportCount = ref
-      .watch(pendingReportCountProvider)
-      .when(data: (count) => count, loading: () => 0, error: (e, stack) => 0);
+  // Watch both providers - this creates proper dependency tracking
+  final reviewAsync = ref.watch(pendingReviewCountProvider);
+  final reportAsync = ref.watch(pendingReportCountProvider);
+
+  // Extract counts, defaulting to 0 for loading/error states
+  final reviewCount = reviewAsync.when(
+    data: (count) => count,
+    loading: () => 0,
+    error: (_, _) => 0,
+  );
+  final reportCount = reportAsync.when(
+    data: (count) => count,
+    loading: () => 0,
+    error: (_, _) => 0,
+  );
+
   return reviewCount + reportCount;
 });
 

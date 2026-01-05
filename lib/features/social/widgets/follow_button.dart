@@ -256,10 +256,12 @@ class _FollowTextButtonState extends ConsumerState<FollowTextButton> {
       data: (state) => TextButton(
         onPressed: _isLoading ? null : () => _handleToggle(state),
         child: _isLoading
-            ? const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
+            ? const Center(
+                child: SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
               )
             : Text(
                 _getButtonText(state.buttonState),

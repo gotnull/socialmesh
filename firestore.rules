@@ -105,18 +105,21 @@ service cloud.firestore {
     }
     
     // User profiles - public read, owner write (except counters)
+    // Admins can write for testing/seeding purposes (full access)
     match /profiles/{userId} {
       allow read: if true;
       // Owner can write but cannot modify counter fields (Cloud Functions only)
       // Also enforce reserved display name restrictions
-      allow create: if isOwner(userId) && isValidSize() &&
+      // Admins can create any profile for seeding test users (bypass all validation)
+      allow create: if isAdmin() || (isOwner(userId) && isValidSize() &&
         (!('followerCount' in request.resource.data) || request.resource.data.followerCount == 0) &&
         (!('followingCount' in request.resource.data) || request.resource.data.followingCount == 0) &&
         (!('postCount' in request.resource.data) || request.resource.data.postCount == 0) &&
-        (!('displayName' in request.resource.data) || canUseDisplayName(request.resource.data.displayName));
+        (!('displayName' in request.resource.data) || canUseDisplayName(request.resource.data.displayName)));
       // Allow owner to update non-counter fields, OR allow counter increments only
       // Also enforce reserved display name restrictions on updates
-      allow update: if isOwner(userId) && isValidSize() &&
+      // Admins can update any profile for testing purposes (bypass all validation)
+      allow update: if isAdmin() || (isOwner(userId) && isValidSize() &&
         (!('displayName' in request.resource.data) || canUseDisplayName(request.resource.data.displayName)) &&
         (
           // Option 1: Non-counter field updates (displayName, bio, avatarUrl, etc.)
@@ -124,8 +127,9 @@ service cloud.firestore {
           ||
           // Option 2: Counter-only updates (for post create/delete, follow/unfollow)
           (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['postCount', 'followerCount', 'followingCount']))
-        );
-      allow delete: if isOwner(userId);
+        ));
+      // Admins can delete test profiles
+      allow delete: if isOwner(userId) || isAdmin();
     }
     
     // Admin list - only readable by admins
@@ -300,9 +304,9 @@ service cloud.firestore {
         request.resource.data.followerId != request.resource.data.followeeId &&
         followId == request.resource.data.followerId + '_' + request.resource.data.followeeId;
       
-      // Delete: only the follower can unfollow
-      allow delete: if isAuthenticated() &&
-        resource.data.followerId == request.auth.uid;
+      // Delete: only the follower can unfollow (or admin for testing)
+      allow delete: if isAdmin() || (isAuthenticated() &&
+        resource.data.followerId == request.auth.uid);
       
       // No updates allowed - delete and recreate
       allow update: if false;
@@ -339,20 +343,22 @@ service cloud.firestore {
     }
 
     // Posts - user-created content
+    // Admins can create/delete for testing purposes
     match /posts/{postId} {
       allow read: if true; // Public posts
       
       // Create: authenticated, must be author, content required
-      allow create: if isAuthenticated() &&
+      // Admins can create posts for seeding test data
+      allow create: if isAdmin() || (isAuthenticated() &&
         request.resource.data.authorId == request.auth.uid &&
         request.resource.data.content is string &&
         request.resource.data.content.size() > 0 &&
         request.resource.data.content.size() <= 2000 &&
-        isValidSize();
+        isValidSize());
       
-      // Delete: only author can delete their post
-      allow delete: if isAuthenticated() &&
-        resource.data.authorId == request.auth.uid;
+      // Delete: only author can delete their post (or admin)
+      allow delete: if isAdmin() || (isAuthenticated() &&
+        resource.data.authorId == request.auth.uid);
       
       // Allow authenticated users to update only commentCount and likeCount
       allow update: if isAuthenticated() &&
@@ -372,21 +378,23 @@ service cloud.firestore {
     }
 
     // Comments - threaded comments on posts
+    // Admins can create/delete for testing purposes
     match /comments/{commentId} {
       allow read: if true; // Public comments
       
       // Create: authenticated, must be author, content required, max depth check
-      allow create: if isAuthenticated() &&
+      // Admins can create comments for seeding test data
+      allow create: if isAdmin() || (isAuthenticated() &&
         request.resource.data.authorId == request.auth.uid &&
         request.resource.data.content is string &&
         request.resource.data.content.size() > 0 &&
         request.resource.data.content.size() <= 1000 &&
         request.resource.data.postId is string &&
-        isValidSize();
+        isValidSize());
       
-      // Delete: only author can delete their comment
-      allow delete: if isAuthenticated() &&
-        resource.data.authorId == request.auth.uid;
+      // Delete: only author can delete their comment (or admin)
+      allow delete: if isAdmin() || (isAuthenticated() &&
+        resource.data.authorId == request.auth.uid);
       
       // Allow authenticated users to update only replyCount
       allow update: if isAuthenticated() &&

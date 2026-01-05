@@ -474,12 +474,119 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
     },
   ];
 
+  // Sample posts for each user
+  static const _samplePosts = [
+    {
+      'authorId': 'dummy_user_alice',
+      'content':
+          'Just set up my first solar-powered mesh node on the mountain! 🏔️ Getting great coverage over the valley. #offgrid #meshtastic',
+    },
+    {
+      'authorId': 'dummy_user_alice',
+      'content':
+          'Pro tip: Elevate your antennas! Even 3 meters higher can double your range in hilly terrain.',
+    },
+    {
+      'authorId': 'dummy_user_bob',
+      'content':
+          'Finished my DIY weatherproof enclosure for the T-Beam. 3D printed with PETG and sealed with silicone. Works great!',
+    },
+    {
+      'authorId': 'dummy_user_bob',
+      'content':
+          'Anyone else testing the new firmware update? Seeing improved battery life on my RAK nodes.',
+    },
+    {
+      'authorId': 'dummy_user_carol',
+      'content':
+          'Had an amazing QSO today - mesh message relayed through 5 nodes over 47km! The power of community networks. 📡',
+    },
+    {
+      'authorId': 'dummy_user_dave',
+      'content':
+          'Teaching emergency communication at the community center this weekend. Mesh networks are perfect for disaster preparedness!',
+    },
+    {
+      'authorId': 'dummy_user_dave',
+      'content':
+          'Remember: In an emergency, your mesh network might be the only way to communicate. Keep those nodes charged! 🔋',
+    },
+    {
+      'authorId': 'dummy_user_eve',
+      'content':
+          'Love that mesh networks work without any central infrastructure. True peer-to-peer communication. Privacy by design. 🔐',
+    },
+    {
+      'authorId': 'dummy_user_frank',
+      'content':
+          'Used the mesh network on today\'s SAR mission. Invaluable for team coordination in areas with no cell coverage. 🚁',
+    },
+    {
+      'authorId': 'dummy_user_frank',
+      'content':
+          'Setting up permanent nodes at all our mountain huts. This will revolutionize backcountry communication.',
+    },
+    {
+      'authorId': 'dummy_user_grace',
+      'content':
+          'My solar node has been running for 6 months straight now! 100W panel + 50Ah battery = unlimited mesh. ☀️',
+    },
+    {
+      'authorId': 'dummy_user_grace',
+      'content':
+          'New project: Building a mesh-connected weather station. Will share temperature, humidity, and barometric pressure.',
+    },
+    {
+      'authorId': 'dummy_user_henry',
+      'content':
+          'Just completed my DIY Yagi antenna build. 12dBi gain! Range increased significantly. Build guide coming soon.',
+    },
+    {
+      'authorId': 'dummy_user_henry',
+      'content':
+          'Prototyping a mesh-enabled sensor network for my greenhouse. Soil moisture + temp readings over LoRa. 🌱',
+    },
+  ];
+
+  // Sample comments
+  static const _sampleComments = [
+    {
+      'content': 'Awesome setup! What panel are you using?',
+      'authorId': 'dummy_user_bob',
+    },
+    {
+      'content': 'This is inspiring! Might try something similar.',
+      'authorId': 'dummy_user_carol',
+    },
+    {
+      'content': 'Great work! The community needs more nodes like this.',
+      'authorId': 'dummy_user_dave',
+    },
+    {'content': '🔥 Love it!', 'authorId': 'dummy_user_eve'},
+    {
+      'content': 'What\'s the battery life like?',
+      'authorId': 'dummy_user_frank',
+    },
+    {
+      'content': 'Impressive range! What antenna are you using?',
+      'authorId': 'dummy_user_grace',
+    },
+    {
+      'content': 'Nice! Can you share more details on the build?',
+      'authorId': 'dummy_user_henry',
+    },
+    {
+      'content': 'Thanks for sharing! Very helpful.',
+      'authorId': 'dummy_user_alice',
+    },
+  ];
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
       backgroundColor: context.card,
       title: Text(
-        'Seed Dummy Users',
+        'Seed Test Data',
         style: TextStyle(color: context.textPrimary),
       ),
       content: SizedBox(
@@ -489,8 +596,15 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'This will create ${_dummyUsers.length} dummy profiles for testing:',
+              'This will create test data for the social features:',
               style: TextStyle(color: context.textSecondary, fontSize: 14),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '• ${_dummyUsers.length} dummy profiles\n'
+              '• ${_samplePosts.length} posts with content\n'
+              '• ~${_sampleComments.length * 2} comments',
+              style: TextStyle(color: context.textSecondary, fontSize: 13),
             ),
             const SizedBox(height: 12),
             // User list preview
@@ -581,6 +695,16 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
           onPressed: _isSeeding ? null : () => Navigator.pop(context),
           child: const Text('Cancel'),
         ),
+        OutlinedButton(
+          onPressed: _isSeeding ? null : _resetAndSeed,
+          child: _isSeeding
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('Reset & Seed'),
+        ),
         FilledButton(
           onPressed: _isSeeding ? null : _seedUsers,
           child: _isSeeding
@@ -592,10 +716,114 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
                     color: Colors.white,
                   ),
                 )
-              : const Text('Seed Users'),
+              : const Text('Seed Data'),
         ),
       ],
     );
+  }
+
+  Future<void> _resetAndSeed() async {
+    setState(() {
+      _isSeeding = true;
+      _log.clear();
+    });
+
+    try {
+      // Step 1: Delete all dummy user data
+      _log.add('🗑️ Cleaning up existing dummy data...');
+      setState(() => _status = 'Deleting dummy data...');
+
+      // Get all dummy user IDs
+      final dummyUserIds = _dummyUsers.map((u) => u['id'] as String).toList();
+
+      // Delete comments by dummy users
+      _log.add('  Deleting comments...');
+      final commentsQuery = await widget.firestore
+          .collection('comments')
+          .where('authorId', whereIn: dummyUserIds)
+          .get();
+      for (final doc in commentsQuery.docs) {
+        await doc.reference.delete();
+      }
+      _log.add('  ✓ Deleted ${commentsQuery.docs.length} comments');
+
+      // Delete posts by dummy users
+      _log.add('  Deleting posts...');
+      final postsQuery = await widget.firestore
+          .collection('posts')
+          .where('authorId', whereIn: dummyUserIds)
+          .get();
+      for (final doc in postsQuery.docs) {
+        await doc.reference.delete();
+      }
+      _log.add('  ✓ Deleted ${postsQuery.docs.length} posts');
+
+      // Delete follow requests involving dummy users (as requester)
+      _log.add('  Deleting follow requests...');
+      final followRequestsQuery = await widget.firestore
+          .collection('follow_requests')
+          .where('requesterId', whereIn: dummyUserIds)
+          .get();
+      for (final doc in followRequestsQuery.docs) {
+        await doc.reference.delete();
+      }
+      // Also delete requests targeting dummy users
+      final followRequestsTargetQuery = await widget.firestore
+          .collection('follow_requests')
+          .where('targetId', whereIn: dummyUserIds)
+          .get();
+      for (final doc in followRequestsTargetQuery.docs) {
+        await doc.reference.delete();
+      }
+      _log.add(
+        '  ✓ Deleted ${followRequestsQuery.docs.length + followRequestsTargetQuery.docs.length} follow requests',
+      );
+
+      // Delete follows involving dummy users
+      _log.add('  Deleting follows...');
+      final followsQuery = await widget.firestore
+          .collection('follows')
+          .where('followerId', whereIn: dummyUserIds)
+          .get();
+      for (final doc in followsQuery.docs) {
+        await doc.reference.delete();
+      }
+      final followsTargetQuery = await widget.firestore
+          .collection('follows')
+          .where('followingId', whereIn: dummyUserIds)
+          .get();
+      for (final doc in followsTargetQuery.docs) {
+        await doc.reference.delete();
+      }
+      _log.add(
+        '  ✓ Deleted ${followsQuery.docs.length + followsTargetQuery.docs.length} follows',
+      );
+
+      // Delete dummy user profiles
+      _log.add('  Deleting profiles...');
+      for (final userId in dummyUserIds) {
+        final profileRef = widget.firestore.collection('profiles').doc(userId);
+        final profileDoc = await profileRef.get();
+        if (profileDoc.exists) {
+          await profileRef.delete();
+        }
+      }
+      _log.add('  ✓ Deleted ${dummyUserIds.length} profiles');
+
+      _log.add('');
+      _log.add('✓ Cleanup complete!');
+      _log.add('');
+
+      // Step 2: Now seed fresh data
+      await _doSeed();
+    } catch (e) {
+      _log.add('');
+      _log.add('✗ Error: $e');
+      setState(() {
+        _isSeeding = false;
+        _status = 'Error: $e';
+      });
+    }
   }
 
   Future<void> _seedUsers() async {
@@ -604,8 +832,14 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
       _log.clear();
     });
 
+    await _doSeed();
+  }
+
+  Future<void> _doSeed() async {
     try {
-      final batch = widget.firestore.batch();
+      // Step 1: Create users
+      final userBatch = widget.firestore.batch();
+      final userPostCounts = <String, int>{};
 
       for (final user in _dummyUsers) {
         final userId = user['id'] as String;
@@ -614,9 +848,14 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
         setState(() => _status = 'Creating $displayName...');
         _log.add('+ $displayName');
 
+        // Count posts for this user
+        userPostCounts[userId] = _samplePosts
+            .where((p) => p['authorId'] == userId)
+            .length;
+
         // Create profile document
         final profileRef = widget.firestore.collection('profiles').doc(userId);
-        batch.set(profileRef, {
+        userBatch.set(profileRef, {
           'displayName': displayName,
           'displayNameLower': displayName.toLowerCase(),
           'bio': user['bio'],
@@ -626,19 +865,134 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
           'isVerified': user['isVerified'],
           'followerCount': 0,
           'followingCount': 0,
-          'postCount': 0,
+          'postCount': userPostCounts[userId] ?? 0,
           'linkedNodeIds': <int>[],
           'createdAt': FieldValue.serverTimestamp(),
         });
 
-        await Future.delayed(const Duration(milliseconds: 100));
+        await Future.delayed(const Duration(milliseconds: 50));
       }
 
-      setState(() => _status = 'Committing batch...');
-      await batch.commit();
-
+      setState(() => _status = 'Committing users...');
+      await userBatch.commit();
       _log.add('');
-      _log.add('✓ All users created successfully!');
+      _log.add('✓ ${_dummyUsers.length} users created');
+
+      // Step 2: Create posts
+      setState(() => _status = 'Creating posts...');
+      _log.add('');
+      _log.add('Creating posts...');
+      final postIds = <String>[];
+      final postCommentCounts = <String, int>{};
+
+      for (var i = 0; i < _samplePosts.length; i++) {
+        final post = _samplePosts[i];
+        final authorId = post['authorId'] as String;
+        final content = post['content'] as String;
+
+        // Get author snapshot
+        final author = _dummyUsers.firstWhere((u) => u['id'] == authorId);
+
+        final postRef = widget.firestore.collection('posts').doc();
+        postIds.add(postRef.id);
+
+        // Calculate comment count (distribute comments across posts)
+        final commentCount = (i < _sampleComments.length) ? 2 : 1;
+        postCommentCounts[postRef.id] = commentCount;
+
+        try {
+          await postRef.set({
+            'authorId': authorId,
+            'content': content,
+            'mediaUrls': <String>[],
+            'createdAt': Timestamp.fromDate(
+              DateTime.now().subtract(Duration(hours: _samplePosts.length - i)),
+            ),
+            'commentCount': commentCount,
+            'likeCount': (i * 3) % 15 + 1, // Vary likes 1-15
+            'authorSnapshot': {
+              'displayName': author['displayName'],
+              'callsign': author['callsign'],
+              'avatarUrl': null,
+              'isVerified': author['isVerified'],
+            },
+          });
+          _log.add(
+            '+ Post ${i + 1}: ${content.substring(0, content.length.clamp(0, 30))}...',
+          );
+        } catch (e) {
+          _log.add('✗ Post ${i + 1} failed: $e');
+        }
+
+        setState(
+          () => _status = 'Creating post ${i + 1}/${_samplePosts.length}...',
+        );
+        await Future.delayed(const Duration(milliseconds: 50));
+      }
+
+      _log.add('✓ ${_samplePosts.length} posts created');
+
+      // Step 3: Create comments on posts
+      setState(() => _status = 'Creating comments...');
+      _log.add('');
+      _log.add('Creating comments...');
+      var commentCount = 0;
+
+      for (var postIndex = 0; postIndex < postIds.length; postIndex++) {
+        final postId = postIds[postIndex];
+
+        // Add 1-2 comments per post, cycling through comment templates
+        final commentsToAdd = postCommentCounts[postId] ?? 1;
+
+        for (
+          var c = 0;
+          c < commentsToAdd && commentCount < _sampleComments.length * 2;
+          c++
+        ) {
+          final commentTemplate =
+              _sampleComments[commentCount % _sampleComments.length];
+
+          // Don't let user comment on their own post
+          final postAuthorId = _samplePosts[postIndex]['authorId'];
+          var commentAuthorId = commentTemplate['authorId'] as String;
+          if (commentAuthorId == postAuthorId) {
+            // Pick a different commenter
+            final otherCommenters = _dummyUsers
+                .where((u) => u['id'] != postAuthorId)
+                .toList();
+            commentAuthorId =
+                otherCommenters[commentCount % otherCommenters.length]['id']
+                    as String;
+          }
+
+          final commentRef = widget.firestore.collection('comments').doc();
+          try {
+            await commentRef.set({
+              'postId': postId,
+              'authorId': commentAuthorId,
+              'parentId': null, // Root comment
+              'content': commentTemplate['content'],
+              'createdAt': Timestamp.fromDate(
+                DateTime.now().subtract(
+                  Duration(hours: _samplePosts.length - postIndex - 1),
+                ),
+              ),
+              'replyCount': 0,
+              'likeCount': commentCount % 5,
+            });
+          } catch (e) {
+            _log.add('✗ Comment failed: $e');
+          }
+
+          commentCount++;
+          await Future.delayed(const Duration(milliseconds: 30));
+        }
+      }
+
+      _log.add('✓ $commentCount comments created');
+      _log.add('');
+      _log.add('✓ All data seeded successfully!');
+
       setState(() {
         _isSeeding = false;
         _status = 'Done!';
@@ -649,7 +1003,7 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
         Navigator.pop(context);
         showSuccessSnackBar(
           context,
-          'Seeded ${_dummyUsers.length} dummy users',
+          'Seeded ${_dummyUsers.length} users, ${_samplePosts.length} posts, $commentCount comments',
         );
       }
     } catch (e) {
