@@ -9,6 +9,7 @@ import '../../../providers/profile_providers.dart';
 import '../../../utils/share_utils.dart';
 import '../models/shop_models.dart';
 import '../providers/device_shop_providers.dart';
+import 'category_products_screen.dart';
 import 'seller_profile_screen.dart';
 
 /// Product detail screen with full specs, images, and reviews
@@ -295,18 +296,27 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Category badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: context.accentColor.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(4),
+          GestureDetector(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) =>
+                    CategoryProductsScreen(category: product.category),
+              ),
             ),
-            child: Text(
-              product.category.label,
-              style: TextStyle(
-                color: context.accentColor,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: context.accentColor.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                product.category.label,
+                style: TextStyle(
+                  color: context.accentColor,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),
