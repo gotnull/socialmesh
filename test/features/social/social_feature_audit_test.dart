@@ -373,22 +373,6 @@ void main() {
         reason: 'Should have node tagging',
       );
     });
-
-    test('feed_screen has share functionality', () {
-      final file = File('lib/features/social/screens/feed_screen.dart');
-      expect(file.existsSync(), true);
-
-      final content = readFile(file);
-
-      expect(
-        content.contains('Share.share') ||
-            content.contains('share_plus') ||
-            content.contains('shareLinkService') ||
-            content.contains('_sharePost'),
-        true,
-        reason: 'Should have share functionality',
-      );
-    });
   });
 
   group('Social Feature Audit: Service Methods', () {

@@ -31,6 +31,17 @@ import 'followers_screen.dart';
 import 'post_detail_screen.dart';
 import 'user_search_screen.dart';
 
+/// Filter options for posts
+enum PostFilter {
+  all('All'),
+  photos('Photos'),
+  location('Location'),
+  nodes('Nodes');
+
+  const PostFilter(this.label);
+  final String label;
+}
+
 /// Social profile screen with followers, following, posts, and linked devices.
 class ProfileSocialScreen extends ConsumerStatefulWidget {
   const ProfileSocialScreen({
@@ -49,12 +60,20 @@ class ProfileSocialScreen extends ConsumerStatefulWidget {
       _ProfileSocialScreenState();
 }
 
-class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
+class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
+    with SingleTickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
+  late final TabController _tabController;
+  PostFilter _selectedFilter = PostFilter.all;
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(
+      length: PostFilter.values.length,
+      vsync: this,
+    );
+    _tabController.addListener(_onTabChanged);
     _scrollController.addListener(_onScroll);
     // Force refresh streams to get latest data from server
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -63,8 +82,16 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
     });
   }
 
+  void _onTabChanged() {
+    if (!_tabController.indexIsChanging) {
+      setState(() => _selectedFilter = PostFilter.values[_tabController.index]);
+    }
+  }
+
   @override
   void dispose() {
+    _tabController.removeListener(_onTabChanged);
+    _tabController.dispose();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
@@ -146,24 +173,56 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
                   ),
                 // Posts section - only visible if allowed
                 if (canViewContent) ...[
+                  // Posts header with filter tabs
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-                      child: Row(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(
-                            Icons.grid_on_outlined,
-                            size: 16,
-                            color: context.textSecondary,
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.grid_on_outlined,
+                                size: 16,
+                                color: context.textSecondary,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Posts',
+                                style: TextStyle(
+                                  color: context.textSecondary,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Posts',
-                            style: TextStyle(
-                              color: context.textSecondary,
+                          const SizedBox(height: 8),
+                          TabBar(
+                            controller: _tabController,
+                            isScrollable: true,
+                            tabAlignment: TabAlignment.start,
+                            indicatorSize: TabBarIndicatorSize.tab,
+                            indicatorColor: context.accentColor,
+                            labelColor: context.accentColor,
+                            unselectedLabelColor: context.textSecondary,
+                            labelStyle: const TextStyle(
+                              fontWeight: FontWeight.w600,
                               fontSize: 13,
-                              fontWeight: FontWeight.w500,
                             ),
+                            unselectedLabelStyle: const TextStyle(
+                              fontWeight: FontWeight.normal,
+                              fontSize: 13,
+                            ),
+                            dividerColor: Colors.transparent,
+                            padding: EdgeInsets.zero,
+                            labelPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                            ),
+                            tabs: PostFilter.values
+                                .map((filter) => Tab(text: filter.label))
+                                .toList(),
                           ),
                         ],
                       ),
@@ -689,6 +748,16 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
       );
     }
 
+    // Filter posts based on selected filter
+    final filteredPosts = _filterPosts(postsState.posts);
+
+    if (filteredPosts.isEmpty) {
+      return SliverFillRemaining(
+        hasScrollBody: false,
+        child: _buildEmptyFilteredPosts(context),
+      );
+    }
+
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 2),
       sliver: SliverGrid(
@@ -698,7 +767,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
           crossAxisSpacing: 2,
         ),
         delegate: SliverChildBuilderDelegate((context, index) {
-          if (index >= postsState.posts.length) {
+          if (index >= filteredPosts.length) {
             return postsState.hasMore
                 ? Container(
                     color: context.surface,
@@ -713,9 +782,57 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
                 : const SizedBox.shrink();
           }
 
-          final post = postsState.posts[index];
+          final post = filteredPosts[index];
           return _PostGridTile(post: post, onTap: () => _navigateToPost(post));
-        }, childCount: postsState.posts.length + (postsState.hasMore ? 1 : 0)),
+        }, childCount: filteredPosts.length + (postsState.hasMore ? 1 : 0)),
+      ),
+    );
+  }
+
+  List<Post> _filterPosts(List<Post> posts) {
+    switch (_selectedFilter) {
+      case PostFilter.all:
+        return posts;
+      case PostFilter.photos:
+        return posts.where((p) => p.mediaUrls.isNotEmpty).toList();
+      case PostFilter.location:
+        return posts.where((p) => p.location != null).toList();
+      case PostFilter.nodes:
+        return posts.where((p) => p.nodeId != null).toList();
+    }
+  }
+
+  Widget _buildEmptyFilteredPosts(BuildContext context) {
+    final filterInfo = switch (_selectedFilter) {
+      PostFilter.photos => (Icons.image_outlined, 'No photo posts'),
+      PostFilter.location => (Icons.location_on_outlined, 'No location posts'),
+      PostFilter.nodes => (Icons.router_outlined, 'No node posts'),
+      PostFilter.all => (Icons.grid_on_outlined, 'No posts'),
+    };
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(filterInfo.$1, size: 48, color: context.textTertiary),
+            const SizedBox(height: 16),
+            Text(
+              filterInfo.$2,
+              style: TextStyle(
+                color: context.textPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Try selecting a different filter',
+              style: TextStyle(color: context.textSecondary, fontSize: 14),
+            ),
+          ],
+        ),
       ),
     );
   }

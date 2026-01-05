@@ -3,7 +3,6 @@
 library;
 
 // Screens
-export 'screens/feed_screen.dart';
 export 'screens/profile_social_screen.dart';
 export 'screens/post_detail_screen.dart';
 export 'screens/create_post_screen.dart';

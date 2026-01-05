@@ -31,6 +31,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
 
   static const int _maxImages = 10;
   bool _isSubmitting = false;
+  bool _postSubmitted = false;
   PostVisibility _visibility = PostVisibility.public;
   PostLocation? _location;
   String? _nodeId;
@@ -49,11 +50,68 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   void dispose() {
     _contentController.dispose();
     _contentFocusNode.dispose();
+    // Clean up uploaded images if post was not submitted
+    if (!_postSubmitted && _imageUrls.isNotEmpty) {
+      _deleteOrphanedImages();
+    }
     super.dispose();
+  }
+
+  /// Deletes uploaded images that were not used in a post
+  Future<void> _deleteOrphanedImages() async {
+    for (final url in _imageUrls) {
+      try {
+        final ref = FirebaseStorage.instance.refFromURL(url);
+        await ref.delete();
+        debugPrint('Deleted orphaned image: $url');
+      } catch (e) {
+        debugPrint('Failed to delete orphaned image: $e');
+      }
+    }
   }
 
   bool get _canPost =>
       _contentController.text.trim().isNotEmpty || _imageUrls.isNotEmpty;
+
+  Future<void> _handleClose() async {
+    // If there are uploaded images or content, confirm before closing
+    if (_imageUrls.isNotEmpty || _contentController.text.trim().isNotEmpty) {
+      final shouldDiscard = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: context.card,
+          title: Text(
+            'Discard post?',
+            style: TextStyle(color: context.textPrimary),
+          ),
+          content: Text(
+            _imageUrls.isNotEmpty
+                ? 'Your uploaded images will be deleted.'
+                : 'Your draft will be lost.',
+            style: TextStyle(color: context.textSecondary),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(
+                'Keep editing',
+                style: TextStyle(color: context.textSecondary),
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Discard'),
+            ),
+          ],
+        ),
+      );
+
+      if (shouldDiscard != true) return;
+    }
+
+    if (mounted) Navigator.pop(context);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -88,7 +146,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         backgroundColor: Colors.transparent,
         leading: IconButton(
           icon: Icon(Icons.close, color: context.textPrimary),
-          onPressed: () => Navigator.pop(context),
+          onPressed: _handleClose,
         ),
         title: Text(
           'Create Post',
@@ -659,6 +717,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
 
     try {
       final remainingSlots = _maxImages - _imageUrls.length;
+
+      // Only allow multiple selection if more than 1 slot remains
+      // This prevents selecting more than available slots
       final result = await FilePicker.platform.pickFiles(
         type: FileType.image,
         allowMultiple: remainingSlots > 1,
@@ -666,14 +727,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
 
       if (result == null || result.files.isEmpty) return;
 
-      // Limit to remaining slots
+      // Take only up to remaining slots (safety check)
       final filesToUpload = result.files.take(remainingSlots).toList();
-      if (filesToUpload.length < result.files.length && mounted) {
-        showInfoSnackBar(
-          context,
-          'Only uploading ${filesToUpload.length} of ${result.files.length} images (limit: $_maxImages)',
-        );
-      }
 
       setState(() => _isSubmitting = true);
 
@@ -999,6 +1054,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
           );
 
       if (post != null && mounted) {
+        // Mark as submitted so images don't get deleted on dispose
+        _postSubmitted = true;
+
         // Refresh feed and explore providers
         ref.read(feedProvider.notifier).refresh();
         ref.read(exploreProvider.notifier).refresh();
