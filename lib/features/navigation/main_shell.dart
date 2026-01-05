@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
+import '../../core/widgets/node_avatar.dart';
 import '../../models/user_profile.dart' show UserPreferences;
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/legal_document_sheet.dart';
@@ -1310,7 +1311,6 @@ class _DrawerNodeHeader extends ConsumerWidget {
 
     // Get node display info
     final nodeName = myNode?.longName ?? 'Not Connected';
-    final shortName = myNode?.shortName ?? '--';
     final nodeId = myNodeNum != null ? '!${myNodeNum.toRadixString(16)}' : '';
 
     return Container(
@@ -1319,46 +1319,25 @@ class _DrawerNodeHeader extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Node avatar
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              gradient: isConnected
-                  ? LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [accentColor, accentColor.withValues(alpha: 0.7)],
-                    )
-                  : null,
-              color: isConnected ? null : theme.dividerColor,
-              shape: BoxShape.circle,
-              boxShadow: isConnected
-                  ? [
-                      BoxShadow(
-                        color: accentColor.withValues(alpha: 0.3),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ]
-                  : null,
-            ),
-            child: Center(
-              child: isConnected
-                  ? Text(
-                      shortName,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: AppTheme.fontFamily,
-                        color: Colors.white,
-                      ),
-                    )
-                  : Icon(
-                      Icons.bluetooth_disabled,
-                      color: context.textTertiary,
-                      size: 24,
-                    ),
-            ),
+          NodeAvatar(
+            text: myNode?.shortName ?? '--',
+            color: isConnected ? accentColor : theme.dividerColor,
+            size: 56,
+            showGradientBorder: isConnected,
+            gradientColors: isConnected
+                ? [
+                    accentColor.withValues(alpha: 0.8),
+                    const Color(0xFFFF6B9D).withValues(alpha: 0.6),
+                    const Color(0xFFC837AB).withValues(alpha: 0.5),
+                    accentColor.withValues(alpha: 0.3),
+                  ]
+                : null,
+            showOnlineIndicator: isConnected,
+            onlineStatus: isConnected
+                ? OnlineStatus.online
+                : OnlineStatus.offline,
+            batteryLevel: myNode?.batteryLevel,
+            showBatteryBadge: myNode?.batteryLevel != null,
           ),
           const SizedBox(width: 12),
           // Node info - flexible column

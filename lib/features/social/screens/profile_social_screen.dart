@@ -296,24 +296,48 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
                 onTap: isOwnProfile ? _navigateToEditProfile : null,
                 child: Stack(
                   children: [
-                    CircleAvatar(
-                      radius: 44,
-                      backgroundColor: context.accentColor.withValues(
-                        alpha: 0.2,
+                    Container(
+                      width: 88,
+                      height: 88,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            const Color(0xFFFBAA47),
+                            const Color(0xFFD91A46),
+                            const Color(0xFFA60F93),
+                          ],
+                        ),
                       ),
-                      backgroundImage: profile.avatarUrl != null
-                          ? NetworkImage(profile.avatarUrl!)
-                          : null,
-                      child: profile.avatarUrl == null
-                          ? Text(
-                              profile.displayName[0].toUpperCase(),
-                              style: TextStyle(
-                                fontSize: 32,
-                                fontWeight: FontWeight.bold,
-                                color: context.accentColor,
-                              ),
-                            )
-                          : null,
+                      padding: const EdgeInsets.all(3),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: context.background,
+                          shape: BoxShape.circle,
+                        ),
+                        padding: const EdgeInsets.all(3),
+                        child: CircleAvatar(
+                          radius: 38,
+                          backgroundColor: context.accentColor.withValues(
+                            alpha: 0.2,
+                          ),
+                          backgroundImage: profile.avatarUrl != null
+                              ? NetworkImage(profile.avatarUrl!)
+                              : null,
+                          child: profile.avatarUrl == null
+                              ? Text(
+                                  profile.displayName[0].toUpperCase(),
+                                  style: TextStyle(
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.bold,
+                                    color: context.accentColor,
+                                  ),
+                                )
+                              : null,
+                        ),
+                      ),
                     ),
                     if (isOwnProfile)
                       Positioned(
