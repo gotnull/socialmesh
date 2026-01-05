@@ -1555,6 +1555,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                               ? () => _showPkiFixSheet(message)
                               : null,
                           onDelete: () => _deleteMessage(message),
+                          onSenderTap: senderNode != null && !isFromMe
+                              ? () => showNodeDetailsSheet(
+                                  context,
+                                  senderNode,
+                                  false,
+                                )
+                              : null,
                         );
                       },
                     ),
@@ -1659,6 +1666,7 @@ class _MessageBubble extends StatelessWidget {
   final VoidCallback? onRetry;
   final VoidCallback? onPkiFix;
   final VoidCallback? onDelete;
+  final VoidCallback? onSenderTap;
 
   const _MessageBubble({
     required this.message,
@@ -1673,6 +1681,7 @@ class _MessageBubble extends StatelessWidget {
     this.onRetry,
     this.onPkiFix,
     this.onDelete,
+    this.onSenderTap,
   });
 
   Color _getAvatarColor() {
@@ -2018,10 +2027,13 @@ class _MessageBubble extends StatelessWidget {
           if (showSender)
             Padding(
               padding: const EdgeInsets.only(right: 8),
-              child: NodeAvatar(
-                text: _getSafeShortName(),
-                color: _getAvatarColor(),
-                size: 32,
+              child: GestureDetector(
+                onTap: onSenderTap,
+                child: NodeAvatar(
+                  text: _getSafeShortName(),
+                  color: _getAvatarColor(),
+                  size: 32,
+                ),
               ),
             ),
           Flexible(
@@ -2041,12 +2053,15 @@ class _MessageBubble extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (showSender) ...[
-                      Text(
-                        senderName,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: _getAvatarColor(),
+                      GestureDetector(
+                        onTap: onSenderTap,
+                        child: Text(
+                          senderName,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: _getAvatarColor(),
+                          ),
                         ),
                       ),
                       SizedBox(height: 2),
