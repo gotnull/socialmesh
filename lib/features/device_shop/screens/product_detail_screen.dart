@@ -8,6 +8,7 @@ import '../../../providers/auth_providers.dart';
 import '../../../providers/profile_providers.dart';
 import '../../../utils/share_utils.dart';
 import '../models/shop_models.dart';
+import '../providers/admin_shop_providers.dart';
 import '../providers/device_shop_providers.dart';
 import 'category_products_screen.dart';
 import 'seller_profile_screen.dart';
@@ -63,6 +64,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     final favoriteIdsAsync = user != null
         ? ref.watch(userFavoriteIdsProvider(user.uid))
         : const AsyncValue<Set<String>>.data({});
+    final isAdminAsync = ref.watch(isShopAdminProvider);
 
     return Scaffold(
       backgroundColor: context.background,
@@ -115,7 +117,12 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
             controller: _scrollController,
             slivers: [
               // App Bar with Image Gallery
-              _buildImageGallery(product, isFavorite, user?.uid),
+              _buildImageGallery(
+                product,
+                isFavorite,
+                user?.uid,
+                isAdminAsync.value ?? false,
+              ),
 
               // Product Info
               SliverToBoxAdapter(child: _buildProductInfo(product)),
@@ -149,32 +156,37 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     ShopProduct product,
     bool isFavorite,
     String? userId,
+    bool isAdmin,
   ) {
     return SliverAppBar(
       backgroundColor: context.card,
       expandedHeight: 350,
       pinned: true,
-      titleSpacing: 0,
       title: _showTitle
-          ? Row(
-              children: [
-                Expanded(
-                  child: AutoScrollText(
-                    product.name,
-                    style: TextStyle(
-                      color: context.textPrimary,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 1,
-                    velocity: 40.0,
-                    fadeWidth: 30.0,
-                  ),
-                ),
-              ],
+          ? AutoScrollText(
+              product.name,
+              style: TextStyle(
+                color: context.textPrimary,
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+              ),
+              maxLines: 1,
+              velocity: 40.0,
+              fadeWidth: 30.0,
             )
           : null,
       actions: [
+        if (isAdmin)
+          IconButton(
+            icon: Icon(Icons.edit, color: context.accentColor),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const AdminProductsScreen(),
+              ),
+            ).then((_) => ref.invalidate(singleProductProvider(product.id))),
+            tooltip: 'Edit Product',
+          ),
         IconButton(
           icon: Icon(
             isFavorite ? Icons.favorite : Icons.favorite_outline,
