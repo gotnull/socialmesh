@@ -11,6 +11,7 @@ import '../../../core/widgets/node_avatar.dart';
 import '../../../models/mesh_models.dart';
 import '../../../models/social.dart';
 import '../../../providers/app_providers.dart';
+import '../../../services/user_presence_service.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/social_providers.dart';
 import '../../../utils/snackbar.dart';
@@ -291,25 +292,31 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
           // Top row: Avatar + Stats
           Row(
             children: [
-              // Avatar
-              GestureDetector(
-                onTap: isOwnProfile ? _navigateToEditProfile : null,
-                child: Stack(
-                  children: [
-                    Container(
+              // Avatar with online status
+              Consumer(
+                builder: (context, ref, child) {
+                  final isOnlineAsync = ref.watch(
+                    userOnlineStatusProvider(widget.userId),
+                  );
+                  final isOnline =
+                      isOnlineAsync.whenOrNull(data: (value) => value) ?? false;
+                  // TODO: Check for active stories here
+                  // When stories are implemented, use this structure:
+                  // final hasActiveStory = ...; // check story status
+                  // if (hasActiveStory) { ... Instagram gradient ... }
+                  // else if (isOnline) { ... green ring ... }
+                  // else { ... no ring ... }
+
+                  Widget avatarWidget;
+
+                  if (isOnline) {
+                    // Green ring for online status
+                    avatarWidget = Container(
                       width: 88,
                       height: 88,
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            const Color(0xFFFBAA47),
-                            const Color(0xFFD91A46),
-                            const Color(0xFFA60F93),
-                          ],
-                        ),
+                        color: AccentColors.green,
                       ),
                       padding: const EdgeInsets.all(3),
                       child: Container(
@@ -338,30 +345,60 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
                               : null,
                         ),
                       ),
-                    ),
-                    if (isOwnProfile)
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: context.accentColor,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: context.background,
-                              width: 2,
+                    );
+                  } else {
+                    // No ring when offline and no story
+                    avatarWidget = CircleAvatar(
+                      radius: 44,
+                      backgroundColor: context.accentColor.withValues(
+                        alpha: 0.2,
+                      ),
+                      backgroundImage: profile.avatarUrl != null
+                          ? NetworkImage(profile.avatarUrl!)
+                          : null,
+                      child: profile.avatarUrl == null
+                          ? Text(
+                              profile.displayName[0].toUpperCase(),
+                              style: TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                color: context.accentColor,
+                              ),
+                            )
+                          : null,
+                    );
+                  }
+
+                  return GestureDetector(
+                    onTap: isOwnProfile ? _navigateToEditProfile : null,
+                    child: Stack(
+                      children: [
+                        avatarWidget,
+                        if (isOwnProfile)
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: context.accentColor,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: context.background,
+                                  width: 2,
+                                ),
+                              ),
+                              child: const Icon(
+                                Icons.add,
+                                color: Colors.white,
+                                size: 14,
+                              ),
                             ),
                           ),
-                          child: const Icon(
-                            Icons.add,
-                            color: Colors.white,
-                            size: 14,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
+                      ],
+                    ),
+                  );
+                },
               ),
               const SizedBox(width: 24),
               // Stats
