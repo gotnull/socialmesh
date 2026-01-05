@@ -403,6 +403,29 @@ class _MainShellState extends ConsumerState<MainShell> {
   /// Drawer menu items for quick access screens not in bottom nav
   /// Organized into logical sections with headers
   final List<_DrawerMenuItem> _drawerMenuItems = [
+    // Social - First item after ACCOUNT section
+    _DrawerMenuItem(
+      icon: Icons.forum_outlined,
+      label: 'Social',
+      screen: const SocialHubScreen(),
+      iconColor: Colors.deepPurple.shade400,
+    ),
+
+    // Activity & Social
+    _DrawerMenuItem(
+      icon: Icons.timeline,
+      label: 'Timeline',
+      screen: const TimelineScreen(),
+      sectionHeader: 'ACTIVITY & SOCIAL',
+      iconColor: Colors.indigo.shade400,
+    ),
+    _DrawerMenuItem(
+      icon: Icons.people_alt_outlined,
+      label: 'Presence',
+      screen: const PresenceScreen(),
+      iconColor: Colors.green.shade400,
+    ),
+
     // Mesh Features
     _DrawerMenuItem(
       icon: Icons.public,
@@ -434,27 +457,6 @@ class _MainShellState extends ConsumerState<MainShell> {
       label: 'Mesh Health',
       screen: const MeshHealthDashboard(),
       iconColor: Colors.pink.shade400,
-    ),
-
-    // Activity & Social
-    _DrawerMenuItem(
-      icon: Icons.timeline,
-      label: 'Timeline',
-      screen: const TimelineScreen(),
-      sectionHeader: 'ACTIVITY & SOCIAL',
-      iconColor: Colors.indigo.shade400,
-    ),
-    _DrawerMenuItem(
-      icon: Icons.people_alt_outlined,
-      label: 'Presence',
-      screen: const PresenceScreen(),
-      iconColor: Colors.green.shade400,
-    ),
-    _DrawerMenuItem(
-      icon: Icons.forum_outlined,
-      label: 'Social',
-      screen: const SocialHubScreen(),
-      iconColor: Colors.deepPurple.shade400,
     ),
 
     // Tools
@@ -599,6 +601,11 @@ class _MainShellState extends ConsumerState<MainShell> {
                         final item = entry.value;
                         final isSelected = _selectedDrawerItem == index;
 
+                        // Check if next item has a section header (to add divider after this item)
+                        final isLastInSection =
+                            index < _drawerMenuItems.length - 1 &&
+                            _drawerMenuItems[index + 1].sectionHeader != null;
+
                         // Check if this is a premium feature and if user has access
                         final isPremium = item.premiumFeature != null;
                         final hasAccess =
@@ -610,18 +617,6 @@ class _MainShellState extends ConsumerState<MainShell> {
                           children: [
                             // Section header if this item has one
                             if (item.sectionHeader != null) ...[
-                              if (index > 0)
-                                Padding(
-                                  padding: const EdgeInsets.only(
-                                    top: 8,
-                                    bottom: 8,
-                                  ),
-                                  child: Divider(
-                                    color: theme.dividerColor.withValues(
-                                      alpha: 0.1,
-                                    ),
-                                  ),
-                                ),
                               Padding(
                                 padding: EdgeInsets.only(
                                   left: 12,
@@ -670,6 +665,19 @@ class _MainShellState extends ConsumerState<MainShell> {
                                 },
                               ),
                             ),
+                            // Divider after item if next item starts a new section
+                            if (isLastInSection)
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  top: 4,
+                                  bottom: 8,
+                                ),
+                                child: Divider(
+                                  color: theme.dividerColor.withValues(
+                                    alpha: 0.1,
+                                  ),
+                                ),
+                              ),
                           ],
                         );
                       }).toList(),
@@ -1771,12 +1779,6 @@ class _DrawerAdminSection extends ConsumerWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Divider before admin section
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Divider(color: theme.dividerColor.withValues(alpha: 0.1)),
-            ),
-
             // Admin section
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -1785,7 +1787,7 @@ class _DrawerAdminSection extends ConsumerWidget {
                 children: [
                   // Section header
                   Padding(
-                    padding: const EdgeInsets.only(left: 12, bottom: 8),
+                    padding: const EdgeInsets.only(left: 12, bottom: 8, top: 8),
                     child: Row(
                       children: [
                         Icon(
@@ -1858,6 +1860,12 @@ class _DrawerAdminSection extends ConsumerWidget {
                   ),
                 ],
               ),
+            ),
+
+            // Divider after admin section
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Divider(color: theme.dividerColor.withValues(alpha: 0.1)),
             ),
           ],
         );
