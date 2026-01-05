@@ -126,25 +126,29 @@ class HamburgerMenuButton extends ConsumerWidget {
           Positioned(
             right: 8,
             top: 8,
-            child: Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: Colors.red,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: theme.scaffoldBackgroundColor,
-                  width: 2,
+            child: IgnorePointer(
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: theme.scaffoldBackgroundColor,
+                    width: 2,
+                  ),
                 ),
-              ),
-              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-              child: Text(
-                adminNotificationCount > 99 ? '99+' : '$adminNotificationCount',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
+                constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                child: Text(
+                  adminNotificationCount > 99
+                      ? '99+'
+                      : '$adminNotificationCount',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
               ),
             ),
           ),
@@ -675,6 +679,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                           icon: Icons.settings_outlined,
                           label: 'Settings',
                           isSelected: false,
+                          iconColor: Colors.grey.shade600,
                           onTap: () {
                             ref.haptics.tabChange();
                             Navigator.of(context).pop();
@@ -695,6 +700,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                           icon: Icons.help_outline,
                           label: 'Help & Support',
                           isSelected: false,
+                          iconColor: Colors.blue.shade400,
                           onTap: () {
                             ref.haptics.tabChange();
                             Navigator.of(context).pop();
@@ -1035,6 +1041,7 @@ class _DrawerMenuTile extends StatelessWidget {
   final bool isLocked;
   final VoidCallback onTap;
   final int? badgeCount;
+  final Color? iconColor;
 
   const _DrawerMenuTile({
     required this.icon,
@@ -1044,6 +1051,7 @@ class _DrawerMenuTile extends StatelessWidget {
     this.isPremium = false,
     this.isLocked = false,
     this.badgeCount,
+    this.iconColor,
   });
 
   @override
@@ -1085,14 +1093,50 @@ class _DrawerMenuTile extends StatelessWidget {
                     : theme.colorScheme.surface,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
-                icon,
-                size: 22,
-                color: isSelected
-                    ? accentColor
-                    : isLocked
-                    ? goldColor
-                    : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Icon(
+                    icon,
+                    size: 22,
+                    color: isSelected
+                        ? accentColor
+                        : isLocked
+                        ? goldColor
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
+                  // Badge overlay on icon
+                  if (badgeCount != null && badgeCount! > 0)
+                    Positioned(
+                      right: -6,
+                      top: -4,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: theme.scaffoldBackgroundColor,
+                            width: 2,
+                          ),
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
+                        child: Center(
+                          child: Text(
+                            badgeCount! > 99 ? '99+' : '$badgeCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
             const SizedBox(width: 14),
@@ -1111,27 +1155,6 @@ class _DrawerMenuTile extends StatelessWidget {
                 ),
               ),
             ),
-            // Show notification badge if count > 0
-            if (badgeCount != null && badgeCount! > 0) ...[
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.red,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                constraints: const BoxConstraints(minWidth: 24),
-                child: Text(
-                  badgeCount! > 99 ? '99+' : '$badgeCount',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              const SizedBox(width: 8),
-            ],
             // Show lock icon and PRO badge for locked premium features
             if (isLocked) ...[
               Container(
@@ -1758,6 +1781,7 @@ class _DrawerAdminSection extends ConsumerWidget {
                     icon: Icons.dashboard_customize,
                     label: 'Shop Admin',
                     isSelected: false,
+                    iconColor: Colors.purple.shade400,
                     onTap: () {
                       ref.haptics.tabChange();
                       onNavigate(const ShopAdminDashboard());
@@ -1769,6 +1793,7 @@ class _DrawerAdminSection extends ConsumerWidget {
                     icon: Icons.rate_review_outlined,
                     label: 'Review Moderation',
                     isSelected: false,
+                    iconColor: Colors.amber.shade600,
                     badgeCount: ref
                         .watch(pendingReviewCountProvider)
                         .when(
@@ -1787,6 +1812,7 @@ class _DrawerAdminSection extends ConsumerWidget {
                     icon: Icons.flag_outlined,
                     label: 'Reported Content',
                     isSelected: false,
+                    iconColor: Colors.red.shade400,
                     badgeCount: ref
                         .watch(pendingReportCountProvider)
                         .when(
