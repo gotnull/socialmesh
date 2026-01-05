@@ -1139,8 +1139,35 @@ class _PostContent extends StatelessWidget {
           mainAxisSpacing: 2,
           crossAxisSpacing: 2,
           physics: const NeverScrollableScrollPhysics(),
-          children: post.imageUrls.take(4).map((url) {
-            return Image.network(url, fit: BoxFit.cover);
+          children: post.imageUrls.take(4).toList().asMap().entries.map((
+            entry,
+          ) {
+            final index = entry.key;
+            final url = entry.value;
+            final isLastCell = index == 3;
+            final remainingCount = post.imageUrls.length - 4;
+            final showOverlay = isLastCell && remainingCount > 0;
+
+            return Stack(
+              fit: StackFit.expand,
+              children: [
+                Image.network(url, fit: BoxFit.cover),
+                if (showOverlay)
+                  Container(
+                    color: Colors.black54,
+                    child: Center(
+                      child: Text(
+                        '+$remainingCount',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            );
           }).toList(),
         ),
       ),

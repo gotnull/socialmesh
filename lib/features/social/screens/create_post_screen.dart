@@ -29,6 +29,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   final TextEditingController _contentController = TextEditingController();
   final FocusNode _contentFocusNode = FocusNode();
 
+  static const int _maxImages = 10;
   bool _isSubmitting = false;
   PostVisibility _visibility = PostVisibility.public;
   PostLocation? _location;
@@ -262,8 +263,12 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                       _buildToolbarButton(
                         icon: Icons.image_outlined,
                         isActive: _imageUrls.isNotEmpty,
-                        onTap: _addImage,
-                        tooltip: 'Add image',
+                        onTap: _imageUrls.length >= _maxImages
+                            ? null
+                            : () => _addImage(),
+                        tooltip: _imageUrls.isEmpty
+                            ? 'Add image'
+                            : '${_imageUrls.length}/$_maxImages images',
                       ),
                       const SizedBox(width: 4),
                       _buildToolbarButton(
@@ -491,25 +496,29 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   Widget _buildToolbarButton({
     required IconData icon,
     required bool isActive,
-    required VoidCallback onTap,
+    VoidCallback? onTap,
     required String tooltip,
   }) {
+    final isDisabled = onTap == null;
     return Tooltip(
       message: tooltip,
       child: BouncyTap(
         onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: isActive
-                ? context.accentColor.withValues(alpha: 0.15)
-                : context.background,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(
-            icon,
-            size: 22,
-            color: isActive ? context.accentColor : context.textSecondary,
+        child: Opacity(
+          opacity: isDisabled ? 0.5 : 1.0,
+          child: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: isActive
+                  ? context.accentColor.withValues(alpha: 0.15)
+                  : context.background,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              icon,
+              size: 22,
+              color: isActive ? context.accentColor : context.textSecondary,
+            ),
           ),
         ),
       ),
@@ -643,17 +652,32 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   }
 
   Future<void> _addImage() async {
+    if (_imageUrls.length >= _maxImages) {
+      showErrorSnackBar(context, 'Maximum $_maxImages images allowed');
+      return;
+    }
+
     try {
+      final remainingSlots = _maxImages - _imageUrls.length;
       final result = await FilePicker.platform.pickFiles(
         type: FileType.image,
-        allowMultiple: true,
+        allowMultiple: remainingSlots > 1,
       );
 
       if (result == null || result.files.isEmpty) return;
 
+      // Limit to remaining slots
+      final filesToUpload = result.files.take(remainingSlots).toList();
+      if (filesToUpload.length < result.files.length && mounted) {
+        showInfoSnackBar(
+          context,
+          'Only uploading ${filesToUpload.length} of ${result.files.length} images (limit: $_maxImages)',
+        );
+      }
+
       setState(() => _isSubmitting = true);
 
-      for (final file in result.files) {
+      for (final file in filesToUpload) {
         if (file.path == null) continue;
 
         final imageFile = File(file.path!);
