@@ -27,8 +27,7 @@ class ReviewModerationScreen extends ConsumerStatefulWidget {
       _ReviewModerationScreenState();
 }
 
-class _ReviewModerationScreenState
-    extends ConsumerState<ReviewModerationScreen>
+class _ReviewModerationScreenState extends ConsumerState<ReviewModerationScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
@@ -490,10 +489,10 @@ class _ReviewModerationCardState extends ConsumerState<_ReviewModerationCard> {
                       color: widget.review.status == 'approved'
                           ? Colors.green.withValues(alpha: 0.2)
                           : widget.review.status == 'rejected'
-                              ? Colors.red.withValues(alpha: 0.2)
-                              : widget.review.status == 'legacy'
-                                  ? Colors.orange.withValues(alpha: 0.2)
-                                  : Colors.grey.withValues(alpha: 0.2),
+                          ? Colors.red.withValues(alpha: 0.2)
+                          : widget.review.status == 'legacy'
+                          ? Colors.orange.withValues(alpha: 0.2)
+                          : Colors.grey.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -506,10 +505,10 @@ class _ReviewModerationCardState extends ConsumerState<_ReviewModerationCard> {
                         color: widget.review.status == 'approved'
                             ? Colors.green
                             : widget.review.status == 'rejected'
-                                ? Colors.red
-                                : widget.review.status == 'legacy'
-                                    ? Colors.orange
-                                    : Colors.grey,
+                            ? Colors.red
+                            : widget.review.status == 'legacy'
+                            ? Colors.orange
+                            : Colors.grey,
                       ),
                     ),
                   ),

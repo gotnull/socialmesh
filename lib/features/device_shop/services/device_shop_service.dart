@@ -402,29 +402,29 @@ class DeviceShopService {
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map(
-          (snapshot) => snapshot.docs
-              .map((doc) {
-                try {
-                  return ProductReview.fromFirestore(doc);
-                } catch (e) {
-                  // Handle old reviews without status field
-                  debugPrint('Error parsing review ${doc.id}: $e');
-                  // Return a review with pending status as fallback
-                  final data = doc.data();
-                  return ProductReview(
-                    id: doc.id,
-                    productId: data['productId'] as String? ?? '',
-                    userId: data['userId'] as String? ?? '',
-                    userName: data['userName'] as String? ?? 'Unknown',
-                    rating: data['rating'] as int? ?? 0,
-                    body: data['body'] as String?,
-                    createdAt: (data['createdAt'] as Timestamp?)?.toDate() ??
-                        DateTime.now(),
-                    status: data['status'] as String? ?? 'legacy', // Mark old reviews
-                  );
-                }
-              })
-              .toList(),
+          (snapshot) => snapshot.docs.map((doc) {
+            try {
+              return ProductReview.fromFirestore(doc);
+            } catch (e) {
+              // Handle old reviews without status field
+              debugPrint('Error parsing review ${doc.id}: $e');
+              // Return a review with pending status as fallback
+              final data = doc.data();
+              return ProductReview(
+                id: doc.id,
+                productId: data['productId'] as String? ?? '',
+                userId: data['userId'] as String? ?? '',
+                userName: data['userName'] as String? ?? 'Unknown',
+                rating: data['rating'] as int? ?? 0,
+                body: data['body'] as String?,
+                createdAt:
+                    (data['createdAt'] as Timestamp?)?.toDate() ??
+                    DateTime.now(),
+                status:
+                    data['status'] as String? ?? 'legacy', // Mark old reviews
+              );
+            }
+          }).toList(),
         );
   }
 
