@@ -13,6 +13,7 @@ export 'screens/social_hub_screen.dart';
 // Widgets
 export 'widgets/follow_button.dart';
 export 'widgets/post_card.dart';
+export 'widgets/post_skeleton.dart';
 export 'widgets/comment_tile.dart';
 export 'widgets/social_stats_bar.dart';
 export 'widgets/post_actions_bar.dart';

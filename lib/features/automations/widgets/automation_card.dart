@@ -161,8 +161,8 @@ class AutomationCard extends StatelessWidget {
                   onTap: onDelete,
                   child: Icon(
                     Icons.delete_outline,
+                    color: AppTheme.errorRed,
                     size: 20,
-                    color: Colors.grey[600],
                   ),
                 ),
               ],

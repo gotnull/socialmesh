@@ -22,6 +22,7 @@ import '../../settings/linked_devices_screen.dart';
 import '../../settings/settings_screen.dart';
 import '../widgets/follow_button.dart';
 import '../widgets/post_card.dart';
+import '../widgets/post_skeleton.dart';
 import 'create_post_screen.dart';
 import 'followers_screen.dart';
 import 'post_detail_screen.dart';
@@ -45,26 +46,39 @@ class ProfileSocialScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
+  final ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     // Force refresh streams to get latest data from server
-    // DON'T reset optimistic adjustments here - the Firestore write may not have
-    // synced yet. Keep the adjustment so the UI shows correct count until stream updates.
-    // Adjustments are only reset on explicit pull-to-refresh.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.invalidate(publicProfileStreamProvider(widget.userId));
-      ref.invalidate(userPostsStreamProvider(widget.userId));
+      ref.read(userPostsNotifierProvider.notifier).getOrCreate(widget.userId);
     });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 400) {
+      ref.read(userPostsNotifierProvider.notifier).loadMore(widget.userId);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final currentUser = ref.watch(currentUserProvider);
     final isOwnProfile = currentUser?.uid == widget.userId;
-    // Use optimistic provider for instant post count updates
     final profileAsync = ref.watch(optimisticProfileProvider(widget.userId));
-    final postsStream = ref.watch(userPostsStreamProvider(widget.userId));
+    final postsState = ref.watch(userPostsStateProvider(widget.userId));
     final followStateAsync = isOwnProfile
         ? null
         : ref.watch(followStateProvider(widget.userId));
@@ -83,17 +97,19 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
 
           return RefreshIndicator(
             onRefresh: () async {
-              // Reset optimistic adjustments on refresh (stream will have latest)
               ref
                   .read(profileCountAdjustmentsProvider.notifier)
                   .reset(widget.userId);
               ref.invalidate(publicProfileStreamProvider(widget.userId));
-              ref.invalidate(userPostsStreamProvider(widget.userId));
+              await ref
+                  .read(userPostsNotifierProvider.notifier)
+                  .refresh(widget.userId);
               if (!isOwnProfile) {
                 ref.invalidate(followStateProvider(widget.userId));
               }
             },
             child: CustomScrollView(
+              controller: _scrollController,
               slivers: [
                 if (widget.showAppBar)
                   _buildSliverAppBar(context, profile, isOwnProfile),
@@ -105,7 +121,6 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
                     isFollowing,
                   ),
                 ),
-                // Linked devices section (only visible to followers or own profile)
                 if (isOwnProfile || isFollower)
                   SliverToBoxAdapter(
                     child: _LinkedDevicesSection(
@@ -115,7 +130,6 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
                       onManageDevices: () => _navigateToLinkedDevices(),
                     ),
                   ),
-                // Posts section header
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
@@ -139,8 +153,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
                     ),
                   ),
                 ),
-                // Posts list
-                _buildPostsSliver(context, postsStream, isOwnProfile),
+                _buildPostsSliver(context, postsState, isOwnProfile),
               ],
             ),
           );
@@ -485,47 +498,54 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
 
   Widget _buildPostsSliver(
     BuildContext context,
-    AsyncValue<List<Post>> postsAsync,
+    UserPostsState postsState,
     bool isOwnProfile,
   ) {
-    return postsAsync.when(
-      data: (posts) {
-        if (posts.isEmpty) {
-          return SliverFillRemaining(
-            hasScrollBody: false,
-            child: _buildEmptyPosts(context, isOwnProfile),
-          );
+    if (postsState.posts.isEmpty && postsState.isLoading) {
+      return const SliverToBoxAdapter(
+        child: Padding(
+          padding: EdgeInsets.only(top: 16),
+          child: PostSkeletonList(count: 3),
+        ),
+      );
+    }
+
+    if (postsState.posts.isEmpty) {
+      return SliverFillRemaining(
+        hasScrollBody: false,
+        child: _buildEmptyPosts(context, isOwnProfile),
+      );
+    }
+
+    return SliverList(
+      delegate: SliverChildBuilderDelegate((context, index) {
+        if (index >= postsState.posts.length) {
+          return postsState.hasMore
+              ? const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Center(
+                    child: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+                )
+              : const SizedBox.shrink();
         }
 
-        return SliverList(
-          delegate: SliverChildBuilderDelegate((context, index) {
-            final post = posts[index];
-            return PostCard(
-              post: post,
-              onTap: () => _navigateToPost(post),
-              onAuthorTap: () {},
-              onCommentTap: () => _navigateToPost(post, focusComment: true),
-              onShareTap: () => _sharePost(post),
-              onMoreTap: () => _showPostOptions(post, isOwnProfile),
-              onLocationTap: _handleLocationTap,
-              onNodeTap: _handleNodeTap,
-            );
-          }, childCount: posts.length),
+        final post = postsState.posts[index];
+        return PostCard(
+          post: post,
+          onTap: () => _navigateToPost(post),
+          onAuthorTap: () {},
+          onCommentTap: () => _navigateToPost(post, focusComment: true),
+          onShareTap: () => _sharePost(post),
+          onMoreTap: () => _showPostOptions(post, isOwnProfile),
+          onLocationTap: _handleLocationTap,
+          onNodeTap: _handleNodeTap,
         );
-      },
-      loading: () => const SliverFillRemaining(
-        hasScrollBody: false,
-        child: Center(child: CircularProgressIndicator()),
-      ),
-      error: (error, _) => SliverFillRemaining(
-        hasScrollBody: false,
-        child: Center(
-          child: Text(
-            'Failed to load posts',
-            style: TextStyle(color: context.textSecondary),
-          ),
-        ),
-      ),
+      }, childCount: postsState.posts.length + (postsState.hasMore ? 1 : 0)),
     );
   }
 
@@ -936,10 +956,11 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
     if (confirmed == true && mounted) {
       try {
         final socialService = ref.read(socialServiceProvider);
+        ref
+            .read(userPostsNotifierProvider.notifier)
+            .removePost(widget.userId, post.id);
         await socialService.deletePost(post.id);
-        ref.invalidate(userPostsStreamProvider(widget.userId));
 
-        // Apply optimistic post count decrement for instant UI feedback
         final currentProfile = ref
             .read(publicProfileStreamProvider(post.authorId))
             .value;

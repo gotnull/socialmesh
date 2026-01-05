@@ -39,9 +39,10 @@ def get_version_from_pubspec() -> str:
 
 def update_html_version(html_content: str, version: str) -> str:
     """Update version in HTML content."""
+    # Match "Version" with optional version number after it
     return re.sub(
-        r'Version [\d.+]+',
-        f'Version {version}',
+        r'<div class="version">Version(?:\s+[\d.+]+)?</div>',
+        f'<div class="version">Version {version}</div>',
         html_content
     )
 
@@ -54,6 +55,10 @@ def capture_screenshots():
     # Read and update HTML with version
     html_content = HTML_FILE.read_text()
     html_content = update_html_version(html_content, version)
+    
+    # Update source HTML file with version
+    HTML_FILE.write_text(html_content)
+    print(f"  ✏️  Updated {HTML_FILE.relative_to(PROJECT_ROOT)} with version {version}")
     
     # Write updated HTML to temp file
     temp_html = HTML_FILE.parent / "launch_screen_temp.html"

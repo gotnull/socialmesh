@@ -518,14 +518,173 @@ final exploreProvider = NotifierProvider<ExploreNotifier, ExploreState>(
 // USER POSTS
 // ===========================================================================
 
-/// Stream provider for real-time user posts.
+/// State for paginated user posts.
+class UserPostsState {
+  const UserPostsState({
+    this.posts = const [],
+    this.isLoading = false,
+    this.isRefreshing = false,
+    this.hasMore = true,
+    this.lastTimestamp,
+    this.error,
+  });
+
+  final List<Post> posts;
+  final bool isLoading;
+  final bool isRefreshing;
+  final bool hasMore;
+  final DateTime? lastTimestamp;
+  final String? error;
+
+  UserPostsState copyWith({
+    List<Post>? posts,
+    bool? isLoading,
+    bool? isRefreshing,
+    bool? hasMore,
+    DateTime? lastTimestamp,
+    String? error,
+  }) {
+    return UserPostsState(
+      posts: posts ?? this.posts,
+      isLoading: isLoading ?? this.isLoading,
+      isRefreshing: isRefreshing ?? this.isRefreshing,
+      hasMore: hasMore ?? this.hasMore,
+      lastTimestamp: lastTimestamp ?? this.lastTimestamp,
+      error: error,
+    );
+  }
+}
+
+/// Notifier for paginated user posts (Instagram-style).
+/// Uses Map to manage multiple users' posts simultaneously.
+class UserPostsNotifier extends Notifier<Map<String, UserPostsState>> {
+  final Map<String, StreamSubscription<List<Post>>> _subscriptions = {};
+
+  @override
+  Map<String, UserPostsState> build() {
+    ref.onDispose(() {
+      for (final sub in _subscriptions.values) {
+        sub.cancel();
+      }
+      _subscriptions.clear();
+    });
+    return {};
+  }
+
+  UserPostsState getOrCreate(String userId) {
+    if (!state.containsKey(userId)) {
+      _startWatching(userId);
+      state = {...state, userId: const UserPostsState(isLoading: true)};
+    }
+    return state[userId]!;
+  }
+
+  void _startWatching(String userId) {
+    final service = ref.read(socialServiceProvider);
+    _subscriptions[userId]?.cancel();
+    _subscriptions[userId] = service
+        .watchUserPosts(userId, limit: 20)
+        .listen(
+          (posts) {
+            state = {
+              ...state,
+              userId: UserPostsState(
+                posts: posts,
+                hasMore: posts.length >= 20,
+                lastTimestamp: posts.lastOrNull?.createdAt,
+              ),
+            };
+          },
+          onError: (e) {
+            state = {...state, userId: UserPostsState(error: e.toString())};
+          },
+        );
+  }
+
+  Future<void> loadMore(String userId) async {
+    final currentState = state[userId];
+    if (currentState == null ||
+        currentState.isLoading ||
+        !currentState.hasMore) {
+      return;
+    }
+
+    state = {...state, userId: currentState.copyWith(isLoading: true)};
+
+    final service = ref.read(socialServiceProvider);
+    try {
+      final result = await service.getUserPosts(
+        userId,
+        startAfterId: state[userId]?.posts.lastOrNull?.id,
+      );
+      state = {
+        ...state,
+        userId: currentState.copyWith(
+          posts: [...currentState.posts, ...result.items],
+          hasMore: result.hasMore,
+          lastTimestamp: result.lastTimestamp,
+          isLoading: false,
+        ),
+      };
+    } catch (e) {
+      state = {
+        ...state,
+        userId: currentState.copyWith(isLoading: false, error: e.toString()),
+      };
+    }
+  }
+
+  Future<void> refresh(String userId) async {
+    final currentState = state[userId];
+    if (currentState != null) {
+      state = {
+        ...state,
+        userId: currentState.copyWith(isRefreshing: true, error: null),
+      };
+    }
+    _startWatching(userId);
+  }
+
+  /// Optimistically remove a post (before server confirms deletion)
+  void removePost(String userId, String postId) {
+    final currentState = state[userId];
+    if (currentState != null) {
+      state = {
+        ...state,
+        userId: currentState.copyWith(
+          posts: currentState.posts.where((post) => post.id != postId).toList(),
+        ),
+      };
+    }
+  }
+}
+
+/// Global provider for all user posts.
+final userPostsNotifierProvider =
+    NotifierProvider<UserPostsNotifier, Map<String, UserPostsState>>(
+      UserPostsNotifier.new,
+    );
+
+/// Helper provider to watch a specific user's posts.
+final userPostsStateProvider = Provider.family<UserPostsState, String>((
+  ref,
+  userId,
+) {
+  final notifier = ref.watch(userPostsNotifierProvider.notifier);
+  final allStates = ref.watch(userPostsNotifierProvider);
+  return allStates[userId] ?? notifier.getOrCreate(userId);
+});
+
+/// Stream provider for real-time user posts (deprecated - use userPostsNotifierProvider).
+@Deprecated('Use userPostsNotifierProvider for better pagination')
 final userPostsStreamProvider = StreamProvider.autoDispose
     .family<List<Post>, String>((ref, userId) {
       final service = ref.watch(socialServiceProvider);
       return service.watchUserPosts(userId);
     });
 
-/// Paginated user posts provider.
+/// Paginated user posts provider (deprecated - use userPostsNotifierProvider).
+@Deprecated('Use userPostsNotifierProvider for better pagination')
 final userPostsProvider = FutureProvider.autoDispose
     .family<PaginatedResult<Post>, String>((ref, userId) async {
       final service = ref.watch(socialServiceProvider);

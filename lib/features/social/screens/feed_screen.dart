@@ -17,6 +17,7 @@ import '../screens/create_post_screen.dart';
 import '../screens/post_detail_screen.dart';
 import '../screens/profile_social_screen.dart';
 import '../widgets/post_card.dart';
+import '../widgets/post_skeleton.dart';
 
 /// The main social screen showing the current user's profile header with an explore feed.
 class FeedScreen extends ConsumerStatefulWidget {
@@ -62,7 +63,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
   void _onScroll() {
     if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200) {
+        _scrollController.position.maxScrollExtent - 400) {
       ref.read(exploreProvider.notifier).loadMore();
     }
   }
@@ -169,9 +170,11 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
           // Explore posts
           if (exploreState.posts.isEmpty && exploreState.isLoading)
-            const SliverFillRemaining(
-              hasScrollBody: false,
-              child: Center(child: CircularProgressIndicator()),
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.only(top: 16),
+                child: PostSkeletonList(count: 3),
+              ),
             )
           else if (exploreState.posts.isEmpty)
             SliverFillRemaining(

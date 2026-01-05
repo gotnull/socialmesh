@@ -557,7 +557,11 @@ class _AutomationDebugSheet extends StatelessWidget {
                     debugService.clearHistory();
                     Navigator.pop(context);
                   },
-                  icon: const Icon(Icons.delete_outline, size: 18),
+                  icon: const Icon(
+                    Icons.delete_outline,
+                    color: AppTheme.errorRed,
+                    size: 18,
+                  ),
                   label: const Text('Clear'),
                 ),
               ],
@@ -813,7 +817,7 @@ class _AddAutomationSheet extends StatelessWidget {
                   height: 100,
                   child: EdgeFade.horizontal(
                     fadeSize: 24,
-                    fadeColor: context.background,
+                    fadeColor: context.surface,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
