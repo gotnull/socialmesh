@@ -303,8 +303,50 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
                   // TODO: Check for active stories here
                   // When stories are implemented, use this structure:
                   // final hasActiveStory = ...; // check story status
-                  // if (hasActiveStory) { ... gradient ... }
-                  // else if (isOnline) { ... green ring ... }
+                  // if (hasActiveStory) {
+                  //   avatarWidget = Container(
+                  //     width: 88,
+                  //     height: 88,
+                  //     decoration: const BoxDecoration(
+                  //       shape: BoxShape.circle,
+                  //       gradient: LinearGradient(
+                  //         begin: Alignment.topLeft,
+                  //         end: Alignment.bottomRight,
+                  //         colors: [
+                  //           Color(0xFFFFD600), // Yellow
+                  //           Color(0xFFFF7A00), // Orange
+                  //           Color(0xFFFF0069), // Pink
+                  //           Color(0xFFD300C5), // Purple
+                  //         ],
+                  //       ),
+                  //     ),
+                  //     padding: const EdgeInsets.all(3),
+                  //     child: Container(
+                  //       decoration: BoxDecoration(
+                  //         color: context.background,
+                  //         shape: BoxShape.circle,
+                  //       ),
+                  //       padding: const EdgeInsets.all(3),
+                  //       child: CircleAvatar(
+                  //         radius: 38,
+                  //         backgroundColor: context.accentColor.withValues(alpha: 0.2),
+                  //         backgroundImage: profile.avatarUrl != null
+                  //             ? NetworkImage(profile.avatarUrl!)
+                  //             : null,
+                  //         child: profile.avatarUrl == null
+                  //             ? Text(
+                  //                 profile.displayName[0].toUpperCase(),
+                  //                 style: TextStyle(
+                  //                   fontSize: 32,
+                  //                   fontWeight: FontWeight.bold,
+                  //                   color: context.accentColor,
+                  //                 ),
+                  //               )
+                  //             : null,
+                  //       ),
+                  //     ),
+                  //   );
+                  // } else if (isOnline) { ... green ring ... }
                   // else { ... no ring ... }
 
                   Widget avatarWidget;
