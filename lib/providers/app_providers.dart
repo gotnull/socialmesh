@@ -1253,10 +1253,11 @@ class MessagesNotifier extends Notifier<List<Message>> {
       return;
     }
 
-    // Get sender name from nodes
+    // Get sender name - prefer node lookup, fallback to message's cached sender info
     final nodes = ref.read(nodesProvider);
     final senderNode = nodes[message.from];
-    final senderName = senderNode?.displayName ?? 'Unknown';
+    final senderName = senderNode?.displayName ?? message.senderDisplayName;
+    final senderShortName = senderNode?.shortName ?? message.senderShortName;
     AppLogging.app('Sender: $senderName');
 
     // Check if it's a channel message or direct message
@@ -1284,7 +1285,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
       );
       NotificationService().showChannelMessageNotification(
         senderName: senderName,
-        senderShortName: senderNode?.shortName,
+        senderShortName: senderShortName,
         channelName: channelName,
         message: message.text,
         channelIndex: message.channel!,
@@ -1303,7 +1304,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
       AppLogging.app('Showing DM notification from: $senderName');
       NotificationService().showNewMessageNotification(
         senderName: senderName,
-        senderShortName: senderNode?.shortName,
+        senderShortName: senderShortName,
         message: message.text,
         fromNodeNum: message.from,
         playSound: settings.notificationSoundEnabled,

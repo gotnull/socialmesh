@@ -729,6 +729,10 @@ class MessageStorageService {
       'received': message.received,
       'acked': message.acked,
       'source': message.source.name,
+      // Sender info cache
+      'senderLongName': message.senderLongName,
+      'senderShortName': message.senderShortName,
+      'senderAvatarColor': message.senderAvatarColor,
     };
   }
 
@@ -744,6 +748,10 @@ class MessageStorageService {
       received: json['received'] as bool? ?? false,
       acked: json['acked'] as bool? ?? false,
       source: _parseMessageSource(json['source'] as String?),
+      // Sender info cache
+      senderLongName: json['senderLongName'] as String?,
+      senderShortName: json['senderShortName'] as String?,
+      senderAvatarColor: json['senderAvatarColor'] as int?,
     );
   }
 

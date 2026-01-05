@@ -79,13 +79,27 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
           .where((m) => m.received && m.from == nodeNum)
           .length;
 
+      // Get sender info - prefer fresh node lookup, fallback to message's cached info
+      // Find the most recent message from this node to get cached sender info
+      final latestFromNode = nodeMessages
+          .where((m) => m.from == nodeNum)
+          .lastOrNull;
+
+      final displayName =
+          node?.displayName ??
+          latestFromNode?.senderDisplayName ??
+          'Node ${nodeNum.toRadixString(16).toUpperCase()}';
+      final shortName = node?.shortName ?? latestFromNode?.senderShortName;
+      final avatarColor =
+          node?.avatarColor ?? latestFromNode?.senderAvatarColor;
+
       conversations.add(
         _Conversation(
           type: ConversationType.directMessage,
           nodeNum: nodeNum,
-          name: node?.displayName ?? 'Node ${nodeNum.toRadixString(16)}',
-          shortName: node?.shortName,
-          avatarColor: node?.avatarColor,
+          name: displayName,
+          shortName: shortName,
+          avatarColor: avatarColor,
           lastMessage: lastMessage?.text,
           lastMessageTime: lastMessage?.timestamp,
           unreadCount: unreadCount,
@@ -733,6 +747,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (text.isEmpty) return;
 
     final myNodeNum = ref.read(myNodeNumProvider);
+    final nodes = ref.read(nodesProvider);
+    final myNode = myNodeNum != null ? nodes[myNodeNum] : null;
     final messageId = DateTime.now().millisecondsSinceEpoch.toString();
     final to = widget.type == ConversationType.channel
         ? 0xFFFFFFFF
@@ -742,7 +758,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         : 0;
     final wantAck = widget.type != ConversationType.channel;
 
-    // Create pending message
+    // Create pending message with sender info cached
     final pendingMessage = Message(
       id: messageId,
       from: myNodeNum ?? 0,
@@ -752,6 +768,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       sent: true,
       status: MessageStatus.pending,
       source: MessageSource.manual,
+      senderLongName: myNode?.longName,
+      senderShortName: myNode?.shortName,
+      senderAvatarColor: myNode?.avatarColor,
     );
 
     // Add to messages immediately for optimistic UI
@@ -1541,19 +1560,23 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           );
                         }
 
+                        // Get sender info - prefer fresh node lookup, fallback to message's cached info
                         final senderNode = nodes[message.from];
+                        final senderName =
+                            senderNode?.displayName ??
+                            message.senderDisplayName;
+                        final senderShortName =
+                            senderNode?.shortName ?? message.senderAvatarName;
+                        final avatarColor =
+                            senderNode?.avatarColor ??
+                            message.senderAvatarColor;
 
                         return _MessageBubble(
                           message: message,
                           isFromMe: isFromMe,
-                          senderName: senderNode?.displayName ?? 'Unknown',
-                          senderShortName:
-                              senderNode?.shortName ??
-                              message.from
-                                  .toRadixString(16)
-                                  .padLeft(4, '0')
-                                  .substring(0, 4),
-                          avatarColor: senderNode?.avatarColor,
+                          senderName: senderName,
+                          senderShortName: senderShortName,
+                          avatarColor: avatarColor,
                           showSender:
                               widget.type == ConversationType.channel &&
                               !isFromMe,

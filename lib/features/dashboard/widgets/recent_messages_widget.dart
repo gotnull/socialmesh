@@ -38,7 +38,8 @@ class RecentMessagesContent extends ConsumerWidget {
       itemBuilder: (context, index) {
         final message = recentMessages[index];
         final sender = nodes[message.from];
-        final senderName = sender?.displayName ?? 'Node ${message.from}';
+        // Use cached sender info from message, with node lookup as enhancement
+        final senderName = sender?.displayName ?? message.senderDisplayName;
         final timeAgo = _formatTimeAgo(message.timestamp);
 
         return _MessageTile(

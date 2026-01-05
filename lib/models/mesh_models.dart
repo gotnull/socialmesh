@@ -112,6 +112,12 @@ class Message {
   final int? packetId; // Meshtastic packet ID for tracking delivery
   final MessageSource source; // Where the message originated from
 
+  // Cached sender info - populated when message is received/created
+  // This ensures sender info is always available even if node hasn't loaded yet
+  final String? senderLongName;
+  final String? senderShortName;
+  final int? senderAvatarColor;
+
   Message({
     String? id,
     required this.from,
@@ -127,6 +133,9 @@ class Message {
     this.routingError,
     this.packetId,
     this.source = MessageSource.unknown,
+    this.senderLongName,
+    this.senderShortName,
+    this.senderAvatarColor,
   }) : id = id ?? const Uuid().v4(),
        timestamp = timestamp ?? DateTime.now();
 
@@ -145,6 +154,9 @@ class Message {
     RoutingError? routingError,
     int? packetId,
     MessageSource? source,
+    String? senderLongName,
+    String? senderShortName,
+    int? senderAvatarColor,
   }) {
     return Message(
       id: id ?? this.id,
@@ -161,7 +173,34 @@ class Message {
       routingError: routingError ?? this.routingError,
       packetId: packetId ?? this.packetId,
       source: source ?? this.source,
+      senderLongName: senderLongName ?? this.senderLongName,
+      senderShortName: senderShortName ?? this.senderShortName,
+      senderAvatarColor: senderAvatarColor ?? this.senderAvatarColor,
     );
+  }
+
+  /// Get the sender's display name from cached info or fallback to node number
+  String get senderDisplayName {
+    if (senderLongName != null && senderLongName!.isNotEmpty) {
+      return senderLongName!;
+    }
+    if (senderShortName != null && senderShortName!.isNotEmpty) {
+      return senderShortName!;
+    }
+    return 'Node ${from.toRadixString(16).toUpperCase()}';
+  }
+
+  /// Get the sender's avatar name from cached info or fallback to hex ID
+  String get senderAvatarName {
+    if (senderShortName != null && senderShortName!.isNotEmpty) {
+      return senderShortName!;
+    }
+    if (senderLongName != null && senderLongName!.isNotEmpty) {
+      return senderLongName!.substring(0, senderLongName!.length.clamp(0, 4));
+    }
+    // Return last 4 hex digits of node number
+    final hex = from.toRadixString(16).toUpperCase();
+    return hex.length > 4 ? hex.substring(hex.length - 4) : hex;
   }
 
   bool get isBroadcast => to == 0xFFFFFFFF;

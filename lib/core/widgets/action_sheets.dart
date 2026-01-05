@@ -79,6 +79,8 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent> {
     try {
       final protocol = widget.ref.read(protocolServiceProvider);
       final myNodeNum = widget.ref.read(myNodeNumProvider);
+      final nodes = widget.ref.read(nodesProvider);
+      final myNode = myNodeNum != null ? nodes[myNodeNum] : null;
       final targetAddress = _selectedNodeNum ?? broadcastAddress;
       final messageId = 'quick_${DateTime.now().millisecondsSinceEpoch}';
       final messageText = _controller.text;
@@ -92,6 +94,9 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent> {
         channel: _selectedNodeNum == null ? 0 : null,
         sent: true,
         status: MessageStatus.pending,
+        senderLongName: myNode?.longName,
+        senderShortName: myNode?.shortName,
+        senderAvatarColor: myNode?.avatarColor,
       );
       widget.ref.read(messagesProvider.notifier).addMessage(pendingMessage);
 
@@ -546,6 +551,9 @@ class _SosSheetContentState extends State<SosSheetContent> {
         channel: 0,
         sent: true,
         status: MessageStatus.pending,
+        senderLongName: myNode?.longName,
+        senderShortName: myNode?.shortName,
+        senderAvatarColor: myNode?.avatarColor,
       );
       widget.ref.read(messagesProvider.notifier).addMessage(pendingMessage);
 

@@ -1134,12 +1134,41 @@ class ProtocolService {
       final text = utf8.decode(data.payload);
       _logger.i('Text message from ${packet.from}: $text');
 
+      // Look up sender node info to cache in message
+      final senderNode = _nodes[packet.from];
+      String? senderLongName;
+      String? senderShortName;
+      int? senderAvatarColor;
+
+      if (senderNode != null) {
+        senderLongName = senderNode.longName;
+        senderShortName = senderNode.shortName;
+        senderAvatarColor = senderNode.avatarColor;
+      }
+
+      // If sender is unknown, create a placeholder node
+      if (senderNode == null) {
+        _logger.i(
+          'Creating placeholder node for unknown sender ${packet.from}',
+        );
+        final placeholderNode = MeshNode(
+          nodeNum: packet.from,
+          lastHeard: DateTime.now(),
+          firstHeard: DateTime.now(),
+        );
+        _nodes[packet.from] = placeholderNode;
+        _nodeController.add(placeholderNode);
+      }
+
       final message = Message(
         from: packet.from,
         to: packet.to,
         text: text,
         channel: packet.channel,
         received: true,
+        senderLongName: senderLongName,
+        senderShortName: senderShortName,
+        senderAvatarColor: senderAvatarColor,
       );
 
       _messageController.add(message);
@@ -2125,6 +2154,9 @@ class ProtocolService {
         _pendingMessages[packetId] = messageId;
       }
 
+      // Get our node info to cache in message
+      final myNode = _nodes[_myNodeNum!];
+
       final message = Message(
         id: messageId,
         from: _myNodeNum!,
@@ -2135,6 +2167,9 @@ class ProtocolService {
         packetId: packetId,
         status: wantAck ? MessageStatus.pending : MessageStatus.sent,
         source: source,
+        senderLongName: myNode?.longName,
+        senderShortName: myNode?.shortName,
+        senderAvatarColor: myNode?.avatarColor,
       );
 
       _messageController.add(message);
@@ -2209,6 +2244,9 @@ class ProtocolService {
         _pendingMessages[packetId] = messageId;
       }
 
+      // Get our node info to cache in message
+      final myNode = _nodes[_myNodeNum!];
+
       final message = Message(
         id: messageId,
         from: _myNodeNum!,
@@ -2219,6 +2257,9 @@ class ProtocolService {
         packetId: packetId,
         status: wantAck ? MessageStatus.pending : MessageStatus.sent,
         source: source,
+        senderLongName: myNode?.longName,
+        senderShortName: myNode?.shortName,
+        senderAvatarColor: myNode?.avatarColor,
       );
 
       _messageController.add(message);

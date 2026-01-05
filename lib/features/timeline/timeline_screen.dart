@@ -89,12 +89,15 @@ final timelineEventsProvider = Provider<List<TimelineEvent>>((ref) {
     final fromNode = nodes[message.from];
     final toNode = nodes[message.to];
 
+    // Use cached sender info from message, with node lookup as enhancement
+    final fromName = fromNode?.shortName ?? message.senderAvatarName;
+    final toName = toNode?.shortName ?? _formatNodeId(message.to);
+
     String title;
     if (message.from == myNodeNum) {
       title = 'You sent a message';
     } else {
-      title =
-          '${fromNode?.shortName ?? _formatNodeId(message.from)} sent a message';
+      title = '$fromName sent a message';
     }
 
     String? subtitle;
@@ -107,8 +110,7 @@ final timelineEventsProvider = Provider<List<TimelineEvent>>((ref) {
     // Determine if it's a broadcast or DM
     final isBroadcast = message.to == 0xFFFFFFFF;
     if (!isBroadcast && message.from != myNodeNum) {
-      title =
-          '${fromNode?.shortName ?? _formatNodeId(message.from)} → ${toNode?.shortName ?? _formatNodeId(message.to)}';
+      title = '$fromName → $toName';
     }
 
     events.add(
@@ -117,7 +119,7 @@ final timelineEventsProvider = Provider<List<TimelineEvent>>((ref) {
         type: TimelineEventType.message,
         timestamp: message.timestamp,
         nodeNum: message.from,
-        nodeName: fromNode?.shortName,
+        nodeName: fromNode?.shortName ?? message.senderShortName,
         title: title,
         subtitle: subtitle,
         metadata: {
