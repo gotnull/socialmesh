@@ -176,7 +176,7 @@ class NodeAvatar extends StatelessWidget {
             color: context.background,
             shape: BoxShape.circle,
           ),
-          padding: const EdgeInsets.all(2),
+          padding: const EdgeInsets.all(3),
           child: avatar,
         ),
       );

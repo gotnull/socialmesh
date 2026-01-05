@@ -1326,10 +1326,10 @@ class _DrawerNodeHeader extends ConsumerWidget {
             showGradientBorder: isConnected,
             gradientColors: isConnected
                 ? [
-                    accentColor.withValues(alpha: 0.8),
-                    const Color(0xFFFF6B9D).withValues(alpha: 0.6),
-                    const Color(0xFFC837AB).withValues(alpha: 0.5),
-                    accentColor.withValues(alpha: 0.3),
+                    const Color(0xFFFFD600), // Yellow
+                    const Color(0xFFFF7A00), // Orange
+                    const Color(0xFFFF0069), // Pink
+                    const Color(0xFFD300C5), // Purple
                   ]
                 : null,
             showOnlineIndicator: isConnected,
