@@ -859,6 +859,45 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
           ),
         ],
       ),
+      bottomNavigationBar: Consumer(
+        builder: (context, ref, child) {
+          final appVersionAsync = ref.watch(appVersionProvider);
+          final versionText = appVersionAsync.when(
+            data: (version) => 'Socialmesh v$version',
+            loading: () => 'Socialmesh',
+            error: (_, _) => 'Socialmesh',
+          );
+
+          return Container(
+            color: context.background,
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            child: SafeArea(
+              top: false,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    versionText,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: context.textTertiary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '© 2025 Socialmesh. All rights reserved.',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: context.textTertiary.withValues(alpha: 0.7),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 
