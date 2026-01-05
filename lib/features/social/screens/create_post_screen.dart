@@ -519,7 +519,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   Widget _buildImagePreviews() {
     return SizedBox(
       height: 120,
-      child: EdgeFade.horizontal(
+      child: EdgeFade.end(
         fadeSize: 16,
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
