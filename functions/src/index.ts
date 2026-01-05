@@ -1981,4 +1981,6 @@ export {
   onLikeCreated,
   onLikeDeleted,
   checkLikeStatus,
+  // Admin
+  recalculateAllCounts,
 } from './social';

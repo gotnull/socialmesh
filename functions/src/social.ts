@@ -13,6 +13,7 @@ import { onRequest, onCall, HttpsError } from 'firebase-functions/v2/https';
 import { onDocumentCreated, onDocumentDeleted } from 'firebase-functions/v2/firestore';
 
 const db = admin.firestore();
+const storage = admin.storage();
 const FieldValue = admin.firestore.FieldValue;
 
 // =============================================================================
@@ -378,6 +379,7 @@ export const onPostCreated = onDocumentCreated(
  * - Decrements postCount on author's profile
  * - Removes post from all followers' feeds
  * - Deletes all comments on the post
+ * - Deletes all images from Storage
  */
 export const onPostDeleted = onDocumentDeleted(
   'posts/{postId}',
@@ -386,7 +388,37 @@ export const onPostDeleted = onDocumentDeleted(
     const data = event.data?.data();
     if (!data) return;
 
-    const { authorId } = data;
+    const { authorId, mediaUrls } = data;
+
+    // Delete images from Storage
+    if (mediaUrls && Array.isArray(mediaUrls) && mediaUrls.length > 0) {
+      const bucket = storage.bucket();
+      for (const url of mediaUrls) {
+        try {
+          // Extract file path from URL
+          // URL format: https://firebasestorage.googleapis.com/v0/b/BUCKET/o/PATH?token=...
+          // or gs://BUCKET/PATH
+          let filePath: string | null = null;
+
+          if (url.includes('firebasestorage.googleapis.com')) {
+            const match = url.match(/\/o\/([^?]+)/);
+            if (match) {
+              filePath = decodeURIComponent(match[1]);
+            }
+          } else if (url.startsWith('gs://')) {
+            filePath = url.replace(/^gs:\/\/[^/]+\//, '');
+          }
+
+          if (filePath) {
+            await bucket.file(filePath).delete();
+            console.log(`Deleted image: ${filePath}`);
+          }
+        } catch (err) {
+          // Log but don't fail - image might already be deleted
+          console.warn(`Failed to delete image ${url}:`, err);
+        }
+      }
+    }
 
     // Decrement post count
     await db.collection('profiles').doc(authorId).update({
@@ -447,7 +479,8 @@ export const onPostDeleted = onDocumentDeleted(
       await batch.commit();
     }
 
-    console.log(`Post ${postId} deleted: removed from feeds, deleted ${commentsSnap.size} comments, ${likesSnap.size} likes`);
+    const imageCount = mediaUrls?.length || 0;
+    console.log(`Post ${postId} deleted: removed from feeds, deleted ${commentsSnap.size} comments, ${likesSnap.size} likes, ${imageCount} images`);
   }
 );
 
@@ -880,3 +913,118 @@ export const onProfileUpdated = onDocumentDeleted(
     // For MVP, feed author snapshots are set at fan-out time only.
   }
 );
+
+// =============================================================================
+// ADMIN: RECALCULATE COUNTS
+// =============================================================================
+
+/**
+ * Recalculate all denormalized counts from actual data.
+ * This fixes any inconsistencies between stored counts and actual data.
+ * 
+ * Recalculates:
+ * - Post commentCount from actual comments
+ * - Post likeCount from actual likes
+ * - Profile postCount from actual posts
+ * - Profile followerCount from actual follows
+ * - Profile followingCount from actual follows
+ */
+export const recalculateAllCounts = onCall(async (request) => {
+  // Optional: Add admin check here
+  // if (!request.auth?.token.admin) {
+  //   throw new HttpsError('permission-denied', 'Admin only');
+  // }
+
+  const results = {
+    postsFixed: 0,
+    profilesFixed: 0,
+    errors: [] as string[],
+  };
+
+  try {
+    // 1. Fix all post counts
+    const postsSnap = await db.collection('posts').get();
+
+    for (const postDoc of postsSnap.docs) {
+      try {
+        const postId = postDoc.id;
+
+        // Count actual comments
+        const commentsSnap = await db.collection('comments')
+          .where('postId', '==', postId)
+          .count()
+          .get();
+        const actualCommentCount = commentsSnap.data().count;
+
+        // Count actual likes
+        const likesSnap = await db.collection('likes')
+          .where('postId', '==', postId)
+          .count()
+          .get();
+        const actualLikeCount = likesSnap.data().count;
+
+        const currentData = postDoc.data();
+        if (currentData.commentCount !== actualCommentCount ||
+          currentData.likeCount !== actualLikeCount) {
+          await postDoc.ref.update({
+            commentCount: actualCommentCount,
+            likeCount: actualLikeCount,
+          });
+          results.postsFixed++;
+        }
+      } catch (err) {
+        results.errors.push(`Post ${postDoc.id}: ${err}`);
+      }
+    }
+
+    // 2. Fix all profile counts
+    const profilesSnap = await db.collection('profiles').get();
+
+    for (const profileDoc of profilesSnap.docs) {
+      try {
+        const userId = profileDoc.id;
+
+        // Count actual posts
+        const postsCountSnap = await db.collection('posts')
+          .where('authorId', '==', userId)
+          .count()
+          .get();
+        const actualPostCount = postsCountSnap.data().count;
+
+        // Count actual followers (people following this user)
+        const followersSnap = await db.collection('follows')
+          .where('followingId', '==', userId)
+          .count()
+          .get();
+        const actualFollowerCount = followersSnap.data().count;
+
+        // Count actual following (people this user follows)
+        const followingSnap = await db.collection('follows')
+          .where('followerId', '==', userId)
+          .count()
+          .get();
+        const actualFollowingCount = followingSnap.data().count;
+
+        const currentData = profileDoc.data();
+        if (currentData.postCount !== actualPostCount ||
+          currentData.followerCount !== actualFollowerCount ||
+          currentData.followingCount !== actualFollowingCount) {
+          await profileDoc.ref.update({
+            postCount: actualPostCount,
+            followerCount: actualFollowerCount,
+            followingCount: actualFollowingCount,
+          });
+          results.profilesFixed++;
+        }
+      } catch (err) {
+        results.errors.push(`Profile ${profileDoc.id}: ${err}`);
+      }
+    }
+
+    console.log(`Recalculated counts: ${results.postsFixed} posts, ${results.profilesFixed} profiles fixed`);
+    return results;
+  } catch (err) {
+    console.error('Error recalculating counts:', err);
+    throw new HttpsError('internal', `Failed to recalculate: ${err}`);
+  }
+});

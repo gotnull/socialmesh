@@ -1,7 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
+import '../../core/constants.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/node_avatar.dart';
 import '../../models/social.dart';
@@ -190,9 +194,11 @@ class _AdminFollowRequestsScreenState
   }
 
   void _showSeedUsersDialog() {
+    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
     showDialog(
       context: context,
-      builder: (context) => _SeedUsersDialog(firestore: _firestore),
+      builder: (context) =>
+          _SeedUsersDialog(firestore: _firestore, currentUserId: currentUserId),
     );
   }
 }
@@ -393,9 +399,10 @@ class _ProfileBadge extends StatelessWidget {
 }
 
 class _SeedUsersDialog extends StatefulWidget {
-  const _SeedUsersDialog({required this.firestore});
+  const _SeedUsersDialog({required this.firestore, this.currentUserId});
 
   final FirebaseFirestore firestore;
+  final String? currentUserId;
 
   @override
   State<_SeedUsersDialog> createState() => _SeedUsersDialogState();
@@ -799,6 +806,39 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
         '  ✓ Deleted ${followsQuery.docs.length + followsTargetQuery.docs.length} follows',
       );
 
+      // Reset current user's follow counts and delete their follows
+      if (widget.currentUserId != null) {
+        _log.add('  Resetting your follow data...');
+
+        // Delete all follows where current user is follower
+        final myFollowsQuery = await widget.firestore
+            .collection('follows')
+            .where('followerId', isEqualTo: widget.currentUserId)
+            .get();
+        for (final doc in myFollowsQuery.docs) {
+          await doc.reference.delete();
+        }
+
+        // Delete all follows where current user is being followed
+        final myFollowersQuery = await widget.firestore
+            .collection('follows')
+            .where('followingId', isEqualTo: widget.currentUserId)
+            .get();
+        for (final doc in myFollowersQuery.docs) {
+          await doc.reference.delete();
+        }
+
+        // Reset counts on current user's profile
+        await widget.firestore
+            .collection('profiles')
+            .doc(widget.currentUserId)
+            .update({'followerCount': 0, 'followingCount': 0});
+
+        _log.add(
+          '  ✓ Deleted ${myFollowsQuery.docs.length + myFollowersQuery.docs.length} of your follows, reset counts',
+        );
+      }
+
       // Delete dummy user profiles
       _log.add('  Deleting profiles...');
       for (final userId in dummyUserIds) {
@@ -878,7 +918,6 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
       _log.add('');
       _log.add('Creating posts...');
       final postIds = <String>[];
-      final postCommentCounts = <String, int>{};
 
       for (var i = 0; i < _samplePosts.length; i++) {
         final post = _samplePosts[i];
@@ -891,9 +930,8 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
         final postRef = widget.firestore.collection('posts').doc();
         postIds.add(postRef.id);
 
-        // Calculate comment count (distribute comments across posts)
-        final commentCount = (i < _sampleComments.length) ? 2 : 1;
-        postCommentCounts[postRef.id] = commentCount;
+        // Don't set fake counts - Cloud Functions will calculate from actual data
+        // We'll call recalculateAllCounts at the end
 
         try {
           await postRef.set({
@@ -903,8 +941,8 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
             'createdAt': Timestamp.fromDate(
               DateTime.now().subtract(Duration(hours: _samplePosts.length - i)),
             ),
-            'commentCount': commentCount,
-            'likeCount': (i * 3) % 15 + 1, // Vary likes 1-15
+            'commentCount': 0, // Will be recalculated
+            'likeCount': 0, // Will be recalculated
             'authorSnapshot': {
               'displayName': author['displayName'],
               'callsign': author['callsign'],
@@ -936,8 +974,8 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
       for (var postIndex = 0; postIndex < postIds.length; postIndex++) {
         final postId = postIds[postIndex];
 
-        // Add 1-2 comments per post, cycling through comment templates
-        final commentsToAdd = postCommentCounts[postId] ?? 1;
+        // Add 2 comments per post
+        const commentsToAdd = 2;
 
         for (
           var c = 0;
@@ -985,6 +1023,42 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
       }
 
       _log.add('✓ $commentCount comments created');
+      _log.add('');
+
+      // Step 4: Recalculate all counts from actual data
+      setState(() => _status = 'Recalculating counts...');
+      _log.add('Recalculating counts from actual data...');
+      try {
+        final user = FirebaseAuth.instance.currentUser;
+        final token = await user?.getIdToken();
+
+        final response = await http.post(
+          Uri.parse('${AppUrls.cloudFunctionsUrl}/recalculateAllCounts'),
+          headers: {
+            'Content-Type': 'application/json',
+            if (token != null) 'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode({'data': {}}),
+        );
+
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          final result = data['result'] as Map<String, dynamic>?;
+          if (result != null) {
+            _log.add(
+              '  ✓ Fixed ${result['postsFixed']} posts, ${result['profilesFixed']} profiles',
+            );
+          } else {
+            _log.add('  ✓ Counts recalculated');
+          }
+        } else {
+          _log.add('  ⚠ Server returned ${response.statusCode}');
+        }
+      } catch (e) {
+        _log.add('  ⚠ Could not recalculate counts: $e');
+        _log.add('  (Deploy functions and try again)');
+      }
+
       _log.add('');
       _log.add('✓ All data seeded successfully!');
 
