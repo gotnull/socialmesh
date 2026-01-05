@@ -13,94 +13,158 @@ final pendingReviewsProvider = StreamProvider<List<ProductReview>>((ref) {
   return service.watchPendingReviews();
 });
 
+final allReviewsProvider = StreamProvider<List<ProductReview>>((ref) {
+  final service = ref.watch(deviceShopServiceProvider);
+  return service.watchAllReviews();
+});
+
 /// Admin screen for moderating product reviews
-class ReviewModerationScreen extends ConsumerWidget {
+class ReviewModerationScreen extends ConsumerStatefulWidget {
   const ReviewModerationScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final reviewsAsync = ref.watch(pendingReviewsProvider);
+  ConsumerState<ReviewModerationScreen> createState() =>
+      _ReviewModerationScreenState();
+}
 
+class _ReviewModerationScreenState
+    extends ConsumerState<ReviewModerationScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: context.background,
       appBar: AppBar(
         backgroundColor: context.card,
         title: AutoScrollText(
-          'Review Moderation',
+          'Review Management',
           style: TextStyle(color: context.textPrimary),
           maxLines: 1,
           velocity: 30.0,
           fadeWidth: 20.0,
         ),
-      ),
-      body: reviewsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline, color: AppTheme.errorRed, size: 48),
-              const SizedBox(height: 16),
-              Text(
-                'Error loading reviews',
-                style: TextStyle(color: context.textPrimary),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                e.toString(),
-                style: TextStyle(color: context.textSecondary, fontSize: 12),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: context.accentColor,
+          labelColor: context.accentColor,
+          unselectedLabelColor: context.textSecondary,
+          tabs: const [
+            Tab(text: 'Pending'),
+            Tab(text: 'All Reviews'),
+          ],
         ),
-        data: (reviews) {
-          if (reviews.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.check_circle_outline,
-                    color: context.accentColor,
-                    size: 64,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'All caught up!',
-                    style: TextStyle(
-                      color: context.textPrimary,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'No pending reviews to moderate',
-                    style: TextStyle(color: context.textSecondary),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: reviews.length,
-            itemBuilder: (context, index) {
-              return _ReviewModerationCard(review: reviews[index]);
-            },
-          );
-        },
       ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _ReviewList(reviewsProvider: pendingReviewsProvider, isPending: true),
+          _ReviewList(reviewsProvider: allReviewsProvider, isPending: false),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReviewList extends ConsumerWidget {
+  final StreamProvider<List<ProductReview>> reviewsProvider;
+  final bool isPending;
+
+  const _ReviewList({required this.reviewsProvider, required this.isPending});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final reviewsAsync = ref.watch(reviewsProvider);
+
+    return reviewsAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, color: AppTheme.errorRed, size: 48),
+            const SizedBox(height: 16),
+            Text(
+              'Error loading reviews',
+              style: TextStyle(color: context.textPrimary),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              e.toString(),
+              style: TextStyle(color: context.textSecondary, fontSize: 12),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+      data: (reviews) {
+        if (reviews.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.check_circle_outline,
+                  color: context.accentColor,
+                  size: 64,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  isPending ? 'All caught up!' : 'No reviews yet',
+                  style: TextStyle(
+                    color: context.textPrimary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  isPending
+                      ? 'No pending reviews to moderate'
+                      : 'No reviews in database',
+                  style: TextStyle(color: context.textSecondary),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: reviews.length,
+          itemBuilder: (context, index) {
+            return _ReviewModerationCard(
+              review: reviews[index],
+              showModerationActions: isPending,
+            );
+          },
+        );
+      },
     );
   }
 }
 
 class _ReviewModerationCard extends ConsumerStatefulWidget {
   final ProductReview review;
+  final bool showModerationActions;
 
-  const _ReviewModerationCard({required this.review});
+  const _ReviewModerationCard({
+    required this.review,
+    this.showModerationActions = true,
+  });
 
   @override
   ConsumerState<_ReviewModerationCard> createState() =>
@@ -378,7 +442,7 @@ class _ReviewModerationCardState extends ConsumerState<_ReviewModerationCard> {
             // Action buttons
             if (_isProcessing)
               const Center(child: CircularProgressIndicator())
-            else
+            else if (widget.showModerationActions)
               Row(
                 children: [
                   Expanded(
@@ -409,6 +473,55 @@ class _ReviewModerationCardState extends ConsumerState<_ReviewModerationCard> {
                     onPressed: _delete,
                     icon: const Icon(Icons.delete_outline),
                     color: Colors.red,
+                  ),
+                ],
+              )
+            else
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  // Show status badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: widget.review.status == 'approved'
+                          ? Colors.green.withValues(alpha: 0.2)
+                          : widget.review.status == 'rejected'
+                              ? Colors.red.withValues(alpha: 0.2)
+                              : widget.review.status == 'legacy'
+                                  ? Colors.orange.withValues(alpha: 0.2)
+                                  : Colors.grey.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      widget.review.status == 'legacy'
+                          ? 'Legacy (no status)'
+                          : widget.review.status.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: widget.review.status == 'approved'
+                            ? Colors.green
+                            : widget.review.status == 'rejected'
+                                ? Colors.red
+                                : widget.review.status == 'legacy'
+                                    ? Colors.orange
+                                    : Colors.grey,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton.icon(
+                    onPressed: _delete,
+                    icon: const Icon(Icons.delete_outline),
+                    label: const Text('Delete'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                    ),
                   ),
                 ],
               ),
