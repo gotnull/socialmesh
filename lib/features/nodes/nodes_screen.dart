@@ -1131,26 +1131,6 @@ class _NodeCard extends StatelessWidget {
                         width: 2,
                       )
                     : null,
-                badge: isMyNode
-                    ? Container(
-                        width: 20,
-                        height: 20,
-                        decoration: BoxDecoration(
-                          color: context.card,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: context.accentColor,
-                            width: 2,
-                          ),
-                        ),
-                        child: Icon(
-                          Icons.person,
-                          size: 12,
-                          color: context.accentColor,
-                        ),
-                      )
-                    : null,
-                badgeAlignment: Alignment.topRight,
               ),
               SizedBox(width: 16),
               // Info
@@ -1198,7 +1178,6 @@ class _NodeCard extends StatelessWidget {
                                 fontSize: 10,
                                 fontWeight: FontWeight.w700,
                                 color: Colors.white,
-
                                 letterSpacing: 0.5,
                               ),
                             ),

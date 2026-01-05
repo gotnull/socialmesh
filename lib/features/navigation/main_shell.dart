@@ -1508,26 +1508,23 @@ class _DrawerNodeHeader extends ConsumerWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Node avatar
+          // Node avatar - same as nodes screen for own node
           NodeAvatar(
             text: myNode?.shortName ?? '--',
             color: isConnected ? accentColor : theme.dividerColor,
             size: 56,
-            showGradientBorder: isConnected,
-            gradientColors: isConnected
-                ? [
-                    const Color(0xFFFFD600), // Yellow
-                    const Color(0xFFFF7A00), // Orange
-                    const Color(0xFFFF0069), // Pink
-                    const Color(0xFFD300C5), // Purple
-                  ]
-                : null,
-            showOnlineIndicator: isConnected,
+            showOnlineIndicator: true,
             onlineStatus: isConnected
                 ? OnlineStatus.online
                 : OnlineStatus.offline,
             batteryLevel: myNode?.batteryLevel,
             showBatteryBadge: myNode?.batteryLevel != null,
+            border: isConnected
+                ? Border.all(
+                    color: Colors.white.withValues(alpha: 0.3),
+                    width: 2,
+                  )
+                : null,
           ),
           const SizedBox(width: 12),
           // Node info - flexible column
