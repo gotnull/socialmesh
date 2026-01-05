@@ -527,7 +527,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
           itemBuilder: (context, index) {
             return Padding(
               padding: EdgeInsets.only(
-                right: index < _imageUrls.length - 1 ? 12 : 0,
+                right: index < _imageUrls.length - 1 ? 8 : 0,
               ),
               child: Stack(
                 children: [
