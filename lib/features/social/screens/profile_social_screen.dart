@@ -173,59 +173,26 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                   ),
                 // Posts section - only visible if allowed
                 if (canViewContent) ...[
-                  // Posts header with filter tabs
+                  // Posts filter tabs
                   SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.grid_on_outlined,
-                                size: 16,
-                                color: context.textSecondary,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                'Posts',
-                                style: TextStyle(
-                                  color: context.textSecondary,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          TabBar(
-                            controller: _tabController,
-                            isScrollable: true,
-                            tabAlignment: TabAlignment.start,
-                            indicatorSize: TabBarIndicatorSize.tab,
-                            indicatorColor: context.accentColor,
-                            labelColor: context.accentColor,
-                            unselectedLabelColor: context.textSecondary,
-                            labelStyle: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
-                            ),
-                            unselectedLabelStyle: const TextStyle(
-                              fontWeight: FontWeight.normal,
-                              fontSize: 13,
-                            ),
-                            dividerColor: Colors.transparent,
-                            padding: EdgeInsets.zero,
-                            labelPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                            ),
-                            tabs: PostFilter.values
-                                .map((filter) => Tab(text: filter.label))
-                                .toList(),
-                          ),
-                        ],
+                    child: TabBar(
+                      controller: _tabController,
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      indicatorColor: context.accentColor,
+                      labelColor: context.accentColor,
+                      unselectedLabelColor: context.textSecondary,
+                      labelStyle: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
                       ),
+                      unselectedLabelStyle: const TextStyle(
+                        fontWeight: FontWeight.normal,
+                        fontSize: 14,
+                      ),
+                      dividerColor: context.border,
+                      tabs: PostFilter.values
+                          .map((filter) => Tab(text: filter.label))
+                          .toList(),
                     ),
                   ),
                   _buildPostsGrid(context, postsState, isOwnProfile),
@@ -303,30 +270,29 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
   ) {
     return SliverAppBar(
       backgroundColor: context.background,
-      floating: true,
-      snap: true,
+      foregroundColor: context.textPrimary,
+      pinned: true,
       leading: isOwnProfile ? const HamburgerMenuButton() : null,
-      title: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (profile.isPrivate && !isOwnProfile) ...[
-            Icon(Icons.lock_outline, color: context.textSecondary, size: 16),
-            const SizedBox(width: 4),
-          ],
-          Text(
-            profile.displayName,
-            style: TextStyle(
-              color: context.textPrimary,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          if (profile.isVerified) ...[
-            const SizedBox(width: 4),
-            Icon(Icons.verified, color: context.accentColor, size: 18),
-          ],
-        ],
+      titleSpacing: isOwnProfile ? 0 : NavigationToolbar.kMiddleSpacing,
+      title: Text(
+        profile.displayName,
+        style: const TextStyle(fontWeight: FontWeight.w600),
       ),
       actions: [
+        if (profile.isPrivate && !isOwnProfile)
+          Padding(
+            padding: const EdgeInsets.only(right: 4),
+            child: Icon(
+              Icons.lock_outline,
+              color: context.textPrimary,
+              size: 16,
+            ),
+          ),
+        if (profile.isVerified)
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: Icon(Icons.verified, color: context.accentColor, size: 18),
+          ),
         if (isOwnProfile) ...[
           IconButton(
             icon: Icon(Icons.search, color: context.textPrimary),
