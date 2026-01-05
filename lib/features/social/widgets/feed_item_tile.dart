@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
+import '../../../core/widgets/fullscreen_gallery.dart';
 import '../../../models/social.dart';
 import '../widgets/post_actions_bar.dart';
 
@@ -182,26 +183,29 @@ class _FeedImages extends StatelessWidget {
     if (imageUrls.isEmpty) return const SizedBox.shrink();
 
     if (imageUrls.length == 1) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: AspectRatio(
-          aspectRatio: 16 / 9,
-          child: Image.network(
-            imageUrls.first,
-            fit: BoxFit.cover,
-            loadingBuilder: (context, child, loadingProgress) {
-              if (loadingProgress == null) return child;
-              return Container(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                child: const Center(child: CircularProgressIndicator()),
-              );
-            },
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                child: const Center(child: Icon(Icons.broken_image)),
-              );
-            },
+      return GestureDetector(
+        onTap: () => FullscreenGallery.show(context, images: imageUrls),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: AspectRatio(
+            aspectRatio: 16 / 9,
+            child: Image.network(
+              imageUrls.first,
+              fit: BoxFit.cover,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Container(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  child: const Center(child: CircularProgressIndicator()),
+                );
+              },
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  child: const Center(child: Icon(Icons.broken_image)),
+                );
+              },
+            ),
           ),
         ),
       );
@@ -224,51 +228,58 @@ class _FeedImages extends StatelessWidget {
             final remainingCount = imageUrls.length - 4;
             final showOverlay = isLastCell && remainingCount > 0;
 
-            return Stack(
-              fit: StackFit.expand,
-              children: [
-                Image.network(
-                  url,
-                  fit: BoxFit.cover,
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return Container(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.surfaceContainerHighest,
-                      child: const Center(
-                        child: SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+            return GestureDetector(
+              onTap: () => FullscreenGallery.show(
+                context,
+                images: imageUrls,
+                initialIndex: index,
+              ),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.network(
+                    url,
+                    fit: BoxFit.cover,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Container(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest,
+                        child: const Center(
+                          child: SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.surfaceContainerHighest,
-                      child: const Center(child: Icon(Icons.broken_image)),
-                    );
-                  },
-                ),
-                if (showOverlay)
-                  Container(
-                    color: Colors.black54,
-                    child: Center(
-                      child: Text(
-                        '+$remainingCount',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest,
+                        child: const Center(child: Icon(Icons.broken_image)),
+                      );
+                    },
+                  ),
+                  if (showOverlay)
+                    Container(
+                      color: Colors.black54,
+                      child: Center(
+                        child: Text(
+                          '+$remainingCount',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             );
           }).toList(),
         ),

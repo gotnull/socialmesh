@@ -5,6 +5,7 @@ import 'package:timeago/timeago.dart' as timeago;
 
 import '../../../core/theme.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
+import '../../../core/widgets/fullscreen_gallery.dart';
 import '../../../models/social.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/auth_providers.dart';
@@ -1113,19 +1114,22 @@ class _PostContent extends StatelessWidget {
 
   Widget _buildImages(BuildContext context) {
     if (post.imageUrls.length == 1) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Image.network(
-          post.imageUrls.first,
-          fit: BoxFit.cover,
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            return Container(
-              height: 200,
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              child: const Center(child: CircularProgressIndicator()),
-            );
-          },
+      return GestureDetector(
+        onTap: () => FullscreenGallery.show(context, images: post.imageUrls),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.network(
+            post.imageUrls.first,
+            fit: BoxFit.cover,
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
+              return Container(
+                height: 200,
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                child: const Center(child: CircularProgressIndicator()),
+              );
+            },
+          ),
         ),
       );
     }
@@ -1148,25 +1152,32 @@ class _PostContent extends StatelessWidget {
             final remainingCount = post.imageUrls.length - 4;
             final showOverlay = isLastCell && remainingCount > 0;
 
-            return Stack(
-              fit: StackFit.expand,
-              children: [
-                Image.network(url, fit: BoxFit.cover),
-                if (showOverlay)
-                  Container(
-                    color: Colors.black54,
-                    child: Center(
-                      child: Text(
-                        '+$remainingCount',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
+            return GestureDetector(
+              onTap: () => FullscreenGallery.show(
+                context,
+                images: post.imageUrls,
+                initialIndex: index,
+              ),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.network(url, fit: BoxFit.cover),
+                  if (showOverlay)
+                    Container(
+                      color: Colors.black54,
+                      child: Center(
+                        child: Text(
+                          '+$remainingCount',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             );
           }).toList(),
         ),
