@@ -104,7 +104,10 @@ class NodeAvatar extends StatelessWidget {
     final displayText = _getDisplayText();
     final fontSize = _calculateFontSize();
     final borderWidth = showGradientBorder ? 3.0 : 0.0;
-    final batteryRingWidth = batteryLevel != null ? 3.0 : 0.0;
+    // Only show battery ring if NOT showing gradient border (avoid visual clutter)
+    final showBatteryRing = batteryLevel != null && !showGradientBorder;
+    final batteryRingWidth = showBatteryRing ? 3.0 : 0.0;
+    final innerPadding = 3.0; // Always have padding around inner circle
 
     Widget avatar = Container(
       width: size,
@@ -130,31 +133,36 @@ class NodeAvatar extends StatelessWidget {
       ),
     );
 
-    // Wrap in battery ring if battery level provided
-    if (batteryLevel != null) {
+    // Wrap in battery ring if battery level provided AND not showing gradient
+    if (showBatteryRing) {
       final batteryPercent = (batteryLevel! > 100 ? 100 : batteryLevel!) / 100;
       final batteryColor = _getBatteryColor();
 
-      avatar = CustomPaint(
-        painter: _BatteryRingPainter(
-          percent: batteryPercent,
-          color: batteryColor,
-          strokeWidth: batteryRingWidth,
+      avatar = Container(
+        decoration: BoxDecoration(
+          color: context.background,
+          shape: BoxShape.circle,
         ),
-        child: Padding(
-          padding: EdgeInsets.all(batteryRingWidth),
-          child: avatar,
+        padding: EdgeInsets.all(innerPadding),
+        child: CustomPaint(
+          painter: _BatteryRingPainter(
+            percent: batteryPercent,
+            color: batteryColor,
+            strokeWidth: batteryRingWidth,
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(batteryRingWidth),
+            child: avatar,
+          ),
         ),
       );
     }
 
-    // Wrap in gradient border if needed
+    // Wrap in gradient border if needed (mutually exclusive with battery ring visually)
     if (showGradientBorder) {
-      final gradientSize = size + (batteryRingWidth * 2);
-      final darkBg = context.background;
       avatar = Container(
-        width: gradientSize + (borderWidth * 2),
-        height: gradientSize + (borderWidth * 2),
+        width: size + (borderWidth * 2) + (innerPadding * 2),
+        height: size + (borderWidth * 2) + (innerPadding * 2),
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: LinearGradient(
@@ -163,10 +171,10 @@ class NodeAvatar extends StatelessWidget {
             colors:
                 gradientColors ??
                 [
-                  darkBg.withValues(alpha: 0.8),
-                  const Color(0xFF3A4556).withValues(alpha: 0.6),
-                  const Color(0xFF2C3544).withValues(alpha: 0.4),
-                  darkBg.withValues(alpha: 0.2),
+                  const Color(0xFFFFD600), // Yellow
+                  const Color(0xFFFF7A00), // Orange
+                  const Color(0xFFFF0069), // Pink
+                  const Color(0xFFD300C5), // Purple
                 ],
           ),
         ),
@@ -176,11 +184,18 @@ class NodeAvatar extends StatelessWidget {
             color: context.background,
             shape: BoxShape.circle,
           ),
-          padding: const EdgeInsets.all(3),
+          padding: EdgeInsets.all(innerPadding),
           child: avatar,
         ),
       );
     }
+
+    // Only show online dot when there's no other ring indicator
+    final showOnlineDot =
+        showOnlineIndicator &&
+        onlineStatus != null &&
+        !showGradientBorder &&
+        !showBatteryRing;
 
     return Stack(
       clipBehavior: Clip.none,
@@ -190,7 +205,7 @@ class NodeAvatar extends StatelessWidget {
           Positioned.fill(
             child: Align(alignment: badgeAlignment, child: badge!),
           ),
-        // Battery percentage badge (top-left)
+        // Battery percentage badge (top-left) - only when battery level exists
         if (showBatteryBadge && batteryLevel != null)
           Positioned(
             top: -4,
@@ -219,11 +234,11 @@ class NodeAvatar extends StatelessWidget {
               ),
             ),
           ),
-        // Online status indicator (bottom-right)
-        if (showOnlineIndicator && onlineStatus != null)
+        // Online status indicator (bottom-right) - only when no other ring indicators
+        if (showOnlineDot)
           Positioned(
-            bottom: showGradientBorder ? borderWidth : 0,
-            right: showGradientBorder ? borderWidth : 0,
+            bottom: 0,
+            right: 0,
             child: _OnlineStatusIndicator(
               status: onlineStatus!,
               size: size * 0.25,
