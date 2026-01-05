@@ -47,10 +47,10 @@ import '../social/screens/reported_content_screen.dart';
 final adminNotificationCountProvider = Provider<int>((ref) {
   final reviewCount = ref
       .watch(pendingReviewCountProvider)
-      .when(data: (count) => count, loading: () => 0, error: (_, __) => 0);
+      .when(data: (count) => count, loading: () => 0, error: (e, stack) => 0);
   final reportCount = ref
       .watch(pendingReportCountProvider)
-      .when(data: (count) => count, loading: () => 0, error: (_, __) => 0);
+      .when(data: (count) => count, loading: () => 0, error: (e, stack) => 0);
   return reviewCount + reportCount;
 });
 
@@ -1799,7 +1799,7 @@ class _DrawerAdminSection extends ConsumerWidget {
                         .when(
                           data: (count) => count,
                           loading: () => null,
-                          error: (_, __) => null,
+                          error: (e, stack) => null,
                         ),
                     onTap: () {
                       ref.haptics.tabChange();
@@ -1818,7 +1818,7 @@ class _DrawerAdminSection extends ConsumerWidget {
                         .when(
                           data: (count) => count,
                           loading: () => null,
-                          error: (_, __) => null,
+                          error: (e, stack) => null,
                         ),
                     onTap: () {
                       ref.haptics.tabChange();

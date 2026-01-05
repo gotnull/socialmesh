@@ -54,28 +54,27 @@ void main() {
   group('Drawer Menu Tile Badge Logic', () {
     test('badge should display when badgeCount is provided and > 0', () {
       int? badgeCount = 5;
-      bool shouldShowBadge = badgeCount != null && badgeCount > 0;
+      bool shouldShowBadge = badgeCount > 0;
 
       expect(shouldShowBadge, true);
     });
 
     test('badge should not display when badgeCount is null', () {
       int? badgeCount;
-      bool shouldShowBadge = badgeCount != null && badgeCount > 0;
 
-      expect(shouldShowBadge, false);
+      expect(badgeCount, null);
     });
 
     test('badge should not display when badgeCount is 0', () {
       int? badgeCount = 0;
-      bool shouldShowBadge = badgeCount != null && badgeCount > 0;
+      bool shouldShowBadge = badgeCount > 0;
 
       expect(shouldShowBadge, false);
     });
 
     test('badge should not display for negative counts', () {
       int? badgeCount = -1;
-      bool shouldShowBadge = badgeCount != null && badgeCount > 0;
+      bool shouldShowBadge = badgeCount > 0;
 
       expect(shouldShowBadge, false);
     });
@@ -83,7 +82,7 @@ void main() {
     test('badge count displayed correctly for values 1-99', () {
       for (int i = 1; i <= 99; i++) {
         int? badgeCount = i;
-        bool shouldShowBadge = badgeCount != null && badgeCount > 0;
+        bool shouldShowBadge = badgeCount > 0;
         expect(shouldShowBadge, true, reason: 'Badge should show for count $i');
       }
     });
