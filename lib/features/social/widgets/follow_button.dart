@@ -121,16 +121,14 @@ class _FollowButtonState extends ConsumerState<FollowButton> {
 
     if (widget.compact) {
       return SizedBox(
+        width: 110,
         height: 32,
         child: isLoading
-            ? const SizedBox(
-                width: 32,
-                child: Center(
-                  child: SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
+            ? const Center(
+                child: SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
                 ),
               )
             : _buildCompactButton(buttonState, onPressed),
@@ -158,34 +156,49 @@ class _FollowButtonState extends ConsumerState<FollowButton> {
   }
 
   Widget _buildCompactButton(FollowButtonState state, VoidCallback? onPressed) {
+    // Fixed width for uniform button sizes (like Instagram)
+    const buttonWidth = 110.0;
+
     switch (state) {
       case FollowButtonState.following:
-        return OutlinedButton(
-          onPressed: onPressed,
-          style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            minimumSize: const Size(0, 32),
+        return SizedBox(
+          width: buttonWidth,
+          child: FilledButton(
+            onPressed: onPressed,
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              minimumSize: const Size(buttonWidth, 32),
+              backgroundColor: Colors.grey,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Following'),
           ),
-          child: const Text('Following'),
         );
       case FollowButtonState.requested:
-        return OutlinedButton(
-          onPressed: onPressed,
-          style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            minimumSize: const Size(0, 32),
-            foregroundColor: Colors.grey,
+        return SizedBox(
+          width: buttonWidth,
+          child: FilledButton(
+            onPressed: onPressed,
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              minimumSize: const Size(buttonWidth, 32),
+              backgroundColor: Colors.grey,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Requested'),
           ),
-          child: const Text('Requested'),
         );
       case FollowButtonState.notFollowing:
-        return FilledButton(
-          onPressed: onPressed,
-          style: FilledButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            minimumSize: const Size(0, 32),
+        return SizedBox(
+          width: buttonWidth,
+          child: FilledButton(
+            onPressed: onPressed,
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              minimumSize: const Size(buttonWidth, 32),
+            ),
+            child: const Text('Follow'),
           ),
-          child: const Text('Follow'),
         );
     }
   }

@@ -152,7 +152,7 @@ class FollowRequestsScreen extends ConsumerWidget {
   }
 }
 
-class _RequestTile extends StatelessWidget {
+class _RequestTile extends ConsumerWidget {
   const _RequestTile({
     required this.request,
     required this.onAccept,
@@ -166,10 +166,20 @@ class _RequestTile extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final profile = request.profile;
     final createdAt = request.request.createdAt;
+
+    // Check if current user is following this requester
+    final followState = ref.watch(
+      followStateProvider(request.request.requesterId),
+    );
+    final isFollowingThem = followState.when(
+      data: (state) => state.isFollowing,
+      loading: () => false,
+      error: (_, _) => false,
+    );
 
     return ListTile(
       onTap: onTap,
@@ -218,20 +228,32 @@ class _RequestTile extends StatelessWidget {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          IconButton.filled(
-            onPressed: onAccept,
-            icon: const Icon(Icons.check),
-            tooltip: 'Accept',
-            style: IconButton.styleFrom(
-              backgroundColor: theme.colorScheme.primary,
-              foregroundColor: theme.colorScheme.onPrimary,
+          SizedBox(
+            width: 110,
+            height: 32,
+            child: FilledButton(
+              onPressed: onAccept,
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                minimumSize: const Size(110, 32),
+              ),
+              child: Text(isFollowingThem ? 'Follow Back' : 'Confirm'),
             ),
           ),
           const SizedBox(width: 8),
-          IconButton.outlined(
-            onPressed: onDecline,
-            icon: const Icon(Icons.close),
-            tooltip: 'Decline',
+          SizedBox(
+            width: 80,
+            height: 32,
+            child: FilledButton(
+              onPressed: onDecline,
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                minimumSize: const Size(80, 32),
+                backgroundColor: Colors.grey,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Delete'),
+            ),
           ),
         ],
       ),
