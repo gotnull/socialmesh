@@ -97,6 +97,13 @@ service cloud.firestore {
         (!('displayName' in request.resource.data) || canUseDisplayName(request.resource.data.displayName));
     }
     
+    // User presence - public read, owner write
+    // Tracks online/offline status for social features
+    match /presence/{userId} {
+      allow read: if true;
+      allow write: if isOwner(userId);
+    }
+    
     // User profiles - public read, owner write (except counters)
     match /profiles/{userId} {
       allow read: if true;
