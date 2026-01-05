@@ -119,8 +119,6 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
               slivers: [
                 if (widget.showAppBar)
                   _buildSliverAppBar(context, profile, isOwnProfile),
-                if (isOwnProfile)
-                  SliverToBoxAdapter(child: _buildSearchBar(context)),
                 SliverToBoxAdapter(
                   child: _buildProfileHeader(
                     context,
@@ -260,6 +258,11 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
       ),
       actions: [
         if (isOwnProfile) ...[
+          IconButton(
+            icon: Icon(Icons.search, color: context.textPrimary),
+            onPressed: _navigateToUserSearch,
+            tooltip: 'Search users',
+          ),
           _FollowRequestsBadge(
             child: IconButton(
               icon: Icon(Icons.person_add_outlined, color: context.textPrimary),
@@ -291,34 +294,6 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
           ),
         ],
       ],
-    );
-  }
-
-  Widget _buildSearchBar(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-      child: GestureDetector(
-        onTap: _navigateToUserSearch,
-        child: Container(
-          decoration: BoxDecoration(
-            color: context.card,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            child: Row(
-              children: [
-                Icon(Icons.search, color: context.textTertiary),
-                const SizedBox(width: 12),
-                Text(
-                  'Search users...',
-                  style: TextStyle(color: context.textTertiary, fontSize: 16),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 

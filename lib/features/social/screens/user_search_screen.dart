@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/theme.dart';
 import '../../../models/social.dart';
 import '../../../providers/social_providers.dart';
 import '../widgets/follow_button.dart';
@@ -54,29 +55,66 @@ class _UserSearchScreenState extends ConsumerState<UserSearchScreen> {
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         appBar: AppBar(
-          title: TextField(
-            controller: _searchController,
-            focusNode: _searchFocusNode,
-            decoration: InputDecoration(
-              hintText: 'Search users...',
-              border: InputBorder.none,
-              suffixIcon: _searchController.text.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: () {
-                        _searchController.clear();
-                        setState(() => _searchQuery = '');
-                      },
-                    )
-                  : null,
+          backgroundColor: context.background,
+          title: Text(
+            'Search',
+            style: TextStyle(
+              color: context.textPrimary,
+              fontWeight: FontWeight.w600,
             ),
-            onChanged: _onSearchChanged,
-            textInputAction: TextInputAction.search,
           ),
         ),
-        body: _searchQuery.isEmpty
-            ? _SuggestionsView()
-            : _SearchResultsView(query: _searchQuery),
+        body: Column(
+          children: [
+            // Search bar in body like Direct Messages
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: context.card,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  focusNode: _searchFocusNode,
+                  onChanged: _onSearchChanged,
+                  style: TextStyle(color: context.textPrimary),
+                  textInputAction: TextInputAction.search,
+                  decoration: InputDecoration(
+                    hintText: 'Search users...',
+                    hintStyle: TextStyle(color: context.textTertiary),
+                    prefixIcon: Icon(Icons.search, color: context.textTertiary),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: Icon(
+                              Icons.clear,
+                              color: context.textTertiary,
+                            ),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() => _searchQuery = '');
+                            },
+                          )
+                        : null,
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            // Divider
+            Container(height: 1, color: context.border.withValues(alpha: 0.3)),
+            // Results
+            Expanded(
+              child: _searchQuery.isEmpty
+                  ? _SuggestionsView()
+                  : _SearchResultsView(query: _searchQuery),
+            ),
+          ],
+        ),
       ),
     );
   }
