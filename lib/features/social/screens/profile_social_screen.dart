@@ -308,7 +308,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
                     '🟢 Profile online status for ${widget.userId}: isOnline=$isOnline, asyncState=${isOnlineAsync.toString()}',
                   );
 
-                  // TODO: Check for active stories here
+                  // Check for active stories here
                   // When stories are implemented, use this structure:
                   // final hasActiveStory = ...; // check story status
                   // if (hasActiveStory) {

@@ -1119,15 +1119,6 @@ class _NodeCard extends StatelessWidget {
                 text: node.avatarName,
                 color: isMyNode ? context.accentColor : _getAvatarColor(),
                 size: 56,
-                showGradientBorder: !isMyNode,
-                gradientColors: !isMyNode
-                    ? [
-                        const Color(0xFFFFD600), // Yellow
-                        const Color(0xFFFF7A00), // Orange
-                        const Color(0xFFFF0069), // Pink
-                        const Color(0xFFD300C5), // Purple
-                      ]
-                    : null,
                 showOnlineIndicator: true,
                 onlineStatus: node.isOnline
                     ? OnlineStatus.online

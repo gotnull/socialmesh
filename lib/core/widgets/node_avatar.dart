@@ -151,7 +151,7 @@ class NodeAvatar extends StatelessWidget {
             strokeWidth: batteryRingWidth,
           ),
           child: Padding(
-            padding: EdgeInsets.all(batteryRingWidth),
+            padding: EdgeInsets.all(batteryRingWidth + innerPadding),
             child: avatar,
           ),
         ),

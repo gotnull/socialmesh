@@ -403,6 +403,14 @@ class _MainShellState extends ConsumerState<MainShell> {
   /// Drawer menu items for quick access screens not in bottom nav
   /// Organized into logical sections with headers
   final List<_DrawerMenuItem> _drawerMenuItems = [
+    // Social - index 0, account tile navigates here
+    _DrawerMenuItem(
+      icon: Icons.forum_outlined,
+      label: 'Social',
+      screen: const SocialHubScreen(),
+      iconColor: Colors.deepPurple.shade400,
+    ),
+
     // Activity
     _DrawerMenuItem(
       icon: Icons.timeline,
@@ -665,6 +673,210 @@ class _MainShellState extends ConsumerState<MainShell> {
     return slivers;
   }
 
+  /// Build account section inline so setState works directly
+  Widget _buildAccountSection(BuildContext context, ThemeData theme) {
+    final authState = ref.watch(authStateProvider);
+    final profileAsync = ref.watch(userProfileProvider);
+    final isSignedIn = authState.value != null;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Section header
+          Padding(
+            padding: const EdgeInsets.only(left: 12, bottom: 8),
+            child: Text(
+              'ACCOUNT',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 1.2,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+              ),
+            ),
+          ),
+
+          // Account tile - same navigation as other drawer items
+          profileAsync.when(
+            data: (profile) =>
+                _buildProfileTile(context, theme, profile, isSignedIn),
+            loading: () => const SizedBox(
+              height: 56,
+              child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+            ),
+            error: (e, st) => _DrawerMenuTile(
+              icon: Icons.person_outline,
+              label: 'Account',
+              isSelected: _selectedDrawerItem == 0,
+              onTap: () {
+                ref.haptics.tabChange();
+                Navigator.of(context).pop();
+                setState(() {
+                  _selectedDrawerItem = 0;
+                });
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProfileTile(
+    BuildContext context,
+    ThemeData theme,
+    dynamic profile,
+    bool isSignedIn,
+  ) {
+    final accentColor = theme.colorScheme.primary;
+    final syncStatus = ref.watch(syncStatusProvider);
+
+    final displayName = profile?.displayName ?? 'Mesh User';
+    final initials = profile?.initials ?? '?';
+    final avatarUrl = profile?.avatarUrl;
+
+    String getSyncStatusText() {
+      if (!isSignedIn) return 'Not signed in';
+      return switch (syncStatus) {
+        SyncStatus.syncing => 'Syncing...',
+        SyncStatus.error => 'Sync error',
+        SyncStatus.synced => 'Synced',
+        SyncStatus.idle => 'View Profile',
+      };
+    }
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          ref.haptics.tabChange();
+          Navigator.of(context).pop();
+          setState(() {
+            _selectedDrawerItem = 0;
+          });
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              // Avatar
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: accentColor.withValues(alpha: 0.15),
+                  border: Border.all(
+                    color: accentColor.withValues(alpha: 0.3),
+                    width: 1.5,
+                  ),
+                ),
+                child: ClipOval(
+                  child: avatarUrl != null
+                      ? (avatarUrl.startsWith('http')
+                            ? Image.network(
+                                avatarUrl,
+                                fit: BoxFit.cover,
+                                loadingBuilder:
+                                    (context, child, loadingProgress) {
+                                      if (loadingProgress == null) return child;
+                                      return Center(
+                                        child: SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: accentColor,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                errorBuilder: (ctx, err, stack) =>
+                                    _buildInitials(initials, accentColor),
+                              )
+                            : Image.file(
+                                File(avatarUrl),
+                                fit: BoxFit.cover,
+                                errorBuilder: (ctx, err, stack) =>
+                                    _buildInitials(initials, accentColor),
+                              ))
+                      : _buildInitials(initials, accentColor),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Name and subtitle
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      displayName,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        if (syncStatus == SyncStatus.syncing)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 4),
+                            child: SizedBox(
+                              width: 10,
+                              height: 10,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 1.5,
+                                color: accentColor,
+                              ),
+                            ),
+                          ),
+                        Text(
+                          getSyncStatusText(),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.6,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              // Chevron
+              Icon(
+                Icons.chevron_right,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                size: 20,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInitials(String initials, Color accentColor) {
+    return Center(
+      child: Text(
+        initials,
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: accentColor,
+        ),
+      ),
+    );
+  }
+
   Widget _buildDrawer(BuildContext context) {
     final theme = Theme.of(context);
 
@@ -688,8 +900,8 @@ class _MainShellState extends ConsumerState<MainShell> {
               child: Divider(color: theme.dividerColor.withValues(alpha: 0.1)),
             ),
 
-            // Account section (right after node header)
-            const _DrawerProfileSection(),
+            // Account section - inline so setState works
+            _buildAccountSection(context, theme),
 
             // Divider after account
             Padding(
@@ -1450,251 +1662,6 @@ class _PulsingDotState extends State<_PulsingDot>
           ),
         );
       },
-    );
-  }
-}
-
-/// Profile section for the drawer - simplified, just links to Profile screen
-class _DrawerProfileSection extends ConsumerWidget {
-  const _DrawerProfileSection();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final authState = ref.watch(authStateProvider);
-    final profileAsync = ref.watch(userProfileProvider);
-    final isSignedIn = authState.value != null;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Section header
-          Padding(
-            padding: const EdgeInsets.only(left: 12, bottom: 8),
-            child: Text(
-              'ACCOUNT',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 1.2,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-              ),
-            ),
-          ),
-
-          // Account tile with avatar - navigates to Social hub
-          profileAsync.when(
-            data: (profile) => _ProfileTile(
-              profile: profile,
-              isSignedIn: isSignedIn,
-              onTap: () {
-                ref.haptics.tabChange();
-                Navigator.of(context).pop();
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const SocialHubScreen()),
-                );
-              },
-            ),
-            loading: () => const SizedBox(
-              height: 56,
-              child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-            ),
-            error: (e, st) => _DrawerMenuTile(
-              icon: Icons.person_outline,
-              label: 'Account',
-              isSelected: false,
-              onTap: () {
-                ref.haptics.tabChange();
-                Navigator.of(context).pop();
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const SocialHubScreen()),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Profile tile with avatar for the drawer
-class _ProfileTile extends ConsumerWidget {
-  final dynamic profile; // UserProfile?
-  final bool isSignedIn;
-  final VoidCallback onTap;
-
-  const _ProfileTile({
-    required this.profile,
-    required this.isSignedIn,
-    required this.onTap,
-  });
-
-  String _getSyncStatusText(SyncStatus syncStatus) {
-    if (!isSignedIn) return 'Not signed in';
-    return switch (syncStatus) {
-      SyncStatus.syncing => 'Syncing...',
-      SyncStatus.error => 'Sync error',
-      SyncStatus.synced => 'Synced',
-      SyncStatus.idle => 'View Profile',
-    };
-  }
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final accentColor = theme.colorScheme.primary;
-    final syncStatus = ref.watch(syncStatusProvider);
-
-    final displayName = profile?.displayName ?? 'Mesh User';
-    final initials = profile?.initials ?? '?';
-    final avatarUrl = profile?.avatarUrl;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          child: Row(
-            children: [
-              // Avatar
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: accentColor.withValues(alpha: 0.15),
-                  border: Border.all(
-                    color: accentColor.withValues(alpha: 0.3),
-                    width: 1.5,
-                  ),
-                ),
-                child: ClipOval(
-                  child: avatarUrl != null
-                      ? (avatarUrl.startsWith('http')
-                            ? Image.network(
-                                avatarUrl,
-                                fit: BoxFit.cover,
-                                loadingBuilder:
-                                    (context, child, loadingProgress) {
-                                      if (loadingProgress == null) return child;
-                                      return Center(
-                                        child: SizedBox(
-                                          width: 20,
-                                          height: 20,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: accentColor,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                errorBuilder: (ctx, err, stack) =>
-                                    _buildInitials(initials, accentColor),
-                              )
-                            : Image.file(
-                                File(avatarUrl),
-                                fit: BoxFit.cover,
-                                errorBuilder: (ctx, err, stack) =>
-                                    _buildInitials(initials, accentColor),
-                              ))
-                      : _buildInitials(initials, accentColor),
-                ),
-              ),
-              const SizedBox(width: 12),
-              // Name and subtitle
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      displayName,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        if (isSignedIn && syncStatus == SyncStatus.syncing)
-                          Padding(
-                            padding: const EdgeInsets.only(right: 4),
-                            child: SizedBox(
-                              width: 10,
-                              height: 10,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 1.5,
-                                color: theme.colorScheme.onSurface.withValues(
-                                  alpha: 0.5,
-                                ),
-                              ),
-                            ),
-                          )
-                        else if (isSignedIn && syncStatus == SyncStatus.synced)
-                          Padding(
-                            padding: const EdgeInsets.only(right: 4),
-                            child: Icon(
-                              Icons.cloud_done,
-                              size: 12,
-                              color: AccentColors.green,
-                            ),
-                          )
-                        else if (isSignedIn && syncStatus == SyncStatus.error)
-                          Padding(
-                            padding: const EdgeInsets.only(right: 4),
-                            child: Icon(
-                              Icons.cloud_off,
-                              size: 12,
-                              color: AppTheme.errorRed,
-                            ),
-                          ),
-                        Text(
-                          _getSyncStatusText(syncStatus),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: syncStatus == SyncStatus.error
-                                ? AppTheme.errorRed.withValues(alpha: 0.8)
-                                : theme.colorScheme.onSurface.withValues(
-                                    alpha: 0.5,
-                                  ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              // Arrow
-              Icon(
-                Icons.chevron_right,
-                size: 20,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInitials(String initials, Color accentColor) {
-    return Center(
-      child: Text(
-        initials,
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          color: accentColor,
-        ),
-      ),
     );
   }
 }
