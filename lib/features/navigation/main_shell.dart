@@ -399,8 +399,6 @@ class MainShell extends ConsumerStatefulWidget {
 class _MainShellState extends ConsumerState<MainShell> {
   int _currentIndex = 3; // Start on Nodes tab
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  int _selectedDrawerItem =
-      -1; // -1 means no drawer item selected (showing main nav)
 
   @override
   void initState() {
@@ -543,12 +541,7 @@ class _MainShellState extends ConsumerState<MainShell> {
   ];
 
   Widget _buildScreen(int index) {
-    // If a drawer item is selected, show that screen
-    if (_selectedDrawerItem >= 0 &&
-        _selectedDrawerItem < _drawerMenuItems.length) {
-      return _drawerMenuItems[_selectedDrawerItem].screen;
-    }
-    // Otherwise show the bottom nav screen
+    // Show the bottom nav screen
     switch (index) {
       case 0:
         return const ChannelsScreen();
@@ -629,8 +622,6 @@ class _MainShellState extends ConsumerState<MainShell> {
             delegate: SliverChildBuilderDelegate((context, index) {
               final itemWithIndex = section.items[index];
               final item = itemWithIndex.item;
-              final globalIndex = itemWithIndex.index;
-              final isSelected = _selectedDrawerItem == globalIndex;
               final isLastInSection = index == section.items.length - 1;
 
               // Check if this is a premium feature and if user has access
@@ -644,7 +635,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                   _DrawerMenuTile(
                     icon: item.icon,
                     label: item.label,
-                    isSelected: isSelected,
+                    isSelected: false, // Never selected, items push new screens
                     isPremium: isPremium,
                     isLocked: isPremium && !hasAccess,
                     iconColor: item.iconColor,
@@ -659,9 +650,12 @@ class _MainShellState extends ConsumerState<MainShell> {
                           ),
                         );
                       } else {
-                        setState(() {
-                          _selectedDrawerItem = globalIndex;
-                        });
+                        // Push screen with back button for consistent navigation
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (context) => item.screen,
+                          ),
+                        );
                       }
                     },
                   ),
@@ -722,13 +716,15 @@ class _MainShellState extends ConsumerState<MainShell> {
             error: (e, st) => _DrawerMenuTile(
               icon: Icons.person_outline,
               label: 'Account',
-              isSelected: _selectedDrawerItem == 0,
+              isSelected: false,
               onTap: () {
                 ref.haptics.tabChange();
                 Navigator.of(context).pop();
-                setState(() {
-                  _selectedDrawerItem = 0;
-                });
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (context) => _drawerMenuItems[0].screen,
+                  ),
+                );
               },
             ),
           ),
@@ -766,9 +762,12 @@ class _MainShellState extends ConsumerState<MainShell> {
         onTap: () {
           ref.haptics.tabChange();
           Navigator.of(context).pop();
-          setState(() {
-            _selectedDrawerItem = 0;
-          });
+          // Push Social profile screen with back button
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (context) => _drawerMenuItems[0].screen,
+            ),
+          );
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
@@ -1080,11 +1079,7 @@ class _MainShellState extends ConsumerState<MainShell> {
           );
         },
         child: KeyedSubtree(
-          key: ValueKey(
-            _selectedDrawerItem >= 0
-                ? 'drawer_$_selectedDrawerItem'
-                : 'main_$_currentIndex',
-          ),
+          key: ValueKey('main_$_currentIndex'),
           child: _buildScreen(_currentIndex),
         ),
       ),
@@ -1109,8 +1104,7 @@ class _MainShellState extends ConsumerState<MainShell> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: List.generate(_navItems.length, (index) {
                 final item = _navItems[index];
-                final isSelected =
-                    _currentIndex == index && _selectedDrawerItem < 0;
+                final isSelected = _currentIndex == index;
 
                 // Show warning badge on Device tab (index 4) when disconnected
                 final showWarningBadge = index == 4 && !isConnected;
@@ -1135,7 +1129,6 @@ class _MainShellState extends ConsumerState<MainShell> {
                     }
                     setState(() {
                       _currentIndex = index;
-                      _selectedDrawerItem = -1; // Clear drawer selection
                     });
                   },
                 );

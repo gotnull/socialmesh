@@ -9,7 +9,6 @@ import '../../utils/snackbar.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/edge_fade.dart';
-import '../navigation/main_shell.dart';
 import 'automation_debug_service.dart';
 import 'automation_providers.dart';
 import 'automation_repository.dart';
@@ -30,7 +29,6 @@ class AutomationsScreen extends ConsumerWidget {
       backgroundColor: context.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        leading: const HamburgerMenuButton(),
         centerTitle: true,
         title: const Text('Automations'),
         actions: [

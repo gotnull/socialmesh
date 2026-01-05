@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
-import '../navigation/main_shell.dart';
 
 /// Presence status based on recent radio activity
 enum PresenceStatus { active, idle, offline }
@@ -170,9 +169,8 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
       backgroundColor: context.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        leading: const HamburgerMenuButton(),
         centerTitle: true,
-        title: Text('Presence'),
+        title: const Text('Presence'),
       ),
       body: presences.isEmpty
           ? _buildEmptyState(theme)

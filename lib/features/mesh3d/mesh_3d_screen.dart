@@ -7,7 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vector_math/vector_math_64.dart' as vector;
 
 import '../../core/theme.dart';
-import '../../core/widgets/drawer_screen_app_bar.dart';
 import '../../core/widgets/edge_fade.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
@@ -278,8 +277,12 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
 
     return Scaffold(
       backgroundColor: context.background,
-      appBar: DrawerScreenAppBar(
-        title: _currentMode.label,
+      appBar: AppBar(
+        backgroundColor: context.background,
+        title: Text(
+          _currentMode.label,
+          style: TextStyle(color: context.textPrimary),
+        ),
         actions: [
           // View selector - most important action
           IconButton(
@@ -287,43 +290,81 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
             tooltip: 'Change View',
             onPressed: () => _showViewSelector(context),
           ),
-        ],
-        overflowActions: [
-          // Connections toggle (topology mode only)
-          if (_currentMode == Mesh3DViewMode.topology)
-            DrawerAppBarAction(
-              icon: _showConnections ? Icons.share : Icons.share_outlined,
-              label: _showConnections ? 'Hide Connections' : 'Show Connections',
-              onPressed: () =>
-                  setState(() => _showConnections = !_showConnections),
-            ),
-          // Connection quality filter
-          if (_currentMode == Mesh3DViewMode.topology && _showConnections)
-            DrawerAppBarAction(
-              icon: Icons.tune,
-              label: 'Filter Connections',
-              onPressed: () => _showConnectionFilterSheet(context),
-            ),
-          // Label toggle
-          DrawerAppBarAction(
-            icon: _showLabels ? Icons.label : Icons.label_off,
-            label: _showLabels ? 'Hide Labels' : 'Show Labels',
-            onPressed: () => setState(() => _showLabels = !_showLabels),
-          ),
-          // Auto rotate toggle
-          DrawerAppBarAction(
-            icon: Icons.rotate_right,
-            label: _autoRotate ? 'Stop Rotation' : 'Auto Rotate',
-            onPressed: _toggleAutoRotate,
-          ),
-          // AR Radar
-          DrawerAppBarAction(
-            icon: Icons.radar,
-            label: 'AR Node Radar',
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ARRadarScreen()),
-            ),
+          // Overflow menu for additional actions
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) {
+              switch (value) {
+                case 'connections':
+                  setState(() => _showConnections = !_showConnections);
+                case 'filter':
+                  _showConnectionFilterSheet(context);
+                case 'labels':
+                  setState(() => _showLabels = !_showLabels);
+                case 'rotate':
+                  _toggleAutoRotate();
+                case 'radar':
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ARRadarScreen()),
+                  );
+              }
+            },
+            itemBuilder: (context) => [
+              if (_currentMode == Mesh3DViewMode.topology)
+                PopupMenuItem(
+                  value: 'connections',
+                  child: ListTile(
+                    leading: Icon(
+                      _showConnections ? Icons.share : Icons.share_outlined,
+                    ),
+                    title: Text(
+                      _showConnections
+                          ? 'Hide Connections'
+                          : 'Show Connections',
+                    ),
+                    contentPadding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+              if (_currentMode == Mesh3DViewMode.topology && _showConnections)
+                const PopupMenuItem(
+                  value: 'filter',
+                  child: ListTile(
+                    leading: Icon(Icons.tune),
+                    title: Text('Filter Connections'),
+                    contentPadding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+              PopupMenuItem(
+                value: 'labels',
+                child: ListTile(
+                  leading: Icon(_showLabels ? Icons.label : Icons.label_off),
+                  title: Text(_showLabels ? 'Hide Labels' : 'Show Labels'),
+                  contentPadding: EdgeInsets.zero,
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
+              PopupMenuItem(
+                value: 'rotate',
+                child: ListTile(
+                  leading: const Icon(Icons.rotate_right),
+                  title: Text(_autoRotate ? 'Stop Rotation' : 'Auto Rotate'),
+                  contentPadding: EdgeInsets.zero,
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'radar',
+                child: ListTile(
+                  leading: Icon(Icons.radar),
+                  title: Text('AR Node Radar'),
+                  contentPadding: EdgeInsets.zero,
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
+            ],
           ),
         ],
       ),

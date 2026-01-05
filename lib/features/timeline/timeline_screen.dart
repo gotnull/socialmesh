@@ -7,7 +7,6 @@ import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/edge_fade.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
-import '../navigation/main_shell.dart';
 
 /// Types of events that can appear in the timeline
 enum TimelineEventType {
@@ -320,7 +319,6 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
       backgroundColor: context.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        leading: const HamburgerMenuButton(),
         centerTitle: true,
         title: const Text('Timeline'),
         actions: [
@@ -429,37 +427,44 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
     return Consumer(
       builder: (context, ref, _) {
         final animationsEnabled = ref.watch(animationsEnabledProvider);
-        return ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          itemCount: groupedEvents.length,
-          itemBuilder: (context, index) {
-            final dateKey = groupedEvents.keys.elementAt(index);
-            final dateEvents = groupedEvents[dateKey]!;
 
-            return Perspective3DSlide(
-              index: index,
-              direction: SlideDirection.left,
-              enabled: animationsEnabled,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Date header
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: Text(
-                      dateKey,
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        color: context.textSecondary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  // Events for this date
-                  ...dateEvents.map((event) => _buildEventCard(theme, event)),
-                ],
+        // Flatten into a list of widgets with date headers
+        final widgets = <Widget>[];
+        var itemIndex = 0;
+
+        for (final dateKey in groupedEvents.keys) {
+          final dateEvents = groupedEvents[dateKey]!;
+
+          // Date header (no animation)
+          widgets.add(
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Text(
+                dateKey,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: context.textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          );
+
+          // Individual event cards with staggered animation
+          for (final event in dateEvents) {
+            widgets.add(
+              Perspective3DSlide(
+                index: itemIndex++,
+                direction: SlideDirection.left,
+                enabled: animationsEnabled,
+                child: _buildEventCard(theme, event),
               ),
             );
-          },
+          }
+        }
+
+        return ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          children: widgets,
         );
       },
     );

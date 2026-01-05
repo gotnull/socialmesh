@@ -11,7 +11,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/map_config.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
-import '../../core/widgets/drawer_screen_app_bar.dart';
 import '../../core/widgets/map_controls.dart';
 import '../../models/world_mesh_node.dart';
 import '../../providers/node_favorites_provider.dart';
@@ -131,8 +130,12 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
     return GestureDetector(
       onTap: _dismissKeyboard,
       child: Scaffold(
-        appBar: DrawerScreenAppBar(
-          title: 'World Map',
+        appBar: AppBar(
+          backgroundColor: context.background,
+          title: Text(
+            'World Map',
+            style: TextStyle(color: context.textPrimary),
+          ),
           actions: [
             // Search toggle (only show when search is NOT active)
             if (!_showSearch)
@@ -162,50 +165,84 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
               tooltip: 'Favorites',
               onPressed: () => _openFavorites(context),
             ),
-          ],
-          overflowActions: [
-            // Map style options
-            DrawerAppBarAction(
-              icon: Icons.layers,
-              label: 'Dark Map',
-              onPressed: () => setState(() => _mapStyle = MapTileStyle.dark),
-              trailing: _mapStyle == MapTileStyle.dark
-                  ? Icon(Icons.check, size: 18, color: accentColor)
-                  : null,
-            ),
-            DrawerAppBarAction(
-              icon: Icons.layers,
-              label: 'Satellite',
-              onPressed: () =>
-                  setState(() => _mapStyle = MapTileStyle.satellite),
-              trailing: _mapStyle == MapTileStyle.satellite
-                  ? Icon(Icons.check, size: 18, color: accentColor)
-                  : null,
-            ),
-            DrawerAppBarAction(
-              icon: Icons.layers,
-              label: 'Light Map',
-              onPressed: () => setState(() => _mapStyle = MapTileStyle.light),
-              trailing: _mapStyle == MapTileStyle.light
-                  ? Icon(Icons.check, size: 18, color: accentColor)
-                  : null,
-            ),
-            DrawerAppBarAction(
-              icon: Icons.layers,
-              label: 'Terrain',
-              onPressed: () => setState(() => _mapStyle = MapTileStyle.terrain),
-              trailing: _mapStyle == MapTileStyle.terrain
-                  ? Icon(Icons.check, size: 18, color: accentColor)
-                  : null,
-            ),
-            // Refresh
-            DrawerAppBarAction(
-              icon: Icons.refresh,
-              label: 'Refresh',
-              onPressed: () {
-                HapticFeedback.lightImpact();
-                ref.read(worldMeshMapProvider.notifier).forceRefresh();
+            // Overflow menu for map style and refresh
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert),
+              onSelected: (value) {
+                switch (value) {
+                  case 'dark':
+                    setState(() => _mapStyle = MapTileStyle.dark);
+                  case 'satellite':
+                    setState(() => _mapStyle = MapTileStyle.satellite);
+                  case 'light':
+                    setState(() => _mapStyle = MapTileStyle.light);
+                  case 'terrain':
+                    setState(() => _mapStyle = MapTileStyle.terrain);
+                  case 'refresh':
+                    HapticFeedback.lightImpact();
+                    ref.read(worldMeshMapProvider.notifier).forceRefresh();
+                }
               },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'dark',
+                  child: ListTile(
+                    leading: const Icon(Icons.layers),
+                    title: const Text('Dark Map'),
+                    trailing: _mapStyle == MapTileStyle.dark
+                        ? Icon(Icons.check, size: 18, color: accentColor)
+                        : null,
+                    contentPadding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'satellite',
+                  child: ListTile(
+                    leading: const Icon(Icons.layers),
+                    title: const Text('Satellite'),
+                    trailing: _mapStyle == MapTileStyle.satellite
+                        ? Icon(Icons.check, size: 18, color: accentColor)
+                        : null,
+                    contentPadding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'light',
+                  child: ListTile(
+                    leading: const Icon(Icons.layers),
+                    title: const Text('Light Map'),
+                    trailing: _mapStyle == MapTileStyle.light
+                        ? Icon(Icons.check, size: 18, color: accentColor)
+                        : null,
+                    contentPadding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'terrain',
+                  child: ListTile(
+                    leading: const Icon(Icons.layers),
+                    title: const Text('Terrain'),
+                    trailing: _mapStyle == MapTileStyle.terrain
+                        ? Icon(Icons.check, size: 18, color: accentColor)
+                        : null,
+                    contentPadding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+                const PopupMenuDivider(),
+                const PopupMenuItem(
+                  value: 'refresh',
+                  child: ListTile(
+                    leading: Icon(Icons.refresh),
+                    title: Text('Refresh'),
+                    contentPadding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+              ],
             ),
           ],
         ),

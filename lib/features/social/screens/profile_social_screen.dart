@@ -20,7 +20,6 @@ import '../../../utils/snackbar.dart';
 import '../../map/map_screen.dart';
 import '../../messaging/messaging_screen.dart'
     show ChatScreen, ConversationType;
-import '../../navigation/main_shell.dart';
 import '../../profile/profile_screen.dart';
 import '../../settings/linked_devices_screen.dart';
 import '../../settings/settings_screen.dart';
@@ -272,8 +271,6 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
       backgroundColor: context.background,
       foregroundColor: context.textPrimary,
       pinned: true,
-      leading: isOwnProfile ? const HamburgerMenuButton() : null,
-      titleSpacing: isOwnProfile ? 0 : NavigationToolbar.kMiddleSpacing,
       title: Text(
         profile.displayName,
         style: const TextStyle(fontWeight: FontWeight.w600),

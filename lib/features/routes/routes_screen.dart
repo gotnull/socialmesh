@@ -14,7 +14,6 @@ import '../../providers/app_providers.dart';
 import '../../providers/telemetry_providers.dart';
 import '../../utils/share_utils.dart';
 import '../../utils/snackbar.dart';
-import '../navigation/main_shell.dart';
 
 /// Screen showing saved routes and route recording
 class RoutesScreen extends ConsumerStatefulWidget {
@@ -34,7 +33,6 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen> {
       backgroundColor: context.background,
       appBar: AppBar(
         backgroundColor: context.background,
-        leading: const HamburgerMenuButton(),
         centerTitle: true,
         title: Text(
           'Routes',

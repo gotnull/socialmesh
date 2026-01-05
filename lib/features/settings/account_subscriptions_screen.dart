@@ -16,7 +16,6 @@ import '../../providers/profile_providers.dart';
 import '../../providers/subscription_providers.dart';
 import '../../services/subscription/cloud_sync_entitlement_service.dart';
 import '../../utils/snackbar.dart';
-import '../navigation/main_shell.dart';
 import '../profile/profile_screen.dart';
 import 'subscription_screen.dart';
 
@@ -46,7 +45,6 @@ class _AccountSubscriptionsScreenState
       backgroundColor: context.background,
       appBar: AppBar(
         backgroundColor: context.background,
-        leading: const HamburgerMenuButton(),
         centerTitle: true,
         title: Text(
           'Account',

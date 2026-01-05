@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
-import '../../../core/widgets/drawer_screen_app_bar.dart';
 import '../../../services/mesh_health/mesh_health_models.dart';
 import '../../../services/mesh_health/mesh_health_providers.dart';
 
@@ -21,8 +20,12 @@ class MeshHealthDashboard extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: context.background,
-      appBar: DrawerScreenAppBar(
-        title: 'Mesh Health',
+      appBar: AppBar(
+        backgroundColor: context.background,
+        title: Text(
+          'Mesh Health',
+          style: TextStyle(color: context.textPrimary),
+        ),
         actions: [
           IconButton(
             icon: Icon(
@@ -36,11 +39,9 @@ class MeshHealthDashboard extends ConsumerWidget {
               ref.read(meshHealthProvider.notifier).toggleMonitoring();
             },
           ),
-        ],
-        overflowActions: [
-          DrawerAppBarAction(
-            icon: Icons.refresh,
-            label: 'Reset Data',
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Reset Data',
             onPressed: () {
               ref.read(meshHealthProvider.notifier).reset();
             },

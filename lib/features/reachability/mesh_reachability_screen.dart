@@ -6,7 +6,6 @@ import '../../core/widgets/animations.dart';
 import '../../models/reachability_models.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/reachability_provider.dart';
-import '../navigation/main_shell.dart';
 import '../nodes/nodes_screen.dart';
 
 /// Mesh Reachability Screen
@@ -57,7 +56,6 @@ class _MeshReachabilityScreenState
         backgroundColor: context.background,
         appBar: AppBar(
           backgroundColor: context.background,
-          leading: const HamburgerMenuButton(),
           centerTitle: true,
           title: Row(
             mainAxisSize: MainAxisSize.min,
