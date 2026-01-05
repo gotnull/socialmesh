@@ -311,10 +311,12 @@ service cloud.firestore {
     // Follow requests - for private accounts (Instagram-style approval)
     // Document ID format: {requesterId}_{targetId} for idempotent operations
     match /follow_requests/{requestId} {
+      // Admins can read all requests (for testing/moderation)
       // Users can read requests they sent or received
-      allow read: if isAuthenticated() &&
-        (resource.data.requesterId == request.auth.uid ||
-         resource.data.targetId == request.auth.uid);
+      allow read: if isAdmin() || 
+        (isAuthenticated() &&
+         (resource.data.requesterId == request.auth.uid ||
+          resource.data.targetId == request.auth.uid));
       
       // Create: authenticated, must be requesting as yourself, cannot self-request
       allow create: if isAuthenticated() &&
@@ -323,15 +325,17 @@ service cloud.firestore {
         request.resource.data.status == 'pending' &&
         requestId == request.resource.data.requesterId + '_' + request.resource.data.targetId;
       
-      // Update: only target can update status (approve/decline)
-      allow update: if isAuthenticated() &&
-        resource.data.targetId == request.auth.uid &&
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'respondedAt']);
+      // Update: only target can update status (approve/decline), or admin
+      allow update: if isAdmin() ||
+        (isAuthenticated() &&
+         resource.data.targetId == request.auth.uid &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'respondedAt']));
       
-      // Delete: requester can cancel, target can delete after responding
-      allow delete: if isAuthenticated() &&
-        (resource.data.requesterId == request.auth.uid ||
-         resource.data.targetId == request.auth.uid);
+      // Delete: requester can cancel, target can delete after responding, or admin
+      allow delete: if isAdmin() ||
+        (isAuthenticated() &&
+         (resource.data.requesterId == request.auth.uid ||
+          resource.data.targetId == request.auth.uid));
     }
 
     // Posts - user-created content
