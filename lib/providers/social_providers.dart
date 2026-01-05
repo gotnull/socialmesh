@@ -126,6 +126,7 @@ final followStateProvider = FutureProvider.autoDispose
 /// For accounts with pending requests, cancels the request.
 Future<void> toggleFollow(WidgetRef ref, String targetUserId) async {
   final service = ref.read(socialServiceProvider);
+  final currentUser = ref.read(currentUserProvider);
   final currentState = await ref.read(followStateProvider(targetUserId).future);
 
   if (currentState.isFollowing) {
@@ -139,8 +140,13 @@ Future<void> toggleFollow(WidgetRef ref, String targetUserId) async {
     await service.followUser(targetUserId);
   }
 
-  // Invalidate to refresh
+  // Invalidate to refresh both users' states
   ref.invalidate(followStateProvider(targetUserId));
+  // Invalidate profile streams so follower/following counts update immediately
+  ref.invalidate(publicProfileStreamProvider(targetUserId));
+  if (currentUser != null) {
+    ref.invalidate(publicProfileStreamProvider(currentUser.uid));
+  }
 }
 
 // ===========================================================================
@@ -165,12 +171,18 @@ final pendingFollowRequestsProvider =
 /// Accept a follow request
 Future<void> acceptFollowRequest(WidgetRef ref, String requesterId) async {
   final service = ref.read(socialServiceProvider);
+  final currentUser = ref.read(currentUserProvider);
   await service.acceptFollowRequest(requesterId);
 
   // Invalidate related providers
   ref.invalidate(pendingFollowRequestsProvider);
   ref.invalidate(pendingFollowRequestsCountProvider);
   ref.invalidate(followStateProvider(requesterId));
+  // Invalidate profile streams so follower counts update immediately
+  ref.invalidate(publicProfileStreamProvider(requesterId));
+  if (currentUser != null) {
+    ref.invalidate(publicProfileStreamProvider(currentUser.uid));
+  }
 }
 
 /// Decline a follow request
@@ -186,10 +198,16 @@ Future<void> declineFollowRequest(WidgetRef ref, String requesterId) async {
 /// Remove a follower (for private accounts)
 Future<void> removeFollower(WidgetRef ref, String followerId) async {
   final service = ref.read(socialServiceProvider);
+  final currentUser = ref.read(currentUserProvider);
   await service.removeFollower(followerId);
 
   // Invalidate related providers
   ref.invalidate(followStateProvider(followerId));
+  // Invalidate profile streams so follower counts update immediately
+  ref.invalidate(publicProfileStreamProvider(followerId));
+  if (currentUser != null) {
+    ref.invalidate(publicProfileStreamProvider(currentUser.uid));
+  }
 }
 
 /// Set account privacy setting
