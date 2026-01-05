@@ -193,36 +193,31 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
 
                     const SizedBox(height: 16),
 
-                    // Content input card
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: context.card,
-                        borderRadius: BorderRadius.circular(16),
+                    // Content input
+                    TextField(
+                      controller: _contentController,
+                      focusNode: _contentFocusNode,
+                      style: TextStyle(
+                        color: context.textPrimary,
+                        fontSize: 16,
+                        height: 1.5,
                       ),
-                      child: TextField(
-                        controller: _contentController,
-                        focusNode: _contentFocusNode,
-                        style: TextStyle(
-                          color: context.textPrimary,
+                      decoration: InputDecoration(
+                        hintText: 'What\'s happening on the mesh?',
+                        hintStyle: TextStyle(
+                          color: context.textTertiary,
                           fontSize: 16,
-                          height: 1.5,
                         ),
-                        decoration: InputDecoration(
-                          hintText: 'What\'s happening on the mesh?',
-                          hintStyle: TextStyle(
-                            color: context.textTertiary,
-                            fontSize: 16,
-                          ),
-                          border: InputBorder.none,
-                          isDense: true,
-                          contentPadding: EdgeInsets.zero,
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
                         ),
-                        maxLines: null,
-                        minLines: 6,
-                        textCapitalization: TextCapitalization.sentences,
-                        onChanged: (_) => setState(() {}),
                       ),
+                      maxLines: null,
+                      minLines: 6,
+                      textCapitalization: TextCapitalization.sentences,
+                      onChanged: (_) => setState(() {}),
                     ),
 
                     // Image previews

@@ -555,7 +555,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
                   if (profile.socialLinks?.twitter != null)
                     _SocialIconButton(
                       icon: SocialMediaIcons.twitter,
-                      color: context.textPrimary,
+                      color: const Color(0xFF000000),
                       onTap: () => _launchUrl(
                         'https://x.com/${profile.socialLinks!.twitter}',
                       ),
