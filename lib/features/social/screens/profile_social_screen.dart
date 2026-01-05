@@ -303,7 +303,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
                   // TODO: Check for active stories here
                   // When stories are implemented, use this structure:
                   // final hasActiveStory = ...; // check story status
-                  // if (hasActiveStory) { ... Instagram gradient ... }
+                  // if (hasActiveStory) { ... gradient ... }
                   // else if (isOnline) { ... green ring ... }
                   // else { ... no ring ... }
 
