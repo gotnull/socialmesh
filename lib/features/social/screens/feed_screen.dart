@@ -93,6 +93,9 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     final exploreState = ref.watch(exploreProvider);
 
     return RefreshIndicator(
+      edgeOffset: widget.showProfileHeader
+          ? kToolbarHeight + MediaQuery.of(context).padding.top
+          : 0,
       onRefresh: () async {
         // Reset optimistic adjustments on refresh (stream will have latest)
         ref.read(profileCountAdjustmentsProvider.notifier).reset(userId);

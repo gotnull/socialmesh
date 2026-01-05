@@ -839,7 +839,6 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
     try {
       // Step 1: Create users
       final userBatch = widget.firestore.batch();
-      final userPostCounts = <String, int>{};
 
       for (final user in _dummyUsers) {
         final userId = user['id'] as String;
@@ -848,12 +847,8 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
         setState(() => _status = 'Creating $displayName...');
         _log.add('+ $displayName');
 
-        // Count posts for this user
-        userPostCounts[userId] = _samplePosts
-            .where((p) => p['authorId'] == userId)
-            .length;
-
         // Create profile document
+        // Note: postCount starts at 0 - Cloud Functions will increment when posts are created
         final profileRef = widget.firestore.collection('profiles').doc(userId);
         userBatch.set(profileRef, {
           'displayName': displayName,
@@ -865,7 +860,7 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
           'isVerified': user['isVerified'],
           'followerCount': 0,
           'followingCount': 0,
-          'postCount': userPostCounts[userId] ?? 0,
+          'postCount': 0,
           'linkedNodeIds': <int>[],
           'createdAt': FieldValue.serverTimestamp(),
         });

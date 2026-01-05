@@ -103,7 +103,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
 
           return RefreshIndicator(
             edgeOffset: widget.showAppBar
-                ? 0
+                ? kToolbarHeight + MediaQuery.of(context).padding.top
                 : MediaQuery.of(context).padding.top,
             onRefresh: () async {
               ref
