@@ -4,7 +4,6 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -1180,34 +1179,32 @@ class _AppleTVGridCard extends StatefulWidget {
 class _AppleTVGridCardState extends State<_AppleTVGridCard>
     with TickerProviderStateMixin {
   late AnimationController _controller;
-  late AnimationController _disintegrationController;
+  late AnimationController _slideOutController;
   late AnimationController _textAnimationController;
   late AnimationController _shimmerController;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
+  late Animation<double> _slideAnimation;
 
-  // Disintegration state
-  bool _isDisintegrating = false;
-  bool _capturedImage = false;
-  ui.Image? _cardImage;
-  List<_SplashDisintegrationFragment>? _fragments;
-  final _repaintBoundaryKey = GlobalKey();
+  // Slide-out state
+  bool _isSlidingOut = false;
+  late bool _slideEast; // true = slide east, false = slide west
   final _random = math.Random();
-
-  // Fragment grid - fewer, larger pieces for cinematic Endgame effect
-  static const int _fragmentsX = 6;
-  static const int _fragmentsY = 8;
 
   @override
   void initState() {
     super.initState();
+
+    // Randomly choose slide direction
+    _slideEast = _random.nextBool();
+
     _controller = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
 
-    _disintegrationController = AnimationController(
-      duration: const Duration(milliseconds: 3000), // Slower, more cinematic
+    _slideOutController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
 
@@ -1233,6 +1230,11 @@ class _AppleTVGridCardState extends State<_AppleTVGridCard>
       ),
     );
 
+    // Slide animation - angled exit
+    _slideAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _slideOutController, curve: Curves.easeInCubic),
+    );
+
     // Staggered start
     Future.delayed(Duration(milliseconds: widget.staggerDelay), () {
       if (mounted) {
@@ -1247,114 +1249,28 @@ class _AppleTVGridCardState extends State<_AppleTVGridCard>
       }
     });
 
-    // Schedule disintegration after display period
+    // Schedule slide-out after display period
     Future.delayed(Duration(milliseconds: widget.staggerDelay + 6000), () {
-      _startDisintegration();
+      _startSlideOut();
     });
   }
 
-  Future<void> _startDisintegration() async {
-    if (!mounted || _isDisintegrating || widget.entry == null) return;
+  void _startSlideOut() {
+    if (!mounted || _isSlidingOut || widget.entry == null) return;
 
-    try {
-      final boundary =
-          _repaintBoundaryKey.currentContext?.findRenderObject()
-              as RenderRepaintBoundary?;
-      if (boundary == null) return;
+    setState(() {
+      _isSlidingOut = true;
+    });
 
-      final image = await boundary.toImage(pixelRatio: 2.0);
-      if (!mounted) return;
-
-      setState(() {
-        _cardImage = image;
-        _isDisintegrating = true;
-        _capturedImage = true;
-      });
-
-      _generateFragments(image.width.toDouble(), image.height.toDouble());
-      _disintegrationController.forward();
-    } catch (e) {
-      // Silently fail - card just stays
-    }
-  }
-
-  void _generateFragments(double imageWidth, double imageHeight) {
-    final fragmentWidth = imageWidth / _fragmentsX;
-    final fragmentHeight = imageHeight / _fragmentsY;
-
-    _fragments = [];
-
-    for (int y = 0; y < _fragmentsY; y++) {
-      for (int x = 0; x < _fragmentsX; x++) {
-        final normalizedX = x / _fragmentsX;
-        final normalizedY = y / _fragmentsY;
-
-        // Distance from center for radial dissolution
-        final centerDistX = (normalizedX - 0.5) * 2;
-        final centerDistY = (normalizedY - 0.5) * 2;
-        final centerDist = math.sqrt(
-          centerDistX * centerDistX + centerDistY * centerDistY,
-        );
-
-        // Endgame-style: edges dissolve first, flows inward
-        // Start from corners and edges, work toward center
-        final edgeFactor = centerDist * 0.45; // Edges start earlier
-        final randomOffset = _random.nextDouble() * 0.25; // Subtle variation
-        final startDelay = (edgeFactor + randomOffset).clamp(0.0, 0.65);
-
-        // Gentle outward drift - like ash floating away
-        final angle = math.atan2(centerDistY, centerDistX);
-        final gentleSpread =
-            _random.nextDouble() * 0.3 + 0.7; // 70-100% of base
-        final distance =
-            40 + _random.nextDouble() * 60; // Shorter, gentler drift
-
-        // Smooth upward float with gentle outward spread
-        final driftX = math.cos(angle) * distance * gentleSpread * 0.5;
-        final driftY = -30 - _random.nextDouble() * 50; // Float upward gently
-        final driftZ = (_random.nextDouble() - 0.5) * 40; // Minimal depth
-
-        // Subtle rotation - ash doesn't tumble wildly
-        final rotationX = (_random.nextDouble() - 0.5) * math.pi * 0.3;
-        final rotationY = (_random.nextDouble() - 0.5) * math.pi * 0.3;
-        final rotationZ = (_random.nextDouble() - 0.5) * math.pi * 0.5;
-
-        // Fragments shrink and fade as they float away
-        final scaleEnd = 0.3 + _random.nextDouble() * 0.4; // Larger end scale
-
-        // Gentle curve for floating motion
-        final curveIntensity = (_random.nextDouble() - 0.5) * 0.8;
-
-        _fragments!.add(
-          _SplashDisintegrationFragment(
-            srcRect: Rect.fromLTWH(
-              x * fragmentWidth,
-              y * fragmentHeight,
-              fragmentWidth,
-              fragmentHeight,
-            ),
-            startDelay: startDelay,
-            driftX: driftX,
-            driftY: driftY,
-            driftZ: driftZ,
-            rotationX: rotationX,
-            rotationY: rotationY,
-            rotationZ: rotationZ,
-            scaleEnd: scaleEnd,
-            curveIntensity: curveIntensity,
-          ),
-        );
-      }
-    }
+    _slideOutController.forward();
   }
 
   @override
   void dispose() {
     _controller.dispose();
-    _disintegrationController.dispose();
+    _slideOutController.dispose();
     _textAnimationController.dispose();
     _shimmerController.dispose();
-    _cardImage?.dispose();
     super.dispose();
   }
 
@@ -1415,36 +1331,36 @@ class _AppleTVGridCardState extends State<_AppleTVGridCard>
       left: widget.x,
       top: widget.y,
       child: AnimatedBuilder(
-        animation: Listenable.merge([_controller, _disintegrationController]),
+        animation: Listenable.merge([_controller, _slideOutController]),
         builder: (context, child) {
-          // If disintegrating, show the fragment renderer
-          if (_capturedImage && _cardImage != null && _fragments != null) {
-            return Transform.scale(
-              scale: _scaleAnimation.value,
-              child: Opacity(
-                opacity: _fadeAnimation.value * 0.95,
-                child: SizedBox(
-                  width: widget.cardWidth,
-                  height: widget.cardHeight,
-                  child: CustomPaint(
-                    painter: _SplashDisintegrationPainter(
-                      image: _cardImage!,
-                      fragments: _fragments!,
-                      progress: _disintegrationController.value,
-                    ),
-                    size: Size(widget.cardWidth, widget.cardHeight),
-                  ),
-                ),
-              ),
-            );
-          }
+          // Calculate slide-out transformation
+          final slideProgress = _slideAnimation.value;
+          final screenWidth = MediaQuery.of(context).size.width;
+
+          // Angled slide: move both horizontally and slightly vertically
+          final slideDistance = screenWidth * 1.5; // Slide past screen edge
+          final horizontalOffset = _slideEast
+              ? slideDistance * slideProgress
+              : -slideDistance * slideProgress;
+
+          // Slight vertical component for angled effect (20% of horizontal)
+          final verticalOffset = slideDistance * 0.2 * slideProgress;
+
+          // Rotate slightly as it slides for more dynamic effect
+          final rotationAngle = (_slideEast ? 0.15 : -0.15) * slideProgress;
+
+          // Fade out as it slides
+          final opacity = _fadeAnimation.value * (1.0 - slideProgress * 0.7);
 
           // Normal card with entry animations
-          return Transform.scale(
-            scale: _scaleAnimation.value,
-            child: Opacity(
-              opacity: _fadeAnimation.value * 0.95,
-              child: RepaintBoundary(key: _repaintBoundaryKey, child: child),
+          return Transform.translate(
+            offset: Offset(horizontalOffset, verticalOffset),
+            child: Transform.rotate(
+              angle: rotationAngle,
+              child: Transform.scale(
+                scale: _scaleAnimation.value,
+                child: Opacity(opacity: opacity * 0.95, child: child),
+              ),
             ),
           );
         },
@@ -1768,130 +1684,6 @@ class _AppleTVGridCardState extends State<_AppleTVGridCard>
       }),
     );
   }
-}
-
-/// Fragment data for splash screen disintegration
-class _SplashDisintegrationFragment {
-  final Rect srcRect;
-  final double startDelay;
-  final double driftX;
-  final double driftY;
-  final double driftZ;
-  final double rotationX;
-  final double rotationY;
-  final double rotationZ;
-  final double scaleEnd;
-  final double curveIntensity;
-
-  const _SplashDisintegrationFragment({
-    required this.srcRect,
-    required this.startDelay,
-    required this.driftX,
-    required this.driftY,
-    required this.driftZ,
-    required this.rotationX,
-    required this.rotationY,
-    required this.rotationZ,
-    required this.scaleEnd,
-    required this.curveIntensity,
-  });
-}
-
-/// Custom painter for splash card disintegration - Endgame style
-class _SplashDisintegrationPainter extends CustomPainter {
-  final ui.Image image;
-  final List<_SplashDisintegrationFragment> fragments;
-  final double progress;
-
-  _SplashDisintegrationPainter({
-    required this.image,
-    required this.fragments,
-    required this.progress,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..filterQuality = FilterQuality.high;
-
-    // Scale factor (captured at 2x)
-    final scaleX = size.width / image.width;
-    final scaleY = size.height / image.height;
-
-    for (final fragment in fragments) {
-      final fragmentProgress =
-          ((progress - fragment.startDelay) / (1.0 - fragment.startDelay))
-              .clamp(0.0, 1.0);
-
-      if (fragmentProgress <= 0) {
-        // Not started - draw in place
-        final dstRect = Rect.fromLTWH(
-          fragment.srcRect.left * scaleX,
-          fragment.srcRect.top * scaleY,
-          fragment.srcRect.width * scaleX,
-          fragment.srcRect.height * scaleY,
-        );
-        canvas.drawImageRect(image, fragment.srcRect, dstRect, paint);
-        continue;
-      }
-
-      // Smoother, more cinematic curves for Endgame effect
-      final moveProgress = Curves.easeOutSine.transform(fragmentProgress);
-      final fadeProgress = Curves.easeInCubic.transform(fragmentProgress);
-      final scaleProgress = Curves.easeInOutSine.transform(fragmentProgress);
-
-      // Gentle floating motion
-      final curveOffset =
-          math.sin(moveProgress * math.pi * 0.5) * fragment.curveIntensity * 15;
-      final currentX =
-          fragment.srcRect.center.dx * scaleX +
-          fragment.driftX * moveProgress +
-          curveOffset;
-      final currentY =
-          fragment.srcRect.center.dy * scaleY + fragment.driftY * moveProgress;
-      final currentZ = fragment.driftZ * moveProgress;
-
-      final currentScale = 1.0 - (1.0 - fragment.scaleEnd) * scaleProgress;
-
-      // Fade starts later and is more gradual (Endgame style - pieces visible longer)
-      final adjustedFade = (fadeProgress * 1.3 - 0.1).clamp(0.0, 1.0);
-      final opacity = (1.0 - adjustedFade).clamp(0.0, 1.0);
-
-      if (opacity <= 0 || currentScale <= 0) continue;
-
-      paint.color = Color.fromRGBO(255, 255, 255, opacity);
-
-      canvas.save();
-
-      final perspectiveFactor = 1.0 + currentZ * 0.0005; // Subtler depth
-      canvas.translate(currentX, currentY);
-
-      final scaleFactor = currentScale * perspectiveFactor;
-      final matrix = Matrix4.identity()
-        ..setEntry(3, 2, 0.001) // Subtler perspective
-        ..rotateX(fragment.rotationX * moveProgress)
-        ..rotateY(fragment.rotationY * moveProgress)
-        ..rotateZ(fragment.rotationZ * moveProgress)
-        ..scaleByVector3(Vector3(scaleFactor, scaleFactor, scaleFactor));
-
-      canvas.transform(matrix.storage);
-
-      final halfWidth = fragment.srcRect.width * scaleX / 2;
-      final halfHeight = fragment.srcRect.height * scaleY / 2;
-      final dstRect = Rect.fromLTWH(
-        -halfWidth,
-        -halfHeight,
-        fragment.srcRect.width * scaleX,
-        fragment.srcRect.height * scaleY,
-      );
-
-      canvas.drawImageRect(image, fragment.srcRect, dstRect, paint);
-      canvas.restore();
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _SplashDisintegrationPainter oldDelegate) =>
-      oldDelegate.progress != progress;
 }
 
 /// Animated node card for splash screen (legacy - kept for reference)
