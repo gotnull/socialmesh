@@ -9,9 +9,10 @@ import '../../../utils/snackbar.dart';
 ///
 /// Shows different states:
 /// - "Follow" when not following
+/// - "Requested" when follow request is pending (private accounts)
 /// - "Following" when following
 /// - Loading spinner during state change
-class FollowButton extends ConsumerWidget {
+class FollowButton extends ConsumerStatefulWidget {
   const FollowButton({
     super.key,
     required this.targetUserId,
@@ -29,11 +30,18 @@ class FollowButton extends ConsumerWidget {
   final void Function(bool isFollowing)? onFollowChanged;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<FollowButton> createState() => _FollowButtonState();
+}
+
+class _FollowButtonState extends ConsumerState<FollowButton> {
+  bool _isLoading = false;
+
+  @override
+  Widget build(BuildContext context) {
     final currentUser = ref.watch(currentUserProvider);
 
     // Don't show follow button for own profile
-    if (currentUser?.uid == targetUserId) {
+    if (currentUser?.uid == widget.targetUserId) {
       return const SizedBox.shrink();
     }
 
@@ -41,7 +49,7 @@ class FollowButton extends ConsumerWidget {
     if (currentUser == null) {
       return _buildButton(
         context,
-        isFollowing: false,
+        buttonState: FollowButtonState.notFollowing,
         isLoading: false,
         onPressed: () {
           showInfoSnackBar(context, 'Sign in to follow users');
@@ -49,54 +57,69 @@ class FollowButton extends ConsumerWidget {
       );
     }
 
-    final followState = ref.watch(followStateProvider(targetUserId));
+    final followState = ref.watch(followStateProvider(widget.targetUserId));
 
     return followState.when(
       data: (state) => _buildButton(
         context,
-        isFollowing: state.isFollowing,
-        isLoading: false,
-        onPressed: () => _handleToggle(context, ref, state.isFollowing),
+        buttonState: state.buttonState,
+        isLoading: _isLoading,
+        onPressed: _isLoading ? null : () => _handleToggle(context, state),
       ),
       loading: () => _buildButton(
         context,
-        isFollowing: false,
+        buttonState: FollowButtonState.notFollowing,
         isLoading: true,
         onPressed: null,
       ),
       error: (_, _) => _buildButton(
         context,
-        isFollowing: false,
+        buttonState: FollowButtonState.notFollowing,
         isLoading: false,
-        onPressed: () => ref.invalidate(followStateProvider(targetUserId)),
+        onPressed: () =>
+            ref.invalidate(followStateProvider(widget.targetUserId)),
       ),
     );
   }
 
-  Future<void> _handleToggle(
-    BuildContext context,
-    WidgetRef ref,
-    bool currentlyFollowing,
-  ) async {
+  Future<void> _handleToggle(BuildContext context, FollowState state) async {
+    setState(() => _isLoading = true);
     try {
-      await toggleFollow(ref, targetUserId);
-      onFollowChanged?.call(!currentlyFollowing);
+      await toggleFollow(ref, widget.targetUserId);
+
+      // Determine new state for callback
+      final wasFollowing = state.isFollowing;
+      final hadRequest = state.hasPendingRequest;
+
+      // If was following, now not following
+      // If had request, now cancelled
+      // If neither, now either following or requested
+      if (wasFollowing) {
+        widget.onFollowChanged?.call(false);
+      } else if (!hadRequest) {
+        // Started following or sent request
+        widget.onFollowChanged?.call(true);
+      }
     } catch (e) {
       if (context.mounted) {
         showErrorSnackBar(context, 'Failed to update follow: $e');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
       }
     }
   }
 
   Widget _buildButton(
     BuildContext context, {
-    required bool isFollowing,
+    required FollowButtonState buttonState,
     required bool isLoading,
     required VoidCallback? onPressed,
   }) {
     final theme = Theme.of(context);
 
-    if (compact) {
+    if (widget.compact) {
       return SizedBox(
         height: 32,
         child: isLoading
@@ -110,29 +133,13 @@ class FollowButton extends ConsumerWidget {
                   ),
                 ),
               )
-            : isFollowing
-            ? OutlinedButton(
-                onPressed: onPressed,
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  minimumSize: const Size(0, 32),
-                ),
-                child: const Text('Following'),
-              )
-            : FilledButton(
-                onPressed: onPressed,
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  minimumSize: const Size(0, 32),
-                ),
-                child: const Text('Follow'),
-              ),
+            : _buildCompactButton(buttonState, onPressed),
       );
     }
 
     if (isLoading) {
       return SizedBox(
-        width: 100,
+        width: 120,
         height: 40,
         child: Center(
           child: SizedBox(
@@ -147,30 +154,78 @@ class FollowButton extends ConsumerWidget {
       );
     }
 
-    if (isFollowing) {
-      return OutlinedButton.icon(
-        onPressed: onPressed,
-        icon: const Icon(Icons.check, size: 18),
-        label: const Text('Following'),
-        style: OutlinedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        ),
-      );
-    }
+    return _buildFullButton(buttonState, onPressed);
+  }
 
-    return FilledButton.icon(
-      onPressed: onPressed,
-      icon: const Icon(Icons.person_add, size: 18),
-      label: const Text('Follow'),
-      style: FilledButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      ),
-    );
+  Widget _buildCompactButton(FollowButtonState state, VoidCallback? onPressed) {
+    switch (state) {
+      case FollowButtonState.following:
+        return OutlinedButton(
+          onPressed: onPressed,
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            minimumSize: const Size(0, 32),
+          ),
+          child: const Text('Following'),
+        );
+      case FollowButtonState.requested:
+        return OutlinedButton(
+          onPressed: onPressed,
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            minimumSize: const Size(0, 32),
+            foregroundColor: Colors.grey,
+          ),
+          child: const Text('Requested'),
+        );
+      case FollowButtonState.notFollowing:
+        return FilledButton(
+          onPressed: onPressed,
+          style: FilledButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            minimumSize: const Size(0, 32),
+          ),
+          child: const Text('Follow'),
+        );
+    }
+  }
+
+  Widget _buildFullButton(FollowButtonState state, VoidCallback? onPressed) {
+    switch (state) {
+      case FollowButtonState.following:
+        return OutlinedButton.icon(
+          onPressed: onPressed,
+          icon: const Icon(Icons.check, size: 18),
+          label: const Text('Following'),
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          ),
+        );
+      case FollowButtonState.requested:
+        return OutlinedButton.icon(
+          onPressed: onPressed,
+          icon: const Icon(Icons.schedule, size: 18),
+          label: const Text('Requested'),
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            foregroundColor: Colors.grey,
+          ),
+        );
+      case FollowButtonState.notFollowing:
+        return FilledButton.icon(
+          onPressed: onPressed,
+          icon: const Icon(Icons.person_add, size: 18),
+          label: const Text('Follow'),
+          style: FilledButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          ),
+        );
+    }
   }
 }
 
 /// A text button version for use in lists
-class FollowTextButton extends ConsumerWidget {
+class FollowTextButton extends ConsumerStatefulWidget {
   const FollowTextButton({
     super.key,
     required this.targetUserId,
@@ -181,35 +236,37 @@ class FollowTextButton extends ConsumerWidget {
   final void Function(bool isFollowing)? onFollowChanged;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<FollowTextButton> createState() => _FollowTextButtonState();
+}
+
+class _FollowTextButtonState extends ConsumerState<FollowTextButton> {
+  bool _isLoading = false;
+
+  @override
+  Widget build(BuildContext context) {
     final currentUser = ref.watch(currentUserProvider);
 
-    if (currentUser?.uid == targetUserId || currentUser == null) {
+    if (currentUser?.uid == widget.targetUserId || currentUser == null) {
       return const SizedBox.shrink();
     }
 
-    final followState = ref.watch(followStateProvider(targetUserId));
+    final followState = ref.watch(followStateProvider(widget.targetUserId));
 
     return followState.when(
       data: (state) => TextButton(
-        onPressed: () async {
-          try {
-            await toggleFollow(ref, targetUserId);
-            onFollowChanged?.call(!state.isFollowing);
-          } catch (e) {
-            if (context.mounted) {
-              showErrorSnackBar(context, 'Failed: $e');
-            }
-          }
-        },
-        child: Text(
-          state.isFollowing ? 'Unfollow' : 'Follow',
-          style: TextStyle(
-            color: state.isFollowing
-                ? Colors.grey
-                : Theme.of(context).colorScheme.primary,
-          ),
-        ),
+        onPressed: _isLoading ? null : () => _handleToggle(state),
+        child: _isLoading
+            ? const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : Text(
+                _getButtonText(state.buttonState),
+                style: TextStyle(
+                  color: _getButtonColor(context, state.buttonState),
+                ),
+              ),
       ),
       loading: () => const SizedBox(
         width: 60,
@@ -222,9 +279,56 @@ class FollowTextButton extends ConsumerWidget {
         ),
       ),
       error: (_, _) => TextButton(
-        onPressed: () => ref.invalidate(followStateProvider(targetUserId)),
+        onPressed: () =>
+            ref.invalidate(followStateProvider(widget.targetUserId)),
         child: const Text('Retry'),
       ),
     );
+  }
+
+  Future<void> _handleToggle(FollowState state) async {
+    setState(() => _isLoading = true);
+    try {
+      await toggleFollow(ref, widget.targetUserId);
+
+      final wasFollowing = state.isFollowing;
+      final hadRequest = state.hasPendingRequest;
+
+      if (wasFollowing) {
+        widget.onFollowChanged?.call(false);
+      } else if (!hadRequest) {
+        widget.onFollowChanged?.call(true);
+      }
+    } catch (e) {
+      if (mounted) {
+        showErrorSnackBar(context, 'Failed: $e');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  String _getButtonText(FollowButtonState state) {
+    switch (state) {
+      case FollowButtonState.following:
+        return 'Unfollow';
+      case FollowButtonState.requested:
+        return 'Cancel';
+      case FollowButtonState.notFollowing:
+        return 'Follow';
+    }
+  }
+
+  Color _getButtonColor(BuildContext context, FollowButtonState state) {
+    switch (state) {
+      case FollowButtonState.following:
+        return Colors.grey;
+      case FollowButtonState.requested:
+        return Colors.orange;
+      case FollowButtonState.notFollowing:
+        return Theme.of(context).colorScheme.primary;
+    }
   }
 }

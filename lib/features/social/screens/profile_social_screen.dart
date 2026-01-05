@@ -25,8 +25,10 @@ import '../widgets/follow_button.dart';
 import '../widgets/post_card.dart';
 import '../widgets/post_skeleton.dart';
 import 'create_post_screen.dart';
+import 'follow_requests_screen.dart';
 import 'followers_screen.dart';
 import 'post_detail_screen.dart';
+import 'user_search_screen.dart';
 
 /// Social profile screen with followers, following, posts, and linked devices.
 class ProfileSocialScreen extends ConsumerStatefulWidget {
@@ -257,8 +259,21 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
       actions: [
         if (isOwnProfile) ...[
           IconButton(
+            icon: Icon(Icons.search, color: context.textPrimary),
+            onPressed: _navigateToUserSearch,
+            tooltip: 'Search users',
+          ),
+          _FollowRequestsBadge(
+            child: IconButton(
+              icon: Icon(Icons.person_add_outlined, color: context.textPrimary),
+              onPressed: _navigateToFollowRequests,
+              tooltip: 'Follow requests',
+            ),
+          ),
+          IconButton(
             icon: Icon(Icons.add_box_outlined, color: context.textPrimary),
             onPressed: _navigateToCreatePost,
+            tooltip: 'Create post',
           ),
           IconButton(
             icon: Icon(Icons.settings_outlined, color: context.textPrimary),
@@ -266,6 +281,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
               context,
               MaterialPageRoute(builder: (_) => const SettingsScreen()),
             ),
+            tooltip: 'Settings',
           ),
         ] else ...[
           IconButton(
@@ -735,6 +751,20 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const CreatePostScreen()),
+    );
+  }
+
+  void _navigateToUserSearch() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const UserSearchScreen()),
+    );
+  }
+
+  void _navigateToFollowRequests() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const FollowRequestsScreen()),
     );
   }
 
@@ -1396,6 +1426,30 @@ class _ProfileLinkChip extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Widget that shows a badge with pending follow requests count.
+class _FollowRequestsBadge extends ConsumerWidget {
+  const _FollowRequestsBadge({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final countAsync = ref.watch(pendingFollowRequestsCountProvider);
+
+    return countAsync.when(
+      data: (count) {
+        if (count == 0) return child;
+        return Badge(
+          label: Text(count > 99 ? '99+' : count.toString()),
+          child: child,
+        );
+      },
+      loading: () => child,
+      error: (_, _) => child,
     );
   }
 }

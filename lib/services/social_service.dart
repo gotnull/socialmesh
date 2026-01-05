@@ -26,8 +26,9 @@ class SocialService {
   // FOLLOW SYSTEM
   // ===========================================================================
 
-  /// Follow a user. Creates a follow document with composite ID.
-  Future<void> followUser(String targetUserId) async {
+  /// Follow a user or send a follow request if the target account is private.
+  /// Returns 'followed' if directly followed, 'requested' if request was sent.
+  Future<String> followUser(String targetUserId) async {
     final currentUserId = _currentUserId;
     if (currentUserId == null) {
       throw StateError('Must be signed in to follow users');
@@ -36,6 +37,17 @@ class SocialService {
       throw ArgumentError('Cannot follow yourself');
     }
 
+    // Check if target user has a private account
+    final targetProfile = await _getPublicProfile(targetUserId);
+    final isPrivate = targetProfile?.isPrivate ?? false;
+
+    if (isPrivate) {
+      // Create a follow request instead of directly following
+      await _createFollowRequest(targetUserId);
+      return 'requested';
+    }
+
+    // Public account - follow directly
     final followId = '${currentUserId}_$targetUserId';
     final follow = Follow(
       id: followId,
@@ -48,6 +60,225 @@ class SocialService {
         .collection('follows')
         .doc(followId)
         .set(follow.toFirestore());
+    return 'followed';
+  }
+
+  /// Create a follow request for a private account.
+  Future<void> _createFollowRequest(String targetUserId) async {
+    final currentUserId = _currentUserId;
+    if (currentUserId == null) {
+      throw StateError('Must be signed in to send follow requests');
+    }
+
+    final requestId = '${currentUserId}_$targetUserId';
+    final request = FollowRequest(
+      id: requestId,
+      requesterId: currentUserId,
+      targetId: targetUserId,
+      status: FollowRequestStatus.pending,
+      createdAt: DateTime.now(),
+    );
+
+    await _firestore
+        .collection('follow_requests')
+        .doc(requestId)
+        .set(request.toFirestore());
+  }
+
+  /// Send a follow request to a private account.
+  Future<void> sendFollowRequest(String targetUserId) async {
+    await _createFollowRequest(targetUserId);
+  }
+
+  /// Cancel a pending follow request.
+  Future<void> cancelFollowRequest(String targetUserId) async {
+    final currentUserId = _currentUserId;
+    if (currentUserId == null) {
+      throw StateError('Must be signed in to cancel follow requests');
+    }
+
+    final requestId = '${currentUserId}_$targetUserId';
+    await _firestore.collection('follow_requests').doc(requestId).delete();
+  }
+
+  /// Accept a follow request (creates follow and deletes request).
+  Future<void> acceptFollowRequest(String requesterId) async {
+    final currentUserId = _currentUserId;
+    if (currentUserId == null) {
+      throw StateError('Must be signed in to accept follow requests');
+    }
+
+    final requestId = '${requesterId}_$currentUserId';
+    final followId = '${requesterId}_$currentUserId';
+
+    // Use a batch to ensure atomicity
+    final batch = _firestore.batch();
+
+    // Create the follow relationship
+    final follow = Follow(
+      id: followId,
+      followerId: requesterId,
+      followeeId: currentUserId,
+      createdAt: DateTime.now(),
+    );
+    batch.set(
+      _firestore.collection('follows').doc(followId),
+      follow.toFirestore(),
+    );
+
+    // Delete the follow request
+    batch.delete(_firestore.collection('follow_requests').doc(requestId));
+
+    await batch.commit();
+  }
+
+  /// Decline a follow request.
+  Future<void> declineFollowRequest(String requesterId) async {
+    final currentUserId = _currentUserId;
+    if (currentUserId == null) {
+      throw StateError('Must be signed in to decline follow requests');
+    }
+
+    final requestId = '${requesterId}_$currentUserId';
+    await _firestore.collection('follow_requests').doc(requestId).delete();
+  }
+
+  /// Check if current user has a pending follow request to target.
+  Future<bool> hasPendingFollowRequest(String targetUserId) async {
+    final currentUserId = _currentUserId;
+    if (currentUserId == null) return false;
+
+    final requestId = '${currentUserId}_$targetUserId';
+    final doc = await _firestore
+        .collection('follow_requests')
+        .doc(requestId)
+        .get();
+    return doc.exists && doc.data()?['status'] == 'pending';
+  }
+
+  /// Stream of pending follow request status for a target user.
+  Stream<bool> watchFollowRequestStatus(String targetUserId) {
+    final currentUserId = _currentUserId;
+    if (currentUserId == null) {
+      return Stream.value(false);
+    }
+
+    final requestId = '${currentUserId}_$targetUserId';
+    return _firestore
+        .collection('follow_requests')
+        .doc(requestId)
+        .snapshots()
+        .map((doc) => doc.exists && doc.data()?['status'] == 'pending');
+  }
+
+  /// Get pending follow requests for the current user (requests TO approve).
+  Future<PaginatedResult<FollowRequestWithProfile>> getPendingFollowRequests({
+    int limit = 20,
+    String? startAfterId,
+  }) async {
+    final currentUserId = _currentUserId;
+    if (currentUserId == null) {
+      throw StateError('Must be signed in to get follow requests');
+    }
+
+    Query<Map<String, dynamic>> query = _firestore
+        .collection('follow_requests')
+        .where('targetId', isEqualTo: currentUserId)
+        .where('status', isEqualTo: 'pending')
+        .orderBy('createdAt', descending: true)
+        .limit(limit);
+
+    if (startAfterId != null) {
+      final startDoc = await _firestore
+          .collection('follow_requests')
+          .doc(startAfterId)
+          .get();
+      if (startDoc.exists) {
+        query = query.startAfterDocument(startDoc);
+      }
+    }
+
+    final snapshot = await query.get();
+    final items = await Future.wait(
+      snapshot.docs.map((doc) async {
+        final request = FollowRequest.fromFirestore(doc);
+        final profile = await _getPublicProfile(request.requesterId);
+        return FollowRequestWithProfile(request: request, profile: profile);
+      }),
+    );
+
+    return PaginatedResult(
+      items: items,
+      hasMore: snapshot.docs.length == limit,
+      lastId: snapshot.docs.lastOrNull?.id,
+    );
+  }
+
+  /// Stream of pending follow requests count for the current user.
+  Stream<int> watchPendingFollowRequestsCount() {
+    final currentUserId = _currentUserId;
+    if (currentUserId == null) {
+      return Stream.value(0);
+    }
+
+    return _firestore
+        .collection('follow_requests')
+        .where('targetId', isEqualTo: currentUserId)
+        .where('status', isEqualTo: 'pending')
+        .snapshots()
+        .map((snapshot) => snapshot.docs.length);
+  }
+
+  /// Stream of pending follow requests for the current user.
+  Stream<List<FollowRequestWithProfile>> watchPendingFollowRequests() {
+    final currentUserId = _currentUserId;
+    if (currentUserId == null) {
+      return Stream.value([]);
+    }
+
+    return _firestore
+        .collection('follow_requests')
+        .where('targetId', isEqualTo: currentUserId)
+        .where('status', isEqualTo: 'pending')
+        .orderBy('createdAt', descending: true)
+        .limit(50)
+        .snapshots()
+        .asyncMap((snapshot) async {
+          final items = await Future.wait(
+            snapshot.docs.map((doc) async {
+              final request = FollowRequest.fromFirestore(doc);
+              final profile = await _getPublicProfile(request.requesterId);
+              return FollowRequestWithProfile(
+                request: request,
+                profile: profile,
+              );
+            }),
+          );
+          return items;
+        });
+  }
+
+  /// Update current user's account privacy setting.
+  Future<void> setAccountPrivacy(bool isPrivate) async {
+    final currentUserId = _currentUserId;
+    if (currentUserId == null) {
+      throw StateError('Must be signed in to update privacy settings');
+    }
+
+    await _firestore.collection('profiles').doc(currentUserId).update({
+      'isPrivate': isPrivate,
+    });
+  }
+
+  /// Remove a follower from the current user's followers list.
+  Future<void> removeFollower(String followerId) async {
+    final currentUserId = _currentUserId;
+    if (currentUserId == null) {
+      throw StateError('Must be signed in to remove followers');
+    }
+
+    final followId = '${followerId}_$currentUserId';
+    await _firestore.collection('follows').doc(followId).delete();
   }
 
   /// Unfollow a user. Deletes the follow document.
@@ -170,6 +401,150 @@ class SocialService {
       hasMore: snapshot.docs.length == limit,
       lastId: snapshot.docs.lastOrNull?.id,
     );
+  }
+
+  // ===========================================================================
+  // USER SEARCH
+  // ===========================================================================
+
+  /// Search for users by display name or callsign.
+  /// Returns paginated list of public profiles matching the query.
+  Future<PaginatedResult<PublicProfile>> searchUsers(
+    String query, {
+    int limit = 20,
+    String? startAfterId,
+  }) async {
+    if (query.trim().isEmpty) {
+      return PaginatedResult(items: [], hasMore: false);
+    }
+
+    final queryLower = query.toLowerCase().trim();
+
+    // Search by displayName (case-insensitive prefix search)
+    // Note: Firestore doesn't support true case-insensitive search,
+    // so we use a searchable field that stores lowercase version
+    Query<Map<String, dynamic>> nameQuery = _firestore
+        .collection('profiles')
+        .where('displayNameLower', isGreaterThanOrEqualTo: queryLower)
+        .where('displayNameLower', isLessThanOrEqualTo: '$queryLower\uf8ff')
+        .limit(limit);
+
+    final nameSnapshot = await nameQuery.get();
+
+    // Also search by callsign
+    Query<Map<String, dynamic>> callsignQuery = _firestore
+        .collection('profiles')
+        .where('callsignLower', isGreaterThanOrEqualTo: queryLower)
+        .where('callsignLower', isLessThanOrEqualTo: '$queryLower\uf8ff')
+        .limit(limit);
+
+    final callsignSnapshot = await callsignQuery.get();
+
+    // Combine results and remove duplicates
+    final seenIds = <String>{};
+    final items = <PublicProfile>[];
+
+    for (final doc in [...nameSnapshot.docs, ...callsignSnapshot.docs]) {
+      if (!seenIds.contains(doc.id)) {
+        seenIds.add(doc.id);
+        items.add(PublicProfile.fromFirestore(doc));
+      }
+    }
+
+    // Sort by relevance (exact match first, then alphabetically)
+    items.sort((a, b) {
+      final aName = a.displayName.toLowerCase();
+      final bName = b.displayName.toLowerCase();
+      final aExact =
+          aName == queryLower || a.callsign?.toLowerCase() == queryLower;
+      final bExact =
+          bName == queryLower || b.callsign?.toLowerCase() == queryLower;
+
+      if (aExact && !bExact) return -1;
+      if (!aExact && bExact) return 1;
+      return aName.compareTo(bName);
+    });
+
+    return PaginatedResult(
+      items: items.take(limit).toList(),
+      hasMore: items.length > limit,
+      lastId: items.lastOrNull?.id,
+    );
+  }
+
+  /// Get suggested users to follow (users the current user doesn't follow yet).
+  /// Returns popular users or users followed by the current user's connections.
+  Future<List<PublicProfile>> getSuggestedUsers({int limit = 10}) async {
+    final currentUserId = _currentUserId;
+    if (currentUserId == null) {
+      // Return popular users for logged-out state
+      return _getPopularUsers(limit: limit);
+    }
+
+    // Get users the current user already follows
+    final followingSnapshot = await _firestore
+        .collection('follows')
+        .where('followerId', isEqualTo: currentUserId)
+        .get();
+
+    final followingIds = followingSnapshot.docs
+        .map((doc) => doc.data()['followeeId'] as String)
+        .toSet();
+    followingIds.add(currentUserId); // Exclude self
+
+    // Get popular users that the current user doesn't follow
+    final popularUsers = await _getPopularUsers(
+      limit: limit + followingIds.length,
+    );
+
+    return popularUsers
+        .where((user) => !followingIds.contains(user.id))
+        .take(limit)
+        .toList();
+  }
+
+  /// Get popular users by follower count.
+  Future<List<PublicProfile>> _getPopularUsers({int limit = 10}) async {
+    final snapshot = await _firestore
+        .collection('profiles')
+        .orderBy('followerCount', descending: true)
+        .limit(limit)
+        .get();
+
+    return snapshot.docs
+        .map((doc) => PublicProfile.fromFirestore(doc))
+        .toList();
+  }
+
+  /// Get recently active users.
+  Future<List<PublicProfile>> getRecentlyActiveUsers({int limit = 10}) async {
+    // Get users who have posted recently
+    final postsSnapshot = await _firestore
+        .collection('posts')
+        .orderBy('createdAt', descending: true)
+        .limit(limit * 3)
+        .get();
+
+    final authorIds = postsSnapshot.docs
+        .map((doc) => doc.data()['authorId'] as String)
+        .toSet()
+        .take(limit)
+        .toList();
+
+    if (authorIds.isEmpty) {
+      return _getPopularUsers(limit: limit);
+    }
+
+    // Fetch profiles for these users
+    final profiles = <PublicProfile>[];
+    for (final authorId in authorIds) {
+      final profile = await _getPublicProfile(authorId);
+      if (profile != null) {
+        profiles.add(profile);
+      }
+    }
+
+    return profiles;
   }
 
   // ===========================================================================
@@ -826,6 +1201,7 @@ class SocialService {
         // Sync the displayName from users collection to profiles collection
         final updates = <String, dynamic>{
           'displayName': userProfileDisplayName,
+          'displayNameLower': userProfileDisplayName.toLowerCase(),
           'updatedAt': FieldValue.serverTimestamp(),
         };
         // Also sync avatar if users collection has one
@@ -1058,6 +1434,9 @@ class SocialService {
     // Callsign can be null to clear it
     if (callsign != null) {
       updates['callsign'] = callsign.isEmpty ? null : callsign;
+      updates['callsignLower'] = callsign.isEmpty
+          ? null
+          : callsign.toLowerCase();
     }
     if (avatarUrl != null) updates['avatarUrl'] = avatarUrl;
 

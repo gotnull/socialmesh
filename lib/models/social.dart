@@ -14,6 +14,120 @@ enum PostVisibility {
   private,
 }
 
+/// Follow request status for private accounts
+enum FollowRequestStatus {
+  /// Request is pending approval
+  pending,
+
+  /// Request was approved (becomes a follow)
+  approved,
+
+  /// Request was declined
+  declined,
+}
+
+/// Represents a follow request for private accounts.
+///
+/// Document ID format: `{requesterId}_{targetId}` for idempotent operations.
+/// Stored in `follow_requests/{requesterId}_{targetId}` collection.
+class FollowRequest {
+  /// Document ID (requesterId_targetId)
+  final String id;
+
+  /// The user who is requesting to follow
+  final String requesterId;
+
+  /// The user being requested to be followed
+  final String targetId;
+
+  /// Status of the request
+  final FollowRequestStatus status;
+
+  /// When the request was created
+  final DateTime createdAt;
+
+  /// When the request was responded to (approved/declined)
+  final DateTime? respondedAt;
+
+  const FollowRequest({
+    required this.id,
+    required this.requesterId,
+    required this.targetId,
+    this.status = FollowRequestStatus.pending,
+    required this.createdAt,
+    this.respondedAt,
+  });
+
+  /// Generate document ID for this follow request
+  String get documentId => '${requesterId}_$targetId';
+
+  factory FollowRequest.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return FollowRequest(
+      id: doc.id,
+      requesterId: data['requesterId'] as String,
+      targetId: data['targetId'] as String,
+      status: FollowRequestStatus.values.firstWhere(
+        (e) => e.name == (data['status'] as String? ?? 'pending'),
+        orElse: () => FollowRequestStatus.pending,
+      ),
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      respondedAt: (data['respondedAt'] as Timestamp?)?.toDate(),
+    );
+  }
+
+  Map<String, dynamic> toFirestore() {
+    return {
+      'requesterId': requesterId,
+      'targetId': targetId,
+      'status': status.name,
+      'createdAt': FieldValue.serverTimestamp(),
+      if (respondedAt != null) 'respondedAt': Timestamp.fromDate(respondedAt!),
+    };
+  }
+
+  FollowRequest copyWith({
+    String? id,
+    String? requesterId,
+    String? targetId,
+    FollowRequestStatus? status,
+    DateTime? createdAt,
+    DateTime? respondedAt,
+  }) {
+    return FollowRequest(
+      id: id ?? this.id,
+      requesterId: requesterId ?? this.requesterId,
+      targetId: targetId ?? this.targetId,
+      status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
+      respondedAt: respondedAt ?? this.respondedAt,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is FollowRequest &&
+        other.requesterId == requesterId &&
+        other.targetId == targetId;
+  }
+
+  @override
+  int get hashCode => Object.hash(requesterId, targetId);
+
+  @override
+  String toString() =>
+      'FollowRequest(requesterId: $requesterId, targetId: $targetId, status: $status)';
+}
+
+/// Follow request with requester profile information
+class FollowRequestWithProfile {
+  final FollowRequest request;
+  final PublicProfile? profile;
+
+  const FollowRequestWithProfile({required this.request, this.profile});
+}
+
 /// Represents a follow relationship between two users.
 ///
 /// Document ID format: `{followerId}_{followeeId}` for idempotent operations.
@@ -587,6 +701,7 @@ class PublicProfile {
   final int followingCount;
   final int postCount;
   final bool isVerified;
+  final bool isPrivate;
   final DateTime? createdAt;
 
   const PublicProfile({
@@ -603,6 +718,7 @@ class PublicProfile {
     this.followingCount = 0,
     this.postCount = 0,
     this.isVerified = false,
+    this.isPrivate = false,
     this.createdAt,
   });
 
@@ -630,6 +746,7 @@ class PublicProfile {
       followingCount: data['followingCount'] as int? ?? 0,
       postCount: data['postCount'] as int? ?? 0,
       isVerified: data['isVerified'] as bool? ?? false,
+      isPrivate: data['isPrivate'] as bool? ?? false,
       createdAt: data['createdAt'] != null
           ? (data['createdAt'] as Timestamp).toDate()
           : null,
@@ -664,6 +781,7 @@ class PublicProfile {
     int? followingCount,
     int? postCount,
     bool? isVerified,
+    bool? isPrivate,
     DateTime? createdAt,
   }) {
     return PublicProfile(
@@ -680,6 +798,7 @@ class PublicProfile {
       followingCount: followingCount ?? this.followingCount,
       postCount: postCount ?? this.postCount,
       isVerified: isVerified ?? this.isVerified,
+      isPrivate: isPrivate ?? this.isPrivate,
       createdAt: createdAt ?? this.createdAt,
     );
   }

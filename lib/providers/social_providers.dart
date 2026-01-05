@@ -27,61 +27,212 @@ final pendingReportCountProvider = StreamProvider<int>((ref) {
 // ===========================================================================
 
 /// State for tracking follow status between current user and a target.
+/// Supports both public (instant follow) and private (request-based) accounts.
 class FollowState {
   const FollowState({
     this.isFollowing = false,
     this.isFollowedBy = false,
+    this.hasPendingRequest = false,
+    this.targetIsPrivate = false,
     this.isLoading = false,
     this.error,
   });
 
+  /// Whether current user is following the target
   final bool isFollowing;
+
+  /// Whether target is following the current user
   final bool isFollowedBy;
+
+  /// Whether there's a pending follow request to the target
+  final bool hasPendingRequest;
+
+  /// Whether the target account is private
+  final bool targetIsPrivate;
+
   final bool isLoading;
   final String? error;
 
+  /// Both users follow each other
   bool get isMutual => isFollowing && isFollowedBy;
+
+  /// Computed state for UI button display
+  FollowButtonState get buttonState {
+    if (isFollowing) return FollowButtonState.following;
+    if (hasPendingRequest) return FollowButtonState.requested;
+    return FollowButtonState.notFollowing;
+  }
 
   FollowState copyWith({
     bool? isFollowing,
     bool? isFollowedBy,
+    bool? hasPendingRequest,
+    bool? targetIsPrivate,
     bool? isLoading,
     String? error,
   }) {
     return FollowState(
       isFollowing: isFollowing ?? this.isFollowing,
       isFollowedBy: isFollowedBy ?? this.isFollowedBy,
+      hasPendingRequest: hasPendingRequest ?? this.hasPendingRequest,
+      targetIsPrivate: targetIsPrivate ?? this.targetIsPrivate,
       isLoading: isLoading ?? this.isLoading,
       error: error,
     );
   }
 }
 
+/// Button state for follow action UI
+enum FollowButtonState {
+  /// Not following - show "Follow" button
+  notFollowing,
+
+  /// Request sent to private account - show "Requested" button
+  requested,
+
+  /// Following - show "Following" button
+  following,
+}
+
 /// Provider for follow state with a specific user.
-/// Use AutoDisposeFutureProvider for simple async loading, combined with
-/// a notifier for actions.
+/// Includes follow request status for private accounts.
 final followStateProvider = FutureProvider.autoDispose
     .family<FollowState, String>((ref, targetUserId) async {
       final service = ref.watch(socialServiceProvider);
-      final isFollowing = await service.isFollowing(targetUserId);
-      final isFollowedBy = await service.isFollowedBy(targetUserId);
-      return FollowState(isFollowing: isFollowing, isFollowedBy: isFollowedBy);
+
+      // Fetch all states in parallel
+      final results = await Future.wait([
+        service.isFollowing(targetUserId),
+        service.isFollowedBy(targetUserId),
+        service.hasPendingFollowRequest(targetUserId),
+        service.getPublicProfile(targetUserId),
+      ]);
+
+      final isFollowing = results[0] as bool;
+      final isFollowedBy = results[1] as bool;
+      final hasPendingRequest = results[2] as bool;
+      final profile = results[3] as PublicProfile?;
+
+      return FollowState(
+        isFollowing: isFollowing,
+        isFollowedBy: isFollowedBy,
+        hasPendingRequest: hasPendingRequest,
+        targetIsPrivate: profile?.isPrivate ?? false,
+      );
     });
 
-/// Helper to toggle follow status (call this and then invalidate provider)
+/// Helper to toggle follow status.
+/// For private accounts, sends a follow request instead of instant follow.
+/// For accounts with pending requests, cancels the request.
 Future<void> toggleFollow(WidgetRef ref, String targetUserId) async {
   final service = ref.read(socialServiceProvider);
   final currentState = await ref.read(followStateProvider(targetUserId).future);
 
   if (currentState.isFollowing) {
+    // Unfollow
     await service.unfollowUser(targetUserId);
+  } else if (currentState.hasPendingRequest) {
+    // Cancel pending request
+    await service.cancelFollowRequest(targetUserId);
   } else {
+    // Follow or send request (followUser handles private accounts internally)
     await service.followUser(targetUserId);
   }
 
   // Invalidate to refresh
   ref.invalidate(followStateProvider(targetUserId));
 }
+
+// ===========================================================================
+// FOLLOW REQUESTS
+// ===========================================================================
+
+/// Provider for the count of pending follow requests (for badges).
+final pendingFollowRequestsCountProvider = StreamProvider.autoDispose<int>((
+  ref,
+) {
+  final service = ref.watch(socialServiceProvider);
+  return service.watchPendingFollowRequestsCount();
+});
+
+/// Provider for pending follow requests with requester profiles.
+final pendingFollowRequestsProvider =
+    StreamProvider.autoDispose<List<FollowRequestWithProfile>>((ref) {
+      final service = ref.watch(socialServiceProvider);
+      return service.watchPendingFollowRequests();
+    });
+
+/// Accept a follow request
+Future<void> acceptFollowRequest(WidgetRef ref, String requesterId) async {
+  final service = ref.read(socialServiceProvider);
+  await service.acceptFollowRequest(requesterId);
+
+  // Invalidate related providers
+  ref.invalidate(pendingFollowRequestsProvider);
+  ref.invalidate(pendingFollowRequestsCountProvider);
+  ref.invalidate(followStateProvider(requesterId));
+}
+
+/// Decline a follow request
+Future<void> declineFollowRequest(WidgetRef ref, String requesterId) async {
+  final service = ref.read(socialServiceProvider);
+  await service.declineFollowRequest(requesterId);
+
+  // Invalidate related providers
+  ref.invalidate(pendingFollowRequestsProvider);
+  ref.invalidate(pendingFollowRequestsCountProvider);
+}
+
+/// Remove a follower (for private accounts)
+Future<void> removeFollower(WidgetRef ref, String followerId) async {
+  final service = ref.read(socialServiceProvider);
+  await service.removeFollower(followerId);
+
+  // Invalidate related providers
+  ref.invalidate(followStateProvider(followerId));
+}
+
+/// Set account privacy setting
+Future<void> setAccountPrivacy(WidgetRef ref, bool isPrivate) async {
+  final service = ref.read(socialServiceProvider);
+  await service.setAccountPrivacy(isPrivate);
+
+  // Invalidate current user's profile
+  final currentUser = ref.read(currentUserProvider);
+  if (currentUser != null) {
+    ref.invalidate(publicProfileProvider(currentUser.uid));
+  }
+}
+
+// ===========================================================================
+// USER SEARCH
+// ===========================================================================
+
+/// Provider for user search results.
+/// Pass the search query as the family parameter.
+final userSearchProvider = FutureProvider.autoDispose
+    .family<PaginatedResult<PublicProfile>, String>((ref, query) async {
+      if (query.trim().isEmpty) {
+        return PaginatedResult(items: [], hasMore: false);
+      }
+      final service = ref.watch(socialServiceProvider);
+      return service.searchUsers(query);
+    });
+
+/// Provider for suggested users to follow.
+final suggestedUsersProvider = FutureProvider.autoDispose<List<PublicProfile>>((
+  ref,
+) async {
+  final service = ref.watch(socialServiceProvider);
+  return service.getSuggestedUsers();
+});
+
+/// Provider for recently active users.
+final recentlyActiveUsersProvider =
+    FutureProvider.autoDispose<List<PublicProfile>>((ref) async {
+      final service = ref.watch(socialServiceProvider);
+      return service.getRecentlyActiveUsers();
+    });
 
 // ===========================================================================
 // PROFILE BY NODE ID & LINKED NODES

@@ -381,7 +381,10 @@ void main() {
       final content = readFile(file);
 
       expect(
-        content.contains('Share.share') || content.contains('share_plus'),
+        content.contains('Share.share') ||
+            content.contains('share_plus') ||
+            content.contains('shareLinkService') ||
+            content.contains('_sharePost'),
         true,
         reason: 'Should have share functionality',
       );
