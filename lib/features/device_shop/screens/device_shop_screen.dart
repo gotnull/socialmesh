@@ -105,6 +105,10 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
               floating: true,
               pinned: true,
               expandedHeight: 120,
+              leading: IconButton(
+                icon: const Icon(Icons.menu),
+                onPressed: () => Scaffold.of(context).openDrawer(),
+              ),
               flexibleSpace: FlexibleSpaceBar(
                 background: Container(
                   decoration: BoxDecoration(

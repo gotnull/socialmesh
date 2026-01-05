@@ -5,6 +5,7 @@ import 'package:timeago/timeago.dart' as timeago;
 import '../../../core/theme.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
 import '../../../providers/auth_providers.dart';
+import '../../../utils/snackbar.dart';
 import '../models/shop_models.dart';
 import '../providers/device_shop_providers.dart';
 
@@ -184,15 +185,11 @@ class _ReviewModerationCardState extends ConsumerState<_ReviewModerationCard> {
           .approveReview(widget.review.id, user.uid);
 
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Review approved')));
+        showSuccessSnackBar(context, 'Review approved');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        showErrorSnackBar(context, 'Error: $e');
       }
     } finally {
       if (mounted) setState(() => _isProcessing = false);
@@ -217,15 +214,11 @@ class _ReviewModerationCardState extends ConsumerState<_ReviewModerationCard> {
           .rejectReview(widget.review.id, user.uid, reason);
 
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Review rejected')));
+        showSuccessSnackBar(context, 'Review rejected');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        showErrorSnackBar(context, 'Error: $e');
       }
     } finally {
       if (mounted) setState(() => _isProcessing = false);
@@ -261,15 +254,11 @@ class _ReviewModerationCardState extends ConsumerState<_ReviewModerationCard> {
       await ref.read(deviceShopServiceProvider).deleteReview(widget.review.id);
 
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Review deleted')));
+        showSuccessSnackBar(context, 'Review deleted');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        showErrorSnackBar(context, 'Error: $e');
       }
     } finally {
       if (mounted) setState(() => _isProcessing = false);

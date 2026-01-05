@@ -27,6 +27,9 @@ import '../timeline/timeline_screen.dart';
 import '../routes/routes_screen.dart';
 import '../automations/automations_screen.dart';
 import '../settings/settings_screen.dart';
+import '../settings/theme_settings_screen.dart';
+import '../settings/ringtone_screen.dart';
+import '../settings/ifttt_config_screen.dart';
 import '../presence/presence_screen.dart';
 import '../mesh3d/mesh_3d_screen.dart';
 import '../world_mesh/world_mesh_screen.dart';
@@ -34,7 +37,7 @@ import '../settings/subscription_screen.dart';
 import '../settings/account_subscriptions_screen.dart';
 import '../widget_builder/widget_builder_screen.dart';
 import '../reachability/mesh_reachability_screen.dart';
-import '../sky_tracker/screens/sky_tracker_screen.dart';
+// Removed: import '../sky_tracker/screens/sky_tracker_screen.dart';
 import '../device_shop/screens/device_shop_screen.dart';
 import '../device_shop/screens/shop_admin_dashboard.dart';
 import '../device_shop/screens/review_moderation_screen.dart';
@@ -454,28 +457,36 @@ class _MainShellState extends ConsumerState<MainShell> {
       iconColor: Colors.deepPurple.shade400,
     ),
 
-    // Tools & Tracking
-    _DrawerMenuItem(
-      icon: Icons.flight,
-      label: 'Sky Tracker',
-      screen: const SkyTrackerScreen(),
-      sectionHeader: 'TOOLS & TRACKING',
-      iconColor: Colors.lightBlue.shade400,
-    ),
+    // Tools
     _DrawerMenuItem(
       icon: Icons.store,
       label: 'Device Shop',
       screen: const DeviceShopScreen(),
+      sectionHeader: 'TOOLS',
       iconColor: Colors.amber.shade600,
     ),
 
     // Premium Features
     _DrawerMenuItem(
+      icon: Icons.palette_outlined,
+      label: 'Theme Pack',
+      screen: const ThemeSettingsScreen(),
+      premiumFeature: PremiumFeature.premiumThemes,
+      sectionHeader: 'PREMIUM FEATURES',
+      iconColor: Colors.purple.shade400,
+    ),
+    _DrawerMenuItem(
+      icon: Icons.music_note_outlined,
+      label: 'Ringtone Pack',
+      screen: const RingtoneScreen(),
+      premiumFeature: PremiumFeature.customRingtones,
+      iconColor: Colors.pink.shade300,
+    ),
+    _DrawerMenuItem(
       icon: Icons.widgets_outlined,
       label: 'Widgets',
       screen: const WidgetBuilderScreen(),
       premiumFeature: PremiumFeature.homeWidgets,
-      sectionHeader: 'PREMIUM FEATURES',
       iconColor: Colors.deepOrange.shade400,
     ),
     _DrawerMenuItem(
@@ -484,6 +495,13 @@ class _MainShellState extends ConsumerState<MainShell> {
       screen: const AutomationsScreen(),
       premiumFeature: PremiumFeature.automations,
       iconColor: Colors.yellow.shade700,
+    ),
+    _DrawerMenuItem(
+      icon: Icons.webhook_outlined,
+      label: 'IFTTT Integration',
+      screen: const IftttConfigScreen(),
+      premiumFeature: PremiumFeature.iftttIntegration,
+      iconColor: Colors.blue.shade300,
     ),
   ];
 

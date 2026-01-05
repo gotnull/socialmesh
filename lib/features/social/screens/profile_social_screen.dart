@@ -215,6 +215,12 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen> {
       backgroundColor: context.background,
       floating: true,
       snap: true,
+      leading: isOwnProfile
+          ? IconButton(
+              icon: const Icon(Icons.menu),
+              onPressed: () => Scaffold.of(context).openDrawer(),
+            )
+          : null,
       title: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

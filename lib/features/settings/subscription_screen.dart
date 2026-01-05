@@ -74,6 +74,25 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
             // Complete Pack Bundle (prominent)
             _buildBundleCard(),
 
+            // Restore Purchases button
+            const SizedBox(height: 16),
+            Center(
+              child: TextButton.icon(
+                onPressed: isLoading ? null : _restorePurchases,
+                icon: isLoading
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.refresh, size: 18),
+                label: const Text('Restore Purchases'),
+                style: TextButton.styleFrom(
+                  foregroundColor: context.accentColor,
+                ),
+              ),
+            ),
+
             // Show individual packs section
             if (!allUnlocked) ...[
               const SizedBox(height: 24),
