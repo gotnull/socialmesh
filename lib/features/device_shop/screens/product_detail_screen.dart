@@ -163,8 +163,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                 fontWeight: FontWeight.w600,
               ),
               maxLines: 1,
-              velocity: 30.0,
-              fadeWidth: 20.0,
+              velocity: 40.0,
+              fadeWidth: 30.0,
             )
           : null,
       actions: [
@@ -323,13 +323,16 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           SizedBox(height: 12),
 
           // Name
-          Text(
+          AutoScrollText(
             product.name,
             style: TextStyle(
               color: context.textPrimary,
               fontSize: 24,
               fontWeight: FontWeight.bold,
             ),
+            maxLines: 1,
+            velocity: 40.0,
+            fadeWidth: 30.0,
           ),
           const SizedBox(height: 8),
 
