@@ -665,6 +665,8 @@ class _MainShellState extends ConsumerState<MainShell> {
                       }
                     },
                   ),
+                  // Add spacing between items within a section
+                  if (!isLastInSection) const SizedBox(height: 4),
                   // Add divider after last item in section
                   if (isLastInSection && !isLastSection)
                     Padding(
