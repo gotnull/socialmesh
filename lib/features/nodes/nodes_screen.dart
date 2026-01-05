@@ -706,6 +706,7 @@ class _FilterChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final chipColor = color ?? AppTheme.primaryBlue;
+    final showStatusIndicator = label == 'Online';
 
     return GestureDetector(
       onTap: onTap,
@@ -724,7 +725,36 @@ class _FilterChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (icon != null) ...[
+            // Status indicator for Online chip
+            if (showStatusIndicator && label == 'Online') ...[
+              Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [chipColor, chipColor.withValues(alpha: 0.6)],
+                  ),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: chipColor.withValues(alpha: 0.4),
+                            blurRadius: 4,
+                            spreadRadius: 1,
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Container(
+                  margin: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    color: chipColor.withValues(alpha: 0.3),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+              SizedBox(width: 6),
+            ] else if (icon != null) ...[
               Icon(
                 icon,
                 size: 14,
@@ -1085,80 +1115,43 @@ class _NodeCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Avatar
-              Column(
-                children: [
-                  Stack(
-                    children: [
-                      NodeAvatar(
-                        text: node.avatarName,
-                        color: isMyNode
-                            ? context.accentColor
-                            : _getAvatarColor(),
-                        size: 56,
-                        border: isMyNode
-                            ? Border.all(
-                                color: Colors.white.withValues(alpha: 0.3),
-                                width: 2,
-                              )
-                            : null,
-                      ),
-                      // "You" indicator on avatar
-                      if (isMyNode)
-                        Positioned(
-                          bottom: 0,
-                          right: 0,
-                          child: Container(
-                            width: 20,
-                            height: 20,
-                            decoration: BoxDecoration(
-                              color: context.card,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: context.accentColor,
-                                width: 2,
-                              ),
-                            ),
-                            child: Icon(
-                              Icons.person,
-                              size: 12,
-                              color: context.accentColor,
-                            ),
+              NodeAvatar(
+                text: node.avatarName,
+                color: isMyNode ? context.accentColor : _getAvatarColor(),
+                size: 56,
+                showGradientBorder: !isMyNode,
+                showOnlineIndicator: true,
+                onlineStatus: node.isOnline
+                    ? OnlineStatus.online
+                    : OnlineStatus.offline,
+                batteryLevel: node.batteryLevel,
+                showBatteryBadge: true,
+                border: isMyNode
+                    ? Border.all(
+                        color: Colors.white.withValues(alpha: 0.3),
+                        width: 2,
+                      )
+                    : null,
+                badge: isMyNode
+                    ? Container(
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          color: context.card,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: context.accentColor,
+                            width: 2,
                           ),
                         ),
-                    ],
-                  ),
-                  SizedBox(height: 8),
-                  // PWD/Battery indicator
-                  if (node.role != null || node.batteryLevel != null)
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (node.role == 'CLIENT')
-                          Icon(
-                            Icons.bluetooth,
-                            size: 14,
-                            color: context.accentColor,
-                          ),
-                        if (node.batteryLevel != null) ...[
-                          if (node.role != null) SizedBox(width: 4),
-                          Icon(
-                            _getBatteryIcon(node.batteryLevel!),
-                            size: 14,
-                            color: _getBatteryColor(node.batteryLevel!),
-                          ),
-                          // Only show percentage text if not charging
-                          if (node.batteryLevel! <= 100)
-                            Text(
-                              '${node.batteryLevel}%',
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: _getBatteryColor(node.batteryLevel!),
-                              ),
-                            ),
-                        ],
-                      ],
-                    ),
-                ],
+                        child: Icon(
+                          Icons.person,
+                          size: 12,
+                          color: context.accentColor,
+                        ),
+                      )
+                    : null,
+                badgeAlignment: Alignment.topRight,
               ),
               SizedBox(width: 16),
               // Info
@@ -1238,14 +1231,51 @@ class _NodeCard extends StatelessWidget {
                     else
                       Row(
                         children: [
-                          Icon(
-                            node.isOnline ? Icons.wifi : Icons.wifi_off,
-                            size: 14,
-                            color: node.isOnline
-                                ? context.accentColor
-                                : context.textTertiary,
+                          Container(
+                            width: 10,
+                            height: 10,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: RadialGradient(
+                                colors: node.isOnline
+                                    ? [
+                                        context.accentColor,
+                                        context.accentColor.withValues(
+                                          alpha: 0.6,
+                                        ),
+                                      ]
+                                    : [
+                                        context.textTertiary,
+                                        context.textTertiary.withValues(
+                                          alpha: 0.6,
+                                        ),
+                                      ],
+                              ),
+                              boxShadow: node.isOnline
+                                  ? [
+                                      BoxShadow(
+                                        color: context.accentColor.withValues(
+                                          alpha: 0.3,
+                                        ),
+                                        blurRadius: 4,
+                                        spreadRadius: 1,
+                                      ),
+                                    ]
+                                  : null,
+                            ),
+                            child: Container(
+                              margin: const EdgeInsets.all(2),
+                              decoration: BoxDecoration(
+                                color: node.isOnline
+                                    ? context.accentColor.withValues(alpha: 0.3)
+                                    : context.textTertiary.withValues(
+                                        alpha: 0.3,
+                                      ),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
                           ),
-                          SizedBox(width: 6),
+                          SizedBox(width: 8),
                           Text(
                             node.isOnline ? 'Connected' : 'Offline',
                             style: TextStyle(

@@ -555,7 +555,7 @@ class UserPostsState {
   }
 }
 
-/// Notifier for paginated user posts (Instagram-style).
+/// Notifier for paginated user posts
 /// Uses Map to manage multiple users' posts simultaneously.
 class UserPostsNotifier extends Notifier<Map<String, UserPostsState>> {
   final Map<String, StreamSubscription<List<Post>>> _subscriptions = {};

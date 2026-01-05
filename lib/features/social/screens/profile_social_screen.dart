@@ -1161,35 +1161,19 @@ class _LinkedDeviceChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 8),
         child: Column(
           children: [
-            Stack(
-              children: [
-                NodeAvatar(
-                  text: node?.avatarName ?? nodeId.toRadixString(16)[0],
-                  color: _getNodeColor(nodeId),
-                  size: 44,
-                ),
-                // Online indicator
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: Container(
-                    width: 14,
-                    height: 14,
-                    decoration: BoxDecoration(
-                      color: isOnline
-                          ? AccentColors.green
-                          : context.textTertiary,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: context.background, width: 2),
-                    ),
-                  ),
-                ),
-                // Primary badge
-                if (isPrimary)
-                  Positioned(
-                    top: -2,
-                    right: -2,
-                    child: Container(
+            NodeAvatar(
+              text: node?.avatarName ?? nodeId.toRadixString(16)[0],
+              color: _getNodeColor(nodeId),
+              size: 44,
+              showGradientBorder: true,
+              showOnlineIndicator: true,
+              onlineStatus: isOnline
+                  ? OnlineStatus.online
+                  : OnlineStatus.offline,
+              batteryLevel: node?.batteryLevel,
+              showBatteryBadge: false,
+              badge: isPrimary
+                  ? Container(
                       padding: const EdgeInsets.all(2),
                       decoration: BoxDecoration(
                         color: context.accentColor,
@@ -1201,9 +1185,9 @@ class _LinkedDeviceChip extends StatelessWidget {
                         color: Colors.white,
                         size: 8,
                       ),
-                    ),
-                  ),
-              ],
+                    )
+                  : null,
+              badgeAlignment: Alignment.topRight,
             ),
             const SizedBox(height: 6),
             SizedBox(

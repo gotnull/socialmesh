@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme.dart';
 
-/// Skeleton loader for PostCard - mimics Instagram's shimmer effect
+/// Skeleton loader for PostCard
 class PostSkeleton extends StatefulWidget {
   const PostSkeleton({super.key});
 

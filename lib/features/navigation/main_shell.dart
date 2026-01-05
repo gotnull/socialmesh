@@ -554,6 +554,125 @@ class _MainShellState extends ConsumerState<MainShell> {
     }
   }
 
+  /// Build drawer menu slivers with sticky section headers
+  List<Widget> _buildDrawerMenuSlivers(BuildContext context, ThemeData theme) {
+    final slivers = <Widget>[];
+
+    // Add top padding
+    slivers.add(const SliverPadding(padding: EdgeInsets.only(top: 8)));
+
+    // Group items by section
+    final sections = <_DrawerMenuSection>[];
+    _DrawerMenuSection? currentSection;
+
+    for (var i = 0; i < _drawerMenuItems.length; i++) {
+      final item = _drawerMenuItems[i];
+
+      if (item.sectionHeader != null) {
+        // Start new section
+        if (currentSection != null) {
+          sections.add(currentSection);
+        }
+        currentSection = _DrawerMenuSection(item.sectionHeader!, []);
+      }
+
+      if (currentSection != null) {
+        currentSection.items.add(_DrawerMenuItemWithIndex(item, i));
+      } else {
+        // Items before any section header go in a special section
+        if (sections.isEmpty || sections.last.title.isNotEmpty) {
+          sections.add(_DrawerMenuSection('', []));
+        }
+        sections.last.items.add(_DrawerMenuItemWithIndex(item, i));
+      }
+    }
+
+    // Add the last section
+    if (currentSection != null) {
+      sections.add(currentSection);
+    }
+
+    // Build slivers for each section
+    for (var sectionIndex = 0; sectionIndex < sections.length; sectionIndex++) {
+      final section = sections[sectionIndex];
+      final isLastSection = sectionIndex == sections.length - 1;
+
+      // Add sticky header if section has a title
+      if (section.title.isNotEmpty) {
+        slivers.add(
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _DrawerStickyHeaderDelegate(
+              title: section.title,
+              theme: theme,
+            ),
+          ),
+        );
+      }
+
+      // Add section items
+      slivers.add(
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final itemWithIndex = section.items[index];
+              final item = itemWithIndex.item;
+              final globalIndex = itemWithIndex.index;
+              final isSelected = _selectedDrawerItem == globalIndex;
+              final isLastInSection = index == section.items.length - 1;
+
+              // Check if this is a premium feature and if user has access
+              final isPremium = item.premiumFeature != null;
+              final hasAccess =
+                  !isPremium ||
+                  ref.watch(hasFeatureProvider(item.premiumFeature!));
+
+              return Column(
+                children: [
+                  _DrawerMenuTile(
+                    icon: item.icon,
+                    label: item.label,
+                    isSelected: isSelected,
+                    isPremium: isPremium,
+                    isLocked: isPremium && !hasAccess,
+                    iconColor: item.iconColor,
+                    onTap: () {
+                      ref.haptics.tabChange();
+                      Navigator.of(context).pop();
+
+                      if (isPremium && !hasAccess) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (context) => const SubscriptionScreen(),
+                          ),
+                        );
+                      } else {
+                        setState(() {
+                          _selectedDrawerItem = globalIndex;
+                        });
+                      }
+                    },
+                  ),
+                  // Add divider after last item in section
+                  if (isLastInSection && !isLastSection)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4, bottom: 4),
+                      child: Divider(
+                        color: theme.dividerColor.withValues(alpha: 0.1),
+                      ),
+                    ),
+                ],
+              );
+            }, childCount: section.items.length),
+          ),
+        ),
+      );
+    }
+
+    return slivers;
+  }
+
   Widget _buildDrawer(BuildContext context) {
     final theme = Theme.of(context);
 
@@ -586,164 +705,78 @@ class _MainShellState extends ConsumerState<MainShell> {
               child: Divider(color: theme.dividerColor.withValues(alpha: 0.1)),
             ),
 
-            // Menu items
+            // Menu items with sticky headers
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                children: [
-                  // Main menu items
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: _drawerMenuItems.asMap().entries.map((entry) {
-                        final index = entry.key;
-                        final item = entry.value;
-                        final isSelected = _selectedDrawerItem == index;
-
-                        // Check if next item has a section header (to add divider after this item)
-                        final isLastInSection =
-                            index < _drawerMenuItems.length - 1 &&
-                            _drawerMenuItems[index + 1].sectionHeader != null;
-
-                        // Check if this is a premium feature and if user has access
-                        final isPremium = item.premiumFeature != null;
-                        final hasAccess =
-                            !isPremium ||
-                            ref.watch(hasFeatureProvider(item.premiumFeature!));
-
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Section header if this item has one
-                            if (item.sectionHeader != null) ...[
-                              Padding(
-                                padding: EdgeInsets.only(
-                                  left: 12,
-                                  bottom: 8,
-                                  top: index == 0 ? 0 : 8,
-                                ),
-                                child: Text(
-                                  item.sectionHeader!,
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: 1.2,
-                                    color: theme.colorScheme.onSurface
-                                        .withValues(alpha: 0.5),
-                                  ),
-                                ),
-                              ),
-                            ],
-                            // Menu tile
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 4),
-                              child: _DrawerMenuTile(
-                                icon: item.icon,
-                                label: item.label,
-                                isSelected: isSelected,
-                                isPremium: isPremium,
-                                isLocked: isPremium && !hasAccess,
-                                iconColor: item.iconColor,
-                                onTap: () {
-                                  ref.haptics.tabChange();
-                                  Navigator.of(context).pop(); // Close drawer
-
-                                  if (isPremium && !hasAccess) {
-                                    // Show subscription screen for locked features
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute<void>(
-                                        builder: (context) =>
-                                            const SubscriptionScreen(),
-                                      ),
-                                    );
-                                  } else {
-                                    setState(() {
-                                      _selectedDrawerItem = index;
-                                    });
-                                  }
-                                },
-                              ),
-                            ),
-                            // Divider after item if next item starts a new section
-                            if (isLastInSection)
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                  top: 4,
-                                  bottom: 8,
-                                ),
-                                child: Divider(
-                                  color: theme.dividerColor.withValues(
-                                    alpha: 0.1,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        );
-                      }).toList(),
-                    ),
-                  ),
+              child: CustomScrollView(
+                slivers: [
+                  ..._buildDrawerMenuSlivers(context, theme),
 
                   // Admin section (only visible to shop admins)
-                  _DrawerAdminSection(
-                    onNavigate: (screen) {
-                      Navigator.of(context).pop();
-                      Navigator.of(
-                        context,
-                      ).push(MaterialPageRoute(builder: (_) => screen));
-                    },
+                  SliverToBoxAdapter(
+                    child: _DrawerAdminSection(
+                      onNavigate: (screen) {
+                        Navigator.of(context).pop();
+                        Navigator.of(
+                          context,
+                        ).push(MaterialPageRoute(builder: (_) => screen));
+                      },
+                    ),
                   ),
 
                   // Divider before Settings/Help
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    child: Divider(
-                      color: theme.dividerColor.withValues(alpha: 0.1),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      child: Divider(
+                        color: theme.dividerColor.withValues(alpha: 0.1),
+                      ),
                     ),
                   ),
 
                   // Settings & Help
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Column(
-                      children: [
-                        // Settings
-                        _DrawerMenuTile(
-                          icon: Icons.settings_outlined,
-                          label: 'Settings',
-                          isSelected: false,
-                          iconColor: Colors.grey.shade600,
-                          onTap: () {
-                            ref.haptics.tabChange();
-                            Navigator.of(context).pop();
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const SettingsScreen(),
-                              ),
-                            );
-                          },
-                        ),
-                        Divider(
-                          height: 17,
-                          thickness: 1,
-                          color: theme.dividerColor.withValues(alpha: 0.1),
-                        ),
-                        // Help & Support
-                        _DrawerMenuTile(
-                          icon: Icons.help_outline,
-                          label: 'Help & Support',
-                          isSelected: false,
-                          iconColor: Colors.blue.shade400,
-                          onTap: () {
-                            ref.haptics.tabChange();
-                            Navigator.of(context).pop();
-                            LegalDocumentSheet.showSupport(context);
-                          },
-                        ),
-                      ],
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Column(
+                        children: [
+                          // Settings
+                          _DrawerMenuTile(
+                            icon: Icons.settings_outlined,
+                            label: 'Settings',
+                            isSelected: false,
+                            iconColor: Colors.grey.shade600,
+                            onTap: () {
+                              ref.haptics.tabChange();
+                              Navigator.of(context).pop();
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => const SettingsScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                          Divider(
+                            height: 17,
+                            thickness: 1,
+                            color: theme.dividerColor.withValues(alpha: 0.1),
+                          ),
+                          // Help & Support
+                          _DrawerMenuTile(
+                            icon: Icons.help_outline,
+                            label: 'Help & Support',
+                            isSelected: false,
+                            iconColor: Colors.blue.shade400,
+                            onTap: () {
+                              ref.haptics.tabChange();
+                              Navigator.of(context).pop();
+                              LegalDocumentSheet.showSupport(context);
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -1873,5 +1906,61 @@ class _DrawerAdminSection extends ConsumerWidget {
       loading: () => const SizedBox.shrink(),
       error: (error, stackTrace) => const SizedBox.shrink(),
     );
+  }
+}
+
+/// Helper class for grouping drawer menu items into sections
+class _DrawerMenuSection {
+  final String title;
+  final List<_DrawerMenuItemWithIndex> items;
+
+  _DrawerMenuSection(this.title, this.items);
+}
+
+/// Helper class to track menu item with its original index
+class _DrawerMenuItemWithIndex {
+  final _DrawerMenuItem item;
+  final int index;
+
+  _DrawerMenuItemWithIndex(this.item, this.index);
+}
+
+/// Sticky header delegate for drawer section headers
+class _DrawerStickyHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final String title;
+  final ThemeData theme;
+
+  _DrawerStickyHeaderDelegate({required this.title, required this.theme});
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return Container(
+      color: theme.scaffoldBackgroundColor,
+      padding: const EdgeInsets.only(left: 24, top: 8, bottom: 8),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 1.2,
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+        ),
+      ),
+    );
+  }
+
+  @override
+  double get maxExtent => 32;
+
+  @override
+  double get minExtent => 32;
+
+  @override
+  bool shouldRebuild(covariant _DrawerStickyHeaderDelegate oldDelegate) {
+    return title != oldDelegate.title;
   }
 }
