@@ -50,31 +50,34 @@ class _UserSearchScreenState extends ConsumerState<UserSearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: TextField(
-          controller: _searchController,
-          focusNode: _searchFocusNode,
-          decoration: InputDecoration(
-            hintText: 'Search users...',
-            border: InputBorder.none,
-            suffixIcon: _searchController.text.isNotEmpty
-                ? IconButton(
-                    icon: const Icon(Icons.clear),
-                    onPressed: () {
-                      _searchController.clear();
-                      setState(() => _searchQuery = '');
-                    },
-                  )
-                : null,
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        appBar: AppBar(
+          title: TextField(
+            controller: _searchController,
+            focusNode: _searchFocusNode,
+            decoration: InputDecoration(
+              hintText: 'Search users...',
+              border: InputBorder.none,
+              suffixIcon: _searchController.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        _searchController.clear();
+                        setState(() => _searchQuery = '');
+                      },
+                    )
+                  : null,
+            ),
+            onChanged: _onSearchChanged,
+            textInputAction: TextInputAction.search,
           ),
-          onChanged: _onSearchChanged,
-          textInputAction: TextInputAction.search,
         ),
+        body: _searchQuery.isEmpty
+            ? _SuggestionsView()
+            : _SearchResultsView(query: _searchQuery),
       ),
-      body: _searchQuery.isEmpty
-          ? _SuggestionsView()
-          : _SearchResultsView(query: _searchQuery),
     );
   }
 }
