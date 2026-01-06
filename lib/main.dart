@@ -54,6 +54,7 @@ import 'features/routes/route_detail_screen.dart';
 import 'features/globe/globe_screen.dart';
 import 'features/reachability/mesh_reachability_screen.dart';
 import 'features/social/screens/post_detail_screen.dart';
+import 'features/social/screens/profile_social_screen.dart';
 import 'services/user_presence_service.dart';
 // import 'features/intro/intro_screen.dart';
 import 'models/route.dart' as route_model;
@@ -64,6 +65,9 @@ final Completer<bool> firebaseReadyCompleter = Completer<bool>();
 
 /// Future that completes when Firebase is initialized (or fails)
 Future<bool> get firebaseReady => firebaseReadyCompleter.future;
+
+/// Global navigator key for push notification navigation
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -133,6 +137,8 @@ class SocialmeshApp extends ConsumerStatefulWidget {
 
 class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
     with WidgetsBindingObserver {
+  StreamSubscription<NotificationNavigation>? _pushNotificationSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -149,11 +155,14 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       _initializePurchases();
       // Initialize deep link handling
       _initializeDeepLinks();
+      // Initialize push notification navigation
+      _initializePushNotificationNavigation();
     });
   }
 
   @override
   void dispose() {
+    _pushNotificationSubscription?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -329,6 +338,60 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
     } catch (e) {
       AppLogging.debug('🔗 Deep link init failed: $e');
     }
+  }
+
+  /// Initialize push notification navigation handling
+  void _initializePushNotificationNavigation() {
+    _pushNotificationSubscription = PushNotificationService()
+        .onNotificationNavigation
+        .listen(_handlePushNotificationNavigation);
+    AppLogging.notifications('🔔 Push notification navigation initialized');
+  }
+
+  /// Handle navigation from push notification tap
+  void _handlePushNotificationNavigation(NotificationNavigation nav) {
+    AppLogging.notifications(
+      '🔔 Handling notification navigation: ${nav.type} -> ${nav.targetId}',
+    );
+
+    final navigator = navigatorKey.currentState;
+    if (navigator == null) {
+      AppLogging.notifications('🔔 Navigator not available');
+      return;
+    }
+
+    // Small delay to ensure app is fully loaded after cold start
+    Future.delayed(const Duration(milliseconds: 500), () {
+      switch (nav.type) {
+        case 'new_follower':
+        case 'follow_request':
+        case 'follow_request_accepted':
+          // Navigate to the user's profile
+          if (nav.targetId != null) {
+            navigator.pushNamed(
+              '/profile',
+              arguments: {'userId': nav.targetId},
+            );
+          }
+          break;
+
+        case 'new_like':
+        case 'new_comment':
+        case 'new_reply':
+        case 'mention':
+          // Navigate to the post
+          if (nav.targetId != null) {
+            navigator.pushNamed(
+              '/post-detail',
+              arguments: {'postId': nav.targetId},
+            );
+          }
+          break;
+
+        default:
+          AppLogging.notifications('🔔 Unknown notification type: ${nav.type}');
+      }
+    });
   }
 
   Future<void> _handleDeepLink(DeepLinkData link) async {
@@ -717,6 +780,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
     return MaterialApp(
       title: 'Socialmesh',
       debugShowCheckedModeBanner: false,
+      navigatorKey: navigatorKey,
       theme: AppTheme.lightTheme(accentColor),
       darkTheme: AppTheme.darkTheme(accentColor),
       themeMode: themeMode,
@@ -770,6 +834,15 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
           if (postId != null) {
             return MaterialPageRoute(
               builder: (context) => PostDetailScreen(postId: postId),
+            );
+          }
+        }
+        if (settings.name == '/profile') {
+          final args = settings.arguments as Map<String, dynamic>?;
+          final userId = args?['userId'] as String?;
+          if (userId != null) {
+            return MaterialPageRoute(
+              builder: (context) => ProfileSocialScreen(userId: userId),
             );
           }
         }
