@@ -86,5 +86,24 @@ service firebase.storage {
       allow write: if isOwner(userId) && isValidImage();
       allow delete: if isOwner(userId) || isAdmin();
     }
+
+    // =============================================================================
+    // STORY MEDIA (ephemeral content)
+    // =============================================================================
+    
+    // Story media - stored at stories/{userId}/{storyId}/media.*
+    match /stories/{userId}/{storyId}/{fileName} {
+      // Public read for story media
+      allow read: if true;
+      
+      // Only owner can write their story media
+      allow write: if isOwner(userId) && 
+        (request.resource.contentType.matches('image/.*') ||
+         request.resource.contentType.matches('video/.*')) &&
+        request.resource.size < 50 * 1024 * 1024; // 50MB max for videos
+      
+      // Owner can delete their story media
+      allow delete: if isOwner(userId);
+    }
   }
 }

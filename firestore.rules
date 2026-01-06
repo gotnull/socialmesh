@@ -466,5 +466,46 @@ service cloud.firestore {
       // Only admins can delete reports
       allow delete: if isAdmin();
     }
+
+    // =============================================================================
+    // STORIES (Instagram-style ephemeral content)
+    // =============================================================================
+
+    // Stories - ephemeral content that expires after 24 hours
+    match /stories/{storyId} {
+      // Public stories are visible to everyone
+      // Private stories require follower relationship check
+      allow read: if true; // Visibility filtering done in app queries
+      
+      // Create: authenticated, must be author
+      allow create: if isAuthenticated() &&
+        request.resource.data.authorId == request.auth.uid &&
+        request.resource.data.mediaUrl is string &&
+        request.resource.data.mediaUrl.size() > 0 &&
+        isValidSize();
+      
+      // Delete: only author can delete their story (or admin)
+      allow delete: if isAdmin() || (isAuthenticated() &&
+        resource.data.authorId == request.auth.uid);
+      
+      // Update: only view count updates allowed by authenticated users
+      allow update: if isAuthenticated() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['viewCount']);
+
+      // Story viewers subcollection - tracks who viewed the story
+      match /viewers/{viewerId} {
+        // Story author can see who viewed
+        allow read: if isAuthenticated() &&
+          get(/databases/$(database)/documents/stories/$(storyId)).data.authorId == request.auth.uid;
+        
+        // Any authenticated user can record their view (as themselves)
+        allow create: if isAuthenticated() &&
+          viewerId == request.auth.uid &&
+          request.resource.data.userId == request.auth.uid;
+        
+        // No updates or deletes
+        allow update, delete: if false;
+      }
+    }
   }
 }

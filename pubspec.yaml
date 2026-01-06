@@ -32,6 +32,8 @@ dependencies:
   path_provider: ^2.1.4
   path: ^1.9.0
   file_picker: ^8.3.7
+  image_picker: ^1.1.2
+  photo_manager: ^3.6.3
   
   # QR Code
   qr_flutter: ^4.1.0
