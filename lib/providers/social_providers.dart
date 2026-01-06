@@ -517,6 +517,7 @@ Future<void> setPrimaryNode(WidgetRef ref, int nodeId) async {
   final currentUser = ref.read(currentUserProvider);
   if (currentUser != null) {
     ref.invalidate(publicProfileProvider(currentUser.uid));
+    ref.invalidate(publicProfileStreamProvider(currentUser.uid));
   }
 }
 
