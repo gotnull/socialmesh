@@ -1273,6 +1273,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
       '🔔 Is channel message: $isChannelMessage (channel: ${message.channel})',
     );
 
+    String? channelName;
     if (isChannelMessage) {
       // Check channel message setting
       if (!settings.channelMessageNotificationsEnabled) {
@@ -1280,25 +1281,15 @@ class MessagesNotifier extends Notifier<List<Message>> {
         return;
       }
 
-      // Channel message notification
+      // Get channel name
       final channels = ref.read(channelsProvider);
       final channel = channels
           .where((c) => c.index == message.channel)
           .firstOrNull;
-      final channelName = channel?.name ?? 'Channel ${message.channel}';
+      channelName = channel?.name ?? 'Channel ${message.channel}';
 
       AppLogging.debug(
-        '🔔 Showing channel notification: $senderName in $channelName',
-      );
-      NotificationService().showChannelMessageNotification(
-        senderName: senderName,
-        senderShortName: senderShortName,
-        channelName: channelName,
-        message: message.text,
-        channelIndex: message.channel!,
-        fromNodeNum: message.from,
-        playSound: settings.notificationSoundEnabled,
-        vibrate: settings.notificationVibrationEnabled,
+        '🔔 Queueing channel notification: $senderName in $channelName',
       );
     } else {
       // Check direct message setting
@@ -1307,17 +1298,22 @@ class MessagesNotifier extends Notifier<List<Message>> {
         return;
       }
 
-      // Direct message notification
-      AppLogging.app('Showing DM notification from: $senderName');
-      NotificationService().showNewMessageNotification(
-        senderName: senderName,
-        senderShortName: senderShortName,
-        message: message.text,
-        fromNodeNum: message.from,
-        playSound: settings.notificationSoundEnabled,
-        vibrate: settings.notificationVibrationEnabled,
-      );
+      AppLogging.app('Queueing DM notification from: $senderName');
     }
+
+    // Queue notification for batching (handles flood protection)
+    ref
+        .read(notificationBatchProvider.notifier)
+        .queueMessage(
+          PendingMessageNotification(
+            senderName: senderName,
+            senderShortName: senderShortName,
+            message: message.text,
+            fromNodeNum: message.from,
+            channelIndex: isChannelMessage ? message.channel : null,
+            channelName: channelName,
+          ),
+        );
 
     // Trigger IFTTT webhook for message received
     _triggerIftttForMessage(message, senderName, isChannelMessage);
@@ -1956,11 +1952,10 @@ class NodeDiscoveryNotifier extends Notifier<MeshNode?> {
     if (!settings.notificationsEnabled) return;
     if (!settings.newNodeNotificationsEnabled) return;
 
-    await NotificationService().showNewNodeNotification(
-      node,
-      playSound: settings.notificationSoundEnabled,
-      vibrate: settings.notificationVibrationEnabled,
-    );
+    // Queue notification for batching (handles flood protection)
+    ref
+        .read(notificationBatchProvider.notifier)
+        .queueNode(PendingNodeNotification(node: node));
   }
 }
 
@@ -2107,3 +2102,172 @@ void _refreshLinkedNodeMetadataAfterDelay(Ref ref) {
     _linkedNodeMetadataRefreshTimer = null;
   });
 }
+
+// ============================================================
+// NOTIFICATION BATCHING - Handles notification floods during sync
+// ============================================================
+
+/// State for the notification batch system
+class NotificationBatchState {
+  final List<PendingMessageNotification> pendingMessages;
+  final List<PendingNodeNotification> pendingNodes;
+
+  const NotificationBatchState({
+    this.pendingMessages = const [],
+    this.pendingNodes = const [],
+  });
+
+  NotificationBatchState copyWith({
+    List<PendingMessageNotification>? pendingMessages,
+    List<PendingNodeNotification>? pendingNodes,
+  }) {
+    return NotificationBatchState(
+      pendingMessages: pendingMessages ?? this.pendingMessages,
+      pendingNodes: pendingNodes ?? this.pendingNodes,
+    );
+  }
+}
+
+/// Batches notifications and flushes them after a debounce period
+/// This prevents notification floods during sync operations
+class NotificationBatchNotifier extends Notifier<NotificationBatchState> {
+  Timer? _flushTimer;
+
+  /// Debounce duration - wait this long after last notification before flushing
+  static const _debounceDuration = Duration(seconds: 2);
+
+  /// Maximum batch size before forcing a flush
+  static const _maxBatchSize = 50;
+
+  @override
+  NotificationBatchState build() => const NotificationBatchState();
+
+  /// Queue a message notification for batching
+  void queueMessage(PendingMessageNotification message) {
+    final newMessages = [...state.pendingMessages, message];
+    state = state.copyWith(pendingMessages: newMessages);
+
+    AppLogging.notifications(
+      '🔔 Queued message notification (${newMessages.length} pending)',
+    );
+
+    _scheduleFlush();
+  }
+
+  /// Queue a node notification for batching
+  void queueNode(PendingNodeNotification node) {
+    final newNodes = [...state.pendingNodes, node];
+    state = state.copyWith(pendingNodes: newNodes);
+
+    AppLogging.notifications(
+      '🔔 Queued node notification (${newNodes.length} pending)',
+    );
+
+    _scheduleFlush();
+  }
+
+  /// Schedule a flush after the debounce period
+  void _scheduleFlush() {
+    // Cancel existing timer
+    _flushTimer?.cancel();
+
+    // Check if we've hit max batch size
+    final totalPending =
+        state.pendingMessages.length + state.pendingNodes.length;
+    if (totalPending >= _maxBatchSize) {
+      AppLogging.notifications('🔔 Max batch size reached, flushing now');
+      _flush();
+      return;
+    }
+
+    // Schedule flush after debounce period
+    _flushTimer = Timer(_debounceDuration, _flush);
+  }
+
+  /// Flush all pending notifications
+  Future<void> _flush() async {
+    _flushTimer?.cancel();
+    _flushTimer = null;
+
+    final messages = state.pendingMessages;
+    final nodes = state.pendingNodes;
+
+    // Clear state immediately
+    state = const NotificationBatchState();
+
+    if (messages.isEmpty && nodes.isEmpty) return;
+
+    AppLogging.notifications(
+      '🔔 Flushing ${messages.length} messages and ${nodes.length} nodes',
+    );
+
+    // Get settings
+    final settingsAsync = ref.read(settingsServiceProvider);
+    final settings = settingsAsync.value;
+    final playSound = settings?.notificationSoundEnabled ?? true;
+    final vibrate = settings?.notificationVibrationEnabled ?? true;
+
+    final notificationService = NotificationService();
+
+    // Show batched notifications
+    if (messages.length == 1) {
+      // Single message - show regular notification
+      final msg = messages.first;
+      if (msg.isChannelMessage) {
+        await notificationService.showChannelMessageNotification(
+          senderName: msg.senderName,
+          senderShortName: msg.senderShortName,
+          channelName: msg.channelName ?? 'Channel',
+          message: msg.message,
+          channelIndex: msg.channelIndex!,
+          fromNodeNum: msg.fromNodeNum,
+          playSound: playSound,
+          vibrate: vibrate,
+        );
+      } else {
+        await notificationService.showNewMessageNotification(
+          senderName: msg.senderName,
+          senderShortName: msg.senderShortName,
+          message: msg.message,
+          fromNodeNum: msg.fromNodeNum,
+          playSound: playSound,
+          vibrate: vibrate,
+        );
+      }
+    } else if (messages.isNotEmpty) {
+      // Multiple messages - show batched
+      await notificationService.showBatchedMessagesNotification(
+        messages: messages,
+        playSound: playSound,
+        vibrate: vibrate,
+      );
+    }
+
+    if (nodes.isNotEmpty) {
+      // Nodes - batched handles single vs multiple internally
+      await notificationService.showBatchedNodesNotification(
+        nodes: nodes,
+        playSound: playSound,
+        vibrate: vibrate,
+      );
+    }
+  }
+
+  /// Force flush all pending notifications immediately
+  Future<void> flushNow() async {
+    await _flush();
+  }
+
+  /// Cancel all pending notifications without showing them
+  void cancelPending() {
+    _flushTimer?.cancel();
+    _flushTimer = null;
+    state = const NotificationBatchState();
+    AppLogging.notifications('🔔 Cancelled all pending notifications');
+  }
+}
+
+final notificationBatchProvider =
+    NotifierProvider<NotificationBatchNotifier, NotificationBatchState>(
+      NotificationBatchNotifier.new,
+    );
