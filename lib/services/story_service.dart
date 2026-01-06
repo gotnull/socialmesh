@@ -151,47 +151,107 @@ class StoryService {
 
   /// Delete a story and its media
   Future<void> deleteStory(String storyId) async {
+    debugPrint(
+      '🗑️ [StoryService.deleteStory] Starting delete for storyId=$storyId',
+    );
+
     final currentUserId = _currentUserId;
     if (currentUserId == null) {
+      debugPrint('🗑️ [StoryService.deleteStory] ERROR: Not signed in');
       throw StateError('Must be signed in to delete stories');
     }
+    debugPrint('🗑️ [StoryService.deleteStory] Current user: $currentUserId');
 
     // Get the story to verify ownership
+    debugPrint('🗑️ [StoryService.deleteStory] Fetching story document...');
     final storyDoc = await _firestore.collection('stories').doc(storyId).get();
-    if (!storyDoc.exists) return;
+    if (!storyDoc.exists) {
+      debugPrint(
+        '🗑️ [StoryService.deleteStory] Story document does not exist, returning',
+      );
+      return;
+    }
+    debugPrint(
+      '🗑️ [StoryService.deleteStory] Story document exists, data: ${storyDoc.data()}',
+    );
 
     final story = Story.fromFirestore(storyDoc);
+    debugPrint(
+      '🗑️ [StoryService.deleteStory] Story authorId: ${story.authorId}, currentUserId: $currentUserId',
+    );
     if (story.authorId != currentUserId) {
+      debugPrint(
+        '🗑️ [StoryService.deleteStory] ERROR: Cannot delete another user\'s story',
+      );
       throw StateError('Cannot delete another user\'s story');
     }
 
     // Delete media from storage
+    debugPrint('🗑️ [StoryService.deleteStory] Deleting media from storage...');
     try {
       final storageRef = _storage.ref().child(
         'stories/$currentUserId/$storyId',
       );
+      debugPrint(
+        '🗑️ [StoryService.deleteStory] Storage path: stories/$currentUserId/$storyId',
+      );
       final items = await storageRef.listAll();
+      debugPrint(
+        '🗑️ [StoryService.deleteStory] Found ${items.items.length} media items to delete',
+      );
       for (final item in items.items) {
+        debugPrint('🗑️ [StoryService.deleteStory] Deleting: ${item.fullPath}');
         await item.delete();
       }
-    } catch (e) {
-      debugPrint('Error deleting story media: $e');
+      debugPrint('🗑️ [StoryService.deleteStory] Media deleted successfully');
+    } catch (e, stack) {
+      debugPrint(
+        '🗑️ [StoryService.deleteStory] Error deleting story media: $e',
+      );
+      debugPrint('🗑️ [StoryService.deleteStory] Stack: $stack');
     }
 
     // Delete story document
-    await _firestore.collection('stories').doc(storyId).delete();
+    debugPrint('🗑️ [StoryService.deleteStory] Deleting story document...');
+    try {
+      await _firestore.collection('stories').doc(storyId).delete();
+      debugPrint(
+        '🗑️ [StoryService.deleteStory] Story document deleted successfully',
+      );
+    } catch (e, stack) {
+      debugPrint(
+        '🗑️ [StoryService.deleteStory] ERROR deleting story document: $e',
+      );
+      debugPrint('🗑️ [StoryService.deleteStory] Stack: $stack');
+      rethrow;
+    }
 
     // Delete all views subcollection
-    final viewsSnapshot = await _firestore
-        .collection('stories')
-        .doc(storyId)
-        .collection('viewers')
-        .get();
-    for (final doc in viewsSnapshot.docs) {
-      await doc.reference.delete();
+    debugPrint(
+      '🗑️ [StoryService.deleteStory] Deleting viewers subcollection...',
+    );
+    try {
+      final viewsSnapshot = await _firestore
+          .collection('stories')
+          .doc(storyId)
+          .collection('viewers')
+          .get();
+      debugPrint(
+        '🗑️ [StoryService.deleteStory] Found ${viewsSnapshot.docs.length} viewer docs to delete',
+      );
+      for (final doc in viewsSnapshot.docs) {
+        await doc.reference.delete();
+      }
+      debugPrint('🗑️ [StoryService.deleteStory] Viewers deleted successfully');
+    } catch (e, stack) {
+      debugPrint('🗑️ [StoryService.deleteStory] Error deleting viewers: $e');
+      debugPrint('🗑️ [StoryService.deleteStory] Stack: $stack');
     }
 
     // Check if user has any remaining stories and update flag
+    debugPrint(
+      '🗑️ [StoryService.deleteStory] Checking for remaining stories...',
+    );
     final remainingStories = await _firestore
         .collection('stories')
         .where('authorId', isEqualTo: currentUserId)
@@ -199,11 +259,19 @@ class StoryService {
         .limit(1)
         .get();
 
+    debugPrint(
+      '🗑️ [StoryService.deleteStory] Remaining stories: ${remainingStories.docs.length}',
+    );
     if (remainingStories.docs.isEmpty) {
+      debugPrint(
+        '🗑️ [StoryService.deleteStory] No remaining stories, setting hasActiveStory=false',
+      );
       await _firestore.collection('users').doc(currentUserId).set({
         'hasActiveStory': false,
       }, SetOptions(merge: true));
     }
+
+    debugPrint('🗑️ [StoryService.deleteStory] Delete completed successfully');
   }
 
   // ===========================================================================

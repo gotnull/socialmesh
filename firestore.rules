@@ -494,8 +494,8 @@ service cloud.firestore {
 
       // Story viewers subcollection - tracks who viewed the story
       match /viewers/{viewerId} {
-        // Story author can see who viewed
-        allow read: if isAuthenticated() &&
+        // Story author can see who viewed and delete viewers when deleting story
+        allow read, delete: if isAuthenticated() &&
           get(/databases/$(database)/documents/stories/$(storyId)).data.authorId == request.auth.uid;
         
         // Any authenticated user can record their view (as themselves)
@@ -503,8 +503,8 @@ service cloud.firestore {
           viewerId == request.auth.uid &&
           request.resource.data.userId == request.auth.uid;
         
-        // No updates or deletes
-        allow update, delete: if false;
+        // No updates
+        allow update: if false;
       }
     }
   }

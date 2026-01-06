@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme.dart';
 import '../../providers/splash_mesh_provider.dart';
 import 'animated_tagline.dart';
+import 'split_flap_text.dart';
 
 /// Status information for the connecting screen
 class ConnectionStatusInfo {
@@ -107,14 +108,7 @@ class ConnectingContent extends StatelessWidget {
             const ConfiguredSplashMeshNode(),
             const SizedBox(height: 32),
           ],
-          Text(
-            'Socialmesh',
-            style: TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: context.textPrimary,
-            ),
-          ),
+          const SocialmeshSplitFlapLogo(fontSize: 32),
           const SizedBox(height: 8),
           const AnimatedTagline(taglines: appTaglines),
           const SizedBox(height: 48),

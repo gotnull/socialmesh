@@ -203,15 +203,42 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
         story: _currentStory,
         isOwnStory: _isOwnStory,
         onDelete: () async {
+          debugPrint(
+            '🗑️ [StoryViewer.onDelete] Delete tapped for story: ${_currentStory.id}',
+          );
+          debugPrint(
+            '🗑️ [StoryViewer.onDelete] Story details: authorId=${_currentStory.authorId}, mediaUrl=${_currentStory.mediaUrl}',
+          );
           Navigator.pop(context);
-          await deleteStory(ref, _currentStory.id);
-          if (mounted) {
-            showSuccessSnackBar(context, 'Story deleted');
-            // Check if there are remaining stories in this group
-            if (_currentGroup.stories.length <= 1) {
-              Navigator.pop(context);
-            } else {
-              _goToNextStory();
+          try {
+            debugPrint(
+              '🗑️ [StoryViewer.onDelete] Calling deleteStory provider...',
+            );
+            await deleteStory(ref, _currentStory.id);
+            debugPrint(
+              '🗑️ [StoryViewer.onDelete] deleteStory completed successfully',
+            );
+            if (mounted) {
+              showSuccessSnackBar(context, 'Story deleted');
+              // Check if there are remaining stories in this group
+              debugPrint(
+                '🗑️ [StoryViewer.onDelete] Stories in group: ${_currentGroup.stories.length}',
+              );
+              if (_currentGroup.stories.length <= 1) {
+                debugPrint(
+                  '🗑️ [StoryViewer.onDelete] No more stories, closing viewer',
+                );
+                Navigator.pop(context);
+              } else {
+                debugPrint('🗑️ [StoryViewer.onDelete] Going to next story');
+                _goToNextStory();
+              }
+            }
+          } catch (e, stack) {
+            debugPrint('🗑️ [StoryViewer.onDelete] ERROR: $e');
+            debugPrint('🗑️ [StoryViewer.onDelete] Stack: $stack');
+            if (mounted) {
+              showErrorSnackBar(context, 'Failed to delete story: $e');
             }
           }
         },

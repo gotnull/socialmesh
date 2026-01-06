@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/social.dart';
@@ -271,11 +272,24 @@ Future<void> markStoryViewed(WidgetRef ref, String storyId) async {
 
 /// Delete a story.
 Future<void> deleteStory(WidgetRef ref, String storyId) async {
-  final service = ref.read(storyServiceProvider);
-  await service.deleteStory(storyId);
+  debugPrint('🗑️ [deleteStory provider] Starting delete for storyId=$storyId');
+  try {
+    final service = ref.read(storyServiceProvider);
+    debugPrint(
+      '🗑️ [deleteStory provider] Got story service, calling deleteStory...',
+    );
+    await service.deleteStory(storyId);
+    debugPrint('🗑️ [deleteStory provider] Service deleteStory completed');
 
-  // Refresh story groups
-  ref.read(storyGroupsProvider.notifier).refresh();
+    // Refresh story groups
+    debugPrint('🗑️ [deleteStory provider] Refreshing story groups...');
+    ref.read(storyGroupsProvider.notifier).refresh();
+    debugPrint('🗑️ [deleteStory provider] Story groups refreshed');
+  } catch (e, stack) {
+    debugPrint('🗑️ [deleteStory provider] ERROR: $e');
+    debugPrint('🗑️ [deleteStory provider] Stack: $stack');
+    rethrow;
+  }
 }
 
 // ===========================================================================
