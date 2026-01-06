@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme.dart';
 import '../../../models/story.dart';
 import '../../../providers/auth_providers.dart';
+import '../../../providers/profile_providers.dart';
 import '../../../providers/story_providers.dart';
 import '../screens/create_story_screen.dart';
 import '../screens/story_viewer_screen.dart';
@@ -23,6 +24,10 @@ class StoryBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final currentUser = ref.watch(currentUserProvider);
     final storyGroupsState = ref.watch(storyGroupsProvider);
+    final myStoriesAsync = ref.watch(
+      myStoriesProvider,
+    ); // Direct stream of own stories
+    final myAvatarUrl = ref.watch(profileAvatarUrlProvider);
 
     if (currentUser == null) {
       return const SizedBox.shrink();
@@ -30,6 +35,13 @@ class StoryBar extends ConsumerWidget {
 
     final myGroup = ref.watch(myStoryGroupProvider);
     final followingGroups = ref.watch(followingStoryGroupsProvider);
+
+    // Check if user has stories from direct provider (more reliable)
+    final hasOwnStories = myStoriesAsync.when(
+      data: (stories) => stories.isNotEmpty,
+      loading: () => myGroup?.stories.isNotEmpty ?? false,
+      error: (_, _) => false,
+    );
 
     // Show loading shimmer if loading and no data yet
     if (storyGroupsState.isLoading && storyGroupsState.groups.isEmpty) {
@@ -51,13 +63,12 @@ class StoryBar extends ConsumerWidget {
               padding: const EdgeInsets.only(right: 12),
               child: StoryAvatar(
                 userId: currentUser.uid,
-                avatarUrl: null, // Will use generated avatar
-                displayName: myGroup != null && myGroup.stories.isNotEmpty
-                    ? 'Your story'
-                    : 'Add story',
-                hasUnviewed: myGroup?.stories.isNotEmpty ?? false,
-                isAddButton: myGroup == null || myGroup.stories.isEmpty,
-                onTap: () => _onOwnStoryTap(context, ref, myGroup),
+                avatarUrl: myAvatarUrl,
+                displayName: hasOwnStories ? 'Your story' : 'Add story',
+                hasUnviewed: hasOwnStories,
+                isAddButton: !hasOwnStories,
+                onTap: () =>
+                    _onOwnStoryTap(context, ref, myGroup, myStoriesAsync),
               ),
             );
           }
@@ -80,14 +91,29 @@ class StoryBar extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     StoryGroup? myGroup,
+    AsyncValue<List<Story>> myStoriesAsync,
   ) {
-    if (myGroup != null && myGroup.stories.isNotEmpty) {
-      // View own stories
+    final stories = myStoriesAsync.when(
+      data: (list) => list,
+      loading: () => <Story>[],
+      error: (_, _) => <Story>[],
+    );
+
+    if (stories.isNotEmpty) {
+      // View own stories - create a temporary group if myGroup is null
+      final group =
+          myGroup ??
+          StoryGroup(
+            userId: stories.first.authorId,
+            stories: stories,
+            lastStoryAt: stories.first.createdAt,
+            profile: stories.first.authorSnapshot,
+          );
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (_) =>
-              StoryViewerScreen(storyGroups: [myGroup], initialGroupIndex: 0),
+              StoryViewerScreen(storyGroups: [group], initialGroupIndex: 0),
         ),
       );
     } else {
