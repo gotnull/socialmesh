@@ -284,13 +284,13 @@ class _ProfileView extends ConsumerWidget {
                   label: 'Email',
                   value: profile.email!,
                 ),
-              _InfoItem(
-                icon: Icons.badge_outlined,
-                label: 'Profile ID',
-                value: profile.id.length > 20
-                    ? '${profile.id.substring(0, 20)}...'
-                    : profile.id,
-              ),
+              // _InfoItem(
+              //   icon: Icons.badge_outlined,
+              //   label: 'Profile ID',
+              //   value: profile.id.length > 20
+              //       ? '${profile.id.substring(0, 20)}...'
+              //       : profile.id,
+              // ),
               _InfoItem(
                 icon: Icons.calendar_today_outlined,
                 label: 'Member since',
