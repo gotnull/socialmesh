@@ -211,22 +211,8 @@ class StoryService {
       debugPrint('🗑️ [StoryService.deleteStory] Stack: $stack');
     }
 
-    // Delete story document
-    debugPrint('🗑️ [StoryService.deleteStory] Deleting story document...');
-    try {
-      await _firestore.collection('stories').doc(storyId).delete();
-      debugPrint(
-        '🗑️ [StoryService.deleteStory] Story document deleted successfully',
-      );
-    } catch (e, stack) {
-      debugPrint(
-        '🗑️ [StoryService.deleteStory] ERROR deleting story document: $e',
-      );
-      debugPrint('🗑️ [StoryService.deleteStory] Stack: $stack');
-      rethrow;
-    }
-
-    // Delete all views subcollection
+    // Delete viewers subcollection FIRST (before deleting story document)
+    // This is required because the viewers permission rule checks the parent story's authorId
     debugPrint(
       '🗑️ [StoryService.deleteStory] Deleting viewers subcollection...',
     );
@@ -246,6 +232,21 @@ class StoryService {
     } catch (e, stack) {
       debugPrint('🗑️ [StoryService.deleteStory] Error deleting viewers: $e');
       debugPrint('🗑️ [StoryService.deleteStory] Stack: $stack');
+    }
+
+    // Delete story document (after viewers are deleted)
+    debugPrint('🗑️ [StoryService.deleteStory] Deleting story document...');
+    try {
+      await _firestore.collection('stories').doc(storyId).delete();
+      debugPrint(
+        '🗑️ [StoryService.deleteStory] Story document deleted successfully',
+      );
+    } catch (e, stack) {
+      debugPrint(
+        '🗑️ [StoryService.deleteStory] ERROR deleting story document: $e',
+      );
+      debugPrint('🗑️ [StoryService.deleteStory] Stack: $stack');
+      rethrow;
     }
 
     // Check if user has any remaining stories and update flag

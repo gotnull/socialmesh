@@ -197,6 +197,10 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
   }
 
   void _showOptions() {
+    // Capture values before showing sheet (for use in async callback)
+    final storyId = _currentStory.id;
+    final storyService = ref.read(storyServiceProvider);
+
     AppBottomSheet.show(
       context: context,
       child: _StoryOptionsSheet(
@@ -204,35 +208,21 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
         isOwnStory: _isOwnStory,
         onDelete: () async {
           debugPrint(
-            '🗑️ [StoryViewer.onDelete] Delete tapped for story: ${_currentStory.id}',
+            '🗑️ [StoryViewer.onDelete] Delete tapped for story: $storyId',
           );
-          debugPrint(
-            '🗑️ [StoryViewer.onDelete] Story details: authorId=${_currentStory.authorId}, mediaUrl=${_currentStory.mediaUrl}',
-          );
-          Navigator.pop(context);
+          // Bottom sheet closes itself before calling this callback
           try {
             debugPrint(
-              '🗑️ [StoryViewer.onDelete] Calling deleteStory provider...',
+              '🗑️ [StoryViewer.onDelete] Calling storyService.deleteStory...',
             );
-            await deleteStory(ref, _currentStory.id);
+            await storyService.deleteStory(storyId);
             debugPrint(
               '🗑️ [StoryViewer.onDelete] deleteStory completed successfully',
             );
             if (mounted) {
               showSuccessSnackBar(context, 'Story deleted');
-              // Check if there are remaining stories in this group
-              debugPrint(
-                '🗑️ [StoryViewer.onDelete] Stories in group: ${_currentGroup.stories.length}',
-              );
-              if (_currentGroup.stories.length <= 1) {
-                debugPrint(
-                  '🗑️ [StoryViewer.onDelete] No more stories, closing viewer',
-                );
-                Navigator.pop(context);
-              } else {
-                debugPrint('🗑️ [StoryViewer.onDelete] Going to next story');
-                _goToNextStory();
-              }
+              // Close the story viewer - data is stale and needs refresh
+              Navigator.pop(context);
             }
           } catch (e, stack) {
             debugPrint('🗑️ [StoryViewer.onDelete] ERROR: $e');
@@ -790,6 +780,10 @@ class _StoryOptionsSheet extends StatelessWidget {
                 ),
               );
               if (confirm == true) {
+                // Close the bottom sheet first, then trigger deletion
+                if (context.mounted) {
+                  Navigator.pop(context);
+                }
                 onDelete();
               }
             },

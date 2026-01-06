@@ -9,30 +9,32 @@ const _brandGradientColors = [
   Color(0xFF4F6AF6), // Blue
 ];
 
-/// Characters for split-flap display (standard Vestaboard charset)
-const _splitFlapChars =
-    ' ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#\$()+-&=;:\'"%,./?°';
+/// Characters for split-flap display cycling - includes lowercase
+const _flipCharsUpper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#%&';
+const _flipCharsLower = 'abcdefghijklmnopqrstuvwxyz0123456789!@#%&';
 
-/// A premium split-flap (Vestaboard-style) animated text widget.
-/// Each letter flips through characters with realistic 3D mechanics.
+/// Slot machine / Pokie style split-flap text with bouncy physics.
+///
+/// Features:
+/// - Realistic variable-speed spinning that slows down
+/// - Bouncy overshoot when landing on final character
+/// - Blur effect during fast spins
+/// - Randomized timing per letter for organic feel
+/// - Staggered start from right-to-left like a real machine
 class SplitFlapText extends StatefulWidget {
   const SplitFlapText({
     super.key,
     required this.text,
     this.style,
     this.useGradient = false,
-    this.letterWidth = 24,
-    this.letterHeight = 32,
-    this.flipDuration = const Duration(milliseconds: 80),
-    this.staggerDelay = const Duration(milliseconds: 120),
+    this.spinDuration = const Duration(milliseconds: 1800),
+    this.staggerDelay = const Duration(milliseconds: 180),
   });
 
   final String text;
   final TextStyle? style;
   final bool useGradient;
-  final double letterWidth;
-  final double letterHeight;
-  final Duration flipDuration;
+  final Duration spinDuration;
   final Duration staggerDelay;
 
   @override
@@ -41,53 +43,52 @@ class SplitFlapText extends StatefulWidget {
 
 class _SplitFlapTextState extends State<SplitFlapText>
     with TickerProviderStateMixin {
-  late List<_SplitFlapLetterController> _controllers;
+  late List<_LetterAnimationController> _letterControllers;
   final _random = Random();
 
   @override
   void initState() {
     super.initState();
-    _initControllers();
-  }
-
-  void _initControllers() {
-    _controllers = [];
-
-    for (var i = 0; i < widget.text.length; i++) {
-      final targetChar = widget.text[i].toUpperCase();
-      final targetIndex = _splitFlapChars.indexOf(targetChar);
-      final finalIndex = targetIndex >= 0 ? targetIndex : 0;
-
-      // Random number of flips before landing (8-16 flips)
-      final flipCount = 8 + _random.nextInt(9);
-
-      final controller = _SplitFlapLetterController(
+    _letterControllers = List.generate(
+      widget.text.length,
+      (i) => _LetterAnimationController(
+        targetChar: widget.text[i],
         vsync: this,
-        flipDuration: widget.flipDuration,
-        totalFlips: flipCount,
-        targetIndex: finalIndex,
-      );
-
-      // Stagger from right to left (last letter starts first)
-      final reverseIndex = widget.text.length - 1 - i;
-      final delay = Duration(
-        milliseconds: reverseIndex * widget.staggerDelay.inMilliseconds,
-      );
-
-      Future.delayed(delay, () {
-        if (mounted) controller.start();
-      });
-
-      _controllers.add(controller);
-    }
+        random: _random,
+      ),
+    );
+    _startAnimation();
   }
 
   @override
   void dispose() {
-    for (final c in _controllers) {
-      c.dispose();
+    for (final controller in _letterControllers) {
+      controller.dispose();
     }
     super.dispose();
+  }
+
+  void _startAnimation() {
+    for (var i = 0; i < widget.text.length; i++) {
+      // Stagger from right to left with randomized delays
+      final reverseIndex = widget.text.length - 1 - i;
+      final baseDelay = reverseIndex * widget.staggerDelay.inMilliseconds;
+      // Add ±50ms randomness for organic feel
+      final jitter = _random.nextInt(100) - 50;
+      final delay = Duration(milliseconds: baseDelay + jitter);
+
+      // Vary spin duration per letter ±300ms
+      final durationJitter = _random.nextInt(600) - 300;
+      final spinDuration = Duration(
+        milliseconds: widget.spinDuration.inMilliseconds + durationJitter,
+      );
+
+      Future.delayed(delay, () {
+        if (mounted) {
+          _letterControllers[i].startSpin(spinDuration);
+        }
+      });
+    }
   }
 
   @override
@@ -95,139 +96,173 @@ class _SplitFlapTextState extends State<SplitFlapText>
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: List.generate(widget.text.length, (index) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 1),
-          child: _SplitFlapLetter(
-            controller: _controllers[index],
-            width: widget.letterWidth,
-            height: widget.letterHeight,
-            style: widget.style,
-            useGradient: widget.useGradient,
-            gradientPosition: index / (widget.text.length - 1).clamp(1, 999),
-          ),
+        return _SlotLetter(
+          controller: _letterControllers[index],
+          style: widget.style,
+          useGradient: widget.useGradient,
+          gradientPosition: index / (widget.text.length - 1).clamp(1, 999),
         );
       }),
     );
   }
 }
 
-/// Controller for a single split-flap letter
-class _SplitFlapLetterController {
-  _SplitFlapLetterController({
+/// Controls the animation state for a single letter slot
+class _LetterAnimationController {
+  _LetterAnimationController({
+    required this.targetChar,
     required TickerProvider vsync,
-    required this.flipDuration,
-    required this.totalFlips,
-    required this.targetIndex,
-  }) {
-    _flipController = AnimationController(duration: flipDuration, vsync: vsync);
-
-    _flipAnimation = Tween<double>(
-      begin: 0,
-      end: pi,
-    ).animate(CurvedAnimation(parent: _flipController, curve: Curves.easeIn));
+    required this.random,
+  }) : _vsync = vsync {
+    _isUpperCase =
+        targetChar == targetChar.toUpperCase() &&
+        targetChar != targetChar.toLowerCase();
+    _flipChars = _isUpperCase ? _flipCharsUpper : _flipCharsLower;
   }
 
-  final Duration flipDuration;
-  final int totalFlips;
-  final int targetIndex;
+  final String targetChar;
+  final TickerProvider _vsync;
+  final Random random;
+  late final bool _isUpperCase;
+  late final String _flipChars;
 
-  late AnimationController _flipController;
-  late Animation<double> _flipAnimation;
+  AnimationController? _spinController;
+  AnimationController? _bounceController;
 
-  int _currentFlip = 0;
-  int _currentCharIndex = 0;
-  int _nextCharIndex = 0;
-  bool _isFlipping = false;
-  bool _isComplete = false;
-
-  Animation<double> get flipAnimation => _flipAnimation;
-  bool get isFlipping => _isFlipping;
-  bool get isComplete => _isComplete;
-  String get currentChar => _splitFlapChars[_currentCharIndex];
-  String get nextChar => _splitFlapChars[_nextCharIndex];
+  String currentChar = ' ';
+  double blurAmount = 0;
+  double bounceOffset = 0;
+  double rotationAngle = 0;
 
   final _listeners = <VoidCallback>[];
 
   void addListener(VoidCallback listener) {
     _listeners.add(listener);
-    _flipController.addListener(listener);
   }
 
   void removeListener(VoidCallback listener) {
     _listeners.remove(listener);
-    _flipController.removeListener(listener);
   }
 
-  void start() {
-    _doFlip();
+  void _notifyListeners() {
+    for (final listener in _listeners) {
+      listener();
+    }
   }
 
-  void _doFlip() {
-    if (_currentFlip >= totalFlips) {
-      _isComplete = true;
-      _currentCharIndex = targetIndex;
-      for (final l in _listeners) {
-        l();
+  void startSpin(Duration duration) {
+    _spinController = AnimationController(duration: duration, vsync: _vsync);
+
+    // Use a custom curve that spins fast then decelerates
+    final spinCurve = CurvedAnimation(
+      parent: _spinController!,
+      curve: const _SlotMachineCurve(),
+    );
+
+    // Calculate how many character changes based on duration
+    final totalFlips = 15 + random.nextInt(10); // 15-25 flips
+    var lastFlipIndex = -1;
+
+    _spinController!.addListener(() {
+      final progress = spinCurve.value;
+
+      // Determine current flip index (which character we're showing)
+      final flipIndex = (progress * totalFlips).floor();
+
+      if (flipIndex != lastFlipIndex && flipIndex < totalFlips) {
+        lastFlipIndex = flipIndex;
+
+        // Pick random character, but ensure last few approach target
+        if (flipIndex >= totalFlips - 3) {
+          // Last 3 flips: 50% chance of showing target
+          currentChar = random.nextBool()
+              ? targetChar
+              : _flipChars[random.nextInt(_flipChars.length)];
+        } else {
+          currentChar = _flipChars[random.nextInt(_flipChars.length)];
+        }
+
+        // Blur based on spin speed (derivative of progress)
+        final speed = 1.0 - progress; // Fast at start, slow at end
+        blurAmount = speed * 2.5;
+
+        // Rotation wobble during spin
+        rotationAngle = sin(progress * 20) * (1 - progress) * 0.08;
+
+        _notifyListeners();
       }
-      return;
-    }
-
-    _isFlipping = true;
-
-    // Calculate next character - accelerate towards target near the end
-    if (_currentFlip >= totalFlips - 3) {
-      // Last 3 flips - move towards target
-      final remaining = totalFlips - _currentFlip;
-      final step = ((targetIndex - _currentCharIndex) / remaining).round();
-      _nextCharIndex = (_currentCharIndex + step).clamp(
-        0,
-        _splitFlapChars.length - 1,
-      );
-    } else {
-      // Random character
-      _nextCharIndex = Random().nextInt(_splitFlapChars.length);
-    }
-
-    _flipController.forward(from: 0).then((_) {
-      _currentCharIndex = _nextCharIndex;
-      _currentFlip++;
-      _isFlipping = false;
-
-      // Small pause between flips for realism
-      Future.delayed(const Duration(milliseconds: 20), () {
-        _doFlip();
-      });
     });
+
+    _spinController!.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        // Set final character
+        currentChar = targetChar;
+        blurAmount = 0;
+        rotationAngle = 0;
+        _notifyListeners();
+
+        // Start bounce animation
+        _startBounce();
+      }
+    });
+
+    _spinController!.forward();
+  }
+
+  void _startBounce() {
+    _bounceController = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: _vsync,
+    );
+
+    // Bouncy overshoot curve
+    final bounceCurve = CurvedAnimation(
+      parent: _bounceController!,
+      curve: const _BouncyOvershootCurve(),
+    );
+
+    _bounceController!.addListener(() {
+      // Bounce offset: overshoot down then settle
+      bounceOffset = bounceCurve.value;
+      _notifyListeners();
+    });
+
+    _bounceController!.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        bounceOffset = 0;
+        _notifyListeners();
+      }
+    });
+
+    _bounceController!.forward();
   }
 
   void dispose() {
-    _flipController.dispose();
+    _spinController?.dispose();
+    _bounceController?.dispose();
+    _listeners.clear();
   }
 }
 
-/// A single split-flap letter with 3D flip animation
-class _SplitFlapLetter extends StatefulWidget {
-  const _SplitFlapLetter({
+/// Slot machine style letter with blur, bounce, and flip effects
+class _SlotLetter extends StatefulWidget {
+  const _SlotLetter({
     required this.controller,
-    required this.width,
-    required this.height,
     this.style,
     this.useGradient = false,
     this.gradientPosition = 0,
   });
 
-  final _SplitFlapLetterController controller;
-  final double width;
-  final double height;
+  final _LetterAnimationController controller;
   final TextStyle? style;
   final bool useGradient;
   final double gradientPosition;
 
   @override
-  State<_SplitFlapLetter> createState() => _SplitFlapLetterState();
+  State<_SlotLetter> createState() => _SlotLetterState();
 }
 
-class _SplitFlapLetterState extends State<_SplitFlapLetter> {
+class _SlotLetterState extends State<_SlotLetter> {
   @override
   void initState() {
     super.initState();
@@ -246,120 +281,27 @@ class _SplitFlapLetterState extends State<_SplitFlapLetter> {
 
   @override
   Widget build(BuildContext context) {
-    final flipValue = widget.controller.flipAnimation.value;
-    final isTopHalfFlipping = flipValue < pi / 2;
+    final char = widget.controller.currentChar;
+    final blur = widget.controller.blurAmount;
+    final bounce = widget.controller.bounceOffset;
+    final rotation = widget.controller.rotationAngle;
 
-    return SizedBox(
-      width: widget.width,
-      height: widget.height,
-      child: Stack(
-        children: [
-          // Bottom half (static, shows next character)
-          Positioned(
-            top: widget.height / 2,
-            left: 0,
-            right: 0,
-            child: ClipRect(
-              child: Align(
-                alignment: Alignment.topCenter,
-                heightFactor: 0.5,
-                child: _buildCharacter(
-                  widget.controller.isFlipping
-                      ? widget.controller.nextChar
-                      : widget.controller.currentChar,
-                ),
-              ),
-            ),
-          ),
-
-          // Top half (static, shows current character)
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: ClipRect(
-              child: Align(
-                alignment: Alignment.bottomCenter,
-                heightFactor: 0.5,
-                child: _buildCharacter(widget.controller.currentChar),
-              ),
-            ),
-          ),
-
-          // Flipping panel
-          if (widget.controller.isFlipping)
-            Positioned(
-              top: isTopHalfFlipping ? 0 : widget.height / 2,
-              left: 0,
-              right: 0,
-              child: Transform(
-                alignment: isTopHalfFlipping
-                    ? Alignment.bottomCenter
-                    : Alignment.topCenter,
-                transform: Matrix4.identity()
-                  ..setEntry(3, 2, 0.002)
-                  ..rotateX(isTopHalfFlipping ? -flipValue : pi - flipValue),
-                child: ClipRect(
-                  child: Align(
-                    alignment: isTopHalfFlipping
-                        ? Alignment.bottomCenter
-                        : Alignment.topCenter,
-                    heightFactor: 0.5,
-                    child: _buildCharacter(
-                      isTopHalfFlipping
-                          ? widget.controller.currentChar
-                          : widget.controller.nextChar,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-          // Center divider line
-          Positioned(
-            top: widget.height / 2 - 0.5,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: 1,
-              color: Colors.black.withValues(alpha: 0.3),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCharacter(String char) {
-    final baseStyle = (widget.style ?? const TextStyle()).copyWith(
-      fontSize: widget.height * 0.75,
-      fontWeight: FontWeight.w700,
-      height: 1.0,
-    );
-
-    Widget text = SizedBox(
-      height: widget.height,
-      child: Center(
-        child: Text(
-          char,
-          style: baseStyle.copyWith(
-            color: widget.useGradient ? Colors.white : null,
-          ),
-        ),
+    Widget text = Text(
+      char,
+      style: widget.style?.copyWith(
+        color: widget.useGradient ? Colors.white : null,
       ),
     );
 
+    // Apply gradient shader
     if (widget.useGradient) {
       text = ShaderMask(
         shaderCallback: (bounds) {
-          return LinearGradient(
-            colors: _brandGradientColors,
-            stops: const [0.0, 0.5, 1.0],
-          ).createShader(
+          return LinearGradient(colors: _brandGradientColors).createShader(
             Rect.fromLTWH(
-              -bounds.width * widget.gradientPosition * 5,
+              -bounds.width * widget.gradientPosition * 4,
               0,
-              bounds.width * 6,
+              bounds.width * 5,
               bounds.height,
             ),
           );
@@ -369,7 +311,76 @@ class _SplitFlapLetterState extends State<_SplitFlapLetter> {
       );
     }
 
-    return text;
+    // Apply transformations
+    return Transform(
+      alignment: Alignment.center,
+      transform: Matrix4.identity()
+        ..setTranslationRaw(
+          0.0,
+          bounce * 8,
+          0.0,
+        ) // Bounce offset (max 8 pixels)
+        ..rotateZ(rotation), // Subtle wobble during spin
+      child: blur > 0.1
+          ? Stack(
+              children: [
+                // Motion blur effect - show previous chars faded
+                Opacity(
+                  opacity: 0.3,
+                  child: Transform.translate(
+                    offset: Offset(0, -blur * 4),
+                    child: text,
+                  ),
+                ),
+                Opacity(
+                  opacity: 0.15,
+                  child: Transform.translate(
+                    offset: Offset(0, -blur * 8),
+                    child: text,
+                  ),
+                ),
+                // Main character
+                text,
+              ],
+            )
+          : text,
+    );
+  }
+}
+
+/// Curve that simulates slot machine spin: fast start, gradual deceleration
+class _SlotMachineCurve extends Curve {
+  const _SlotMachineCurve();
+
+  @override
+  double transformInternal(double t) {
+    // Deceleration curve - spins fast then slows dramatically
+    // Using cubic ease-out with extra emphasis on the slowdown
+    final p = 1.0 - t;
+    return 1.0 - (p * p * p * p); // Quartic ease-out
+  }
+}
+
+/// Bouncy overshoot curve for the landing effect
+class _BouncyOvershootCurve extends Curve {
+  const _BouncyOvershootCurve();
+
+  @override
+  double transformInternal(double t) {
+    // Creates: 0 -> overshoot(1.3) -> undershoot(-0.1) -> settle(0)
+    if (t < 0.4) {
+      // Overshoot phase: 0 to 1.3
+      final p = t / 0.4;
+      return Curves.easeOut.transform(p) * 1.3;
+    } else if (t < 0.7) {
+      // Snap back past zero: 1.3 to -0.15
+      final p = (t - 0.4) / 0.3;
+      return 1.3 - Curves.easeInOut.transform(p) * 1.45;
+    } else {
+      // Settle to zero: -0.15 to 0
+      final p = (t - 0.7) / 0.3;
+      return -0.15 + Curves.easeOut.transform(p) * 0.15;
+    }
   }
 }
 
@@ -405,15 +416,13 @@ class SocialmeshSplitFlapLogo extends StatelessWidget {
                 : Colors.black87,
           ),
         ),
-        // "mesh" - animated split-flap with gradient
+        // "mesh" - animated with gradient (LOWERCASE)
         SplitFlapText(
           text: 'mesh',
           style: baseStyle,
           useGradient: true,
-          letterWidth: fontSize * 0.7,
-          letterHeight: fontSize * 1.1,
-          flipDuration: const Duration(milliseconds: 60),
-          staggerDelay: const Duration(milliseconds: 200),
+          spinDuration: const Duration(milliseconds: 1600),
+          staggerDelay: const Duration(milliseconds: 220),
         ),
       ],
     );
