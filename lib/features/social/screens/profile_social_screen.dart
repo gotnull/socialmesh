@@ -26,6 +26,7 @@ import '../../settings/settings_screen.dart';
 import '../widgets/follow_button.dart';
 import '../widgets/story_bar.dart';
 import 'create_post_screen.dart';
+import 'create_story_screen.dart';
 import 'follow_requests_screen.dart';
 import 'followers_screen.dart';
 import 'post_detail_screen.dart';
@@ -488,7 +489,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                   }
 
                   return GestureDetector(
-                    onTap: isOwnProfile ? _navigateToEditProfile : null,
+                    onTap: isOwnProfile ? _navigateToCreateStory : null,
                     child: Stack(
                       children: [
                         avatarWidget,
@@ -974,6 +975,13 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const ProfileScreen()),
+    );
+  }
+
+  void _navigateToCreateStory() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const CreateStoryScreen()),
     );
   }
 
