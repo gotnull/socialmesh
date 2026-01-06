@@ -923,38 +923,66 @@ class _SortButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PopupMenuButton<NodeSortOrder>(
-      initialValue: sortOrder,
-      onSelected: onChanged,
-      color: context.card,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      offset: const Offset(0, 40),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: context.card,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: Material(
+        color: context.card,
+        child: InkWell(
+          onTap: () => _showSortMenu(context),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: context.border.withValues(alpha: 0.3)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.sort, size: 14, color: context.textTertiary),
-            SizedBox(width: 4),
-            Text(
-              _sortLabel,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: context.textSecondary,
-              ),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: context.border.withValues(alpha: 0.3)),
             ),
-            SizedBox(width: 2),
-            Icon(Icons.arrow_drop_down, size: 18, color: context.textTertiary),
-          ],
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.sort, size: 14, color: context.textTertiary),
+                SizedBox(width: 4),
+                Text(
+                  _sortLabel,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: context.textSecondary,
+                  ),
+                ),
+                SizedBox(width: 2),
+                Icon(
+                  Icons.arrow_drop_down,
+                  size: 18,
+                  color: context.textTertiary,
+                ),
+              ],
+            ),
+          ),
         ),
       ),
-      itemBuilder: (context) => [
+    );
+  }
+
+  void _showSortMenu(BuildContext context) {
+    final RenderBox button = context.findRenderObject()! as RenderBox;
+    final RenderBox overlay =
+        Navigator.of(context).overlay!.context.findRenderObject()! as RenderBox;
+    final Offset offset = button.localToGlobal(
+      Offset(0, button.size.height + 4),
+      ancestor: overlay,
+    );
+
+    showMenu<NodeSortOrder>(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        offset.dx,
+        offset.dy,
+        overlay.size.width - offset.dx - button.size.width,
+        0,
+      ),
+      color: context.card,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      items: [
         _buildMenuItem(
           NodeSortOrder.lastHeard,
           'Most Recent',
@@ -980,7 +1008,11 @@ class _SortButton extends StatelessWidget {
           context,
         ),
       ],
-    );
+    ).then((value) {
+      if (value != null) {
+        onChanged(value);
+      }
+    });
   }
 
   PopupMenuItem<NodeSortOrder> _buildMenuItem(
