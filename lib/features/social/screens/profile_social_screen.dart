@@ -1258,9 +1258,8 @@ class _LinkedDeviceChip extends StatelessWidget {
 
     return GestureDetector(
       onTap: () => _showNodeBottomSheet(context),
-      child: Container(
-        width: 72,
-        padding: const EdgeInsets.only(right: 10),
+      child: SizedBox(
+        width: 56,
         child: Column(
           children: [
             NodeAvatar(
@@ -1293,7 +1292,8 @@ class _LinkedDeviceChip extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             SizedBox(
-              width: 55,
+              width: 56,
+              height: 14,
               child: Center(
                 child: AutoScrollText(
                   _longName,

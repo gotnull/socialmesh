@@ -609,7 +609,7 @@ class _LinkedDeviceCard extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            Flexible(
+                            Expanded(
                               child: AutoScrollText(
                                 node?.displayName ??
                                     '!${nodeId.toRadixString(16)}',
@@ -647,17 +647,12 @@ class _LinkedDeviceCard extends StatelessWidget {
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            Flexible(
-                              child: AutoScrollText(
-                                node?.longName ??
-                                    '!${nodeId.toRadixString(16)}',
-                                style: TextStyle(
-                                  color: context.textTertiary,
-                                  fontSize: 12,
-                                  fontFamily: node?.longName != null
-                                      ? null
-                                      : 'monospace',
-                                ),
+                            Text(
+                              '!${nodeId.toRadixString(16)}',
+                              style: TextStyle(
+                                color: context.textTertiary,
+                                fontSize: 12,
+                                fontFamily: 'monospace',
                               ),
                             ),
                             if (node?.hardwareModel != null) ...[
