@@ -165,6 +165,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                   SliverToBoxAdapter(
                     child: _LinkedDevicesSection(
                       linkedNodeIds: profile.linkedNodeIds,
+                      linkedNodeMetadata: profile.linkedNodeMetadata,
                       primaryNodeId: profile.primaryNodeId,
                       isOwnProfile: isOwnProfile,
                       onManageDevices: () => _navigateToLinkedDevices(),
@@ -1091,12 +1092,14 @@ class _StatColumn extends StatelessWidget {
 class _LinkedDevicesSection extends ConsumerWidget {
   const _LinkedDevicesSection({
     required this.linkedNodeIds,
+    required this.linkedNodeMetadata,
     required this.primaryNodeId,
     required this.isOwnProfile,
     this.onManageDevices,
   });
 
   final List<int> linkedNodeIds;
+  final Map<int, LinkedNodeInfo> linkedNodeMetadata;
   final int? primaryNodeId;
   final bool isOwnProfile;
   final VoidCallback? onManageDevices;
@@ -1170,11 +1173,13 @@ class _LinkedDevicesSection extends ConsumerWidget {
               itemBuilder: (context, index) {
                 final nodeId = linkedNodeIds[index];
                 final node = allNodes[nodeId];
+                final cachedInfo = linkedNodeMetadata[nodeId];
                 final isPrimary = nodeId == primaryNodeId;
 
                 return _LinkedDeviceChip(
                   nodeId: nodeId,
                   node: node,
+                  cachedInfo: cachedInfo,
                   isPrimary: isPrimary,
                 );
               },
@@ -1190,11 +1195,13 @@ class _LinkedDeviceChip extends StatelessWidget {
   const _LinkedDeviceChip({
     required this.nodeId,
     required this.node,
+    this.cachedInfo,
     required this.isPrimary,
   });
 
   final int nodeId;
   final MeshNode? node;
+  final LinkedNodeInfo? cachedInfo;
   final bool isPrimary;
 
   Color _getNodeColor(int nodeNum) {
@@ -1209,6 +1216,24 @@ class _LinkedDeviceChip extends StatelessWidget {
     return colors[nodeNum % colors.length];
   }
 
+  /// Get display name - prefer live node data, fallback to cached info
+  String get _displayName =>
+      node?.displayName ??
+      cachedInfo?.displayName ??
+      '!${nodeId.toRadixString(16)}';
+
+  /// Get avatar name - prefer live node data, fallback to cached info
+  String get _avatarName =>
+      node?.avatarName ?? cachedInfo?.avatarName ?? nodeId.toRadixString(16)[0];
+
+  /// Get long name for display under avatar
+  String get _longName =>
+      node?.longName ?? cachedInfo?.longName ?? '!${nodeId.toRadixString(16)}';
+
+  /// Check if we have a real name (not just hex ID)
+  bool get _hasRealName =>
+      node?.longName != null || cachedInfo?.longName != null;
+
   @override
   Widget build(BuildContext context) {
     final isOnline = node?.isOnline ?? false;
@@ -1221,7 +1246,7 @@ class _LinkedDeviceChip extends StatelessWidget {
         child: Column(
           children: [
             NodeAvatar(
-              text: node?.avatarName ?? nodeId.toRadixString(16)[0],
+              text: _avatarName,
               color: _getNodeColor(nodeId),
               size: 44,
               showGradientBorder: true,
@@ -1253,11 +1278,11 @@ class _LinkedDeviceChip extends StatelessWidget {
               width: 72,
               child: Center(
                 child: AutoScrollText(
-                  node?.longName ?? '!${nodeId.toRadixString(16)}',
+                  _longName,
                   style: TextStyle(
                     color: context.textSecondary,
                     fontSize: 11,
-                    fontFamily: node?.longName != null ? null : 'monospace',
+                    fontFamily: _hasRealName ? null : 'monospace',
                   ),
                   maxLines: 1,
                   velocity: 25.0,
@@ -1277,7 +1302,7 @@ class _LinkedDeviceChip extends StatelessWidget {
     AppBottomSheet.showActions(
       context: context,
       header: Text(
-        node?.displayName ?? '!${nodeId.toRadixString(16)}',
+        _displayName,
         style: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w600,
@@ -1295,7 +1320,7 @@ class _LinkedDeviceChip extends StatelessWidget {
               builder: (_) => ChatScreen(
                 type: ConversationType.directMessage,
                 nodeNum: nodeId,
-                title: node?.displayName ?? '!${nodeId.toRadixString(16)}',
+                title: _displayName,
               ),
             ),
           ),

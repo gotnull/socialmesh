@@ -338,32 +338,42 @@ class _LinkedDevicesScreenState extends ConsumerState<LinkedDevicesScreen> {
   }
 
   Future<void> _unlinkDevice(int nodeId) async {
+    debugPrint('🔗 [UnlinkDevice] Starting unlink for nodeId: $nodeId');
+
+    // Capture all the services and data we need BEFORE showing dialog
+    // since widget may unmount during dialog due to provider rebuilds
+    final socialService = ref.read(socialServiceProvider);
+    final userProfileNotifier = ref.read(userProfileProvider.notifier);
+    final currentProfile = ref.read(userProfileProvider).value;
+    final currentUser = ref.read(currentUserProvider);
+    final container = ProviderScope.containerOf(context);
+
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.card,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: dialogContext.card,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           'Unlink Device',
           style: TextStyle(
-            color: context.textPrimary,
+            color: dialogContext.textPrimary,
             fontWeight: FontWeight.w600,
           ),
         ),
         content: Text(
           'Remove this device from your profile? Others will no longer see your profile when viewing this node.',
-          style: TextStyle(color: context.textSecondary),
+          style: TextStyle(color: dialogContext.textSecondary),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(dialogContext, false),
             child: Text(
               'Cancel',
-              style: TextStyle(color: context.textSecondary),
+              style: TextStyle(color: dialogContext.textSecondary),
             ),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(dialogContext, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.errorRed,
               foregroundColor: Colors.white,
@@ -374,25 +384,78 @@ class _LinkedDevicesScreenState extends ConsumerState<LinkedDevicesScreen> {
       ),
     );
 
-    if (confirmed != true) return;
+    debugPrint('🔗 [UnlinkDevice] Dialog result: confirmed=$confirmed');
+    if (confirmed != true) {
+      debugPrint('🔗 [UnlinkDevice] User cancelled or dialog dismissed');
+      return;
+    }
 
-    if (!mounted) return;
-    setState(() => _isUnlinking = true);
+    if (mounted) {
+      setState(() => _isUnlinking = true);
+    }
+    debugPrint(
+      '🔗 [UnlinkDevice] Starting unlink operation (mounted=$mounted)...',
+    );
 
     try {
-      await unlinkNode(ref, nodeId);
+      // Use captured service directly - doesn't rely on widget being mounted
+      debugPrint('🔗 [UnlinkDevice] Calling unlinkNodeFromProfile...');
+      await socialService.unlinkNodeFromProfile(nodeId);
+      debugPrint('🔗 [UnlinkDevice] Firestore unlink completed');
+
+      // Update local profile if we have it
+      if (currentProfile != null) {
+        final updatedLinkedNodes = [...currentProfile.linkedNodeIds]
+          ..remove(nodeId);
+        final newPrimaryId = currentProfile.primaryNodeId == nodeId
+            ? (updatedLinkedNodes.isNotEmpty ? updatedLinkedNodes.first : null)
+            : currentProfile.primaryNodeId;
+        debugPrint(
+          '🔗 [UnlinkDevice] Updating local profile: '
+          'updatedLinkedNodes=$updatedLinkedNodes, newPrimaryId=$newPrimaryId',
+        );
+        try {
+          await userProfileNotifier.updateLinkedNodes(
+            updatedLinkedNodes,
+            primaryNodeId: newPrimaryId,
+            clearPrimaryNodeId: newPrimaryId == null,
+          );
+          debugPrint('🔗 [UnlinkDevice] Local profile update completed');
+        } catch (e) {
+          debugPrint('🔗 [UnlinkDevice] Local profile update failed: $e');
+          // Don't rethrow - Firestore already updated
+        }
+      }
+
+      // Invalidate providers using the container (works even if widget unmounted)
+      debugPrint('🔗 [UnlinkDevice] Invalidating providers via container...');
+      container.invalidate(linkedNodeIdsProvider);
+      container.invalidate(isNodeLinkedProvider(nodeId));
+      container.invalidate(profileByNodeIdProvider(nodeId));
+      if (currentUser != null) {
+        container.invalidate(publicProfileProvider(currentUser.uid));
+        container.invalidate(publicProfileStreamProvider(currentUser.uid));
+      }
+      debugPrint('🔗 [UnlinkDevice] Providers invalidated');
+
       // Reset banner dismissed state so it can show again
       await resetLinkDeviceBannerDismissState();
+      debugPrint('🔗 [UnlinkDevice] Banner state reset');
+
       if (mounted) {
         showSuccessSnackBar(context, 'Device unlinked');
+        debugPrint('🔗 [UnlinkDevice] Success snackbar shown');
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('🔗 [UnlinkDevice] ERROR: $e');
+      debugPrint('🔗 [UnlinkDevice] Stack trace: $stackTrace');
       if (mounted) {
         showErrorSnackBar(context, 'Failed to unlink: $e');
       }
     } finally {
       if (mounted) {
         setState(() => _isUnlinking = false);
+        debugPrint('🔗 [UnlinkDevice] Unlink operation finished');
       }
     }
   }

@@ -1,9 +1,12 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../models/mesh_models.dart';
 import '../models/social.dart';
 import '../services/social_service.dart';
+import 'app_providers.dart';
 import 'auth_providers.dart';
 import 'profile_providers.dart';
 
@@ -296,7 +299,18 @@ Future<void> linkNode(
   bool setPrimary = false,
 }) async {
   final service = ref.read(socialServiceProvider);
-  await service.linkNodeToProfile(nodeId, setPrimary: setPrimary);
+
+  // Get node metadata to cache for display when node isn't in local store
+  final nodes = ref.read(nodesProvider);
+  final node = nodes[nodeId];
+
+  await service.linkNodeToProfile(
+    nodeId,
+    setPrimary: setPrimary,
+    longName: node?.longName,
+    shortName: node?.shortName,
+    avatarColor: node?.avatarColor,
+  );
 
   // Update local profile storage to persist linked nodes across app restarts
   final userProfileNotifier = ref.read(userProfileProvider.notifier);
@@ -327,34 +341,159 @@ Future<void> linkNode(
 
 /// Unlink a node from current user's profile
 Future<void> unlinkNode(WidgetRef ref, int nodeId) async {
+  debugPrint('🔗 [unlinkNode] Starting unlink for nodeId: $nodeId');
+
   final service = ref.read(socialServiceProvider);
-  await service.unlinkNodeFromProfile(nodeId);
+  debugPrint(
+    '🔗 [unlinkNode] Got socialService, calling unlinkNodeFromProfile...',
+  );
+
+  try {
+    await service.unlinkNodeFromProfile(nodeId);
+    debugPrint('🔗 [unlinkNode] Firestore unlink completed');
+  } catch (e, stackTrace) {
+    debugPrint('🔗 [unlinkNode] Firestore unlink FAILED: $e');
+    debugPrint('🔗 [unlinkNode] Stack trace: $stackTrace');
+    rethrow;
+  }
 
   // Update local profile storage to persist linked nodes across app restarts
   final userProfileNotifier = ref.read(userProfileProvider.notifier);
   final currentProfile = ref.read(userProfileProvider).value;
+  debugPrint(
+    '🔗 [unlinkNode] Current profile: ${currentProfile != null ? "exists" : "null"}, '
+    'linkedNodeIds: ${currentProfile?.linkedNodeIds}',
+  );
+
   if (currentProfile != null) {
     final updatedLinkedNodes = [...currentProfile.linkedNodeIds]
       ..remove(nodeId);
     final newPrimaryId = currentProfile.primaryNodeId == nodeId
         ? (updatedLinkedNodes.isNotEmpty ? updatedLinkedNodes.first : null)
         : currentProfile.primaryNodeId;
-    await userProfileNotifier.updateLinkedNodes(
-      updatedLinkedNodes,
-      primaryNodeId: newPrimaryId,
-      clearPrimaryNodeId: newPrimaryId == null,
+    debugPrint(
+      '🔗 [unlinkNode] Updating local profile: '
+      'updatedLinkedNodes=$updatedLinkedNodes, newPrimaryId=$newPrimaryId',
     );
+    try {
+      await userProfileNotifier.updateLinkedNodes(
+        updatedLinkedNodes,
+        primaryNodeId: newPrimaryId,
+        clearPrimaryNodeId: newPrimaryId == null,
+      );
+      debugPrint('🔗 [unlinkNode] Local profile update completed');
+    } catch (e, stackTrace) {
+      debugPrint('🔗 [unlinkNode] Local profile update FAILED: $e');
+      debugPrint('🔗 [unlinkNode] Stack trace: $stackTrace');
+      // Don't rethrow - Firestore already updated
+    }
   }
 
   // Invalidate providers to refresh state
+  debugPrint('🔗 [unlinkNode] Invalidating providers...');
   ref.invalidate(linkedNodeIdsProvider);
   ref.invalidate(isNodeLinkedProvider(nodeId));
   ref.invalidate(profileByNodeIdProvider(nodeId));
   // Also invalidate the user's public profile so UI updates
   final currentUser = ref.read(currentUserProvider);
+  debugPrint('🔗 [unlinkNode] Current user: ${currentUser?.uid}');
   if (currentUser != null) {
     ref.invalidate(publicProfileProvider(currentUser.uid));
+    debugPrint('🔗 [unlinkNode] Invalidated publicProfileProvider');
   }
+  debugPrint('🔗 [unlinkNode] Unlink complete');
+}
+
+/// Refresh cached metadata for all linked nodes using current mesh data.
+/// Call this when connecting to a device to ensure cached info is current.
+/// This updates Firestore with the latest node names so they display correctly
+/// even when viewing the profile from a different device.
+Future<void> refreshLinkedNodeMetadata(Ref ref) async {
+  final currentUser = ref.read(currentUserProvider);
+  if (currentUser == null) return;
+
+  final service = ref.read(socialServiceProvider);
+  final nodes = ref.read(nodesProvider);
+  final linkedNodeIds = ref.read(linkedNodeIdsProvider).asData?.value ?? [];
+
+  if (linkedNodeIds.isEmpty) return;
+
+  var updated = false;
+  for (final nodeId in linkedNodeIds) {
+    final node = nodes[nodeId];
+    // Only update if we have meaningful node data (not just the ID)
+    if (node != null && (node.longName != null || node.shortName != null)) {
+      try {
+        await service.updateLinkedNodeMetadata(
+          nodeId,
+          longName: node.longName,
+          shortName: node.shortName,
+          avatarColor: node.avatarColor,
+        );
+        updated = true;
+      } catch (e) {
+        // Silently fail - this is opportunistic refresh
+        debugPrint('Failed to update linked node metadata for $nodeId: $e');
+      }
+    }
+  }
+
+  // If we updated any metadata, invalidate the profile to pick up changes
+  if (updated) {
+    ref.invalidate(publicProfileProvider(currentUser.uid));
+  }
+}
+
+/// Check if a node's identity fields have changed in a way that requires
+/// updating the cached metadata. Only compares display-relevant fields.
+bool _hasIdentityChanged(MeshNode node, MeshNode? previousNode) {
+  if (previousNode == null) {
+    // New node with identity data = changed
+    return node.longName != null || node.shortName != null;
+  }
+  return node.longName != previousNode.longName ||
+      node.shortName != previousNode.shortName ||
+      node.avatarColor != previousNode.avatarColor;
+}
+
+/// Event-driven handler for node updates. Called from NodesNotifier when
+/// a node is updated. If the node is linked to the current user's profile
+/// and its identity fields have changed, updates the cached metadata in Firestore.
+///
+/// This is the primary mechanism for keeping linked node metadata current.
+/// The connection-triggered refresh serves as a bootstrap fallback.
+void onLinkedNodeUpdated(Ref ref, MeshNode node, MeshNode? previousNode) {
+  // Skip if no identity change
+  if (!_hasIdentityChanged(node, previousNode)) return;
+
+  // Skip if user not signed in
+  final currentUser = ref.read(currentUserProvider);
+  if (currentUser == null) return;
+
+  // Check if this node is linked to the current user (async lookup)
+  final linkedNodeIds = ref.read(linkedNodeIdsProvider).asData?.value;
+  if (linkedNodeIds == null || !linkedNodeIds.contains(node.nodeNum)) return;
+
+  // Update metadata in Firestore (fire-and-forget)
+  final service = ref.read(socialServiceProvider);
+  service
+      .updateLinkedNodeMetadata(
+        node.nodeNum,
+        longName: node.longName,
+        shortName: node.shortName,
+        avatarColor: node.avatarColor,
+      )
+      .then((_) {
+        // Invalidate profile to pick up new metadata
+        ref.invalidate(publicProfileProvider(currentUser.uid));
+        debugPrint(
+          '✅ Updated linked node metadata for ${node.displayName} (${node.nodeNum})',
+        );
+      })
+      .catchError((e) {
+        // Silently fail - opportunistic update
+        debugPrint('Failed to update linked node metadata: $e');
+      });
 }
 
 /// Set a linked node as the primary node

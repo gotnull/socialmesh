@@ -1239,7 +1239,14 @@ class SocialService {
 
   /// Link a mesh node to the current user's profile.
   /// If setPrimary is true, also sets it as the primary node.
-  Future<void> linkNodeToProfile(int nodeId, {bool setPrimary = false}) async {
+  /// Optionally caches node metadata (longName, shortName, avatarColor) for display.
+  Future<void> linkNodeToProfile(
+    int nodeId, {
+    bool setPrimary = false,
+    String? longName,
+    String? shortName,
+    int? avatarColor,
+  }) async {
     final currentUserId = _currentUserId;
     if (currentUserId == null) {
       throw StateError('Must be signed in to link nodes');
@@ -1275,34 +1282,100 @@ class SocialService {
       updates['primaryNodeId'] = nodeId;
     }
 
+    // Store node metadata for display when node isn't in local cache
+    if (longName != null || shortName != null || avatarColor != null) {
+      final nodeIdKey = nodeId.toString();
+      updates['linkedNodeMetadata.$nodeIdKey'] = {
+        'nodeId': nodeId,
+        if (longName != null) 'longName': longName,
+        if (shortName != null) 'shortName': shortName,
+        if (avatarColor != null) 'avatarColor': avatarColor,
+      };
+    }
+
     await docRef.update(updates);
+  }
+
+  /// Update cached metadata for a linked node.
+  Future<void> updateLinkedNodeMetadata(
+    int nodeId, {
+    String? longName,
+    String? shortName,
+    int? avatarColor,
+  }) async {
+    final currentUserId = _currentUserId;
+    if (currentUserId == null) return;
+
+    final docRef = _firestore.collection('profiles').doc(currentUserId);
+    final nodeIdKey = nodeId.toString();
+
+    await docRef.update({
+      'linkedNodeMetadata.$nodeIdKey': {
+        'nodeId': nodeId,
+        if (longName != null) 'longName': longName,
+        if (shortName != null) 'shortName': shortName,
+        if (avatarColor != null) 'avatarColor': avatarColor,
+      },
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 
   /// Unlink a mesh node from the current user's profile.
   Future<void> unlinkNodeFromProfile(int nodeId) async {
+    debugPrint(
+      '🔗 [SocialService.unlinkNodeFromProfile] Starting for nodeId: $nodeId',
+    );
+
     final currentUserId = _currentUserId;
+    debugPrint(
+      '🔗 [SocialService.unlinkNodeFromProfile] currentUserId: $currentUserId',
+    );
     if (currentUserId == null) {
+      debugPrint(
+        '🔗 [SocialService.unlinkNodeFromProfile] ERROR: Not signed in',
+      );
       throw StateError('Must be signed in to unlink nodes');
     }
 
     final docRef = _firestore.collection('profiles').doc(currentUserId);
+    debugPrint(
+      '🔗 [SocialService.unlinkNodeFromProfile] Fetching profile doc...',
+    );
     final doc = await docRef.get();
 
-    if (!doc.exists) return;
+    if (!doc.exists) {
+      debugPrint(
+        '🔗 [SocialService.unlinkNodeFromProfile] Profile doc does not exist, returning early',
+      );
+      return;
+    }
 
+    debugPrint(
+      '🔗 [SocialService.unlinkNodeFromProfile] Profile doc exists, parsing data...',
+    );
     final currentLinkedNodes =
         (doc.data()?['linkedNodeIds'] as List<dynamic>?)
             ?.map((e) => e as int)
             .toList() ??
         [];
     final currentPrimaryId = doc.data()?['primaryNodeId'] as int?;
+    debugPrint(
+      '🔗 [SocialService.unlinkNodeFromProfile] Current state: '
+      'linkedNodes=$currentLinkedNodes, primaryId=$currentPrimaryId',
+    );
 
     // Remove the node
-    currentLinkedNodes.remove(nodeId);
+    final removed = currentLinkedNodes.remove(nodeId);
+    debugPrint(
+      '🔗 [SocialService.unlinkNodeFromProfile] Removed nodeId $nodeId: $removed, '
+      'remaining: $currentLinkedNodes',
+    );
 
     final updates = <String, dynamic>{
       'linkedNodeIds': currentLinkedNodes,
       'updatedAt': FieldValue.serverTimestamp(),
+      // Remove the cached metadata for this node
+      'linkedNodeMetadata.${nodeId.toString()}': FieldValue.delete(),
     };
 
     // If we removed the primary node, set a new one or clear it
@@ -1310,9 +1383,29 @@ class SocialService {
       updates['primaryNodeId'] = currentLinkedNodes.isNotEmpty
           ? currentLinkedNodes.first
           : null;
+      debugPrint(
+        '🔗 [SocialService.unlinkNodeFromProfile] Primary node removed, '
+        'new primary: ${updates['primaryNodeId']}',
+      );
     }
 
-    await docRef.update(updates);
+    debugPrint(
+      '🔗 [SocialService.unlinkNodeFromProfile] Updating Firestore with: $updates',
+    );
+    try {
+      await docRef.update(updates);
+      debugPrint(
+        '🔗 [SocialService.unlinkNodeFromProfile] Firestore update SUCCESS',
+      );
+    } catch (e, stackTrace) {
+      debugPrint(
+        '🔗 [SocialService.unlinkNodeFromProfile] Firestore update FAILED: $e',
+      );
+      debugPrint(
+        '🔗 [SocialService.unlinkNodeFromProfile] Stack trace: $stackTrace',
+      );
+      rethrow;
+    }
   }
 
   /// Set a linked node as the primary node.

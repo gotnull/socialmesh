@@ -11,6 +11,7 @@ class AutoScrollText extends StatefulWidget {
   final int? maxLines;
   final double velocity;
   final double fadeWidth;
+  final TextAlign textAlign;
 
   const AutoScrollText(
     this.text, {
@@ -21,6 +22,7 @@ class AutoScrollText extends StatefulWidget {
     this.maxLines = 1,
     this.velocity = 35.0,
     this.fadeWidth = 20.0,
+    this.textAlign = TextAlign.start,
   });
 
   @override
@@ -124,6 +126,7 @@ class _AutoScrollTextState extends State<AutoScrollText> {
             style: widget.style,
             maxLines: widget.maxLines,
             overflow: TextOverflow.ellipsis,
+            textAlign: widget.textAlign,
           );
         }
 
@@ -145,6 +148,7 @@ class _AutoScrollTextState extends State<AutoScrollText> {
             style: widget.style,
             maxLines: widget.maxLines,
             overflow: TextOverflow.ellipsis,
+            textAlign: widget.textAlign,
           );
         }
 

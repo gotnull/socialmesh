@@ -683,6 +683,65 @@ class Like {
   String toString() => 'Like(userId: $userId, postId: $postId)';
 }
 
+/// Cached metadata for a linked mesh node.
+///
+/// Stored in profile's `linkedNodeMetadata` map to ensure node info
+/// is available even when the device isn't actively connected to the mesh.
+class LinkedNodeInfo {
+  final int nodeId;
+  final String? longName;
+  final String? shortName;
+  final int? avatarColor;
+
+  const LinkedNodeInfo({
+    required this.nodeId,
+    this.longName,
+    this.shortName,
+    this.avatarColor,
+  });
+
+  factory LinkedNodeInfo.fromJson(Map<String, dynamic> json) {
+    return LinkedNodeInfo(
+      nodeId: json['nodeId'] as int,
+      longName: json['longName'] as String?,
+      shortName: json['shortName'] as String?,
+      avatarColor: json['avatarColor'] as int?,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'nodeId': nodeId,
+    if (longName != null) 'longName': longName,
+    if (shortName != null) 'shortName': shortName,
+    if (avatarColor != null) 'avatarColor': avatarColor,
+  };
+
+  /// Get the display name (long name or short name or hex ID)
+  String get displayName =>
+      longName ?? shortName ?? '!${nodeId.toRadixString(16)}';
+
+  /// Get the avatar name (short name first character or hex ID first character)
+  String get avatarName {
+    if (shortName != null && shortName!.isNotEmpty) {
+      return shortName!;
+    }
+    if (longName != null && longName!.isNotEmpty) {
+      return longName![0].toUpperCase();
+    }
+    return nodeId.toRadixString(16)[0].toUpperCase();
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is LinkedNodeInfo &&
+          runtimeType == other.runtimeType &&
+          nodeId == other.nodeId;
+
+  @override
+  int get hashCode => nodeId.hashCode;
+}
+
 /// Public profile data for social features.
 ///
 /// This is the denormalized public view of a user profile.
@@ -697,6 +756,7 @@ class PublicProfile {
   final ProfileSocialLinks? socialLinks;
   final int? primaryNodeId;
   final List<int> linkedNodeIds;
+  final Map<int, LinkedNodeInfo> linkedNodeMetadata;
   final int followerCount;
   final int followingCount;
   final int postCount;
@@ -714,6 +774,7 @@ class PublicProfile {
     this.socialLinks,
     this.primaryNodeId,
     this.linkedNodeIds = const [],
+    this.linkedNodeMetadata = const {},
     this.followerCount = 0,
     this.followingCount = 0,
     this.postCount = 0,
@@ -724,6 +785,21 @@ class PublicProfile {
 
   factory PublicProfile.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+
+    // Parse linkedNodeMetadata map
+    final metadataMap = <int, LinkedNodeInfo>{};
+    final rawMetadata = data['linkedNodeMetadata'] as Map<String, dynamic>?;
+    if (rawMetadata != null) {
+      for (final entry in rawMetadata.entries) {
+        final nodeId = int.tryParse(entry.key);
+        if (nodeId != null && entry.value is Map<String, dynamic>) {
+          metadataMap[nodeId] = LinkedNodeInfo.fromJson(
+            entry.value as Map<String, dynamic>,
+          );
+        }
+      }
+    }
+
     return PublicProfile(
       id: doc.id,
       displayName: data['displayName'] as String? ?? 'Unknown',
@@ -742,6 +818,7 @@ class PublicProfile {
               ?.map((e) => e as int)
               .toList() ??
           const [],
+      linkedNodeMetadata: metadataMap,
       followerCount: data['followerCount'] as int? ?? 0,
       followingCount: data['followingCount'] as int? ?? 0,
       postCount: data['postCount'] as int? ?? 0,
@@ -755,6 +832,9 @@ class PublicProfile {
 
   /// Check if this profile has a specific node linked
   bool hasNodeLinked(int nodeId) => linkedNodeIds.contains(nodeId);
+
+  /// Get cached node info for a linked node (if available)
+  LinkedNodeInfo? getLinkedNodeInfo(int nodeId) => linkedNodeMetadata[nodeId];
 
   /// Convert to FeedAuthorSnapshot for embedding in feed items
   FeedAuthorSnapshot toAuthorSnapshot() {
@@ -777,6 +857,7 @@ class PublicProfile {
     ProfileSocialLinks? socialLinks,
     int? primaryNodeId,
     List<int>? linkedNodeIds,
+    Map<int, LinkedNodeInfo>? linkedNodeMetadata,
     int? followerCount,
     int? followingCount,
     int? postCount,
@@ -794,6 +875,7 @@ class PublicProfile {
       socialLinks: socialLinks ?? this.socialLinks,
       primaryNodeId: primaryNodeId ?? this.primaryNodeId,
       linkedNodeIds: linkedNodeIds ?? this.linkedNodeIds,
+      linkedNodeMetadata: linkedNodeMetadata ?? this.linkedNodeMetadata,
       followerCount: followerCount ?? this.followerCount,
       followingCount: followingCount ?? this.followingCount,
       postCount: postCount ?? this.postCount,

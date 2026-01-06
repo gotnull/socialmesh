@@ -19,6 +19,7 @@ import '../features/automations/automation_providers.dart';
 import '../features/automations/automation_engine.dart';
 import '../models/mesh_models.dart';
 import '../generated/meshtastic/mesh.pbenum.dart' as pbenum;
+import 'social_providers.dart';
 import 'telemetry_providers.dart';
 
 // Logger
@@ -491,6 +492,12 @@ final autoReconnectManagerProvider = Provider<void>((ref) {
             .read(autoReconnectStateProvider.notifier)
             .setState(AutoReconnectState.idle);
         return;
+      }
+
+      // When connected, opportunistically refresh linked node metadata
+      // after a delay to allow node info to be received from the device
+      if (state == DeviceConnectionState.connected) {
+        _refreshLinkedNodeMetadataAfterDelay(ref);
       }
 
       // If disconnected and we have a device to reconnect to
@@ -1620,6 +1627,9 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
 
       // Trigger automation engine for node updates
       _triggerAutomationForNode(node, existing);
+
+      // Update cached metadata for linked nodes when identity changes
+      onLinkedNodeUpdated(ref, node, existing);
     });
   }
 
@@ -2081,3 +2091,19 @@ final pendingMessagesCountProvider = StreamProvider<int>((ref) async* {
     yield items.length;
   }
 });
+
+/// Timer for debouncing linked node metadata refresh
+Timer? _linkedNodeMetadataRefreshTimer;
+
+/// Refreshes linked node metadata after a delay to allow node info to arrive
+/// from the device. Debounced to avoid multiple refreshes on rapid reconnects.
+void _refreshLinkedNodeMetadataAfterDelay(Ref ref) {
+  // Cancel any pending refresh
+  _linkedNodeMetadataRefreshTimer?.cancel();
+
+  // Wait 10 seconds for node info to arrive from the device before refreshing
+  _linkedNodeMetadataRefreshTimer = Timer(const Duration(seconds: 10), () {
+    refreshLinkedNodeMetadata(ref);
+    _linkedNodeMetadataRefreshTimer = null;
+  });
+}
