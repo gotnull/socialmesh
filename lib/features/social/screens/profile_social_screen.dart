@@ -24,6 +24,7 @@ import '../../profile/profile_screen.dart';
 import '../../settings/linked_devices_screen.dart';
 import '../../settings/settings_screen.dart';
 import '../widgets/follow_button.dart';
+import '../widgets/story_bar.dart';
 import 'create_post_screen.dart';
 import 'follow_requests_screen.dart';
 import 'followers_screen.dart';
@@ -47,12 +48,16 @@ class ProfileSocialScreen extends ConsumerStatefulWidget {
     super.key,
     required this.userId,
     this.showAppBar = true,
+    this.showStoryBar = false,
   });
 
   final String userId;
 
   /// Whether to show the SliverAppBar. Set to false when embedding in tabs.
   final bool showAppBar;
+
+  /// Whether to show the StoryBar at the top (only for own profile in Social tab).
+  final bool showStoryBar;
 
   @override
   ConsumerState<ProfileSocialScreen> createState() =>
@@ -149,9 +154,15 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
             },
             child: CustomScrollView(
               controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
               slivers: [
                 if (widget.showAppBar)
                   _buildSliverAppBar(context, profile, isOwnProfile),
+                // Show StoryBar at top if enabled (for Social hub screen)
+                if (widget.showStoryBar)
+                  const SliverToBoxAdapter(child: StoryBar()),
                 SliverToBoxAdapter(
                   child: _buildProfileHeader(
                     context,

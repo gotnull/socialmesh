@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import '../../../core/theme.dart';
@@ -6,8 +8,9 @@ import '../../../models/story.dart';
 /// A circular avatar with a gradient ring for displaying story status.
 ///
 /// Shows a colorful gradient ring for unviewed stories, gray ring for viewed,
-/// and a plus icon for the "Add Story" button.
-class StoryAvatar extends StatelessWidget {
+/// and a plus icon for the "Add Story" button. The gradient ring rotates
+/// with randomized speed and direction for a dynamic effect.
+class StoryAvatar extends StatefulWidget {
   const StoryAvatar({
     super.key,
     required this.userId,
@@ -45,13 +48,67 @@ class StoryAvatar extends StatelessWidget {
   final VoidCallback? onTap;
 
   @override
+  State<StoryAvatar> createState() => _StoryAvatarState();
+}
+
+class _StoryAvatarState extends State<StoryAvatar>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _rotationController;
+  late final bool _rotateClockwise;
+
+  // Random instance seeded with userId hash for consistent per-user randomness
+  late final Random _random;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Seed random with userId for consistent animation per user
+    _random = Random(widget.userId.hashCode);
+
+    // Random duration between 3-8 seconds for variety
+    final durationSeconds = 3 + _random.nextInt(6);
+
+    // Random direction
+    _rotateClockwise = _random.nextBool();
+
+    _rotationController = AnimationController(
+      duration: Duration(seconds: durationSeconds),
+      vsync: this,
+    );
+
+    // Start rotating if has unviewed stories
+    if (widget.hasUnviewed) {
+      _rotationController.repeat();
+    }
+  }
+
+  @override
+  void didUpdateWidget(StoryAvatar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.hasUnviewed && !_rotationController.isAnimating) {
+      _rotationController.repeat();
+    } else if (!widget.hasUnviewed && _rotationController.isAnimating) {
+      _rotationController.stop();
+      _rotationController.reset();
+    }
+  }
+
+  @override
+  void dispose() {
+    _rotationController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final ringWidth = size * 0.05;
-    final ringPadding = size * 0.04;
-    final totalSize = size + (ringWidth + ringPadding) * 2;
+    final ringWidth = widget.size * 0.05;
+    final ringPadding = widget.size * 0.04;
+    final totalSize = widget.size + (ringWidth + ringPadding) * 2;
 
     return GestureDetector(
-      onTap: onTap,
+      onTap: widget.onTap,
       child: SizedBox(
         width: totalSize,
         child: Column(
@@ -64,29 +121,49 @@ class StoryAvatar extends StatelessWidget {
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  // Gradient or gray ring
-                  if (!isAddButton || hasUnviewed)
-                    Container(
-                      width: totalSize,
-                      height: totalSize,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: hasUnviewed
-                            ? const LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  Color(0xFFFF6B6B), // Red/pink
-                                  Color(0xFFFFE66D), // Yellow
-                                  Color(0xFF4ECDC4), // Cyan
-                                  Color(0xFFA855F7), // Purple
-                                ],
-                                stops: [0.0, 0.33, 0.66, 1.0],
-                              )
-                            : null,
-                        color: hasUnviewed ? null : context.border,
-                      ),
-                    ),
+                  // Gradient or gray ring (animated rotation for gradient)
+                  if (!widget.isAddButton || widget.hasUnviewed)
+                    widget.hasUnviewed
+                        ? AnimatedBuilder(
+                            animation: _rotationController,
+                            builder: (context, child) {
+                              // Calculate rotation angle based on direction
+                              final angle = _rotateClockwise
+                                  ? _rotationController.value * 2 * pi
+                                  : -_rotationController.value * 2 * pi;
+                              return Transform.rotate(
+                                angle: angle,
+                                child: child,
+                              );
+                            },
+                            child: Container(
+                              width: totalSize,
+                              height: totalSize,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: SweepGradient(
+                                  colors: [
+                                    Color(0xFFFF6B6B), // Red/pink
+                                    Color(0xFFFFE66D), // Yellow
+                                    Color(0xFF4ECDC4), // Cyan
+                                    Color(0xFFA855F7), // Purple
+                                    Color(
+                                      0xFFFF6B6B,
+                                    ), // Back to red for seamless loop
+                                  ],
+                                  stops: [0.0, 0.25, 0.5, 0.75, 1.0],
+                                ),
+                              ),
+                            ),
+                          )
+                        : Container(
+                            width: totalSize,
+                            height: totalSize,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: context.border,
+                            ),
+                          ),
 
                   // Inner white/dark circle to create ring effect
                   Container(
@@ -100,19 +177,19 @@ class StoryAvatar extends StatelessWidget {
 
                   // Actual avatar
                   SizedBox(
-                    width: size,
-                    height: size,
+                    width: widget.size,
+                    height: widget.size,
                     child: CircleAvatar(
-                      radius: size / 2,
-                      backgroundImage: avatarUrl != null
-                          ? NetworkImage(avatarUrl!)
+                      radius: widget.size / 2,
+                      backgroundImage: widget.avatarUrl != null
+                          ? NetworkImage(widget.avatarUrl!)
                           : null,
                       backgroundColor: context.cardAlt,
-                      child: avatarUrl == null
+                      child: widget.avatarUrl == null
                           ? Text(
-                              (displayName ?? 'U')[0].toUpperCase(),
+                              (widget.displayName ?? 'U')[0].toUpperCase(),
                               style: TextStyle(
-                                fontSize: size * 0.4,
+                                fontSize: widget.size * 0.4,
                                 fontWeight: FontWeight.w600,
                               ),
                             )
@@ -121,13 +198,13 @@ class StoryAvatar extends StatelessWidget {
                   ),
 
                   // Add button overlay
-                  if (isAddButton)
+                  if (widget.isAddButton)
                     Positioned(
                       bottom: ringWidth,
                       right: ringWidth,
                       child: Container(
-                        width: size * 0.35,
-                        height: size * 0.35,
+                        width: widget.size * 0.35,
+                        height: widget.size * 0.35,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           gradient: AppTheme.brandGradientHorizontal,
@@ -138,7 +215,7 @@ class StoryAvatar extends StatelessWidget {
                         ),
                         child: Icon(
                           Icons.add,
-                          size: size * 0.2,
+                          size: widget.size * 0.2,
                           color: Colors.white,
                         ),
                       ),
@@ -148,12 +225,14 @@ class StoryAvatar extends StatelessWidget {
             ),
 
             // Name label
-            if (showName) ...[
+            if (widget.showName) ...[
               const SizedBox(height: 4),
               SizedBox(
                 width: totalSize,
                 child: Text(
-                  isAddButton ? 'Your story' : (displayName ?? 'User'),
+                  widget.isAddButton
+                      ? 'Your story'
+                      : (widget.displayName ?? 'User'),
                   style: TextStyle(
                     color: context.textPrimary,
                     fontSize: 11,

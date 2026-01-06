@@ -58,7 +58,7 @@ class StoryBar extends ConsumerWidget {
         itemCount: 1 + followingGroups.length, // +1 for add/own story button
         itemBuilder: (context, index) {
           if (index == 0) {
-            // "Add Story" / Own stories button
+            // "Add Story" / Own stories button - always opens create screen
             return Padding(
               padding: const EdgeInsets.only(right: 12),
               child: StoryAvatar(
@@ -67,8 +67,7 @@ class StoryBar extends ConsumerWidget {
                 displayName: hasOwnStories ? 'Your story' : 'Add story',
                 hasUnviewed: hasOwnStories,
                 isAddButton: !hasOwnStories,
-                onTap: () =>
-                    _onOwnStoryTap(context, ref, myGroup, myStoriesAsync),
+                onTap: () => _onOwnStoryTap(context),
               ),
             );
           }
@@ -87,42 +86,12 @@ class StoryBar extends ConsumerWidget {
     );
   }
 
-  void _onOwnStoryTap(
-    BuildContext context,
-    WidgetRef ref,
-    StoryGroup? myGroup,
-    AsyncValue<List<Story>> myStoriesAsync,
-  ) {
-    final stories = myStoriesAsync.when(
-      data: (list) => list,
-      loading: () => <Story>[],
-      error: (_, _) => <Story>[],
+  void _onOwnStoryTap(BuildContext context) {
+    // Always go to create story screen - user can view their stories from there
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const CreateStoryScreen()),
     );
-
-    if (stories.isNotEmpty) {
-      // View own stories - create a temporary group if myGroup is null
-      final group =
-          myGroup ??
-          StoryGroup(
-            userId: stories.first.authorId,
-            stories: stories,
-            lastStoryAt: stories.first.createdAt,
-            profile: stories.first.authorSnapshot,
-          );
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) =>
-              StoryViewerScreen(storyGroups: [group], initialGroupIndex: 0),
-        ),
-      );
-    } else {
-      // Create new story
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const CreateStoryScreen()),
-      );
-    }
   }
 
   void _onStoryGroupTap(
