@@ -72,11 +72,13 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
   Widget build(BuildContext context) {
     final nodes = ref.watch(nodesProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
+    final linkedNodeIds =
+        ref.watch(linkedNodeIdsProvider).asData?.value ?? <int>[];
 
     var nodesList = nodes.values.toList();
 
     // Apply filter
-    nodesList = _applyFilter(nodesList, myNodeNum);
+    nodesList = _applyFilter(nodesList, myNodeNum, linkedNodeIds);
 
     // Apply sort
     nodesList = _applySort(nodesList, myNodeNum);
@@ -95,6 +97,11 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
     final allNodes = nodes.values.toList();
     final onlineCount = allNodes.where((n) => n.isOnline).length;
     final favoritesCount = allNodes.where((n) => n.isFavorite).length;
+    final linkedCount = allNodes
+        .where(
+          (n) => linkedNodeIds.contains(n.nodeNum) && n.nodeNum != myNodeNum,
+        )
+        .length;
     final withPositionCount = allNodes
         .where((n) => n.latitude != null && n.longitude != null)
         .length;
@@ -224,6 +231,17 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
                           ),
                           const SizedBox(width: 8),
                           _FilterChip(
+                            label: 'Linked',
+                            count: linkedCount,
+                            isSelected: _activeFilter == NodeFilter.linked,
+                            color: AccentColors.blue,
+                            icon: Icons.link,
+                            onTap: () => setState(
+                              () => _activeFilter = NodeFilter.linked,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          _FilterChip(
                             label: 'With Position',
                             count: withPositionCount,
                             isSelected:
@@ -326,7 +344,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
                         ],
                       ),
                     )
-                  : _buildNodeList(nodesList, myNodeNum),
+                  : _buildNodeList(nodesList, myNodeNum, linkedNodeIds),
             ),
           ],
         ),
@@ -334,7 +352,11 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
     );
   }
 
-  Widget _buildNodeList(List<MeshNode> nodesList, int? myNodeNum) {
+  Widget _buildNodeList(
+    List<MeshNode> nodesList,
+    int? myNodeNum,
+    List<int> linkedNodeIds,
+  ) {
     final animationsEnabled = ref.watch(animationsEnabledProvider);
 
     if (!_showSectionHeaders) {
@@ -363,7 +385,11 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
     }
 
     // Build grouped list with sticky section headers
-    final sections = _groupNodesIntoSections(nodesList, myNodeNum);
+    final sections = _groupNodesIntoSections(
+      nodesList,
+      myNodeNum,
+      linkedNodeIds,
+    );
     final nonEmptySections = sections.where((s) => s.nodes.isNotEmpty).toList();
 
     return CustomScrollView(
@@ -410,42 +436,81 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
   List<_NodeSection> _groupNodesIntoSections(
     List<MeshNode> nodes,
     int? myNodeNum,
+    List<int> linkedNodeIds,
   ) {
     switch (_sortOrder) {
       case NodeSortOrder.lastHeard:
-        return _groupByStatus(nodes, myNodeNum);
+        return _groupByStatus(nodes, myNodeNum, linkedNodeIds);
       case NodeSortOrder.name:
-        return _groupByAlphabet(nodes, myNodeNum);
+        return _groupByAlphabet(nodes, myNodeNum, linkedNodeIds);
       case NodeSortOrder.signalStrength:
-        return _groupBySignal(nodes, myNodeNum);
+        return _groupBySignal(nodes, myNodeNum, linkedNodeIds);
       case NodeSortOrder.batteryLevel:
-        return _groupByBattery(nodes, myNodeNum);
+        return _groupByBattery(nodes, myNodeNum, linkedNodeIds);
     }
   }
 
-  List<_NodeSection> _groupByStatus(List<MeshNode> nodes, int? myNodeNum) {
+  List<_NodeSection> _groupByStatus(
+    List<MeshNode> nodes,
+    int? myNodeNum,
+    List<int> linkedNodeIds,
+  ) {
     final myNode = nodes.where((n) => n.nodeNum == myNodeNum).toList();
+    final linkedNodes = nodes
+        .where(
+          (n) => n.nodeNum != myNodeNum && linkedNodeIds.contains(n.nodeNum),
+        )
+        .toList();
     final online = nodes
-        .where((n) => n.nodeNum != myNodeNum && n.isOnline)
+        .where(
+          (n) =>
+              n.nodeNum != myNodeNum &&
+              !linkedNodeIds.contains(n.nodeNum) &&
+              n.isOnline,
+        )
         .toList();
     final idle = nodes
-        .where((n) => n.nodeNum != myNodeNum && n.isIdle)
+        .where(
+          (n) =>
+              n.nodeNum != myNodeNum &&
+              !linkedNodeIds.contains(n.nodeNum) &&
+              n.isIdle,
+        )
         .toList();
     final offline = nodes
-        .where((n) => n.nodeNum != myNodeNum && n.isOffline)
+        .where(
+          (n) =>
+              n.nodeNum != myNodeNum &&
+              !linkedNodeIds.contains(n.nodeNum) &&
+              n.isOffline,
+        )
         .toList();
 
     return [
       if (myNode.isNotEmpty) _NodeSection('Your Device', myNode),
+      if (linkedNodes.isNotEmpty) _NodeSection('Linked Devices', linkedNodes),
       _NodeSection('Online', online),
       _NodeSection('Idle (2-24h)', idle),
       _NodeSection('Offline', offline),
     ];
   }
 
-  List<_NodeSection> _groupByAlphabet(List<MeshNode> nodes, int? myNodeNum) {
+  List<_NodeSection> _groupByAlphabet(
+    List<MeshNode> nodes,
+    int? myNodeNum,
+    List<int> linkedNodeIds,
+  ) {
     final myNode = nodes.where((n) => n.nodeNum == myNodeNum).toList();
-    final others = nodes.where((n) => n.nodeNum != myNodeNum).toList();
+    final linkedNodes = nodes
+        .where(
+          (n) => n.nodeNum != myNodeNum && linkedNodeIds.contains(n.nodeNum),
+        )
+        .toList();
+    final others = nodes
+        .where(
+          (n) => n.nodeNum != myNodeNum && !linkedNodeIds.contains(n.nodeNum),
+        )
+        .toList();
 
     final grouped = <String, List<MeshNode>>{};
     for (final node in others) {
@@ -459,13 +524,27 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
     final sortedKeys = grouped.keys.toList()..sort();
     return [
       if (myNode.isNotEmpty) _NodeSection('Your Device', myNode),
+      if (linkedNodes.isNotEmpty) _NodeSection('Linked Devices', linkedNodes),
       ...sortedKeys.map((key) => _NodeSection(key, grouped[key]!)),
     ];
   }
 
-  List<_NodeSection> _groupBySignal(List<MeshNode> nodes, int? myNodeNum) {
+  List<_NodeSection> _groupBySignal(
+    List<MeshNode> nodes,
+    int? myNodeNum,
+    List<int> linkedNodeIds,
+  ) {
     final myNode = nodes.where((n) => n.nodeNum == myNodeNum).toList();
-    final others = nodes.where((n) => n.nodeNum != myNodeNum).toList();
+    final linkedNodes = nodes
+        .where(
+          (n) => n.nodeNum != myNodeNum && linkedNodeIds.contains(n.nodeNum),
+        )
+        .toList();
+    final others = nodes
+        .where(
+          (n) => n.nodeNum != myNodeNum && !linkedNodeIds.contains(n.nodeNum),
+        )
+        .toList();
 
     final strong = others.where((n) => (n.snr ?? -999) > 0).toList();
     final medium = others
@@ -478,6 +557,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
 
     return [
       if (myNode.isNotEmpty) _NodeSection('Your Device', myNode),
+      if (linkedNodes.isNotEmpty) _NodeSection('Linked Devices', linkedNodes),
       _NodeSection('Strong (>0 dB)', strong),
       _NodeSection('Medium (-10 to 0 dB)', medium),
       _NodeSection('Weak (<-10 dB)', weak),
@@ -485,9 +565,22 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
     ];
   }
 
-  List<_NodeSection> _groupByBattery(List<MeshNode> nodes, int? myNodeNum) {
+  List<_NodeSection> _groupByBattery(
+    List<MeshNode> nodes,
+    int? myNodeNum,
+    List<int> linkedNodeIds,
+  ) {
     final myNode = nodes.where((n) => n.nodeNum == myNodeNum).toList();
-    final others = nodes.where((n) => n.nodeNum != myNodeNum).toList();
+    final linkedNodes = nodes
+        .where(
+          (n) => n.nodeNum != myNodeNum && linkedNodeIds.contains(n.nodeNum),
+        )
+        .toList();
+    final others = nodes
+        .where(
+          (n) => n.nodeNum != myNodeNum && !linkedNodeIds.contains(n.nodeNum),
+        )
+        .toList();
 
     final charging = others.where((n) => (n.batteryLevel ?? -1) > 100).toList();
     final full = others
@@ -514,6 +607,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
 
     return [
       if (myNode.isNotEmpty) _NodeSection('Your Device', myNode),
+      if (linkedNodes.isNotEmpty) _NodeSection('Linked Devices', linkedNodes),
       _NodeSection('Charging', charging),
       _NodeSection('Full (80-100%)', full),
       _NodeSection('Good (50-80%)', good),
@@ -523,7 +617,11 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
     ];
   }
 
-  List<MeshNode> _applyFilter(List<MeshNode> nodes, int? myNodeNum) {
+  List<MeshNode> _applyFilter(
+    List<MeshNode> nodes,
+    int? myNodeNum,
+    List<int> linkedNodeIds,
+  ) {
     switch (_activeFilter) {
       case NodeFilter.all:
         return nodes;
@@ -533,6 +631,13 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
         return nodes.where((n) => !n.isOnline).toList();
       case NodeFilter.favorites:
         return nodes.where((n) => n.isFavorite).toList();
+      case NodeFilter.linked:
+        return nodes
+            .where(
+              (n) =>
+                  linkedNodeIds.contains(n.nodeNum) && n.nodeNum != myNodeNum,
+            )
+            .toList();
       case NodeFilter.withPosition:
         return nodes
             .where((n) => n.latitude != null && n.longitude != null)
@@ -678,6 +783,7 @@ enum NodeFilter {
   online,
   offline,
   favorites,
+  linked,
   withPosition,
   recentlyDiscovered,
 }
