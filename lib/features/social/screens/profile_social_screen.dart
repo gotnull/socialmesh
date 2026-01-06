@@ -1165,7 +1165,7 @@ class _LinkedDevicesSection extends ConsumerWidget {
           ),
           const SizedBox(height: 10),
           SizedBox(
-            height: 80,
+            height: 90,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: linkedNodeIds.length,
@@ -1242,7 +1242,7 @@ class _LinkedDeviceChip extends StatelessWidget {
       onTap: () => _showNodeBottomSheet(context),
       child: Container(
         width: 72,
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.only(right: 10),
         child: Column(
           children: [
             NodeAvatar(
@@ -1275,19 +1275,17 @@ class _LinkedDeviceChip extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             SizedBox(
-              width: 72,
-              child: Center(
-                child: AutoScrollText(
-                  _longName,
-                  style: TextStyle(
-                    color: context.textSecondary,
-                    fontSize: 11,
-                    fontFamily: _hasRealName ? null : 'monospace',
-                  ),
-                  maxLines: 1,
-                  velocity: 25.0,
-                  fadeWidth: 10.0,
+              width: 55,
+              child: AutoScrollText(
+                _longName,
+                style: TextStyle(
+                  color: context.textSecondary,
+                  fontSize: 11,
+                  fontFamily: _hasRealName ? null : 'monospace',
                 ),
+                maxLines: 1,
+                velocity: 25.0,
+                fadeWidth: 8.0,
               ),
             ),
           ],
