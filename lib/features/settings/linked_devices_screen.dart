@@ -438,9 +438,9 @@ class _LinkedDevicesScreenState extends ConsumerState<LinkedDevicesScreen> {
       }
       debugPrint('🔗 [UnlinkDevice] Providers invalidated');
 
-      // Reset banner dismissed state so it can show again
-      await resetLinkDeviceBannerDismissState();
-      debugPrint('🔗 [UnlinkDevice] Banner state reset');
+      // Reset banner dismissed state for this specific node so it can show again
+      await resetLinkDeviceBannerDismissState(nodeId: nodeId);
+      debugPrint('🔗 [UnlinkDevice] Banner state reset for node $nodeId');
 
       if (mounted) {
         showSuccessSnackBar(context, 'Device unlinked');

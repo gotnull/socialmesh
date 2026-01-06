@@ -24,8 +24,9 @@ class _LinkDeviceBannerState extends ConsumerState<LinkDeviceBanner>
   bool _isLinking = false;
   late AnimationController _animController;
   late Animation<double> _fadeAnimation;
+  int? _lastCheckedNodeNum;
 
-  static const _dismissedKey = 'link_device_banner_dismissed';
+  static const _dismissedKeyPrefix = 'link_device_banner_dismissed_';
 
   @override
   void initState() {
@@ -39,7 +40,6 @@ class _LinkDeviceBannerState extends ConsumerState<LinkDeviceBanner>
       curve: Curves.easeOut,
     );
     _animController.forward();
-    _loadDismissedState();
   }
 
   @override
@@ -48,18 +48,28 @@ class _LinkDeviceBannerState extends ConsumerState<LinkDeviceBanner>
     super.dispose();
   }
 
-  Future<void> _loadDismissedState() async {
+  /// Get the dismiss key for a specific node
+  String _getDismissKey(int nodeNum) => '$_dismissedKeyPrefix$nodeNum';
+
+  Future<void> _loadDismissedState(int nodeNum) async {
+    // Only reload if node changed
+    if (_lastCheckedNodeNum == nodeNum) return;
+    _lastCheckedNodeNum = nodeNum;
+
     final prefs = await SharedPreferences.getInstance();
-    final dismissed = prefs.getBool(_dismissedKey) ?? false;
-    if (dismissed && mounted) {
-      setState(() => _isDismissed = true);
+    final dismissed = prefs.getBool(_getDismissKey(nodeNum)) ?? false;
+    if (mounted) {
+      setState(() => _isDismissed = dismissed);
+      if (!dismissed) {
+        _animController.forward();
+      }
     }
   }
 
-  Future<void> _dismiss() async {
+  Future<void> _dismiss(int nodeNum) async {
     await _animController.reverse();
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_dismissedKey, true);
+    await prefs.setBool(_getDismissKey(nodeNum), true);
     if (mounted) {
       setState(() => _isDismissed = true);
     }
@@ -74,7 +84,7 @@ class _LinkDeviceBannerState extends ConsumerState<LinkDeviceBanner>
       await linkNode(ref, nodeNum, setPrimary: true);
       if (mounted) {
         showSuccessSnackBar(context, 'Device linked to your profile!');
-        _dismiss();
+        _dismiss(nodeNum);
       }
     } catch (e) {
       if (mounted) {
@@ -86,8 +96,6 @@ class _LinkDeviceBannerState extends ConsumerState<LinkDeviceBanner>
 
   @override
   Widget build(BuildContext context) {
-    if (_isDismissed) return const SizedBox.shrink();
-
     final currentUser = ref.watch(currentUserProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
 
@@ -95,6 +103,12 @@ class _LinkDeviceBannerState extends ConsumerState<LinkDeviceBanner>
     if (currentUser == null || myNodeNum == null) {
       return const SizedBox.shrink();
     }
+
+    // Load dismissed state for this specific node
+    _loadDismissedState(myNodeNum);
+
+    // Don't show if dismissed for this node
+    if (_isDismissed) return const SizedBox.shrink();
 
     // Check if this node is already linked
     final isLinkedAsync = ref.watch(isNodeLinkedProvider(myNodeNum));
@@ -205,7 +219,7 @@ class _LinkDeviceBannerState extends ConsumerState<LinkDeviceBanner>
                             ),
                       const SizedBox(width: 4),
                       IconButton(
-                        onPressed: _dismiss,
+                        onPressed: () => _dismiss(myNodeNum),
                         icon: Icon(
                           Icons.close,
                           color: context.textTertiary,
@@ -232,9 +246,20 @@ class _LinkDeviceBannerState extends ConsumerState<LinkDeviceBanner>
   }
 }
 
-/// Resets the banner dismissal state so it can be shown again.
-/// Call this when user unlinks all devices.
-Future<void> resetLinkDeviceBannerDismissState() async {
+/// Resets the banner dismissal state for a specific node so it can be shown again.
+/// Call this when user unlinks a device.
+Future<void> resetLinkDeviceBannerDismissState({int? nodeId}) async {
   final prefs = await SharedPreferences.getInstance();
-  await prefs.setBool('link_device_banner_dismissed', false);
+  if (nodeId != null) {
+    // Clear dismissal for specific node
+    await prefs.remove('link_device_banner_dismissed_$nodeId');
+  } else {
+    // Clear all dismissal keys (for backward compatibility)
+    final keys = prefs.getKeys().where(
+      (k) => k.startsWith('link_device_banner_dismissed'),
+    );
+    for (final key in keys) {
+      await prefs.remove(key);
+    }
+  }
 }
