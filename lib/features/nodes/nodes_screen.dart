@@ -220,6 +220,17 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
                           ),
                           const SizedBox(width: 8),
                           _FilterChip(
+                            label: 'Linked',
+                            count: linkedCount,
+                            isSelected: _activeFilter == NodeFilter.linked,
+                            color: AccentColors.red,
+                            icon: Icons.link,
+                            onTap: () => setState(
+                              () => _activeFilter = NodeFilter.linked,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          _FilterChip(
                             label: 'Favorites',
                             count: favoritesCount,
                             isSelected: _activeFilter == NodeFilter.favorites,
@@ -227,17 +238,6 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
                             icon: Icons.star,
                             onTap: () => setState(
                               () => _activeFilter = NodeFilter.favorites,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          _FilterChip(
-                            label: 'Linked',
-                            count: linkedCount,
-                            isSelected: _activeFilter == NodeFilter.linked,
-                            color: AccentColors.blue,
-                            icon: Icons.link,
-                            onTap: () => setState(
-                              () => _activeFilter = NodeFilter.linked,
                             ),
                           ),
                           const SizedBox(width: 8),
