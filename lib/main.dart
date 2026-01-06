@@ -33,6 +33,7 @@ import 'models/mesh_models.dart';
 import 'services/app_intents/app_intents_service.dart';
 import 'services/deep_link_service.dart';
 import 'services/profile/profile_cloud_sync_service.dart';
+import 'services/notifications/push_notification_service.dart';
 import 'features/scanner/scanner_screen.dart';
 import 'features/messaging/messaging_screen.dart';
 import 'features/channels/channels_screen.dart';
@@ -102,6 +103,9 @@ Future<void> _initializeFirebaseInBackground() async {
 
     // Initialize profile cloud sync service (requires Firebase)
     initProfileCloudSyncService();
+
+    // Initialize push notifications for social features
+    await PushNotificationService().initialize();
 
     // Set up async error handler
     ui.PlatformDispatcher.instance.onError = (error, stack) {

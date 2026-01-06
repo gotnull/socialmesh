@@ -1,7 +1,9 @@
 import 'dart:convert';
 
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/logging.dart';
@@ -1230,6 +1232,10 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
           height: 1,
           color: context.border.withAlpha(60),
         ),
+
+        // Local Notification Test
+        _buildSectionLabel('LOCAL NOTIFICATIONS'),
+        const SizedBox(height: 12),
         SizedBox(
           width: double.infinity,
           child: BouncyTap(
@@ -1245,13 +1251,13 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    Icons.send_rounded,
+                    Icons.notifications_rounded,
                     size: 18,
                     color: AppTheme.accentOrange,
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Send Test Notification',
+                    'Test Local Notification',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -1263,8 +1269,237 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
             ),
           ),
         ),
+
+        const SizedBox(height: 20),
+
+        // FCM Push Notification Tests
+        _buildSectionLabel('FCM PUSH NOTIFICATIONS'),
+        const SizedBox(height: 12),
+
+        // Test Follow Notification
+        _buildPushTestButton(
+          icon: Icons.person_add_rounded,
+          label: 'Test Follow Notification',
+          color: AppTheme.primaryBlue,
+          onTap: () => _sendTestPushNotification('follow'),
+        ),
+        const SizedBox(height: 8),
+
+        // Test Like Notification
+        _buildPushTestButton(
+          icon: Icons.favorite_rounded,
+          label: 'Test Like Notification',
+          color: AppTheme.errorRed,
+          onTap: () => _sendTestPushNotification('like'),
+        ),
+        const SizedBox(height: 8),
+
+        // Test Comment Notification
+        _buildPushTestButton(
+          icon: Icons.chat_bubble_rounded,
+          label: 'Test Comment Notification',
+          color: AppTheme.successGreen,
+          onTap: () => _sendTestPushNotification('comment'),
+        ),
+        const SizedBox(height: 8),
+
+        // Test Mention Notification
+        _buildPushTestButton(
+          icon: Icons.alternate_email_rounded,
+          label: 'Test Mention Notification',
+          color: AccentColors.purple,
+          onTap: () => _sendTestPushNotification('mention'),
+        ),
+
+        const SizedBox(height: 16),
+
+        // FCM Token Info
+        FutureBuilder<String?>(
+          future: _getFcmToken(),
+          builder: (context, snapshot) {
+            final token = snapshot.data;
+            return Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: context.background,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: context.border),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.key_rounded,
+                        size: 14,
+                        color: context.textSecondary,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'FCM Token',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: context.textSecondary,
+                        ),
+                      ),
+                      const Spacer(),
+                      if (token != null)
+                        BouncyTap(
+                          onTap: () {
+                            Clipboard.setData(ClipboardData(text: token));
+                            showSuccessSnackBar(
+                              context,
+                              'FCM token copied to clipboard',
+                            );
+                          },
+                          child: Icon(
+                            Icons.copy_rounded,
+                            size: 16,
+                            color: context.accentColor,
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    token != null
+                        ? '${token.substring(0, 20)}...${token.substring(token.length - 20)}'
+                        : snapshot.connectionState == ConnectionState.waiting
+                        ? 'Loading...'
+                        : 'No token available',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontFamily: AppTheme.fontFamily,
+                      color: context.textTertiary,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       ],
     );
+  }
+
+  Widget _buildPushTestButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      child: BouncyTap(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          decoration: BoxDecoration(
+            color: color.withAlpha(15),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: color.withAlpha(40)),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, size: 18, color: color),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: context.textPrimary,
+                  ),
+                ),
+              ),
+              Icon(Icons.send_rounded, size: 16, color: color.withAlpha(150)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<String?> _getFcmToken() async {
+    try {
+      final messaging = FirebaseMessaging.instance;
+      return await messaging.getToken();
+    } catch (e) {
+      AppLogging.notifications('Error getting FCM token: $e');
+      return null;
+    }
+  }
+
+  Future<void> _sendTestPushNotification(String type) async {
+    AppLogging.notifications('🔔 Sending test $type push notification...');
+
+    try {
+      // Show a local notification to simulate receiving a push
+      final localNotifications = FlutterLocalNotificationsPlugin();
+
+      String title;
+      String body;
+
+      switch (type) {
+        case 'follow':
+          title = 'New Follower';
+          body = 'Debug User started following you';
+          break;
+        case 'like':
+          title = 'New Like';
+          body = 'Debug User liked your post';
+          break;
+        case 'comment':
+          title = 'New Comment';
+          body = 'Debug User commented: "This is a test comment!"';
+          break;
+        case 'mention':
+          title = 'You were mentioned';
+          body = 'Debug User mentioned you: "Hey @you check this out!"';
+          break;
+        default:
+          title = 'Test Notification';
+          body = 'This is a test push notification';
+      }
+
+      await localNotifications.show(
+        DateTime.now().millisecondsSinceEpoch ~/ 1000,
+        title,
+        body,
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            'social_notifications',
+            'Social Notifications',
+            channelDescription:
+                'Notifications for follows, likes, and comments',
+            importance: Importance.high,
+            priority: Priority.high,
+            icon: '@mipmap/ic_launcher',
+          ),
+          iOS: const DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+          ),
+        ),
+        payload: type,
+      );
+
+      if (mounted) {
+        showSuccessSnackBar(
+          context,
+          'Test $type notification sent - check notification center',
+        );
+      }
+    } catch (e) {
+      AppLogging.notifications('🔔 Test push notification error: $e');
+      if (mounted) {
+        showErrorSnackBar(context, 'Push notification error: $e');
+      }
+    }
   }
 
   Widget _buildQuickTestsContent() {

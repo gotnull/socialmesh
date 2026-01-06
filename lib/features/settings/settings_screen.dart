@@ -18,6 +18,7 @@ import '../../providers/subscription_providers.dart';
 import '../../models/subscription_models.dart';
 import '../../services/storage/storage_service.dart';
 import '../../services/notifications/notification_service.dart';
+import '../../services/notifications/push_notification_service.dart';
 import '../../services/haptic_service.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/info_table.dart';
@@ -239,13 +240,39 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           title: 'Profile',
           subtitle: 'Your display name, avatar, and bio',
           keywords: ['user', 'name', 'avatar', 'account', 'bio'],
-          section: 'PROFILE',
+          section: 'ACCOUNT',
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(
               builder: (_) => const AccountSubscriptionsScreen(),
             ),
           ),
+        ),
+
+        // Social Notifications
+        _SearchableSettingItem(
+          icon: Icons.person_add_outlined,
+          title: 'New followers',
+          subtitle: 'Push notifications when someone follows you',
+          keywords: ['social', 'notification', 'follow', 'follower'],
+          section: 'SOCIAL NOTIFICATIONS',
+          hasSwitch: true,
+        ),
+        _SearchableSettingItem(
+          icon: Icons.favorite_outline,
+          title: 'Likes',
+          subtitle: 'Push notifications for post likes',
+          keywords: ['social', 'notification', 'like', 'heart'],
+          section: 'SOCIAL NOTIFICATIONS',
+          hasSwitch: true,
+        ),
+        _SearchableSettingItem(
+          icon: Icons.chat_bubble_outline,
+          title: 'Comments & mentions',
+          subtitle: 'Push notifications for comments and @mentions',
+          keywords: ['social', 'notification', 'comment', 'mention', 'reply'],
+          section: 'SOCIAL NOTIFICATIONS',
+          hasSwitch: true,
         ),
         _SearchableSettingItem(
           icon: Icons.devices,
@@ -1794,6 +1821,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             ),
                             _PrivacySettingTile(),
                             _FollowRequestsTile(),
+
+                            // Social Notifications Section (only for signed-in users)
+                            const _SocialNotificationsSection(),
 
                             const SizedBox(height: 16),
 
@@ -3846,6 +3876,132 @@ class _OpenSourceLicensesScreen extends ConsumerWidget {
             '© 2024 Socialmesh\n\nThis app uses open source software. '
             'See below for the complete list of third-party licenses.',
       ),
+    );
+  }
+}
+
+/// Social notifications settings section (for signed-in users only)
+class _SocialNotificationsSection extends ConsumerStatefulWidget {
+  const _SocialNotificationsSection();
+
+  @override
+  ConsumerState<_SocialNotificationsSection> createState() =>
+      _SocialNotificationsSectionState();
+}
+
+class _SocialNotificationsSectionState
+    extends ConsumerState<_SocialNotificationsSection> {
+  bool _isLoading = true;
+  bool _followsEnabled = true;
+  bool _likesEnabled = true;
+  bool _commentsEnabled = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    try {
+      final settings = await PushNotificationService()
+          .getNotificationSettings();
+      if (mounted) {
+        setState(() {
+          _followsEnabled = settings['follows'] ?? true;
+          _likesEnabled = settings['likes'] ?? true;
+          _commentsEnabled = settings['comments'] ?? true;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _updateSetting(String type, bool value) async {
+    HapticFeedback.selectionClick();
+
+    setState(() {
+      switch (type) {
+        case 'follows':
+          _followsEnabled = value;
+          break;
+        case 'likes':
+          _likesEnabled = value;
+          break;
+        case 'comments':
+          _commentsEnabled = value;
+          break;
+      }
+    });
+
+    await PushNotificationService().updateNotificationSettings(
+      followNotifications: type == 'follows' ? value : null,
+      likeNotifications: type == 'likes' ? value : null,
+      commentNotifications: type == 'comments' ? value : null,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final currentUser = ref.watch(currentUserProvider);
+
+    // Only show for signed-in users
+    if (currentUser == null) {
+      return const SizedBox.shrink();
+    }
+
+    if (_isLoading) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 16),
+          const _SectionHeader(title: 'SOCIAL NOTIFICATIONS'),
+          _SettingsTile(
+            icon: Icons.notifications_active_outlined,
+            title: 'Loading...',
+            subtitle: 'Fetching notification preferences',
+          ),
+        ],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 16),
+        const _SectionHeader(title: 'SOCIAL NOTIFICATIONS'),
+        _SettingsTile(
+          icon: Icons.person_add_outlined,
+          title: 'New followers',
+          subtitle: 'When someone follows you or sends a request',
+          trailing: ThemedSwitch(
+            value: _followsEnabled,
+            onChanged: (value) => _updateSetting('follows', value),
+          ),
+        ),
+        _SettingsTile(
+          icon: Icons.favorite_outline,
+          title: 'Likes',
+          subtitle: 'When someone likes your posts',
+          trailing: ThemedSwitch(
+            value: _likesEnabled,
+            onChanged: (value) => _updateSetting('likes', value),
+          ),
+        ),
+        _SettingsTile(
+          icon: Icons.chat_bubble_outline,
+          title: 'Comments & mentions',
+          subtitle: 'When someone comments or @mentions you',
+          trailing: ThemedSwitch(
+            value: _commentsEnabled,
+            onChanged: (value) => _updateSetting('comments', value),
+          ),
+        ),
+      ],
     );
   }
 }
