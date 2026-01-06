@@ -1187,7 +1187,7 @@ class _LinkedDevicesSection extends ConsumerWidget {
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: linkedNodeIds.length,
-              separatorBuilder: (context, index) => const SizedBox(width: 12),
+              separatorBuilder: (context, index) => const SizedBox(width: 10),
               itemBuilder: (context, index) {
                 final nodeId = linkedNodeIds[index];
                 final node = allNodes[nodeId];
@@ -1294,16 +1294,18 @@ class _LinkedDeviceChip extends StatelessWidget {
             const SizedBox(height: 6),
             SizedBox(
               width: 55,
-              child: AutoScrollText(
-                _longName,
-                style: TextStyle(
-                  color: context.textSecondary,
-                  fontSize: 11,
-                  fontFamily: _hasRealName ? null : 'monospace',
+              child: Center(
+                child: AutoScrollText(
+                  _longName,
+                  style: TextStyle(
+                    color: context.textSecondary,
+                    fontSize: 11,
+                    fontFamily: _hasRealName ? null : 'monospace',
+                  ),
+                  maxLines: 1,
+                  velocity: 25.0,
+                  fadeWidth: 8.0,
                 ),
-                maxLines: 1,
-                velocity: 25.0,
-                fadeWidth: 8.0,
               ),
             ),
           ],
