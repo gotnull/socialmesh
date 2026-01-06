@@ -156,7 +156,7 @@ class _FollowButtonState extends ConsumerState<FollowButton> {
   }
 
   Widget _buildCompactButton(FollowButtonState state, VoidCallback? onPressed) {
-    // Fixed width for uniform button sizes (like Instagram)
+    // Fixed width for uniform button sizes
     const buttonWidth = 110.0;
 
     switch (state) {

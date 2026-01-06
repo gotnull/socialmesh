@@ -312,7 +312,7 @@ service cloud.firestore {
       allow update: if false;
     }
 
-    // Follow requests - for private accounts (Instagram-style approval)
+    // Follow requests - for private accounts (approval required)
     // Document ID format: {requesterId}_{targetId} for idempotent operations
     match /follow_requests/{requestId} {
       // Admins can read all requests (for testing/moderation)
@@ -468,7 +468,7 @@ service cloud.firestore {
     }
 
     // =============================================================================
-    // STORIES (Instagram-style ephemeral content)
+    // STORIES (ephemeral content)
     // =============================================================================
 
     // Stories - ephemeral content that expires after 24 hours

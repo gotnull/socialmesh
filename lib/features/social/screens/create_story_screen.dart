@@ -17,7 +17,38 @@ import '../../../providers/auth_providers.dart';
 import '../../../providers/story_providers.dart';
 import '../../../utils/snackbar.dart';
 
-/// Screen for creating a new story with Instagram-style media picker.
+/// Album filter type for story media picker
+enum AlbumFilterType { recents, videos, favorites, allAlbums }
+
+extension AlbumFilterTypeExtension on AlbumFilterType {
+  String get label {
+    switch (this) {
+      case AlbumFilterType.recents:
+        return 'Recents';
+      case AlbumFilterType.videos:
+        return 'Videos';
+      case AlbumFilterType.favorites:
+        return 'Favorites';
+      case AlbumFilterType.allAlbums:
+        return 'All Albums';
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case AlbumFilterType.recents:
+        return Icons.photo_library_outlined;
+      case AlbumFilterType.videos:
+        return Icons.play_circle_outline;
+      case AlbumFilterType.favorites:
+        return Icons.favorite_outline;
+      case AlbumFilterType.allAlbums:
+        return Icons.grid_view_outlined;
+    }
+  }
+}
+
+/// Screen for creating a new story with media picker.
 class CreateStoryScreen extends ConsumerStatefulWidget {
   const CreateStoryScreen({super.key});
 
@@ -34,6 +65,11 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
   bool _isLoadingAssets = true;
   bool _isLoadingMedia = false;
   bool _hasPermission = false;
+
+  // Album selection
+  AlbumFilterType _selectedAlbumFilter = AlbumFilterType.recents;
+  List<AssetPathEntity> _allAlbums = [];
+  AssetPathEntity? _selectedAlbum; // For "All Albums" view
 
   // Story options
   bool _isUploading = false;
@@ -76,25 +112,104 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
 
     setState(() => _hasPermission = true);
 
-    // Get recent photos and videos
-    final albums = await PhotoManager.getAssetPathList(
-      type: RequestType.common, // Both images and videos
+    // Load all albums for the "All Albums" option
+    final allAlbums = await PhotoManager.getAssetPathList(
+      type: RequestType.common,
       hasAll: true,
     );
+    _allAlbums = allAlbums;
 
-    if (albums.isEmpty) {
-      setState(() => _isLoadingAssets = false);
-      return;
+    // Load assets based on filter type
+    await _loadAssetsForFilter(_selectedAlbumFilter);
+  }
+
+  Future<void> _loadAssetsForFilter(AlbumFilterType filter) async {
+    setState(() => _isLoadingAssets = true);
+
+    List<AssetEntity> assets = [];
+
+    switch (filter) {
+      case AlbumFilterType.recents:
+        // Get "Recent" or "All" album (first album is usually all/recents)
+        final albums = await PhotoManager.getAssetPathList(
+          type: RequestType.common,
+          hasAll: true,
+        );
+        if (albums.isNotEmpty) {
+          assets = await albums.first.getAssetListRange(start: 0, end: 100);
+        }
+        break;
+
+      case AlbumFilterType.videos:
+        // Get only videos
+        final videoAlbums = await PhotoManager.getAssetPathList(
+          type: RequestType.video,
+          hasAll: true,
+        );
+        if (videoAlbums.isNotEmpty) {
+          assets = await videoAlbums.first.getAssetListRange(
+            start: 0,
+            end: 100,
+          );
+        }
+        break;
+
+      case AlbumFilterType.favorites:
+        // Get favorites - filter from all albums or use iOS favorites
+        final favAlbums = await PhotoManager.getAssetPathList(
+          type: RequestType.common,
+          hasAll: true,
+        );
+        // Try to find "Favorites" album by name
+        AssetPathEntity? favAlbum;
+        for (final album in favAlbums) {
+          if (album.name.toLowerCase().contains('favorite') ||
+              album.name.toLowerCase().contains('favourite')) {
+            favAlbum = album;
+            break;
+          }
+        }
+        if (favAlbum != null) {
+          assets = await favAlbum.getAssetListRange(start: 0, end: 100);
+        } else if (favAlbums.isNotEmpty) {
+          // Fall back to recents if no favorites album
+          assets = await favAlbums.first.getAssetListRange(start: 0, end: 100);
+        }
+        break;
+
+      case AlbumFilterType.allAlbums:
+        // Show specific album if selected, otherwise show first album
+        if (_selectedAlbum != null) {
+          assets = await _selectedAlbum!.getAssetListRange(start: 0, end: 100);
+        } else if (_allAlbums.isNotEmpty) {
+          assets = await _allAlbums.first.getAssetListRange(start: 0, end: 100);
+        }
+        break;
     }
 
-    // Get "Recent" or "All" album
-    final recentAlbum = albums.first;
-    final assets = await recentAlbum.getAssetListRange(start: 0, end: 50);
+    if (mounted) {
+      setState(() {
+        _recentAssets = assets;
+        _isLoadingAssets = false;
+      });
+    }
+  }
 
+  void _changeAlbumFilter(AlbumFilterType filter) {
+    if (filter == _selectedAlbumFilter) return;
     setState(() {
-      _recentAssets = assets;
-      _isLoadingAssets = false;
+      _selectedAlbumFilter = filter;
+      _selectedAlbum = null;
     });
+    _loadAssetsForFilter(filter);
+  }
+
+  void _selectAlbum(AssetPathEntity album) {
+    setState(() {
+      _selectedAlbum = album;
+      _selectedAlbumFilter = AlbumFilterType.allAlbums;
+    });
+    _loadAssetsForFilter(AlbumFilterType.allAlbums);
   }
 
   Future<void> _selectAsset(AssetEntity asset) async {
@@ -328,10 +443,36 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
                   textAlign: TextAlign.center,
                 ),
               ),
-              const SizedBox(width: 48),
+              // Settings icon
+              IconButton(
+                icon: const Icon(Icons.settings_outlined, color: Colors.white),
+                onPressed: () {},
+              ),
             ],
           ),
         ),
+
+        // Album filter dropdown
+        if (_hasPermission)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                _buildAlbumDropdown(),
+                const Spacer(),
+                // Multi-select button (future feature placeholder)
+                IconButton(
+                  icon: const Icon(
+                    Icons.library_add_check_outlined,
+                    color: Colors.white70,
+                    size: 22,
+                  ),
+                  onPressed: () {},
+                  tooltip: 'Select multiple',
+                ),
+              ],
+            ),
+          ),
 
         // Content
         Expanded(
@@ -341,9 +482,99 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
                 )
               : !_hasPermission
               ? _buildPermissionRequest()
+              : _selectedAlbumFilter == AlbumFilterType.allAlbums &&
+                    _selectedAlbum == null
+              ? _buildAlbumsList()
               : _buildMediaGrid(),
         ),
       ],
+    );
+  }
+
+  Widget _buildAlbumDropdown() {
+    return PopupMenuButton<AlbumFilterType>(
+      offset: const Offset(0, 40),
+      color: context.card,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      onSelected: _changeAlbumFilter,
+      itemBuilder: (context) => AlbumFilterType.values.map((filter) {
+        return PopupMenuItem<AlbumFilterType>(
+          value: filter,
+          child: Row(
+            children: [
+              Icon(
+                filter.icon,
+                color: filter == _selectedAlbumFilter
+                    ? context.accentColor
+                    : context.textPrimary,
+                size: 22,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                filter.label,
+                style: TextStyle(
+                  color: filter == _selectedAlbumFilter
+                      ? context.accentColor
+                      : context.textPrimary,
+                  fontWeight: filter == _selectedAlbumFilter
+                      ? FontWeight.w600
+                      : FontWeight.normal,
+                ),
+              ),
+              if (filter == _selectedAlbumFilter) ...[
+                const Spacer(),
+                Icon(Icons.check, color: context.accentColor, size: 20),
+              ],
+            ],
+          ),
+        );
+      }).toList(),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              _selectedAlbum?.name ?? _selectedAlbumFilter.label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: 15,
+              ),
+            ),
+            const SizedBox(width: 4),
+            const Icon(
+              Icons.keyboard_arrow_down,
+              color: Colors.white,
+              size: 20,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAlbumsList() {
+    if (_allAlbums.isEmpty) {
+      return Center(
+        child: Text(
+          'No albums found',
+          style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      itemCount: _allAlbums.length,
+      itemBuilder: (context, index) {
+        final album = _allAlbums[index];
+        return _AlbumListTile(album: album, onTap: () => _selectAlbum(album));
+      },
     );
   }
 
@@ -923,5 +1154,86 @@ class _MediaThumbnailState extends State<_MediaThumbnail> {
     final minutes = duration.inMinutes;
     final seconds = duration.inSeconds % 60;
     return '$minutes:${seconds.toString().padLeft(2, '0')}';
+  }
+}
+
+/// List tile for album selection in "All Albums" view
+class _AlbumListTile extends StatefulWidget {
+  const _AlbumListTile({required this.album, required this.onTap});
+
+  final AssetPathEntity album;
+  final VoidCallback onTap;
+
+  @override
+  State<_AlbumListTile> createState() => _AlbumListTileState();
+}
+
+class _AlbumListTileState extends State<_AlbumListTile> {
+  Uint8List? _thumbnailData;
+  int _assetCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAlbumInfo();
+  }
+
+  Future<void> _loadAlbumInfo() async {
+    // Get asset count
+    _assetCount = await widget.album.assetCountAsync;
+
+    // Get first asset for thumbnail
+    if (_assetCount > 0) {
+      final assets = await widget.album.getAssetListRange(start: 0, end: 1);
+      if (assets.isNotEmpty) {
+        final data = await assets.first.thumbnailDataWithSize(
+          const ThumbnailSize(200, 200),
+          quality: 80,
+        );
+        if (mounted && data != null) {
+          setState(() => _thumbnailData = data);
+        }
+      }
+    }
+
+    if (mounted) setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      onTap: widget.onTap,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      leading: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: SizedBox(
+          width: 56,
+          height: 56,
+          child: _thumbnailData != null
+              ? Image.memory(_thumbnailData!, fit: BoxFit.cover)
+              : Container(
+                  color: Colors.grey[800],
+                  child: const Icon(Icons.photo_album, color: Colors.white54),
+                ),
+        ),
+      ),
+      title: Text(
+        widget.album.name.isEmpty ? 'Untitled Album' : widget.album.name,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w500,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      subtitle: Text(
+        '$_assetCount items',
+        style: TextStyle(
+          color: Colors.white.withValues(alpha: 0.6),
+          fontSize: 13,
+        ),
+      ),
+      trailing: const Icon(Icons.chevron_right, color: Colors.white54),
+    );
   }
 }

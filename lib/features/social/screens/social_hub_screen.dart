@@ -6,7 +6,7 @@ import '../../../providers/auth_providers.dart';
 import 'profile_social_screen.dart';
 
 /// The main Social screen - shows stories at top + user's profile with posts.
-/// Stories bar appears at the top like Instagram's home feed.
+/// Stories bar appears at the top of the home feed.
 class SocialHubScreen extends ConsumerWidget {
   const SocialHubScreen({super.key});
 
