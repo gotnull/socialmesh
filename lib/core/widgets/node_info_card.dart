@@ -121,7 +121,7 @@ class NodeInfoCard extends ConsumerWidget {
                   style: TextStyle(
                     color: context.accentColor,
                     fontWeight: FontWeight.bold,
-                    fontFamily: 'JetBrainsMono',
+                    fontFamily: AppTheme.fontFamily,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -152,7 +152,7 @@ class NodeInfoCard extends ConsumerWidget {
               style: TextStyle(
                 color: context.textSecondary,
                 fontSize: 12,
-                fontFamily: 'JetBrainsMono',
+                fontFamily: AppTheme.fontFamily,
               ),
             ),
             Text(
@@ -160,7 +160,7 @@ class NodeInfoCard extends ConsumerWidget {
               style: TextStyle(
                 color: context.textSecondary,
                 fontSize: 12,
-                fontFamily: 'JetBrainsMono',
+                fontFamily: AppTheme.fontFamily,
               ),
             ),
           ],

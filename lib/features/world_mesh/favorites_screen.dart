@@ -543,7 +543,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
                           style: TextStyle(
                             fontSize: 12,
                             color: context.textTertiary,
-                            fontFamily: 'monospace',
+                            fontFamily: AppTheme.fontFamily,
                           ),
                         ),
                         if (item.metadata.role.isNotEmpty) ...[

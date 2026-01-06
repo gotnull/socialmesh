@@ -1172,7 +1172,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                           controller: _rtttlController,
                           style: TextStyle(
                             color: context.textPrimary,
-                            fontFamily: 'monospace',
+                            fontFamily: AppTheme.fontFamily,
                             fontSize: 13,
                           ),
                           maxLines: 4,
@@ -1182,7 +1182,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                               color: context.textTertiary.withValues(
                                 alpha: 0.5,
                               ),
-                              fontFamily: 'monospace',
+                              fontFamily: AppTheme.fontFamily,
                               fontSize: 13,
                             ),
                             filled: true,

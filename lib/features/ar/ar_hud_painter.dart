@@ -1,3 +1,4 @@
+import 'package:socialmesh/core/theme.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -142,7 +143,7 @@ class ARHudPainter extends CustomPainter {
           color: _primaryColor.withValues(alpha: config.opacity),
           fontSize: 14,
           fontWeight: FontWeight.bold,
-          fontFamily: 'monospace',
+          fontFamily: AppTheme.fontFamily,
         ),
       ),
       textDirection: TextDirection.ltr,
@@ -160,7 +161,7 @@ class ARHudPainter extends CustomPainter {
         style: TextStyle(
           color: _primaryColor.withValues(alpha: config.opacity * 0.7),
           fontSize: 12,
-          fontFamily: 'monospace',
+          fontFamily: AppTheme.fontFamily,
         ),
       ),
       textDirection: TextDirection.ltr,
@@ -206,7 +207,7 @@ class ARHudPainter extends CustomPainter {
           style: TextStyle(
             color: _primaryColor.withValues(alpha: alpha + 0.1),
             fontSize: 8,
-            fontFamily: 'monospace',
+            fontFamily: AppTheme.fontFamily,
           ),
         ),
         textDirection: TextDirection.ltr,
@@ -248,7 +249,7 @@ class ARHudPainter extends CustomPainter {
     final textStyle = TextStyle(
       color: _primaryColor.withValues(alpha: 0.7),
       fontSize: 10,
-      fontFamily: 'monospace',
+      fontFamily: AppTheme.fontFamily,
     );
 
     for (var pitch = -60; pitch <= 60; pitch += 10) {
@@ -395,13 +396,13 @@ class ARHudPainter extends CustomPainter {
       color: _primaryColor,
       fontSize: 12,
       fontWeight: FontWeight.bold,
-      fontFamily: 'monospace',
+      fontFamily: AppTheme.fontFamily,
     );
 
     final smallTextStyle = TextStyle(
       color: _primaryColor.withValues(alpha: 0.6),
       fontSize: 9,
-      fontFamily: 'monospace',
+      fontFamily: AppTheme.fontFamily,
     );
 
     for (
@@ -492,7 +493,7 @@ class ARHudPainter extends CustomPainter {
           color: _primaryColor,
           fontSize: 14,
           fontWeight: FontWeight.bold,
-          fontFamily: 'monospace',
+          fontFamily: AppTheme.fontFamily,
         ),
       ),
       textDirection: TextDirection.ltr,
@@ -598,7 +599,7 @@ class ARHudPainter extends CustomPainter {
           style: TextStyle(
             color: _primaryColor.withValues(alpha: isMajor ? 1.0 : 0.6),
             fontSize: isMajor ? 11 : 9,
-            fontFamily: 'monospace',
+            fontFamily: AppTheme.fontFamily,
             fontWeight: isMajor ? FontWeight.bold : FontWeight.normal,
           ),
         ),
@@ -643,7 +644,7 @@ class ARHudPainter extends CustomPainter {
           color: Colors.black,
           fontSize: 12,
           fontWeight: FontWeight.bold,
-          fontFamily: 'monospace',
+          fontFamily: AppTheme.fontFamily,
         ),
       ),
       textDirection: TextDirection.ltr,
@@ -683,7 +684,7 @@ class ARHudPainter extends CustomPainter {
           color: _primaryColor.withValues(alpha: 0.7),
           fontSize: 9,
           fontWeight: FontWeight.bold,
-          fontFamily: 'monospace',
+          fontFamily: AppTheme.fontFamily,
           letterSpacing: 1,
         ),
       ),
@@ -781,7 +782,7 @@ class ARHudPainter extends CustomPainter {
             color: color,
             fontSize: 10 * config.markerScale,
             fontWeight: FontWeight.bold,
-            fontFamily: 'monospace',
+            fontFamily: AppTheme.fontFamily,
           ),
         ),
         textDirection: TextDirection.ltr,
@@ -804,7 +805,7 @@ class ARHudPainter extends CustomPainter {
             color: color,
             fontSize: (isSelected ? 12 : 10) * config.markerScale,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            fontFamily: 'monospace',
+            fontFamily: AppTheme.fontFamily,
           ),
         ),
         textDirection: TextDirection.ltr,
@@ -1071,7 +1072,7 @@ class ARHudPainter extends CustomPainter {
           color: _primaryColor,
           fontSize: 14,
           fontWeight: FontWeight.bold,
-          fontFamily: 'monospace',
+          fontFamily: AppTheme.fontFamily,
         ),
       ),
       textDirection: TextDirection.ltr,
@@ -1095,7 +1096,7 @@ class ARHudPainter extends CustomPainter {
         style: TextStyle(
           color: _primaryColor.withValues(alpha: 0.8),
           fontSize: 10,
-          fontFamily: 'monospace',
+          fontFamily: AppTheme.fontFamily,
         ),
       ),
       textDirection: TextDirection.ltr,
@@ -1190,7 +1191,7 @@ class ARHudPainter extends CustomPainter {
           color: color,
           fontSize: 9,
           fontWeight: FontWeight.bold,
-          fontFamily: 'monospace',
+          fontFamily: AppTheme.fontFamily,
         ),
       ),
       textDirection: TextDirection.ltr,
@@ -1322,7 +1323,7 @@ class ARHudPainter extends CustomPainter {
           style: TextStyle(
             color: Colors.white.withValues(alpha: 0.9),
             fontSize: 11,
-            fontFamily: 'monospace',
+            fontFamily: AppTheme.fontFamily,
           ),
         ),
         textDirection: TextDirection.ltr,

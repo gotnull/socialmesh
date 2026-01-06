@@ -151,7 +151,7 @@ class NodeComparisonScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 11,
                 color: context.textTertiary,
-                fontFamily: 'monospace',
+                fontFamily: AppTheme.fontFamily,
               ),
             ),
           ),

@@ -1,3 +1,4 @@
+import 'package:socialmesh/core/theme.dart';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -202,7 +203,7 @@ class _NeuralPulsePainter extends CustomPainter {
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.2),
               fontSize: 10,
-              fontFamily: 'monospace',
+              fontFamily: AppTheme.fontFamily,
             ),
           ),
           textDirection: TextDirection.ltr,

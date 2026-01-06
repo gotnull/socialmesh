@@ -1300,7 +1300,7 @@ class _LinkedDeviceChip extends StatelessWidget {
                   style: TextStyle(
                     color: context.textSecondary,
                     fontSize: 11,
-                    fontFamily: _hasRealName ? null : 'monospace',
+                    fontFamily: _hasRealName ? null : AppTheme.fontFamily,
                   ),
                   maxLines: 1,
                   velocity: 25.0,

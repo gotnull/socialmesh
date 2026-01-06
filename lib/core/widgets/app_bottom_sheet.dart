@@ -488,7 +488,9 @@ class BottomSheetTextField extends StatelessWidget {
       style: TextStyle(
         color: context.textPrimary,
         fontSize: 16,
-        fontFamily: monospace ? 'monospace' : 'Inter',
+        fontFamily: monospace
+            ? AppTheme.fontFamily
+            : AppTheme.fontFamilyFallback,
       ),
       decoration: InputDecoration(
         labelText: label,
@@ -496,7 +498,7 @@ class BottomSheetTextField extends StatelessWidget {
         hintText: hint,
         hintStyle: TextStyle(
           color: context.textSecondary.withAlpha(128),
-          fontFamily: monospace ? 'monospace' : null,
+          fontFamily: monospace ? AppTheme.fontFamily : null,
         ),
         errorText: errorText,
         filled: true,

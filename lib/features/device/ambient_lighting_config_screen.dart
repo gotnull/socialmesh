@@ -407,7 +407,7 @@ class _ColorSlider extends StatelessWidget {
               style: TextStyle(
                 fontSize: 14,
                 color: context.textPrimary,
-                fontFamily: 'monospace',
+                fontFamily: AppTheme.fontFamily,
               ),
             ),
           ),

@@ -1122,7 +1122,7 @@ class _ActionEditorState extends State<ActionEditor> {
               key,
               style: TextStyle(
                 fontSize: 11,
-                fontFamily: 'monospace',
+                fontFamily: AppTheme.fontFamily,
                 color: Colors.green[300],
               ),
             ),

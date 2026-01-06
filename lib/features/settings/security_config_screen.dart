@@ -412,7 +412,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
                 color: _publicKey.isEmpty
                     ? context.textTertiary
                     : context.textPrimary,
-                fontFamily: 'JetBrainsMono',
+                fontFamily: AppTheme.fontFamily,
                 fontSize: 11,
               ),
             ),
@@ -455,7 +455,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
             obscureText: !_privateKeyVisible,
             style: TextStyle(
               color: context.textPrimary,
-              fontFamily: 'JetBrainsMono',
+              fontFamily: AppTheme.fontFamily,
               fontSize: 11,
             ),
             decoration: InputDecoration(
@@ -600,7 +600,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
         TextField(
           style: TextStyle(
             color: context.textPrimary,
-            fontFamily: 'JetBrainsMono',
+            fontFamily: AppTheme.fontFamily,
             fontSize: 11,
           ),
           decoration: InputDecoration(

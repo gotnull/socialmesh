@@ -1054,7 +1054,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
             child: Text(
               eventName,
               style: TextStyle(
-                fontFamily: 'monospace',
+                fontFamily: AppTheme.fontFamily,
                 fontWeight: FontWeight.w600,
                 fontSize: 11,
                 color: context.accentColor,

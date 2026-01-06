@@ -709,7 +709,7 @@ class _EncryptionKeyContentState extends State<_EncryptionKeyContent> {
                   style: TextStyle(
                     fontSize: 14,
                     color: context.accentColor,
-                    fontFamily: 'monospace',
+                    fontFamily: AppTheme.fontFamily,
                     fontWeight: FontWeight.w500,
                     letterSpacing: 0.5,
                     height: 1.5,
@@ -720,7 +720,7 @@ class _EncryptionKeyContentState extends State<_EncryptionKeyContent> {
                   style: TextStyle(
                     fontSize: 14,
                     color: context.textTertiary.withValues(alpha: 0.5),
-                    fontFamily: 'monospace',
+                    fontFamily: AppTheme.fontFamily,
                     letterSpacing: 2,
                   ),
                 ),

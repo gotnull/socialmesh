@@ -315,7 +315,7 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen> {
                           '${positionState.position!.latitude.toStringAsFixed(4)}, ${positionState.position!.longitude.toStringAsFixed(4)}',
                           style: TextStyle(
                             color: context.accentColor,
-                            fontFamily: 'monospace',
+                            fontFamily: AppTheme.fontFamily,
                             fontSize: 13,
                           ),
                         ),

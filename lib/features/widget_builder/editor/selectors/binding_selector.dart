@@ -504,7 +504,7 @@ class _BindingSelectorContentState extends State<_BindingSelectorContent> {
                           binding.path,
                           style: TextStyle(
                             fontSize: 10,
-                            fontFamily: 'monospace',
+                            fontFamily: AppTheme.fontFamily,
                             color: context.textSecondary,
                           ),
                         ),

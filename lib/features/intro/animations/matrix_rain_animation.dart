@@ -1,3 +1,4 @@
+import 'package:socialmesh/core/theme.dart';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -154,7 +155,7 @@ class _MatrixRainPainter extends CustomPainter {
             style: TextStyle(
               color: color,
               fontSize: 14,
-              fontFamily: 'monospace',
+              fontFamily: AppTheme.fontFamily,
               fontWeight: i == 0 ? FontWeight.bold : FontWeight.normal,
             ),
           ),

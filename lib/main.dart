@@ -1698,7 +1698,7 @@ class _AppleTVGridCardState extends State<_AppleTVGridCard>
             style: TextStyle(
               color: isAtScanLine ? context.accentColor : context.textTertiary,
               fontSize: 10,
-              fontFamily: 'monospace',
+              fontFamily: AppTheme.fontFamily,
               fontWeight: FontWeight.w500,
               shadows: isAtScanLine
                   ? [
@@ -1860,7 +1860,7 @@ class _SplashNodeCardState extends State<_SplashNodeCard>
                     style: TextStyle(
                       color: context.textTertiary,
                       fontSize: 11,
-                      fontFamily: 'monospace',
+                      fontFamily: AppTheme.fontFamily,
                     ),
                   ),
                 ],

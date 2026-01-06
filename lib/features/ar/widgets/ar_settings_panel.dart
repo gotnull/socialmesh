@@ -1,3 +1,4 @@
+import 'package:socialmesh/core/theme.dart';
 import 'package:flutter/material.dart';
 
 import '../ar_state.dart';
@@ -60,7 +61,7 @@ class ARSettingsPanel extends StatelessWidget {
         color: const Color(0xFF00E5FF).withValues(alpha: 0.7),
         fontSize: 11,
         fontWeight: FontWeight.bold,
-        fontFamily: 'monospace',
+        fontFamily: AppTheme.fontFamily,
         letterSpacing: 2,
       ),
     );
@@ -160,7 +161,7 @@ class ARSettingsPanel extends StatelessWidget {
                 color: Color(0xFF00E5FF),
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'monospace',
+                fontFamily: AppTheme.fontFamily,
               ),
             ),
           ],

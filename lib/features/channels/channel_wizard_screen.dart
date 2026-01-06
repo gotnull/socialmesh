@@ -1051,7 +1051,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: context.textPrimary,
                 fontWeight: FontWeight.w600,
-                fontFamily: 'monospace',
+                fontFamily: AppTheme.fontFamily,
               ),
               overflow: TextOverflow.ellipsis,
             ),

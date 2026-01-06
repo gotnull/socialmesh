@@ -558,7 +558,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
             time,
             style: TextStyle(
               fontSize: 11,
-              fontFamily: 'monospace',
+              fontFamily: AppTheme.fontFamily,
               color: context.textTertiary,
             ),
           ),
@@ -579,7 +579,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
                 fontSize: 9,
                 fontWeight: FontWeight.w600,
                 color: entry.level.getColor(context),
-                fontFamily: 'monospace',
+                fontFamily: AppTheme.fontFamily,
               ),
             ),
           ),
@@ -590,7 +590,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
             '[${entry.source}]',
             style: TextStyle(
               fontSize: 11,
-              fontFamily: 'monospace',
+              fontFamily: AppTheme.fontFamily,
               color: context.accentColor.withValues(alpha: 0.8),
             ),
           ),
@@ -602,7 +602,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
               entry.message,
               style: TextStyle(
                 fontSize: 11,
-                fontFamily: 'monospace',
+                fontFamily: AppTheme.fontFamily,
                 color: entry.level == LogLevel.error
                     ? AppTheme.errorRed
                     : entry.level == LogLevel.warning

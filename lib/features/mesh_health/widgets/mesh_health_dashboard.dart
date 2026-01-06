@@ -486,7 +486,7 @@ class _IssueCard extends StatelessWidget {
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.5),
                         fontSize: 11,
-                        fontFamily: 'monospace',
+                        fontFamily: AppTheme.fontFamily,
                       ),
                     ),
                   ),
@@ -576,7 +576,7 @@ class _NodeContributorRow extends StatelessWidget {
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 13,
-                        fontFamily: 'monospace',
+                        fontFamily: AppTheme.fontFamily,
                       ),
                     ),
                     if (node.isSpamming) ...[

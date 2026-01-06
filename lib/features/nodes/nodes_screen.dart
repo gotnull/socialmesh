@@ -1701,7 +1701,7 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
                   style: TextStyle(
                     fontSize: 13,
                     color: context.textSecondary,
-                    fontFamily: 'monospace',
+                    fontFamily: AppTheme.fontFamily,
                   ),
                 ),
               ],
@@ -1933,7 +1933,7 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
           'This will reboot your Meshtastic device. The app will automatically reconnect once the device restarts.',
           style: TextStyle(
             color: context.textSecondary,
-            fontFamily: 'JetBrainsMono',
+            fontFamily: AppTheme.fontFamily,
           ),
         ),
         actions: [
@@ -2014,7 +2014,7 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
           'This will turn off your Meshtastic device. You will need to physically power it back on to reconnect.',
           style: TextStyle(
             color: context.textSecondary,
-            fontFamily: 'JetBrainsMono',
+            fontFamily: AppTheme.fontFamily,
           ),
         ),
         actions: [
@@ -2226,7 +2226,7 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
               'Request User Info',
               style: TextStyle(
                 color: context.textPrimary,
-                fontFamily: 'JetBrainsMono',
+                fontFamily: AppTheme.fontFamily,
               ),
             ),
             subtitle: Text(
@@ -2244,7 +2244,7 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
               'Exchange Positions',
               style: TextStyle(
                 color: context.textPrimary,
-                fontFamily: 'JetBrainsMono',
+                fontFamily: AppTheme.fontFamily,
               ),
             ),
             subtitle: Text(
@@ -2267,7 +2267,7 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
               node.isFavorite ? 'Remove from Favorites' : 'Add to Favorites',
               style: TextStyle(
                 color: context.textPrimary,
-                fontFamily: 'JetBrainsMono',
+                fontFamily: AppTheme.fontFamily,
               ),
             ),
             onTap: () {
@@ -2284,7 +2284,7 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
               node.isIgnored ? 'Unmute Node' : 'Mute Node',
               style: TextStyle(
                 color: context.textPrimary,
-                fontFamily: 'JetBrainsMono',
+                fontFamily: AppTheme.fontFamily,
               ),
             ),
             subtitle: Text(
@@ -2305,7 +2305,7 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
                 'Set as Fixed Position',
                 style: TextStyle(
                   color: context.textPrimary,
-                  fontFamily: 'JetBrainsMono',
+                  fontFamily: AppTheme.fontFamily,
                 ),
               ),
               onTap: () {
@@ -2319,7 +2319,7 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
               'Remove Node',
               style: TextStyle(
                 color: AppTheme.errorRed,
-                fontFamily: 'JetBrainsMono',
+                fontFamily: AppTheme.fontFamily,
               ),
             ),
             onTap: () {
@@ -2399,7 +2399,7 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
                       style: TextStyle(
                         fontSize: 14,
                         color: context.textSecondary,
-                        fontFamily: 'monospace',
+                        fontFamily: AppTheme.fontFamily,
                       ),
                     ),
                   ],

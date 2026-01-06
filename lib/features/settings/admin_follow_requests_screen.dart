@@ -688,7 +688,7 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
                     style: TextStyle(
                       color: context.textTertiary,
                       fontSize: 11,
-                      fontFamily: 'monospace',
+                      fontFamily: AppTheme.fontFamily,
                     ),
                   ),
                 ),

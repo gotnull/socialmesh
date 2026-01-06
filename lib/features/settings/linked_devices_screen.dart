@@ -652,7 +652,7 @@ class _LinkedDeviceCard extends StatelessWidget {
                               style: TextStyle(
                                 color: context.textTertiary,
                                 fontSize: 12,
-                                fontFamily: 'monospace',
+                                fontFamily: AppTheme.fontFamily,
                               ),
                             ),
                             if (node?.hardwareModel != null) ...[

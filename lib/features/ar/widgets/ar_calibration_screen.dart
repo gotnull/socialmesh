@@ -1,3 +1,4 @@
+import 'package:socialmesh/core/theme.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -155,7 +156,7 @@ class _ARCalibrationScreenState extends ConsumerState<ARCalibrationScreen>
                 color: Color(0xFF00E5FF),
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'monospace',
+                fontFamily: AppTheme.fontFamily,
                 letterSpacing: 2,
               ),
             ),
@@ -270,7 +271,7 @@ class _ARCalibrationScreenState extends ConsumerState<ARCalibrationScreen>
             color: Color(0xFF00E5FF),
             fontSize: 48,
             fontWeight: FontWeight.bold,
-            fontFamily: 'monospace',
+            fontFamily: AppTheme.fontFamily,
           ),
         ),
 
@@ -324,7 +325,7 @@ class _ARCalibrationScreenState extends ConsumerState<ARCalibrationScreen>
                   color: Color(0xFF00E676),
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  fontFamily: 'monospace',
+                  fontFamily: AppTheme.fontFamily,
                   letterSpacing: 2,
                 ),
               ),
@@ -388,7 +389,7 @@ class _ARCalibrationScreenState extends ConsumerState<ARCalibrationScreen>
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  fontFamily: 'monospace',
+                  fontFamily: AppTheme.fontFamily,
                   letterSpacing: 1,
                 ),
               ),
@@ -420,7 +421,7 @@ class _ARCalibrationScreenState extends ConsumerState<ARCalibrationScreen>
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  fontFamily: 'monospace',
+                  fontFamily: AppTheme.fontFamily,
                   letterSpacing: 1,
                 ),
               ),
@@ -611,7 +612,7 @@ class GPSAccuracyBadge extends StatelessWidget {
               color: color,
               fontSize: 11,
               fontWeight: FontWeight.bold,
-              fontFamily: 'monospace',
+              fontFamily: AppTheme.fontFamily,
             ),
           ),
         ],
@@ -685,7 +686,7 @@ class CompassAccuracyBadge extends StatelessWidget {
                 color: color,
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'monospace',
+                fontFamily: AppTheme.fontFamily,
               ),
             ),
             if (needsCalibration) ...[

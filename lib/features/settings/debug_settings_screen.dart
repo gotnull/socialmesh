@@ -854,7 +854,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                       style: const TextStyle(
                         fontSize: 10,
                         color: Colors.white70,
-                        fontFamily: 'monospace',
+                        fontFamily: AppTheme.fontFamily,
                       ),
                     ),
                   ),
@@ -1208,7 +1208,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                 _generateJsonConfig(),
                 style: TextStyle(
                   fontSize: 11,
-                  fontFamily: 'monospace',
+                  fontFamily: AppTheme.fontFamily,
                   color: context.textSecondary,
                   height: 1.4,
                 ),
@@ -1549,7 +1549,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
             style: TextStyle(
               fontSize: 12,
               color: context.textSecondary,
-              fontFamily: 'monospace',
+              fontFamily: AppTheme.fontFamily,
             ),
           ),
         ),

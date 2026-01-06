@@ -153,7 +153,7 @@ class _GlobeScreenState extends ConsumerState<GlobeScreen> {
                         color: context.textPrimary,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        fontFamily: 'JetBrainsMono',
+                        fontFamily: AppTheme.fontFamily,
                       ),
                     ),
                   ],

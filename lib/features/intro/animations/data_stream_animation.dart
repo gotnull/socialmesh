@@ -1,3 +1,4 @@
+import 'package:socialmesh/core/theme.dart';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -138,7 +139,7 @@ class _DataStreamPainter extends CustomPainter {
                     ? Colors.white.withValues(alpha: 0.9)
                     : accentColor.withValues(alpha: alpha),
                 fontSize: 14,
-                fontFamily: 'monospace',
+                fontFamily: AppTheme.fontFamily,
                 fontWeight: i == 0 ? FontWeight.bold : FontWeight.normal,
               ),
             ),

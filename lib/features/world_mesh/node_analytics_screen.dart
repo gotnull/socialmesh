@@ -678,7 +678,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
                   style: TextStyle(
                     fontSize: 13,
                     color: context.textSecondary,
-                    fontFamily: 'monospace',
+                    fontFamily: AppTheme.fontFamily,
                   ),
                 ),
                 if (node.role != 'UNKNOWN') ...[
@@ -1012,7 +1012,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
             style: TextStyle(
               fontSize: 11,
               color: color,
-              fontFamily: 'monospace',
+              fontFamily: AppTheme.fontFamily,
             ),
           ),
           if (snr != null) ...[
@@ -1049,7 +1049,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
             style: TextStyle(
               fontSize: 11,
               color: context.accentColor,
-              fontFamily: 'monospace',
+              fontFamily: AppTheme.fontFamily,
             ),
           ),
         ],

@@ -1,3 +1,4 @@
+import 'package:socialmesh/core/theme.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -151,7 +152,7 @@ class _MiniRadarPainter extends CustomPainter {
       color: const Color(0xFF00E5FF).withValues(alpha: 0.5),
       fontSize: 8,
       fontWeight: FontWeight.bold,
-      fontFamily: 'monospace',
+      fontFamily: AppTheme.fontFamily,
     );
 
     final directions = ['N', 'E', 'S', 'W'];
@@ -522,7 +523,7 @@ class _AnimatedMiniRadarPainter extends CustomPainter {
           color: Color(0xFF00E5FF),
           fontSize: 10,
           fontWeight: FontWeight.bold,
-          fontFamily: 'monospace',
+          fontFamily: AppTheme.fontFamily,
         ),
       ),
       textDirection: TextDirection.ltr,

@@ -1,3 +1,4 @@
+import 'package:socialmesh/core/theme.dart';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -145,7 +146,7 @@ class _CymaticsPainter extends CustomPainter {
         style: TextStyle(
           color: Colors.white.withValues(alpha: 0.3),
           fontSize: 14,
-          fontFamily: 'monospace',
+          fontFamily: AppTheme.fontFamily,
         ),
       ),
       textDirection: TextDirection.ltr,

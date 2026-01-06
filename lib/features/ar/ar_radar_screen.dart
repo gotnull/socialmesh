@@ -1,3 +1,4 @@
+import 'package:socialmesh/core/theme.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -468,7 +469,7 @@ class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
               color: color,
               fontSize: 12,
               fontWeight: FontWeight.bold,
-              fontFamily: 'monospace',
+              fontFamily: AppTheme.fontFamily,
             ),
           ),
         ],
@@ -502,7 +503,7 @@ class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
                 color: Color(0xFF00E5FF),
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'monospace',
+                fontFamily: AppTheme.fontFamily,
                 letterSpacing: 2,
               ),
             ),
@@ -512,7 +513,7 @@ class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.6),
                 fontSize: 12,
-                fontFamily: 'monospace',
+                fontFamily: AppTheme.fontFamily,
               ),
             ),
           ],
@@ -542,7 +543,7 @@ class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
                   color: Color(0xFFFF1744),
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  fontFamily: 'monospace',
+                  fontFamily: AppTheme.fontFamily,
                 ),
               ),
               const SizedBox(height: 8),
@@ -634,7 +635,7 @@ class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
             style: TextStyle(
               color: const Color(0xFF00E5FF).withValues(alpha: 0.6),
               fontSize: 10,
-              fontFamily: 'monospace',
+              fontFamily: AppTheme.fontFamily,
             ),
           ),
           const SizedBox(width: 8),
@@ -643,7 +644,7 @@ class _ARRadarScreenState extends ConsumerState<ARRadarScreen>
             style: const TextStyle(
               color: Color(0xFF00E5FF),
               fontSize: 10,
-              fontFamily: 'monospace',
+              fontFamily: AppTheme.fontFamily,
               fontWeight: FontWeight.bold,
             ),
           ),

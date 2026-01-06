@@ -2353,7 +2353,7 @@ class _EncryptionKeyContentState extends State<_EncryptionKeyContent> {
                   style: TextStyle(
                     fontSize: 14,
                     color: context.accentColor,
-                    fontFamily: 'monospace',
+                    fontFamily: AppTheme.fontFamily,
                   ),
                 )
               : Text(
@@ -2361,7 +2361,7 @@ class _EncryptionKeyContentState extends State<_EncryptionKeyContent> {
                   style: TextStyle(
                     fontSize: 14,
                     color: context.textTertiary.withValues(alpha: 0.5),
-                    fontFamily: 'monospace',
+                    fontFamily: AppTheme.fontFamily,
                   ),
                 ),
         ),

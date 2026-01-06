@@ -349,7 +349,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                               fontSize: 24,
                               fontWeight: FontWeight.w600,
                               letterSpacing: 8,
-                              fontFamily: 'monospace',
+                              fontFamily: AppTheme.fontFamily,
                             ),
                             textAlign: TextAlign.center,
                             decoration: InputDecoration(
@@ -362,7 +362,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                                 fontSize: 24,
                                 fontWeight: FontWeight.w600,
                                 letterSpacing: 8,
-                                fontFamily: 'monospace',
+                                fontFamily: AppTheme.fontFamily,
                               ),
                               filled: true,
                               fillColor: context.background,

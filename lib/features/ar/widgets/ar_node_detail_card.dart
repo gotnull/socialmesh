@@ -1,3 +1,4 @@
+import 'package:socialmesh/core/theme.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -218,7 +219,7 @@ class ARNodeDetailCard extends StatelessWidget {
                   color: _getThreatColor(node.threatLevel),
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  fontFamily: 'monospace',
+                  fontFamily: AppTheme.fontFamily,
                 ),
               ),
             ),
@@ -246,7 +247,7 @@ class ARNodeDetailCard extends StatelessWidget {
                   style: TextStyle(
                     color: const Color(0xFF00E5FF).withValues(alpha: 0.7),
                     fontSize: 12,
-                    fontFamily: 'monospace',
+                    fontFamily: AppTheme.fontFamily,
                   ),
                 ),
               ],
@@ -279,7 +280,7 @@ class ARNodeDetailCard extends StatelessWidget {
           style: TextStyle(
             color: const Color(0xFF00E5FF).withValues(alpha: 0.6),
             fontSize: 10,
-            fontFamily: 'monospace',
+            fontFamily: AppTheme.fontFamily,
             letterSpacing: 1,
           ),
         ),
@@ -290,7 +291,7 @@ class ARNodeDetailCard extends StatelessWidget {
             color: Color(0xFF00E5FF),
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            fontFamily: 'monospace',
+            fontFamily: AppTheme.fontFamily,
           ),
         ),
       ],
@@ -335,7 +336,7 @@ class ARNodeDetailCard extends StatelessWidget {
               color: valueColor ?? Colors.white,
               fontSize: 12,
               fontWeight: FontWeight.bold,
-              fontFamily: 'monospace',
+              fontFamily: AppTheme.fontFamily,
             ),
           ),
         ],
@@ -357,7 +358,7 @@ class ARNodeDetailCard extends StatelessWidget {
           color: color,
           fontSize: 10,
           fontWeight: FontWeight.bold,
-          fontFamily: 'monospace',
+          fontFamily: AppTheme.fontFamily,
         ),
       ),
     );

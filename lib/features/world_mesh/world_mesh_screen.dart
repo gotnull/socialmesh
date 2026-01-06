@@ -1215,7 +1215,7 @@ class _SearchResultTile extends StatelessWidget {
                         color: isActive ? accentColor : context.textSecondary,
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
-                        fontFamily: 'JetBrainsMono',
+                        fontFamily: AppTheme.fontFamily,
                       ),
                     ),
                   ),
@@ -1384,7 +1384,7 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
                         color: accentColor,
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
-                        fontFamily: 'JetBrainsMono',
+                        fontFamily: AppTheme.fontFamily,
                       ),
                     ),
                   ),
@@ -1410,7 +1410,7 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
                               node.nodeId,
                               style: TextStyle(
                                 color: context.textSecondary,
-                                fontFamily: 'JetBrainsMono',
+                                fontFamily: AppTheme.fontFamily,
                                 fontSize: 12,
                               ),
                             ),
@@ -1651,7 +1651,7 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
                             '${entry.key}${snr != null ? ' (${snr.toStringAsFixed(1)}dB)' : ''}',
                             style: const TextStyle(
                               fontSize: 11,
-                              fontFamily: 'JetBrainsMono',
+                              fontFamily: AppTheme.fontFamily,
                             ),
                           ),
                         );

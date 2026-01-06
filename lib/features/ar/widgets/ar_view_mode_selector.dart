@@ -1,3 +1,4 @@
+import 'package:socialmesh/core/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -95,7 +96,7 @@ class ARViewModeSelector extends StatelessWidget {
                     : Colors.white.withValues(alpha: 0.5),
                 fontSize: 9,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                fontFamily: 'monospace',
+                fontFamily: AppTheme.fontFamily,
               ),
             ),
           ],

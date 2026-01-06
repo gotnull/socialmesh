@@ -2050,7 +2050,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                   color: isZero ? context.textSecondary : accentColor,
-                  fontFamily: isZero ? null : 'monospace',
+                  fontFamily: isZero ? null : AppTheme.fontFamily,
                 ),
               ),
             ),
@@ -2414,7 +2414,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                           style: TextStyle(
                             color: context.textSecondary,
                             fontSize: 10,
-                            fontFamily: 'monospace',
+                            fontFamily: AppTheme.fontFamily,
                           ),
                         ),
                     ],

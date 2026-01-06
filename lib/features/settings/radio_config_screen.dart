@@ -835,7 +835,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
               dropdownColor: context.card,
               style: TextStyle(
                 color: context.textPrimary,
-                fontFamily: 'JetBrainsMono',
+                fontFamily: AppTheme.fontFamily,
               ),
               items: regions.map((r) {
                 return DropdownMenuItem(

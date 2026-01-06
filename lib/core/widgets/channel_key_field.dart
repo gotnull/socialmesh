@@ -252,7 +252,7 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                       style: TextStyle(
                         fontSize: 14,
                         color: context.textPrimary,
-                        fontFamily: 'monospace',
+                        fontFamily: AppTheme.fontFamily,
                         fontWeight: FontWeight.w500,
                       ),
                       decoration: InputDecoration(
@@ -261,7 +261,7 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                         hintText: 'e.g., AQ== or AAAAAAAAAAAAAAAAAAAAAA==',
                         hintStyle: TextStyle(
                           color: context.textTertiary.withAlpha(128),
-                          fontFamily: 'monospace',
+                          fontFamily: AppTheme.fontFamily,
                         ),
                         suffixIcon: IconButton(
                           icon: Icon(Icons.check, color: _accentColor),
@@ -301,7 +301,7 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                                   color: _keyController.text.isEmpty
                                       ? context.textTertiary
                                       : _accentColor,
-                                  fontFamily: 'monospace',
+                                  fontFamily: AppTheme.fontFamily,
                                   fontWeight: FontWeight.w500,
                                   letterSpacing: 0.5,
                                   height: 1.5,
@@ -314,7 +314,7 @@ class _ChannelKeyFieldState extends State<ChannelKeyField> {
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: context.textTertiary.withAlpha(128),
-                                  fontFamily: 'monospace',
+                                  fontFamily: AppTheme.fontFamily,
                                   letterSpacing: 2,
                                 ),
                               ),

@@ -2824,7 +2824,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           '$limit messages',
           style: TextStyle(
             color: context.textPrimary,
-            fontFamily: 'JetBrainsMono',
+            fontFamily: AppTheme.fontFamily,
           ),
         ),
       ),
