@@ -716,7 +716,10 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       theme: AppTheme.lightTheme(accentColor),
       darkTheme: AppTheme.darkTheme(accentColor),
       themeMode: themeMode,
-      navigatorObservers: [if (analyticsObserver != null) analyticsObserver],
+      navigatorObservers: [
+        _KeyboardDismissObserver(),
+        if (analyticsObserver != null) analyticsObserver,
+      ],
       home: const _AppRouter(),
       routes: {
         '/scanner': (context) => const ScannerScreen(),
@@ -1946,5 +1949,33 @@ class _ErrorScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+}
+
+/// Navigator observer that dismisses keyboard on route changes.
+/// Prevents keyboard from persisting when navigating between screens.
+class _KeyboardDismissObserver extends NavigatorObserver {
+  void _dismissKeyboard() {
+    FocusManager.instance.primaryFocus?.unfocus();
+  }
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    _dismissKeyboard();
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    _dismissKeyboard();
+  }
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    _dismissKeyboard();
+  }
+
+  @override
+  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    _dismissKeyboard();
   }
 }
