@@ -54,27 +54,27 @@ class StoryBar extends ConsumerWidget {
       height: 100,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         itemCount: 1 + followingGroups.length, // +1 for add/own story button
         itemBuilder: (context, index) {
           if (index == 0) {
-            // "Add Story" / Own stories button - always opens create screen
+            // "Add Story" / Own stories button
             return Padding(
-              padding: const EdgeInsets.only(right: 12),
+              padding: const EdgeInsets.only(right: 16),
               child: StoryAvatar(
                 userId: currentUser.uid,
                 avatarUrl: myAvatarUrl,
                 displayName: hasOwnStories ? 'Your story' : 'Add story',
                 hasUnviewed: hasOwnStories,
                 isAddButton: !hasOwnStories,
-                onTap: () => _onOwnStoryTap(context),
+                onTap: () => _onOwnStoryTap(context, myGroup, myStoriesAsync),
               ),
             );
           }
 
           final group = followingGroups[index - 1];
           return Padding(
-            padding: const EdgeInsets.only(right: 12),
+            padding: const EdgeInsets.only(right: 16),
             child: AnimatedStoryAvatar(
               storyGroup: group,
               onTap: () =>
@@ -86,12 +86,41 @@ class StoryBar extends ConsumerWidget {
     );
   }
 
-  void _onOwnStoryTap(BuildContext context) {
-    // Always go to create story screen - user can view their stories from there
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const CreateStoryScreen()),
+  void _onOwnStoryTap(
+    BuildContext context,
+    StoryGroup? myGroup,
+    AsyncValue<List<Story>> myStoriesAsync,
+  ) {
+    final stories = myStoriesAsync.when(
+      data: (list) => list,
+      loading: () => <Story>[],
+      error: (_, _) => <Story>[],
     );
+
+    if (stories.isNotEmpty) {
+      // View own stories
+      final group =
+          myGroup ??
+          StoryGroup(
+            userId: stories.first.authorId,
+            stories: stories,
+            lastStoryAt: stories.first.createdAt,
+            profile: stories.first.authorSnapshot,
+          );
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) =>
+              StoryViewerScreen(storyGroups: [group], initialGroupIndex: 0),
+        ),
+      );
+    } else {
+      // No stories - create new story
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const CreateStoryScreen()),
+      );
+    }
   }
 
   void _onStoryGroupTap(
