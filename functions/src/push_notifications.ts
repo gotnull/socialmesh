@@ -12,6 +12,7 @@
 
 import * as admin from 'firebase-admin';
 import { onDocumentCreated } from 'firebase-functions/v2/firestore';
+import { onCall, HttpsError } from 'firebase-functions/v2/https';
 
 const db = admin.firestore();
 const messaging = admin.messaging();
@@ -430,3 +431,98 @@ export const onCommentCreatedNotification = onDocumentCreated(
     }
   }
 );
+
+// =============================================================================
+// TEST NOTIFICATION (Debug only)
+// =============================================================================
+
+/**
+ * Send a test push notification to the calling user
+ * Used for debugging FCM setup in the app
+ */
+export const sendTestPushNotification = onCall(async (request) => {
+  // Require authentication
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'Must be logged in');
+  }
+
+  const userId = request.auth.uid;
+  const type = request.data?.type as string || 'test';
+
+  // Get user's FCM tokens
+  const tokens = await getFcmTokens(userId);
+  if (tokens.length === 0) {
+    throw new HttpsError('failed-precondition', 'No FCM tokens registered for this user');
+  }
+
+  // Build notification based on type
+  let title: string;
+  let body: string;
+  let data: Record<string, string>;
+
+  switch (type) {
+    case 'follow':
+      title = 'New Follower';
+      body = 'Debug User started following you';
+      data = { type: 'new_follower', targetId: 'debug_user' };
+      break;
+    case 'like':
+      title = 'New Like';
+      body = 'Debug User liked your post';
+      data = { type: 'new_like', targetId: 'debug_post' };
+      break;
+    case 'comment':
+      title = 'New Comment';
+      body = 'Debug User commented: "This is a test comment!"';
+      data = { type: 'new_comment', targetId: 'debug_post', commentId: 'debug_comment' };
+      break;
+    case 'mention':
+      title = 'You were mentioned';
+      body = 'Debug User mentioned you: "Hey @you check this out!"';
+      data = { type: 'mention', targetId: 'debug_post', commentId: 'debug_comment' };
+      break;
+    default:
+      title = 'Test Notification';
+      body = 'This is a test push notification from Firebase';
+      data = { type: 'test' };
+  }
+
+  // Send the notification
+  const message: admin.messaging.MulticastMessage = {
+    notification: {
+      title,
+      body,
+    },
+    data,
+    tokens,
+    apns: {
+      payload: {
+        aps: {
+          sound: 'default',
+          badge: 1,
+        },
+      },
+    },
+    android: {
+      notification: {
+        sound: 'default',
+        channelId: 'social_notifications',
+      },
+    },
+  };
+
+  try {
+    const response = await messaging.sendEachForMulticast(message);
+    console.log(`Test push sent to ${userId}: ${response.successCount} success, ${response.failureCount} failures`);
+
+    return {
+      success: response.successCount > 0,
+      successCount: response.successCount,
+      failureCount: response.failureCount,
+      tokenCount: tokens.length,
+    };
+  } catch (error) {
+    console.error(`Error sending test push to ${userId}:`, error);
+    throw new HttpsError('internal', 'Failed to send push notification');
+  }
+});

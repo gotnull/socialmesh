@@ -1995,4 +1995,5 @@ export {
   onFollowRequestAcceptedNotification,
   onLikeCreatedNotification,
   onCommentCreatedNotification,
+  sendTestPushNotification,
 } from './push_notifications';

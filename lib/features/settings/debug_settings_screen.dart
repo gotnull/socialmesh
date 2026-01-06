@@ -1,9 +1,9 @@
 import 'dart:convert';
 
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/logging.dart';
@@ -1434,65 +1434,41 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
   }
 
   Future<void> _sendTestPushNotification(String type) async {
-    AppLogging.notifications('🔔 Sending test $type push notification...');
+    AppLogging.notifications('🔔 Sending test $type FCM push notification...');
 
     try {
-      // Show a local notification to simulate receiving a push
-      final localNotifications = FlutterLocalNotificationsPlugin();
+      // Call the Firebase Cloud Function to send a real FCM push
+      final callable = FirebaseFunctions.instance.httpsCallable(
+        'sendTestPushNotification',
+      );
 
-      String title;
-      String body;
+      final result = await callable.call<Map<String, dynamic>>({'type': type});
+      final data = result.data;
 
-      switch (type) {
-        case 'follow':
-          title = 'New Follower';
-          body = 'Debug User started following you';
-          break;
-        case 'like':
-          title = 'New Like';
-          body = 'Debug User liked your post';
-          break;
-        case 'comment':
-          title = 'New Comment';
-          body = 'Debug User commented: "This is a test comment!"';
-          break;
-        case 'mention':
-          title = 'You were mentioned';
-          body = 'Debug User mentioned you: "Hey @you check this out!"';
-          break;
-        default:
-          title = 'Test Notification';
-          body = 'This is a test push notification';
-      }
+      final successCount = data['successCount'] as int? ?? 0;
+      final failureCount = data['failureCount'] as int? ?? 0;
+      final tokenCount = data['tokenCount'] as int? ?? 0;
 
-      await localNotifications.show(
-        DateTime.now().millisecondsSinceEpoch ~/ 1000,
-        title,
-        body,
-        NotificationDetails(
-          android: AndroidNotificationDetails(
-            'social_notifications',
-            'Social Notifications',
-            channelDescription:
-                'Notifications for follows, likes, and comments',
-            importance: Importance.high,
-            priority: Priority.high,
-            icon: '@mipmap/ic_launcher',
-          ),
-          iOS: const DarwinNotificationDetails(
-            presentAlert: true,
-            presentBadge: true,
-            presentSound: true,
-          ),
-        ),
-        payload: type,
+      AppLogging.notifications(
+        '🔔 FCM result: $successCount success, $failureCount failures, $tokenCount tokens',
       );
 
       if (mounted) {
-        showSuccessSnackBar(
-          context,
-          'Test $type notification sent - check notification center',
-        );
+        if (successCount > 0) {
+          showSuccessSnackBar(
+            context,
+            'FCM push sent! ($successCount/$tokenCount devices)',
+          );
+        } else {
+          showErrorSnackBar(context, 'FCM push failed: $failureCount failures');
+        }
+      }
+    } on FirebaseFunctionsException catch (e) {
+      AppLogging.notifications(
+        '🔔 FCM function error: ${e.code} - ${e.message}',
+      );
+      if (mounted) {
+        showErrorSnackBar(context, 'FCM error: ${e.message}');
       }
     } catch (e) {
       AppLogging.notifications('🔔 Test push notification error: $e');
