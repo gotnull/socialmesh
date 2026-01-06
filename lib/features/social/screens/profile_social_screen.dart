@@ -272,9 +272,21 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
       backgroundColor: context.background,
       foregroundColor: context.textPrimary,
       pinned: true,
-      title: Text(
-        profile.displayName,
-        style: const TextStyle(fontWeight: FontWeight.w600),
+      title: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Flexible(
+            child: Text(
+              profile.displayName,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          if (profile.isVerified) ...[
+            const SizedBox(width: 4),
+            Icon(Icons.verified, color: context.accentColor, size: 18),
+          ],
+        ],
       ),
       actions: [
         if (profile.isPrivate && !isOwnProfile)
@@ -285,11 +297,6 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
               color: context.textPrimary,
               size: 16,
             ),
-          ),
-        if (profile.isVerified)
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: Icon(Icons.verified, color: context.accentColor, size: 18),
           ),
         if (isOwnProfile) ...[
           IconButton(
@@ -527,13 +534,24 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
           const SizedBox(height: 16),
 
           // Name
-          Text(
-            profile.displayName,
-            style: TextStyle(
-              color: context.textPrimary,
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-            ),
+          Row(
+            children: [
+              Flexible(
+                child: Text(
+                  profile.displayName,
+                  style: TextStyle(
+                    color: context.textPrimary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (profile.isVerified) ...[
+                const SizedBox(width: 4),
+                Icon(Icons.verified, color: context.accentColor, size: 16),
+              ],
+            ],
           ),
 
           // Callsign
