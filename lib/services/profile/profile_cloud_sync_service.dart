@@ -94,7 +94,7 @@ class ProfileCloudSyncService {
       'socialLinks': profile.socialLinks?.toJson(),
       'primaryNodeId': profile.primaryNodeId,
       'linkedNodeIds': profile.linkedNodeIds,
-      'isVerified': profile.isVerified,
+      // Note: isVerified is NOT included - managed by admin only
       'updatedAt': FieldValue.serverTimestamp(),
     };
 
@@ -315,11 +315,10 @@ class ProfileCloudSyncService {
       'accentColorIndex': profile.accentColorIndex,
       'installedWidgetIds': profile.installedWidgetIds,
       'preferences': profile.preferences?.toJson(),
-      'isVerified': profile.isVerified,
       'createdAt': profile.createdAt.toIso8601String(),
       'updatedAt': FieldValue.serverTimestamp(),
-      // Do NOT include: followerCount, followingCount, postCount
-      // These are managed by Cloud Functions
+      // Do NOT include: followerCount, followingCount, postCount, isVerified
+      // These are managed by Cloud Functions / admin only
     };
   }
 
