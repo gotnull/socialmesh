@@ -18,6 +18,7 @@ import '../../../services/user_presence_service.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/social_providers.dart';
 import '../../../utils/snackbar.dart';
+import '../../../utils/validation.dart';
 import '../../map/map_screen.dart';
 import '../../messaging/messaging_screen.dart'
     show ChatScreen, ConversationType;
@@ -295,7 +296,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          if (profile.isVerified) ...[
+          if (profile.isVerified || isAppOwner(profile.id)) ...[
             const SizedBox(width: 4),
             const SimpleVerifiedBadge(size: 18),
           ],
@@ -560,7 +561,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              if (profile.isVerified) ...[
+              if (profile.isVerified || isAppOwner(profile.id)) ...[
                 const SizedBox(width: 4),
                 const SimpleVerifiedBadge(size: 16),
               ],

@@ -136,8 +136,11 @@ class UpperCaseTextFormatter extends TextInputFormatter {
 // DISPLAY NAME / USERNAME VALIDATION
 // =============================================================================
 
-/// The owner's Firebase UID - only this user can use reserved names
-const String _ownerUid = '9ltxJGViWHW5aj5HhLGmiVwkrLU2';
+/// The owner's Firebase UID - only this user can use reserved names and is verified
+const String ownerUid = '9ltxJGViWHW5aj5HhLGmiVwkrLU2';
+
+/// Check if a user ID is the app owner (always verified)
+bool isAppOwner(String? userId) => userId == ownerUid;
 
 /// Reserved display names that only the owner can claim
 const Set<String> _reservedExactNames = {
@@ -211,7 +214,7 @@ bool matchesBlockedPattern(String displayName) {
 /// Returns true if the name is allowed for this user
 bool canUseDisplayName(String displayName, String? userId) {
   // Owner can use any name
-  if (userId == _ownerUid) return true;
+  if (isAppOwner(userId)) return true;
 
   final lowerName = displayName.toLowerCase();
 
