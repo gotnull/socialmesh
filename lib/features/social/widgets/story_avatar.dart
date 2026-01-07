@@ -122,7 +122,7 @@ class _StoryAvatarState extends State<StoryAvatar>
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  // Gradient or gray ring (animated rotation for gradient)
+                  // Gradient ring for all stories (animated for unviewed, static for viewed)
                   if (!widget.isAddButton || widget.hasUnviewed)
                     widget.hasUnviewed
                         ? AnimatedBuilder(
@@ -144,25 +144,37 @@ class _StoryAvatarState extends State<StoryAvatar>
                                 shape: BoxShape.circle,
                                 gradient: SweepGradient(
                                   colors: [
-                                    Color(0xFFFF6B6B), // Red/pink
-                                    Color(0xFFFFE66D), // Yellow
-                                    Color(0xFF4ECDC4), // Cyan
-                                    Color(0xFFA855F7), // Purple
+                                    Color(0xFFE91E8C), // Magenta
+                                    Color(0xFF8B5CF6), // Purple
+                                    Color(0xFF4F6AF6), // Blue
+                                    Color(0xFF8B5CF6), // Purple
                                     Color(
-                                      0xFFFF6B6B,
-                                    ), // Back to red for seamless loop
+                                      0xFFE91E8C,
+                                    ), // Back to magenta for seamless loop
                                   ],
                                   stops: [0.0, 0.25, 0.5, 0.75, 1.0],
                                 ),
                               ),
                             ),
                           )
+                        // Viewed stories - static gradient (no animation)
                         : Container(
                             width: totalSize,
                             height: totalSize,
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                               shape: BoxShape.circle,
-                              color: context.border,
+                              gradient: SweepGradient(
+                                colors: [
+                                  Color(0xFFE91E8C), // Magenta
+                                  Color(0xFF8B5CF6), // Purple
+                                  Color(0xFF4F6AF6), // Blue
+                                  Color(0xFF8B5CF6), // Purple
+                                  Color(
+                                    0xFFE91E8C,
+                                  ), // Back to magenta for seamless loop
+                                ],
+                                stops: [0.0, 0.25, 0.5, 0.75, 1.0],
+                              ),
                             ),
                           ),
 

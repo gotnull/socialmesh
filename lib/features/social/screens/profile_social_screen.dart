@@ -1423,6 +1423,11 @@ class _LinkedDeviceChip extends StatelessWidget {
               color: _getNodeColor(nodeId),
               size: 44,
               showGradientBorder: true,
+              gradientColors: const [
+                Color(0xFFE91E8C), // Magenta
+                Color(0xFF8B5CF6), // Purple
+                Color(0xFF4F6AF6), // Blue
+              ],
               showOnlineIndicator: true,
               onlineStatus: isOnline
                   ? OnlineStatus.online
