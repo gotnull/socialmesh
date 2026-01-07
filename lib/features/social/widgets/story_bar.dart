@@ -61,7 +61,7 @@ class StoryBar extends ConsumerWidget {
     // Show nothing if there are no stories and user hasn't posted
     // (we still show the add button though)
     return Padding(
-      padding: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.only(top: 16),
       child: SizedBox(
         height: 100,
         child: EdgeFade.end(

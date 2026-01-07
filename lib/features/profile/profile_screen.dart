@@ -1961,220 +1961,235 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Avatar edit
-                            Center(
-                              child: GestureDetector(
-                                onTap: _isUploadingAvatar ? null : _pickAvatar,
-                                child: Stack(
-                                  children: [
-                                    Container(
-                                      width: 100,
-                                      height: 100,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: context.card,
-                                        border: Border.all(
-                                          color: accentColor,
-                                          width: 2,
-                                        ),
-                                      ),
-                                      child: ClipOval(
-                                        child: _isUploadingAvatar
-                                            ? Center(
-                                                child:
-                                                    CircularProgressIndicator(
-                                                      strokeWidth: 2,
-                                                      color: accentColor,
-                                                    ),
-                                              )
-                                            : profile?.avatarUrl != null
-                                            ? (profile!.avatarUrl!.startsWith(
-                                                    'http',
-                                                  )
-                                                  ? Image.network(
-                                                      profile.avatarUrl!,
-                                                      fit: BoxFit.cover,
-                                                      loadingBuilder:
-                                                          (
-                                                            context,
-                                                            child,
-                                                            loadingProgress,
-                                                          ) {
-                                                            if (loadingProgress ==
-                                                                null) {
-                                                              return child;
-                                                            }
-                                                            return Center(
-                                                              child: CircularProgressIndicator(
-                                                                strokeWidth: 2,
-                                                                color:
-                                                                    accentColor,
-                                                              ),
-                                                            );
-                                                          },
-                                                      errorBuilder:
-                                                          (
-                                                            ctx,
-                                                            err,
-                                                            stack,
-                                                          ) => Center(
-                                                            child: Text(
-                                                              profile.initials,
-                                                              style: TextStyle(
-                                                                fontSize: 32,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                color:
-                                                                    accentColor,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                    )
-                                                  : Image.file(
-                                                      File(profile.avatarUrl!),
-                                                      fit: BoxFit.cover,
-                                                    ))
-                                            : Center(
-                                                child: Text(
-                                                  profile?.initials ?? '?',
-                                                  style: TextStyle(
-                                                    fontSize: 32,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: accentColor,
-                                                  ),
-                                                ),
-                                              ),
-                                      ),
-                                    ),
-                                    Positioned(
-                                      right: 0,
-                                      bottom: 0,
+                            // Banner + Avatar header (like Twitter/Instagram)
+                            SizedBox(
+                              height: 180,
+                              child: Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  // Banner
+                                  Positioned(
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
+                                    child: GestureDetector(
+                                      onTap: _isUploadingBanner
+                                          ? null
+                                          : _pickBanner,
                                       child: Container(
-                                        padding: const EdgeInsets.all(6),
+                                        height: 120,
                                         decoration: BoxDecoration(
-                                          color: accentColor,
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                            color: context.background,
-                                            width: 2,
+                                          color: context.card,
+                                          borderRadius: BorderRadius.circular(
+                                            12,
                                           ),
                                         ),
-                                        child: const Icon(
-                                          Icons.camera_alt,
-                                          size: 16,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            if (profile?.avatarUrl != null) ...[
-                              const SizedBox(height: 8),
-                              Center(
-                                child: TextButton(
-                                  onPressed: _isUploadingAvatar
-                                      ? null
-                                      : _removeAvatar,
-                                  child: _isUploadingAvatar
-                                      ? SizedBox(
-                                          width: 16,
-                                          height: 16,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: AppTheme.errorRed,
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
                                           ),
-                                        )
-                                      : const Text(
-                                          'Remove Avatar',
-                                          style: TextStyle(
-                                            color: AppTheme.errorRed,
-                                          ),
-                                        ),
-                                ),
-                              ),
-                            ],
-                            const SizedBox(height: 24),
-
-                            // Banner edit
-                            _buildSectionHeader('Profile Banner'),
-                            const SizedBox(height: 12),
-                            GestureDetector(
-                              onTap: _isUploadingBanner ? null : _pickBanner,
-                              child: Container(
-                                height: 120,
-                                decoration: BoxDecoration(
-                                  color: context.card,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: accentColor.withValues(alpha: 0.5),
-                                    width: 1,
-                                  ),
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(11),
-                                  child: _isUploadingBanner
-                                      ? Center(
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: accentColor,
-                                          ),
-                                        )
-                                      : profile?.bannerUrl != null
-                                      ? Stack(
-                                          fit: StackFit.expand,
-                                          children: [
-                                            profile!.bannerUrl!.startsWith(
-                                                  'http',
+                                          child: Stack(
+                                            fit: StackFit.expand,
+                                            children: [
+                                              if (_isUploadingBanner)
+                                                Center(
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                        strokeWidth: 2,
+                                                        color: accentColor,
+                                                      ),
                                                 )
-                                                ? Image.network(
-                                                    profile.bannerUrl!,
-                                                    fit: BoxFit.cover,
-                                                    loadingBuilder:
-                                                        (
-                                                          context,
-                                                          child,
-                                                          loadingProgress,
-                                                        ) {
-                                                          if (loadingProgress ==
-                                                              null) {
-                                                            return child;
-                                                          }
-                                                          return Center(
-                                                            child:
-                                                                CircularProgressIndicator(
+                                              else if (profile?.bannerUrl !=
+                                                  null)
+                                                profile!.bannerUrl!.startsWith(
+                                                      'http',
+                                                    )
+                                                    ? Image.network(
+                                                        profile.bannerUrl!,
+                                                        fit: BoxFit.cover,
+                                                        loadingBuilder:
+                                                            (
+                                                              context,
+                                                              child,
+                                                              loadingProgress,
+                                                            ) {
+                                                              if (loadingProgress ==
+                                                                  null) {
+                                                                return child;
+                                                              }
+                                                              return Center(
+                                                                child: CircularProgressIndicator(
                                                                   strokeWidth:
                                                                       2,
                                                                   color:
                                                                       accentColor,
                                                                 ),
-                                                          );
-                                                        },
-                                                    errorBuilder:
-                                                        (ctx, err, stack) =>
-                                                            DefaultBanner(
+                                                              );
+                                                            },
+                                                        errorBuilder:
+                                                            (
+                                                              ctx,
+                                                              err,
+                                                              stack,
+                                                            ) => DefaultBanner(
                                                               accentColor:
                                                                   accentColor,
                                                             ),
-                                                  )
-                                                : Image.file(
-                                                    File(profile.bannerUrl!),
-                                                    fit: BoxFit.cover,
+                                                      )
+                                                    : Image.file(
+                                                        File(
+                                                          profile.bannerUrl!,
+                                                        ),
+                                                        fit: BoxFit.cover,
+                                                      )
+                                              else
+                                                DefaultBanner(
+                                                  accentColor: accentColor,
+                                                ),
+                                              // Camera button overlay
+                                              Positioned(
+                                                right: 8,
+                                                bottom: 8,
+                                                child: Container(
+                                                  padding: const EdgeInsets.all(
+                                                    8,
                                                   ),
-                                            // Edit overlay
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.black
+                                                        .withValues(alpha: 0.6),
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                  child: const Icon(
+                                                    Icons.camera_alt,
+                                                    size: 18,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  // Avatar overlapping banner
+                                  Positioned(
+                                    left: 16,
+                                    bottom: 0,
+                                    child: GestureDetector(
+                                      onTap: _isUploadingAvatar
+                                          ? null
+                                          : _pickAvatar,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: context.background,
+                                            width: 4,
+                                          ),
+                                        ),
+                                        child: Stack(
+                                          children: [
+                                            Container(
+                                              width: 100,
+                                              height: 100,
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                color: context.card,
+                                                border: Border.all(
+                                                  color: accentColor,
+                                                  width: 2,
+                                                ),
+                                              ),
+                                              child: ClipOval(
+                                                child: _isUploadingAvatar
+                                                    ? Center(
+                                                        child:
+                                                            CircularProgressIndicator(
+                                                              strokeWidth: 2,
+                                                              color:
+                                                                  accentColor,
+                                                            ),
+                                                      )
+                                                    : profile?.avatarUrl != null
+                                                    ? (profile!.avatarUrl!
+                                                              .startsWith(
+                                                                'http',
+                                                              )
+                                                          ? Image.network(
+                                                              profile
+                                                                  .avatarUrl!,
+                                                              fit: BoxFit.cover,
+                                                              loadingBuilder:
+                                                                  (
+                                                                    context,
+                                                                    child,
+                                                                    loadingProgress,
+                                                                  ) {
+                                                                    if (loadingProgress ==
+                                                                        null) {
+                                                                      return child;
+                                                                    }
+                                                                    return Center(
+                                                                      child: CircularProgressIndicator(
+                                                                        strokeWidth:
+                                                                            2,
+                                                                        color:
+                                                                            accentColor,
+                                                                      ),
+                                                                    );
+                                                                  },
+                                                              errorBuilder: (ctx, err, stack) => Center(
+                                                                child: Text(
+                                                                  profile
+                                                                      .initials,
+                                                                  style: TextStyle(
+                                                                    fontSize:
+                                                                        32,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold,
+                                                                    color:
+                                                                        accentColor,
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            )
+                                                          : Image.file(
+                                                              File(
+                                                                profile
+                                                                    .avatarUrl!,
+                                                              ),
+                                                              fit: BoxFit.cover,
+                                                            ))
+                                                    : Center(
+                                                        child: Text(
+                                                          profile?.initials ??
+                                                              '?',
+                                                          style: TextStyle(
+                                                            fontSize: 32,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: accentColor,
+                                                          ),
+                                                        ),
+                                                      ),
+                                              ),
+                                            ),
                                             Positioned(
-                                              right: 8,
-                                              bottom: 8,
+                                              right: 0,
+                                              bottom: 0,
                                               child: Container(
                                                 padding: const EdgeInsets.all(
                                                   6,
                                                 ),
                                                 decoration: BoxDecoration(
-                                                  color: Colors.black
-                                                      .withValues(alpha: 0.6),
+                                                  color: accentColor,
                                                   shape: BoxShape.circle,
+                                                  border: Border.all(
+                                                    color: context.background,
+                                                    width: 2,
+                                                  ),
                                                 ),
                                                 child: const Icon(
                                                   Icons.camera_alt,
@@ -2184,39 +2199,69 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                                               ),
                                             ),
                                           ],
-                                        )
-                                      : DefaultBanner(accentColor: accentColor),
-                                ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            if (profile?.bannerUrl != null) ...[
-                              const SizedBox(height: 8),
-                              Center(
-                                child: TextButton(
-                                  onPressed: _isUploadingBanner
-                                      ? null
-                                      : _removeBanner,
-                                  child: _isUploadingBanner
-                                      ? SizedBox(
-                                          width: 16,
-                                          height: 16,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: AppTheme.errorRed,
-                                          ),
-                                        )
-                                      : const Text(
-                                          'Remove Banner',
-                                          style: TextStyle(
-                                            color: AppTheme.errorRed,
-                                          ),
-                                        ),
-                                ),
+                            // Remove buttons row
+                            Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: Row(
+                                children: [
+                                  if (profile?.avatarUrl != null)
+                                    TextButton(
+                                      onPressed: _isUploadingAvatar
+                                          ? null
+                                          : _removeAvatar,
+                                      child: _isUploadingAvatar
+                                          ? SizedBox(
+                                              width: 16,
+                                              height: 16,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                color: AppTheme.errorRed,
+                                              ),
+                                            )
+                                          : const Text(
+                                              'Remove Avatar',
+                                              style: TextStyle(
+                                                color: AppTheme.errorRed,
+                                                fontSize: 13,
+                                              ),
+                                            ),
+                                    ),
+                                  const Spacer(),
+                                  if (profile?.bannerUrl != null)
+                                    TextButton(
+                                      onPressed: _isUploadingBanner
+                                          ? null
+                                          : _removeBanner,
+                                      child: _isUploadingBanner
+                                          ? SizedBox(
+                                              width: 16,
+                                              height: 16,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                color: AppTheme.errorRed,
+                                              ),
+                                            )
+                                          : const Text(
+                                              'Remove Banner',
+                                              style: TextStyle(
+                                                color: AppTheme.errorRed,
+                                                fontSize: 13,
+                                              ),
+                                            ),
+                                    ),
+                                ],
                               ),
-                            ],
-                            const SizedBox(height: 24),
+                            ),
+                            const SizedBox(height: 16),
 
-                            // Basic info section
+                            // Basic Info section
                             _buildSectionHeader('Basic Info'),
                             const SizedBox(height: 12),
                             _buildTextField(

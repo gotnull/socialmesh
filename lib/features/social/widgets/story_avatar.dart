@@ -157,23 +157,21 @@ class _StoryAvatarState extends State<StoryAvatar>
                               ),
                             ),
                           )
-                        // Viewed stories - static gradient (no animation)
+                        // Viewed stories - static GRAY gradient (no animation)
                         : Container(
                             width: totalSize,
                             height: totalSize,
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               gradient: SweepGradient(
                                 colors: [
-                                  Color(0xFFE91E8C), // Magenta
-                                  Color(0xFF8B5CF6), // Purple
-                                  Color(0xFF4F6AF6), // Blue
-                                  Color(0xFF8B5CF6), // Purple
-                                  Color(
-                                    0xFFE91E8C,
-                                  ), // Back to magenta for seamless loop
+                                  Colors.grey.shade500,
+                                  Colors.grey.shade400,
+                                  Colors.grey.shade500,
+                                  Colors.grey.shade400,
+                                  Colors.grey.shade500,
                                 ],
-                                stops: [0.0, 0.25, 0.5, 0.75, 1.0],
+                                stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
                               ),
                             ),
                           ),
