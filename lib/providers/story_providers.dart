@@ -283,10 +283,23 @@ Future<bool> toggleStoryLike(WidgetRef ref, String storyId) async {
 // ===========================================================================
 
 /// Provider to get stories for a specific user.
+/// Also pre-populates viewed state from server.
 final userStoriesProvider = FutureProvider.autoDispose
     .family<List<Story>, String>((ref, userId) async {
       final service = ref.watch(storyServiceProvider);
-      return service.getUserStories(userId);
+      final stories = await service.getUserStories(userId);
+
+      // Pre-populate viewed state from server
+      if (stories.isNotEmpty) {
+        final storyIds = stories.map((s) => s.id).toList();
+        final viewedIds = await service.getViewedStoryIds(storyIds);
+        final viewedNotifier = ref.read(viewedStoriesProvider.notifier);
+        for (final id in viewedIds) {
+          viewedNotifier.markViewed(id);
+        }
+      }
+
+      return stories;
     });
 
 // ===========================================================================
