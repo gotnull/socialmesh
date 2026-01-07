@@ -2559,7 +2559,9 @@ class ProtocolService {
         ..to = _myNodeNum!
         ..decoded = data
         ..id = _generatePacketId()
-        ..priority = 70; // RELIABLE priority (70) for admin messages
+        ..priority =
+            70 // RELIABLE priority (70) for admin messages
+        ..wantAck = true;
 
       final toRadio = pn.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
@@ -3472,7 +3474,8 @@ class ProtocolService {
       ..to = target
       ..decoded = data
       ..id = _generatePacketId()
-      ..priority = 70;
+      ..priority = 70
+      ..wantAck = true;
 
     final toRadio = pn.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
@@ -3800,7 +3803,8 @@ class ProtocolService {
       ..to = target
       ..decoded = data
       ..id = _generatePacketId()
-      ..priority = 70;
+      ..priority = 70
+      ..wantAck = true;
 
     final toRadio = pn.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
