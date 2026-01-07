@@ -12,11 +12,11 @@ import '../../core/widgets/animations.dart';
 import '../../core/widgets/channel_key_field.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
-import '../../providers/splash_mesh_provider.dart';
 import '../../utils/encoding.dart';
 import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 import '../../generated/meshtastic/mesh.pbenum.dart' as pbenum;
+import '../../core/widgets/loading_indicator.dart';
 
 /// Key size options with security explanations
 enum WizardKeySize {
@@ -794,14 +794,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            MeshLoadingIndicator(
-              size: 64,
-              colors: [
-                context.accentColor,
-                context.accentColor.withValues(alpha: 0.6),
-                context.accentColor.withValues(alpha: 0.3),
-              ],
-            ),
+            LoadingIndicator(size: 64),
             SizedBox(height: 24),
             Text(
               'Creating channel...',

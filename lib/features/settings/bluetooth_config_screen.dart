@@ -9,6 +9,7 @@ import '../../utils/snackbar.dart';
 import '../../providers/app_providers.dart';
 import '../../generated/meshtastic/mesh.pbenum.dart' as pb;
 import '../../generated/meshtastic/mesh.pb.dart' as pb_config;
+import '../../core/widgets/loading_indicator.dart';
 
 class BluetoothConfigScreen extends ConsumerStatefulWidget {
   const BluetoothConfigScreen({super.key});
@@ -169,18 +170,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
               child: TextButton(
                 onPressed: _saving ? null : _saveConfig,
                 child: _saving
-                    ? SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: MeshLoadingIndicator(
-                          size: 20,
-                          colors: [
-                            context.accentColor,
-                            context.accentColor.withValues(alpha: 0.6),
-                            context.accentColor.withValues(alpha: 0.3),
-                          ],
-                        ),
-                      )
+                    ? LoadingIndicator(size: 20)
                     : Text(
                         'Save',
                         style: TextStyle(

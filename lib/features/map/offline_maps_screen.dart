@@ -10,8 +10,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 import '../../core/theme.dart';
 import '../../core/widgets/mesh_map_widget.dart';
-import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
+import '../../core/widgets/loading_indicator.dart';
 
 /// Screen for downloading and managing offline map regions
 class OfflineMapsScreen extends ConsumerStatefulWidget {
@@ -623,11 +623,7 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
                 children: [
                   Row(
                     children: [
-                      SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: MeshLoadingIndicator(size: 20),
-                      ),
+                      LoadingIndicator(size: 20),
                       SizedBox(width: 12),
                       Expanded(
                         child: Text(

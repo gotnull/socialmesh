@@ -10,6 +10,7 @@ import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
+import '../../core/widgets/loading_indicator.dart';
 
 /// Screen for running and configuring Range Test module
 class RangeTestScreen extends ConsumerStatefulWidget {
@@ -349,11 +350,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
             TextButton(
               onPressed: _isSaving ? null : _saveConfig,
               child: _isSaving
-                  ? SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: MeshLoadingIndicator(size: 20),
-                    )
+                  ? LoadingIndicator(size: 20)
                   : Text('Save', style: TextStyle(color: context.accentColor)),
             ),
         ],

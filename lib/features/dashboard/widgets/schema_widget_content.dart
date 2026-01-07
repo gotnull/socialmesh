@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme.dart';
 import '../../../providers/app_providers.dart';
-import '../../../providers/splash_mesh_provider.dart';
 import '../../widget_builder/models/widget_schema.dart';
 import '../../widget_builder/renderer/widget_renderer.dart';
 import '../../widget_builder/storage/widget_storage_service.dart';
 import '../../map/map_screen.dart';
+import '../../../core/widgets/loading_indicator.dart';
 
 /// Content widget that renders a schema-based custom widget with live data
 class SchemaWidgetContent extends ConsumerStatefulWidget {
@@ -57,7 +57,7 @@ class _SchemaWidgetContentState extends ConsumerState<SchemaWidgetContent> {
     if (_isLoading) {
       return const SizedBox(
         height: 120,
-        child: Center(child: MeshLoadingIndicator(size: 20)),
+        child: Center(child: LoadingIndicator(size: 20)),
       );
     }
 

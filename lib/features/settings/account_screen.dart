@@ -6,6 +6,7 @@ import '../../providers/auth_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../social/social.dart';
+import '../../core/widgets/loading_indicator.dart';
 
 /// Screen for managing user account and authentication
 class AccountScreen extends ConsumerStatefulWidget {
@@ -617,11 +618,7 @@ class _EmailSignInDialogState extends ConsumerState<_EmailSignInDialog> {
         FilledButton(
           onPressed: _isLoading ? null : _submit,
           child: _isLoading
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: MeshLoadingIndicator(size: 20),
-                )
+              ? const LoadingIndicator(size: 20)
               : Text(widget.isCreateAccount ? 'Create' : 'Sign In'),
         ),
       ],

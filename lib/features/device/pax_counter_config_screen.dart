@@ -5,6 +5,7 @@ import '../../core/widgets/animations.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
+import '../../core/widgets/loading_indicator.dart';
 
 /// PAX Counter module configuration screen
 class PaxCounterConfigScreen extends ConsumerStatefulWidget {
@@ -134,18 +135,7 @@ class _PaxCounterConfigScreenState
             TextButton(
               onPressed: _isSaving ? null : _save,
               child: _isSaving
-                  ? SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: MeshLoadingIndicator(
-                        size: 16,
-                        colors: [
-                          context.accentColor,
-                          context.accentColor.withValues(alpha: 0.6),
-                          context.accentColor.withValues(alpha: 0.3),
-                        ],
-                      ),
-                    )
+                  ? LoadingIndicator(size: 16)
                   : Text(
                       'Save',
                       style: TextStyle(

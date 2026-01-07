@@ -11,10 +11,10 @@ import '../../models/user_profile.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/profile_providers.dart';
-import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../services/ifttt/ifttt_service.dart';
 import 'geofence_picker_screen.dart';
+import '../../core/widgets/loading_indicator.dart';
 
 /// Screen for configuring IFTTT Webhooks integration
 class IftttConfigScreen extends ConsumerStatefulWidget {
@@ -301,14 +301,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                   icon: _isTesting
-                      ? MeshLoadingIndicator(
-                          size: 16,
-                          colors: [
-                            context.accentColor,
-                            context.accentColor.withValues(alpha: 0.6),
-                            context.accentColor.withValues(alpha: 0.3),
-                          ],
-                        )
+                      ? LoadingIndicator(size: 16)
                       : const Icon(Icons.send, size: 18),
                   label: Text(_isTesting ? 'Testing...' : 'Test Connection'),
                 ),

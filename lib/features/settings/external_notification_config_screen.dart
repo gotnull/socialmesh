@@ -6,6 +6,7 @@ import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
+import '../../core/widgets/loading_indicator.dart';
 
 /// Screen for configuring External Notification module (buzzers, LEDs, vibration)
 class ExternalNotificationConfigScreen extends ConsumerStatefulWidget {
@@ -161,11 +162,7 @@ class _ExternalNotificationConfigScreenState
             TextButton(
               onPressed: _isSaving ? null : _saveConfig,
               child: _isSaving
-                  ? SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: MeshLoadingIndicator(size: 20),
-                    )
+                  ? LoadingIndicator(size: 20)
                   : Text('Save', style: TextStyle(color: context.accentColor)),
             ),
         ],

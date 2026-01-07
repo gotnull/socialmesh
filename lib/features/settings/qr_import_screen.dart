@@ -8,9 +8,9 @@ import '../../models/mesh_models.dart';
 import '../../core/transport.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 import '../../core/theme.dart';
-import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../channels/channel_form_screen.dart';
+import '../../core/widgets/loading_indicator.dart';
 
 class QrImportScreen extends ConsumerStatefulWidget {
   const QrImportScreen({super.key});
@@ -405,14 +405,7 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
             Container(
               color: Colors.black54,
               child: Center(
-                child: MeshLoadingIndicator(
-                  size: 48,
-                  colors: [
-                    context.accentColor,
-                    context.accentColor.withValues(alpha: 0.6),
-                    context.accentColor.withValues(alpha: 0.3),
-                  ],
-                ),
+                child: LoadingIndicator(size: 48),
               ),
             ),
           Positioned(

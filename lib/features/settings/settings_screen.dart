@@ -71,6 +71,7 @@ import '../routes/routes_screen.dart';
 import '../widget_builder/widget_builder_screen.dart';
 import 'debug_settings_screen.dart';
 import '../social/screens/follow_requests_screen.dart';
+import '../../core/widgets/loading_indicator.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -2911,14 +2912,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         backgroundColor: context.card,
         content: Row(
           children: [
-            MeshLoadingIndicator(
-              size: 40,
-              colors: [
-                context.accentColor,
-                context.accentColor.withValues(alpha: 0.6),
-                context.accentColor.withValues(alpha: 0.3),
-              ],
-            ),
+            LoadingIndicator(size: 40),
             const SizedBox(width: 20),
             Text(
               'Syncing from device...',

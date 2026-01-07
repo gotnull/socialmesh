@@ -8,6 +8,7 @@ import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
+import '../../core/widgets/loading_indicator.dart';
 
 class PowerConfigScreen extends ConsumerStatefulWidget {
   const PowerConfigScreen({super.key});
@@ -149,18 +150,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
             child: TextButton(
               onPressed: _saving ? null : _saveConfig,
               child: _saving
-                  ? SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: MeshLoadingIndicator(
-                        size: 20,
-                        colors: [
-                          context.accentColor,
-                          context.accentColor.withValues(alpha: 0.6),
-                          context.accentColor.withValues(alpha: 0.3),
-                        ],
-                      ),
-                    )
+                  ? LoadingIndicator(size: 20)
                   : Text(
                       'Save',
                       style: TextStyle(

@@ -7,10 +7,10 @@ import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../models/canned_response.dart';
 import '../../models/user_profile.dart';
-import '../../providers/splash_mesh_provider.dart';
 import '../../providers/profile_providers.dart';
 import '../../services/storage/storage_service.dart';
 import '../../providers/app_providers.dart';
+import '../../core/widgets/loading_indicator.dart';
 
 class CannedResponsesScreen extends ConsumerStatefulWidget {
   const CannedResponsesScreen({super.key});
@@ -184,14 +184,7 @@ class _CannedResponsesScreenState extends ConsumerState<CannedResponsesScreen> {
           Expanded(
             child: _isLoading
                 ? Center(
-                    child: MeshLoadingIndicator(
-                      size: 48,
-                      colors: [
-                        context.accentColor,
-                        context.accentColor.withValues(alpha: 0.6),
-                        context.accentColor.withValues(alpha: 0.3),
-                      ],
-                    ),
+                    child: LoadingIndicator(size: 48),
                   )
                 : _isReordering
                 ? ReorderableListView.builder(

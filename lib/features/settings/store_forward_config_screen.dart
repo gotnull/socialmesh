@@ -6,6 +6,7 @@ import '../../core/widgets/animations.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
+import '../../core/widgets/loading_indicator.dart';
 
 /// Screen for configuring Store & Forward module
 class StoreForwardConfigScreen extends ConsumerStatefulWidget {
@@ -113,11 +114,7 @@ class _StoreForwardConfigScreenState
           TextButton(
             onPressed: _isSaving ? null : _saveConfig,
             child: _isSaving
-                ? SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: MeshLoadingIndicator(size: 20),
-                  )
+                ? LoadingIndicator(size: 20)
                 : Text('Save', style: TextStyle(color: context.accentColor)),
           ),
         ],

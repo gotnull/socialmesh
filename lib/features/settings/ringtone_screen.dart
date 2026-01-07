@@ -6,10 +6,10 @@ import '../../core/widgets/app_bottom_sheet.dart';
 import '../../models/user_profile.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/profile_providers.dart';
-import '../../providers/splash_mesh_provider.dart';
 import '../../services/audio/rtttl_library_service.dart';
 import '../../services/audio/rtttl_player.dart';
 import '../../utils/snackbar.dart';
+import '../../core/widgets/loading_indicator.dart';
 
 /// Preset ringtones with name and RTTTL string
 class RingtonePreset {
@@ -1112,14 +1112,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
             child: TextButton(
               onPressed: _saving ? null : _saveRingtone,
               child: _saving
-                  ? MeshLoadingIndicator(
-                      size: 20,
-                      colors: [
-                        context.accentColor,
-                        context.accentColor.withValues(alpha: 0.6),
-                        context.accentColor.withValues(alpha: 0.3),
-                      ],
-                    )
+                  ? LoadingIndicator(size: 20)
                   : Text(
                       'Save',
                       style: TextStyle(
@@ -1136,14 +1129,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
         behavior: HitTestBehavior.opaque,
         child: _loading
             ? Center(
-                child: MeshLoadingIndicator(
-                  size: 48,
-                  colors: [
-                    context.accentColor,
-                    context.accentColor.withValues(alpha: 0.6),
-                    context.accentColor.withValues(alpha: 0.3),
-                  ],
-                ),
+                child: LoadingIndicator(size: 48),
               )
             : ListView(
                 padding: const EdgeInsets.all(16),
@@ -2294,14 +2280,7 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
                 ),
                 if (_loading) ...[
                   SizedBox(width: 8),
-                  MeshLoadingIndicator(
-                    size: 12,
-                    colors: [
-                      context.accentColor,
-                      context.accentColor.withValues(alpha: 0.6),
-                      context.accentColor.withValues(alpha: 0.3),
-                    ],
-                  ),
+                  LoadingIndicator(size: 12),
                 ],
               ],
             ),
@@ -2312,14 +2291,7 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
           Expanded(
             child: _loadingSuggestions && !hasSearch
                 ? Center(
-                    child: MeshLoadingIndicator(
-                      size: 48,
-                      colors: [
-                        context.accentColor,
-                        context.accentColor.withValues(alpha: 0.6),
-                        context.accentColor.withValues(alpha: 0.3),
-                      ],
-                    ),
+                    child: LoadingIndicator(size: 48),
                   )
                 : displayList.isEmpty
                 ? Center(

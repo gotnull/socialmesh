@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../core/theme.dart';
-import '../../../providers/splash_mesh_provider.dart';
 import '../models/dashboard_widget_config.dart';
+import '../../../core/widgets/loading_indicator.dart';
 
 /// Base wrapper for all dashboard widgets
 /// Provides consistent styling, header with title, and edit mode controls
@@ -386,11 +386,7 @@ class WidgetLoadingState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          SizedBox(
-            width: 24,
-            height: 24,
-            child: MeshLoadingIndicator(size: 24),
-          ),
+          LoadingIndicator(size: 24),
           if (message != null) ...[
             SizedBox(height: 12),
             Text(

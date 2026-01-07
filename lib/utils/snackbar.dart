@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../providers/splash_mesh_provider.dart';
+import '../core/widgets/loading_indicator.dart';
 
 /// Snackbar types with associated styling
 enum SnackBarType {
@@ -239,7 +239,7 @@ void _showLoadingSnackBar(
                   color: SnackBarType.info.iconColor.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Center(child: MeshLoadingIndicator(size: 24)),
+                child: const Center(child: LoadingIndicator(size: 24)),
               ),
               const SizedBox(width: 12),
               Expanded(

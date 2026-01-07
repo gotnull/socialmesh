@@ -9,10 +9,10 @@ import '../../core/widgets/animations.dart';
 import '../../core/widgets/channel_key_field.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
-import '../../providers/splash_mesh_provider.dart';
 import '../../utils/encoding.dart';
 import '../../utils/snackbar.dart';
 import '../../utils/validation.dart';
+import '../../core/widgets/loading_indicator.dart';
 
 /// Key size options
 enum KeySize {
@@ -361,18 +361,7 @@ class _ChannelFormScreenState extends ConsumerState<ChannelFormScreen> {
               child: TextButton(
                 onPressed: _isSaving ? null : _saveChannel,
                 child: _isSaving
-                    ? SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: MeshLoadingIndicator(
-                          size: 20,
-                          colors: [
-                            context.accentColor,
-                            context.accentColor.withValues(alpha: 0.6),
-                            context.accentColor.withValues(alpha: 0.3),
-                          ],
-                        ),
-                      )
+                    ? LoadingIndicator(size: 20)
                     : Text(
                         'Save',
                         style: TextStyle(

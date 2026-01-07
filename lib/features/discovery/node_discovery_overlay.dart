@@ -9,8 +9,8 @@ import 'package:vector_math/vector_math_64.dart' show Vector3;
 import '../../core/theme.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
-import '../../providers/splash_mesh_provider.dart';
 import '../../services/haptic_service.dart';
+import '../../core/widgets/loading_indicator.dart';
 
 /// Provider to track discovered nodes for the overlay animation
 final discoveredNodesQueueProvider =
@@ -412,14 +412,7 @@ class _ScanningOrb extends StatelessWidget {
             ),
           ),
           // Core
-          MeshLoadingIndicator(
-            size: 14,
-            colors: [
-              context.accentColor,
-              context.accentColor.withValues(alpha: 0.6),
-              context.accentColor.withValues(alpha: 0.3),
-            ],
-          ),
+          LoadingIndicator(size: 14),
         ],
       ),
     );

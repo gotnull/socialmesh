@@ -10,12 +10,12 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import '../../core/transport.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/connecting_content.dart';
-import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../providers/app_providers.dart';
 import '../../services/storage/storage_service.dart';
 import '../../generated/meshtastic/mesh.pbenum.dart' as pbenum;
 import 'widgets/connecting_animation.dart';
+import '../../core/widgets/loading_indicator.dart';
 
 class ScannerScreen extends ConsumerStatefulWidget {
   final bool isOnboarding;
@@ -609,11 +609,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
             const SizedBox(
               width: 48,
               child: Center(
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: MeshLoadingIndicator(size: 20),
-                ),
+                child: LoadingIndicator(size: 20),
               ),
             ),
         ],
@@ -664,11 +660,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
               ),
               child: Row(
                 children: [
-                  SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: MeshLoadingIndicator(size: 20),
-                  ),
+                  LoadingIndicator(size: 20),
                   SizedBox(width: 12),
                   Expanded(
                     child: Column(

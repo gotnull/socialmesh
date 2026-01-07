@@ -8,6 +8,7 @@ import '../../providers/app_providers.dart';
 import '../../providers/profile_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../services/storage/storage_service.dart';
+import '../../core/widgets/loading_indicator.dart';
 
 /// Theme settings screen for Theme Pack owners
 /// Allows customization of accent color and app appearance
@@ -459,14 +460,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
           const SizedBox(height: 12),
           Row(
             children: [
-              MeshLoadingIndicator(
-                size: 24,
-                colors: [
-                  accentColor,
-                  accentColor.withValues(alpha: 0.6),
-                  accentColor.withValues(alpha: 0.3),
-                ],
-              ),
+              LoadingIndicator(size: 24),
               const SizedBox(width: 16),
               Expanded(
                 child: LinearProgressIndicator(

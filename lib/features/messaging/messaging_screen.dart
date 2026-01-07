@@ -7,7 +7,6 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'dart:async';
 import 'dart:convert';
 import '../../providers/app_providers.dart';
-import '../../providers/splash_mesh_provider.dart';
 import '../../models/mesh_models.dart';
 import '../../models/canned_response.dart';
 import '../../core/theme.dart';
@@ -26,6 +25,7 @@ import '../settings/device_management_screen.dart';
 import '../nodes/nodes_screen.dart';
 import '../navigation/main_shell.dart';
 import 'widgets/message_context_menu.dart';
+import '../../core/widgets/loading_indicator.dart';
 
 /// Conversation type enum
 enum ConversationType { channel, directMessage }
@@ -1909,11 +1909,7 @@ class _MessageBubble extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 4),
                               ] else if (isPending) ...[
-                                SizedBox(
-                                  width: 12,
-                                  height: 12,
-                                  child: MeshLoadingIndicator(size: 12),
-                                ),
+                                LoadingIndicator(size: 12),
                                 const SizedBox(width: 4),
                               ],
                               Text(

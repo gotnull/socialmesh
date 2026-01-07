@@ -20,6 +20,7 @@ import '../../utils/snackbar.dart';
 import '../intro/intro_animation_preview_screen.dart';
 import '../widget_builder/marketplace/widget_approval_screen.dart';
 import 'admin_follow_requests_screen.dart';
+import '../../core/widgets/loading_indicator.dart';
 
 /// Debug settings screen with developer tools and the mesh node playground.
 /// Accessible via secret 7-tap gesture on the Socialmesh tile in About section.
@@ -585,18 +586,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                       ),
                     ),
                     child: _isLoadingRemote
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: MeshLoadingIndicator(
-                              size: 18,
-                              colors: [
-                                AppTheme.primaryBlue,
-                                Colors.cyan,
-                                Colors.lightBlue,
-                              ],
-                            ),
-                          )
+                        ? const LoadingIndicator(size: 18)
                         : const Icon(
                             Icons.cloud_download_rounded,
                             size: 18,

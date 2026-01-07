@@ -14,12 +14,12 @@ import '../../core/widgets/animations.dart';
 import '../../core/widgets/map_controls.dart';
 import '../../models/world_mesh_node.dart';
 import '../../providers/node_favorites_provider.dart';
-import '../../providers/splash_mesh_provider.dart';
 import '../../providers/world_mesh_map_provider.dart';
 import '../../utils/snackbar.dart';
 import 'favorites_screen.dart';
 import 'widgets/node_intelligence_panel.dart';
 import 'world_mesh_filter_sheet.dart';
+import '../../core/widgets/loading_indicator.dart';
 
 /// World Mesh Map screen showing all Meshtastic nodes from mesh-observer
 class WorldMeshScreen extends ConsumerStatefulWidget {
@@ -248,27 +248,13 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
         ),
         body: meshMapState.when(
           loading: () => Center(
-            child: MeshLoadingIndicator(
-              size: 100,
-              colors: [
-                context.accentColor,
-                context.accentColor.withValues(alpha: 0.6),
-                context.accentColor.withValues(alpha: 0.3),
-              ],
-            ),
+            child: LoadingIndicator(size: 100),
           ),
           error: (error, _) => _buildErrorState(theme, error.toString()),
           data: (state) {
             if (state.isLoading && state.nodes.isEmpty) {
               return Center(
-                child: MeshLoadingIndicator(
-                  size: 100,
-                  colors: [
-                    context.accentColor,
-                    context.accentColor.withValues(alpha: 0.6),
-                    context.accentColor.withValues(alpha: 0.3),
-                  ],
-                ),
+                child: LoadingIndicator(size: 100),
               );
             }
             if (state.error != null && state.nodes.isEmpty) {
@@ -844,14 +830,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            MeshLoadingIndicator(
-              size: 20,
-              colors: [
-                accentColor,
-                accentColor.withValues(alpha: 0.6),
-                accentColor.withValues(alpha: 0.3),
-              ],
-            ),
+            LoadingIndicator(size: 20),
             SizedBox(width: 12),
             Text(
               'Loading node info...',

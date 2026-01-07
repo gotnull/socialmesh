@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme.dart';
 import '../../../providers/app_providers.dart';
-import '../../../providers/splash_mesh_provider.dart';
 import '../../../models/mesh_models.dart';
 import 'dashboard_widget.dart';
+import '../../../core/widgets/loading_indicator.dart';
 
 /// Recent Messages Widget - Shows latest messages from the mesh
 class RecentMessagesContent extends ConsumerWidget {
@@ -142,11 +142,7 @@ class _MessageTile extends StatelessWidget {
           if (status == MessageStatus.pending)
             Padding(
               padding: const EdgeInsets.only(left: 8),
-              child: SizedBox(
-                width: 12,
-                height: 12,
-                child: MeshLoadingIndicator(size: 12),
-              ),
+              child: LoadingIndicator(size: 12),
             )
           else if (status == MessageStatus.failed)
             Padding(

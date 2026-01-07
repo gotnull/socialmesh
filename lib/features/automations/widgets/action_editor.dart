@@ -11,6 +11,7 @@ import '../../../services/audio/rtttl_player.dart';
 import '../../../utils/snackbar.dart';
 import '../models/automation.dart';
 import 'variable_text_field.dart';
+import '../../../core/widgets/loading_indicator.dart';
 
 /// Widget for editing an action
 class ActionEditor extends StatefulWidget {
@@ -1513,18 +1514,7 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet> {
                                 IconButton(
                                   onPressed: () => _playPreview(item),
                                   icon: isPlaying
-                                      ? SizedBox(
-                                          width: 20,
-                                          height: 20,
-                                          child: MeshLoadingIndicator(
-                                            size: 20,
-                                            colors: [
-                                              Colors.orange,
-                                              Colors.deepOrange,
-                                              Colors.amber,
-                                            ],
-                                          ),
-                                        )
+                                      ? LoadingIndicator(size: 20)
                                       : Icon(
                                           Icons.play_circle_outline,
                                           color: isSelected

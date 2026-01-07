@@ -11,6 +11,7 @@ import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 import 'package:cryptography/cryptography.dart';
+import '../../core/widgets/loading_indicator.dart';
 
 class SecurityConfigScreen extends ConsumerStatefulWidget {
   const SecurityConfigScreen({super.key});
@@ -229,18 +230,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
             child: TextButton(
               onPressed: _saving ? null : _saveConfig,
               child: _saving
-                  ? SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: MeshLoadingIndicator(
-                        size: 20,
-                        colors: [
-                          context.accentColor,
-                          context.accentColor.withValues(alpha: 0.6),
-                          context.accentColor.withValues(alpha: 0.3),
-                        ],
-                      ),
-                    )
+                  ? LoadingIndicator(size: 20)
                   : Text(
                       'Save',
                       style: TextStyle(

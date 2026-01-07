@@ -8,6 +8,7 @@ import '../../utils/snackbar.dart';
 import '../../providers/app_providers.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 import '../../generated/meshtastic/mesh.pbenum.dart' as pbenum;
+import '../../core/widgets/loading_indicator.dart';
 
 /// Screen for configuring Detection Sensor module
 class DetectionSensorConfigScreen extends ConsumerStatefulWidget {
@@ -141,11 +142,7 @@ class _DetectionSensorConfigScreenState
           TextButton(
             onPressed: _isSaving ? null : _saveConfig,
             child: _isSaving
-                ? SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: MeshLoadingIndicator(size: 20),
-                  )
+                ? LoadingIndicator(size: 20)
                 : Text('Save', style: TextStyle(color: context.accentColor)),
           ),
         ],

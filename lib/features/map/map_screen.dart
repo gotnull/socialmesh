@@ -14,10 +14,10 @@ import '../../utils/snackbar.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
-import '../../providers/splash_mesh_provider.dart';
 import '../../services/share_link_service.dart';
 import '../messaging/messaging_screen.dart';
 import '../navigation/main_shell.dart';
+import '../../core/widgets/loading_indicator.dart';
 
 /// Node filter options
 enum NodeFilter {
@@ -1535,11 +1535,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
             ElevatedButton.icon(
               onPressed: _isRefreshing ? null : _refreshPositions,
               icon: _isRefreshing
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: MeshLoadingIndicator(size: 16),
-                    )
+                  ? const LoadingIndicator(size: 16)
                   : Icon(Icons.refresh, size: 18),
               label: Text(
                 _isRefreshing ? 'Requesting...' : 'Request Positions',

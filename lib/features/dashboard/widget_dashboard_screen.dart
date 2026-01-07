@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
-import '../../providers/splash_mesh_provider.dart';
 import '../navigation/main_shell.dart';
 import '../widget_builder/storage/widget_storage_service.dart';
 import '../widget_builder/wizard/widget_wizard_screen.dart';
@@ -24,6 +23,7 @@ import '../../config/revenuecat_config.dart';
 import '../../models/subscription_models.dart';
 import '../../providers/subscription_providers.dart';
 import '../settings/subscription_screen.dart';
+import '../../core/widgets/loading_indicator.dart';
 
 /// Widgets available for free - showcase the feature
 const _freeWidgetTypes = {
@@ -348,7 +348,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
           },
           loading: () => const SizedBox(
             height: 160,
-            child: Center(child: MeshLoadingIndicator(size: 20)),
+            child: Center(child: LoadingIndicator(size: 20)),
           ),
           error: (e, _) => DashboardWidget(
             config: config,

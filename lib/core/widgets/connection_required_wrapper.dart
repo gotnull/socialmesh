@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/app_providers.dart';
-import '../../providers/splash_mesh_provider.dart';
 import '../theme.dart';
 import '../transport.dart';
+import 'loading_indicator.dart';
 
 /// A wrapper widget that shows a "No Device Connected" screen when disconnected.
 ///
@@ -189,7 +189,7 @@ class ConnectionRequiredWrapper extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const MeshLoadingIndicator(size: 48),
+            const LoadingIndicator(size: 48),
             const SizedBox(height: 24),
             Text(
               autoReconnectState == AutoReconnectState.scanning

@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
-import '../../providers/splash_mesh_provider.dart';
+import '../../core/widgets/loading_indicator.dart';
 
 /// Provider for firmware update check
 final firmwareCheckProvider = FutureProvider.autoDispose<FirmwareInfo?>((
@@ -415,11 +415,7 @@ class FirmwareUpdateScreen extends ConsumerWidget {
               padding: const EdgeInsets.all(32),
               child: Column(
                 children: [
-                  SizedBox(
-                    width: 32,
-                    height: 32,
-                    child: MeshLoadingIndicator(size: 32),
-                  ),
+                  LoadingIndicator(size: 32),
                   SizedBox(height: 16),
                   Text(
                     'Checking for updates...',

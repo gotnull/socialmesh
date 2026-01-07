@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
-import '../../providers/splash_mesh_provider.dart';
 import '../../utils/share_utils.dart';
 import '../../utils/snackbar.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/telemetry_providers.dart';
 import '../automations/automation_providers.dart';
+import '../../core/widgets/loading_indicator.dart';
 
 class DataExportScreen extends ConsumerStatefulWidget {
   const DataExportScreen({super.key});
@@ -462,14 +462,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
           // Clear button
           if (onClear != null) ...[
             if (isClearing)
-              MeshLoadingIndicator(
-                size: 20,
-                colors: [
-                  AppTheme.errorRed,
-                  AppTheme.errorRed.withValues(alpha: 0.6),
-                  AppTheme.errorRed.withValues(alpha: 0.3),
-                ],
-              )
+              LoadingIndicator(size: 20)
             else
               IconButton(
                 icon: Icon(
@@ -486,14 +479,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
           SizedBox(width: 4),
           // Export button
           if (isExporting)
-            MeshLoadingIndicator(
-              size: 20,
-              colors: [
-                context.accentColor,
-                context.accentColor.withValues(alpha: 0.6),
-                context.accentColor.withValues(alpha: 0.3),
-              ],
-            )
+            LoadingIndicator(size: 20)
           else
             IconButton(
               icon: Icon(Icons.ios_share, color: context.accentColor, size: 20),
