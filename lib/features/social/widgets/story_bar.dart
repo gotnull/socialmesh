@@ -62,7 +62,7 @@ class StoryBar extends ConsumerWidget {
     // (we still show the add button though)
     return SizedBox(
       height: 100,
-      child: EdgeFade.end(
+      child: EdgeFade.horizontal(
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

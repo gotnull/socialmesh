@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 import '../../../core/theme.dart';
+import '../../../core/widgets/auto_scroll_text.dart';
 import '../../../models/story.dart';
 
 /// A circular avatar with a gradient ring for displaying story status.
@@ -224,12 +225,12 @@ class _StoryAvatarState extends State<StoryAvatar>
               ),
             ),
 
-            // Name label
+            // Name label with marquee for long names
             if (widget.showName) ...[
               const SizedBox(height: 4),
-              SizedBox(
-                width: totalSize,
-                child: Text(
+              ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: totalSize),
+                child: AutoScrollText(
                   widget.isAddButton
                       ? 'Your story'
                       : (widget.displayName ?? 'User'),
@@ -239,8 +240,6 @@ class _StoryAvatarState extends State<StoryAvatar>
                     fontWeight: FontWeight.w500,
                   ),
                   textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],

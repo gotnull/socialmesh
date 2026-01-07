@@ -478,37 +478,9 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
           ],
         ],
       ),
+      centerTitle: true,
       actions: [
-        if (isOwnProfile) ...[
-          IconButton(
-            icon: Icon(Icons.search, color: context.textPrimary),
-            onPressed: _navigateToUserSearch,
-            tooltip: 'Search users',
-          ),
-          _FollowRequestsBadge(
-            child: IconButton(
-              icon: Icon(Icons.person_add_outlined, color: context.textPrimary),
-              onPressed: _navigateToFollowRequests,
-              tooltip: 'Follow requests',
-            ),
-          ),
-          _ActivityBadge(
-            child: IconButton(
-              icon: Icon(Icons.favorite_border, color: context.textPrimary),
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const ActivityTimelineScreen(),
-                ),
-              ),
-              tooltip: 'Activity',
-            ),
-          ),
-          IconButton(
-            icon: Icon(Icons.add_box_outlined, color: context.textPrimary),
-            onPressed: _navigateToCreatePost,
-            tooltip: 'Create post',
-          ),
+        if (isOwnProfile)
           IconButton(
             icon: Icon(Icons.settings_outlined, color: context.textPrimary),
             onPressed: () => Navigator.push(
@@ -516,8 +488,8 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
               MaterialPageRoute(builder: (_) => const SettingsScreen()),
             ),
             tooltip: 'Settings',
-          ),
-        ] else ...[
+          )
+        else ...[
           IconButton(
             icon: Icon(Icons.share_outlined, color: context.textPrimary),
             onPressed: () => _shareProfile(profile),
@@ -550,6 +522,18 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
+                Consumer(
+                  builder: (context, ref, _) {
+                    final postsState = ref.watch(
+                      userPostsStateProvider(widget.userId),
+                    );
+                    return _StatColumn(
+                      count: postsState.posts.length,
+                      label: 'Posts',
+                      onTap: null,
+                    );
+                  },
+                ),
                 _StatColumn(
                   count: profile.followerCount,
                   label: 'Followers',
@@ -595,7 +579,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
             const SizedBox(height: 12),
             SizedBox(
               height: 44,
-              child: EdgeFade.end(
+              child: EdgeFade.horizontal(
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   children: [
@@ -678,7 +662,41 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
           const SizedBox(height: 16),
 
           // Action buttons
-          if (isOwnProfile)
+          if (isOwnProfile) ...[
+            // Quick action bar
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _QuickActionButton(
+                  icon: Icons.search,
+                  label: 'Search',
+                  onTap: _navigateToUserSearch,
+                ),
+                _QuickActionButton(
+                  icon: Icons.person_add_outlined,
+                  label: 'Requests',
+                  onTap: _navigateToFollowRequests,
+                  badgeBuilder: (child) => _FollowRequestsBadge(child: child),
+                ),
+                _QuickActionButton(
+                  icon: Icons.favorite_border,
+                  label: 'Activity',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const ActivityTimelineScreen(),
+                    ),
+                  ),
+                  badgeBuilder: (child) => _ActivityBadge(child: child),
+                ),
+                _QuickActionButton(
+                  icon: Icons.add_box_outlined,
+                  label: 'Create',
+                  onTap: _navigateToCreatePost,
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
             Row(
               children: [
                 Expanded(
@@ -711,8 +729,8 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                   child: const Icon(Icons.share, size: 18),
                 ),
               ],
-            )
-          else
+            ),
+          ] else
             FollowButton(targetUserId: widget.userId),
         ],
       ),
@@ -1186,6 +1204,52 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
 // HELPER WIDGETS
 // ===========================================================================
 
+/// Quick action button for profile header
+class _QuickActionButton extends StatelessWidget {
+  const _QuickActionButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.badgeBuilder,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final Widget Function(Widget child)? badgeBuilder;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget iconWidget = Icon(icon, color: context.textPrimary, size: 22);
+    if (badgeBuilder != null) {
+      iconWidget = badgeBuilder!(iconWidget);
+    }
+
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: context.border),
+            ),
+            child: Center(child: iconWidget),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(color: context.textSecondary, fontSize: 11),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _StatColumn extends StatelessWidget {
   const _StatColumn({required this.count, required this.label, this.onTap});
 
@@ -1317,7 +1381,7 @@ class _LinkedDevicesSection extends ConsumerWidget {
                   sortedNodeIds.insert(0, primaryNodeId!);
                 }
 
-                return EdgeFade.end(
+                return EdgeFade.horizontal(
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: sortedNodeIds.length,
