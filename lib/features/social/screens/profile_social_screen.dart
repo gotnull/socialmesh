@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:file_picker/file_picker.dart';
@@ -80,10 +81,16 @@ class ProfileSocialScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
   late final TabController _tabController;
   PostFilter _selectedFilter = PostFilter.all;
+
+  // Shattered ring animation
+  AnimationController? _shatterController;
+  AnimationController? _glowController;
+  bool _hasPlayedShatterAnimation = false;
+  String? _lastProfileIdWithStories;
 
   @override
   void initState() {
@@ -113,7 +120,32 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
     _tabController.dispose();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
+    _shatterController?.dispose();
+    _glowController?.dispose();
     super.dispose();
+  }
+
+  void _initShatterAnimation() {
+    _shatterController?.dispose();
+    _glowController?.dispose();
+
+    _shatterController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+    _glowController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+
+    _shatterController!.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        // Trigger glow pulse when assembly completes
+        _glowController!.forward(from: 0);
+      }
+    });
+
+    _shatterController!.forward();
   }
 
   void _onScroll() {
@@ -365,13 +397,6 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                   bottom: 0,
                   child: Consumer(
                     builder: (context, ref, _) {
-                      final isOnlineAsync = ref.watch(
-                        userOnlineStatusProvider(widget.userId),
-                      );
-                      final isOnline =
-                          isOnlineAsync.whenOrNull(data: (value) => value) ??
-                          false;
-
                       // Check if user has stories
                       final userStoriesAsync = ref.watch(
                         userStoriesProvider(widget.userId),
@@ -405,6 +430,27 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                       final ringPadding = avatarSize * 0.04;
                       final totalRingSize =
                           avatarSize + (ringWidth + ringPadding) * 2;
+
+                      // Trigger shatter animation on first visit with stories
+                      if (hasStories &&
+                          !isOwnProfile &&
+                          _lastProfileIdWithStories != widget.userId) {
+                        _lastProfileIdWithStories = widget.userId;
+                        _hasPlayedShatterAnimation = false;
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (mounted) {
+                            _initShatterAnimation();
+                            setState(() => _hasPlayedShatterAnimation = true);
+                          }
+                        });
+                      }
+
+                      // Determine if we should show the shatter animation
+                      final showShatterAnimation =
+                          hasStories &&
+                          !isOwnProfile &&
+                          _hasPlayedShatterAnimation &&
+                          _shatterController != null;
 
                       return GestureDetector(
                         onTap: () {
@@ -448,58 +494,140 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                           ),
                           child: Stack(
                             children: [
-                              // Gradient ring for stories
+                              // Gradient ring for stories (animated shatter effect or static)
                               if (hasStories)
-                                Container(
-                                  width: totalRingSize,
-                                  height: totalRingSize,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    gradient: hasUnviewed
-                                        ? SweepGradient(
-                                            colors: [
-                                              gradientColors[0],
-                                              gradientColors[1],
-                                              gradientColors[2],
-                                              gradientColors[1],
-                                              gradientColors[0],
+                                showShatterAnimation
+                                    ? AnimatedBuilder(
+                                        animation: Listenable.merge([
+                                          _shatterController,
+                                          _glowController,
+                                        ]),
+                                        builder: (context, _) {
+                                          final glowValue =
+                                              _glowController?.value ?? 0.0;
+                                          final glowOpacity = glowValue < 0.5
+                                              ? glowValue * 2
+                                              : 2 - glowValue * 2;
+                                          return Stack(
+                                            children: [
+                                              // Glow effect behind the ring
+                                              if (glowOpacity > 0)
+                                                Container(
+                                                  width: totalRingSize + 8,
+                                                  height: totalRingSize + 8,
+                                                  transform:
+                                                      Matrix4.translationValues(
+                                                        -4,
+                                                        -4,
+                                                        0,
+                                                      ),
+                                                  decoration: BoxDecoration(
+                                                    shape: BoxShape.circle,
+                                                    boxShadow: [
+                                                      BoxShadow(
+                                                        color: gradientColors[0]
+                                                            .withValues(
+                                                              alpha:
+                                                                  glowOpacity *
+                                                                  0.6,
+                                                            ),
+                                                        blurRadius: 20,
+                                                        spreadRadius: 4,
+                                                      ),
+                                                      BoxShadow(
+                                                        color: gradientColors[2]
+                                                            .withValues(
+                                                              alpha:
+                                                                  glowOpacity *
+                                                                  0.4,
+                                                            ),
+                                                        blurRadius: 30,
+                                                        spreadRadius: 8,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              // Custom painted shattered ring
+                                              CustomPaint(
+                                                size: Size(
+                                                  totalRingSize,
+                                                  totalRingSize,
+                                                ),
+                                                painter: _ShatteredRingPainter(
+                                                  progress:
+                                                      _shatterController!.value,
+                                                  gradientColors: hasUnviewed
+                                                      ? gradientColors
+                                                      : [
+                                                          Colors.grey.shade500,
+                                                          Colors.grey.shade400,
+                                                          Colors.grey.shade500,
+                                                        ],
+                                                  ringWidth: ringWidth,
+                                                  backgroundColor:
+                                                      context.background,
+                                                ),
+                                              ),
                                             ],
-                                            stops: const [
-                                              0.0,
-                                              0.25,
-                                              0.5,
-                                              0.75,
-                                              1.0,
-                                            ],
-                                          )
-                                        : SweepGradient(
-                                            colors: [
-                                              Colors.grey.shade500,
-                                              Colors.grey.shade400,
-                                              Colors.grey.shade500,
-                                              Colors.grey.shade400,
-                                              Colors.grey.shade500,
-                                            ],
-                                            stops: const [
-                                              0.0,
-                                              0.25,
-                                              0.5,
-                                              0.75,
-                                              1.0,
-                                            ],
+                                          );
+                                        },
+                                      )
+                                    : Container(
+                                        width: totalRingSize,
+                                        height: totalRingSize,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          gradient: hasUnviewed
+                                              ? SweepGradient(
+                                                  colors: [
+                                                    gradientColors[0],
+                                                    gradientColors[1],
+                                                    gradientColors[2],
+                                                    gradientColors[1],
+                                                    gradientColors[0],
+                                                  ],
+                                                  stops: const [
+                                                    0.0,
+                                                    0.25,
+                                                    0.5,
+                                                    0.75,
+                                                    1.0,
+                                                  ],
+                                                  // Offset seam to bottom where it's less visible
+                                                  startAngle: math.pi / 2,
+                                                )
+                                              : SweepGradient(
+                                                  colors: [
+                                                    Colors.grey.shade500,
+                                                    Colors.grey.shade400,
+                                                    Colors.grey.shade500,
+                                                    Colors.grey.shade400,
+                                                    Colors.grey.shade500,
+                                                  ],
+                                                  stops: const [
+                                                    0.0,
+                                                    0.25,
+                                                    0.5,
+                                                    0.75,
+                                                    1.0,
+                                                  ],
+                                                  // Offset seam to bottom where it's less visible
+                                                  startAngle: math.pi / 2,
+                                                ),
+                                        ),
+                                        child: Center(
+                                          child: Container(
+                                            width:
+                                                totalRingSize - ringWidth * 2,
+                                            height:
+                                                totalRingSize - ringWidth * 2,
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: context.background,
+                                            ),
                                           ),
-                                  ),
-                                  child: Center(
-                                    child: Container(
-                                      width: totalRingSize - ringWidth * 2,
-                                      height: totalRingSize - ringWidth * 2,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: context.background,
+                                        ),
                                       ),
-                                    ),
-                                  ),
-                                ),
                               // Avatar
                               Positioned(
                                 left: hasStories
@@ -525,28 +653,6 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                                       : null,
                                 ),
                               ),
-                              // Online indicator
-                              if (isOnline)
-                                Positioned(
-                                  right: hasStories
-                                      ? (ringWidth + ringPadding + 2)
-                                      : 2,
-                                  bottom: hasStories
-                                      ? (ringWidth + ringPadding + 2)
-                                      : 2,
-                                  child: Container(
-                                    width: 16,
-                                    height: 16,
-                                    decoration: BoxDecoration(
-                                      color: AccentColors.green,
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: context.background,
-                                        width: 2,
-                                      ),
-                                    ),
-                                  ),
-                                ),
                               // Add story button for own profile (only if no stories)
                               if (isOwnProfile && !hasStories)
                                 Positioned(
@@ -672,6 +778,58 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
             ],
           ),
           const SizedBox(height: 16),
+
+          // Online status chip
+          Consumer(
+            builder: (context, ref, _) {
+              final isOnlineAsync = ref.watch(
+                userOnlineStatusProvider(widget.userId),
+              );
+              final isOnline =
+                  isOnlineAsync.whenOrNull(data: (value) => value) ?? false;
+
+              if (!isOnline) return const SizedBox.shrink();
+
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AccentColors.green.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AccentColors.green.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: AccentColors.green,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Online',
+                        style: TextStyle(
+                          color: AccentColors.green,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
 
           // Callsign
           if (profile.callsign != null && profile.callsign!.isNotEmpty) ...[
@@ -1931,4 +2089,236 @@ class _PostGridTile extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Custom painter that creates a "shattered glass" effect for the story ring.
+/// The ring starts as broken fragments that fly in and assemble together.
+class _ShatteredRingPainter extends CustomPainter {
+  _ShatteredRingPainter({
+    required this.progress,
+    required this.gradientColors,
+    required this.ringWidth,
+    required this.backgroundColor,
+  });
+
+  final double progress;
+  final List<Color> gradientColors;
+  final double ringWidth;
+  final Color backgroundColor;
+
+  // Pre-defined shard configurations for consistent animation
+  static const _shardConfigs = [
+    _ShardConfig(0.0, 0.12, 1.2, -0.3, 0.15), // Top-right shard
+    _ShardConfig(0.12, 0.28, 0.8, 0.4, -0.2), // Right shard
+    _ShardConfig(0.28, 0.42, 1.5, 0.2, 0.35), // Bottom-right shard
+    _ShardConfig(0.42, 0.55, 1.0, -0.5, 0.25), // Bottom shard
+    _ShardConfig(0.55, 0.70, 1.3, 0.3, -0.4), // Bottom-left shard
+    _ShardConfig(0.70, 0.82, 0.9, -0.25, -0.3), // Left shard
+    _ShardConfig(0.82, 0.92, 1.4, 0.15, 0.4), // Top-left shard
+    _ShardConfig(0.92, 1.0, 1.1, -0.4, -0.15), // Top shard
+  ];
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final outerRadius = size.width / 2;
+    final innerRadius = outerRadius - ringWidth;
+
+    // Create gradient shader
+    final gradient = SweepGradient(
+      colors: [
+        gradientColors[0],
+        gradientColors[1],
+        gradientColors[2],
+        gradientColors[1],
+        gradientColors[0],
+      ],
+      stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+    );
+
+    final rect = Rect.fromCircle(center: center, radius: outerRadius);
+    final paint = Paint()
+      ..shader = gradient.createShader(rect)
+      ..style = PaintingStyle.fill;
+
+    // Background paint for inner circle
+    final bgPaint = Paint()
+      ..color = backgroundColor
+      ..style = PaintingStyle.fill;
+
+    // Apply easing curve for more satisfying animation
+    final easedProgress = _easeOutBack(progress);
+
+    // Draw each shard with its own animation offset
+    for (final config in _shardConfigs) {
+      _drawShard(
+        canvas,
+        center,
+        outerRadius,
+        innerRadius,
+        config,
+        easedProgress,
+        paint,
+      );
+    }
+
+    // Draw inner circle to create ring effect (cutout)
+    canvas.drawCircle(center, innerRadius, bgPaint);
+
+    // Draw particle effects during assembly
+    if (progress > 0.3 && progress < 0.95) {
+      _drawSparkles(canvas, center, outerRadius, progress);
+    }
+  }
+
+  void _drawShard(
+    Canvas canvas,
+    Offset center,
+    double outerRadius,
+    double innerRadius,
+    _ShardConfig config,
+    double progress,
+    Paint paint,
+  ) {
+    // Calculate shard's assembly progress with stagger
+    final shardDelay = config.startAngle * 0.3;
+    final shardProgress = ((progress - shardDelay) / (1 - shardDelay)).clamp(
+      0.0,
+      1.0,
+    );
+
+    if (shardProgress <= 0) return;
+
+    // Calculate offset - starts far away and moves to center
+    final distanceMultiplier = (1 - shardProgress) * config.distanceScale;
+    final offsetX = config.offsetX * distanceMultiplier * outerRadius;
+    final offsetY = config.offsetY * distanceMultiplier * outerRadius;
+
+    // Rotation effect - shards rotate as they approach
+    final rotation = (1 - shardProgress) * config.distanceScale * 0.5;
+
+    // Scale effect - shards grow slightly as they approach
+    final scale = 0.6 + (shardProgress * 0.4);
+
+    canvas.save();
+
+    // Apply transformations
+    canvas.translate(center.dx + offsetX, center.dy + offsetY);
+    canvas.rotate(rotation);
+    canvas.scale(scale);
+    canvas.translate(-center.dx, -center.dy);
+
+    // Draw the arc segment
+    final startAngle = config.startAngle * 2 * math.pi - math.pi / 2;
+    final sweepAngle = (config.endAngle - config.startAngle) * 2 * math.pi;
+
+    final path = Path()
+      ..moveTo(
+        center.dx + innerRadius * math.cos(startAngle),
+        center.dy + innerRadius * math.sin(startAngle),
+      )
+      ..arcTo(
+        Rect.fromCircle(center: center, radius: outerRadius),
+        startAngle,
+        sweepAngle,
+        false,
+      )
+      ..arcTo(
+        Rect.fromCircle(center: center, radius: innerRadius),
+        startAngle + sweepAngle,
+        -sweepAngle,
+        false,
+      )
+      ..close();
+
+    final shardPaint = Paint()
+      ..shader = paint.shader
+      ..style = PaintingStyle.fill;
+
+    // Add glow effect to shards
+    if (shardProgress < 1.0) {
+      final glowPaint = Paint()
+        ..shader = paint.shader
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..maskFilter = const MaskFilter.blur(BlurStyle.outer, 4);
+      canvas.drawPath(path, glowPaint);
+    }
+
+    canvas.drawPath(path, shardPaint);
+    canvas.restore();
+  }
+
+  void _drawSparkles(
+    Canvas canvas,
+    Offset center,
+    double radius,
+    double progress,
+  ) {
+    final random = math.Random(42); // Fixed seed for consistent sparkles
+    final sparkleProgress = ((progress - 0.3) / 0.65).clamp(0.0, 1.0);
+
+    for (var i = 0; i < 12; i++) {
+      final angle = random.nextDouble() * 2 * math.pi;
+      final distance = radius * (0.8 + random.nextDouble() * 0.4);
+      final sparkleDelay = random.nextDouble() * 0.5;
+      final sparkleAlpha = ((sparkleProgress - sparkleDelay) * 3).clamp(
+        0.0,
+        1.0,
+      );
+
+      if (sparkleAlpha <= 0) continue;
+
+      final fadeOut = sparkleAlpha > 0.5 ? (1 - sparkleAlpha) * 2 : 1.0;
+      final sparkleSize = 2 + random.nextDouble() * 2;
+
+      final x = center.dx + math.cos(angle) * distance * sparkleProgress;
+      final y = center.dy + math.sin(angle) * distance * sparkleProgress;
+
+      final colorIndex = i % gradientColors.length;
+      final sparklePaint = Paint()
+        ..color = gradientColors[colorIndex].withValues(alpha: fadeOut * 0.8)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
+
+      canvas.drawCircle(Offset(x, y), sparkleSize * fadeOut, sparklePaint);
+    }
+  }
+
+  // Easing function for satisfying "snap into place" effect
+  double _easeOutBack(double t) {
+    const c1 = 1.70158;
+    const c3 = c1 + 1;
+    return 1 + c3 * math.pow(t - 1, 3) + c1 * math.pow(t - 1, 2);
+  }
+
+  @override
+  bool shouldRepaint(_ShatteredRingPainter oldDelegate) {
+    return oldDelegate.progress != progress;
+  }
+}
+
+/// Configuration for a single shard in the shattered ring effect
+class _ShardConfig {
+  const _ShardConfig(
+    this.startAngle,
+    this.endAngle,
+    this.distanceScale,
+    this.offsetX,
+    this.offsetY,
+  );
+
+  /// Start angle as fraction of full circle (0.0 - 1.0)
+  final double startAngle;
+
+  /// End angle as fraction of full circle (0.0 - 1.0)
+  final double endAngle;
+
+  /// How far the shard starts from center (multiplier)
+  final double distanceScale;
+
+  /// X offset direction (-1.0 to 1.0)
+  final double offsetX;
+
+  /// Y offset direction (-1.0 to 1.0)
+  final double offsetY;
 }
