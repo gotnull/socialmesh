@@ -404,7 +404,7 @@ class _SeedDataTabState extends State<_SeedDataTab> {
 
   String? get _currentUserId => FirebaseAuth.instance.currentUser?.uid;
 
-  // Dummy user data with avatar URLs
+  // Dummy user data with avatar and banner URLs
   static const _dummyUsers = [
     {
       'id': 'dummy_user_alice',
@@ -414,6 +414,7 @@ class _SeedDataTabState extends State<_SeedDataTab> {
       'isPrivate': false,
       'isVerified': true,
       'avatarUrl': 'https://i.pravatar.cc/300?u=alice',
+      'bannerUrl': 'https://picsum.photos/seed/banner_alice/1200/400',
     },
     {
       'id': 'dummy_user_bob',
@@ -423,6 +424,7 @@ class _SeedDataTabState extends State<_SeedDataTab> {
       'isPrivate': true,
       'isVerified': false,
       'avatarUrl': 'https://i.pravatar.cc/300?u=bob',
+      'bannerUrl': 'https://picsum.photos/seed/banner_bob/1200/400',
     },
     {
       'id': 'dummy_user_carol',
@@ -432,6 +434,7 @@ class _SeedDataTabState extends State<_SeedDataTab> {
       'isPrivate': true,
       'isVerified': false,
       'avatarUrl': 'https://i.pravatar.cc/300?u=carol',
+      'bannerUrl': 'https://picsum.photos/seed/banner_carol/1200/400',
     },
     {
       'id': 'dummy_user_dave',
@@ -441,6 +444,7 @@ class _SeedDataTabState extends State<_SeedDataTab> {
       'isPrivate': false,
       'isVerified': false,
       'avatarUrl': 'https://i.pravatar.cc/300?u=dave',
+      'bannerUrl': 'https://picsum.photos/seed/banner_dave/1200/400',
     },
     {
       'id': 'dummy_user_eve',
@@ -450,6 +454,7 @@ class _SeedDataTabState extends State<_SeedDataTab> {
       'isPrivate': true,
       'isVerified': true,
       'avatarUrl': 'https://i.pravatar.cc/300?u=eve',
+      'bannerUrl': 'https://picsum.photos/seed/banner_eve/1200/400',
     },
     {
       'id': 'dummy_user_frank',
@@ -459,6 +464,7 @@ class _SeedDataTabState extends State<_SeedDataTab> {
       'isPrivate': false,
       'isVerified': false,
       'avatarUrl': 'https://i.pravatar.cc/300?u=frank',
+      'bannerUrl': 'https://picsum.photos/seed/banner_frank/1200/400',
     },
     {
       'id': 'dummy_user_grace',
@@ -468,6 +474,7 @@ class _SeedDataTabState extends State<_SeedDataTab> {
       'isPrivate': true,
       'isVerified': false,
       'avatarUrl': 'https://i.pravatar.cc/300?u=grace',
+      'bannerUrl': 'https://picsum.photos/seed/banner_grace/1200/400',
     },
     {
       'id': 'dummy_user_henry',
@@ -477,6 +484,7 @@ class _SeedDataTabState extends State<_SeedDataTab> {
       'isPrivate': false,
       'isVerified': false,
       'avatarUrl': 'https://i.pravatar.cc/300?u=henry',
+      'bannerUrl': 'https://picsum.photos/seed/banner_henry/1200/400',
     },
   ];
 
@@ -1070,6 +1078,7 @@ class _SeedDataTabState extends State<_SeedDataTab> {
         final displayName = user['displayName'] as String;
         final callsign = user['callsign'] as String;
         final avatarUrl = user['avatarUrl'] as String?;
+        final bannerUrl = user['bannerUrl'] as String?;
         setState(() => _status = 'Creating $displayName...');
         _log.add('+ $displayName');
 
@@ -1085,6 +1094,7 @@ class _SeedDataTabState extends State<_SeedDataTab> {
           'isPrivate': user['isPrivate'],
           'isVerified': user['isVerified'],
           'avatarUrl': avatarUrl,
+          'bannerUrl': bannerUrl,
           'followerCount': 0,
           'followingCount': 0,
           'postCount': 0,
@@ -1232,7 +1242,7 @@ class _SeedDataTabState extends State<_SeedDataTab> {
         setState(() => _status = 'Creating follows for story visibility...');
         _log.add('');
         _log.add('Following public users with stories...');
-        _log.add('  Your user ID: ${_currentUserId}');
+        _log.add('  Your user ID: $_currentUserId');
         var followCount = 0;
 
         // Get public users who have stories

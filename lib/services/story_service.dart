@@ -9,6 +9,7 @@ import 'package:uuid/uuid.dart';
 
 import '../models/social.dart';
 import '../models/story.dart';
+import 'social_activity_service.dart';
 
 /// Service for story operations: create, delete, view tracking, and retrieval.
 ///
@@ -577,6 +578,122 @@ class StoryService {
         .orderBy('expiresAt')
         .snapshots()
         .asyncMap((_) => getStoryGroups());
+  }
+
+  // ===========================================================================
+  // STORY LIKES
+  // ===========================================================================
+
+  /// Like/favorite a story
+  ///
+  /// Returns true if this is a new like, false if already liked
+  Future<bool> likeStory(String storyId) async {
+    final currentUserId = _currentUserId;
+    if (currentUserId == null) {
+      throw StateError('Must be signed in to like stories');
+    }
+
+    final storyRef = _firestore.collection('stories').doc(storyId);
+    final likeRef = storyRef.collection('likes').doc(currentUserId);
+
+    // Check if already liked
+    final existingLike = await likeRef.get();
+    if (existingLike.exists) {
+      return false;
+    }
+
+    // Get the story to find the owner
+    final storyDoc = await storyRef.get();
+    if (!storyDoc.exists) {
+      return false;
+    }
+    final story = Story.fromFirestore(storyDoc);
+
+    // Create the like
+    await likeRef.set({
+      'userId': currentUserId,
+      'likedAt': FieldValue.serverTimestamp(),
+    });
+
+    // Increment like count
+    await storyRef.update({'likeCount': FieldValue.increment(1)});
+
+    // Create activity for story owner
+    final activityService = SocialActivityService(
+      firestore: _firestore,
+      auth: _auth,
+    );
+    await activityService.createStoryLikeActivity(
+      storyId: storyId,
+      storyOwnerId: story.authorId,
+      storyThumbnailUrl: story.mediaUrl,
+    );
+
+    return true;
+  }
+
+  /// Unlike a story
+  Future<void> unlikeStory(String storyId) async {
+    final currentUserId = _currentUserId;
+    if (currentUserId == null) {
+      throw StateError('Must be signed in to unlike stories');
+    }
+
+    final storyRef = _firestore.collection('stories').doc(storyId);
+    final likeRef = storyRef.collection('likes').doc(currentUserId);
+
+    // Check if like exists
+    final existingLike = await likeRef.get();
+    if (!existingLike.exists) {
+      return;
+    }
+
+    // Delete the like
+    await likeRef.delete();
+
+    // Decrement like count
+    await storyRef.update({'likeCount': FieldValue.increment(-1)});
+  }
+
+  /// Check if the current user has liked a story
+  Future<bool> hasLikedStory(String storyId) async {
+    final currentUserId = _currentUserId;
+    if (currentUserId == null) return false;
+
+    final likeDoc = await _firestore
+        .collection('stories')
+        .doc(storyId)
+        .collection('likes')
+        .doc(currentUserId)
+        .get();
+
+    return likeDoc.exists;
+  }
+
+  /// Stream to watch like status for a story
+  Stream<bool> watchStoryLikeStatus(String storyId) {
+    final currentUserId = _currentUserId;
+    if (currentUserId == null) return Stream.value(false);
+
+    return _firestore
+        .collection('stories')
+        .doc(storyId)
+        .collection('likes')
+        .doc(currentUserId)
+        .snapshots()
+        .map((doc) => doc.exists);
+  }
+
+  /// Get list of users who liked a story
+  Future<List<StoryLike>> getStoryLikes(String storyId) async {
+    final snapshot = await _firestore
+        .collection('stories')
+        .doc(storyId)
+        .collection('likes')
+        .orderBy('likedAt', descending: true)
+        .get();
+
+    return snapshot.docs.map(StoryLike.fromFirestore).toList();
   }
 
   // ===========================================================================

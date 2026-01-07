@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
+import '../../../core/widgets/edge_fade.dart';
 import '../../../models/story.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/profile_providers.dart';
@@ -61,36 +62,38 @@ class StoryBar extends ConsumerWidget {
     // (we still show the add button though)
     return SizedBox(
       height: 100,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        itemCount: 1 + followingGroups.length, // +1 for add/own story button
-        itemBuilder: (context, index) {
-          if (index == 0) {
-            // "Add Story" / Own stories button
+      child: EdgeFade.end(
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          itemCount: 1 + followingGroups.length, // +1 for add/own story button
+          itemBuilder: (context, index) {
+            if (index == 0) {
+              // "Add Story" / Own stories button
+              return Padding(
+                padding: const EdgeInsets.only(right: 16),
+                child: StoryAvatar(
+                  userId: currentUser.uid,
+                  avatarUrl: myAvatarUrl,
+                  displayName: hasOwnStories ? 'Your story' : 'Add story',
+                  hasUnviewed: hasOwnStories,
+                  isAddButton: !hasOwnStories,
+                  onTap: () => _onOwnStoryTap(context, myGroup, myStoriesAsync),
+                ),
+              );
+            }
+
+            final group = followingGroups[index - 1];
             return Padding(
               padding: const EdgeInsets.only(right: 16),
-              child: StoryAvatar(
-                userId: currentUser.uid,
-                avatarUrl: myAvatarUrl,
-                displayName: hasOwnStories ? 'Your story' : 'Add story',
-                hasUnviewed: hasOwnStories,
-                isAddButton: !hasOwnStories,
-                onTap: () => _onOwnStoryTap(context, myGroup, myStoriesAsync),
+              child: AnimatedStoryAvatar(
+                storyGroup: group,
+                onTap: () =>
+                    _onStoryGroupTap(context, ref, group, followingGroups),
               ),
             );
-          }
-
-          final group = followingGroups[index - 1];
-          return Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: AnimatedStoryAvatar(
-              storyGroup: group,
-              onTap: () =>
-                  _onStoryGroupTap(context, ref, group, followingGroups),
-            ),
-          );
-        },
+          },
+        ),
       ),
     );
   }

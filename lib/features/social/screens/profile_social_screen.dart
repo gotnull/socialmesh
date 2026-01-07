@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -13,10 +14,12 @@ import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
 import '../../../core/widgets/default_banner.dart';
+import '../../../core/widgets/edge_fade.dart';
 import '../../../core/widgets/node_avatar.dart';
 import '../../../core/widgets/verified_badge.dart';
 import '../../../models/mesh_models.dart';
 import '../../../models/social.dart';
+import '../../../providers/activity_providers.dart';
 import '../../../providers/app_providers.dart';
 import '../../../services/user_presence_service.dart';
 import '../../../providers/auth_providers.dart';
@@ -32,6 +35,7 @@ import '../../settings/linked_devices_screen.dart';
 import '../../settings/settings_screen.dart';
 import '../widgets/follow_button.dart';
 import '../widgets/story_bar.dart';
+import 'activity_timeline_screen.dart';
 import 'create_post_screen.dart';
 import 'create_story_screen.dart';
 import 'follow_requests_screen.dart';
@@ -221,6 +225,12 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                   _buildPostsGrid(context, postsState, isOwnProfile),
                 ] else
                   _buildPrivateAccountSliver(context, profile),
+                // Bottom safe area padding
+                SliverPadding(
+                  padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).padding.bottom,
+                  ),
+                ),
               ],
             ),
           );
@@ -296,144 +306,157 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
     const avatarOverlap = 40.0;
 
     return SliverAppBar(
-      backgroundColor: context.background,
+      backgroundColor: context.background.withValues(alpha: 0.8),
       foregroundColor: context.textPrimary,
       pinned: true,
       expandedHeight: bannerHeight + avatarOverlap,
       collapsedHeight: kToolbarHeight,
-      flexibleSpace: FlexibleSpaceBar(
-        background: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            // Banner image
-            Positioned.fill(
-              bottom: avatarOverlap,
-              child: GestureDetector(
-                onTap: isOwnProfile ? () => _showBannerOptions(profile) : null,
-                child: profile.bannerUrl != null
-                    ? Image.network(
-                        profile.bannerUrl!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const DefaultBanner(),
-                      )
-                    : const DefaultBanner(),
-              ),
-            ),
-            // Gradient overlay for readability
-            Positioned.fill(
-              bottom: avatarOverlap,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.black.withValues(alpha: 0.5),
-                      Colors.black.withValues(alpha: 0.2),
-                      Colors.transparent,
-                      Colors.black.withValues(alpha: 0.5),
-                    ],
-                    stops: const [0.0, 0.15, 0.5, 1.0],
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      flexibleSpace: ClipRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: FlexibleSpaceBar(
+            background: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                // Banner image
+                Positioned.fill(
+                  bottom: avatarOverlap,
+                  child: GestureDetector(
+                    onTap: isOwnProfile
+                        ? () => _showBannerOptions(profile)
+                        : null,
+                    child: profile.bannerUrl != null
+                        ? Image.network(
+                            profile.bannerUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const DefaultBanner(),
+                          )
+                        : const DefaultBanner(),
                   ),
                 ),
-              ),
-            ),
-            // Avatar overlapping the banner
-            Positioned(
-              left: 16,
-              bottom: 0,
-              child: Consumer(
-                builder: (context, ref, _) {
-                  final isOnlineAsync = ref.watch(
-                    userOnlineStatusProvider(widget.userId),
-                  );
-                  final isOnline =
-                      isOnlineAsync.whenOrNull(data: (value) => value) ?? false;
-
-                  return GestureDetector(
-                    onTap: isOwnProfile ? _navigateToCreateStory : null,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: context.background, width: 4),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.2),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
+                // Gradient overlay for readability
+                Positioned.fill(
+                  bottom: avatarOverlap,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.black.withValues(alpha: 0.5),
+                          Colors.black.withValues(alpha: 0.2),
+                          Colors.transparent,
+                          Colors.black.withValues(alpha: 0.5),
                         ],
-                      ),
-                      child: Stack(
-                        children: [
-                          CircleAvatar(
-                            radius: avatarSize / 2,
-                            backgroundColor: context.accentColor.withValues(
-                              alpha: 0.2,
-                            ),
-                            backgroundImage: profile.avatarUrl != null
-                                ? NetworkImage(profile.avatarUrl!)
-                                : null,
-                            child: profile.avatarUrl == null
-                                ? Text(
-                                    profile.displayName[0].toUpperCase(),
-                                    style: TextStyle(
-                                      fontSize: 28,
-                                      fontWeight: FontWeight.bold,
-                                      color: context.accentColor,
-                                    ),
-                                  )
-                                : null,
-                          ),
-                          // Online indicator
-                          if (isOnline)
-                            Positioned(
-                              right: 2,
-                              bottom: 2,
-                              child: Container(
-                                width: 16,
-                                height: 16,
-                                decoration: BoxDecoration(
-                                  color: AccentColors.green,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: context.background,
-                                    width: 2,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          // Add story button for own profile
-                          if (isOwnProfile)
-                            Positioned(
-                              right: 0,
-                              bottom: 0,
-                              child: Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  color: context.accentColor,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: context.background,
-                                    width: 2,
-                                  ),
-                                ),
-                                child: const Icon(
-                                  Icons.add,
-                                  color: Colors.white,
-                                  size: 12,
-                                ),
-                              ),
-                            ),
-                        ],
+                        stops: const [0.0, 0.15, 0.5, 1.0],
                       ),
                     ),
-                  );
-                },
-              ),
+                  ),
+                ),
+                // Avatar overlapping the banner
+                Positioned(
+                  left: 16,
+                  bottom: 0,
+                  child: Consumer(
+                    builder: (context, ref, _) {
+                      final isOnlineAsync = ref.watch(
+                        userOnlineStatusProvider(widget.userId),
+                      );
+                      final isOnline =
+                          isOnlineAsync.whenOrNull(data: (value) => value) ??
+                          false;
+
+                      return GestureDetector(
+                        onTap: isOwnProfile ? _navigateToCreateStory : null,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: context.background,
+                              width: 4,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.2),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Stack(
+                            children: [
+                              CircleAvatar(
+                                radius: avatarSize / 2,
+                                backgroundColor: context.accentColor.withValues(
+                                  alpha: 0.2,
+                                ),
+                                backgroundImage: profile.avatarUrl != null
+                                    ? NetworkImage(profile.avatarUrl!)
+                                    : null,
+                                child: profile.avatarUrl == null
+                                    ? Text(
+                                        profile.displayName[0].toUpperCase(),
+                                        style: TextStyle(
+                                          fontSize: 28,
+                                          fontWeight: FontWeight.bold,
+                                          color: context.accentColor,
+                                        ),
+                                      )
+                                    : null,
+                              ),
+                              // Online indicator
+                              if (isOnline)
+                                Positioned(
+                                  right: 2,
+                                  bottom: 2,
+                                  child: Container(
+                                    width: 16,
+                                    height: 16,
+                                    decoration: BoxDecoration(
+                                      color: AccentColors.green,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: context.background,
+                                        width: 2,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              // Add story button for own profile
+                              if (isOwnProfile)
+                                Positioned(
+                                  right: 0,
+                                  bottom: 0,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      color: context.accentColor,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: context.background,
+                                        width: 2,
+                                      ),
+                                    ),
+                                    child: const Icon(
+                                      Icons.add,
+                                      color: Colors.white,
+                                      size: 12,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
       title: Row(
@@ -467,6 +490,18 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
               icon: Icon(Icons.person_add_outlined, color: context.textPrimary),
               onPressed: _navigateToFollowRequests,
               tooltip: 'Follow requests',
+            ),
+          ),
+          _ActivityBadge(
+            child: IconButton(
+              icon: Icon(Icons.favorite_border, color: context.textPrimary),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const ActivityTimelineScreen(),
+                ),
+              ),
+              tooltip: 'Activity',
             ),
           ),
           IconButton(
@@ -515,7 +550,6 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _StatColumn(count: profile.postCount, label: 'Posts'),
                 _StatColumn(
                   count: profile.followerCount,
                   label: 'Followers',
@@ -561,67 +595,82 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
             const SizedBox(height: 12),
             SizedBox(
               height: 44,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: [
-                  if (profile.website != null)
-                    _SocialIconButton(
-                      icon: Icons.language,
-                      color: context.accentColor,
-                      onTap: () => _launchUrl(profile.website!),
-                      tooltip: _formatUrl(profile.website!),
-                    ),
-                  if (profile.socialLinks?.twitter != null)
-                    _SocialIconButton(
-                      icon: SocialMediaIcons.twitter,
-                      color: const Color(0xFF000000),
-                      onTap: () => _launchUrl(
-                        'https://x.com/${profile.socialLinks!.twitter}',
+              child: EdgeFade.end(
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    if (profile.website != null)
+                      _SocialIconButton(
+                        icon: Icons.language,
+                        color: context.accentColor,
+                        onTap: () => _launchUrl(profile.website!),
+                        tooltip: _formatUrl(profile.website!),
                       ),
-                      tooltip: '@${profile.socialLinks!.twitter}',
-                    ),
-                  if (profile.socialLinks?.github != null)
-                    _SocialIconButton(
-                      icon: SocialMediaIcons.github_circled,
-                      color: const Color(0xFF6E5494),
-                      onTap: () => _launchUrl(
-                        'https://github.com/${profile.socialLinks!.github}',
+                    if (profile.socialLinks?.twitter != null)
+                      _SocialIconButton(
+                        icon: SocialMediaIcons.twitter,
+                        color: const Color(0xFF000000),
+                        onTap: () => _launchUrl(
+                          'https://x.com/${profile.socialLinks!.twitter}',
+                        ),
+                        tooltip: '@${profile.socialLinks!.twitter}',
                       ),
-                      tooltip: profile.socialLinks!.github!,
-                    ),
-                  if (profile.socialLinks?.discord != null)
-                    _SocialIconButton(
-                      icon: Icons.discord,
-                      color: const Color(0xFF5865F2),
-                      onTap: null,
-                      tooltip: profile.socialLinks!.discord!,
-                    ),
-                  if (profile.socialLinks?.telegram != null)
-                    _SocialIconButton(
-                      icon: Icons.telegram,
-                      color: const Color(0xFF0088CC),
-                      onTap: () => _launchUrl(
-                        'https://t.me/${profile.socialLinks!.telegram}',
+                    if (profile.socialLinks?.github != null)
+                      _SocialIconButton(
+                        icon: SocialMediaIcons.github_circled,
+                        color: const Color(0xFF6E5494),
+                        onTap: () => _launchUrl(
+                          'https://github.com/${profile.socialLinks!.github}',
+                        ),
+                        tooltip: profile.socialLinks!.github!,
                       ),
-                      tooltip: '@${profile.socialLinks!.telegram}',
-                    ),
-                  if (profile.socialLinks?.linkedin != null)
-                    _SocialIconButton(
-                      icon: SocialMediaIcons.linkedin,
-                      color: const Color(0xFF0A66C2),
-                      onTap: () => _launchUrl(
-                        'https://linkedin.com/in/${profile.socialLinks!.linkedin}',
+                    if (profile.socialLinks?.discord != null)
+                      _SocialIconButton(
+                        icon: Icons.discord,
+                        color: const Color(0xFF5865F2),
+                        onTap: () {
+                          // Discord usernames - copy to clipboard since no direct link
+                          Clipboard.setData(
+                            ClipboardData(text: profile.socialLinks!.discord!),
+                          );
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Discord username copied: ${profile.socialLinks!.discord}',
+                              ),
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        },
+                        tooltip: profile.socialLinks!.discord!,
                       ),
-                      tooltip: profile.socialLinks!.linkedin!,
-                    ),
-                  if (profile.socialLinks?.mastodon != null)
-                    _SocialIconButton(
-                      icon: Icons.tag,
-                      color: const Color(0xFF6364FF),
-                      onTap: null,
-                      tooltip: profile.socialLinks!.mastodon!,
-                    ),
-                ],
+                    if (profile.socialLinks?.telegram != null)
+                      _SocialIconButton(
+                        icon: Icons.telegram,
+                        color: const Color(0xFF0088CC),
+                        onTap: () => _launchUrl(
+                          'https://t.me/${profile.socialLinks!.telegram}',
+                        ),
+                        tooltip: '@${profile.socialLinks!.telegram}',
+                      ),
+                    if (profile.socialLinks?.linkedin != null)
+                      _SocialIconButton(
+                        icon: SocialMediaIcons.linkedin,
+                        color: const Color(0xFF0A66C2),
+                        onTap: () => _launchUrl(
+                          'https://linkedin.com/in/${profile.socialLinks!.linkedin}',
+                        ),
+                        tooltip: profile.socialLinks!.linkedin!,
+                      ),
+                    if (profile.socialLinks?.mastodon != null)
+                      _SocialIconButton(
+                        icon: Icons.tag,
+                        color: const Color(0xFF6364FF),
+                        onTap: null,
+                        tooltip: profile.socialLinks!.mastodon!,
+                      ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -1258,21 +1307,36 @@ class _LinkedDevicesSection extends ConsumerWidget {
           const SizedBox(height: 10),
           SizedBox(
             height: 90,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: linkedNodeIds.length,
-              separatorBuilder: (context, index) => const SizedBox(width: 10),
-              itemBuilder: (context, index) {
-                final nodeId = linkedNodeIds[index];
-                final node = allNodes[nodeId];
-                final cachedInfo = linkedNodeMetadata[nodeId];
-                final isPrimary = nodeId == primaryNodeId;
+            child: Builder(
+              builder: (context) {
+                // Sort nodes with primary first
+                final sortedNodeIds = List<int>.from(linkedNodeIds);
+                if (primaryNodeId != null &&
+                    sortedNodeIds.contains(primaryNodeId)) {
+                  sortedNodeIds.remove(primaryNodeId);
+                  sortedNodeIds.insert(0, primaryNodeId!);
+                }
 
-                return _LinkedDeviceChip(
-                  nodeId: nodeId,
-                  node: node,
-                  cachedInfo: cachedInfo,
-                  isPrimary: isPrimary,
+                return EdgeFade.end(
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: sortedNodeIds.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(width: 10),
+                    itemBuilder: (context, index) {
+                      final nodeId = sortedNodeIds[index];
+                      final node = allNodes[nodeId];
+                      final cachedInfo = linkedNodeMetadata[nodeId];
+                      final isPrimary = nodeId == primaryNodeId;
+
+                      return _LinkedDeviceChip(
+                        nodeId: nodeId,
+                        node: node,
+                        cachedInfo: cachedInfo,
+                        isPrimary: isPrimary,
+                      );
+                    },
+                  ),
                 );
               },
             ),
@@ -1492,6 +1556,22 @@ class _FollowRequestsBadge extends ConsumerWidget {
       loading: () => child,
       error: (_, _) => child,
     );
+  }
+}
+
+/// Widget that shows a badge with unread activity count.
+class _ActivityBadge extends ConsumerWidget {
+  const _ActivityBadge({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final hasUnread = ref.watch(hasUnreadActivitiesProvider);
+
+    if (!hasUnread) return child;
+    // Show a simple dot badge for unread activities
+    return Badge(smallSize: 10, child: child);
   }
 }
 

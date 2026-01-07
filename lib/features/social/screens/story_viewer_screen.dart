@@ -308,16 +308,24 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
                   ),
                 ),
 
-                // Footer (view count, reply for own stories)
-                if (_isOwnStory && groupIndex == _currentGroupIndex)
+                // Footer (view count for own stories, like button for others)
+                if (groupIndex == _currentGroupIndex)
                   Positioned(
                     bottom: MediaQuery.of(context).padding.bottom + 16,
                     left: 16,
                     right: 16,
-                    child: _StoryFooter(
-                      story: story,
-                      onViewersTap: _showViewers,
-                    ),
+                    child: _isOwnStory
+                        ? _OwnerStoryFooter(
+                            story: story,
+                            onViewersTap: _showViewers,
+                          )
+                        : _ViewerStoryFooter(
+                            story: story,
+                            onLiked: () {
+                              // Brief haptic feedback
+                              HapticFeedback.lightImpact();
+                            },
+                          ),
                   ),
 
                 // Pause indicator
@@ -352,19 +360,24 @@ class _StoryContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.network(
-      story.mediaUrl,
-      fit: BoxFit.contain,
-      loadingBuilder: (context, child, loadingProgress) {
-        if (loadingProgress == null) return child;
-        return const Center(
-          child: CircularProgressIndicator(color: Colors.white),
-        );
-      },
-      errorBuilder: (_, error, stackTrace) => Container(
-        color: Colors.black,
-        child: const Center(
-          child: Icon(Icons.error_outline, color: Colors.white54, size: 48),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: Image.network(
+        story.mediaUrl,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return const Center(
+            child: CircularProgressIndicator(color: Colors.white),
+          );
+        },
+        errorBuilder: (_, error, stackTrace) => Container(
+          color: Colors.black,
+          child: const Center(
+            child: Icon(Icons.error_outline, color: Colors.white54, size: 48),
+          ),
         ),
       ),
     );
@@ -536,46 +549,144 @@ class _StoryHeader extends StatelessWidget {
   }
 }
 
-class _StoryFooter extends StatelessWidget {
-  const _StoryFooter({required this.story, required this.onViewersTap});
+class _OwnerStoryFooter extends StatelessWidget {
+  const _OwnerStoryFooter({required this.story, required this.onViewersTap});
 
   final Story story;
   final VoidCallback onViewersTap;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onViewersTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.black38,
-          borderRadius: BorderRadius.circular(24),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // Views button
+        GestureDetector(
+          onTap: onViewersTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.black38,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.visibility_outlined,
+                  color: Colors.white,
+                  size: 18,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '${story.viewCount}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  story.viewCount == 1 ? 'view' : 'views',
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.8)),
+                ),
+              ],
+            ),
+          ),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.visibility_outlined,
-              color: Colors.white,
-              size: 18,
+        if (story.likeCount > 0) ...[
+          const SizedBox(width: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.black38,
+              borderRadius: BorderRadius.circular(24),
             ),
-            const SizedBox(width: 8),
-            Text(
-              '${story.viewCount}',
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.favorite, color: Colors.redAccent, size: 18),
+                const SizedBox(width: 8),
+                Text(
+                  '${story.likeCount}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 4),
-            Text(
-              story.viewCount == 1 ? 'view' : 'views',
-              style: TextStyle(color: Colors.white.withValues(alpha: 0.8)),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _ViewerStoryFooter extends ConsumerWidget {
+  const _ViewerStoryFooter({required this.story, this.onLiked});
+
+  final Story story;
+  final VoidCallback? onLiked;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isLikedAsync = ref.watch(storyLikeStatusProvider(story.id));
+    final isLiked = isLikedAsync.maybeWhen(data: (v) => v, orElse: () => false);
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        GestureDetector(
+          onTap: () async {
+            final wasLiked = await toggleStoryLike(ref, story.id);
+            if (wasLiked) {
+              onLiked?.call();
+            }
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            decoration: BoxDecoration(
+              color: isLiked
+                  ? Colors.redAccent.withValues(alpha: 0.3)
+                  : Colors.black38,
+              borderRadius: BorderRadius.circular(28),
+              border: isLiked
+                  ? Border.all(
+                      color: Colors.redAccent.withValues(alpha: 0.5),
+                      width: 1,
+                    )
+                  : null,
             ),
-          ],
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  transitionBuilder: (child, animation) =>
+                      ScaleTransition(scale: animation, child: child),
+                  child: Icon(
+                    isLiked ? Icons.favorite : Icons.favorite_border,
+                    key: ValueKey(isLiked),
+                    color: isLiked ? Colors.redAccent : Colors.white,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  isLiked ? 'Liked' : 'Like',
+                  style: TextStyle(
+                    color: isLiked ? Colors.redAccent : Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
-      ),
+      ],
     );
   }
 }

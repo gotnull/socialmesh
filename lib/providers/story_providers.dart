@@ -246,6 +246,39 @@ final storyViewersProvider = StreamProvider.autoDispose
     });
 
 // ===========================================================================
+// STORY LIKES
+// ===========================================================================
+
+/// Provider to check if current user has liked a story.
+final storyLikeStatusProvider = StreamProvider.autoDispose.family<bool, String>(
+  (ref, storyId) {
+    final service = ref.watch(storyServiceProvider);
+    return service.watchStoryLikeStatus(storyId);
+  },
+);
+
+/// Provider to get likes for a story.
+final storyLikesProvider = FutureProvider.autoDispose
+    .family<List<StoryLike>, String>((ref, storyId) async {
+      final service = ref.watch(storyServiceProvider);
+      return service.getStoryLikes(storyId);
+    });
+
+/// Like or unlike a story.
+Future<bool> toggleStoryLike(WidgetRef ref, String storyId) async {
+  final service = ref.read(storyServiceProvider);
+  final isLiked = await service.hasLikedStory(storyId);
+
+  if (isLiked) {
+    await service.unlikeStory(storyId);
+    return false;
+  } else {
+    await service.likeStory(storyId);
+    return true;
+  }
+}
+
+// ===========================================================================
 // SINGLE USER'S STORIES
 // ===========================================================================
 

@@ -1994,6 +1994,7 @@ export {
   onFollowRequestCreatedNotification,
   onFollowRequestAcceptedNotification,
   onLikeCreatedNotification,
+  onStoryLikeCreatedNotification,
   onCommentCreatedNotification,
   sendTestPushNotification,
 } from './push_notifications';

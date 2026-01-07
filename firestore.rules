@@ -97,6 +97,22 @@ service cloud.firestore {
       allow write: if (isOwner(userId) && 
         (!('displayName' in request.resource.data) || canUseDisplayName(request.resource.data.displayName))) ||
         isAdmin();
+
+      // Activities subcollection - user's activity feed
+      match /activities/{activityId} {
+        // User can read their own activities
+        allow read: if isOwner(userId);
+        
+        // Activities are created by Cloud Functions or authenticated users
+        // (e.g., when someone likes your story, they create an activity in your feed)
+        allow create: if isAuthenticated();
+        
+        // User can update their own activities (mark as read)
+        allow update: if isOwner(userId);
+        
+        // User can delete their own activities
+        allow delete: if isOwner(userId);
+      }
     }
     
     // User presence - public read, owner write
@@ -490,9 +506,9 @@ service cloud.firestore {
       allow delete: if isAdmin() || (isAuthenticated() &&
         resource.data.authorId == request.auth.uid);
       
-      // Update: only view count updates allowed by authenticated users
+      // Update: view count and like count updates allowed by authenticated users
       allow update: if isAuthenticated() &&
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['viewCount']);
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['viewCount', 'likeCount']);
 
       // Story viewers subcollection - tracks who viewed the story
       match /viewers/{viewerId} {
@@ -509,6 +525,26 @@ service cloud.firestore {
         // Any authenticated user can record their view (as themselves)
         allow create: if isAuthenticated() &&
           viewerId == request.auth.uid;
+        
+        // No updates
+        allow update: if false;
+      }
+
+      // Story likes subcollection - tracks who liked the story
+      match /likes/{likerId} {
+        // Story author can see ALL likes
+        // Users can read their OWN like record to check if they liked
+        allow read: if isAuthenticated() &&
+          (get(/databases/$(database)/documents/stories/$(storyId)).data.authorId == request.auth.uid ||
+           likerId == request.auth.uid);
+        
+        // Any authenticated user can like (as themselves)
+        allow create: if isAuthenticated() &&
+          likerId == request.auth.uid;
+        
+        // Users can unlike their own likes
+        allow delete: if isAuthenticated() &&
+          likerId == request.auth.uid;
         
         // No updates
         allow update: if false;

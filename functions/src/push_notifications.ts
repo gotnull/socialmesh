@@ -306,6 +306,55 @@ export const onLikeCreatedNotification = onDocumentCreated(
 );
 
 // =============================================================================
+// STORY LIKE NOTIFICATIONS
+// =============================================================================
+
+/**
+ * Send notification when someone likes a story
+ */
+export const onStoryLikeCreatedNotification = onDocumentCreated(
+  'stories/{storyId}/likes/{likeId}',
+  async (event) => {
+    const data = event.data?.data();
+    if (!data) return;
+
+    const { userId: likerId } = data;
+    const storyId = event.params.storyId;
+
+    // Get the story to find the author
+    const storyDoc = await db.collection('stories').doc(storyId).get();
+    if (!storyDoc.exists) return;
+
+    const storyData = storyDoc.data()!;
+    const authorId = storyData.authorId;
+
+    // Don't notify if user liked their own story
+    if (likerId === authorId) return;
+
+    // Check if user has like notifications enabled
+    if (!await isNotificationEnabled(authorId, 'likes')) {
+      console.log(`Like notifications disabled for user ${authorId}`);
+      return;
+    }
+
+    // Get liker's profile
+    const likerProfile = await getProfile(likerId);
+    const likerName = likerProfile?.displayName || 'Someone';
+
+    await sendPushNotification(
+      authorId,
+      'Story Liked ❤️',
+      `${likerName} liked your story`,
+      {
+        type: 'story_like',
+        targetId: storyId,
+        likerId: likerId,
+      }
+    );
+  }
+);
+
+// =============================================================================
 // COMMENT NOTIFICATIONS
 // =============================================================================
 

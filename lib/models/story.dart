@@ -137,6 +137,9 @@ class Story {
   /// Total view count
   final int viewCount;
 
+  /// Total like/favorite count
+  final int likeCount;
+
   /// Optional location data
   final PostLocation? location;
 
@@ -166,6 +169,7 @@ class Story {
     required this.createdAt,
     required this.expiresAt,
     this.viewCount = 0,
+    this.likeCount = 0,
     this.location,
     this.nodeId,
     this.mentions = const [],
@@ -208,6 +212,7 @@ class Story {
           (data['expiresAt'] as Timestamp?)?.toDate() ??
           DateTime.now().add(const Duration(hours: 24)),
       viewCount: data['viewCount'] as int? ?? 0,
+      likeCount: data['likeCount'] as int? ?? 0,
       location: data['location'] != null
           ? PostLocation.fromMap(data['location'] as Map<String, dynamic>)
           : null,
@@ -243,6 +248,7 @@ class Story {
       'createdAt': FieldValue.serverTimestamp(),
       'expiresAt': Timestamp.fromDate(expiresAt),
       'viewCount': 0,
+      'likeCount': 0,
       if (location != null) 'location': location!.toMap(),
       if (nodeId != null) 'nodeId': nodeId,
       'mentions': mentions,
@@ -263,6 +269,7 @@ class Story {
     DateTime? createdAt,
     DateTime? expiresAt,
     int? viewCount,
+    int? likeCount,
     PostLocation? location,
     String? nodeId,
     List<String>? mentions,
@@ -281,6 +288,7 @@ class Story {
       createdAt: createdAt ?? this.createdAt,
       expiresAt: expiresAt ?? this.expiresAt,
       viewCount: viewCount ?? this.viewCount,
+      likeCount: likeCount ?? this.likeCount,
       location: location ?? this.location,
       nodeId: nodeId ?? this.nodeId,
       mentions: mentions ?? this.mentions,
@@ -324,6 +332,29 @@ class StoryView {
 
   Map<String, dynamic> toFirestore() {
     return {'userId': viewerId, 'viewedAt': FieldValue.serverTimestamp()};
+  }
+}
+
+/// A record of a user liking a story
+class StoryLike {
+  /// The user who liked
+  final String likerId;
+
+  /// When they liked
+  final DateTime likedAt;
+
+  const StoryLike({required this.likerId, required this.likedAt});
+
+  factory StoryLike.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return StoryLike(
+      likerId: data['userId'] as String? ?? doc.id,
+      likedAt: (data['likedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+    );
+  }
+
+  Map<String, dynamic> toFirestore() {
+    return {'userId': likerId, 'likedAt': FieldValue.serverTimestamp()};
   }
 }
 
