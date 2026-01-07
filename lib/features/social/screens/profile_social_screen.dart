@@ -41,7 +41,10 @@ import 'create_story_screen.dart';
 import 'follow_requests_screen.dart';
 import 'followers_screen.dart';
 import 'post_detail_screen.dart';
+import 'story_viewer_screen.dart';
 import 'user_search_screen.dart';
+import '../../../providers/story_providers.dart';
+import '../../../models/story.dart';
 
 /// Filter options for posts
 enum PostFilter {
@@ -369,8 +372,59 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                           isOnlineAsync.whenOrNull(data: (value) => value) ??
                           false;
 
+                      // Check if user has stories
+                      final userStoriesAsync = ref.watch(
+                        userStoriesProvider(widget.userId),
+                      );
+                      final hasStories =
+                          userStoriesAsync.whenOrNull(
+                            data: (stories) => stories.isNotEmpty,
+                          ) ??
+                          false;
+
+                      // Check if current user has viewed all stories
+                      final viewedStoriesState = ref.watch(
+                        viewedStoriesProvider,
+                      );
+                      final allViewed =
+                          userStoriesAsync.whenOrNull(
+                            data: (stories) => stories.every(
+                              (s) => viewedStoriesState.hasViewed(s.id),
+                            ),
+                          ) ??
+                          true;
+
+                      final hasUnviewed = hasStories && !allViewed;
+                      final accentColor = context.accentColor;
+                      final gradientColors = AccentColors.gradientFor(
+                        accentColor,
+                      );
+
                       return GestureDetector(
-                        onTap: isOwnProfile ? _navigateToCreateStory : null,
+                        onTap: () {
+                          if (hasStories) {
+                            // Open story viewer
+                            final stories = userStoriesAsync.value ?? [];
+                            if (stories.isNotEmpty) {
+                              final group = StoryGroup(
+                                userId: widget.userId,
+                                stories: stories,
+                                lastStoryAt: stories.first.createdAt,
+                              );
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => StoryViewerScreen(
+                                    storyGroups: [group],
+                                    initialGroupIndex: 0,
+                                  ),
+                                ),
+                              );
+                            }
+                          } else if (isOwnProfile) {
+                            _navigateToCreateStory();
+                          }
+                        },
                         child: Container(
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
@@ -388,30 +442,86 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                           ),
                           child: Stack(
                             children: [
-                              CircleAvatar(
-                                radius: avatarSize / 2,
-                                backgroundColor: context.accentColor.withValues(
-                                  alpha: 0.2,
+                              // Gradient ring for stories
+                              if (hasStories)
+                                Container(
+                                  width: avatarSize + 6,
+                                  height: avatarSize + 6,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: hasUnviewed
+                                        ? SweepGradient(
+                                            colors: [
+                                              gradientColors[0],
+                                              gradientColors[1],
+                                              gradientColors[2],
+                                              gradientColors[1],
+                                              gradientColors[0],
+                                            ],
+                                            stops: const [
+                                              0.0,
+                                              0.25,
+                                              0.5,
+                                              0.75,
+                                              1.0,
+                                            ],
+                                          )
+                                        : SweepGradient(
+                                            colors: [
+                                              Colors.grey.shade500,
+                                              Colors.grey.shade400,
+                                              Colors.grey.shade500,
+                                              Colors.grey.shade400,
+                                              Colors.grey.shade500,
+                                            ],
+                                            stops: const [
+                                              0.0,
+                                              0.25,
+                                              0.5,
+                                              0.75,
+                                              1.0,
+                                            ],
+                                          ),
+                                  ),
+                                  child: Center(
+                                    child: Container(
+                                      width: avatarSize + 2,
+                                      height: avatarSize + 2,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: context.background,
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                                backgroundImage: profile.avatarUrl != null
-                                    ? NetworkImage(profile.avatarUrl!)
-                                    : null,
-                                child: profile.avatarUrl == null
-                                    ? Text(
-                                        profile.displayName[0].toUpperCase(),
-                                        style: TextStyle(
-                                          fontSize: 28,
-                                          fontWeight: FontWeight.bold,
-                                          color: context.accentColor,
-                                        ),
-                                      )
-                                    : null,
+                              // Avatar
+                              Positioned(
+                                left: hasStories ? 3 : 0,
+                                top: hasStories ? 3 : 0,
+                                child: CircleAvatar(
+                                  radius: avatarSize / 2,
+                                  backgroundColor: context.accentColor
+                                      .withValues(alpha: 0.2),
+                                  backgroundImage: profile.avatarUrl != null
+                                      ? NetworkImage(profile.avatarUrl!)
+                                      : null,
+                                  child: profile.avatarUrl == null
+                                      ? Text(
+                                          profile.displayName[0].toUpperCase(),
+                                          style: TextStyle(
+                                            fontSize: 28,
+                                            fontWeight: FontWeight.bold,
+                                            color: context.accentColor,
+                                          ),
+                                        )
+                                      : null,
+                                ),
                               ),
                               // Online indicator
                               if (isOnline)
                                 Positioned(
-                                  right: 2,
-                                  bottom: 2,
+                                  right: hasStories ? 5 : 2,
+                                  bottom: hasStories ? 5 : 2,
                                   child: Container(
                                     width: 16,
                                     height: 16,
@@ -425,8 +535,8 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                                     ),
                                   ),
                                 ),
-                              // Add story button for own profile
-                              if (isOwnProfile)
+                              // Add story button for own profile (only if no stories)
+                              if (isOwnProfile && !hasStories)
                                 Positioned(
                                   right: 0,
                                   bottom: 0,
@@ -571,6 +681,23 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
               style: TextStyle(color: context.textSecondary, fontSize: 14),
             ),
           ],
+
+          // Joined date
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(
+                Icons.calendar_today_outlined,
+                size: 14,
+                color: context.textTertiary,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                'Joined ${_formatJoinedDate(profile.createdAt)}',
+                style: TextStyle(color: context.textTertiary, fontSize: 13),
+              ),
+            ],
+          ),
 
           // Website & Social Links - Horizontal scrollable circular icons
           if (profile.website != null ||
@@ -1103,6 +1230,24 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
         .replaceAll('www.', '');
   }
 
+  String _formatJoinedDate(DateTime date) {
+    const months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    return '${months[date.month - 1]} ${date.year}';
+  }
+
   Future<void> _launchUrl(String url) async {
     final uri = url.startsWith('http')
         ? Uri.parse(url)
@@ -1592,7 +1737,11 @@ class _ActivityBadge extends ConsumerWidget {
 
     if (!hasUnread) return child;
     // Show a simple dot badge for unread activities
-    return Badge(smallSize: 10, child: child);
+    return Badge(
+      backgroundColor: context.accentColor,
+      smallSize: 10,
+      child: child,
+    );
   }
 }
 
