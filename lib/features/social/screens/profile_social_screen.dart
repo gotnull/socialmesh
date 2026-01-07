@@ -88,7 +88,6 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
 
   // Shattered ring animation
   AnimationController? _shatterController;
-  AnimationController? _glowController;
   bool _hasPlayedShatterAnimation = false;
   String? _lastProfileIdWithStories;
 
@@ -121,29 +120,16 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     _shatterController?.dispose();
-    _glowController?.dispose();
     super.dispose();
   }
 
   void _initShatterAnimation() {
     _shatterController?.dispose();
-    _glowController?.dispose();
 
     _shatterController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     );
-    _glowController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
-
-    _shatterController!.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        // Trigger glow pulse when assembly completes
-        _glowController!.forward(from: 0);
-      }
-    });
 
     _shatterController!.forward();
   }
@@ -498,77 +484,27 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                               if (hasStories)
                                 showShatterAnimation
                                     ? AnimatedBuilder(
-                                        animation: Listenable.merge([
-                                          _shatterController,
-                                          _glowController,
-                                        ]),
+                                        animation: _shatterController!,
                                         builder: (context, _) {
-                                          final glowValue =
-                                              _glowController?.value ?? 0.0;
-                                          final glowOpacity = glowValue < 0.5
-                                              ? glowValue * 2
-                                              : 2 - glowValue * 2;
-                                          return Stack(
-                                            children: [
-                                              // Glow effect behind the ring
-                                              if (glowOpacity > 0)
-                                                Container(
-                                                  width: totalRingSize + 8,
-                                                  height: totalRingSize + 8,
-                                                  transform:
-                                                      Matrix4.translationValues(
-                                                        -4,
-                                                        -4,
-                                                        0,
-                                                      ),
-                                                  decoration: BoxDecoration(
-                                                    shape: BoxShape.circle,
-                                                    boxShadow: [
-                                                      BoxShadow(
-                                                        color: gradientColors[0]
-                                                            .withValues(
-                                                              alpha:
-                                                                  glowOpacity *
-                                                                  0.6,
-                                                            ),
-                                                        blurRadius: 20,
-                                                        spreadRadius: 4,
-                                                      ),
-                                                      BoxShadow(
-                                                        color: gradientColors[2]
-                                                            .withValues(
-                                                              alpha:
-                                                                  glowOpacity *
-                                                                  0.4,
-                                                            ),
-                                                        blurRadius: 30,
-                                                        spreadRadius: 8,
-                                                      ),
+                                          return CustomPaint(
+                                            size: Size(
+                                              totalRingSize,
+                                              totalRingSize,
+                                            ),
+                                            painter: _ShatteredRingPainter(
+                                              progress:
+                                                  _shatterController!.value,
+                                              gradientColors: hasUnviewed
+                                                  ? gradientColors
+                                                  : [
+                                                      Colors.grey.shade500,
+                                                      Colors.grey.shade400,
+                                                      Colors.grey.shade500,
                                                     ],
-                                                  ),
-                                                ),
-                                              // Custom painted shattered ring
-                                              CustomPaint(
-                                                size: Size(
-                                                  totalRingSize,
-                                                  totalRingSize,
-                                                ),
-                                                painter: _ShatteredRingPainter(
-                                                  progress:
-                                                      _shatterController!.value,
-                                                  gradientColors: hasUnviewed
-                                                      ? gradientColors
-                                                      : [
-                                                          Colors.grey.shade500,
-                                                          Colors.grey.shade400,
-                                                          Colors.grey.shade500,
-                                                        ],
-                                                  ringWidth: ringWidth,
-                                                  backgroundColor:
-                                                      context.background,
-                                                ),
-                                              ),
-                                            ],
+                                              ringWidth: ringWidth,
+                                              backgroundColor:
+                                                  context.background,
+                                            ),
                                           );
                                         },
                                       )
@@ -2106,16 +2042,16 @@ class _ShatteredRingPainter extends CustomPainter {
   final double ringWidth;
   final Color backgroundColor;
 
-  // Pre-defined shard configurations for consistent animation
+  // Pre-defined shard configurations - 8 equal segments (12.5% each)
   static const _shardConfigs = [
-    _ShardConfig(0.0, 0.12, 1.2, -0.3, 0.15), // Top-right shard
-    _ShardConfig(0.12, 0.28, 0.8, 0.4, -0.2), // Right shard
-    _ShardConfig(0.28, 0.42, 1.5, 0.2, 0.35), // Bottom-right shard
-    _ShardConfig(0.42, 0.55, 1.0, -0.5, 0.25), // Bottom shard
-    _ShardConfig(0.55, 0.70, 1.3, 0.3, -0.4), // Bottom-left shard
-    _ShardConfig(0.70, 0.82, 0.9, -0.25, -0.3), // Left shard
-    _ShardConfig(0.82, 0.92, 1.4, 0.15, 0.4), // Top-left shard
-    _ShardConfig(0.92, 1.0, 1.1, -0.4, -0.15), // Top shard
+    _ShardConfig(0.000, 0.125, 1.2, -0.35, 0.20), // Segment 1
+    _ShardConfig(0.125, 0.250, 0.9, 0.40, 0.15), // Segment 2
+    _ShardConfig(0.250, 0.375, 1.4, 0.30, -0.25), // Segment 3
+    _ShardConfig(0.375, 0.500, 1.0, -0.20, -0.40), // Segment 4
+    _ShardConfig(0.500, 0.625, 1.3, -0.45, -0.15), // Segment 5
+    _ShardConfig(0.625, 0.750, 0.8, -0.30, 0.35), // Segment 6
+    _ShardConfig(0.750, 0.875, 1.1, 0.25, 0.30), // Segment 7
+    _ShardConfig(0.875, 1.000, 1.0, 0.15, -0.20), // Segment 8
   ];
 
   @override
@@ -2124,7 +2060,7 @@ class _ShatteredRingPainter extends CustomPainter {
     final outerRadius = size.width / 2;
     final innerRadius = outerRadius - ringWidth;
 
-    // Create gradient shader
+    // Create gradient shader - offset seam to bottom to match final state
     final gradient = SweepGradient(
       colors: [
         gradientColors[0],
@@ -2134,6 +2070,7 @@ class _ShatteredRingPainter extends CustomPainter {
         gradientColors[0],
       ],
       stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+      startAngle: math.pi / 2,
     );
 
     final rect = Rect.fromCircle(center: center, radius: outerRadius);
@@ -2145,6 +2082,15 @@ class _ShatteredRingPainter extends CustomPainter {
     final bgPaint = Paint()
       ..color = backgroundColor
       ..style = PaintingStyle.fill;
+
+    // When fully assembled, just draw a simple ring - no individual shards
+    if (progress >= 1.0) {
+      // Draw complete outer circle
+      canvas.drawCircle(center, outerRadius, paint);
+      // Cut out inner circle
+      canvas.drawCircle(center, innerRadius, bgPaint);
+      return;
+    }
 
     // Apply easing curve for more satisfying animation
     final easedProgress = _easeOutBack(progress);
@@ -2202,8 +2148,9 @@ class _ShatteredRingPainter extends CustomPainter {
 
     canvas.save();
 
-    // Apply transformations
-    canvas.translate(center.dx + offsetX, center.dy + offsetY);
+    // Apply transformations centered around the ring
+    canvas.translate(center.dx, center.dy);
+    canvas.translate(offsetX, offsetY);
     canvas.rotate(rotation);
     canvas.scale(scale);
     canvas.translate(-center.dx, -center.dy);
@@ -2231,21 +2178,7 @@ class _ShatteredRingPainter extends CustomPainter {
       )
       ..close();
 
-    final shardPaint = Paint()
-      ..shader = paint.shader
-      ..style = PaintingStyle.fill;
-
-    // Add glow effect to shards
-    if (shardProgress < 1.0) {
-      final glowPaint = Paint()
-        ..shader = paint.shader
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2
-        ..maskFilter = const MaskFilter.blur(BlurStyle.outer, 4);
-      canvas.drawPath(path, glowPaint);
-    }
-
-    canvas.drawPath(path, shardPaint);
+    canvas.drawPath(path, paint);
     canvas.restore();
   }
 
@@ -2284,11 +2217,12 @@ class _ShatteredRingPainter extends CustomPainter {
     }
   }
 
-  // Easing function for satisfying "snap into place" effect
+  // Smooth easing that settles perfectly at 1.0 without overshoot
   double _easeOutBack(double t) {
-    const c1 = 1.70158;
-    const c3 = c1 + 1;
-    return 1 + c3 * math.pow(t - 1, 3) + c1 * math.pow(t - 1, 2);
+    // Use easeOutQuart - fast start, smooth landing
+    // This ensures shards align perfectly at the end
+    final t1 = 1 - t;
+    return 1 - t1 * t1 * t1 * t1;
   }
 
   @override
