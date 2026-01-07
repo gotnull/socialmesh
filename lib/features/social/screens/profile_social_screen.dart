@@ -438,6 +438,10 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
       title: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (profile.isPrivate) ...[
+            Icon(Icons.lock, color: context.textPrimary, size: 16),
+            const SizedBox(width: 4),
+          ],
           Flexible(
             child: Text(
               profile.displayName,
@@ -451,15 +455,6 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
         ],
       ),
       actions: [
-        if (profile.isPrivate && !isOwnProfile)
-          Padding(
-            padding: const EdgeInsets.only(right: 4),
-            child: Icon(
-              Icons.lock_outline,
-              color: context.textPrimary,
-              size: 16,
-            ),
-          ),
         if (isOwnProfile) ...[
           IconButton(
             icon: Icon(Icons.search, color: context.textPrimary),
