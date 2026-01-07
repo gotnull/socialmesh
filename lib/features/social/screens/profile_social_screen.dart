@@ -400,6 +400,12 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                         accentColor,
                       );
 
+                      // Use same proportions as StoryAvatar for consistency
+                      final ringWidth = avatarSize * 0.05;
+                      final ringPadding = avatarSize * 0.04;
+                      final totalRingSize =
+                          avatarSize + (ringWidth + ringPadding) * 2;
+
                       return GestureDetector(
                         onTap: () {
                           if (hasStories) {
@@ -445,8 +451,8 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                               // Gradient ring for stories
                               if (hasStories)
                                 Container(
-                                  width: avatarSize + 6,
-                                  height: avatarSize + 6,
+                                  width: totalRingSize,
+                                  height: totalRingSize,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     gradient: hasUnviewed
@@ -485,8 +491,8 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                                   ),
                                   child: Center(
                                     child: Container(
-                                      width: avatarSize + 2,
-                                      height: avatarSize + 2,
+                                      width: totalRingSize - ringWidth * 2,
+                                      height: totalRingSize - ringWidth * 2,
                                       decoration: BoxDecoration(
                                         shape: BoxShape.circle,
                                         color: context.background,
@@ -496,8 +502,10 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                                 ),
                               // Avatar
                               Positioned(
-                                left: hasStories ? 3 : 0,
-                                top: hasStories ? 3 : 0,
+                                left: hasStories
+                                    ? (ringWidth + ringPadding)
+                                    : 0,
+                                top: hasStories ? (ringWidth + ringPadding) : 0,
                                 child: CircleAvatar(
                                   radius: avatarSize / 2,
                                   backgroundColor: context.accentColor
@@ -520,8 +528,12 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                               // Online indicator
                               if (isOnline)
                                 Positioned(
-                                  right: hasStories ? 5 : 2,
-                                  bottom: hasStories ? 5 : 2,
+                                  right: hasStories
+                                      ? (ringWidth + ringPadding + 2)
+                                      : 2,
+                                  bottom: hasStories
+                                      ? (ringWidth + ringPadding + 2)
+                                      : 2,
                                   child: Container(
                                     width: 16,
                                     height: 16,
@@ -683,21 +695,23 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
           ],
 
           // Joined date
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Icon(
-                Icons.calendar_today_outlined,
-                size: 14,
-                color: context.textTertiary,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                'Joined ${_formatJoinedDate(profile.createdAt)}',
-                style: TextStyle(color: context.textTertiary, fontSize: 13),
-              ),
-            ],
-          ),
+          if (profile.createdAt != null) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(
+                  Icons.calendar_today_outlined,
+                  size: 14,
+                  color: context.textTertiary,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'Joined ${_formatJoinedDate(profile.createdAt!)}',
+                  style: TextStyle(color: context.textTertiary, fontSize: 13),
+                ),
+              ],
+            ),
+          ],
 
           // Website & Social Links - Horizontal scrollable circular icons
           if (profile.website != null ||
