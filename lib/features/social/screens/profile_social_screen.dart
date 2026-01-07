@@ -145,7 +145,10 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
           return RefreshIndicator(
             displacement: 40,
             edgeOffset: widget.showAppBar
-                ? kToolbarHeight + MediaQuery.of(context).padding.top
+                ? 220 +
+                      MediaQuery.of(context)
+                          .padding
+                          .top // Banner height (180) + avatar overlap (40)
                 : MediaQuery.of(context).padding.top,
             onRefresh: () async {
               ref
@@ -443,7 +446,6 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
             ),
           ),
           if (profile.isVerified || isAppOwner(profile.id)) ...[
-            const SizedBox(width: 4),
             const SimpleVerifiedBadge(size: 18),
           ],
         ],
