@@ -60,39 +60,44 @@ class StoryBar extends ConsumerWidget {
 
     // Show nothing if there are no stories and user hasn't posted
     // (we still show the add button though)
-    return SizedBox(
-      height: 100,
-      child: EdgeFade.horizontal(
-        child: ListView.builder(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          itemCount: 1 + followingGroups.length, // +1 for add/own story button
-          itemBuilder: (context, index) {
-            if (index == 0) {
-              // "Add Story" / Own stories button
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: SizedBox(
+        height: 100,
+        child: EdgeFade.end(
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            itemCount:
+                1 + followingGroups.length, // +1 for add/own story button
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                // "Add Story" / Own stories button
+                return Padding(
+                  padding: const EdgeInsets.only(right: 16),
+                  child: StoryAvatar(
+                    userId: currentUser.uid,
+                    avatarUrl: myAvatarUrl,
+                    displayName: hasOwnStories ? 'Your story' : 'Add story',
+                    hasUnviewed: hasOwnStories,
+                    isAddButton: !hasOwnStories,
+                    onTap: () =>
+                        _onOwnStoryTap(context, myGroup, myStoriesAsync),
+                  ),
+                );
+              }
+
+              final group = followingGroups[index - 1];
               return Padding(
                 padding: const EdgeInsets.only(right: 16),
-                child: StoryAvatar(
-                  userId: currentUser.uid,
-                  avatarUrl: myAvatarUrl,
-                  displayName: hasOwnStories ? 'Your story' : 'Add story',
-                  hasUnviewed: hasOwnStories,
-                  isAddButton: !hasOwnStories,
-                  onTap: () => _onOwnStoryTap(context, myGroup, myStoriesAsync),
+                child: AnimatedStoryAvatar(
+                  storyGroup: group,
+                  onTap: () =>
+                      _onStoryGroupTap(context, ref, group, followingGroups),
                 ),
               );
-            }
-
-            final group = followingGroups[index - 1];
-            return Padding(
-              padding: const EdgeInsets.only(right: 16),
-              child: AnimatedStoryAvatar(
-                storyGroup: group,
-                onTap: () =>
-                    _onStoryGroupTap(context, ref, group, followingGroups),
-              ),
-            );
-          },
+            },
+          ),
         ),
       ),
     );
