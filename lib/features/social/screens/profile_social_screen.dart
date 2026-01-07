@@ -1411,6 +1411,8 @@ class _LinkedDeviceChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isOnline = node?.isOnline ?? false;
+    final accentColor = context.accentColor;
+    final gradientColors = AccentColors.gradientFor(accentColor);
 
     return GestureDetector(
       onTap: () => _showNodeBottomSheet(context),
@@ -1423,11 +1425,7 @@ class _LinkedDeviceChip extends StatelessWidget {
               color: _getNodeColor(nodeId),
               size: 44,
               showGradientBorder: true,
-              gradientColors: const [
-                Color(0xFFE91E8C), // Magenta
-                Color(0xFF8B5CF6), // Purple
-                Color(0xFF4F6AF6), // Blue
-              ],
+              gradientColors: gradientColors,
               showOnlineIndicator: true,
               onlineStatus: isOnline
                   ? OnlineStatus.online

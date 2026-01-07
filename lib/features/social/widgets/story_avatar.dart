@@ -21,6 +21,7 @@ class StoryAvatar extends StatefulWidget {
     this.hasUnviewed = false,
     this.isAddButton = false,
     this.showName = true,
+    this.accentColor,
     this.onTap,
   });
 
@@ -44,6 +45,9 @@ class StoryAvatar extends StatefulWidget {
 
   /// Whether to show the name below the avatar
   final bool showName;
+
+  /// Accent color for the gradient ring (uses theme accent if not provided)
+  final Color? accentColor;
 
   /// Callback when tapped
   final VoidCallback? onTap;
@@ -108,6 +112,18 @@ class _StoryAvatarState extends State<StoryAvatar>
     final ringPadding = widget.size * 0.04;
     final totalSize = widget.size + (ringWidth + ringPadding) * 2;
 
+    // Get gradient colors based on accent color
+    final accentColor = widget.accentColor ?? context.accentColor;
+    final gradientColors = AccentColors.gradientFor(accentColor);
+    // Create sweep gradient colors (cycle back to start for seamless loop)
+    final sweepColors = [
+      gradientColors[0],
+      gradientColors[1],
+      gradientColors[2],
+      gradientColors[1],
+      gradientColors[0],
+    ];
+
     return GestureDetector(
       onTap: widget.onTap,
       child: SizedBox(
@@ -140,19 +156,11 @@ class _StoryAvatarState extends State<StoryAvatar>
                             child: Container(
                               width: totalSize,
                               height: totalSize,
-                              decoration: const BoxDecoration(
+                              decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 gradient: SweepGradient(
-                                  colors: [
-                                    Color(0xFFE91E8C), // Magenta
-                                    Color(0xFF8B5CF6), // Purple
-                                    Color(0xFF4F6AF6), // Blue
-                                    Color(0xFF8B5CF6), // Purple
-                                    Color(
-                                      0xFFE91E8C,
-                                    ), // Back to magenta for seamless loop
-                                  ],
-                                  stops: [0.0, 0.25, 0.5, 0.75, 1.0],
+                                  colors: sweepColors,
+                                  stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
                                 ),
                               ),
                             ),

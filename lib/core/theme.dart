@@ -48,6 +48,36 @@ class AccentColors {
     'Rose',
   ];
 
+  /// Gradient colors for each accent (used for story rings, etc.)
+  /// Each gradient has 3 colors that blend well with the base accent
+  /// Indexed same as [all] list
+  static const List<List<Color>> gradients = [
+    [Color(0xFFE91E8C), Color(0xFF8B5CF6), Color(0xFF4F6AF6)], // magenta
+    [Color(0xFF8B5CF6), Color(0xFFA855F7), Color(0xFFEC4899)], // purple
+    [Color(0xFF4F6AF6), Color(0xFF3B82F6), Color(0xFF06B6D4)], // blue
+    [Color(0xFF06B6D4), Color(0xFF22D3EE), Color(0xFF14B8A6)], // cyan
+    [Color(0xFF14B8A6), Color(0xFF2DD4BF), Color(0xFF22C55E)], // teal
+    [Color(0xFF22C55E), Color(0xFF4ADE80), Color(0xFF84CC16)], // green
+    [Color(0xFF84CC16), Color(0xFFA3E635), Color(0xFFEAB308)], // lime
+    [Color(0xFFEAB308), Color(0xFFFBBF24), Color(0xFFF97316)], // yellow
+    [Color(0xFFF97316), Color(0xFFFB923C), Color(0xFFEF4444)], // orange
+    [Color(0xFFEF4444), Color(0xFFF87171), Color(0xFFF43F5E)], // red
+    [Color(0xFFEC4899), Color(0xFFF472B6), Color(0xFFE91E8C)], // pink
+    [Color(0xFFF43F5E), Color(0xFFFB7185), Color(0xFFEC4899)], // rose
+  ];
+
+  /// Get the gradient colors for a given accent color
+  static List<Color> gradientFor(Color color) {
+    final colorValue = color.toARGB32();
+    for (int i = 0; i < all.length; i++) {
+      if (all[i].toARGB32() == colorValue) {
+        return gradients[i];
+      }
+    }
+    // Default to magenta gradient (index 0)
+    return gradients[0];
+  }
+
   static String nameFor(Color color) {
     final colorValue = color.toARGB32();
     for (int i = 0; i < all.length; i++) {
