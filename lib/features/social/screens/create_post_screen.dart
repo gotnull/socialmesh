@@ -1037,8 +1037,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     final content = _contentController.text.trim();
     if (content.isEmpty && _imageUrls.isEmpty) return;
 
-    // Dismiss keyboard immediately
-    FocusScope.of(context).unfocus();
+    // Dismiss keyboard immediately using multiple methods for reliability
+    _contentFocusNode.unfocus();
+    FocusManager.instance.primaryFocus?.unfocus();
 
     setState(() => _isSubmitting = true);
 

@@ -19,7 +19,6 @@ import '../../services/storage/storage_service.dart';
 import '../../utils/snackbar.dart';
 import '../intro/intro_animation_preview_screen.dart';
 import '../widget_builder/marketplace/widget_approval_screen.dart';
-import 'admin_follow_requests_screen.dart';
 import '../../core/widgets/loading_indicator.dart';
 
 /// Debug settings screen with developer tools and the mesh node playground.
@@ -1578,73 +1577,6 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                       SizedBox(height: 2),
                       Text(
                         'Review pending marketplace submissions',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: context.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(Icons.chevron_right_rounded, color: context.textSecondary),
-              ],
-            ),
-          ),
-        ),
-
-        const SizedBox(height: 12),
-
-        // Follow Requests Admin
-        _buildSectionLabel('SOCIAL MODERATION'),
-        const SizedBox(height: 12),
-
-        BouncyTap(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const AdminFollowRequestsScreen(),
-              ),
-            );
-          },
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: context.background,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AccentColors.purple.withAlpha(60)),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: AccentColors.purple.withAlpha(20),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    Icons.person_add_alt_1_rounded,
-                    color: AccentColors.purple,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Follow Requests Admin',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: context.textPrimary,
-                        ),
-                      ),
-                      SizedBox(height: 2),
-                      Text(
-                        'Manage requests & seed dummy users',
                         style: TextStyle(
                           fontSize: 12,
                           color: context.textSecondary,

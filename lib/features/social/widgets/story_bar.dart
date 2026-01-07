@@ -36,6 +36,15 @@ class StoryBar extends ConsumerWidget {
     final myGroup = ref.watch(myStoryGroupProvider);
     final followingGroups = ref.watch(followingStoryGroupsProvider);
 
+    debugPrint(
+      '📖 [StoryBar] Total groups: ${storyGroupsState.groups.length}, Following groups: ${followingGroups.length}',
+    );
+    for (final g in storyGroupsState.groups) {
+      debugPrint(
+        '📖 [StoryBar]   Group: ${g.userId}, stories: ${g.stories.length}',
+      );
+    }
+
     // Check if user has stories from direct provider (more reliable)
     final hasOwnStories = myStoriesAsync.when(
       data: (stories) => stories.isNotEmpty,

@@ -46,6 +46,7 @@ import '../device_shop/providers/admin_shop_providers.dart';
 import '../mesh_health/widgets/mesh_health_dashboard.dart';
 import '../social/social.dart';
 import '../social/screens/reported_content_screen.dart';
+import '../settings/admin_follow_requests_screen.dart';
 
 /// Combined admin notification count provider
 /// Uses FutureProvider to properly handle the async stream states
@@ -1929,6 +1930,18 @@ class _DrawerAdminSection extends ConsumerWidget {
                     onTap: () {
                       ref.haptics.tabChange();
                       onNavigate(const ReportedContentScreen());
+                    },
+                  ),
+
+                  // Social Seeding (Follow Requests Admin)
+                  _DrawerMenuTile(
+                    icon: Icons.group_add_rounded,
+                    label: 'Social Seeding',
+                    isSelected: false,
+                    iconColor: Colors.teal.shade400,
+                    onTap: () {
+                      ref.haptics.tabChange();
+                      onNavigate(const AdminFollowRequestsScreen());
                     },
                   ),
                 ],

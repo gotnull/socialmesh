@@ -27,118 +27,116 @@ class _AdminFollowRequestsScreenState
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
         backgroundColor: context.background,
-        title: Text(
-          'Admin: Follow Requests',
-          style: TextStyle(
-            color: context.textPrimary,
-            fontWeight: FontWeight.w600,
+        appBar: AppBar(
+          backgroundColor: context.background,
+          title: Text(
+            'Social Admin',
+            style: TextStyle(
+              color: context.textPrimary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          bottom: TabBar(
+            indicatorColor: context.accentColor,
+            labelColor: context.textPrimary,
+            unselectedLabelColor: context.textTertiary,
+            tabs: const [
+              Tab(text: 'Follow Requests'),
+              Tab(text: 'Seed Data'),
+            ],
           ),
         ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.person_add, color: context.textPrimary),
-            onPressed: _showSeedUsersDialog,
-            tooltip: 'Seed dummy users',
-          ),
-        ],
+        body: TabBarView(
+          children: [
+            _buildFollowRequestsTab(),
+            _SeedDataTab(firestore: _firestore),
+          ],
+        ),
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: _firestore
-            .collection('follow_requests')
-            .where('status', isEqualTo: 'pending')
-            .orderBy('createdAt', descending: true)
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: 48,
-                      color: AppTheme.errorRed,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Error loading requests',
-                      style: TextStyle(
-                        color: context.textPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      snapshot.error.toString(),
-                      style: TextStyle(
-                        color: context.textTertiary,
-                        fontSize: 13,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
+    );
+  }
 
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          final requests = snapshot.data?.docs ?? [];
-
-          if (requests.isEmpty) {
-            return Center(
+  Widget _buildFollowRequestsTab() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: _firestore
+          .collection('follow_requests')
+          .where('status', isEqualTo: 'pending')
+          .orderBy('createdAt', descending: true)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    Icons.inbox_outlined,
-                    size: 64,
-                    color: context.textTertiary,
-                  ),
+                  Icon(Icons.error_outline, size: 48, color: AppTheme.errorRed),
                   const SizedBox(height: 16),
                   Text(
-                    'No pending requests',
+                    'Error loading requests',
                     style: TextStyle(
-                      color: context.textSecondary,
+                      color: context.textPrimary,
                       fontSize: 16,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                  const SizedBox(height: 24),
-                  OutlinedButton.icon(
-                    onPressed: _showSeedUsersDialog,
-                    icon: const Icon(Icons.person_add),
-                    label: const Text('Seed Dummy Users'),
+                  const SizedBox(height: 8),
+                  Text(
+                    snapshot.error.toString(),
+                    style: TextStyle(color: context.textTertiary, fontSize: 13),
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),
-            );
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: requests.length,
-            itemBuilder: (context, index) {
-              final doc = requests[index];
-              final request = FollowRequest.fromFirestore(doc);
-              return _FollowRequestCard(
-                request: request,
-                onAccept: () => _acceptRequest(request),
-                onDecline: () => _declineRequest(request),
-              );
-            },
+            ),
           );
-        },
-      ),
+        }
+
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final requests = snapshot.data?.docs ?? [];
+
+        if (requests.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.inbox_outlined,
+                  size: 64,
+                  color: context.textTertiary,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'No pending requests',
+                  style: TextStyle(color: context.textSecondary, fontSize: 16),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: requests.length,
+          itemBuilder: (context, index) {
+            final doc = requests[index];
+            final request = FollowRequest.fromFirestore(doc);
+            return _FollowRequestCard(
+              request: request,
+              onAccept: () => _acceptRequest(request),
+              onDecline: () => _declineRequest(request),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -191,15 +189,6 @@ class _AdminFollowRequestsScreenState
         showErrorSnackBar(context, 'Failed to decline: $e');
       }
     }
-  }
-
-  void _showSeedUsersDialog() {
-    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
-    showDialog(
-      context: context,
-      builder: (context) =>
-          _SeedUsersDialog(firestore: _firestore, currentUserId: currentUserId),
-    );
   }
 }
 
@@ -398,22 +387,24 @@ class _ProfileBadge extends StatelessWidget {
   }
 }
 
-class _SeedUsersDialog extends StatefulWidget {
-  const _SeedUsersDialog({required this.firestore, this.currentUserId});
+class _SeedDataTab extends StatefulWidget {
+  const _SeedDataTab({required this.firestore});
 
   final FirebaseFirestore firestore;
-  final String? currentUserId;
 
   @override
-  State<_SeedUsersDialog> createState() => _SeedUsersDialogState();
+  State<_SeedDataTab> createState() => _SeedDataTabState();
 }
 
-class _SeedUsersDialogState extends State<_SeedUsersDialog> {
+class _SeedDataTabState extends State<_SeedDataTab> {
   bool _isSeeding = false;
   String _status = '';
   final List<String> _log = [];
+  final ScrollController _logScrollController = ScrollController();
 
-  // Dummy user data
+  String? get _currentUserId => FirebaseAuth.instance.currentUser?.uid;
+
+  // Dummy user data with avatar URLs
   static const _dummyUsers = [
     {
       'id': 'dummy_user_alice',
@@ -422,6 +413,7 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
       'callsign': 'AA1',
       'isPrivate': false,
       'isVerified': true,
+      'avatarUrl': 'https://i.pravatar.cc/300?u=alice',
     },
     {
       'id': 'dummy_user_bob',
@@ -430,6 +422,7 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
       'callsign': 'BB2',
       'isPrivate': true,
       'isVerified': false,
+      'avatarUrl': 'https://i.pravatar.cc/300?u=bob',
     },
     {
       'id': 'dummy_user_carol',
@@ -438,6 +431,7 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
       'callsign': 'CC3',
       'isPrivate': true,
       'isVerified': false,
+      'avatarUrl': 'https://i.pravatar.cc/300?u=carol',
     },
     {
       'id': 'dummy_user_dave',
@@ -446,6 +440,7 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
       'callsign': 'DD4',
       'isPrivate': false,
       'isVerified': false,
+      'avatarUrl': 'https://i.pravatar.cc/300?u=dave',
     },
     {
       'id': 'dummy_user_eve',
@@ -454,6 +449,7 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
       'callsign': 'EE5',
       'isPrivate': true,
       'isVerified': true,
+      'avatarUrl': 'https://i.pravatar.cc/300?u=eve',
     },
     {
       'id': 'dummy_user_frank',
@@ -462,6 +458,7 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
       'callsign': 'FF6',
       'isPrivate': false,
       'isVerified': false,
+      'avatarUrl': 'https://i.pravatar.cc/300?u=frank',
     },
     {
       'id': 'dummy_user_grace',
@@ -470,6 +467,7 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
       'callsign': 'GG7',
       'isPrivate': true,
       'isVerified': false,
+      'avatarUrl': 'https://i.pravatar.cc/300?u=grace',
     },
     {
       'id': 'dummy_user_henry',
@@ -478,80 +476,95 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
       'callsign': 'HH8',
       'isPrivate': false,
       'isVerified': false,
+      'avatarUrl': 'https://i.pravatar.cc/300?u=henry',
     },
   ];
 
-  // Sample posts for each user
+  // Sample posts for each user with images
   static const _samplePosts = [
     {
       'authorId': 'dummy_user_alice',
       'content':
           'Just set up my first solar-powered mesh node on the mountain! 🏔️ Getting great coverage over the valley. #offgrid #meshtastic',
+      'imageUrl': 'https://picsum.photos/seed/post1/800/600',
     },
     {
       'authorId': 'dummy_user_alice',
       'content':
           'Pro tip: Elevate your antennas! Even 3 meters higher can double your range in hilly terrain.',
+      'imageUrl': null,
     },
     {
       'authorId': 'dummy_user_bob',
       'content':
           'Finished my DIY weatherproof enclosure for the T-Beam. 3D printed with PETG and sealed with silicone. Works great!',
+      'imageUrl': 'https://picsum.photos/seed/post3/800/600',
     },
     {
       'authorId': 'dummy_user_bob',
       'content':
           'Anyone else testing the new firmware update? Seeing improved battery life on my RAK nodes.',
+      'imageUrl': null,
     },
     {
       'authorId': 'dummy_user_carol',
       'content':
           'Had an amazing QSO today - mesh message relayed through 5 nodes over 47km! The power of community networks. 📡',
+      'imageUrl': 'https://picsum.photos/seed/post5/800/600',
     },
     {
       'authorId': 'dummy_user_dave',
       'content':
           'Teaching emergency communication at the community center this weekend. Mesh networks are perfect for disaster preparedness!',
+      'imageUrl': 'https://picsum.photos/seed/post6/800/600',
     },
     {
       'authorId': 'dummy_user_dave',
       'content':
           'Remember: In an emergency, your mesh network might be the only way to communicate. Keep those nodes charged! 🔋',
+      'imageUrl': null,
     },
     {
       'authorId': 'dummy_user_eve',
       'content':
           'Love that mesh networks work without any central infrastructure. True peer-to-peer communication. Privacy by design. 🔐',
+      'imageUrl': null,
     },
     {
       'authorId': 'dummy_user_frank',
       'content':
           'Used the mesh network on today\'s SAR mission. Invaluable for team coordination in areas with no cell coverage. 🚁',
+      'imageUrl': 'https://picsum.photos/seed/post9/800/600',
     },
     {
       'authorId': 'dummy_user_frank',
       'content':
           'Setting up permanent nodes at all our mountain huts. This will revolutionize backcountry communication.',
+      'imageUrl': 'https://picsum.photos/seed/post10/800/600',
     },
     {
       'authorId': 'dummy_user_grace',
       'content':
           'My solar node has been running for 6 months straight now! 100W panel + 50Ah battery = unlimited mesh. ☀️',
+      'imageUrl': 'https://picsum.photos/seed/post11/800/600',
     },
     {
       'authorId': 'dummy_user_grace',
       'content':
           'New project: Building a mesh-connected weather station. Will share temperature, humidity, and barometric pressure.',
+      'imageUrl': null,
     },
     {
       'authorId': 'dummy_user_henry',
       'content':
           'Just completed my DIY Yagi antenna build. 12dBi gain! Range increased significantly. Build guide coming soon.',
+      'imageUrl': 'https://picsum.photos/seed/post13/800/600',
     },
     {
       'authorId': 'dummy_user_henry',
       'content':
           'Prototyping a mesh-enabled sensor network for my greenhouse. Soil moisture + temp readings over LoRa. 🌱',
+      'imageUrl': 'https://picsum.photos/seed/post14/800/600',
     },
   ];
 
@@ -588,144 +601,304 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
     },
   ];
 
+  // Sample stories for testing story bar
+  static const _sampleStories = [
+    {
+      'authorId': 'dummy_user_alice',
+      'mediaUrl': 'https://picsum.photos/seed/story1/1080/1920',
+      'text': 'Beautiful sunset from my mountain node! 🌅',
+    },
+    {
+      'authorId': 'dummy_user_alice',
+      'mediaUrl': 'https://picsum.photos/seed/story2/1080/1920',
+      'text': 'Node status: Online for 30 days straight! 🔥',
+    },
+    {
+      'authorId': 'dummy_user_dave',
+      'mediaUrl': 'https://picsum.photos/seed/story3/1080/1920',
+      'text': 'Emergency drill went great today 🚨',
+    },
+    {
+      'authorId': 'dummy_user_frank',
+      'mediaUrl': 'https://picsum.photos/seed/story4/1080/1920',
+      'text': 'Out on patrol in the mountains 🏔️',
+    },
+    {
+      'authorId': 'dummy_user_frank',
+      'mediaUrl': 'https://picsum.photos/seed/story5/1080/1920',
+      'text': 'Testing mesh coverage from the summit',
+    },
+    {
+      'authorId': 'dummy_user_henry',
+      'mediaUrl': 'https://picsum.photos/seed/story6/1080/1920',
+      'text': 'New antenna build progress 📡',
+    },
+  ];
+
+  @override
+  void dispose() {
+    _logScrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_logScrollController.hasClients) {
+        _logScrollController.animateTo(
+          _logScrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 100),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: context.card,
-      title: Text(
-        'Seed Test Data',
-        style: TextStyle(color: context.textPrimary),
-      ),
-      content: SizedBox(
-        width: double.maxFinite,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'This will create test data for the social features:',
-              style: TextStyle(color: context.textSecondary, fontSize: 14),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '• ${_dummyUsers.length} dummy profiles\n'
-              '• ${_samplePosts.length} posts with content\n'
-              '• ~${_sampleComments.length * 2} comments',
-              style: TextStyle(color: context.textSecondary, fontSize: 13),
-            ),
-            const SizedBox(height: 12),
-            // User list preview
-            Container(
-              height: 150,
-              decoration: BoxDecoration(
-                color: context.background,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: ListView.builder(
-                padding: const EdgeInsets.all(8),
-                itemCount: _dummyUsers.length,
-                itemBuilder: (context, index) {
-                  final user = _dummyUsers[index];
-                  final isPrivate = user['isPrivate'] as bool;
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Row(
-                      children: [
-                        Icon(
-                          isPrivate ? Icons.lock : Icons.public,
-                          size: 14,
-                          color: isPrivate
-                              ? context.textTertiary
-                              : AccentColors.green,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          user['displayName'] as String,
-                          style: TextStyle(
-                            color: context.textPrimary,
-                            fontSize: 13,
-                          ),
-                        ),
-                        if (user['isVerified'] == true) ...[
-                          const SizedBox(width: 4),
-                          Icon(
-                            Icons.verified,
-                            size: 12,
-                            color: context.accentColor,
-                          ),
-                        ],
-                      ],
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        // Summary card
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: context.card,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: context.border),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.dataset_outlined, color: context.accentColor),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Test Data',
+                    style: TextStyle(
+                      color: context.textPrimary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
                     ),
-                  );
-                },
+                  ),
+                ],
               ),
-            ),
-            if (_isSeeding) ...[
-              const SizedBox(height: 16),
-              LinearProgressIndicator(
-                backgroundColor: context.border,
-                valueColor: AlwaysStoppedAnimation(context.accentColor),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                _status,
-                style: TextStyle(color: context.textTertiary, fontSize: 12),
+              const SizedBox(height: 12),
+              _buildStatRow(context, '${_dummyUsers.length}', 'Profiles'),
+              _buildStatRow(context, '${_samplePosts.length}', 'Posts'),
+              _buildStatRow(context, '${_sampleStories.length}', 'Stories'),
+              _buildStatRow(
+                context,
+                '~${_sampleComments.length * 2}',
+                'Comments',
               ),
             ],
-            if (_log.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Container(
-                height: 100,
-                decoration: BoxDecoration(
-                  color: context.background,
-                  borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        // User preview
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: context.card,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: context.border),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Dummy Users',
+                style: TextStyle(
+                  color: context.textSecondary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5,
                 ),
-                child: ListView.builder(
-                  padding: const EdgeInsets.all(8),
-                  itemCount: _log.length,
-                  itemBuilder: (context, index) => Text(
-                    _log[index],
-                    style: TextStyle(
-                      color: context.textTertiary,
-                      fontSize: 11,
-                      fontFamily: AppTheme.fontFamily,
+              ),
+              const SizedBox(height: 12),
+              ...List.generate(_dummyUsers.length, (index) {
+                final user = _dummyUsers[index];
+                final isPrivate = user['isPrivate'] as bool;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      Icon(
+                        isPrivate ? Icons.lock : Icons.public,
+                        size: 14,
+                        color: isPrivate
+                            ? context.textTertiary
+                            : AccentColors.green,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        user['displayName'] as String,
+                        style: TextStyle(
+                          color: context.textPrimary,
+                          fontSize: 13,
+                        ),
+                      ),
+                      if (user['isVerified'] == true) ...[
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.verified,
+                          size: 12,
+                          color: context.accentColor,
+                        ),
+                      ],
+                    ],
+                  ),
+                );
+              }),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        // Log output (only show when seeding)
+        if (_log.isNotEmpty)
+          Container(
+            height: 150,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.black87,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.terminal,
+                      size: 14,
+                      color: Colors.green.shade400,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Log',
+                      style: TextStyle(
+                        color: Colors.green.shade400,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const Spacer(),
+                    if (_isSeeding)
+                      SizedBox(
+                        width: 12,
+                        height: 12,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 1.5,
+                          color: Colors.green.shade400,
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: ListView.builder(
+                    controller: _logScrollController,
+                    itemCount: _log.length,
+                    itemBuilder: (context, index) => Text(
+                      _log[index],
+                      style: TextStyle(
+                        color: Colors.green.shade300,
+                        fontSize: 11,
+                        fontFamily: 'monospace',
+                      ),
                     ),
                   ),
                 ),
+              ],
+            ),
+          ),
+
+        if (_isSeeding) ...[
+          const SizedBox(height: 12),
+          LinearProgressIndicator(
+            backgroundColor: context.border,
+            valueColor: AlwaysStoppedAnimation(context.accentColor),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _status,
+            style: TextStyle(color: context.textTertiary, fontSize: 12),
+            textAlign: TextAlign.center,
+          ),
+        ],
+
+        const SizedBox(height: 24),
+
+        // Action buttons
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _isSeeding ? null : _resetAndSeed,
+                icon: const Icon(Icons.refresh, size: 18),
+                label: const Text('Reset & Seed'),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  side: BorderSide(color: context.border),
+                ),
               ),
-            ],
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: FilledButton.icon(
+                onPressed: _isSeeding ? null : _seedUsers,
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('Seed Data'),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+              ),
+            ),
           ],
         ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: _isSeeding ? null : () => Navigator.pop(context),
-          child: const Text('Cancel'),
+
+        const SizedBox(height: 12),
+
+        // Help text
+        Text(
+          'Reset & Seed: Clears all dummy data first, then seeds fresh.\n'
+          'Seed Data: Adds to existing data (may create duplicates).',
+          style: TextStyle(color: context.textTertiary, fontSize: 11),
+          textAlign: TextAlign.center,
         ),
-        OutlinedButton(
-          onPressed: _isSeeding ? null : _resetAndSeed,
-          child: _isSeeding
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Text('Reset & Seed'),
-        ),
-        FilledButton(
-          onPressed: _isSeeding ? null : _seedUsers,
-          child: _isSeeding
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : const Text('Seed Data'),
-        ),
+
+        const SizedBox(height: 32),
       ],
+    );
+  }
+
+  Widget _buildStatRow(BuildContext context, String value, String label) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 40,
+            child: Text(
+              value,
+              style: TextStyle(
+                color: context.accentColor,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          Text(
+            label,
+            style: TextStyle(color: context.textSecondary, fontSize: 13),
+          ),
+        ],
+      ),
     );
   }
 
@@ -738,6 +911,7 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
     try {
       // Step 1: Delete all dummy user data
       _log.add('🗑️ Cleaning up existing dummy data...');
+      _scrollToBottom();
       setState(() => _status = 'Deleting dummy data...');
 
       // Get all dummy user IDs
@@ -764,6 +938,17 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
         await doc.reference.delete();
       }
       _log.add('  ✓ Deleted ${postsQuery.docs.length} posts');
+
+      // Delete stories by dummy users
+      _log.add('  Deleting stories...');
+      final storiesQuery = await widget.firestore
+          .collection('stories')
+          .where('authorId', whereIn: dummyUserIds)
+          .get();
+      for (final doc in storiesQuery.docs) {
+        await doc.reference.delete();
+      }
+      _log.add('  ✓ Deleted ${storiesQuery.docs.length} stories');
 
       // Delete follow requests involving dummy users (as requester)
       _log.add('  Deleting follow requests...');
@@ -807,13 +992,13 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
       );
 
       // Reset current user's follow counts and delete their follows
-      if (widget.currentUserId != null) {
+      if (_currentUserId != null) {
         _log.add('  Resetting your follow data...');
 
         // Delete all follows where current user is follower
         final myFollowsQuery = await widget.firestore
             .collection('follows')
-            .where('followerId', isEqualTo: widget.currentUserId)
+            .where('followerId', isEqualTo: _currentUserId)
             .get();
         for (final doc in myFollowsQuery.docs) {
           await doc.reference.delete();
@@ -822,7 +1007,7 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
         // Delete all follows where current user is being followed
         final myFollowersQuery = await widget.firestore
             .collection('follows')
-            .where('followingId', isEqualTo: widget.currentUserId)
+            .where('followingId', isEqualTo: _currentUserId)
             .get();
         for (final doc in myFollowersQuery.docs) {
           await doc.reference.delete();
@@ -831,7 +1016,7 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
         // Reset counts on current user's profile
         await widget.firestore
             .collection('profiles')
-            .doc(widget.currentUserId)
+            .doc(_currentUserId)
             .update({'followerCount': 0, 'followingCount': 0});
 
         _log.add(
@@ -884,6 +1069,7 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
         final userId = user['id'] as String;
         final displayName = user['displayName'] as String;
         final callsign = user['callsign'] as String;
+        final avatarUrl = user['avatarUrl'] as String?;
         setState(() => _status = 'Creating $displayName...');
         _log.add('+ $displayName');
 
@@ -898,6 +1084,7 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
           'callsignLower': callsign.toLowerCase(),
           'isPrivate': user['isPrivate'],
           'isVerified': user['isVerified'],
+          'avatarUrl': avatarUrl,
           'followerCount': 0,
           'followingCount': 0,
           'postCount': 0,
@@ -923,6 +1110,7 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
         final post = _samplePosts[i];
         final authorId = post['authorId'] as String;
         final content = post['content'] as String;
+        final imageUrl = post['imageUrl'];
 
         // Get author snapshot
         final author = _dummyUsers.firstWhere((u) => u['id'] == authorId);
@@ -937,7 +1125,7 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
           await postRef.set({
             'authorId': authorId,
             'content': content,
-            'mediaUrls': <String>[],
+            'mediaUrls': imageUrl != null ? <String>[imageUrl] : <String>[],
             'createdAt': Timestamp.fromDate(
               DateTime.now().subtract(Duration(hours: _samplePosts.length - i)),
             ),
@@ -946,7 +1134,7 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
             'authorSnapshot': {
               'displayName': author['displayName'],
               'callsign': author['callsign'],
-              'avatarUrl': null,
+              'avatarUrl': author['avatarUrl'],
               'isVerified': author['isVerified'],
             },
           });
@@ -965,7 +1153,150 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
 
       _log.add('✓ ${_samplePosts.length} posts created');
 
-      // Step 3: Create comments on posts
+      // Step 3: Create stories for some users
+      setState(() => _status = 'Creating stories...');
+      _log.add('');
+      _log.add('Creating stories...');
+      var storyCount = 0;
+
+      for (var i = 0; i < _sampleStories.length; i++) {
+        final storyData = _sampleStories[i];
+        final authorId = storyData['authorId'] as String;
+        final mediaUrl = storyData['mediaUrl'] as String;
+        final text = storyData['text'] as String;
+
+        // Get author info
+        final author = _dummyUsers.firstWhere((u) => u['id'] == authorId);
+
+        final storyRef = widget.firestore.collection('stories').doc();
+        final now = DateTime.now();
+        // Stagger stories over the past few hours so they appear fresh
+        final createdAt = now.subtract(Duration(hours: i * 2));
+        final expiresAt = createdAt.add(const Duration(hours: 24));
+
+        try {
+          await storyRef.set({
+            'authorId': authorId,
+            'mediaUrl': mediaUrl,
+            'mediaType': 'image',
+            'duration': 5,
+            'createdAt': Timestamp.fromDate(createdAt),
+            'expiresAt': Timestamp.fromDate(expiresAt),
+            'viewCount': 0,
+            'visibility': 'public',
+            'mentions': <String>[],
+            'hashtags': <String>[],
+            'textOverlay': {
+              'text': text,
+              'x': 0.5,
+              'y': 0.85,
+              'fontSize': 20.0,
+              'color': '#FFFFFF',
+              'alignment': 'center',
+            },
+            'authorSnapshot': {
+              'displayName': author['displayName'],
+              'avatarUrl': author['avatarUrl'],
+              'isVerified': author['isVerified'] ?? false,
+            },
+          });
+          storyCount++;
+          _log.add(
+            '+ Story: ${text.substring(0, text.length.clamp(0, 30))}...',
+          );
+        } catch (e) {
+          _log.add('✗ Story failed: $e');
+        }
+
+        setState(
+          () => _status = 'Creating story ${i + 1}/${_sampleStories.length}...',
+        );
+        await Future.delayed(const Duration(milliseconds: 50));
+      }
+
+      // Update hasActiveStory flag for users who have stories
+      final usersWithStories = _sampleStories
+          .map((s) => s['authorId'] as String)
+          .toSet();
+      for (final userId in usersWithStories) {
+        await widget.firestore.collection('users').doc(userId).set({
+          'hasActiveStory': true,
+          'lastStoryAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      }
+      _log.add('✓ $storyCount stories created');
+
+      // Step 4: Create follows from current user to public users with stories
+      // This ensures the story bar shows stories from followed users
+      if (_currentUserId != null) {
+        setState(() => _status = 'Creating follows for story visibility...');
+        _log.add('');
+        _log.add('Following public users with stories...');
+        _log.add('  Your user ID: ${_currentUserId}');
+        var followCount = 0;
+
+        // Get public users who have stories
+        final publicUsersWithStories = usersWithStories.where((userId) {
+          final user = _dummyUsers.firstWhere((u) => u['id'] == userId);
+          return user['isPrivate'] != true;
+        }).toList();
+
+        _log.add('  Public users with stories: $publicUsersWithStories');
+
+        for (final targetUserId in publicUsersWithStories) {
+          final followId = '${_currentUserId}_$targetUserId';
+          final user = _dummyUsers.firstWhere((u) => u['id'] == targetUserId);
+
+          try {
+            await widget.firestore.collection('follows').doc(followId).set({
+              'followerId': _currentUserId,
+              'followeeId': targetUserId,
+              'createdAt': FieldValue.serverTimestamp(),
+            });
+            followCount++;
+            _log.add('+ Followed ${user['displayName']} (doc: $followId)');
+          } catch (e) {
+            _log.add('✗ Follow ${user['displayName']} failed: $e');
+          }
+        }
+
+        // Update counts
+        if (followCount > 0) {
+          try {
+            await widget.firestore
+                .collection('profiles')
+                .doc(_currentUserId)
+                .set({
+                  'followingCount': FieldValue.increment(followCount),
+                }, SetOptions(merge: true));
+            _log.add('  Updated your followingCount +$followCount');
+          } catch (e) {
+            _log.add('  ⚠ Failed to update your followingCount: $e');
+          }
+
+          for (final targetUserId in publicUsersWithStories) {
+            try {
+              await widget.firestore
+                  .collection('profiles')
+                  .doc(targetUserId)
+                  .set({
+                    'followerCount': FieldValue.increment(1),
+                  }, SetOptions(merge: true));
+            } catch (e) {
+              _log.add(
+                '  ⚠ Failed to update followerCount for $targetUserId: $e',
+              );
+            }
+          }
+          _log.add(
+            '  Updated followerCount for ${publicUsersWithStories.length} users',
+          );
+        }
+
+        _log.add('✓ Following $followCount users');
+      }
+
+      // Step 5: Create comments on posts
       setState(() => _status = 'Creating comments...');
       _log.add('');
       _log.add('Creating comments...');
@@ -1025,7 +1356,7 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
       _log.add('✓ $commentCount comments created');
       _log.add('');
 
-      // Step 4: Recalculate all counts from actual data
+      // Step 6: Recalculate all counts from actual data
       setState(() => _status = 'Recalculating counts...');
       _log.add('Recalculating counts from actual data...');
       try {
@@ -1061,23 +1392,23 @@ class _SeedUsersDialogState extends State<_SeedUsersDialog> {
 
       _log.add('');
       _log.add('✓ All data seeded successfully!');
+      _scrollToBottom();
 
       setState(() {
         _isSeeding = false;
         _status = 'Done!';
       });
 
-      await Future.delayed(const Duration(seconds: 1));
       if (mounted) {
-        Navigator.pop(context);
         showSuccessSnackBar(
           context,
-          'Seeded ${_dummyUsers.length} users, ${_samplePosts.length} posts, $commentCount comments',
+          'Seeded ${_dummyUsers.length} users, ${_samplePosts.length} posts, ${_sampleStories.length} stories, $commentCount comments',
         );
       }
     } catch (e) {
       _log.add('');
       _log.add('✗ Error: $e');
+      _scrollToBottom();
       setState(() {
         _isSeeding = false;
         _status = 'Error: $e';

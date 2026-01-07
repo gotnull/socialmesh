@@ -484,6 +484,10 @@ class StoryService {
         .map((d) => d.data()['followeeId'] as String)
         .toList();
 
+    debugPrint(
+      '📖 [StoryGroups] Following ${followedUserIds.length} users: $followedUserIds',
+    );
+
     // Add current user to get their stories too
     final userIds = [currentUserId, ...followedUserIds];
 
@@ -491,6 +495,7 @@ class StoryService {
     final stories = <Story>[];
     for (var i = 0; i < userIds.length; i += 30) {
       final batch = userIds.skip(i).take(30).toList();
+      debugPrint('📖 [StoryGroups] Querying stories for batch: $batch');
       final snapshot = await _firestore
           .collection('stories')
           .where('authorId', whereIn: batch)
@@ -498,8 +503,13 @@ class StoryService {
           .orderBy('expiresAt')
           .orderBy('createdAt', descending: true)
           .get();
+      debugPrint(
+        '📖 [StoryGroups] Found ${snapshot.docs.length} stories in batch',
+      );
       stories.addAll(snapshot.docs.map(Story.fromFirestore));
     }
+
+    debugPrint('📖 [StoryGroups] Total stories found: ${stories.length}');
 
     // Group by user
     final groupedByUser = <String, List<Story>>{};

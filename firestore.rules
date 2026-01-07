@@ -91,10 +91,12 @@ service cloud.firestore {
     // =============================================================================
     
     // User data - owner read/write (with reserved name enforcement)
+    // Admins can write for seeding/testing purposes
     match /users/{userId} {
-      allow read: if isOwner(userId);
-      allow write: if isOwner(userId) && 
-        (!('displayName' in request.resource.data) || canUseDisplayName(request.resource.data.displayName));
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if (isOwner(userId) && 
+        (!('displayName' in request.resource.data) || canUseDisplayName(request.resource.data.displayName))) ||
+        isAdmin();
     }
     
     // User presence - public read, owner write
@@ -477,9 +479,9 @@ service cloud.firestore {
       // Private stories require follower relationship check
       allow read: if true; // Visibility filtering done in app queries
       
-      // Create: authenticated, must be author
+      // Create: authenticated, must be author (or admin for seeding)
       allow create: if isAuthenticated() &&
-        request.resource.data.authorId == request.auth.uid &&
+        (request.resource.data.authorId == request.auth.uid || isAdmin()) &&
         request.resource.data.mediaUrl is string &&
         request.resource.data.mediaUrl.size() > 0 &&
         isValidSize();
@@ -494,14 +496,19 @@ service cloud.firestore {
 
       // Story viewers subcollection - tracks who viewed the story
       match /viewers/{viewerId} {
-        // Story author can see who viewed and delete viewers when deleting story
-        allow read, delete: if isAuthenticated() &&
+        // Story author can see ALL viewers
+        // Users can read their OWN view record to check if they viewed
+        allow read: if isAuthenticated() &&
+          (get(/databases/$(database)/documents/stories/$(storyId)).data.authorId == request.auth.uid ||
+           viewerId == request.auth.uid);
+        
+        // Author can delete viewers (when deleting story)
+        allow delete: if isAuthenticated() &&
           get(/databases/$(database)/documents/stories/$(storyId)).data.authorId == request.auth.uid;
         
         // Any authenticated user can record their view (as themselves)
         allow create: if isAuthenticated() &&
-          viewerId == request.auth.uid &&
-          request.resource.data.userId == request.auth.uid;
+          viewerId == request.auth.uid;
         
         // No updates
         allow update: if false;
