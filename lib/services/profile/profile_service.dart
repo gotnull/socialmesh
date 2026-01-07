@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/logging.dart';
 import '../../models/user_profile.dart';
 
 /// Service for managing user profile data with local storage.
@@ -21,8 +22,10 @@ class ProfileService {
 
   /// Initialize the service
   Future<void> initialize() async {
+    AppLogging.auth('ProfileService: initialize() - START');
     _prefs = await SharedPreferences.getInstance();
     await _initAvatarDirectory();
+    AppLogging.auth('ProfileService: initialize() - ✅ COMPLETE');
   }
 
   Future<void> _initAvatarDirectory() async {
@@ -30,6 +33,7 @@ class ProfileService {
     _avatarDir = Directory('${appDir.path}/$_avatarDirName');
     if (!await _avatarDir!.exists()) {
       await _avatarDir!.create(recursive: true);
+      AppLogging.auth('ProfileService: Created avatar directory');
     }
   }
 
@@ -53,40 +57,72 @@ class ProfileService {
 
   /// Get the current user profile
   Future<UserProfile?> getProfile() async {
+    AppLogging.auth('ProfileService: getProfile() - START');
     final json = _preferences.getString(_profileKey);
-    if (json == null) return null;
+    if (json == null) {
+      AppLogging.auth(
+        'ProfileService: getProfile() - ❌ NO PROFILE FOUND (key missing)',
+      );
+      return null;
+    }
 
     try {
-      return UserProfile.fromJsonString(json);
+      final profile = UserProfile.fromJsonString(json);
+      AppLogging.auth(
+        'ProfileService: getProfile() - ✅ Found profile: id=${profile.id}, displayName=${profile.displayName}',
+      );
+      return profile;
     } catch (e) {
-      debugPrint('Error parsing profile: $e');
+      AppLogging.auth(
+        'ProfileService: getProfile() - ❌ ERROR parsing profile: $e',
+      );
       return null;
     }
   }
 
   /// Save the user profile
   Future<void> saveProfile(UserProfile profile) async {
+    AppLogging.auth(
+      'ProfileService: saveProfile() - Saving: id=${profile.id}, displayName=${profile.displayName}, isSynced=${profile.isSynced}',
+    );
     await _preferences.setString(_profileKey, profile.toJsonString());
+    AppLogging.auth('ProfileService: saveProfile() - ✅ SAVED');
   }
 
   /// Delete the user profile
   Future<void> deleteProfile() async {
+    AppLogging.auth('ProfileService: deleteProfile() - START');
     await _preferences.remove(_profileKey);
     await _clearAvatarImages();
+    AppLogging.auth('ProfileService: deleteProfile() - ✅ DELETED');
   }
 
   /// Check if a profile exists
   bool hasProfile() {
-    return _preferences.containsKey(_profileKey);
+    final exists = _preferences.containsKey(_profileKey);
+    AppLogging.auth('ProfileService: hasProfile() - $exists');
+    return exists;
   }
 
   /// Get or create profile (creates guest profile if none exists)
   Future<UserProfile> getOrCreateProfile() async {
+    AppLogging.auth('ProfileService: getOrCreateProfile() - START');
     final existing = await getProfile();
-    if (existing != null) return existing;
+    if (existing != null) {
+      AppLogging.auth(
+        'ProfileService: getOrCreateProfile() - ✅ Returning existing: ${existing.displayName}',
+      );
+      return existing;
+    }
 
+    AppLogging.auth(
+      'ProfileService: getOrCreateProfile() - Creating new guest profile',
+    );
     final guest = UserProfile.guest();
     await saveProfile(guest);
+    AppLogging.auth(
+      'ProfileService: getOrCreateProfile() - ✅ Created guest: id=${guest.id}',
+    );
     return guest;
   }
 

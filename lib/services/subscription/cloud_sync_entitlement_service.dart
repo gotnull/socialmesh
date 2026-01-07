@@ -347,11 +347,20 @@ class CloudSyncEntitlementService {
 
   void _onAuthStateChange(User? user) {
     if (user == null) {
-      AppLogging.subscriptions('☁️ User signed out, clearing entitlement');
+      AppLogging.subscriptions('☁️ Auth state changed: User signed out');
+      AppLogging.subscriptions(
+        '☁️ Clearing entitlement and cancelling Firestore subscription',
+      );
       _updateEntitlement(CloudSyncEntitlement.none);
       _firestoreSubscription?.cancel();
     } else {
       // Refresh on sign in
+      AppLogging.subscriptions(
+        '☁️ Auth state changed: User signed in (uid=${user.uid.substring(0, 8)}...)',
+      );
+      AppLogging.subscriptions(
+        '☁️ Refreshing entitlement and starting Firestore listener',
+      );
       refreshEntitlement();
       _listenToFirestoreEntitlement(user.uid);
     }

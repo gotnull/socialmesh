@@ -41,107 +41,135 @@ class AppLogging {
   static bool? _firmwareLoggingEnabled;
   static bool? _settingsLoggingEnabled;
   static bool? _debugLoggingEnabled;
+  static bool? _authLoggingEnabled;
   static Logger? _bleLogger;
   static Logger? _noOpLogger;
 
   static bool get bleLoggingEnabled {
-    _bleLoggingEnabled ??= _safeGetEnv('BLE_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    _bleLoggingEnabled ??=
+        _safeGetEnv('BLE_LOGGING_ENABLED')?.toLowerCase() != 'false';
     return _bleLoggingEnabled!;
   }
 
   static bool get protocolLoggingEnabled {
-    _protocolLoggingEnabled ??= _safeGetEnv('PROTOCOL_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    _protocolLoggingEnabled ??=
+        _safeGetEnv('PROTOCOL_LOGGING_ENABLED')?.toLowerCase() != 'false';
     return _protocolLoggingEnabled!;
   }
 
   static bool get widgetBuilderLoggingEnabled {
-    _widgetBuilderLoggingEnabled ??= _safeGetEnv('WIDGET_BUILDER_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    _widgetBuilderLoggingEnabled ??=
+        _safeGetEnv('WIDGET_BUILDER_LOGGING_ENABLED')?.toLowerCase() != 'false';
     return _widgetBuilderLoggingEnabled!;
   }
 
   static bool get liveActivityLoggingEnabled {
-    _liveActivityLoggingEnabled ??= _safeGetEnv('LIVE_ACTIVITY_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    _liveActivityLoggingEnabled ??=
+        _safeGetEnv('LIVE_ACTIVITY_LOGGING_ENABLED')?.toLowerCase() != 'false';
     return _liveActivityLoggingEnabled!;
   }
 
   static bool get automationsLoggingEnabled {
-    _automationsLoggingEnabled ??= _safeGetEnv('AUTOMATIONS_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    _automationsLoggingEnabled ??=
+        _safeGetEnv('AUTOMATIONS_LOGGING_ENABLED')?.toLowerCase() != 'false';
     return _automationsLoggingEnabled!;
   }
 
   static bool get messagesLoggingEnabled {
-    _messagesLoggingEnabled ??= _safeGetEnv('MESSAGES_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    _messagesLoggingEnabled ??=
+        _safeGetEnv('MESSAGES_LOGGING_ENABLED')?.toLowerCase() != 'false';
     return _messagesLoggingEnabled!;
   }
 
   static bool get iftttLoggingEnabled {
-    _iftttLoggingEnabled ??= _safeGetEnv('IFTTT_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    _iftttLoggingEnabled ??=
+        _safeGetEnv('IFTTT_LOGGING_ENABLED')?.toLowerCase() != 'false';
     return _iftttLoggingEnabled!;
   }
 
   static bool get telemetryLoggingEnabled {
-    _telemetryLoggingEnabled ??= _safeGetEnv('TELEMETRY_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    _telemetryLoggingEnabled ??=
+        _safeGetEnv('TELEMETRY_LOGGING_ENABLED')?.toLowerCase() != 'false';
     return _telemetryLoggingEnabled!;
   }
 
   static bool get connectionLoggingEnabled {
-    _connectionLoggingEnabled ??= _safeGetEnv('CONNECTION_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    _connectionLoggingEnabled ??=
+        _safeGetEnv('CONNECTION_LOGGING_ENABLED')?.toLowerCase() != 'false';
     return _connectionLoggingEnabled!;
   }
 
   static bool get nodesLoggingEnabled {
-    _nodesLoggingEnabled ??= _safeGetEnv('NODES_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    _nodesLoggingEnabled ??=
+        _safeGetEnv('NODES_LOGGING_ENABLED')?.toLowerCase() != 'false';
     return _nodesLoggingEnabled!;
   }
 
   static bool get channelsLoggingEnabled {
-    _channelsLoggingEnabled ??= _safeGetEnv('CHANNELS_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    _channelsLoggingEnabled ??=
+        _safeGetEnv('CHANNELS_LOGGING_ENABLED')?.toLowerCase() != 'false';
     return _channelsLoggingEnabled!;
   }
 
   static bool get appLoggingEnabled {
-    _appLoggingEnabled ??= _safeGetEnv('APP_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    _appLoggingEnabled ??=
+        _safeGetEnv('APP_LOGGING_ENABLED')?.toLowerCase() != 'false';
     return _appLoggingEnabled!;
   }
 
   static bool get subscriptionsLoggingEnabled {
-    _subscriptionsLoggingEnabled ??= _safeGetEnv('SUBSCRIPTIONS_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    _subscriptionsLoggingEnabled ??=
+        _safeGetEnv('SUBSCRIPTIONS_LOGGING_ENABLED')?.toLowerCase() != 'false';
     return _subscriptionsLoggingEnabled!;
   }
 
   static bool get notificationsLoggingEnabled {
-    _notificationsLoggingEnabled ??= _safeGetEnv('NOTIFICATIONS_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    _notificationsLoggingEnabled ??=
+        _safeGetEnv('NOTIFICATIONS_LOGGING_ENABLED')?.toLowerCase() != 'false';
     return _notificationsLoggingEnabled!;
   }
 
   static bool get audioLoggingEnabled {
-    _audioLoggingEnabled ??= _safeGetEnv('AUDIO_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    _audioLoggingEnabled ??=
+        _safeGetEnv('AUDIO_LOGGING_ENABLED')?.toLowerCase() != 'false';
     return _audioLoggingEnabled!;
   }
 
   static bool get mapsLoggingEnabled {
-    _mapsLoggingEnabled ??= _safeGetEnv('MAPS_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    _mapsLoggingEnabled ??=
+        _safeGetEnv('MAPS_LOGGING_ENABLED')?.toLowerCase() != 'false';
     return _mapsLoggingEnabled!;
   }
 
   static bool get firmwareLoggingEnabled {
-    _firmwareLoggingEnabled ??= _safeGetEnv('FIRMWARE_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    _firmwareLoggingEnabled ??=
+        _safeGetEnv('FIRMWARE_LOGGING_ENABLED')?.toLowerCase() != 'false';
     return _firmwareLoggingEnabled!;
   }
 
   static bool get settingsLoggingEnabled {
-    _settingsLoggingEnabled ??= _safeGetEnv('SETTINGS_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    _settingsLoggingEnabled ??=
+        _safeGetEnv('SETTINGS_LOGGING_ENABLED')?.toLowerCase() != 'false';
     return _settingsLoggingEnabled!;
   }
 
   static bool get debugLoggingEnabled {
-    _debugLoggingEnabled ??= _safeGetEnv('DEBUG_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    _debugLoggingEnabled ??=
+        _safeGetEnv('DEBUG_LOGGING_ENABLED')?.toLowerCase() != 'false';
     return _debugLoggingEnabled!;
+  }
+
+  static bool get authLoggingEnabled {
+    _authLoggingEnabled ??=
+        _safeGetEnv('AUTH_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    return _authLoggingEnabled!;
   }
 
   static Logger get bleLogger {
     if (bleLoggingEnabled) {
-      _bleLogger ??= Logger(printer: PrettyPrinter(methodCount: 0, printEmojis: false));
+      _bleLogger ??= Logger(
+        printer: PrettyPrinter(methodCount: 0, printEmojis: false),
+      );
       return _bleLogger!;
     } else {
       _noOpLogger ??= Logger(output: _NoOpOutput());
@@ -225,6 +253,10 @@ class AppLogging {
     if (debugLoggingEnabled) debugPrint('🐛 $message');
   }
 
+  static void auth(String message) {
+    if (authLoggingEnabled) debugPrint('🔐 Auth: $message');
+  }
+
   static void reset() {
     _bleLoggingEnabled = null;
     _protocolLoggingEnabled = null;
@@ -245,6 +277,7 @@ class AppLogging {
     _firmwareLoggingEnabled = null;
     _settingsLoggingEnabled = null;
     _debugLoggingEnabled = null;
+    _authLoggingEnabled = null;
     _bleLogger = null;
     _noOpLogger = null;
   }

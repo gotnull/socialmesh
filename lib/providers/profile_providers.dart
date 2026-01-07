@@ -1,8 +1,8 @@
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/logging.dart';
 import '../models/user_profile.dart';
 import '../services/profile/profile_cloud_sync_service.dart';
 import '../services/profile/profile_service.dart';
@@ -24,7 +24,7 @@ final profileCloudSyncServiceProvider = Provider<ProfileCloudSyncService>((
 class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
   @override
   Future<UserProfile?> build() async {
-    debugPrint('[UserProfile] build() called - loading profile');
+    AppLogging.auth('UserProfile: build() called - loading profile');
 
     // Watch auth state - this ensures we rebuild when user signs in/out
     final authState = ref.watch(authStateProvider);
@@ -32,15 +32,15 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
     // Initialize and load local profile
     await profileService.initialize();
     final localProfile = await profileService.getOrCreateProfile();
-    debugPrint(
-      '[UserProfile] Loaded local profile: ${localProfile.displayName}, avatarUrl: ${localProfile.avatarUrl}',
+    AppLogging.auth(
+      'UserProfile: Loaded local profile: ${localProfile.displayName}, avatarUrl: ${localProfile.avatarUrl}',
     );
 
     // Check if user is signed in
     final user = authState.value;
     if (user != null) {
-      debugPrint(
-        '[UserProfile] User signed in (${user.uid}), syncing from cloud',
+      AppLogging.auth(
+        'UserProfile: User signed in (${user.uid}), syncing from cloud',
       );
       // Update sync status
       ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.syncing);
@@ -49,14 +49,14 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
         // Perform full sync with cloud
         final synced = await profileCloudSyncService.fullSync(user.uid);
         if (synced != null) {
-          debugPrint(
-            '[UserProfile] Cloud sync complete: ${synced.displayName}, avatarUrl: ${synced.avatarUrl}',
+          AppLogging.auth(
+            'UserProfile: Cloud sync complete: ${synced.displayName}, avatarUrl: ${synced.avatarUrl}',
           );
           ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.synced);
           return synced;
         }
       } catch (e) {
-        debugPrint('[UserProfile] Cloud sync failed: $e');
+        AppLogging.auth('UserProfile: Cloud sync failed: $e');
         final errorString = e.toString();
 
         // Check if this is a transient network error
@@ -68,7 +68,9 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
 
         if (isTransientError) {
           // For transient errors, treat as idle - user is logged in, just offline
-          debugPrint('[UserProfile] Transient network error, treating as idle');
+          AppLogging.auth(
+            'UserProfile: Transient network error, treating as idle',
+          );
           ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.idle);
         } else {
           // For actual errors (permissions, etc), show error state
@@ -78,17 +80,17 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
         // Fall back to local profile on error
       }
     } else {
-      debugPrint('[UserProfile] No user signed in');
+      AppLogging.auth('UserProfile: No user signed in');
     }
 
     return localProfile;
   }
 
   Future<UserProfile?> _loadProfile() async {
-    debugPrint('[UserProfile] _loadProfile() entered');
+    AppLogging.auth('UserProfile: _loadProfile() entered');
     await profileService.initialize();
     final profile = await profileService.getOrCreateProfile();
-    debugPrint('[UserProfile] Loaded profile: ${profile.displayName}');
+    AppLogging.auth('UserProfile: Loaded profile: ${profile.displayName}');
     return profile;
   }
 
@@ -135,14 +137,14 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
       if (user != null) {
         try {
           await profileCloudSyncService.syncToCloud(user.uid);
-          debugPrint('[UserProfile] Cloud sync completed successfully');
+          AppLogging.auth('UserProfile: Cloud sync completed successfully');
         } catch (syncError) {
           // Cloud sync failed but local save succeeded - don't crash UI
-          debugPrint('[UserProfile] Cloud sync failed: $syncError');
+          AppLogging.auth('UserProfile: Cloud sync failed: $syncError');
         }
       }
     } catch (e, st) {
-      debugPrint('[UserProfile] Error updating profile: $e');
+      AppLogging.auth('UserProfile: Error updating profile: $e');
       state = AsyncValue.error(e, st);
     }
   }
@@ -171,13 +173,13 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
       if (user != null) {
         try {
           await profileCloudSyncService.syncToCloud(user.uid);
-          debugPrint('[UserProfile] Linked nodes synced to cloud');
+          AppLogging.auth('UserProfile: Linked nodes synced to cloud');
         } catch (syncError) {
-          debugPrint('[UserProfile] Cloud sync failed: $syncError');
+          AppLogging.auth('UserProfile: Cloud sync failed: $syncError');
         }
       }
     } catch (e, st) {
-      debugPrint('[UserProfile] Error updating linked nodes: $e');
+      AppLogging.auth('UserProfile: Error updating linked nodes: $e');
       state = AsyncValue.error(e, st);
     }
   }
@@ -286,14 +288,16 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
       if (user != null) {
         try {
           await profileCloudSyncService.syncToCloud(user.uid);
-          debugPrint('[UserProfile] Preferences cloud sync completed');
+          AppLogging.auth('UserProfile: Preferences cloud sync completed');
         } catch (syncError) {
           // Cloud sync failed but local save succeeded - don't crash UI
-          debugPrint('[UserProfile] Preferences cloud sync failed: $syncError');
+          AppLogging.auth(
+            'UserProfile: Preferences cloud sync failed: $syncError',
+          );
         }
       }
     } catch (e, st) {
-      debugPrint('[UserProfile] Error updating preferences: $e');
+      AppLogging.auth('UserProfile: Error updating preferences: $e');
       state = AsyncValue.error(e, st);
     }
   }
@@ -309,7 +313,7 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
         profile.id,
         imageFile,
       );
-      debugPrint('[UserProfile] Saved avatar locally: $localPath');
+      AppLogging.auth('UserProfile: Saved avatar locally: $localPath');
 
       // Update state immediately with local path so UI shows it
       final localUpdated = profile.copyWith(avatarUrl: localPath);
@@ -318,7 +322,9 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
       // If user is signed in, also upload to cloud
       final user = ref.read(currentUserProvider);
       if (user != null) {
-        debugPrint('[UserProfile] User signed in, uploading avatar to cloud');
+        AppLogging.auth(
+          'UserProfile: User signed in, uploading avatar to cloud',
+        );
         try {
           final cloudUrl = await profileCloudSyncService.uploadAvatar(
             user.uid,
@@ -332,15 +338,17 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
           );
           await profileService.saveProfile(cloudUpdated);
           state = AsyncValue.data(cloudUpdated);
-          debugPrint('[UserProfile] Avatar uploaded to cloud: $cloudUrl');
+          AppLogging.auth('UserProfile: Avatar uploaded to cloud: $cloudUrl');
         } catch (e) {
           // Cloud upload failed, but local save succeeded
-          debugPrint('[UserProfile] Cloud upload failed (local save OK): $e');
+          AppLogging.auth(
+            'UserProfile: Cloud upload failed (local save OK): $e',
+          );
           // Keep using local path - don't throw error
         }
       }
     } catch (e, st) {
-      debugPrint('[UserProfile] Error saving avatar: $e');
+      AppLogging.auth('UserProfile: Error saving avatar: $e');
       state = AsyncValue.error(e, st);
     }
   }
@@ -357,13 +365,13 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
       // If signed in, also delete from cloud
       final user = ref.read(currentUserProvider);
       if (user != null) {
-        debugPrint('[UserProfile] Deleting avatar from cloud');
+        AppLogging.auth('UserProfile: Deleting avatar from cloud');
         await profileCloudSyncService.deleteCloudAvatar(user.uid);
       }
 
       await refresh();
     } catch (e, st) {
-      debugPrint('[UserProfile] Error deleting avatar: $e');
+      AppLogging.auth('UserProfile: Error deleting avatar: $e');
       state = AsyncValue.error(e, st);
     }
   }
@@ -414,7 +422,7 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
       await profileCloudSyncService.syncToCloud(uid);
       await refresh();
     } catch (e, st) {
-      debugPrint('[UserProfile] Error syncing to cloud: $e');
+      AppLogging.auth('UserProfile: Error syncing to cloud: $e');
       state = AsyncValue.error(e, st);
     }
   }
@@ -427,7 +435,7 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
         state = AsyncValue.data(synced);
       }
     } catch (e, st) {
-      debugPrint('[UserProfile] Error syncing from cloud: $e');
+      AppLogging.auth('UserProfile: Error syncing from cloud: $e');
       state = AsyncValue.error(e, st);
     }
   }
@@ -442,13 +450,13 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
 
         // Also sync avatar if it's a local file path
         if (synced.avatarUrl != null && !synced.avatarUrl!.startsWith('http')) {
-          debugPrint('[UserProfile] Syncing local avatar to cloud');
+          AppLogging.auth('UserProfile: Syncing local avatar to cloud');
           await profileCloudSyncService.syncAvatarToCloud(uid);
           await refresh();
         }
       }
     } catch (e, st) {
-      debugPrint('[UserProfile] Error during full sync: $e');
+      AppLogging.auth('UserProfile: Error during full sync: $e');
       state = AsyncValue.error(e, st);
     }
   }
@@ -473,7 +481,7 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
       await profileService.saveProfile(updated);
       state = AsyncValue.data(updated);
     } catch (e, st) {
-      debugPrint('[UserProfile] Error uploading avatar: $e');
+      AppLogging.auth('UserProfile: Error uploading avatar: $e');
       state = AsyncValue.error(e, st);
     }
   }
@@ -498,7 +506,7 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
         }
       }
     } catch (e, st) {
-      debugPrint('[UserProfile] Error adding installed widget: $e');
+      AppLogging.auth('UserProfile: Error adding installed widget: $e');
       state = AsyncValue.error(e, st);
     }
   }
@@ -522,7 +530,7 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
         }
       }
     } catch (e, st) {
-      debugPrint('[UserProfile] Error removing installed widget: $e');
+      AppLogging.auth('UserProfile: Error removing installed widget: $e');
       state = AsyncValue.error(e, st);
     }
   }
@@ -629,7 +637,7 @@ final autoSyncProvider = Provider<void>((ref) {
 
   // If user just signed in (was null, now has value)
   if (previousUser == null && user != null) {
-    debugPrint('[AutoSync] User signed in, triggering sync');
+    AppLogging.auth('AutoSync: User signed in, triggering sync');
     _triggerAutoSync(ref, user.uid);
   }
 });
@@ -642,9 +650,9 @@ Future<void> _triggerAutoSync(Ref ref, String uid) async {
   try {
     await ref.read(userProfileProvider.notifier).fullSync(uid);
     ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.synced);
-    debugPrint('[AutoSync] Sync completed successfully');
+    AppLogging.auth('AutoSync: Sync completed successfully');
   } catch (e) {
-    debugPrint('[AutoSync] Sync failed: $e');
+    AppLogging.auth('AutoSync: Sync failed: $e');
     ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.error);
     ref.read(syncErrorProvider.notifier).setError(e.toString());
   }

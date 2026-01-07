@@ -27,7 +27,7 @@ service cloud.firestore {
     
     // Owner UID - can use any display name
     function isOwner_displayName() {
-      return request.auth.uid == 'rAHv8sx4UeTajyeBurx9ZjjBzWn1';
+      return request.auth.uid == '9ltxJGViWHW5aj5HhLGmiVwkrLU2';
     }
     
     // Reserved exact usernames - blocked for everyone except owner

@@ -213,27 +213,42 @@ class PushNotificationService {
 
   /// Update FCM token when user signs in
   Future<void> onUserSignIn() async {
-    if (!_initialized) return;
+    AppLogging.notifications('🔔 onUserSignIn - Updating FCM token...');
+    if (!_initialized) {
+      AppLogging.notifications('🔔 onUserSignIn - Not initialized, skipping');
+      return;
+    }
     await _saveFcmToken();
+    AppLogging.notifications('🔔 onUserSignIn - FCM token updated');
   }
 
   /// Remove FCM token when user signs out
   Future<void> onUserSignOut() async {
+    AppLogging.notifications('🔔 onUserSignOut - START');
     final user = _auth.currentUser;
-    if (user == null) return;
+    if (user == null) {
+      AppLogging.notifications('🔔 onUserSignOut - No current user, skipping');
+      return;
+    }
 
     try {
       final token = await _messaging.getToken();
-      if (token == null) return;
+      if (token == null) {
+        AppLogging.notifications('🔔 onUserSignOut - No FCM token, skipping');
+        return;
+      }
 
       // Remove this token from user's profile
+      AppLogging.notifications(
+        '🔔 onUserSignOut - Removing FCM token for user ${user.uid}',
+      );
       await _firestore.collection('users').doc(user.uid).update({
         'fcmTokens.$token': FieldValue.delete(),
       });
 
-      AppLogging.notifications('🔔 FCM token removed for user ${user.uid}');
+      AppLogging.notifications('🔔 onUserSignOut - ✅ FCM token removed');
     } catch (e) {
-      AppLogging.notifications('🔔 Error removing FCM token: $e');
+      AppLogging.notifications('🔔 onUserSignOut - ❌ Error: $e');
     }
   }
 

@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 
+import '../core/logging.dart';
 import '../models/social.dart';
 import '../models/user_profile.dart';
 
@@ -1215,12 +1216,14 @@ class SocialService {
 
   /// Get a user's public profile.
   Future<PublicProfile?> getPublicProfile(String userId) async {
+    AppLogging.auth('Social: getPublicProfile() called for userId=$userId');
     return _getPublicProfile(userId);
   }
 
   /// Find a user by their linked mesh node ID.
   /// Returns null if no user has this node in their linkedNodeIds.
   Future<PublicProfile?> getProfileByNodeId(int nodeId) async {
+    AppLogging.auth('Social: getProfileByNodeId() - START for nodeId=$nodeId');
     try {
       // Query using array-contains on linkedNodeIds
       final query = await _firestore
@@ -1229,10 +1232,19 @@ class SocialService {
           .limit(1)
           .get();
 
-      if (query.docs.isEmpty) return null;
-      return PublicProfile.fromFirestore(query.docs.first);
+      if (query.docs.isEmpty) {
+        AppLogging.auth(
+          'Social: getProfileByNodeId() - ❌ No profile found for nodeId=$nodeId',
+        );
+        return null;
+      }
+      final profile = PublicProfile.fromFirestore(query.docs.first);
+      AppLogging.auth(
+        'Social: getProfileByNodeId() - ✅ Found: userId=${profile.id}, displayName=${profile.displayName}',
+      );
+      return profile;
     } catch (e) {
-      debugPrint('Error finding profile by nodeId: $e');
+      AppLogging.auth('Social: getProfileByNodeId() - ❌ ERROR: $e');
       return null;
     }
   }
@@ -1713,21 +1725,34 @@ class SocialService {
   // ===========================================================================
 
   Future<PublicProfile?> _getPublicProfile(String userId) async {
+    AppLogging.auth('Social: _getPublicProfile() - START for userId=$userId');
     // Try server first for fresh data, fall back to cache
     DocumentSnapshot<Map<String, dynamic>> doc;
     try {
+      AppLogging.auth('Social: _getPublicProfile() - Fetching from server...');
       doc = await _firestore
           .collection('profiles')
           .doc(userId)
           .get(const GetOptions(source: Source.server));
+      AppLogging.auth('Social: _getPublicProfile() - Server fetch complete');
     } catch (e) {
       // Server fetch failed, try cache
+      AppLogging.auth(
+        'Social: _getPublicProfile() - Server failed ($e), trying cache...',
+      );
       doc = await _firestore.collection('profiles').doc(userId).get();
     }
     if (!doc.exists) {
+      AppLogging.auth(
+        'Social: _getPublicProfile() - ❌ PROFILE NOT FOUND for userId=$userId',
+      );
       return null;
     }
-    return PublicProfile.fromFirestore(doc);
+    final profile = PublicProfile.fromFirestore(doc);
+    AppLogging.auth(
+      'Social: _getPublicProfile() - ✅ Found: displayName=${profile.displayName}, isVerified=${profile.isVerified}',
+    );
+    return profile;
   }
 }
 

@@ -2,9 +2,9 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../../core/logging.dart';
 import '../../models/user_profile.dart';
 import 'profile_service.dart';
 
@@ -45,11 +45,11 @@ class ProfileCloudSyncService {
 
   /// Sync local profile to Firestore (both `users` and `profiles` collections)
   Future<void> syncToCloud(String uid) async {
-    debugPrint('[ProfileSync] Syncing to cloud for uid: $uid');
+    AppLogging.auth('ProfileSync: Syncing to cloud for uid: $uid');
 
     final localProfile = await _localService.getProfile();
     if (localProfile == null) {
-      debugPrint('[ProfileSync] No local profile to sync');
+      AppLogging.auth('ProfileSync: No local profile to sync');
       return;
     }
 
@@ -69,9 +69,9 @@ class ProfileCloudSyncService {
       // Update local profile with synced status
       await _localService.saveProfile(profileForCloud);
 
-      debugPrint('[ProfileSync] Successfully synced to cloud');
+      AppLogging.auth('ProfileSync: Successfully synced to cloud');
     } catch (e) {
-      debugPrint('[ProfileSync] Error syncing to cloud: $e');
+      AppLogging.auth('ProfileSync: Error syncing to cloud: $e');
       rethrow;
     }
   }
@@ -79,7 +79,7 @@ class ProfileCloudSyncService {
   /// Sync only the public-facing profile fields to `profiles` collection
   /// This is the collection used by social features (followers, posts, etc.)
   Future<void> _syncPublicProfile(String uid, UserProfile profile) async {
-    debugPrint('[ProfileSync] Syncing public profile for uid: $uid');
+    AppLogging.auth('ProfileSync: Syncing public profile for uid: $uid');
 
     final docRef = _publicProfileDoc(uid);
     final doc = await docRef.get();
@@ -105,23 +105,23 @@ class ProfileCloudSyncService {
       publicData['postCount'] = 0;
       publicData['createdAt'] = FieldValue.serverTimestamp();
       await docRef.set(publicData);
-      debugPrint('[ProfileSync] Created new public profile');
+      AppLogging.auth('ProfileSync: Created new public profile');
     } else {
       // Document exists - update without touching counter fields
       await docRef.update(publicData);
-      debugPrint('[ProfileSync] Updated existing public profile');
+      AppLogging.auth('ProfileSync: Updated existing public profile');
     }
   }
 
   /// Fetch profile from Firestore and merge with local
   Future<UserProfile?> syncFromCloud(String uid) async {
-    debugPrint('[ProfileSync] Syncing from cloud for uid: $uid');
+    AppLogging.auth('ProfileSync: Syncing from cloud for uid: $uid');
 
     try {
       final doc = await _userDoc(uid).get();
 
       if (!doc.exists || doc.data() == null) {
-        debugPrint('[ProfileSync] No cloud profile found');
+        AppLogging.auth('ProfileSync: No cloud profile found');
         return null;
       }
 
@@ -134,17 +134,17 @@ class ProfileCloudSyncService {
       // Save merged profile locally
       await _localService.saveProfile(merged);
 
-      debugPrint('[ProfileSync] Successfully synced from cloud');
+      AppLogging.auth('ProfileSync: Successfully synced from cloud');
       return merged;
     } catch (e) {
-      debugPrint('[ProfileSync] Error syncing from cloud: $e');
+      AppLogging.auth('ProfileSync: Error syncing from cloud: $e');
       rethrow;
     }
   }
 
   /// Two-way sync: push local changes and pull remote changes
   Future<UserProfile?> fullSync(String uid) async {
-    debugPrint('[ProfileSync] Starting full sync for uid: $uid');
+    AppLogging.auth('ProfileSync: Starting full sync for uid: $uid');
 
     try {
       // First, fetch any remote changes
@@ -155,7 +155,7 @@ class ProfileCloudSyncService {
 
       if (!cloudDoc.exists || cloudDoc.data() == null) {
         // No cloud profile - push local to cloud
-        debugPrint('[ProfileSync] No cloud profile, pushing local');
+        AppLogging.auth('ProfileSync: No cloud profile, pushing local');
         final profileForCloud = localProfile.copyWith(id: uid, isSynced: true);
         await _userDoc(uid).set(_profileToFirestore(profileForCloud));
         // Also sync to public profiles collection
@@ -177,17 +177,17 @@ class ProfileCloudSyncService {
       // Save final profile locally
       await _localService.saveProfile(finalProfile);
 
-      debugPrint('[ProfileSync] Full sync complete');
+      AppLogging.auth('ProfileSync: Full sync complete');
       return finalProfile;
     } catch (e) {
-      debugPrint('[ProfileSync] Error during full sync: $e');
+      AppLogging.auth('ProfileSync: Error during full sync: $e');
       rethrow;
     }
   }
 
   /// Delete cloud profile data (from both `users` and `profiles` collections)
   Future<void> deleteCloudProfile(String uid) async {
-    debugPrint('[ProfileSync] Deleting cloud profile for uid: $uid');
+    AppLogging.auth('ProfileSync: Deleting cloud profile for uid: $uid');
 
     try {
       // Delete from both collections
@@ -199,12 +199,14 @@ class ProfileCloudSyncService {
         await _avatarRef(uid).delete();
       } catch (e) {
         // Avatar might not exist, ignore
-        debugPrint('[ProfileSync] Avatar delete failed (may not exist): $e');
+        AppLogging.auth(
+          'ProfileSync: Avatar delete failed (may not exist): $e',
+        );
       }
 
-      debugPrint('[ProfileSync] Cloud profile deleted');
+      AppLogging.auth('ProfileSync: Cloud profile deleted');
     } catch (e) {
-      debugPrint('[ProfileSync] Error deleting cloud profile: $e');
+      AppLogging.auth('ProfileSync: Error deleting cloud profile: $e');
       rethrow;
     }
   }
@@ -213,7 +215,7 @@ class ProfileCloudSyncService {
 
   /// Upload avatar to Firebase Storage
   Future<String> uploadAvatar(String uid, File imageFile) async {
-    debugPrint('[ProfileSync] Uploading avatar for uid: $uid');
+    AppLogging.auth('ProfileSync: Uploading avatar for uid: $uid');
 
     try {
       final ref = _avatarRef(uid);
@@ -230,17 +232,17 @@ class ProfileCloudSyncService {
       // Get download URL
       final downloadUrl = await ref.getDownloadURL();
 
-      debugPrint('[ProfileSync] Avatar uploaded: $downloadUrl');
+      AppLogging.auth('ProfileSync: Avatar uploaded: $downloadUrl');
       return downloadUrl;
     } catch (e) {
-      debugPrint('[ProfileSync] Error uploading avatar: $e');
+      AppLogging.auth('ProfileSync: Error uploading avatar: $e');
       rethrow;
     }
   }
 
   /// Download avatar from Firebase Storage to local cache
   Future<File?> downloadAvatar(String uid) async {
-    debugPrint('[ProfileSync] Downloading avatar for uid: $uid');
+    AppLogging.auth('ProfileSync: Downloading avatar for uid: $uid');
 
     try {
       final ref = _avatarRef(uid);
@@ -255,23 +257,23 @@ class ProfileCloudSyncService {
       // Download to local file
       await ref.writeToFile(localFile);
 
-      debugPrint('[ProfileSync] Avatar downloaded to: ${localFile.path}');
+      AppLogging.auth('ProfileSync: Avatar downloaded to: ${localFile.path}');
       return localFile;
     } catch (e) {
-      debugPrint('[ProfileSync] Error downloading avatar: $e');
+      AppLogging.auth('ProfileSync: Error downloading avatar: $e');
       return null;
     }
   }
 
   /// Delete avatar from Firebase Storage
   Future<void> deleteCloudAvatar(String uid) async {
-    debugPrint('[ProfileSync] Deleting cloud avatar for uid: $uid');
+    AppLogging.auth('ProfileSync: Deleting cloud avatar for uid: $uid');
 
     try {
       await _avatarRef(uid).delete();
-      debugPrint('[ProfileSync] Cloud avatar deleted');
+      AppLogging.auth('ProfileSync: Cloud avatar deleted');
     } catch (e) {
-      debugPrint('[ProfileSync] Error deleting cloud avatar: $e');
+      AppLogging.auth('ProfileSync: Error deleting cloud avatar: $e');
       // Don't rethrow - avatar might not exist
     }
   }
@@ -325,8 +327,8 @@ class ProfileCloudSyncService {
   /// Create UserProfile from Firestore document
   /// Note: Social counters are read from cloud but never written back by client
   UserProfile _profileFromFirestore(String uid, Map<String, dynamic> data) {
-    debugPrint(
-      '[ProfileSync] Parsing Firestore data: displayName=${data['displayName']}, avatarUrl=${data['avatarUrl']}, accentColorIndex=${data['accentColorIndex']}',
+    AppLogging.auth(
+      'ProfileSync: Parsing Firestore data: displayName=${data['displayName']}, avatarUrl=${data['avatarUrl']}, accentColorIndex=${data['accentColorIndex']}',
     );
     return UserProfile(
       id: uid,
@@ -377,15 +379,15 @@ class ProfileCloudSyncService {
   /// Strategy: Use cloud values for synced fields, preserve local customizations
   /// For installedWidgetIds and linkedNodeIds: use the newer profile's list (NOT union) to respect deletions
   UserProfile _mergeProfiles(UserProfile? local, UserProfile cloud) {
-    debugPrint(
-      '[ProfileSync] Merging profiles - local.isSynced: ${local?.isSynced}, cloud.avatarUrl: ${cloud.avatarUrl}',
+    AppLogging.auth(
+      'ProfileSync: Merging profiles - local.isSynced: ${local?.isSynced}, cloud.avatarUrl: ${cloud.avatarUrl}',
     );
     if (local == null) return cloud;
 
     // If local has never been synced, prefer cloud but merge widget IDs (union)
     // This preserves any local installations made before first sync
     if (!local.isSynced) {
-      debugPrint('[ProfileSync] Local not synced, using cloud profile');
+      AppLogging.auth('ProfileSync: Local not synced, using cloud profile');
       // Only use union for first-time sync to preserve local installations
       final mergedWidgetIds = <String>{
         ...local.installedWidgetIds,
@@ -396,8 +398,8 @@ class ProfileCloudSyncService {
         ...local.linkedNodeIds,
         ...cloud.linkedNodeIds,
       }.toList();
-      debugPrint(
-        '[ProfileSync] First sync - merging widget IDs: local=${local.installedWidgetIds}, cloud=${cloud.installedWidgetIds}, merged=$mergedWidgetIds',
+      AppLogging.auth(
+        'ProfileSync: First sync - merging widget IDs: local=${local.installedWidgetIds}, cloud=${cloud.installedWidgetIds}, merged=$mergedWidgetIds',
       );
       return cloud.copyWith(
         // Preserve any local customizations that don't exist in cloud
@@ -415,20 +417,20 @@ class ProfileCloudSyncService {
 
     // Both synced - use most recently updated
     // IMPORTANT: Use the newer profile's installedWidgetIds and linkedNodeIds (NOT union) to respect deletions
-    debugPrint(
-      '[ProfileSync] Both synced - local.updatedAt: ${local.updatedAt}, cloud.updatedAt: ${cloud.updatedAt}',
+    AppLogging.auth(
+      'ProfileSync: Both synced - local.updatedAt: ${local.updatedAt}, cloud.updatedAt: ${cloud.updatedAt}',
     );
     if (local.updatedAt.isAfter(cloud.updatedAt)) {
-      debugPrint(
-        '[ProfileSync] Local is newer, using local installedWidgetIds: ${local.installedWidgetIds}',
+      AppLogging.auth(
+        'ProfileSync: Local is newer, using local installedWidgetIds: ${local.installedWidgetIds}',
       );
       return local.copyWith(isSynced: true);
     }
-    debugPrint(
-      '[ProfileSync] Cloud is newer, using cloud installedWidgetIds: ${cloud.installedWidgetIds}',
+    AppLogging.auth(
+      'ProfileSync: Cloud is newer, using cloud installedWidgetIds: ${cloud.installedWidgetIds}',
     );
-    debugPrint(
-      '[ProfileSync] Cloud accentColorIndex: ${cloud.accentColorIndex}',
+    AppLogging.auth(
+      'ProfileSync: Cloud accentColorIndex: ${cloud.accentColorIndex}',
     );
     return cloud;
   }
