@@ -329,11 +329,12 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Colors.black.withValues(alpha: 0.3),
+                      Colors.black.withValues(alpha: 0.5),
+                      Colors.black.withValues(alpha: 0.2),
                       Colors.transparent,
                       Colors.black.withValues(alpha: 0.5),
                     ],
-                    stops: const [0.0, 0.5, 1.0],
+                    stops: const [0.0, 0.15, 0.5, 1.0],
                   ),
                 ),
               ),
@@ -1519,10 +1520,25 @@ class _PostGridTile extends StatelessWidget {
           else
             _buildTextPreview(context),
 
-          // Overlay with stats (shown on hover/tap for images)
+          // Overlay with gradient at top for icons visibility
           if (post.imageUrls.isNotEmpty)
-            Positioned.fill(
-              child: Container(color: Colors.black.withValues(alpha: 0.0)),
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 40,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withValues(alpha: 0.4),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
             ),
 
           // Multi-image indicator
