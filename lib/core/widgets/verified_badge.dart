@@ -143,13 +143,13 @@ class _AnimatedGoldBadgeState extends State<_AnimatedGoldBadge>
     );
     _spinController.addStatusListener(_onSpinComplete);
 
-    // Shimmer animation for gradient movement
+    // Shimmer animation for gradient movement - reverse for smooth back-and-forth
     _shimmerController = AnimationController(
-      duration: const Duration(milliseconds: 2000),
+      duration: const Duration(milliseconds: 1500),
       vsync: this,
-    )..repeat();
-    _shimmerAnimation = Tween<double>(begin: -1, end: 2).animate(
-      CurvedAnimation(parent: _shimmerController, curve: Curves.linear),
+    )..repeat(reverse: true);
+    _shimmerAnimation = Tween<double>(begin: -0.5, end: 1.5).animate(
+      CurvedAnimation(parent: _shimmerController, curve: Curves.easeInOut),
     );
 
     // Sparkle animation controller
@@ -330,7 +330,7 @@ class _AnimatedGoldBadgeState extends State<_AnimatedGoldBadge>
     return SizedBox(
       width: size,
       height: size,
-      child: CustomPaint(painter: _SparklePainter(color: _goldLight)),
+      child: CustomPaint(painter: _SparklePainter(color: Colors.white)),
     );
   }
 }

@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
+import '../../core/widgets/default_banner.dart';
 import '../../core/widgets/verified_badge.dart';
 import '../../models/user_profile.dart';
 import '../../providers/auth_providers.dart';
@@ -1630,6 +1631,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
 
   bool _isLoading = false;
   bool _isUploadingAvatar = false;
+  bool _isUploadingBanner = false;
   bool _hasChanges = false;
 
   @override
@@ -1740,6 +1742,56 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
     } finally {
       if (mounted) {
         setState(() => _isUploadingAvatar = false);
+      }
+    }
+  }
+
+  Future<void> _pickBanner() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+      allowMultiple: false,
+    );
+
+    if (result != null && result.files.isNotEmpty) {
+      setState(() => _isUploadingBanner = true);
+      try {
+        final file = File(result.files.first.path!);
+        await ref.read(userProfileProvider.notifier).saveBannerFromFile(file);
+        // Force refresh to ensure parent screen sees new banner
+        ref.invalidate(userProfileProvider);
+        if (mounted) {
+          setState(() => _hasChanges = true);
+          showSuccessSnackBar(context, 'Banner updated');
+        }
+      } catch (e) {
+        if (mounted) {
+          showErrorSnackBar(context, 'Failed to upload banner: $e');
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isUploadingBanner = false);
+        }
+      }
+    }
+  }
+
+  Future<void> _removeBanner() async {
+    setState(() => _isUploadingBanner = true);
+    try {
+      await ref.read(userProfileProvider.notifier).deleteBanner();
+      // Force refresh to ensure parent screen sees banner removed
+      ref.invalidate(userProfileProvider);
+      if (mounted) {
+        setState(() => _hasChanges = true);
+        showSuccessSnackBar(context, 'Banner removed');
+      }
+    } catch (e) {
+      if (mounted) {
+        showErrorSnackBar(context, 'Failed to remove banner: $e');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isUploadingBanner = false);
       }
     }
   }
@@ -2037,6 +2089,124 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                                         )
                                       : const Text(
                                           'Remove Avatar',
+                                          style: TextStyle(
+                                            color: AppTheme.errorRed,
+                                          ),
+                                        ),
+                                ),
+                              ),
+                            ],
+                            const SizedBox(height: 24),
+
+                            // Banner edit
+                            _buildSectionHeader('Profile Banner'),
+                            const SizedBox(height: 12),
+                            GestureDetector(
+                              onTap: _isUploadingBanner ? null : _pickBanner,
+                              child: Container(
+                                height: 120,
+                                decoration: BoxDecoration(
+                                  color: context.card,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: accentColor.withValues(alpha: 0.5),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(11),
+                                  child: _isUploadingBanner
+                                      ? Center(
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: accentColor,
+                                          ),
+                                        )
+                                      : profile?.bannerUrl != null
+                                      ? Stack(
+                                          fit: StackFit.expand,
+                                          children: [
+                                            profile!.bannerUrl!.startsWith(
+                                                  'http',
+                                                )
+                                                ? Image.network(
+                                                    profile.bannerUrl!,
+                                                    fit: BoxFit.cover,
+                                                    loadingBuilder:
+                                                        (
+                                                          context,
+                                                          child,
+                                                          loadingProgress,
+                                                        ) {
+                                                          if (loadingProgress ==
+                                                              null) {
+                                                            return child;
+                                                          }
+                                                          return Center(
+                                                            child:
+                                                                CircularProgressIndicator(
+                                                                  strokeWidth:
+                                                                      2,
+                                                                  color:
+                                                                      accentColor,
+                                                                ),
+                                                          );
+                                                        },
+                                                    errorBuilder:
+                                                        (ctx, err, stack) =>
+                                                            DefaultBanner(
+                                                              accentColor:
+                                                                  accentColor,
+                                                            ),
+                                                  )
+                                                : Image.file(
+                                                    File(profile.bannerUrl!),
+                                                    fit: BoxFit.cover,
+                                                  ),
+                                            // Edit overlay
+                                            Positioned(
+                                              right: 8,
+                                              bottom: 8,
+                                              child: Container(
+                                                padding: const EdgeInsets.all(
+                                                  6,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.black
+                                                      .withValues(alpha: 0.6),
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: const Icon(
+                                                  Icons.camera_alt,
+                                                  size: 16,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        )
+                                      : DefaultBanner(accentColor: accentColor),
+                                ),
+                              ),
+                            ),
+                            if (profile?.bannerUrl != null) ...[
+                              const SizedBox(height: 8),
+                              Center(
+                                child: TextButton(
+                                  onPressed: _isUploadingBanner
+                                      ? null
+                                      : _removeBanner,
+                                  child: _isUploadingBanner
+                                      ? SizedBox(
+                                          width: 16,
+                                          height: 16,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: AppTheme.errorRed,
+                                          ),
+                                        )
+                                      : const Text(
+                                          'Remove Banner',
                                           style: TextStyle(
                                             color: AppTheme.errorRed,
                                           ),

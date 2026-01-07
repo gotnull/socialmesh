@@ -19,6 +19,7 @@ class ProfileCloudSyncService {
   static const String _usersCollection = 'users';
   static const String _profilesCollection = 'profiles';
   static const String _avatarsFolder = 'profile_avatars';
+  static const String _bannersFolder = 'profile_banners';
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
@@ -39,6 +40,11 @@ class ProfileCloudSyncService {
   /// Reference to avatar storage path
   Reference _avatarRef(String uid) {
     return _storage.ref().child(_avatarsFolder).child('$uid.jpg');
+  }
+
+  /// Reference to banner storage path
+  Reference _bannerRef(String uid) {
+    return _storage.ref().child(_bannersFolder).child('$uid.jpg');
   }
 
   // --- Firestore Profile Sync ---
@@ -88,6 +94,7 @@ class ProfileCloudSyncService {
       'displayName': profile.displayName,
       'displayNameLower': profile.displayName.toLowerCase(),
       'avatarUrl': profile.avatarUrl,
+      'bannerUrl': profile.bannerUrl,
       'bio': profile.bio,
       'callsign': profile.callsign,
       'website': profile.website,
@@ -297,6 +304,92 @@ class ProfileCloudSyncService {
     }
   }
 
+  // --- Firebase Storage Banner Sync ---
+
+  /// Upload banner to Firebase Storage
+  Future<String> uploadBanner(String uid, File imageFile) async {
+    AppLogging.auth('ProfileSync: Uploading banner for uid: $uid');
+
+    try {
+      final ref = _bannerRef(uid);
+
+      // Upload with metadata
+      await ref.putFile(
+        imageFile,
+        SettableMetadata(
+          contentType: 'image/jpeg',
+          customMetadata: {'uid': uid},
+        ),
+      );
+
+      // Get download URL
+      final downloadUrl = await ref.getDownloadURL();
+
+      AppLogging.auth('ProfileSync: Banner uploaded: $downloadUrl');
+      return downloadUrl;
+    } catch (e) {
+      AppLogging.auth('ProfileSync: Error uploading banner: $e');
+      rethrow;
+    }
+  }
+
+  /// Download banner from Firebase Storage to local cache
+  Future<File?> downloadBanner(String uid) async {
+    AppLogging.auth('ProfileSync: Downloading banner for uid: $uid');
+
+    try {
+      final ref = _bannerRef(uid);
+
+      // Get app directory for caching
+      final appDir = await getApplicationDocumentsDirectory();
+      final localFile = File('${appDir.path}/profile_banners/banner_$uid.jpg');
+
+      // Ensure directory exists
+      await localFile.parent.create(recursive: true);
+
+      // Download to local file
+      await ref.writeToFile(localFile);
+
+      AppLogging.auth('ProfileSync: Banner downloaded to: ${localFile.path}');
+      return localFile;
+    } catch (e) {
+      AppLogging.auth('ProfileSync: Error downloading banner: $e');
+      return null;
+    }
+  }
+
+  /// Delete banner from Firebase Storage
+  Future<void> deleteCloudBanner(String uid) async {
+    AppLogging.auth('ProfileSync: Deleting cloud banner for uid: $uid');
+
+    try {
+      await _bannerRef(uid).delete();
+      AppLogging.auth('ProfileSync: Cloud banner deleted');
+    } catch (e) {
+      AppLogging.auth('ProfileSync: Error deleting cloud banner: $e');
+      // Don't rethrow - banner might not exist
+    }
+  }
+
+  /// Sync local banner to cloud and update profile with URL
+  Future<void> syncBannerToCloud(String uid) async {
+    final profile = await _localService.getProfile();
+    if (profile == null || profile.bannerUrl == null) return;
+
+    // Check if it's a local file path (not already a URL)
+    if (!profile.bannerUrl!.startsWith('http')) {
+      final localFile = File(profile.bannerUrl!);
+      if (await localFile.exists()) {
+        final cloudUrl = await uploadBanner(uid, localFile);
+
+        // Update profile with cloud URL
+        await _localService.saveProfile(
+          profile.copyWith(bannerUrl: cloudUrl, isSynced: true),
+        );
+      }
+    }
+  }
+
   // --- Helper Methods ---
 
   /// Convert UserProfile to Firestore-compatible map
@@ -311,6 +404,7 @@ class ProfileCloudSyncService {
       'email': profile.email,
       'website': profile.website,
       'avatarUrl': profile.avatarUrl,
+      'bannerUrl': profile.bannerUrl,
       'socialLinks': profile.socialLinks?.toJson(),
       'primaryNodeId': profile.primaryNodeId,
       'linkedNodeIds': profile.linkedNodeIds,
@@ -338,6 +432,7 @@ class ProfileCloudSyncService {
       email: data['email'] as String?,
       website: data['website'] as String?,
       avatarUrl: data['avatarUrl'] as String?,
+      bannerUrl: data['bannerUrl'] as String?,
       socialLinks: data['socialLinks'] != null
           ? ProfileSocialLinks.fromJson(
               data['socialLinks'] as Map<String, dynamic>,

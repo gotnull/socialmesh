@@ -306,6 +306,9 @@ class UserProfile {
   /// Optional avatar image URL (local file path or cloud URL)
   final String? avatarUrl;
 
+  /// Optional banner/header image URL (local file path or cloud URL)
+  final String? bannerUrl;
+
   /// Short bio or status message
   final String? bio;
 
@@ -363,6 +366,7 @@ class UserProfile {
     required this.id,
     required this.displayName,
     this.avatarUrl,
+    this.bannerUrl,
     this.bio,
     this.callsign,
     this.email,
@@ -418,6 +422,7 @@ class UserProfile {
       id: json['id'] as String,
       displayName: json['displayName'] as String,
       avatarUrl: json['avatarUrl'] as String?,
+      bannerUrl: json['bannerUrl'] as String?,
       bio: json['bio'] as String?,
       callsign: json['callsign'] as String?,
       email: json['email'] as String?,
@@ -460,6 +465,7 @@ class UserProfile {
       'id': id,
       'displayName': displayName,
       'avatarUrl': avatarUrl,
+      'bannerUrl': bannerUrl,
       'bio': bio,
       'callsign': callsign,
       'email': email,
@@ -493,6 +499,7 @@ class UserProfile {
     String? id,
     String? displayName,
     String? avatarUrl,
+    String? bannerUrl,
     String? bio,
     String? callsign,
     String? email,
@@ -511,6 +518,7 @@ class UserProfile {
     int? followingCount,
     int? postCount,
     bool clearAvatarUrl = false,
+    bool clearBannerUrl = false,
     bool clearBio = false,
     bool clearCallsign = false,
     bool clearWebsite = false,
@@ -521,6 +529,7 @@ class UserProfile {
       id: id ?? this.id,
       displayName: displayName ?? this.displayName,
       avatarUrl: clearAvatarUrl ? null : (avatarUrl ?? this.avatarUrl),
+      bannerUrl: clearBannerUrl ? null : (bannerUrl ?? this.bannerUrl),
       bio: clearBio ? null : (bio ?? this.bio),
       callsign: clearCallsign ? null : (callsign ?? this.callsign),
       email: email ?? this.email,

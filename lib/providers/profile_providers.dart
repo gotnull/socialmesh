@@ -376,6 +376,80 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
     }
   }
 
+  /// Save banner from file (and upload to cloud if signed in)
+  Future<void> saveBannerFromFile(File imageFile) async {
+    final profile = state.value;
+    if (profile == null) return;
+
+    try {
+      // Save locally first
+      final localPath = await profileService.saveBannerFromFile(
+        profile.id,
+        imageFile,
+      );
+      AppLogging.auth('UserProfile: Saved banner locally: $localPath');
+
+      // Update state immediately with local path so UI shows it
+      final localUpdated = profile.copyWith(bannerUrl: localPath);
+      state = AsyncValue.data(localUpdated);
+
+      // If user is signed in, also upload to cloud
+      final user = ref.read(currentUserProvider);
+      if (user != null) {
+        AppLogging.auth(
+          'UserProfile: User signed in, uploading banner to cloud',
+        );
+        try {
+          final cloudUrl = await profileCloudSyncService.uploadBanner(
+            user.uid,
+            imageFile,
+          );
+
+          // Update profile with cloud URL
+          final cloudUpdated = localUpdated.copyWith(
+            bannerUrl: cloudUrl,
+            isSynced: true,
+          );
+          await profileService.saveProfile(cloudUpdated);
+          state = AsyncValue.data(cloudUpdated);
+          AppLogging.auth('UserProfile: Banner uploaded to cloud: $cloudUrl');
+        } catch (e) {
+          // Cloud upload failed, but local save succeeded
+          AppLogging.auth(
+            'UserProfile: Cloud banner upload failed (local save OK): $e',
+          );
+          // Keep using local path - don't throw error
+        }
+      }
+    } catch (e, st) {
+      AppLogging.auth('UserProfile: Error saving banner: $e');
+      state = AsyncValue.error(e, st);
+    }
+  }
+
+  /// Delete banner (and from cloud if signed in)
+  Future<void> deleteBanner() async {
+    final profile = state.value;
+    if (profile == null) return;
+
+    try {
+      // Delete locally
+      await profileService.deleteBanner(profile.id);
+
+      // If signed in, also delete from cloud
+      final user = ref.read(currentUserProvider);
+      if (user != null) {
+        AppLogging.auth('UserProfile: Deleting banner from cloud');
+        await profileCloudSyncService.deleteCloudBanner(user.uid);
+      }
+
+      await refresh();
+    } catch (e, st) {
+      AppLogging.auth('UserProfile: Error deleting banner: $e');
+      state = AsyncValue.error(e, st);
+    }
+  }
+
   /// Delete profile entirely
   Future<void> deleteProfile() async {
     try {

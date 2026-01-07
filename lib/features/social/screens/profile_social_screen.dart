@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +12,7 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
+import '../../../core/widgets/default_banner.dart';
 import '../../../core/widgets/node_avatar.dart';
 import '../../../core/widgets/verified_badge.dart';
 import '../../../models/mesh_models.dart';
@@ -16,6 +20,7 @@ import '../../../models/social.dart';
 import '../../../providers/app_providers.dart';
 import '../../../services/user_presence_service.dart';
 import '../../../providers/auth_providers.dart';
+import '../../../providers/profile_providers.dart';
 import '../../../providers/social_providers.dart';
 import '../../../utils/snackbar.dart';
 import '../../../utils/validation.dart';
@@ -282,10 +287,150 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
     PublicProfile profile,
     bool isOwnProfile,
   ) {
+    const bannerHeight = 180.0;
+    const avatarSize = 80.0;
+    const avatarOverlap = 40.0;
+
     return SliverAppBar(
       backgroundColor: context.background,
       foregroundColor: context.textPrimary,
       pinned: true,
+      expandedHeight: bannerHeight + avatarOverlap,
+      collapsedHeight: kToolbarHeight,
+      flexibleSpace: FlexibleSpaceBar(
+        background: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            // Banner image
+            Positioned.fill(
+              bottom: avatarOverlap,
+              child: GestureDetector(
+                onTap: isOwnProfile ? () => _showBannerOptions(profile) : null,
+                child: profile.bannerUrl != null
+                    ? Image.network(
+                        profile.bannerUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const DefaultBanner(),
+                      )
+                    : const DefaultBanner(),
+              ),
+            ),
+            // Gradient overlay for readability
+            Positioned.fill(
+              bottom: avatarOverlap,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withValues(alpha: 0.3),
+                      Colors.transparent,
+                      Colors.black.withValues(alpha: 0.5),
+                    ],
+                    stops: const [0.0, 0.5, 1.0],
+                  ),
+                ),
+              ),
+            ),
+            // Avatar overlapping the banner
+            Positioned(
+              left: 16,
+              bottom: 0,
+              child: Consumer(
+                builder: (context, ref, _) {
+                  final isOnlineAsync = ref.watch(
+                    userOnlineStatusProvider(widget.userId),
+                  );
+                  final isOnline =
+                      isOnlineAsync.whenOrNull(data: (value) => value) ?? false;
+
+                  return GestureDetector(
+                    onTap: isOwnProfile ? _navigateToCreateStory : null,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: context.background, width: 4),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.2),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Stack(
+                        children: [
+                          CircleAvatar(
+                            radius: avatarSize / 2,
+                            backgroundColor: context.accentColor.withValues(
+                              alpha: 0.2,
+                            ),
+                            backgroundImage: profile.avatarUrl != null
+                                ? NetworkImage(profile.avatarUrl!)
+                                : null,
+                            child: profile.avatarUrl == null
+                                ? Text(
+                                    profile.displayName[0].toUpperCase(),
+                                    style: TextStyle(
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.bold,
+                                      color: context.accentColor,
+                                    ),
+                                  )
+                                : null,
+                          ),
+                          // Online indicator
+                          if (isOnline)
+                            Positioned(
+                              right: 2,
+                              bottom: 2,
+                              child: Container(
+                                width: 16,
+                                height: 16,
+                                decoration: BoxDecoration(
+                                  color: AccentColors.green,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: context.background,
+                                    width: 2,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          // Add story button for own profile
+                          if (isOwnProfile)
+                            Positioned(
+                              right: 0,
+                              bottom: 0,
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: context.accentColor,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: context.background,
+                                    width: 2,
+                                  ),
+                                ),
+                                child: const Icon(
+                                  Icons.add,
+                                  color: Colors.white,
+                                  size: 12,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
       title: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -363,214 +508,34 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Top row: Avatar + Stats
-          Row(
-            children: [
-              // Avatar with online status
-              Consumer(
-                builder: (context, ref, child) {
-                  final isOnlineAsync = ref.watch(
-                    userOnlineStatusProvider(widget.userId),
-                  );
-                  final isOnline =
-                      isOnlineAsync.whenOrNull(data: (value) => value) ?? false;
-
-                  debugPrint(
-                    '🟢 Profile online status for ${widget.userId}: isOnline=$isOnline, asyncState=${isOnlineAsync.toString()}',
-                  );
-
-                  // Check for active stories here
-                  // When stories are implemented, use this structure:
-                  // final hasActiveStory = ...; // check story status
-                  // if (hasActiveStory) {
-                  //   avatarWidget = Container(
-                  //     width: 88,
-                  //     height: 88,
-                  //     decoration: const BoxDecoration(
-                  //       shape: BoxShape.circle,
-                  //       gradient: LinearGradient(
-                  //         begin: Alignment.topLeft,
-                  //         end: Alignment.bottomRight,
-                  //         colors: [
-                  //           Color(0xFFFFD600), // Yellow
-                  //           Color(0xFFFF7A00), // Orange
-                  //           Color(0xFFFF0069), // Pink
-                  //           Color(0xFFD300C5), // Purple
-                  //         ],
-                  //       ),
-                  //     ),
-                  //     padding: const EdgeInsets.all(3),
-                  //     child: Container(
-                  //       decoration: BoxDecoration(
-                  //         color: context.background,
-                  //         shape: BoxShape.circle,
-                  //       ),
-                  //       padding: const EdgeInsets.all(3),
-                  //       child: CircleAvatar(
-                  //         radius: 38,
-                  //         backgroundColor: context.accentColor.withValues(alpha: 0.2),
-                  //         backgroundImage: profile.avatarUrl != null
-                  //             ? NetworkImage(profile.avatarUrl!)
-                  //             : null,
-                  //         child: profile.avatarUrl == null
-                  //             ? Text(
-                  //                 profile.displayName[0].toUpperCase(),
-                  //                 style: TextStyle(
-                  //                   fontSize: 32,
-                  //                   fontWeight: FontWeight.bold,
-                  //                   color: context.accentColor,
-                  //                 ),
-                  //               )
-                  //             : null,
-                  //       ),
-                  //     ),
-                  //   );
-                  // } else if (isOnline) { ... green ring ... }
-                  // else { ... no ring ... }
-
-                  Widget avatarWidget;
-
-                  if (isOnline) {
-                    // Green ring for online status
-                    avatarWidget = Container(
-                      width: 88,
-                      height: 88,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AccentColors.green,
-                      ),
-                      padding: const EdgeInsets.all(3),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: context.background,
-                          shape: BoxShape.circle,
-                        ),
-                        padding: const EdgeInsets.all(3),
-                        child: CircleAvatar(
-                          radius: 38,
-                          backgroundColor: context.accentColor.withValues(
-                            alpha: 0.2,
-                          ),
-                          backgroundImage: profile.avatarUrl != null
-                              ? NetworkImage(profile.avatarUrl!)
-                              : null,
-                          child: profile.avatarUrl == null
-                              ? Text(
-                                  profile.displayName[0].toUpperCase(),
-                                  style: TextStyle(
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.bold,
-                                    color: context.accentColor,
-                                  ),
-                                )
-                              : null,
-                        ),
-                      ),
-                    );
-                  } else {
-                    // No ring when offline and no story
-                    avatarWidget = CircleAvatar(
-                      radius: 44,
-                      backgroundColor: context.accentColor.withValues(
-                        alpha: 0.2,
-                      ),
-                      backgroundImage: profile.avatarUrl != null
-                          ? NetworkImage(profile.avatarUrl!)
-                          : null,
-                      child: profile.avatarUrl == null
-                          ? Text(
-                              profile.displayName[0].toUpperCase(),
-                              style: TextStyle(
-                                fontSize: 32,
-                                fontWeight: FontWeight.bold,
-                                color: context.accentColor,
-                              ),
-                            )
-                          : null,
-                    );
-                  }
-
-                  return GestureDetector(
-                    onTap: isOwnProfile ? _navigateToCreateStory : null,
-                    child: Stack(
-                      children: [
-                        avatarWidget,
-                        if (isOwnProfile)
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                color: context.accentColor,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: context.background,
-                                  width: 2,
-                                ),
-                              ),
-                              child: const Icon(
-                                Icons.add,
-                                color: Colors.white,
-                                size: 14,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(width: 24),
-              // Stats
-              Expanded(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _StatColumn(count: profile.postCount, label: 'Posts'),
-                    _StatColumn(
-                      count: profile.followerCount,
-                      label: 'Followers',
-                      onTap: () =>
-                          _navigateToFollowers(FollowersScreenMode.followers),
-                    ),
-                    _StatColumn(
-                      count: profile.followingCount,
-                      label: 'Following',
-                      onTap: () =>
-                          _navigateToFollowers(FollowersScreenMode.following),
-                    ),
-                  ],
+          // Stats row - aligned to the right of where avatar overlaps
+          Padding(
+            padding: const EdgeInsets.only(
+              left: 96,
+            ), // Space for avatar overlap
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _StatColumn(count: profile.postCount, label: 'Posts'),
+                _StatColumn(
+                  count: profile.followerCount,
+                  label: 'Followers',
+                  onTap: () =>
+                      _navigateToFollowers(FollowersScreenMode.followers),
                 ),
-              ),
-            ],
+                _StatColumn(
+                  count: profile.followingCount,
+                  label: 'Following',
+                  onTap: () =>
+                      _navigateToFollowers(FollowersScreenMode.following),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 16),
 
-          // Name
-          Row(
-            children: [
-              Flexible(
-                child: Text(
-                  profile.displayName,
-                  style: TextStyle(
-                    color: context.textPrimary,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              if (profile.isVerified || isAppOwner(profile.id)) ...[
-                const SizedBox(width: 4),
-                const SimpleVerifiedBadge(size: 16),
-              ],
-            ],
-          ),
-
           // Callsign
           if (profile.callsign != null && profile.callsign!.isNotEmpty) ...[
-            const SizedBox(height: 2),
             Text(
               profile.callsign!,
               style: TextStyle(
@@ -978,6 +943,95 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
       context,
       MaterialPageRoute(builder: (context) => const ProfileScreen()),
     );
+  }
+
+  void _showBannerOptions(PublicProfile profile) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: context.card,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: context.textTertiary,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: Icon(Icons.photo_library, color: context.accentColor),
+              title: Text(
+                profile.bannerUrl != null ? 'Change banner' : 'Add banner',
+                style: TextStyle(color: context.textPrimary),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                _pickBanner();
+              },
+            ),
+            if (profile.bannerUrl != null)
+              ListTile(
+                leading: const Icon(Icons.delete_outline, color: Colors.red),
+                title: const Text(
+                  'Remove banner',
+                  style: TextStyle(color: Colors.red),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _removeBanner();
+                },
+              ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickBanner() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+      allowMultiple: false,
+    );
+
+    if (result != null && result.files.isNotEmpty) {
+      try {
+        final file = File(result.files.first.path!);
+        await ref.read(userProfileProvider.notifier).saveBannerFromFile(file);
+        ref.invalidate(userProfileProvider);
+        ref.invalidate(publicProfileStreamProvider(widget.userId));
+        if (mounted) {
+          showSuccessSnackBar(context, 'Banner updated');
+        }
+      } catch (e) {
+        if (mounted) {
+          showErrorSnackBar(context, 'Failed to upload banner: $e');
+        }
+      }
+    }
+  }
+
+  Future<void> _removeBanner() async {
+    try {
+      await ref.read(userProfileProvider.notifier).deleteBanner();
+      ref.invalidate(userProfileProvider);
+      ref.invalidate(publicProfileStreamProvider(widget.userId));
+      if (mounted) {
+        showSuccessSnackBar(context, 'Banner removed');
+      }
+    } catch (e) {
+      if (mounted) {
+        showErrorSnackBar(context, 'Failed to remove banner: $e');
+      }
+    }
   }
 
   void _navigateToCreateStory() {

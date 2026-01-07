@@ -37,6 +37,15 @@ service firebase.storage {
     }
     
     // =============================================================================
+    // PROFILE BANNERS
+    // =============================================================================
+    match /profile_banners/{fileName} {
+      allow read: if true;
+      // Allow authenticated users to upload their own banners
+      allow write: if isAuthenticated() && isValidImage();
+    }
+    
+    // =============================================================================
     // DEVICE SHOP IMAGES
     // =============================================================================
     

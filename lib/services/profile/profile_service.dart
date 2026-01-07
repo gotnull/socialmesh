@@ -16,15 +16,18 @@ import '../../models/user_profile.dart';
 class ProfileService {
   static const String _profileKey = 'user_profile';
   static const String _avatarDirName = 'profile_avatars';
+  static const String _bannerDirName = 'profile_banners';
 
   SharedPreferences? _prefs;
   Directory? _avatarDir;
+  Directory? _bannerDir;
 
   /// Initialize the service
   Future<void> initialize() async {
     AppLogging.auth('ProfileService: initialize() - START');
     _prefs = await SharedPreferences.getInstance();
     await _initAvatarDirectory();
+    await _initBannerDirectory();
     AppLogging.auth('ProfileService: initialize() - ✅ COMPLETE');
   }
 
@@ -34,6 +37,15 @@ class ProfileService {
     if (!await _avatarDir!.exists()) {
       await _avatarDir!.create(recursive: true);
       AppLogging.auth('ProfileService: Created avatar directory');
+    }
+  }
+
+  Future<void> _initBannerDirectory() async {
+    final appDir = await getApplicationDocumentsDirectory();
+    _bannerDir = Directory('${appDir.path}/$_bannerDirName');
+    if (!await _bannerDir!.exists()) {
+      await _bannerDir!.create(recursive: true);
+      AppLogging.auth('ProfileService: Created banner directory');
     }
   }
 
@@ -53,6 +65,15 @@ class ProfileService {
       );
     }
     return _avatarDir!;
+  }
+
+  Directory get _bannerDirectory {
+    if (_bannerDir == null) {
+      throw StateError(
+        'ProfileService not initialized. Call initialize() first.',
+      );
+    }
+    return _bannerDir!;
   }
 
   /// Get the current user profile
@@ -94,6 +115,7 @@ class ProfileService {
     AppLogging.auth('ProfileService: deleteProfile() - START');
     await _preferences.remove(_profileKey);
     await _clearAvatarImages();
+    await _clearBannerImages();
     AppLogging.auth('ProfileService: deleteProfile() - ✅ DELETED');
   }
 
@@ -224,6 +246,54 @@ class ProfileService {
   Future<void> _clearAvatarImages() async {
     if (await _avatarDirectory.exists()) {
       final files = await _avatarDirectory.list().toList();
+      for (final file in files) {
+        if (file is File) {
+          await file.delete();
+        }
+      }
+    }
+  }
+
+  // Banner management
+
+  /// Get the path for storing a banner image
+  String _getBannerPath(String profileId) {
+    return '${_bannerDirectory.path}/banner_$profileId.jpg';
+  }
+
+  /// Save banner image from file
+  Future<String> saveBannerFromFile(String profileId, File imageFile) async {
+    final bannerPath = _getBannerPath(profileId);
+
+    // Copy the image to our banner directory
+    await imageFile.copy(bannerPath);
+
+    // Update profile with local banner URL
+    final profile = await getOrCreateProfile();
+    await saveProfile(profile.copyWith(bannerUrl: bannerPath));
+
+    return bannerPath;
+  }
+
+  /// Delete banner image
+  Future<void> deleteBanner(String profileId) async {
+    final bannerPath = _getBannerPath(profileId);
+    final file = File(bannerPath);
+    if (await file.exists()) {
+      await file.delete();
+    }
+
+    // Update profile to remove banner URL
+    final profile = await getProfile();
+    if (profile != null) {
+      await saveProfile(profile.copyWith(clearBannerUrl: true));
+    }
+  }
+
+  /// Clear all banner images
+  Future<void> _clearBannerImages() async {
+    if (await _bannerDirectory.exists()) {
+      final files = await _bannerDirectory.list().toList();
       for (final file in files) {
         if (file is File) {
           await file.delete();

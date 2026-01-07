@@ -750,6 +750,7 @@ class PublicProfile {
   final String id;
   final String displayName;
   final String? avatarUrl;
+  final String? bannerUrl;
   final String? bio;
   final String? callsign;
   final String? website;
@@ -768,6 +769,7 @@ class PublicProfile {
     required this.id,
     required this.displayName,
     this.avatarUrl,
+    this.bannerUrl,
     this.bio,
     this.callsign,
     this.website,
@@ -804,6 +806,7 @@ class PublicProfile {
       id: doc.id,
       displayName: data['displayName'] as String? ?? 'Unknown',
       avatarUrl: data['avatarUrl'] as String?,
+      bannerUrl: data['bannerUrl'] as String?,
       bio: data['bio'] as String?,
       callsign: data['callsign'] as String?,
       website: data['website'] as String?,
@@ -851,6 +854,7 @@ class PublicProfile {
     String? id,
     String? displayName,
     String? avatarUrl,
+    String? bannerUrl,
     String? bio,
     String? callsign,
     String? website,
@@ -869,6 +873,7 @@ class PublicProfile {
       id: id ?? this.id,
       displayName: displayName ?? this.displayName,
       avatarUrl: avatarUrl ?? this.avatarUrl,
+      bannerUrl: bannerUrl ?? this.bannerUrl,
       bio: bio ?? this.bio,
       callsign: callsign ?? this.callsign,
       website: website ?? this.website,
