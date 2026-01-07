@@ -127,9 +127,14 @@ class HamburgerMenuButton extends ConsumerWidget {
           ),
           onPressed: () {
             HapticFeedback.lightImpact();
-            // Try to open the drawer from MainShell
-            // If drawer couldn't be opened (e.g., context issue), show as bottom sheet
-            if (scaffoldKey?.currentState != null) {
+            // Try multiple ways to open the drawer:
+            // 1. First try Scaffold.maybeOf(context) - works if we're inside a Scaffold
+            // 2. Then try the provider-stored scaffold key
+            // 3. Fall back to showing a bottom sheet if neither works
+            final scaffoldState = Scaffold.maybeOf(context);
+            if (scaffoldState?.hasDrawer ?? false) {
+              scaffoldState!.openDrawer();
+            } else if (scaffoldKey?.currentState != null) {
               scaffoldKey!.currentState!.openDrawer();
             } else {
               _showQuickAccessSheet(context, ref);

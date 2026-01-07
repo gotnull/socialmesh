@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import 'dart:convert';
 import '../../providers/app_providers.dart';
 import '../../providers/social_providers.dart';
@@ -16,6 +17,7 @@ import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/node_avatar.dart';
 import '../../core/widgets/edge_fade.dart';
 import '../../core/widgets/auto_scroll_text.dart';
+import '../../core/widgets/skeleton_config.dart';
 import '../../services/share_link_service.dart';
 import '../messaging/messaging_screen.dart';
 import '../map/map_screen.dart';
@@ -73,6 +75,14 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
     final myNodeNum = ref.watch(myNodeNumProvider);
     final linkedNodeIds =
         ref.watch(linkedNodeIdsProvider).asData?.value ?? <int>[];
+    final connectionStateAsync = ref.watch(connectionStateProvider);
+
+    // Check if connected - used to show loading shimmer
+    final isConnected = connectionStateAsync.when(
+      data: (state) => state == DeviceConnectionState.connected,
+      loading: () => false,
+      error: (_, _) => false,
+    );
 
     var nodesList = nodes.values.toList();
 
@@ -296,46 +306,48 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
             // Node list
             Expanded(
               child: nodesList.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            width: 72,
-                            height: 72,
-                            decoration: BoxDecoration(
-                              color: context.card,
-                              borderRadius: BorderRadius.circular(16),
+                  ? (isConnected && _activeFilter == NodeFilter.all)
+                        ? _buildLoadingShimmer()
+                        : Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  width: 72,
+                                  height: 72,
+                                  decoration: BoxDecoration(
+                                    color: context.card,
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Icon(
+                                    Icons.group,
+                                    size: 40,
+                                    color: context.textTertiary,
+                                  ),
+                                ),
+                                SizedBox(height: 24),
+                                Text(
+                                  _activeFilter == NodeFilter.all
+                                      ? 'No nodes discovered yet'
+                                      : 'No nodes match this filter',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                    color: context.textSecondary,
+                                  ),
+                                ),
+                                if (_activeFilter != NodeFilter.all) ...[
+                                  const SizedBox(height: 12),
+                                  TextButton(
+                                    onPressed: () => setState(
+                                      () => _activeFilter = NodeFilter.all,
+                                    ),
+                                    child: const Text('Show all nodes'),
+                                  ),
+                                ],
+                              ],
                             ),
-                            child: Icon(
-                              Icons.group,
-                              size: 40,
-                              color: context.textTertiary,
-                            ),
-                          ),
-                          SizedBox(height: 24),
-                          Text(
-                            _activeFilter == NodeFilter.all
-                                ? 'No nodes discovered yet'
-                                : 'No nodes match this filter',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: context.textSecondary,
-                            ),
-                          ),
-                          if (_activeFilter != NodeFilter.all) ...[
-                            const SizedBox(height: 12),
-                            TextButton(
-                              onPressed: () => setState(
-                                () => _activeFilter = NodeFilter.all,
-                              ),
-                              child: const Text('Show all nodes'),
-                            ),
-                          ],
-                        ],
-                      ),
-                    )
+                          )
                   : _buildNodeList(nodesList, myNodeNum, linkedNodeIds),
             ),
           ],
@@ -766,6 +778,17 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
     final transport = ref.read(transportProvider);
     await transport.disconnect();
     ref.read(connectedDeviceProvider.notifier).setState(null);
+  }
+
+  Widget _buildLoadingShimmer() {
+    return Skeletonizer(
+      enabled: true,
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        itemCount: 8,
+        itemBuilder: (context, index) => const SkeletonNodeCard(),
+      ),
+    );
   }
 }
 

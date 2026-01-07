@@ -2078,6 +2078,11 @@ class NodeDiscoveryNotifier extends Notifier<MeshNode?> {
     final appState = ref.read(appInitProvider);
     if (appState != AppInitState.ready) return;
 
+    // Suppress notifications during initial config sync after connect/reconnect
+    // This prevents 50+ notifications when reconnecting to a device with known nodes
+    final protocol = ref.read(protocolServiceProvider);
+    if (!protocol.configurationComplete) return;
+
     // Check master notification toggle and new node setting
     final settingsAsync = ref.read(settingsServiceProvider);
     final settings = settingsAsync.value;
