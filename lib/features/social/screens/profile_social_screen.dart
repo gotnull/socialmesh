@@ -143,6 +143,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
               isOwnProfile || !profile.isPrivate || isFollowing;
 
           return RefreshIndicator(
+            displacement: 40,
             edgeOffset: widget.showAppBar
                 ? kToolbarHeight + MediaQuery.of(context).padding.top
                 : MediaQuery.of(context).padding.top,
