@@ -520,6 +520,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
               );
             }).toList(),
           ),
+          // Device status
+          const DeviceStatusButton(),
           // More options menu
           PopupMenuButton<String>(
             icon: Icon(Icons.more_vert, color: context.textSecondary),

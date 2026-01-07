@@ -2,12 +2,9 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/transport.dart' as transport;
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
-import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
-import '../device/device_sheet.dart';
 import '../navigation/main_shell.dart';
 import '../widget_builder/storage/widget_storage_service.dart';
 import '../widget_builder/wizard/widget_wizard_screen.dart';
@@ -49,21 +46,9 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final connectionStateAsync = ref.watch(connectionStateProvider);
-    final autoReconnectState = ref.watch(autoReconnectStateProvider);
+    // Connection state handling is done by ConnectionRequiredWrapper in MainShell
+    // This screen only needs to handle the connected state
     final widgetConfigs = ref.watch(dashboardWidgetsProvider);
-
-    final connectionState = connectionStateAsync.when(
-      data: (state) => state,
-      loading: () => transport.DeviceConnectionState.connecting,
-      error: (_, s) => transport.DeviceConnectionState.error,
-    );
-
-    final isConnected =
-        connectionState == transport.DeviceConnectionState.connected;
-    final isReconnecting =
-        autoReconnectState == AutoReconnectState.scanning ||
-        autoReconnectState == AutoReconnectState.connecting;
 
     return Scaffold(
       backgroundColor: context.background,
@@ -88,10 +73,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
           ),
           if (!_editMode) ...[
             // Device button
-            _DeviceButton(
-              isConnected: isConnected,
-              isReconnecting: isReconnecting,
-            ),
+            const DeviceStatusButton(),
             // Settings
             IconButton(
               icon: Icon(Icons.settings_outlined, color: context.textPrimary),
@@ -114,100 +96,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
           ],
         ],
       ),
-      body: !isConnected && !isReconnecting
-          ? _buildDisconnectedState(context, autoReconnectState)
-          : isReconnecting
-          ? _buildReconnectingState(context, autoReconnectState)
-          : _buildDashboard(context, widgetConfigs),
-    );
-  }
-
-  Widget _buildDisconnectedState(
-    BuildContext context,
-    AutoReconnectState autoReconnectState,
-  ) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              autoReconnectState == AutoReconnectState.failed
-                  ? Icons.wifi_off
-                  : Icons.bluetooth_disabled,
-              size: 64,
-              color: context.textTertiary,
-            ),
-            SizedBox(height: 16),
-            Text(
-              autoReconnectState == AutoReconnectState.failed
-                  ? 'Connection Failed'
-                  : 'No Device Connected',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: context.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              autoReconnectState == AutoReconnectState.failed
-                  ? 'Could not find saved device'
-                  : 'Connect to a Meshtastic device to get started',
-              style: TextStyle(fontSize: 14, color: context.textSecondary),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 32),
-            ElevatedButton.icon(
-              onPressed: () => Navigator.of(context).pushNamed('/scanner'),
-              icon: Icon(Icons.bluetooth_searching, size: 20),
-              label: Text('Scan for Devices'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: context.accentColor,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 28,
-                  vertical: 16,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildReconnectingState(
-    BuildContext context,
-    AutoReconnectState autoReconnectState,
-  ) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          MeshLoadingIndicator(size: 48),
-          SizedBox(height: 24),
-          Text(
-            autoReconnectState == AutoReconnectState.scanning
-                ? 'Scanning for device...'
-                : 'Connecting...',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: context.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Please wait while we reconnect',
-            style: TextStyle(fontSize: 14, color: context.textSecondary),
-          ),
-        ],
-      ),
+      body: _buildDashboard(context, widgetConfigs),
     );
   }
 
@@ -762,55 +651,6 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
           const SizedBox(height: 16),
         ],
       ),
-    );
-  }
-}
-
-/// Device button that shows connection status and navigates to device page
-class _DeviceButton extends StatelessWidget {
-  final bool isConnected;
-  final bool isReconnecting;
-
-  const _DeviceButton({
-    required this.isConnected,
-    required this.isReconnecting,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return IconButton(
-      icon: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Icon(
-            Icons.router,
-            color: isConnected
-                ? context.accentColor
-                : isReconnecting
-                ? AppTheme.warningYellow
-                : context.textTertiary,
-          ),
-          Positioned(
-            right: -2,
-            top: -2,
-            child: Container(
-              width: 10,
-              height: 10,
-              decoration: BoxDecoration(
-                color: isConnected
-                    ? context.accentColor
-                    : isReconnecting
-                    ? AppTheme.warningYellow
-                    : AppTheme.errorRed,
-                shape: BoxShape.circle,
-                border: Border.all(color: context.background, width: 2),
-              ),
-            ),
-          ),
-        ],
-      ),
-      onPressed: () => showDeviceSheet(context),
-      tooltip: 'Device',
     );
   }
 }

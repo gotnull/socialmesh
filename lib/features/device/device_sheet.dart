@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/logging.dart';
 import '../../core/transport.dart' as transport;
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/info_table.dart';
 import '../../core/widgets/auto_scroll_text.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/connection_providers.dart';
+import '../../utils/snackbar.dart';
 
 /// Shows the device sheet as a modal bottom sheet
 void showDeviceSheet(BuildContext context) {
@@ -185,6 +188,13 @@ class _DeviceSheetContent extends ConsumerWidget {
                   Navigator.of(context).pushNamed('/settings');
                 },
               ),
+              if (isConnected)
+                _ActionTile(
+                  icon: Icons.delete_sweep_outlined,
+                  title: 'Reset Node Database',
+                  subtitle: 'Clear all learned nodes from device',
+                  onTap: () => _showResetNodeDbDialog(context, ref),
+                ),
               const SizedBox(height: 24),
 
               // Connection Actions
@@ -284,6 +294,8 @@ class _DeviceSheetContent extends ConsumerWidget {
   }
 
   Future<void> _disconnect(BuildContext context, WidgetRef ref) async {
+    AppLogging.connection('🔌 DISCONNECT: User tapped disconnect button');
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -294,11 +306,17 @@ class _DeviceSheetContent extends ConsumerWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () {
+              AppLogging.connection('🔌 DISCONNECT: User cancelled dialog');
+              Navigator.pop(context, false);
+            },
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () {
+              AppLogging.connection('🔌 DISCONNECT: User confirmed disconnect');
+              Navigator.pop(context, true);
+            },
             style: TextButton.styleFrom(foregroundColor: AppTheme.errorRed),
             child: const Text('Disconnect'),
           ),
@@ -307,16 +325,90 @@ class _DeviceSheetContent extends ConsumerWidget {
     );
 
     if (confirmed == true && context.mounted) {
+      AppLogging.connection('🔌 DISCONNECT: Starting disconnect sequence...');
+
+      // CRITICAL: Set userDisconnected flag FIRST to prevent ALL auto-reconnect logic
+      AppLogging.connection('🔌 DISCONNECT: Setting userDisconnected=true');
+      ref.read(userDisconnectedProvider.notifier).setUserDisconnected(true);
+
+      // Also set auto-reconnect state to idle for extra safety
+      AppLogging.connection(
+        '🔌 DISCONNECT: Setting autoReconnectState to idle (user disconnect)',
+      );
+      ref
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.idle);
+
+      // Use DeviceConnectionNotifier for proper disconnect handling
+      // This sets the proper disconnect reason and prevents auto-reconnect
+      AppLogging.connection(
+        '🔌 DISCONNECT: Calling DeviceConnectionNotifier.disconnect()',
+      );
+      await ref.read(deviceConnectionProvider.notifier).disconnect();
+
+      // Also stop protocol service
+      AppLogging.connection('🔌 DISCONNECT: Stopping protocol service');
       final protocol = ref.read(protocolServiceProvider);
       protocol.stop();
 
-      final transport = ref.read(transportProvider);
-      await transport.disconnect();
-
-      ref.read(connectedDeviceProvider.notifier).setState(null);
+      AppLogging.connection('🔌 DISCONNECT: Disconnect sequence complete');
 
       if (context.mounted) {
-        Navigator.pop(context); // Close the sheet
+        AppLogging.connection('🔌 DISCONNECT: Closing sheet');
+        // Just close the sheet - the ConnectionRequiredWrapper on the
+        // underlying screen will show the disconnected state with a
+        // "Scan for Devices" button. This avoids complex navigation
+        // timing issues and duplicate scanner instances.
+        Navigator.pop(context);
+      }
+    } else {
+      AppLogging.connection(
+        '🔌 DISCONNECT: Dialog dismissed or context not mounted',
+      );
+    }
+  }
+
+  Future<void> _showResetNodeDbDialog(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: context.card,
+        title: const Text('Reset Node Database'),
+        content: const Text(
+          'This will clear all learned nodes from the device. '
+          'The device will need to rediscover nodes on the mesh.\n\n'
+          'Are you sure you want to continue?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: AppTheme.errorRed),
+            child: const Text('Reset'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      try {
+        final protocol = ref.read(protocolServiceProvider);
+        await protocol.nodeDbReset();
+
+        if (context.mounted) {
+          showSuccessSnackBar(context, 'Node database reset successfully');
+          Navigator.pop(context);
+        }
+      } catch (e) {
+        if (context.mounted) {
+          showErrorSnackBar(context, 'Failed to reset node database: $e');
+        }
       }
     }
   }

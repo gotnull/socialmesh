@@ -17,7 +17,10 @@ import 'core/theme.dart';
 import 'core/transport.dart';
 import 'core/logging.dart';
 import 'core/widgets/connecting_content.dart';
+import 'core/routing/route_guard.dart';
 import 'providers/splash_mesh_provider.dart';
+import 'providers/connection_providers.dart' as conn;
+import 'providers/lifecycle_command_provider.dart';
 import 'models/canned_response.dart';
 import 'models/tapback.dart';
 import 'models/user_profile.dart';
@@ -171,12 +174,16 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) {
+      // Mark app as active for lifecycle-aware commands
+      ref.read(lifecycleCommandManagerProvider).setAppActive(true);
       _handleAppResumed();
       // Set user online when app returns to foreground
       ref.read(userPresenceServiceProvider).setOnline();
     } else if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive ||
         state == AppLifecycleState.detached) {
+      // Mark app as inactive - prevents device commands from background
+      ref.read(lifecycleCommandManagerProvider).setAppActive(false);
       // Set user offline when app goes to background
       ref.read(userPresenceServiceProvider).setOffline();
     }
@@ -185,21 +192,52 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
   /// Handle app returning to foreground
   /// This cleans up stale BLE state and triggers reconnect if needed
   Future<void> _handleAppResumed() async {
-    AppLogging.liveActivity('App resumed - checking BLE state');
+    AppLogging.connection('📱 APP RESUMED: Checking BLE state...');
 
     final transport = ref.read(transportProvider);
     final autoReconnectState = ref.read(autoReconnectStateProvider);
+    final deviceConnectionState = ref.read(conn.deviceConnectionProvider);
+    final userDisconnected = ref.read(userDisconnectedProvider);
+
+    AppLogging.connection(
+      '📱 APP RESUMED: transport.state=${transport.state}, '
+      'autoReconnectState=$autoReconnectState, '
+      'deviceConnectionState=${deviceConnectionState.state}, '
+      'reason=${deviceConnectionState.reason}, '
+      'userDisconnected=$userDisconnected',
+    );
 
     // If we think we're connected, verify the connection is still valid
     if (transport.state == DeviceConnectionState.connected) {
-      AppLogging.liveActivity('App resumed - transport reports connected');
+      AppLogging.connection(
+        '📱 APP RESUMED: Transport reports connected, doing nothing',
+      );
       return;
     }
 
     // If already trying to reconnect, don't interfere
     if (autoReconnectState == AutoReconnectState.scanning ||
         autoReconnectState == AutoReconnectState.connecting) {
-      AppLogging.liveActivity('App resumed - reconnect already in progress');
+      AppLogging.connection(
+        '📱 APP RESUMED: Reconnect already in progress, doing nothing',
+      );
+      return;
+    }
+
+    // CRITICAL: Check the global userDisconnected flag
+    if (userDisconnected) {
+      AppLogging.connection(
+        '📱 APP RESUMED: User manually disconnected (global flag), NOT triggering reconnect',
+      );
+      return;
+    }
+
+    // Also check disconnect reason (belt and suspenders)
+    if (deviceConnectionState.reason ==
+        conn.DisconnectReason.userDisconnected) {
+      AppLogging.connection(
+        '📱 APP RESUMED: User manually disconnected (reason), NOT triggering reconnect',
+      );
       return;
     }
 
@@ -210,8 +248,8 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       final lastDeviceId = settings.lastDeviceId;
 
       if (lastDeviceId != null && settings.autoReconnect) {
-        AppLogging.liveActivity(
-          'App resumed - disconnected, triggering reconnect scan',
+        AppLogging.connection(
+          '📱 APP RESUMED: Disconnected with saved device, triggering reconnect scan...',
         );
 
         // Reset to idle first to allow reconnect to proceed
@@ -228,37 +266,63 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
         // Start the reconnect process
         _performReconnectOnResume(lastDeviceId);
       } else {
-        AppLogging.debug(
-          '📱 App resumed - transport reports disconnected (no saved device or auto-reconnect disabled)',
+        AppLogging.connection(
+          '📱 APP RESUMED: No saved device or auto-reconnect disabled',
         );
       }
     } catch (e) {
-      AppLogging.liveActivity('App resumed - error checking settings: $e');
+      AppLogging.connection('📱 APP RESUMED: Error checking settings: $e');
     }
   }
 
   /// Perform a single reconnect attempt when app resumes
   Future<void> _performReconnectOnResume(String deviceId) async {
-    AppLogging.liveActivity(
-      'Attempting reconnect on resume for device: $deviceId',
+    AppLogging.connection(
+      '📱 RECONNECT ON RESUME: Starting for device: $deviceId',
     );
+
+    // CRITICAL: Check the global userDisconnected flag
+    if (ref.read(userDisconnectedProvider)) {
+      AppLogging.connection(
+        '📱 RECONNECT ON RESUME: BLOCKED - user manually disconnected (global flag)',
+      );
+      ref
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.idle);
+      return;
+    }
+
+    // Also check device connection state reason
+    final deviceState = ref.read(conn.deviceConnectionProvider);
+    if (deviceState.reason == conn.DisconnectReason.userDisconnected) {
+      AppLogging.connection(
+        '📱 RECONNECT ON RESUME: BLOCKED - user manually disconnected (reason)',
+      );
+      ref
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.idle);
+      return;
+    }
 
     try {
       final transport = ref.read(transportProvider);
 
       // Quick scan to find the device
+      AppLogging.connection('📱 RECONNECT ON RESUME: Starting 8s scan...');
       final scanStream = transport.scan(timeout: const Duration(seconds: 8));
       DeviceInfo? foundDevice;
 
       await for (final device in scanStream) {
+        AppLogging.connection('📱 RECONNECT ON RESUME: Found ${device.id}');
         if (device.id == deviceId) {
           foundDevice = device;
+          AppLogging.connection('📱 RECONNECT ON RESUME: Target device found!');
           break;
         }
       }
 
       if (foundDevice != null) {
-        AppLogging.liveActivity('Device found on resume, connecting...');
+        AppLogging.connection('📱 RECONNECT ON RESUME: Connecting...');
         ref
             .read(autoReconnectStateProvider.notifier)
             .setState(AutoReconnectState.connecting);
@@ -266,6 +330,9 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
         await transport.connect(foundDevice);
 
         if (transport.state == DeviceConnectionState.connected) {
+          AppLogging.connection(
+            '📱 RECONNECT ON RESUME: BLE connected, starting protocol...',
+          );
           // Clear all previous device data before starting new connection
           await clearDeviceDataBeforeConnect(ref);
 
@@ -278,6 +345,17 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
 
           await protocol.start();
 
+          if (protocol.myNodeNum == null) {
+            AppLogging.connection(
+              '📱 RECONNECT ON RESUME: No myNodeNum - auth may have failed',
+            );
+            await transport.disconnect();
+            throw Exception('Authentication failed');
+          }
+
+          AppLogging.connection(
+            '📱 RECONNECT ON RESUME: Protocol started, myNodeNum=${protocol.myNodeNum}',
+          );
           ref.read(connectedDeviceProvider.notifier).setState(foundDevice);
           ref
               .read(autoReconnectStateProvider.notifier)
@@ -287,23 +365,28 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
           final locationService = ref.read(locationServiceProvider);
           await locationService.startLocationUpdates();
 
-          AppLogging.liveActivity('✅ Reconnected successfully on resume!');
+          AppLogging.connection('📱 RECONNECT ON RESUME: ✅ Success!');
 
           await Future.delayed(const Duration(milliseconds: 500));
           ref
               .read(autoReconnectStateProvider.notifier)
               .setState(AutoReconnectState.idle);
         } else {
+          AppLogging.connection(
+            '📱 RECONNECT ON RESUME: BLE connect failed, transport.state=${transport.state}',
+          );
           throw Exception('Connection failed');
         }
       } else {
-        AppLogging.liveActivity('Device not found on resume scan');
+        AppLogging.connection(
+          '📱 RECONNECT ON RESUME: Device not found in scan',
+        );
         ref
             .read(autoReconnectStateProvider.notifier)
             .setState(AutoReconnectState.idle);
       }
     } catch (e) {
-      AppLogging.liveActivity('Reconnect on resume failed: $e');
+      AppLogging.connection('📱 RECONNECT ON RESUME: Failed: $e');
       ref
           .read(autoReconnectStateProvider.notifier)
           .setState(AutoReconnectState.idle);
@@ -756,6 +839,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
     // Watch auto-reconnect and live activity managers at app level
     // so they stay active regardless of which screen is shown
     ref.watch(autoReconnectManagerProvider);
+    ref.watch(bluetoothStateListenerProvider);
     ref.watch(liveActivityManagerProvider);
 
     // Watch telemetry logger to automatically save telemetry data
@@ -774,8 +858,11 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
     // Watch theme mode for dark/light switching
     final themeMode = ref.watch(themeModeProvider);
 
-    // Analytics observer (nullable until Firebase initializes)
-    final analyticsObserver = ref.watch(analyticsObserverProvider);
+    // Note: We intentionally don't watch analyticsObserverProvider here
+    // because changing the navigatorObservers list causes the navigator
+    // to be recreated, which destroys all current routes (including the
+    // scanner). Instead, we use a stable delegating observer that will
+    // pick up the real analytics observer when Firebase initializes.
 
     return MaterialApp(
       title: 'Socialmesh',
@@ -786,7 +873,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       themeMode: themeMode,
       navigatorObservers: [
         _KeyboardDismissObserver(),
-        if (analyticsObserver != null) analyticsObserver,
+        _DelegatingAnalyticsObserver(ref),
       ],
       home: const _AppRouter(),
       routes: {
@@ -800,9 +887,16 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
         '/settings': (context) => const SettingsScreen(),
         '/qr-import': (context) => const QrImportScreen(),
         '/channel-qr-scanner': (context) => const QrImportScreen(),
-        '/device-config': (context) => const DeviceConfigScreen(),
-        '/region-setup': (context) =>
-            const RegionSelectionScreen(isInitialSetup: true),
+        '/device-config': (context) => _buildProtectedRoute(
+          context,
+          '/device-config',
+          const DeviceConfigScreen(),
+        ),
+        '/region-setup': (context) => _buildProtectedRoute(
+          context,
+          '/region-setup',
+          const RegionSelectionScreen(isInitialSetup: true),
+        ),
         '/main': (context) => const MainShell(),
         '/onboarding': (context) => const OnboardingScreen(),
         '/emotion-test': (context) => const MeshBrainEmotionTestScreen(),
@@ -811,6 +905,11 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
         '/reachability': (context) => const MeshReachabilityScreen(),
       },
       onGenerateRoute: (settings) {
+        // Check route requirements before building
+        if (RouteRegistry.isDeviceRequired(settings.name)) {
+          // This route requires device - it will be checked by the builder
+        }
+
         // Handle routes that need arguments
         if (settings.name == '/route-detail') {
           final route = settings.arguments as route_model.Route;
@@ -850,9 +949,112 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       },
     );
   }
+
+  /// Build a protected route that checks device connection requirements
+  Widget _buildProtectedRoute(
+    BuildContext context,
+    String routeName,
+    Widget screen,
+  ) {
+    return Consumer(
+      builder: (context, ref, _) {
+        final isConnected = ref.watch(conn.isDeviceConnectedProvider);
+
+        if (isConnected) {
+          return screen;
+        }
+
+        // Show blocked screen
+        return _BlockedRouteScreen(
+          routeName: routeName,
+          message:
+              RouteRegistry.getMetadata(routeName)?.blockedMessage ??
+              'Connect device to access this screen',
+        );
+      },
+    );
+  }
+}
+
+/// Screen shown when a device-required route is accessed while disconnected
+class _BlockedRouteScreen extends StatelessWidget {
+  final String routeName;
+  final String message;
+
+  const _BlockedRouteScreen({required this.routeName, required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Device Required')),
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.bluetooth_disabled,
+                    size: 40,
+                    color: Colors.orange,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'Device Not Connected',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                FilledButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).pushNamed('/scanner');
+                  },
+                  icon: const Icon(Icons.bluetooth_searching),
+                  label: const Text('Connect Device'),
+                ),
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: () {
+                    if (Navigator.of(context).canPop()) {
+                      Navigator.of(context).pop();
+                    } else {
+                      Navigator.of(context).pushReplacementNamed('/main');
+                    }
+                  },
+                  child: const Text('Go Back'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// App router handles initialization and navigation flow
+/// NOTE: With deferred connection, MainShell is shown as soon as app is 'ready'.
+/// Device connection happens asynchronously via DeviceConnectionNotifier.
 class _AppRouter extends ConsumerWidget {
   const _AppRouter();
 
@@ -869,10 +1071,11 @@ class _AppRouter extends ConsumerWidget {
       case AppInitState.needsOnboarding:
         return const OnboardingScreen();
       case AppInitState.needsScanner:
+        // First time user needs to pair a device before using mesh features
         return const ScannerScreen();
-      case AppInitState.needsRegionSetup:
-        return const RegionSelectionScreen(isInitialSetup: true);
-      case AppInitState.initialized:
+      case AppInitState.ready:
+        // App is ready - show main UI immediately
+        // Device connection will happen in background (if auto-reconnect enabled)
         return const MainShell();
     }
   }
@@ -2054,5 +2257,54 @@ class _KeyboardDismissObserver extends NavigatorObserver {
   @override
   void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
     _dismissKeyboard();
+  }
+}
+
+/// A delegating analytics observer that forwards calls to the real
+/// Firebase Analytics observer when available.
+///
+/// This allows us to have a stable navigator observer list that doesn't
+/// change when Firebase initializes, preventing navigator recreation
+/// which would destroy current routes.
+class _DelegatingAnalyticsObserver extends NavigatorObserver {
+  final WidgetRef _ref;
+
+  _DelegatingAnalyticsObserver(this._ref);
+
+  FirebaseAnalyticsObserver? get _delegate {
+    return _ref.read(analyticsObserverProvider);
+  }
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    _delegate?.didPush(route, previousRoute);
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    _delegate?.didPop(route, previousRoute);
+  }
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    _delegate?.didReplace(newRoute: newRoute, oldRoute: oldRoute);
+  }
+
+  @override
+  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    _delegate?.didRemove(route, previousRoute);
+  }
+
+  @override
+  void didStartUserGesture(
+    Route<dynamic> route,
+    Route<dynamic>? previousRoute,
+  ) {
+    _delegate?.didStartUserGesture(route, previousRoute);
+  }
+
+  @override
+  void didStopUserGesture() {
+    _delegate?.didStopUserGesture();
   }
 }

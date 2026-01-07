@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/node_avatar.dart';
+import '../../core/widgets/connection_required_wrapper.dart';
 import '../../models/user_profile.dart' show UserPreferences;
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/legal_document_sheet.dart';
@@ -23,6 +24,7 @@ import '../nodes/nodes_screen.dart';
 import '../map/map_screen.dart';
 import '../dashboard/widget_dashboard_screen.dart';
 import '../scanner/scanner_screen.dart';
+import '../device/device_sheet.dart';
 import '../device/region_selection_screen.dart';
 import '../timeline/timeline_screen.dart';
 import '../routes/routes_screen.dart';
@@ -37,7 +39,6 @@ import '../world_mesh/world_mesh_screen.dart';
 import '../settings/subscription_screen.dart';
 import '../widget_builder/widget_builder_screen.dart';
 import '../reachability/mesh_reachability_screen.dart';
-// Removed: import '../sky_tracker/screens/sky_tracker_screen.dart';
 import '../device_shop/screens/device_shop_screen.dart';
 import '../device_shop/screens/shop_admin_dashboard.dart';
 import '../device_shop/screens/review_moderation_screen.dart';
@@ -369,6 +370,62 @@ class _QuickAccessTile extends StatelessWidget {
   }
 }
 
+/// Global device status button for app bars
+/// Shows connection status with colored indicator and opens device sheet
+class DeviceStatusButton extends ConsumerWidget {
+  const DeviceStatusButton({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final connectionStateAsync = ref.watch(connectionStateProvider);
+    final autoReconnectState = ref.watch(autoReconnectStateProvider);
+
+    final isConnected = connectionStateAsync.when(
+      data: (state) => state == DeviceConnectionState.connected,
+      loading: () => false,
+      error: (e, s) => false,
+    );
+    final isReconnecting =
+        autoReconnectState == AutoReconnectState.scanning ||
+        autoReconnectState == AutoReconnectState.connecting;
+
+    return IconButton(
+      icon: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Icon(
+            Icons.router,
+            color: isConnected
+                ? context.accentColor
+                : isReconnecting
+                ? AppTheme.warningYellow
+                : context.textTertiary,
+          ),
+          Positioned(
+            right: -2,
+            top: -2,
+            child: Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                color: isConnected
+                    ? context.accentColor
+                    : isReconnecting
+                    ? AppTheme.warningYellow
+                    : AppTheme.errorRed,
+                shape: BoxShape.circle,
+                border: Border.all(color: context.background, width: 2),
+              ),
+            ),
+          ),
+        ],
+      ),
+      onPressed: () => showDeviceSheet(context),
+      tooltip: 'Device',
+    );
+  }
+}
+
 /// Drawer menu item data for quick access screens
 class _DrawerMenuItem {
   final IconData icon;
@@ -541,20 +598,40 @@ class _MainShellState extends ConsumerState<MainShell> {
   ];
 
   Widget _buildScreen(int index) {
-    // Show the bottom nav screen
+    // All screens are wrapped with ConnectionRequiredWrapper to show consistent
+    // "No Device Connected" UI when disconnected. The wrapper renders a full
+    // Scaffold when disconnected so user sees consistent UI across all tabs.
     switch (index) {
       case 0:
-        return const ChannelsScreen();
+        return const ConnectionRequiredWrapper(
+          screenTitle: 'Channels',
+          child: ChannelsScreen(),
+        );
       case 1:
-        return const MessagingScreen();
+        return const ConnectionRequiredWrapper(
+          screenTitle: 'Messages',
+          child: MessagingScreen(),
+        );
       case 2:
-        return const MapScreen();
+        return const ConnectionRequiredWrapper(
+          screenTitle: 'Map',
+          child: MapScreen(),
+        );
       case 3:
-        return const NodesScreen();
+        return const ConnectionRequiredWrapper(
+          screenTitle: 'Nodes',
+          child: NodesScreen(),
+        );
       case 4:
-        return const WidgetDashboardScreen();
+        return const ConnectionRequiredWrapper(
+          screenTitle: 'Dashboard',
+          child: WidgetDashboardScreen(),
+        );
       default:
-        return const ChannelsScreen();
+        return const ConnectionRequiredWrapper(
+          screenTitle: 'Channels',
+          child: ChannelsScreen(),
+        );
     }
   }
 

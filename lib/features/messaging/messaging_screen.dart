@@ -147,6 +147,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
               icon: Icon(Icons.edit_square, color: context.textPrimary),
               onPressed: () => _showNewMessageSheet(context, ref),
             ),
+            const DeviceStatusButton(),
             IconButton(
               icon: Icon(Icons.settings_outlined, color: context.textPrimary),
               tooltip: 'Settings',

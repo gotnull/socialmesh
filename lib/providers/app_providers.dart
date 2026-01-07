@@ -21,6 +21,7 @@ import '../models/mesh_models.dart';
 import '../generated/meshtastic/mesh.pbenum.dart' as pbenum;
 import 'social_providers.dart';
 import 'telemetry_providers.dart';
+import 'connection_providers.dart';
 
 // Logger
 final loggerProvider = Provider<Logger>((ref) {
@@ -36,181 +37,109 @@ final loggerProvider = Provider<Logger>((ref) {
   );
 });
 
-// App initialization state
+// App initialization state - purely about app lifecycle, NOT device connection
+// Device connection is handled separately by DeviceConnectionNotifier in connection_providers.dart
 enum AppInitState {
   uninitialized,
   initializing,
-  initialized,
+  ready, // App services loaded, UI can be shown (renamed from initialized)
   needsOnboarding,
-  needsScanner, // Auto-reconnect failed or no saved device
-  needsRegionSetup, // Connected but region not configured
+  needsScanner, // First launch after onboarding, need to pair a device
   error,
+  // REMOVED: needsRegionSetup - handled by MainShell when connected
+  // Note: 'initialized' renamed to 'ready' to clarify it's about app, not device
 }
 
 class AppInitNotifier extends Notifier<AppInitState> {
   @override
   AppInitState build() => AppInitState.uninitialized;
 
-  /// Manually set state to initialized (e.g., after successful connection from scanner)
-  void setInitialized() {
-    state = AppInitState.initialized;
+  /// Manually set state to ready (e.g., after successful connection from scanner)
+  void setReady() {
+    state = AppInitState.ready;
   }
 
-  /// Set state to needsScanner (e.g., user skipped auto-reconnect)
+  /// Alias for backward compatibility
+  void setInitialized() => setReady();
+
+  /// Set state to needsScanner (e.g., first launch after onboarding)
   void setNeedsScanner() {
     state = AppInitState.needsScanner;
   }
 
+  /// Initialize core app services (NO device connection here).
+  /// Device connection is handled asynchronously by DeviceConnectionNotifier.
   Future<void> initialize() async {
     if (state == AppInitState.initializing) return;
 
     state = AppInitState.initializing;
     try {
+      // Phase 1: Critical services (fast, <500ms target)
       // Initialize notification service
       await NotificationService().initialize();
 
       // Initialize storage services
-      await ref.read(settingsServiceProvider.future);
-      await ref.read(messageStorageProvider.future);
-      await ref.read(nodeStorageProvider.future);
-
-      // Initialize IFTTT service
-      await ref.read(iftttServiceProvider).init();
-
-      // Initialize automation engine (loads automations from storage)
-      await ref.read(automationEngineInitProvider.future);
-
-      // Check for onboarding completion
       final settings = await ref.read(settingsServiceProvider.future);
+
+      // Check for onboarding completion FIRST
       if (!settings.onboardingComplete) {
         state = AppInitState.needsOnboarding;
         return;
       }
 
-      // Check for auto-reconnect settings
+      // Check if device was ever paired
       final lastDeviceId = settings.lastDeviceId;
-      final lastDeviceName = settings.lastDeviceName;
-      final shouldAutoReconnect = settings.autoReconnect;
+      final hasEverPaired = lastDeviceId != null;
 
-      if (lastDeviceId != null && shouldAutoReconnect) {
-        ref
-            .read(autoReconnectStateProvider.notifier)
-            .setState(AutoReconnectState.scanning);
+      // Phase 2: Background services (can complete after UI shows)
+      // These run in parallel but don't block app ready state
+      _initializeBackgroundServices();
 
-        final transport = ref.read(transportProvider);
-        try {
-          DeviceInfo? lastDevice;
-
-          // Scan for devices and try to find the last connected one
-          await for (final device in transport.scan(
-            timeout: const Duration(seconds: 5),
-          )) {
-            if (device.id == lastDeviceId) {
-              lastDevice = device;
-              break;
-            }
-          }
-
-          if (lastDevice != null) {
-            // Use stored name if scan didn't provide one
-            if (lastDevice.name.isEmpty || lastDevice.name == 'Unknown') {
-              lastDevice = DeviceInfo(
-                id: lastDevice.id,
-                name: lastDeviceName ?? lastDevice.name,
-                type: lastDevice.type,
-                rssi: lastDevice.rssi,
-              );
-            }
-
-            ref
-                .read(autoReconnectStateProvider.notifier)
-                .setState(AutoReconnectState.connecting);
-            await transport.connect(lastDevice);
-
-            // Verify connection was successful at BLE level
-            if (transport.state != DeviceConnectionState.connected) {
-              throw Exception('Connection failed');
-            }
-
-            // Clear all previous device data before starting new connection
-            // This follows the Meshtastic iOS approach of always fetching fresh data
-            await clearDeviceDataBeforeConnectRef(ref);
-
-            // Start protocol service
-            final protocol = ref.read(protocolServiceProvider);
-            AppLogging.app('AppInit: Calling protocol.start()...');
-
-            // Set device info for hardware model inference
-            protocol.setDeviceName(lastDevice.name);
-            protocol.setBleModelNumber(transport.bleModelNumber);
-            protocol.setBleManufacturerName(transport.bleManufacturerName);
-
-            await protocol.start();
-            AppLogging.debug(
-              '🔵 AppInit: protocol.start() returned, myNodeNum=${protocol.myNodeNum}',
-            );
-
-            // Verify protocol actually received configuration from device
-            // If PIN was cancelled or authentication failed, myNodeNum will be null
-            if (protocol.myNodeNum == null) {
-              AppLogging.debug(
-                '❌ AppInit: myNodeNum is NULL - throwing exception',
-              );
-              await transport.disconnect();
-              throw Exception(
-                'Authentication failed - no configuration received',
-              );
-            }
-
-            // Start phone GPS location updates
-            final locationService = ref.read(locationServiceProvider);
-            await locationService.startLocationUpdates();
-
-            ref.read(connectedDeviceProvider.notifier).setState(lastDevice);
-            AppLogging.debug(
-              '🎯 Auto-reconnect: Setting autoReconnectState to success',
-            );
-            ref
-                .read(autoReconnectStateProvider.notifier)
-                .setState(AutoReconnectState.success);
-
-            // Skip region check entirely during auto-reconnect
-            // If we have a lastConnectedDeviceId, user has successfully connected before
-            // The region was either already set on device or user configured it previously
-            // Forcing region selection on every reconnect is wrong - the device retains its config
-            AppLogging.debug(
-              '✅ Auto-reconnect: Skipping region check (reconnecting to known device)',
-            );
-
-            // Mark region as configured since we're reconnecting to a known device
-            if (!settings.regionConfigured) {
-              await settings.setRegionConfigured(true);
-              AppLogging.debug('✅ Auto-reconnect: Marked region as configured');
-            }
-          } else {
-            // Device not found during scan - go to scanner
-            ref
-                .read(autoReconnectStateProvider.notifier)
-                .setState(AutoReconnectState.idle);
-            state = AppInitState.needsScanner;
-            return;
-          }
-        } catch (e) {
-          AppLogging.debug('Auto-reconnect failed: $e');
-          ref
-              .read(autoReconnectStateProvider.notifier)
-              .setState(AutoReconnectState.failed);
-          // Connection failed (user cancelled PIN, timeout, etc.) - go to scanner
-          state = AppInitState.needsScanner;
-          return;
-        }
+      // Determine initial state based on whether user has ever paired
+      if (hasEverPaired) {
+        // User has paired before - go directly to main UI
+        // Device connection will happen in background via DeviceConnectionNotifier
+        AppLogging.debug(
+          '🎯 AppInitNotifier: User has paired before, setting ready',
+        );
+        state = AppInitState.ready;
+      } else {
+        // Never paired - need to go through scanner first
+        AppLogging.debug(
+          '🎯 AppInitNotifier: No previous device, setting needsScanner',
+        );
+        state = AppInitState.needsScanner;
       }
-
-      AppLogging.debug('🎯 AppInitNotifier: Setting state to initialized');
-      state = AppInitState.initialized;
     } catch (e) {
       AppLogging.debug('App initialization failed: $e');
       state = AppInitState.error;
+    }
+  }
+
+  /// Initialize non-critical services in background
+  Future<void> _initializeBackgroundServices() async {
+    try {
+      // These can complete after UI is shown
+      await ref.read(messageStorageProvider.future);
+      await ref.read(nodeStorageProvider.future);
+      await ref.read(iftttServiceProvider).init();
+      await ref.read(automationEngineInitProvider.future);
+      AppLogging.debug('Background services initialized');
+
+      // Start background device connection (if auto-reconnect enabled)
+      // This happens AFTER storage is ready so we can load cached data
+      final settings = await ref.read(settingsServiceProvider.future);
+      if (settings.autoReconnect && settings.lastDeviceId != null) {
+        AppLogging.debug(
+          '🔄 AppInitNotifier: Starting background device connection...',
+        );
+        // Initialize and start background connection via the new notifier
+        await ref.read(deviceConnectionProvider.notifier).initialize();
+        ref.read(deviceConnectionProvider.notifier).startBackgroundConnection();
+      }
+    } catch (e) {
+      // Non-critical, log but don't fail
+      AppLogging.debug('Background service init error: $e');
     }
   }
 }
@@ -378,6 +307,25 @@ final autoReconnectStateProvider =
       AutoReconnectStateNotifier.new,
     );
 
+/// Tracks if user manually disconnected - prevents auto-reconnect until user explicitly connects.
+/// This is separate from autoReconnectState to avoid state confusion.
+class UserDisconnectedNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void setUserDisconnected(bool value) {
+    AppLogging.connection(
+      '🔌 UserDisconnectedNotifier: setUserDisconnected($value)',
+    );
+    state = value;
+  }
+}
+
+final userDisconnectedProvider =
+    NotifierProvider<UserDisconnectedNotifier, bool>(
+      UserDisconnectedNotifier.new,
+    );
+
 /// Helper function to clear all device-specific data before connecting to a (potentially different) device.
 /// This follows the Meshtastic iOS approach of always fetching fresh data from the device.
 /// Should be called BEFORE protocol.start() in all connection paths.
@@ -447,6 +395,149 @@ final _lastConnectedDeviceIdProvider =
       LastConnectedDeviceIdNotifier.new,
     );
 
+/// Bluetooth adapter state provider - tracks Bluetooth on/off
+/// This is exposed so UI can react to Bluetooth state changes
+final bluetoothStateProvider = StreamProvider<BluetoothAdapterState>((ref) {
+  return FlutterBluePlus.adapterState;
+});
+
+/// Bluetooth state listener - monitors Bluetooth being turned off/on
+/// and handles reconnection when Bluetooth is turned back on
+final bluetoothStateListenerProvider = Provider<void>((ref) {
+  AppLogging.connection('🔵 BLUETOOTH STATE LISTENER INITIALIZED');
+
+  ref.listen<AsyncValue<BluetoothAdapterState>>(bluetoothStateProvider, (
+    previous,
+    next,
+  ) {
+    // Extract the values from AsyncValue using when()
+    final prevState = previous?.when(
+      data: (state) => state,
+      loading: () => null,
+      error: (e, st) => null,
+    );
+    final currentState = next.when(
+      data: (state) => state,
+      loading: () => null,
+      error: (e, st) => null,
+    );
+
+    AppLogging.connection(
+      '🔵 Bluetooth state changed: $prevState -> $currentState',
+    );
+
+    // Handle Bluetooth being turned off
+    if (currentState == BluetoothAdapterState.off &&
+        prevState == BluetoothAdapterState.on) {
+      AppLogging.connection(
+        '🔵 Bluetooth turned OFF - connection will be lost',
+      );
+      // When Bluetooth is turned off, mark the disconnect as NOT user-initiated
+      // (unless user had already disconnected before turning off BT)
+      // The transport will handle the actual disconnection
+    }
+
+    // Handle Bluetooth being turned back on
+    if (currentState == BluetoothAdapterState.on &&
+        prevState == BluetoothAdapterState.off) {
+      AppLogging.connection(
+        '🔵 Bluetooth turned ON - checking if reconnect needed',
+      );
+
+      // Check if user manually disconnected - if so, don't auto-reconnect
+      final userDisconnected = ref.read(userDisconnectedProvider);
+      if (userDisconnected) {
+        AppLogging.connection(
+          '🔵 Bluetooth ON but user manually disconnected - not reconnecting',
+        );
+        return;
+      }
+
+      // Check if we have a device to reconnect to
+      final lastDeviceId = ref.read(_lastConnectedDeviceIdProvider);
+      if (lastDeviceId == null) {
+        AppLogging.connection(
+          '🔵 Bluetooth ON but no previous device to reconnect to',
+        );
+        return;
+      }
+
+      // Check current connection state using when() for proper null handling
+      final connectionStateAsync = ref.read(connectionStateProvider);
+      final connectionState = connectionStateAsync.when(
+        data: (state) => state,
+        loading: () => null,
+        error: (e, st) => null,
+      );
+      if (connectionState == DeviceConnectionState.connected) {
+        AppLogging.connection(
+          '🔵 Bluetooth ON but already connected - no action needed',
+        );
+        return;
+      }
+
+      // Check auto-reconnect state
+      final autoReconnectState = ref.read(autoReconnectStateProvider);
+      if (autoReconnectState == AutoReconnectState.scanning ||
+          autoReconnectState == AutoReconnectState.connecting) {
+        AppLogging.connection(
+          '🔵 Bluetooth ON but reconnect already in progress',
+        );
+        return;
+      }
+
+      // Trigger a reconnect attempt after a short delay to let BT stabilize
+      AppLogging.connection(
+        '🔵 Bluetooth ON - scheduling reconnect attempt in 2s',
+      );
+
+      Future.delayed(const Duration(seconds: 2), () {
+        // Recheck conditions after delay
+        final stillUserDisconnected = ref.read(userDisconnectedProvider);
+        if (stillUserDisconnected) {
+          AppLogging.connection(
+            '🔵 BT reconnect cancelled - user disconnected during delay',
+          );
+          return;
+        }
+
+        // Recheck connection state
+        final currentConnStateAsync = ref.read(connectionStateProvider);
+        final currentConnState = currentConnStateAsync.when(
+          data: (state) => state,
+          loading: () => null,
+          error: (e, st) => null,
+        );
+        if (currentConnState == DeviceConnectionState.connected) {
+          AppLogging.connection(
+            '🔵 BT reconnect cancelled - already connected',
+          );
+          return;
+        }
+
+        final currentAutoState = ref.read(autoReconnectStateProvider);
+        if (currentAutoState == AutoReconnectState.scanning ||
+            currentAutoState == AutoReconnectState.connecting) {
+          AppLogging.connection(
+            '🔵 BT reconnect cancelled - reconnect already in progress',
+          );
+          return;
+        }
+
+        AppLogging.connection(
+          '🔵 Bluetooth ON - starting reconnect for device: $lastDeviceId',
+        );
+
+        ref
+            .read(autoReconnectStateProvider.notifier)
+            .setState(AutoReconnectState.scanning);
+
+        _performReconnect(ref, lastDeviceId);
+      });
+    }
+  });
+});
+
 // Auto-reconnect manager - monitors connection and attempts to reconnect on unexpected disconnect
 final autoReconnectManagerProvider = Provider<void>((ref) {
   AppLogging.connection('AUTO-RECONNECT MANAGER INITIALIZED');
@@ -474,10 +565,11 @@ final autoReconnectManagerProvider = Provider<void>((ref) {
     next.whenData((state) {
       final lastDeviceId = ref.read(_lastConnectedDeviceIdProvider);
       final autoReconnectState = ref.read(autoReconnectStateProvider);
+      final userDisconnected = ref.read(userDisconnectedProvider);
 
       AppLogging.debug(
         '🔄 Connection state: $state (lastDeviceId: $lastDeviceId, '
-        'reconnectState: $autoReconnectState)',
+        'reconnectState: $autoReconnectState, userDisconnected: $userDisconnected)',
       );
 
       // If connection comes back while we're in a reconnecting state,
@@ -498,6 +590,14 @@ final autoReconnectManagerProvider = Provider<void>((ref) {
       // after a delay to allow node info to be received from the device
       if (state == DeviceConnectionState.connected) {
         _refreshLinkedNodeMetadataAfterDelay(ref);
+      }
+
+      // CRITICAL: Check if user manually disconnected - never auto-reconnect in this case
+      if (userDisconnected) {
+        AppLogging.connection(
+          '🔄 BLOCKED: User manually disconnected - not auto-reconnecting',
+        );
+        return;
       }
 
       // If disconnected and we have a device to reconnect to
@@ -532,9 +632,31 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
   AppLogging.connection('_performReconnect STARTED for device: $deviceId');
 
   try {
+    // CRITICAL: Check if user manually disconnected before waiting
+    if (ref.read(userDisconnectedProvider)) {
+      AppLogging.connection(
+        '_performReconnect ABORTED: User manually disconnected',
+      );
+      ref
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.idle);
+      return;
+    }
+
     // Wait for device to reboot (Meshtastic devices take ~8-15 seconds)
     AppLogging.connection('Waiting 10s for device to reboot...');
     await Future.delayed(const Duration(seconds: 10));
+
+    // CRITICAL: Check again after delay - user may have disconnected while waiting
+    if (ref.read(userDisconnectedProvider)) {
+      AppLogging.connection(
+        '_performReconnect ABORTED after delay: User manually disconnected',
+      );
+      ref
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.idle);
+      return;
+    }
 
     // Check if cancelled
     final currentState = ref.read(autoReconnectStateProvider);
@@ -562,6 +684,17 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
     // Try up to 8 times (device may take a while to become discoverable after reboot)
     const maxRetries = 8;
     for (int attempt = 1; attempt <= maxRetries; attempt++) {
+      // CRITICAL: Check user disconnect flag at start of each attempt
+      if (ref.read(userDisconnectedProvider)) {
+        AppLogging.connection(
+          '_performReconnect ABORTED in loop: User manually disconnected',
+        );
+        ref
+            .read(autoReconnectStateProvider.notifier)
+            .setState(AutoReconnectState.idle);
+        return;
+      }
+
       // Check if cancelled
       if (ref.read(autoReconnectStateProvider) == AutoReconnectState.idle) {
         AppLogging.connection('Reconnect cancelled');
@@ -1941,9 +2074,9 @@ class NodeDiscoveryNotifier extends Notifier<MeshNode?> {
     // Always update state to trigger UI animations (discovery cards)
     state = node;
 
-    // Only show local notifications when app is fully initialized (not during startup/connecting)
+    // Only show local notifications when app is fully ready (not during startup/connecting)
     final appState = ref.read(appInitProvider);
-    if (appState != AppInitState.initialized) return;
+    if (appState != AppInitState.ready) return;
 
     // Check master notification toggle and new node setting
     final settingsAsync = ref.read(settingsServiceProvider);

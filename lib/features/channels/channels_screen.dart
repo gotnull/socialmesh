@@ -124,6 +124,7 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen> {
                 );
               },
             ),
+            const DeviceStatusButton(),
             IconButton(
               icon: Icon(Icons.settings_outlined),
               tooltip: 'Settings',
