@@ -137,7 +137,7 @@ class UpperCaseTextFormatter extends TextInputFormatter {
 // =============================================================================
 
 /// The owner's Firebase UID - only this user can use reserved names
-const String _ownerUid = 'rAHv8sx4UeTajyeBurx9ZjjBzWn1';
+const String _ownerUid = '9ltxJGViWHW5aj5HhLGmiVwkrLU2';
 
 /// Reserved display names that only the owner can claim
 const Set<String> _reservedExactNames = {

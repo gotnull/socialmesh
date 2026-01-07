@@ -1,6 +1,5 @@
 import 'dart:io' as io;
 
-import '../../core/logging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -17,7 +16,6 @@ import '../../providers/splash_mesh_provider.dart';
 import '../../providers/subscription_providers.dart';
 import '../../models/subscription_models.dart';
 import '../../services/storage/storage_service.dart';
-import '../../services/notifications/notification_service.dart';
 import '../../services/notifications/push_notification_service.dart';
 import '../../services/haptic_service.dart';
 import '../../core/theme.dart';
@@ -2084,12 +2082,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   },
                                 ),
                               ),
-                              _SettingsTile(
-                                icon: Icons.bug_report_outlined,
-                                title: 'Test notification',
-                                subtitle: 'Send a test notification',
-                                onTap: () => _testNotification(context),
-                              ),
                             ],
 
                             const SizedBox(height: 16),
@@ -2135,18 +2127,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 settingsService,
                               ),
                             ),
-                            // Offline Maps
-                            _SettingsTile(
-                              icon: Icons.map,
-                              title: 'Offline Maps',
-                              subtitle: 'Download map regions for offline use',
-                              onTap: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const OfflineMapsScreen(),
-                                ),
-                              ),
-                            ),
                             // Message Export
                             _SettingsTile(
                               icon: Icons.download,
@@ -2190,14 +2170,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               subtitle:
                                   'Re-sync all data from connected device',
                               onTap: () => _forceSync(context, ref),
-                            ),
-                            _SettingsTile(
-                              icon: Icons.bluetooth_searching,
-                              title: 'Scan for Devices',
-                              subtitle:
-                                  'Find and connect to Meshtastic devices',
-                              onTap: () =>
-                                  Navigator.pushNamed(context, '/scanner'),
                             ),
                             _SettingsTile(
                               icon:
@@ -2704,44 +2676,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
       ),
     );
-  }
-
-  Future<void> _testNotification(BuildContext context) async {
-    AppLogging.settings('🔔 Test notification button tapped');
-    final notificationService = NotificationService();
-
-    // First ensure initialized
-    AppLogging.settings('🔔 Initializing notification service...');
-    await notificationService.initialize();
-    AppLogging.settings('🔔 Notification service initialized');
-
-    // Show a test DM notification
-    AppLogging.settings('🔔 Showing test notification...');
-    try {
-      await notificationService.showNewMessageNotification(
-        senderName: 'Gotnull',
-        senderShortName: '45a1',
-        message:
-            'This is a test notification to verify notifications are working correctly.',
-        fromNodeNum: 999999,
-        playSound: true,
-        vibrate: true,
-      );
-      AppLogging.settings('🔔 Test notification show() completed');
-    } catch (e) {
-      AppLogging.settings('🔔 Test notification error: $e');
-      if (context.mounted) {
-        showErrorSnackBar(context, 'Notification error: $e');
-      }
-      return;
-    }
-
-    if (context.mounted) {
-      showInfoSnackBar(
-        context,
-        'Test notification sent - check notification center',
-      );
-    }
   }
 
   void _showHapticIntensityPicker(

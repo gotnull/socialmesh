@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 import '../../../core/widgets/fullscreen_gallery.dart';
+import '../../../core/widgets/verified_badge.dart';
 import '../../../models/social.dart';
 import '../widgets/post_actions_bar.dart';
 
@@ -143,11 +144,7 @@ class _FeedAuthorHeader extends StatelessWidget {
                     ),
                     if (authorSnapshot.isVerified) ...[
                       const SizedBox(width: 4),
-                      Icon(
-                        Icons.verified,
-                        size: 16,
-                        color: theme.colorScheme.primary,
-                      ),
+                      const SimpleVerifiedBadge(size: 16),
                     ],
                   ],
                 ),

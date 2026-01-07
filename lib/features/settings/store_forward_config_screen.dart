@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/logging.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
 import '../../providers/app_providers.dart';
@@ -33,30 +34,46 @@ class _StoreForwardConfigScreenState
   }
 
   Future<void> _loadCurrentConfig() async {
+    AppLogging.settings('[StoreForward] Loading config...');
     final protocol = ref.read(protocolServiceProvider);
 
     // Only request from device if connected
     if (!protocol.isConnected) {
+      AppLogging.settings('[StoreForward] Not connected, skipping load');
       if (mounted) setState(() => _isLoading = false);
       return;
     }
 
-    final config = await protocol.getStoreForwardModuleConfig();
-    if (config != null && mounted) {
-      setState(() {
-        _enabled = config.enabled;
-        _heartbeat = config.heartbeat;
-        _records = config.records;
-        _historyReturnMax = config.historyReturnMax > 0
-            ? config.historyReturnMax
-            : 100;
-        _historyReturnWindow = config.historyReturnWindow > 0
-            ? config.historyReturnWindow
-            : 240;
-        _isLoading = false;
-      });
-    } else if (mounted) {
-      setState(() => _isLoading = false);
+    AppLogging.settings('[StoreForward] Requesting config from device');
+    try {
+      final config = await protocol.getStoreForwardModuleConfig().timeout(
+        const Duration(seconds: 10),
+      );
+      AppLogging.settings('[StoreForward] Config received: $config');
+      if (config != null && mounted) {
+        setState(() {
+          _enabled = config.enabled;
+          _heartbeat = config.heartbeat;
+          _records = config.records;
+          _historyReturnMax = config.historyReturnMax > 0
+              ? config.historyReturnMax
+              : 100;
+          _historyReturnWindow = config.historyReturnWindow > 0
+              ? config.historyReturnWindow
+              : 240;
+          _isLoading = false;
+        });
+        AppLogging.settings('[StoreForward] Config loaded successfully');
+      } else if (mounted) {
+        AppLogging.settings('[StoreForward] Config was null');
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      AppLogging.settings('[StoreForward] Error loading config: $e');
+      if (mounted) {
+        setState(() => _isLoading = false);
+        showErrorSnackBar(context, 'Failed to load config');
+      }
     }
   }
 

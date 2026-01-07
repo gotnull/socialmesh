@@ -10,6 +10,7 @@ import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
 import '../../../core/widgets/node_avatar.dart';
+import '../../../core/widgets/verified_badge.dart';
 import '../../../models/mesh_models.dart';
 import '../../../models/social.dart';
 import '../../../providers/app_providers.dart';
@@ -296,7 +297,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
           ),
           if (profile.isVerified) ...[
             const SizedBox(width: 4),
-            Icon(Icons.verified, color: context.accentColor, size: 18),
+            const SimpleVerifiedBadge(size: 18),
           ],
         ],
       ),
@@ -561,7 +562,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
               ),
               if (profile.isVerified) ...[
                 const SizedBox(width: 4),
-                Icon(Icons.verified, color: context.accentColor, size: 16),
+                const SimpleVerifiedBadge(size: 16),
               ],
             ],
           ),

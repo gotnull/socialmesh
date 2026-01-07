@@ -7,10 +7,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
+import '../../core/widgets/verified_badge.dart';
 import '../../models/user_profile.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/profile_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
+import '../../providers/subscription_providers.dart';
 import '../../utils/snackbar.dart';
 import '../../utils/validation.dart';
 import '../navigation/main_shell.dart';
@@ -203,6 +205,8 @@ class _ProfileView extends ConsumerWidget {
     final accentColor = context.accentColor;
     // Watch sync error from provider (clears when retry succeeds)
     final syncError = ref.watch(syncErrorProvider);
+    // Check if user has all premium features for gold badge
+    final hasAllPremium = ref.watch(hasAllPremiumFeaturesProvider);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -218,14 +222,26 @@ class _ProfileView extends ConsumerWidget {
           _AvatarSection(profile: profile),
           const SizedBox(height: 24),
 
-          // Display name and status
-          Text(
-            profile.displayName,
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: context.textPrimary,
-            ),
+          // Display name and verified badge
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Flexible(
+                child: Text(
+                  profile.displayName,
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: context.textPrimary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (hasAllPremium) ...[
+                const SizedBox(width: 8),
+                const SimpleVerifiedBadge(size: 24),
+              ],
+            ],
           ),
           if (profile.callsign != null) ...[
             const SizedBox(height: 4),
@@ -284,13 +300,13 @@ class _ProfileView extends ConsumerWidget {
                   label: 'Email',
                   value: profile.email!,
                 ),
-              // _InfoItem(
-              //   icon: Icons.badge_outlined,
-              //   label: 'Profile ID',
-              //   value: profile.id.length > 20
-              //       ? '${profile.id.substring(0, 20)}...'
-              //       : profile.id,
-              // ),
+              if (user != null)
+                _InfoItem(
+                  icon: Icons.fingerprint,
+                  label: 'UID',
+                  value: user!.uid,
+                  copyable: true,
+                ),
               _InfoItem(
                 icon: Icons.calendar_today_outlined,
                 label: 'Member since',
@@ -1524,42 +1540,57 @@ class _ProfileInfoCard extends StatelessWidget {
             ),
           ),
           Divider(height: 1, color: context.border),
-          ...items.map(
-            (item) => Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                children: [
-                  Icon(item.icon, size: 20, color: context.textTertiary),
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item.label,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: context.textTertiary,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          item.value,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: context.textPrimary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          ...items.map((item) => _buildInfoRow(context, item)),
         ],
       ),
     );
+  }
+
+  Widget _buildInfoRow(BuildContext context, _InfoItem item) {
+    final content = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Icon(item.icon, size: 20, color: context.textTertiary),
+          SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.label,
+                  style: TextStyle(fontSize: 12, color: context.textTertiary),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  item.value,
+                  style: TextStyle(fontSize: 14, color: context.textPrimary),
+                ),
+              ],
+            ),
+          ),
+          if (item.copyable)
+            Icon(Icons.copy, size: 16, color: context.textTertiary),
+        ],
+      ),
+    );
+
+    if (item.copyable) {
+      return InkWell(
+        onTap: () {
+          Clipboard.setData(ClipboardData(text: item.value));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${item.label} copied to clipboard'),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        },
+        child: content,
+      );
+    }
+
+    return content;
   }
 }
 
@@ -1567,11 +1598,13 @@ class _InfoItem {
   final IconData icon;
   final String label;
   final String value;
+  final bool copyable;
 
   const _InfoItem({
     required this.icon,
     required this.label,
     required this.value,
+    this.copyable = false,
   });
 }
 
@@ -1672,8 +1705,10 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
       try {
         final file = File(result.files.first.path!);
         await ref.read(userProfileProvider.notifier).saveAvatarFromFile(file);
+        // Force refresh to ensure parent screen sees new avatar
+        ref.invalidate(userProfileProvider);
         if (mounted) {
-          // Avatar is saved immediately - no need to mark form as having changes
+          setState(() => _hasChanges = true);
           showSuccessSnackBar(context, 'Avatar updated');
         }
       } catch (e) {
@@ -1692,6 +1727,8 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
     setState(() => _isUploadingAvatar = true);
     try {
       await ref.read(userProfileProvider.notifier).deleteAvatar();
+      // Force refresh to ensure parent screen sees avatar removed
+      ref.invalidate(userProfileProvider);
       if (mounted) {
         setState(() => _hasChanges = true);
         showSuccessSnackBar(context, 'Avatar removed');

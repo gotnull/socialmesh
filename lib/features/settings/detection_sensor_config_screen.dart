@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/logging.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
 import '../../providers/splash_mesh_provider.dart';
@@ -49,35 +50,51 @@ class _DetectionSensorConfigScreenState
   }
 
   Future<void> _loadCurrentConfig() async {
+    AppLogging.settings('[DetectionSensor] Loading config...');
     final protocol = ref.read(protocolServiceProvider);
 
     // Only request from device if connected
     if (!protocol.isConnected) {
+      AppLogging.settings('[DetectionSensor] Not connected, skipping load');
       if (mounted) setState(() => _isLoading = false);
       return;
     }
 
-    final config = await protocol.getDetectionSensorModuleConfig();
-    if (config != null && mounted) {
-      setState(() {
-        _enabled = config.enabled;
-        _name = config.name;
-        _monitorPin = config.monitorPin;
-        _minimumBroadcastSecs = config.minimumBroadcastSecs > 0
-            ? config.minimumBroadcastSecs
-            : 45;
-        _stateBroadcastSecs = config.stateBroadcastSecs > 0
-            ? config.stateBroadcastSecs
-            : 300;
-        _sendBell = config.sendBell;
-        _usePullup = config.usePullup;
-        _triggerType = config.detectionTriggerType;
-        _nameController.text = _name;
-        _pinController.text = _monitorPin.toString();
-        _isLoading = false;
-      });
-    } else if (mounted) {
-      setState(() => _isLoading = false);
+    AppLogging.settings('[DetectionSensor] Requesting config from device');
+    try {
+      final config = await protocol.getDetectionSensorModuleConfig().timeout(
+        const Duration(seconds: 10),
+      );
+      AppLogging.settings('[DetectionSensor] Config received: $config');
+      if (config != null && mounted) {
+        setState(() {
+          _enabled = config.enabled;
+          _name = config.name;
+          _monitorPin = config.monitorPin;
+          _minimumBroadcastSecs = config.minimumBroadcastSecs > 0
+              ? config.minimumBroadcastSecs
+              : 45;
+          _stateBroadcastSecs = config.stateBroadcastSecs > 0
+              ? config.stateBroadcastSecs
+              : 300;
+          _sendBell = config.sendBell;
+          _usePullup = config.usePullup;
+          _triggerType = config.detectionTriggerType;
+          _nameController.text = _name;
+          _pinController.text = _monitorPin.toString();
+          _isLoading = false;
+        });
+        AppLogging.settings('[DetectionSensor] Config loaded successfully');
+      } else if (mounted) {
+        AppLogging.settings('[DetectionSensor] Config was null');
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      AppLogging.settings('[DetectionSensor] Error loading config: $e');
+      if (mounted) {
+        setState(() => _isLoading = false);
+        showErrorSnackBar(context, 'Failed to load config');
+      }
     }
   }
 

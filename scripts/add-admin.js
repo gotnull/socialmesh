@@ -20,7 +20,7 @@ async function addAdmin(userId, email, displayName) {
   if (!userId) {
     console.error('❌ Error: User ID is required');
     console.log('\nUsage: node scripts/add-admin.js USER_ID [EMAIL] [DISPLAY_NAME]');
-    console.log('\nExample: node scripts/add-admin.js rAHv8sx4UeTajyeBurx9ZjjBzWn1 admin@socialmesh.app "Admin User"\n');
+    console.log('\nExample: node scripts/add-admin.js 9ltxJGViWHW5aj5HhLGmiVwkrLU2 admin@socialmesh.app "Admin User"\n');
     process.exit(1);
   }
 

@@ -5,7 +5,6 @@ import '../theme.dart';
 import '../../utils/snackbar.dart';
 import 'node_selector_sheet.dart';
 import '../../providers/app_providers.dart';
-import '../../providers/splash_mesh_provider.dart';
 import '../../models/mesh_models.dart';
 
 /// Broadcast address for mesh-wide messages
@@ -51,6 +50,12 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent> {
   void initState() {
     super.initState();
     _selectedNodeNum = widget.preSelectedNodeNum;
+    _controller.addListener(_onTextChanged);
+  }
+
+  void _onTextChanged() {
+    // Rebuild to update button state based on text content
+    if (mounted) setState(() {});
   }
 
   List<MeshNode> get _availableNodes {
@@ -67,6 +72,7 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent> {
 
   @override
   void dispose() {
+    _controller.removeListener(_onTextChanged);
     _controller.dispose();
     super.dispose();
   }
@@ -396,8 +402,9 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent> {
                 maxLength: 200,
                 maxLines: 2,
                 onChanged: (_) {
+                  // Deselect preset when user types custom text
                   if (_selectedPreset != -1) {
-                    setState(() => _selectedPreset = -1);
+                    _selectedPreset = -1;
                   }
                 },
               ),
@@ -421,13 +428,13 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent> {
                     ),
                   ),
                   child: _isSending
-                      ? const MeshLoadingIndicator(
-                          size: 20,
-                          colors: [
-                            Colors.black,
-                            Colors.black54,
-                            Colors.black26,
-                          ],
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.black54,
+                          ),
                         )
                       : Row(
                           mainAxisAlignment: MainAxisAlignment.center,

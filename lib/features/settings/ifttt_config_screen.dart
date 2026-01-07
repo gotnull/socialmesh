@@ -26,8 +26,6 @@ class IftttConfigScreen extends ConsumerStatefulWidget {
 
 class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
   final _webhookKeyController = TextEditingController();
-  final _batteryThresholdController = TextEditingController();
-  final _temperatureThresholdController = TextEditingController();
   final _geofenceRadiusController = TextEditingController();
   final _geofenceLatController = TextEditingController();
   final _geofenceLonController = TextEditingController();
@@ -44,6 +42,8 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
   int? _geofenceNodeNum;
   String? _geofenceNodeName;
   int _geofenceThrottleMinutes = 30;
+  int _batteryThreshold = 20;
+  double _temperatureThreshold = 40.0;
 
   @override
   void initState() {
@@ -56,9 +56,6 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
     final config = iftttService.config;
 
     _webhookKeyController.text = config.webhookKey;
-    _batteryThresholdController.text = config.batteryThreshold.toString();
-    _temperatureThresholdController.text = config.temperatureThreshold
-        .toStringAsFixed(1);
     _geofenceRadiusController.text = config.geofenceRadius.toStringAsFixed(0);
     _geofenceLatController.text = config.geofenceLat?.toStringAsFixed(6) ?? '';
     _geofenceLonController.text = config.geofenceLon?.toStringAsFixed(6) ?? '';
@@ -75,10 +72,21 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
       _geofenceNodeNum = config.geofenceNodeNum;
       _geofenceNodeName = config.geofenceNodeName;
       _geofenceThrottleMinutes = config.geofenceThrottleMinutes;
+      _batteryThreshold = config.batteryThreshold;
+      _temperatureThreshold = config.temperatureThreshold;
     });
   }
 
   Future<void> _saveConfig() async {
+    // Require valid webhook key when IFTTT is enabled
+    if (_enabled && _webhookKeyController.text.trim().isEmpty) {
+      showErrorSnackBar(
+        context,
+        'Please enter your Webhook Key to enable IFTTT',
+      );
+      return;
+    }
+
     final iftttService = ref.read(iftttServiceProvider);
 
     final config = IftttConfig(
@@ -91,9 +99,8 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
       batteryLow: _batteryLow,
       temperatureAlert: _temperatureAlert,
       sosEmergency: _sosEmergency,
-      batteryThreshold: int.tryParse(_batteryThresholdController.text) ?? 20,
-      temperatureThreshold:
-          double.tryParse(_temperatureThresholdController.text) ?? 40.0,
+      batteryThreshold: _batteryThreshold,
+      temperatureThreshold: _temperatureThreshold,
       geofenceRadius: double.tryParse(_geofenceRadiusController.text) ?? 1000.0,
       geofenceLat: double.tryParse(_geofenceLatController.text),
       geofenceLon: double.tryParse(_geofenceLonController.text),
@@ -139,9 +146,8 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
       batteryLow: _batteryLow,
       temperatureAlert: _temperatureAlert,
       sosEmergency: _sosEmergency,
-      batteryThreshold: int.tryParse(_batteryThresholdController.text) ?? 20,
-      temperatureThreshold:
-          double.tryParse(_temperatureThresholdController.text) ?? 40.0,
+      batteryThreshold: _batteryThreshold,
+      temperatureThreshold: _temperatureThreshold,
       geofenceRadius: double.tryParse(_geofenceRadiusController.text) ?? 1000.0,
       geofenceLat: double.tryParse(_geofenceLatController.text),
       geofenceLon: double.tryParse(_geofenceLonController.text),
@@ -173,8 +179,6 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
   @override
   void dispose() {
     _webhookKeyController.dispose();
-    _batteryThresholdController.dispose();
-    _temperatureThresholdController.dispose();
     _geofenceRadiusController.dispose();
     _geofenceLatController.dispose();
     _geofenceLonController.dispose();
@@ -401,38 +405,91 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
               color: context.card,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: TextField(
-              controller: _batteryThresholdController,
-              keyboardType: TextInputType.number,
-              textInputAction: TextInputAction.done,
-              onSubmitted: (_) => FocusScope.of(context).unfocus(),
-              style: TextStyle(color: context.textPrimary),
-              decoration: InputDecoration(
-                labelText: 'Battery Threshold',
-                labelStyle: TextStyle(color: context.textSecondary),
-                hintText: '20',
-                hintStyle: TextStyle(color: Colors.grey.shade600),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: context.border),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.battery_3_bar,
+                      color: context.textSecondary,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Battery Threshold',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: context.textPrimary,
+                      ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: context.accentColor.withAlpha(30),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '$_batteryThreshold%',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: context.accentColor,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: context.border),
+                const SizedBox(height: 8),
+                SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    trackHeight: 4,
+                    thumbShape: const RoundSliderThumbShape(
+                      enabledThumbRadius: 8,
+                    ),
+                    overlayShape: const RoundSliderOverlayShape(
+                      overlayRadius: 16,
+                    ),
+                    activeTrackColor: context.accentColor,
+                    inactiveTrackColor: context.border,
+                    thumbColor: context.accentColor,
+                    overlayColor: context.accentColor.withAlpha(30),
+                  ),
+                  child: Slider(
+                    value: _batteryThreshold.toDouble(),
+                    min: 5,
+                    max: 50,
+                    divisions: 9,
+                    onChanged: (value) {
+                      HapticFeedback.selectionClick();
+                      setState(() => _batteryThreshold = value.round());
+                    },
+                  ),
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: context.accentColor),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '5%',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.textTertiary,
+                      ),
+                    ),
+                    Text(
+                      '50%',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.textTertiary,
+                      ),
+                    ),
+                  ],
                 ),
-                prefixIcon: Icon(
-                  Icons.battery_3_bar,
-                  color: context.textSecondary,
-                ),
-                suffixText: '%',
-                suffixStyle: TextStyle(color: context.textSecondary),
-                filled: true,
-                fillColor: context.background,
-              ),
+              ],
             ),
           ),
         _SettingsTile(
@@ -455,40 +512,91 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
               color: context.card,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: TextField(
-              controller: _temperatureThresholdController,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              textInputAction: TextInputAction.done,
-              onSubmitted: (_) => FocusScope.of(context).unfocus(),
-              style: TextStyle(color: context.textPrimary),
-              decoration: InputDecoration(
-                labelText: 'Temperature Threshold',
-                labelStyle: TextStyle(color: context.textSecondary),
-                hintText: '40.0',
-                hintStyle: TextStyle(color: Colors.grey.shade600),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: context.border),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.device_thermostat,
+                      color: context.textSecondary,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Temperature Threshold',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: context.textPrimary,
+                      ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: context.accentColor.withAlpha(30),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '${_temperatureThreshold.toStringAsFixed(0)}°C',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: context.accentColor,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: context.border),
+                const SizedBox(height: 8),
+                SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    trackHeight: 4,
+                    thumbShape: const RoundSliderThumbShape(
+                      enabledThumbRadius: 8,
+                    ),
+                    overlayShape: const RoundSliderOverlayShape(
+                      overlayRadius: 16,
+                    ),
+                    activeTrackColor: context.accentColor,
+                    inactiveTrackColor: context.border,
+                    thumbColor: context.accentColor,
+                    overlayColor: context.accentColor.withAlpha(30),
+                  ),
+                  child: Slider(
+                    value: _temperatureThreshold,
+                    min: 30,
+                    max: 80,
+                    divisions: 10,
+                    onChanged: (value) {
+                      HapticFeedback.selectionClick();
+                      setState(() => _temperatureThreshold = value);
+                    },
+                  ),
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: context.accentColor),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '30°C',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.textTertiary,
+                      ),
+                    ),
+                    Text(
+                      '80°C',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.textTertiary,
+                      ),
+                    ),
+                  ],
                 ),
-                prefixIcon: Icon(
-                  Icons.device_thermostat,
-                  color: context.textSecondary,
-                ),
-                suffixText: '°C',
-                suffixStyle: TextStyle(color: context.textSecondary),
-                filled: true,
-                fillColor: context.background,
-              ),
+              ],
             ),
           ),
       ],

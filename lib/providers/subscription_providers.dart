@@ -140,6 +140,26 @@ final hasPurchasedProvider = Provider.family<bool, String>((ref, productId) {
   return state.hasPurchased(productId);
 });
 
+/// Check if user has all premium features unlocked (owns complete pack OR all individual packs)
+/// Users with all premium features get an "Authorised" badge
+final hasAllPremiumFeaturesProvider = Provider<bool>((ref) {
+  final state = ref.watch(purchaseStateProvider);
+
+  // Check if user owns complete pack
+  if (state.hasPurchased(RevenueCatConfig.completePackProductId)) {
+    return true;
+  }
+
+  // Check if user owns all individual packs
+  for (final purchase in OneTimePurchases.allIndividualPurchases) {
+    if (!state.hasPurchased(purchase.productId)) {
+      return false;
+    }
+  }
+
+  return true;
+});
+
 /// Notifier for subscription loading state
 class SubscriptionLoadingNotifier extends Notifier<bool> {
   @override

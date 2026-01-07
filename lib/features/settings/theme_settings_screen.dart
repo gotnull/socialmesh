@@ -66,12 +66,6 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
             _buildSectionHeader('PREVIEW'),
             const SizedBox(height: 12),
             _buildPreviewElements(context, currentColor),
-            const SizedBox(height: 24),
-
-            // App Icon Section (future feature placeholder)
-            _buildSectionHeader('APP ICON'),
-            const SizedBox(height: 12),
-            _buildAppIconSection(context),
           ],
         ),
       ),
@@ -535,76 +529,6 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
                   ),
                 ),
               ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAppIconSection(BuildContext context) {
-    final theme = Theme.of(context);
-    final accentColorAsync = ref.watch(accentColorProvider);
-    final accentColor = accentColorAsync.asData?.value ?? AccentColors.magenta;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.dividerColor),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              // Current app icon
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(14),
-                  gradient: AppTheme.brandGradient,
-                  boxShadow: [
-                    BoxShadow(
-                      color: accentColor.withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      spreadRadius: 1,
-                    ),
-                  ],
-                ),
-                child: Icon(
-                  Icons.wifi_tethering,
-                  color: Colors.white,
-                  size: 32,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Default Icon',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: context.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Alternative app icons coming soon',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: context.textTertiary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(Icons.check_circle, color: accentColor, size: 24),
             ],
           ),
         ],

@@ -429,8 +429,8 @@ export const widgetsRate = onRequest({ cors: true }, async (req, res) => {
 // WIDGET SUBMISSION & APPROVAL FLOW
 // =============================================================================
 
-// Admin UIDs - store in environment or Firestore in production
-const ADMIN_UIDS = ['fulvio_admin_uid']; // Replace with actual admin UIDs
+// Admin UIDs - also checked against Firestore 'admins' collection at runtime
+const ADMIN_UIDS = ['9ltxJGViWHW5aj5HhLGmiVwkrLU2'];
 
 /**
  * Check if user is admin

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/logging.dart';
 import '../../core/theme.dart';
+import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
-import '../../providers/app_providers.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 
 /// Screen for configuring External Notification module (buzzers, LEDs, vibration)
@@ -48,36 +49,56 @@ class _ExternalNotificationConfigScreenState
   }
 
   Future<void> _loadCurrentConfig() async {
+    AppLogging.settings('[ExternalNotification] Loading config...');
     final protocol = ref.read(protocolServiceProvider);
 
     // Only request from device if connected
     if (!protocol.isConnected) {
+      AppLogging.settings(
+        '[ExternalNotification] Not connected, skipping load',
+      );
       if (mounted) setState(() => _isLoading = false);
       return;
     }
 
-    final config = await protocol.getExternalNotificationModuleConfig();
-    if (config != null && mounted) {
-      setState(() {
-        _enabled = config.enabled;
-        _alertBell = config.alertBell;
-        _alertMessage = config.alertMessage;
-        _usePwm = config.usePwm;
-        _useI2sAsBuzzer = config.useI2sAsBuzzer;
-        _active = config.active;
-        _output = config.output;
-        _outputMs = config.outputMs;
-        _nagTimeout = config.nagTimeout;
-        _alertBellBuzzer = config.alertBellBuzzer;
-        _alertBellVibra = config.alertBellVibra;
-        _alertMessageBuzzer = config.alertMessageBuzzer;
-        _alertMessageVibra = config.alertMessageVibra;
-        _outputBuzzer = config.outputBuzzer;
-        _outputVibra = config.outputVibra;
-        _isLoading = false;
-      });
-    } else if (mounted) {
-      setState(() => _isLoading = false);
+    AppLogging.settings('[ExternalNotification] Requesting config from device');
+    try {
+      final config = await protocol
+          .getExternalNotificationModuleConfig()
+          .timeout(const Duration(seconds: 10));
+      AppLogging.settings('[ExternalNotification] Config received: $config');
+      if (config != null && mounted) {
+        setState(() {
+          _enabled = config.enabled;
+          _alertBell = config.alertBell;
+          _alertMessage = config.alertMessage;
+          _usePwm = config.usePwm;
+          _useI2sAsBuzzer = config.useI2sAsBuzzer;
+          _active = config.active;
+          _output = config.output;
+          _outputMs = config.outputMs;
+          _nagTimeout = config.nagTimeout;
+          _alertBellBuzzer = config.alertBellBuzzer;
+          _alertBellVibra = config.alertBellVibra;
+          _alertMessageBuzzer = config.alertMessageBuzzer;
+          _alertMessageVibra = config.alertMessageVibra;
+          _outputBuzzer = config.outputBuzzer;
+          _outputVibra = config.outputVibra;
+          _isLoading = false;
+        });
+        AppLogging.settings(
+          '[ExternalNotification] Config loaded successfully',
+        );
+      } else if (mounted) {
+        AppLogging.settings('[ExternalNotification] Config was null');
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      AppLogging.settings('[ExternalNotification] Error loading config: $e');
+      if (mounted) {
+        setState(() => _isLoading = false);
+        showErrorSnackBar(context, 'Failed to load config');
+      }
     }
   }
 
@@ -137,18 +158,15 @@ class _ExternalNotificationConfigScreenState
         backgroundColor: context.surface,
         actions: [
           if (isConnected)
-            IconButton(
-              icon: _isSaving
+            TextButton(
+              onPressed: _isSaving ? null : _saveConfig,
+              child: _isSaving
                   ? SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: context.textPrimary,
-                      ),
+                      child: MeshLoadingIndicator(size: 20),
                     )
-                  : const Icon(Icons.save),
-              onPressed: _isSaving ? null : _saveConfig,
+                  : Text('Save', style: TextStyle(color: context.accentColor)),
             ),
         ],
       ),

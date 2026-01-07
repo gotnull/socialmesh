@@ -7,6 +7,7 @@ import 'package:timeago/timeago.dart' as timeago;
 
 import '../../../core/theme.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
+import '../../../core/widgets/verified_badge.dart';
 import '../../../models/story.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/story_providers.dart';
@@ -505,11 +506,7 @@ class _StoryHeader extends StatelessWidget {
                       ),
                       if (story.authorSnapshot?.isVerified ?? false) ...[
                         const SizedBox(width: 4),
-                        const Icon(
-                          Icons.verified,
-                          color: Colors.white,
-                          size: 14,
-                        ),
+                        const SimpleVerifiedBadge(size: 14),
                       ],
                     ],
                   ),

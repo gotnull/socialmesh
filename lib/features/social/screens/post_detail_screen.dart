@@ -6,6 +6,7 @@ import 'package:timeago/timeago.dart' as timeago;
 import '../../../core/theme.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/fullscreen_gallery.dart';
+import '../../../core/widgets/verified_badge.dart';
 import '../../../models/social.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/auth_providers.dart';
@@ -749,11 +750,7 @@ class _CommentTileState extends ConsumerState<_CommentTile> {
                             alignment: PlaceholderAlignment.middle,
                             child: Padding(
                               padding: const EdgeInsets.only(left: 4),
-                              child: Icon(
-                                Icons.verified,
-                                size: 12,
-                                color: theme.colorScheme.primary,
-                              ),
+                              child: SimpleVerifiedBadge(size: 12),
                             ),
                           ),
                         TextSpan(
@@ -1030,11 +1027,7 @@ class _PostContent extends StatelessWidget {
                           ),
                           if (snapshot?.isVerified == true) ...[
                             const SizedBox(width: 4),
-                            Icon(
-                              Icons.verified,
-                              size: 18,
-                              color: theme.colorScheme.primary,
-                            ),
+                            const SimpleVerifiedBadge(size: 18),
                           ],
                         ],
                       ),

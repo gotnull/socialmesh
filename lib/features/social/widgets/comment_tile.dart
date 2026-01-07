@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
+import '../../../core/widgets/verified_badge.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/social_providers.dart';
 import '../../../services/social_service.dart';
@@ -93,11 +94,7 @@ class CommentTile extends ConsumerWidget {
                         ),
                         if (comment.author?.isVerified == true) ...[
                           const SizedBox(width: 4),
-                          Icon(
-                            Icons.verified,
-                            size: 14,
-                            color: theme.colorScheme.primary,
-                          ),
+                          const SimpleVerifiedBadge(size: 14),
                         ],
                         const SizedBox(width: 8),
                         Text(

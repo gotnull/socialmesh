@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/widgets/verified_badge.dart';
 import '../../../providers/social_providers.dart';
 import '../../../services/social_service.dart';
 import '../widgets/follow_button.dart';
@@ -194,7 +195,7 @@ class _UserTile extends StatelessWidget {
           ),
           if (profile?.isVerified == true) ...[
             const SizedBox(width: 4),
-            Icon(Icons.verified, size: 16, color: theme.colorScheme.primary),
+            const SimpleVerifiedBadge(size: 16),
           ],
         ],
       ),

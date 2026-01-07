@@ -18,6 +18,7 @@ import '../../core/widgets/node_avatar.dart';
 import '../../core/widgets/edge_fade.dart';
 import '../../core/widgets/auto_scroll_text.dart';
 import '../../core/widgets/skeleton_config.dart';
+import '../../core/widgets/verified_badge.dart';
 import '../../services/share_link_service.dart';
 import '../messaging/messaging_screen.dart';
 import '../map/map_screen.dart';
@@ -2868,11 +2869,7 @@ class _LinkedProfileSection extends ConsumerWidget {
                           ),
                           if (profile.isVerified) ...[
                             const SizedBox(width: 4),
-                            Icon(
-                              Icons.verified,
-                              color: context.accentColor,
-                              size: 16,
-                            ),
+                            const SimpleVerifiedBadge(size: 16),
                           ],
                         ],
                       ),
