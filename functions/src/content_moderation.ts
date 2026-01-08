@@ -46,7 +46,9 @@ let cachedBlockedPatterns: Record<string, RegExp[]> | null = null;
 let cachedCategorySeverity: Record<string, 'low' | 'medium' | 'high' | 'critical'> | null = null;
 
 function loadBannedWordsConfig(): BannedWordsConfig {
-  const configPath = path.join(__dirname, 'banned_words.json');
+  // Load from assets directory (single source of truth)
+  // __dirname is functions/lib/, so go up to project root
+  const configPath = path.join(__dirname, '..', '..', 'assets', 'banned_words.json');
   const rawData = fs.readFileSync(configPath, 'utf-8');
   return JSON.parse(rawData) as BannedWordsConfig;
 }
@@ -556,7 +558,10 @@ export const moderateUploadedMedia = onObjectFinalized(
     }
 
     // Parse file path to determine content type
-    // Expected paths: stories/{userId}/{storyId}/media.jpg, profile_avatars/{userId}.jpg
+    // Expected paths:
+    // - stories/{userId}/{storyId}/media.jpg
+    // - profile_avatars/{userId}.jpg
+    // - post_images/{filename}.jpg (userId in metadata)
     const pathParts = filePath.split('/');
 
     let moderationContentType: ModerationQueueItem['contentType'] | null = null;
@@ -571,6 +576,16 @@ export const moderateUploadedMedia = onObjectFinalized(
       moderationContentType = 'profile';
       userId = pathParts[1]?.replace(/\.[^.]+$/, ''); // Remove extension
       contentId = userId;
+    } else if (pathParts[0] === 'post_images') {
+      // Post images: Extract userId from metadata, use filename as contentId
+      moderationContentType = 'post';
+      userId = event.data.metadata?.authorId || null;
+      contentId = pathParts[1]?.replace(/\.[^.]+$/, ''); // Filename without extension
+
+      if (!userId) {
+        console.log(`Post image ${filePath} missing authorId in metadata`);
+        return;
+      }
     } else {
       console.log(`Skipping unmonitored path: ${filePath}`);
       return;

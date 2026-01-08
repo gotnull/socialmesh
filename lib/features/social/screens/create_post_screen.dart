@@ -716,6 +716,13 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       return;
     }
 
+    // Get current user for metadata
+    final currentUser = ref.read(currentUserProvider);
+    if (currentUser == null) {
+      showErrorSnackBar(context, 'Must be signed in to upload images');
+      return;
+    }
+
     try {
       final remainingSlots = _maxImages - _imageUrls.length;
 
@@ -744,7 +751,16 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
             .child('post_images')
             .child(fileName);
 
-        await ref.putFile(imageFile);
+        // Add metadata with authorId for content moderation
+        final metadata = SettableMetadata(
+          contentType: 'image/jpeg',
+          customMetadata: {
+            'authorId': currentUser.uid,
+            'uploadedAt': DateTime.now().toIso8601String(),
+          },
+        );
+
+        await ref.putFile(imageFile, metadata);
         final url = await ref.getDownloadURL();
 
         setState(() => _imageUrls.add(url));
