@@ -814,16 +814,44 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
 
         debugPrint('[CreatePost] Uploading to: post_images/$fileName');
         await ref.putFile(imageFile, metadata);
-        final url = await ref.getDownloadURL();
-        debugPrint('[CreatePost] Upload complete, URL: $url');
 
-        setState(() => _imageUrls.add(url));
+        // Small delay to allow moderation trigger to process
+        await Future.delayed(const Duration(milliseconds: 500));
+
+        // Try to get download URL - if file was moderated, it won't exist
+        try {
+          final url = await ref.getDownloadURL();
+          debugPrint('[CreatePost] Upload complete, URL: $url');
+          setState(() => _imageUrls.add(url));
+        } on FirebaseException catch (e) {
+          if (e.code == 'object-not-found') {
+            // Image was deleted by content moderation
+            debugPrint('[CreatePost] Image blocked by content moderation');
+            if (mounted) {
+              showErrorSnackBar(
+                context,
+                'Image violates content guidelines and was blocked.',
+              );
+            }
+            return;
+          }
+          rethrow;
+        }
       }
     } catch (e, stackTrace) {
       debugPrint('[CreatePost] Image upload error: $e');
       debugPrint('[CreatePost] Stack trace: $stackTrace');
       if (mounted) {
-        showErrorSnackBar(context, 'Failed to upload image: $e');
+        // Check for object-not-found which indicates moderation
+        final errorStr = e.toString();
+        if (errorStr.contains('object-not-found')) {
+          showErrorSnackBar(
+            context,
+            'Image violates content guidelines and was blocked.',
+          );
+        } else {
+          showErrorSnackBar(context, 'Failed to upload image: $e');
+        }
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
