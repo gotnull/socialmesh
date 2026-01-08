@@ -1038,6 +1038,33 @@ export const getModerationStatus = onCall(
 
     const userId = request.auth.uid;
 
+    // Get user's moderation status
+    const userDoc = await db.collection('users').doc(userId).get();
+    let moderationStatus = userDoc.data()?.moderationStatus || {};
+
+    // Check if suspension has expired and auto-lift it
+    if (moderationStatus.isSuspended && moderationStatus.suspendedUntil) {
+      const suspendedUntil = moderationStatus.suspendedUntil.toDate?.() ||
+        new Date(moderationStatus.suspendedUntil);
+      const now = new Date();
+
+      if (suspendedUntil <= now) {
+        // Suspension has expired - lift it immediately
+        console.log(`Auto-lifting expired suspension for user ${userId}`);
+        await db.collection('users').doc(userId).update({
+          'moderationStatus.isSuspended': false,
+          'moderationStatus.suspendedUntil': null,
+        });
+
+        // Update local status for response
+        moderationStatus = {
+          ...moderationStatus,
+          isSuspended: false,
+          suspendedUntil: null,
+        };
+      }
+    }
+
     // Get user's strikes
     const strikesSnap = await db.collection('user_strikes')
       .where('userId', '==', userId)
@@ -1052,17 +1079,13 @@ export const getModerationStatus = onCall(
       expiresAt: doc.data().expiresAt?.toDate?.()?.toISOString(),
     }));
 
-    // Get user's moderation status
-    const userDoc = await db.collection('users').doc(userId).get();
-    const moderationStatus = userDoc.data()?.moderationStatus || {};
-
     return {
       strikes,
       status: {
         activeStrikes: moderationStatus.activeStrikes || 0,
         activeWarnings: moderationStatus.activeWarnings || 0,
         isSuspended: moderationStatus.isSuspended || false,
-        suspendedUntil: moderationStatus.suspendedUntil?.toDate?.()?.toISOString(),
+        suspendedUntil: moderationStatus.suspendedUntil?.toDate?.()?.toISOString() || null,
         isPermanentlyBanned: moderationStatus.isPermanentlyBanned || false,
       },
     };
