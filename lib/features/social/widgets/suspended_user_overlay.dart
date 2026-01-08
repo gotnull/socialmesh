@@ -104,7 +104,7 @@ class _SuspensionNotice extends StatelessWidget {
     final isPermanent = suspendedUntil == null;
     final accentColor = context.accentColor;
 
-    return Container(
+    return Material(
       color: Colors.black.withValues(alpha: 0.85),
       child: SafeArea(
         child: Padding(
