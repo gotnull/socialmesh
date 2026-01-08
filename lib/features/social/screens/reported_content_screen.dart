@@ -28,7 +28,7 @@ class _ReportedContentScreenState extends ConsumerState<ReportedContentScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   @override
@@ -45,6 +45,7 @@ class _ReportedContentScreenState extends ConsumerState<ReportedContentScreen>
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
+            Tab(text: 'Auto'),
             Tab(text: 'All'),
             Tab(text: 'Posts'),
             Tab(text: 'Comments'),
@@ -54,10 +55,476 @@ class _ReportedContentScreenState extends ConsumerState<ReportedContentScreen>
       body: TabBarView(
         controller: _tabController,
         children: [
+          _ModerationQueueList(),
           _ReportsList(filter: null),
           _ReportsList(filter: 'post'),
           _ReportsList(filter: 'comment'),
         ],
+      ),
+    );
+  }
+}
+
+/// Shows auto-moderated content from the moderation queue.
+class _ModerationQueueList extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final socialService = ref.watch(socialServiceProvider);
+
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: socialService.watchModerationQueue(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: theme.colorScheme.error.withAlpha(150),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Error loading moderation queue',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: theme.colorScheme.error,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '${snapshot.error}',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.hintColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        final items = snapshot.data ?? [];
+
+        if (items.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.shield_outlined,
+                  size: 64,
+                  color: theme.hintColor.withAlpha(100),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'No flagged content',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: theme.hintColor,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Auto-moderation has not flagged any content',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.hintColor,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          itemCount: items.length,
+          itemBuilder: (context, index) {
+            final item = items[index];
+            return _ModerationCard(
+              item: item,
+              onApprove: () => _approveItem(context, ref, item['id']),
+              onReject: () => _rejectItem(context, ref, item),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _approveItem(
+    BuildContext context,
+    WidgetRef ref,
+    String itemId,
+  ) async {
+    try {
+      await ref.read(socialServiceProvider).approveModerationItem(itemId);
+      if (context.mounted) {
+        showSuccessSnackBar(context, 'Content approved');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        showErrorSnackBar(context, 'Error: $e');
+      }
+    }
+  }
+
+  Future<void> _rejectItem(
+    BuildContext context,
+    WidgetRef ref,
+    Map<String, dynamic> item,
+  ) async {
+    final contentType = item['contentType'] as String? ?? 'content';
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Reject & Delete'),
+        content: Text(
+          'This will delete the $contentType and issue a warning to the user. Continue?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(ctx).colorScheme.error,
+            ),
+            child: const Text('Reject'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      try {
+        await ref.read(socialServiceProvider).rejectModerationItem(item['id']);
+        if (context.mounted) {
+          showSuccessSnackBar(context, 'Content rejected and user warned');
+        }
+      } catch (e) {
+        if (context.mounted) {
+          showErrorSnackBar(context, 'Error: $e');
+        }
+      }
+    }
+  }
+}
+
+/// Card for displaying auto-moderated content.
+class _ModerationCard extends StatelessWidget {
+  const _ModerationCard({
+    required this.item,
+    required this.onApprove,
+    required this.onReject,
+  });
+
+  final Map<String, dynamic> item;
+  final VoidCallback onApprove;
+  final VoidCallback onReject;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final contentType = item['contentType'] as String? ?? 'unknown';
+    final textContent = item['textContent'] as String?;
+    final contentUrl = item['contentUrl'] as String?;
+    final createdAt = item['createdAt'];
+    final DateTime? timestamp = createdAt is Timestamp
+        ? createdAt.toDate()
+        : (createdAt is DateTime ? createdAt : null);
+
+    // Extract moderation result details
+    final moderationResult = item['moderationResult'] as Map<String, dynamic>?;
+    final decision =
+        moderationResult?['decision'] as String? ??
+        moderationResult?['action'] as String? ??
+        'unknown';
+    final categories = moderationResult?['categories'] as List<dynamic>? ?? [];
+    final details = moderationResult?['details'] as String?;
+
+    // Type styling
+    final (Color bgColor, Color fgColor, IconData icon) = switch (contentType) {
+      'post' => (
+        context.accentColor.withAlpha(30),
+        context.accentColor,
+        Icons.article_outlined,
+      ),
+      'comment' => (
+        theme.colorScheme.secondary.withAlpha(30),
+        theme.colorScheme.secondary,
+        Icons.comment_outlined,
+      ),
+      'story' => (
+        Colors.orange.withAlpha(30),
+        Colors.orange,
+        Icons.auto_stories_outlined,
+      ),
+      _ => (
+        theme.colorScheme.errorContainer,
+        theme.colorScheme.onErrorContainer,
+        Icons.flag_outlined,
+      ),
+    };
+
+    // Decision styling
+    final (
+      Color decisionBg,
+      Color decisionFg,
+      IconData decisionIcon,
+    ) = switch (decision) {
+      'reject' || 'auto_reject' => (
+        Colors.red.withAlpha(40),
+        Colors.red,
+        Icons.dangerous_outlined,
+      ),
+      'review' || 'flag' || 'flag_for_review' => (
+        Colors.orange.withAlpha(40),
+        Colors.orange,
+        Icons.warning_outlined,
+      ),
+      _ => (
+        theme.colorScheme.surfaceContainerHighest,
+        theme.hintColor,
+        Icons.help_outline,
+      ),
+    };
+
+    // Map decision to display text
+    final decisionLabel = switch (decision) {
+      'reject' || 'auto_reject' => 'REJECTED',
+      'review' || 'flag' || 'flag_for_review' => 'FLAGGED',
+      _ => 'PENDING',
+    };
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header row
+            Row(
+              children: [
+                // Content type badge
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: bgColor,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(icon, size: 14, color: fgColor),
+                      const SizedBox(width: 6),
+                      Text(
+                        contentType.toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: fgColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Decision badge
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: decisionBg,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(decisionIcon, size: 12, color: decisionFg),
+                      const SizedBox(width: 4),
+                      Text(
+                        decisionLabel,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: decisionFg,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Spacer(),
+                if (timestamp != null)
+                  Text(
+                    timeago.format(timestamp),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.hintColor,
+                    ),
+                  ),
+              ],
+            ),
+
+            const SizedBox(height: 12),
+
+            // Detected violations
+            if (categories.isNotEmpty) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.errorContainer.withAlpha(50),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: theme.colorScheme.error.withAlpha(50),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.gpp_bad_outlined,
+                          size: 16,
+                          color: theme.colorScheme.error,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Violations Detected',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.error,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: categories.map((cat) {
+                        final category = cat as Map<String, dynamic>;
+                        final name = category['name'] as String? ?? 'unknown';
+                        final likelihood =
+                            category['likelihood'] as String? ?? '';
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.red.withAlpha(20),
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(color: Colors.red.withAlpha(50)),
+                          ),
+                          child: Text(
+                            '$name ($likelihood)',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.red.shade700,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    if (details != null && details.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        details,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.error.withAlpha(180),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+
+            // Content preview
+            if (contentUrl != null && contentUrl.isNotEmpty) ...[
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  contentUrl,
+                  height: 120,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    height: 60,
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    child: const Center(
+                      child: Icon(Icons.broken_image, size: 24),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+            if (textContent != null && textContent.isNotEmpty)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  textContent,
+                  style: theme.textTheme.bodyMedium,
+                  maxLines: 5,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+
+            const SizedBox(height: 16),
+
+            // Actions
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: onApprove,
+                    icon: const Icon(Icons.check_circle_outline, size: 18),
+                    label: const Text('Approve'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.green.shade700,
+                      side: BorderSide(color: Colors.green.shade300),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: onReject,
+                    icon: const Icon(Icons.delete_outline, size: 18),
+                    label: const Text('Reject'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: theme.colorScheme.error,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1135,6 +1135,78 @@ class SocialService {
   }
 
   // ===========================================================================
+  // AUTO-MODERATION QUEUE
+  // ===========================================================================
+
+  /// Get all pending auto-moderated content (admin only).
+  Stream<List<Map<String, dynamic>>> watchModerationQueue() {
+    return _firestore
+        .collection('moderation_queue')
+        .where('status', isEqualTo: 'pending')
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map(
+          (snap) => snap.docs.map((doc) {
+            final data = doc.data();
+            return {'id': doc.id, ...data};
+          }).toList(),
+        );
+  }
+
+  /// Approve content from moderation queue (admin only).
+  /// This keeps the content visible and removes it from the queue.
+  Future<void> approveModerationItem(String itemId) async {
+    await _firestore.collection('moderation_queue').doc(itemId).update({
+      'status': 'approved',
+      'reviewedAt': FieldValue.serverTimestamp(),
+      'reviewedBy': _currentUserId,
+    });
+  }
+
+  /// Reject content from moderation queue and delete it (admin only).
+  Future<void> rejectModerationItem(String itemId) async {
+    final itemDoc = await _firestore
+        .collection('moderation_queue')
+        .doc(itemId)
+        .get();
+    if (!itemDoc.exists) return;
+
+    final data = itemDoc.data()!;
+    final contentType = data['contentType'] as String;
+    final contentId = data['contentId'] as String;
+    final userId = data['userId'] as String;
+
+    // Delete the content based on type
+    if (contentType == 'comment') {
+      await _firestore.collection('comments').doc(contentId).delete();
+    } else if (contentType == 'post') {
+      await _firestore.collection('posts').doc(contentId).delete();
+    } else if (contentType == 'story') {
+      await _firestore.collection('stories').doc(contentId).delete();
+    }
+
+    // Mark as rejected in queue
+    await _firestore.collection('moderation_queue').doc(itemId).update({
+      'status': 'rejected',
+      'reviewedAt': FieldValue.serverTimestamp(),
+      'reviewedBy': _currentUserId,
+    });
+
+    // Record a strike against the user
+    await _firestore.collection('user_strikes').add({
+      'userId': userId,
+      'type': 'warning',
+      'reason': 'Content violated community guidelines',
+      'contentId': contentId,
+      'contentType': contentType,
+      'createdAt': FieldValue.serverTimestamp(),
+      'expiresAt': Timestamp.fromDate(
+        DateTime.now().add(const Duration(days: 90)),
+      ),
+    });
+  }
+
+  // ===========================================================================
   // PUBLIC PROFILES
   // ===========================================================================
 

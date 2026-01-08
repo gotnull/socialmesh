@@ -33,6 +33,31 @@ final pendingReportCountProvider = StreamProvider<int>((ref) {
   return service.watchPendingReports().map((reports) => reports.length);
 });
 
+/// Provider for pending moderation queue count (for badge)
+final pendingModerationCountProvider = StreamProvider<int>((ref) {
+  final service = ref.watch(socialServiceProvider);
+  return service.watchModerationQueue().map((items) => items.length);
+});
+
+/// Combined count of all pending content needing review
+final totalPendingContentCountProvider = StreamProvider<int>((ref) {
+  final reports = ref.watch(pendingReportCountProvider);
+  final moderation = ref.watch(pendingModerationCountProvider);
+
+  final reportCount = reports.when(
+    data: (count) => count,
+    loading: () => 0,
+    error: (e, s) => 0,
+  );
+  final moderationCount = moderation.when(
+    data: (count) => count,
+    loading: () => 0,
+    error: (e, s) => 0,
+  );
+
+  return Stream.value(reportCount + moderationCount);
+});
+
 // ===========================================================================
 // FOLLOW STATE
 // ===========================================================================
