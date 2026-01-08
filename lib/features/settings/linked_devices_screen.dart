@@ -319,19 +319,15 @@ class _LinkedDevicesScreenState extends ConsumerState<LinkedDevicesScreen> {
     }
 
     // Check if device shares location based on position config
-    final positionConfig = node.deviceMetrics?.position;
-    final sharesLocation =
-        positionConfig != null &&
-        positionConfig.positionBroadcastSecs > 0 &&
-        positionConfig.positionEnabled;
+    final sharesLocation = node.hasPosition;
 
     // Show privacy warning before linking
     final action = await DevicePrivacyWarning.show(
       context,
       nodeNum: nodeNum,
-      deviceName: node.longName,
+      deviceName: node.longName ?? 'Unknown Device',
       sharesLocation: sharesLocation,
-      positionConfig: positionConfig,
+      positionConfig: null, // Position config not available in MeshNode model
     );
 
     if (action != DevicePrivacyAction.proceed) {

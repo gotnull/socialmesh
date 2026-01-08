@@ -305,7 +305,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     } else if (checkResult.action == 'review' || checkResult.action == 'flag') {
       // Content flagged - show warning but allow to proceed
       if (mounted) {
-        final shouldProceed = await ContentModerationWarning.show(
+        final action = await ContentModerationWarning.show(
           context,
           result: ContentModerationCheckResult(
             passed: true,
@@ -314,7 +314,15 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
             details: checkResult.details,
           ),
         );
-        if (shouldProceed != ContentModerationAction.proceed) return;
+        if (action == ContentModerationAction.cancel) return;
+        if (action == ContentModerationAction.edit) {
+          // User wants to edit - focus on comment field
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _commentFocusNode.requestFocus();
+          });
+          return;
+        }
+        // If action is proceed, continue with comment submission
       }
     }
 

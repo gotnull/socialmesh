@@ -1053,7 +1053,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       if (!checkResult.passed || checkResult.action == 'reject') {
         // Content blocked - show warning and don't proceed
         if (mounted) {
-          await ContentModerationWarning.show(
+          final action = await ContentModerationWarning.show(
             context,
             result: ContentModerationCheckResult(
               passed: false,
@@ -1062,13 +1062,19 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
               details: checkResult.details,
             ),
           );
+          if (action == ContentModerationAction.edit) {
+            // User wants to edit - focus on content field
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _contentFocusNode.requestFocus();
+            });
+          }
         }
         return;
       } else if (checkResult.action == 'review' ||
           checkResult.action == 'flag') {
         // Content flagged - show warning but allow to proceed
         if (mounted) {
-          final shouldProceed = await ContentModerationWarning.show(
+          final action = await ContentModerationWarning.show(
             context,
             result: ContentModerationCheckResult(
               passed: true,
@@ -1077,7 +1083,15 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
               details: checkResult.details,
             ),
           );
-          if (shouldProceed != ContentModerationAction.proceed) return;
+          if (action == ContentModerationAction.cancel) return;
+          if (action == ContentModerationAction.edit) {
+            // User wants to edit - focus on content field
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _contentFocusNode.requestFocus();
+            });
+            return;
+          }
+          // If action is proceed, continue with submission
         }
       }
     }

@@ -1622,6 +1622,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _displayNameController;
   late TextEditingController _bioController;
+  final FocusNode _bioFocusNode = FocusNode();
   late TextEditingController _callsignController;
   late TextEditingController _websiteController;
   late TextEditingController _twitterController;
@@ -1681,6 +1682,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
   void dispose() {
     _displayNameController.dispose();
     _bioController.dispose();
+    _bioFocusNode.dispose();
     _callsignController.dispose();
     _websiteController.dispose();
     _twitterController.dispose();
@@ -1816,7 +1818,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
       if (!checkResult.passed || checkResult.action == 'reject') {
         // Content blocked - show warning and don't proceed
         if (mounted) {
-          await ContentModerationWarning.show(
+          final action = await ContentModerationWarning.show(
             context,
             result: ContentModerationCheckResult(
               passed: false,
@@ -1825,13 +1827,19 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
               details: checkResult.details,
             ),
           );
+          if (action == ContentModerationAction.edit) {
+            // User wants to edit - focus on bio field
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _bioFocusNode.requestFocus();
+            });
+          }
         }
         return;
       } else if (checkResult.action == 'review' ||
           checkResult.action == 'flag') {
         // Content flagged - show warning but allow to proceed
         if (mounted) {
-          final shouldProceed = await ContentModerationWarning.show(
+          final action = await ContentModerationWarning.show(
             context,
             result: ContentModerationCheckResult(
               passed: true,
@@ -1840,7 +1848,15 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
               details: checkResult.details,
             ),
           );
-          if (shouldProceed != ContentModerationAction.proceed) return;
+          if (action == ContentModerationAction.cancel) return;
+          if (action == ContentModerationAction.edit) {
+            // User wants to edit - focus on bio field
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _bioFocusNode.requestFocus();
+            });
+            return;
+          }
+          // If action is proceed, continue with save
         }
       }
     }
@@ -2456,6 +2472,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
         SizedBox(height: 8),
         TextFormField(
           controller: _bioController,
+          focusNode: _bioFocusNode,
           decoration: InputDecoration(
             hintText: 'Tell us about yourself',
             filled: true,
