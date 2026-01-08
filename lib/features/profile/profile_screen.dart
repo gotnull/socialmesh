@@ -7,11 +7,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
+import '../../core/widgets/content_moderation_warning.dart';
 import '../../core/widgets/default_banner.dart';
 import '../../core/widgets/verified_badge.dart';
 import '../../models/user_profile.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/profile_providers.dart';
+import '../../providers/social_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../providers/subscription_providers.dart';
 import '../../utils/snackbar.dart';
@@ -1797,6 +1799,51 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
 
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
+
+    // Pre-submission content moderation check for bio and display name
+    final textToCheck = [
+      _displayNameController.text.trim(),
+      _bioController.text.trim(),
+    ].where((t) => t.isNotEmpty).join(' ');
+
+    if (textToCheck.isNotEmpty) {
+      final moderationService = ref.read(contentModerationServiceProvider);
+      final checkResult = await moderationService.checkText(
+        textToCheck,
+        useServerCheck: true,
+      );
+
+      if (!checkResult.passed || checkResult.action == 'reject') {
+        // Content blocked - show warning and don't proceed
+        if (mounted) {
+          await ContentModerationWarning.show(
+            context,
+            result: ContentModerationCheckResult(
+              passed: false,
+              action: 'reject',
+              categories: checkResult.categories.map((c) => c.name).toList(),
+              details: checkResult.details,
+            ),
+          );
+        }
+        return;
+      } else if (checkResult.action == 'review' ||
+          checkResult.action == 'flag') {
+        // Content flagged - show warning but allow to proceed
+        if (mounted) {
+          final shouldProceed = await ContentModerationWarning.show(
+            context,
+            result: ContentModerationCheckResult(
+              passed: true,
+              action: checkResult.action,
+              categories: checkResult.categories.map((c) => c.name).toList(),
+              details: checkResult.details,
+            ),
+          );
+          if (!shouldProceed) return;
+        }
+      }
+    }
 
     setState(() => _isLoading = true);
 

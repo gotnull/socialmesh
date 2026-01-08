@@ -10,10 +10,12 @@ import 'package:photo_manager/photo_manager.dart';
 
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
+import '../../../core/widgets/content_moderation_warning.dart';
 import '../../../core/widgets/node_selector_sheet.dart';
 import '../../../models/social.dart';
 import '../../../models/story.dart';
 import '../../../providers/auth_providers.dart';
+import '../../../providers/social_providers.dart';
 import '../../../providers/story_providers.dart';
 import '../../../utils/snackbar.dart';
 
@@ -422,6 +424,46 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
 
   Future<void> _createStory() async {
     if (_selectedMedia == null) return;
+
+    // Pre-submission content moderation check for text overlay
+    if (_textOverlay != null && _textOverlay!.text.isNotEmpty) {
+      final moderationService = ref.read(contentModerationServiceProvider);
+      final checkResult = await moderationService.checkText(
+        _textOverlay!.text,
+        useServerCheck: true,
+      );
+
+      if (!checkResult.passed || checkResult.action == 'reject') {
+        // Content blocked - show warning and don't proceed
+        if (mounted) {
+          await ContentModerationWarning.show(
+            context,
+            result: ContentModerationCheckResult(
+              passed: false,
+              action: 'reject',
+              categories: checkResult.categories.map((c) => c.name).toList(),
+              details: checkResult.details,
+            ),
+          );
+        }
+        return;
+      } else if (checkResult.action == 'review' ||
+          checkResult.action == 'flag') {
+        // Content flagged - show warning but allow to proceed
+        if (mounted) {
+          final shouldProceed = await ContentModerationWarning.show(
+            context,
+            result: ContentModerationCheckResult(
+              passed: true,
+              action: checkResult.action,
+              categories: checkResult.categories.map((c) => c.name).toList(),
+              details: checkResult.details,
+            ),
+          );
+          if (!shouldProceed) return;
+        }
+      }
+    }
 
     setState(() => _isUploading = true);
 

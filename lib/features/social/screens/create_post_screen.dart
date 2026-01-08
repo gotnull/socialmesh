@@ -9,6 +9,7 @@ import 'package:geocoding/geocoding.dart';
 
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
+import '../../../core/widgets/content_moderation_warning.dart';
 import '../../../core/widgets/edge_fade.dart';
 import '../../../core/widgets/node_selector_sheet.dart';
 import '../../../models/social.dart';
@@ -1040,6 +1041,46 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     // Dismiss keyboard immediately using multiple methods for reliability
     _contentFocusNode.unfocus();
     FocusManager.instance.primaryFocus?.unfocus();
+
+    // Pre-submission content moderation check
+    if (content.isNotEmpty) {
+      final moderationService = ref.read(contentModerationServiceProvider);
+      final checkResult = await moderationService.checkText(
+        content,
+        useServerCheck: true,
+      );
+
+      if (!checkResult.passed || checkResult.action == 'reject') {
+        // Content blocked - show warning and don't proceed
+        if (mounted) {
+          await ContentModerationWarning.show(
+            context,
+            result: ContentModerationCheckResult(
+              passed: false,
+              action: 'reject',
+              categories: checkResult.categories.map((c) => c.name).toList(),
+              details: checkResult.details,
+            ),
+          );
+        }
+        return;
+      } else if (checkResult.action == 'review' ||
+          checkResult.action == 'flag') {
+        // Content flagged - show warning but allow to proceed
+        if (mounted) {
+          final shouldProceed = await ContentModerationWarning.show(
+            context,
+            result: ContentModerationCheckResult(
+              passed: true,
+              action: checkResult.action,
+              categories: checkResult.categories.map((c) => c.name).toList(),
+              details: checkResult.details,
+            ),
+          );
+          if (!shouldProceed) return;
+        }
+      }
+    }
 
     setState(() => _isSubmitting = true);
 

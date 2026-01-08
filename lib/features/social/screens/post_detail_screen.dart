@@ -5,6 +5,7 @@ import 'package:timeago/timeago.dart' as timeago;
 
 import '../../../core/theme.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
+import '../../../core/widgets/content_moderation_warning.dart';
 import '../../../core/widgets/fullscreen_gallery.dart';
 import '../../../core/widgets/verified_badge.dart';
 import '../../../models/social.dart';
@@ -279,6 +280,43 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
 
     // Dismiss keyboard immediately
     FocusScope.of(context).unfocus();
+
+    // Pre-submission content moderation check
+    final moderationService = ref.read(contentModerationServiceProvider);
+    final checkResult = await moderationService.checkText(
+      content,
+      useServerCheck: true,
+    );
+
+    if (!checkResult.passed || checkResult.action == 'reject') {
+      // Content blocked - show warning and don't proceed
+      if (mounted) {
+        await ContentModerationWarning.show(
+          context,
+          result: ContentModerationCheckResult(
+            passed: false,
+            action: 'reject',
+            categories: checkResult.categories.map((c) => c.name).toList(),
+            details: checkResult.details,
+          ),
+        );
+      }
+      return;
+    } else if (checkResult.action == 'review' || checkResult.action == 'flag') {
+      // Content flagged - show warning but allow to proceed
+      if (mounted) {
+        final shouldProceed = await ContentModerationWarning.show(
+          context,
+          result: ContentModerationCheckResult(
+            passed: true,
+            action: checkResult.action,
+            categories: checkResult.categories.map((c) => c.name).toList(),
+            details: checkResult.details,
+          ),
+        );
+        if (!shouldProceed) return;
+      }
+    }
 
     setState(() => _isSubmitting = true);
 
