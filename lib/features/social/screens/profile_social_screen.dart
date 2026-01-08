@@ -1880,13 +1880,10 @@ class _AnimatedSocialIconsRow extends StatelessWidget {
             Clipboard.setData(
               ClipboardData(text: profile.socialLinks!.discord!),
             );
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Discord username copied: ${profile.socialLinks!.discord}',
-                ),
-                duration: const Duration(seconds: 2),
-              ),
+            showInfoSnackBar(
+              context,
+              'Discord username copied: ${profile.socialLinks!.discord}',
+              duration: const Duration(seconds: 2),
             );
           },
           tooltip: profile.socialLinks!.discord!,

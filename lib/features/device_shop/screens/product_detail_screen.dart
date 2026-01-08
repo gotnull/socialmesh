@@ -7,6 +7,7 @@ import '../../../core/widgets/auto_scroll_text.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/profile_providers.dart';
 import '../../../utils/share_utils.dart';
+import '../../../utils/snackbar.dart';
 import '../models/shop_models.dart';
 import '../providers/admin_shop_providers.dart';
 import '../providers/device_shop_providers.dart';
@@ -1066,9 +1067,7 @@ class _ReviewsSection extends ConsumerWidget {
   void _showWriteReviewSheet(BuildContext context, WidgetRef ref) {
     final user = ref.read(currentUserProvider);
     if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please sign in to write a review')),
-      );
+      showWarningSnackBar(context, 'Please sign in to write a review');
       return;
     }
 
@@ -1528,31 +1527,14 @@ class _WriteReviewSheetState extends ConsumerState<_WriteReviewSheet> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Review submitted for moderation. Thank you!'),
-            backgroundColor: context.accentColor,
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.all(16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
+        showSuccessSnackBar(
+          context,
+          'Review submitted for moderation. Thank you!',
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to submit review: $e'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.all(16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-        );
+        showErrorSnackBar(context, 'Failed to submit review: $e');
       }
     } finally {
       if (mounted) {

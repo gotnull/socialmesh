@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
 import '../../../providers/auth_providers.dart';
+import '../../../utils/snackbar.dart';
 import '../models/shop_models.dart';
 import '../providers/admin_shop_providers.dart';
 import '../providers/device_shop_providers.dart';
@@ -1089,9 +1090,7 @@ class _AdminProductEditScreenState
     } catch (e) {
       setState(() => _isUploadingImage = false);
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to upload image: $e')));
+        showErrorSnackBar(context, 'Failed to upload image: $e');
       }
     }
   }
@@ -1099,15 +1098,11 @@ class _AdminProductEditScreenState
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     if (_imageUrls.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please add at least one image')),
-      );
+      showWarningSnackBar(context, 'Please add at least one image');
       return;
     }
     if (_sellerId == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please select a seller')));
+      showWarningSnackBar(context, 'Please select a seller');
       return;
     }
 
@@ -1186,18 +1181,15 @@ class _AdminProductEditScreenState
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(_isEditing ? 'Product updated' : 'Product created'),
-          ),
+        showSuccessSnackBar(
+          context,
+          _isEditing ? 'Product updated' : 'Product created',
         );
       }
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        showErrorSnackBar(context, 'Error: $e');
       }
     }
   }

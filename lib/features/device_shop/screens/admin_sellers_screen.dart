@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
 import '../../../providers/auth_providers.dart';
+import '../../../utils/snackbar.dart';
 import '../models/shop_models.dart';
 import '../providers/admin_shop_providers.dart';
 import '../providers/device_shop_providers.dart';
@@ -708,18 +709,15 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(_isEditing ? 'Seller updated' : 'Seller created'),
-          ),
+        showSuccessSnackBar(
+          context,
+          _isEditing ? 'Seller updated' : 'Seller created',
         );
       }
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        showErrorSnackBar(context, 'Error: $e');
       }
     }
   }

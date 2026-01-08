@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/theme.dart';
 import '../../../providers/auth_providers.dart';
+import '../../../utils/snackbar.dart';
 import '../providers/sky_tracker_providers.dart';
 
 /// Screen to schedule a new sky node flight
@@ -161,17 +162,13 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen> {
 
     final departureDateTime = _buildDepartureDateTime();
     if (departureDateTime == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select departure date and time')),
-      );
+      showWarningSnackBar(context, 'Please select departure date and time');
       return;
     }
 
     final user = ref.read(currentUserProvider);
     if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please sign in to schedule a flight')),
-      );
+      showWarningSnackBar(context, 'Please sign in to schedule a flight');
       return;
     }
 
@@ -199,21 +196,11 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen> {
       if (mounted) {
         HapticFeedback.mediumImpact();
         Navigator.pop(context, true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Flight scheduled! ✈️'),
-            backgroundColor: context.accentColor,
-          ),
-        );
+        showSuccessSnackBar(context, 'Flight scheduled! ✈️');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
+        showErrorSnackBar(context, 'Error: $e');
       }
     } finally {
       if (mounted) {

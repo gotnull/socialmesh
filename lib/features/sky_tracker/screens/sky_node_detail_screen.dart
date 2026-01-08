@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../core/theme.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/auth_providers.dart';
+import '../../../utils/snackbar.dart';
 import '../models/sky_node.dart';
 import '../providers/sky_tracker_providers.dart';
 import '../services/sky_tracker_service.dart';
@@ -793,21 +794,11 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet> {
       if (mounted) {
         HapticFeedback.mediumImpact();
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Reception reported! 📡'),
-            backgroundColor: context.accentColor,
-          ),
-        );
+        showSuccessSnackBar(context, 'Reception reported! 📡');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
+        showErrorSnackBar(context, 'Error: $e');
       }
     } finally {
       if (mounted) {

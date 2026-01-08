@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
+import '../../../utils/snackbar.dart';
 import '../providers/admin_shop_providers.dart';
 import '../services/device_shop_service.dart';
 import 'admin_products_screen.dart';
@@ -274,9 +275,7 @@ class _AdminDashboardContent extends ConsumerWidget {
           title: 'Reviews',
           subtitle: 'Moderate product reviews',
           onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Reviews management coming soon')),
-            );
+            showInfoSnackBar(context, 'Reviews management coming soon');
           },
         ),
         const SizedBox(height: 12),
@@ -285,9 +284,7 @@ class _AdminDashboardContent extends ConsumerWidget {
           title: 'Analytics',
           subtitle: 'View detailed shop analytics',
           onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Analytics coming soon')),
-            );
+            showInfoSnackBar(context, 'Analytics coming soon');
           },
         ),
       ],

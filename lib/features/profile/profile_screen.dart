@@ -1580,11 +1580,10 @@ class _ProfileInfoCard extends StatelessWidget {
       return InkWell(
         onTap: () {
           Clipboard.setData(ClipboardData(text: item.value));
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${item.label} copied to clipboard'),
-              duration: const Duration(seconds: 2),
-            ),
+          showInfoSnackBar(
+            context,
+            '${item.label} copied to clipboard',
+            duration: const Duration(seconds: 2),
           );
         },
         child: content,

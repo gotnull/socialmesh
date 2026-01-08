@@ -5,6 +5,7 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import '../../../core/logging.dart';
 import '../../../providers/cloud_sync_entitlement_providers.dart';
 import '../../../services/subscription/cloud_sync_entitlement_service.dart';
+import '../../../utils/snackbar.dart';
 
 /// Soft paywall for cloud sync feature
 /// Shows subscription options when user doesn't have access
@@ -62,9 +63,7 @@ class _CloudSyncPaywallState extends ConsumerState<CloudSyncPaywall> {
     } catch (e) {
       AppLogging.subscriptions('☁️ Purchase error: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Purchase failed. Please try again.')),
-        );
+        showErrorSnackBar(context, 'Purchase failed. Please try again.');
       }
     } finally {
       if (mounted) {
@@ -85,17 +84,13 @@ class _CloudSyncPaywallState extends ConsumerState<CloudSyncPaywall> {
         widget.onSubscribed?.call();
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No active subscription found')),
-          );
+          showInfoSnackBar(context, 'No active subscription found');
         }
       }
     } catch (e) {
       AppLogging.subscriptions('☁️ Restore error: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Restore failed. Please try again.')),
-        );
+        showErrorSnackBar(context, 'Restore failed. Please try again.');
       }
     } finally {
       if (mounted) {

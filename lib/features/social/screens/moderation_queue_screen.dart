@@ -5,6 +5,7 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../providers/social_providers.dart';
 import '../../../services/content_moderation_service.dart';
+import '../../../utils/snackbar.dart';
 
 /// Admin screen for reviewing AI-flagged content.
 /// Shows items that need human review before final decision.
@@ -289,18 +290,15 @@ class _QueueItemCard extends ConsumerWidget {
       );
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Content ${action}d'),
-            backgroundColor: action == 'approve' ? Colors.green : Colors.red,
-          ),
-        );
+        if (action == 'approve') {
+          showSuccessSnackBar(context, 'Content approved');
+        } else {
+          showErrorSnackBar(context, 'Content rejected');
+        }
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        showErrorSnackBar(context, 'Error: $e');
       }
     }
   }

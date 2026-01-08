@@ -751,7 +751,7 @@ class _AccountSubscriptionsScreenState
     } catch (e) {
       AppLogging.app('Google sign-in error: $e');
       if (mounted) {
-        _showErrorSnackBar('Sign in failed: $e');
+        showErrorSnackBar(context, 'Sign in failed: $e');
       }
     } finally {
       if (mounted) setState(() => _isSigningIn = false);
@@ -768,7 +768,7 @@ class _AccountSubscriptionsScreenState
     } catch (e) {
       AppLogging.app('Apple sign-in error: $e');
       if (mounted) {
-        _showErrorSnackBar('Sign in failed: $e');
+        showErrorSnackBar(context, 'Sign in failed: $e');
       }
     } finally {
       if (mounted) setState(() => _isSigningIn = false);
@@ -785,25 +785,11 @@ class _AccountSubscriptionsScreenState
     } catch (e) {
       AppLogging.app('GitHub sign-in error: $e');
       if (mounted) {
-        _showErrorSnackBar('Sign in failed: $e');
+        showErrorSnackBar(context, 'Sign in failed: $e');
       }
     } finally {
       if (mounted) setState(() => _isSigningIn = false);
     }
-  }
-
-  // Helper to show error snackbar using widget context
-  void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: AppTheme.errorRed),
-    );
-  }
-
-  // Helper to show success snackbar using widget context
-  void _showSuccessSnackBar(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _signOut(BuildContext context) async {
@@ -830,11 +816,11 @@ class _AccountSubscriptionsScreenState
         final authService = ref.read(authServiceProvider);
         await authService.signOut();
         if (mounted) {
-          _showSuccessSnackBar('Signed out');
+          showSuccessSnackBar(context, 'Signed out');
         }
       } catch (e) {
         if (mounted) {
-          _showErrorSnackBar('Error: $e');
+          showErrorSnackBar(context, 'Error: $e');
         }
       }
     }
@@ -917,15 +903,12 @@ class _AccountSubscriptionsScreenState
     // Note: There's no direct API to open subscription management in RevenueCat
     // Users need to manage through their respective app stores
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            Platform.isIOS
-                ? 'Go to Settings > Apple ID > Subscriptions to manage'
-                : 'Go to Play Store > Payments & Subscriptions to manage',
-          ),
-          duration: const Duration(seconds: 4),
-        ),
+      showInfoSnackBar(
+        context,
+        Platform.isIOS
+            ? 'Go to Settings > Apple ID > Subscriptions to manage'
+            : 'Go to Play Store > Payments & Subscriptions to manage',
+        duration: const Duration(seconds: 4),
       );
     }
   }
@@ -1713,18 +1696,11 @@ class _CloudSyncPaywallSheetState
       await service.refreshEntitlement();
       if (service.currentEntitlement.hasFullAccess && mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Subscription restored!')));
+        showSuccessSnackBar(context, 'Subscription restored!');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Restore failed'),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
+        showErrorSnackBar(context, 'Restore failed');
       }
     }
   }
