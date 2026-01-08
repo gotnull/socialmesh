@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 import '../../../core/theme.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../providers/social_providers.dart';
 import '../../../utils/snackbar.dart';
 
@@ -158,6 +160,7 @@ class _ReportsList extends ConsumerWidget {
               onDismiss: () => _dismissReport(context, ref, report['id']),
               onDelete: () => _deleteContent(context, ref, report),
               onViewContent: () => _viewContent(context, ref, report),
+              onBanUser: () => _banUser(context, ref, report),
             );
           },
         );
@@ -253,64 +256,86 @@ class _ReportsList extends ConsumerWidget {
         showErrorSnackBar(context, 'Post not found for this comment');
       }
     } else if (type == 'story') {
-      // Show story details in a dialog since stories may have expired
-      final reportContext = report['context'] as Map<String, dynamic>?;
-      final mediaUrl = reportContext?['mediaUrl'] as String?;
-      final mediaType = reportContext?['mediaType'] as String?;
-      final authorId = reportContext?['authorId'] as String?;
+      _showStoryPreviewSheet(context, report);
+    }
+  }
 
-      await showDialog<void>(
+  void _showStoryPreviewSheet(
+    BuildContext context,
+    Map<String, dynamic> report,
+  ) {
+    final reportContext = report['context'] as Map<String, dynamic>?;
+    final mediaUrl = reportContext?['mediaUrl'] as String?;
+    final mediaType = reportContext?['mediaType'] as String?;
+    final authorId = reportContext?['authorId'] as String?;
+    final reason = report['reason'] as String? ?? 'No reason provided';
+
+    AppBottomSheet.show(
+      context: context,
+      child: _StoryPreviewContent(
+        mediaUrl: mediaUrl,
+        mediaType: mediaType,
+        authorId: authorId,
+        reason: reason,
+      ),
+    );
+  }
+
+  Future<void> _banUser(
+    BuildContext context,
+    WidgetRef ref,
+    Map<String, dynamic> report,
+  ) async {
+    final reportContext = report['context'] as Map<String, dynamic>?;
+    final authorId = reportContext?['authorId'] as String?;
+    final type = report['type'] as String? ?? 'content';
+
+    if (authorId == null) {
+      showErrorSnackBar(context, 'Cannot identify user to ban');
+      return;
+    }
+
+    // Show confirmation with ban reason selection
+    final result = await AppBottomSheet.show<Map<String, dynamic>>(
+      context: context,
+      child: _BanUserSheet(authorId: authorId, contentType: type),
+    );
+
+    if (result == null || !context.mounted) return;
+
+    final reason = result['reason'] as String;
+    final sendEmail = result['sendEmail'] as bool;
+
+    try {
+      // Show loading
+      showDialog(
         context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text('Reported Story'),
-          content: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (mediaUrl != null) ...[
-                  Text(
-                    'Media Type: ${mediaType ?? 'unknown'}',
-                    style: Theme.of(ctx).textTheme.bodySmall,
-                  ),
-                  const SizedBox(height: 8),
-                  if (mediaType == 'image')
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        mediaUrl,
-                        height: 200,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Container(
-                          height: 100,
-                          color: Colors.grey[800],
-                          child: const Center(
-                            child: Icon(Icons.broken_image, size: 48),
-                          ),
-                        ),
-                      ),
-                    )
-                  else
-                    Text('Video URL: $mediaUrl'),
-                ],
-                if (authorId != null) ...[
-                  const SizedBox(height: 12),
-                  Text(
-                    'Author ID: $authorId',
-                    style: Theme.of(ctx).textTheme.bodySmall,
-                  ),
-                ],
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Close'),
-            ),
-          ],
-        ),
+        barrierDismissible: false,
+        builder: (ctx) => const Center(child: CircularProgressIndicator()),
       );
+
+      // Call Firebase Function to ban user
+      final functions = FirebaseFunctions.instance;
+      final callable = functions.httpsCallable('banUser');
+      await callable.call<dynamic>({
+        'userId': authorId,
+        'reason': reason,
+        'sendEmail': sendEmail,
+        'reportId': report['id'],
+      });
+
+      // Delete the content
+      await ref.read(socialServiceProvider).deleteReportedContent(report['id']);
+
+      if (context.mounted) {
+        Navigator.pop(context); // Close loading
+        showSuccessSnackBar(context, 'User banned and $type deleted');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.pop(context); // Close loading
+        showErrorSnackBar(context, 'Failed to ban user: $e');
+      }
     }
   }
 }
@@ -321,12 +346,14 @@ class _ReportCard extends StatelessWidget {
     required this.onDismiss,
     required this.onDelete,
     required this.onViewContent,
+    required this.onBanUser,
   });
 
   final Map<String, dynamic> report;
   final VoidCallback onDismiss;
   final VoidCallback onDelete;
   final VoidCallback onViewContent;
+  final VoidCallback onBanUser;
 
   @override
   Widget build(BuildContext context) {
@@ -507,9 +534,472 @@ class _ReportCard extends StatelessWidget {
                 ),
               ],
             ),
+
+            const SizedBox(height: 8),
+
+            // Ban user action
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: onBanUser,
+                icon: const Icon(Icons.block, size: 18),
+                label: const Text('Ban User & Delete'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.red.shade700,
+                  side: BorderSide(color: Colors.red.shade300),
+                ),
+              ),
+            ),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Bottom sheet for banning a user with reason selection.
+class _BanUserSheet extends StatefulWidget {
+  const _BanUserSheet({required this.authorId, required this.contentType});
+
+  final String authorId;
+  final String contentType;
+
+  @override
+  State<_BanUserSheet> createState() => _BanUserSheetState();
+}
+
+class _BanUserSheetState extends State<_BanUserSheet> {
+  String? _selectedReason;
+  bool _sendEmail = true;
+
+  static const _reasons = [
+    ('pornography', 'Pornography / Sexual content'),
+    ('violence', 'Violence / Threats'),
+    ('harassment', 'Harassment / Bullying'),
+    ('hate_speech', 'Hate speech / Discrimination'),
+    ('spam', 'Spam / Scam'),
+    ('illegal', 'Illegal activity'),
+    ('impersonation', 'Impersonation'),
+    ('other', 'Other violation'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.red.withAlpha(30),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.block, color: Colors.red, size: 24),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Ban User',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      'This will permanently disable their account',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const Divider(),
+
+        // User ID
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          child: Row(
+            children: [
+              Icon(
+                Icons.person_outline,
+                size: 16,
+                color: context.textSecondary,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'User ID: ',
+                style: TextStyle(fontSize: 12, color: context.textSecondary),
+              ),
+              Expanded(
+                child: Text(
+                  widget.authorId,
+                  style: const TextStyle(fontSize: 12, fontFamily: 'monospace'),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Reason selection
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
+          child: Text(
+            'Select ban reason',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
+            ),
+          ),
+        ),
+
+        SizedBox(
+          height: 200,
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            itemCount: _reasons.length,
+            itemBuilder: (context, index) {
+              final (value, label) = _reasons[index];
+              final isSelected = _selectedReason == value;
+              return InkWell(
+                onTap: () => setState(() => _selectedReason = value),
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 6,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        isSelected
+                            ? Icons.radio_button_checked
+                            : Icons.radio_button_unchecked,
+                        size: 20,
+                        color: isSelected
+                            ? Theme.of(context).colorScheme.primary
+                            : context.textSecondary,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          label,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: isSelected
+                                ? FontWeight.w500
+                                : FontWeight.normal,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+
+        // Email option
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: CheckboxListTile(
+            value: _sendEmail,
+            onChanged: (v) => setState(() => _sendEmail = v ?? true),
+            title: const Text(
+              'Send notification email to user',
+              style: TextStyle(fontSize: 14),
+            ),
+            subtitle: Text(
+              'Inform them why their account was banned',
+              style: TextStyle(fontSize: 12, color: context.textSecondary),
+            ),
+            dense: true,
+          ),
+        ),
+
+        const SizedBox(height: 8),
+
+        // Actions
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+          child: Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: _selectedReason == null
+                      ? null
+                      : () => Navigator.pop(context, {
+                          'reason': _selectedReason,
+                          'sendEmail': _sendEmail,
+                        }),
+                  style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                  child: const Text('Ban User'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Content widget for story preview bottom sheet.
+class _StoryPreviewContent extends StatelessWidget {
+  const _StoryPreviewContent({
+    required this.mediaUrl,
+    required this.mediaType,
+    required this.authorId,
+    required this.reason,
+  });
+
+  final String? mediaUrl;
+  final String? mediaType;
+  final String? authorId;
+  final String reason;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withAlpha(30),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.auto_stories_outlined,
+                      size: 14,
+                      color: Colors.orange,
+                    ),
+                    SizedBox(width: 6),
+                    Text(
+                      'STORY',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Spacer(),
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.close),
+              ),
+            ],
+          ),
+        ),
+
+        // Report reason
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.errorContainer.withAlpha(50),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.error.withAlpha(50),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.flag,
+                  size: 16,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    reason,
+                    style: const TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        // Media preview
+        if (mediaUrl != null) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Media (${mediaType ?? 'unknown'})',
+                  style: TextStyle(fontSize: 12, color: context.textSecondary),
+                ),
+                const SizedBox(height: 8),
+                if (mediaType == 'image')
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      mediaUrl!,
+                      height: 250,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        height: 150,
+                        decoration: BoxDecoration(
+                          color: context.card,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.broken_image_outlined,
+                              size: 48,
+                              color: context.textTertiary,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Image unavailable',
+                              style: TextStyle(
+                                color: context.textTertiary,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: context.card,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.videocam_outlined,
+                          color: context.textSecondary,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Video content',
+                            style: TextStyle(color: context.textSecondary),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ] else
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: context.card,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Center(
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.image_not_supported_outlined,
+                      size: 48,
+                      color: context.textTertiary,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Content not available',
+                      style: TextStyle(color: context.textTertiary),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+        // Author info
+        if (authorId != null) ...[
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.person_outline,
+                  size: 16,
+                  color: context.textSecondary,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Author: ',
+                  style: TextStyle(fontSize: 12, color: context.textSecondary),
+                ),
+                Expanded(
+                  child: Text(
+                    authorId!,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontFamily: 'monospace',
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+
+        const SizedBox(height: 24),
+      ],
     );
   }
 }

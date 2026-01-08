@@ -1947,6 +1947,191 @@ export const shopIncrementViewCount = onRequest({ cors: true }, async (req, res)
 });
 
 // =============================================================================
+// USER MODERATION / BAN SYSTEM
+// =============================================================================
+
+import { onCall, HttpsError } from 'firebase-functions/v2/https';
+
+const BAN_EMAIL_TEMPLATE = `
+Subject: Your Socialmesh Account Has Been Suspended
+
+Dear User,
+
+Your Socialmesh account has been permanently suspended due to a violation of our Community Guidelines.
+
+Reason: {{REASON}}
+
+This decision was made after reviewing content that violated our terms of service. The specific violation category is: {{REASON_DETAIL}}
+
+What this means:
+- You will no longer be able to sign in to Socialmesh
+- Your profile and content have been removed
+- This action cannot be undone
+
+If you believe this decision was made in error, you may contact our support team at support@socialmesh.app. Please include your account email address in your correspondence.
+
+We take violations of our Community Guidelines seriously to ensure a safe environment for all users.
+
+Socialmesh Team
+`;
+
+const BAN_REASONS: Record<string, string> = {
+  pornography: 'Posting pornographic or sexually explicit content',
+  violence: 'Sharing violent content or making threats',
+  harassment: 'Harassment or bullying of other users',
+  hate_speech: 'Hate speech or discriminatory content',
+  spam: 'Spam, scams, or fraudulent activity',
+  illegal: 'Promoting or engaging in illegal activity',
+  impersonation: 'Impersonating another person or entity',
+  other: 'Violation of Community Guidelines',
+};
+
+/**
+ * Ban a user - disables their Firebase Auth account, deletes their data,
+ * and optionally sends a notification email.
+ * 
+ * This is a callable function that requires admin privileges.
+ */
+export const banUser = onCall({ cors: true }, async (request) => {
+  // Verify the caller is an admin
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'Must be authenticated');
+  }
+
+  const callerUid = request.auth.uid;
+
+  // Check if caller is admin
+  const callerDoc = await db.collection('users').doc(callerUid).get();
+  const callerData = callerDoc.data();
+  if (!callerData?.isAdmin) {
+    throw new HttpsError('permission-denied', 'Only admins can ban users');
+  }
+
+  const { userId, reason, sendEmail, reportId } = request.data as {
+    userId: string;
+    reason: string;
+    sendEmail: boolean;
+    reportId?: string;
+  };
+
+  if (!userId || !reason) {
+    throw new HttpsError('invalid-argument', 'userId and reason are required');
+  }
+
+  console.log(`Admin ${callerUid} banning user ${userId} for reason: ${reason}`);
+
+  try {
+    // Get user's email before disabling (for notification)
+    let userEmail: string | undefined;
+    try {
+      const userRecord = await admin.auth().getUser(userId);
+      userEmail = userRecord.email;
+    } catch {
+      console.log('Could not fetch user email');
+    }
+
+    // 1. Disable the Firebase Auth account
+    await admin.auth().updateUser(userId, {
+      disabled: true,
+    });
+    console.log(`Disabled auth account for ${userId}`);
+
+    // 2. Revoke all refresh tokens (force sign out everywhere)
+    await admin.auth().revokeRefreshTokens(userId);
+    console.log(`Revoked refresh tokens for ${userId}`);
+
+    // 3. Mark user as banned in Firestore
+    await db.collection('users').doc(userId).set({
+      banned: true,
+      bannedAt: admin.firestore.FieldValue.serverTimestamp(),
+      bannedBy: callerUid,
+      banReason: reason,
+    }, { merge: true });
+
+    // 4. Delete user's public profile
+    await db.collection('profiles').doc(userId).delete().catch(() => {
+      console.log('No profile to delete');
+    });
+
+    // 5. Delete user's stories
+    const storiesSnap = await db.collection('stories')
+      .where('authorId', '==', userId)
+      .get();
+    const storyBatch = db.batch();
+    storiesSnap.docs.forEach(doc => storyBatch.delete(doc.ref));
+    if (!storiesSnap.empty) {
+      await storyBatch.commit();
+      console.log(`Deleted ${storiesSnap.size} stories`);
+    }
+
+    // 6. Delete user's posts
+    const postsSnap = await db.collection('posts')
+      .where('authorId', '==', userId)
+      .get();
+    const postBatch = db.batch();
+    postsSnap.docs.forEach(doc => postBatch.delete(doc.ref));
+    if (!postsSnap.empty) {
+      await postBatch.commit();
+      console.log(`Deleted ${postsSnap.size} posts`);
+    }
+
+    // 7. Delete user's comments
+    const commentsSnap = await db.collection('comments')
+      .where('authorId', '==', userId)
+      .get();
+    const commentBatch = db.batch();
+    commentsSnap.docs.forEach(doc => commentBatch.delete(doc.ref));
+    if (!commentsSnap.empty) {
+      await commentBatch.commit();
+      console.log(`Deleted ${commentsSnap.size} comments`);
+    }
+
+    // 8. Log the ban action
+    await db.collection('adminLogs').add({
+      action: 'ban_user',
+      targetUserId: userId,
+      adminId: callerUid,
+      reason,
+      reportId: reportId || null,
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      userEmail: userEmail || null,
+    });
+
+    // 9. Send notification email if requested and we have the email
+    if (sendEmail && userEmail) {
+      const reasonDetail = BAN_REASONS[reason] || BAN_REASONS.other;
+      const emailBody = BAN_EMAIL_TEMPLATE
+        .replace('{{REASON}}', reasonDetail)
+        .replace('{{REASON_DETAIL}}', reasonDetail);
+
+      // Use Firebase Extensions email trigger or custom email service
+      // For now, we'll store in a collection that can be processed by
+      // an email service or Firebase Extension
+      await db.collection('mail').add({
+        to: userEmail,
+        message: {
+          subject: 'Your Socialmesh Account Has Been Suspended',
+          text: emailBody,
+          html: emailBody.replace(/\n/g, '<br>'),
+        },
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      console.log(`Queued ban notification email to ${userEmail}`);
+    }
+
+    return {
+      success: true,
+      message: `User ${userId} has been banned`,
+      emailSent: sendEmail && !!userEmail,
+    };
+
+  } catch (error) {
+    console.error('Error banning user:', error);
+    throw new HttpsError('internal', `Failed to ban user: ${error}`);
+  }
+});
+
+// =============================================================================
 // CLOUD SYNC ENTITLEMENTS
 // =============================================================================
 
