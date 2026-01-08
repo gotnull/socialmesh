@@ -394,6 +394,9 @@ export const onCommentCreatedNotification = onDocumentCreated(
 
     const { authorId: commenterId, postId, parentId, text } = data;
 
+    // Skip if no text (e.g., moderated comment)
+    if (!text) return;
+
     // Get the post to find the author
     const postDoc = await db.collection('posts').doc(postId).get();
     if (!postDoc.exists) return;
