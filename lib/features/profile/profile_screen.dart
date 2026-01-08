@@ -16,6 +16,7 @@ import '../../providers/profile_providers.dart';
 import '../../providers/social_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../providers/subscription_providers.dart';
+import '../../services/content_moderation/profanity_checker.dart';
 import '../../utils/snackbar.dart';
 import '../../utils/validation.dart';
 import '../navigation/main_shell.dart';
@@ -2395,17 +2396,12 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                                 if (value == null || value.trim().isEmpty) {
                                   return null; // Callsign is optional
                                 }
-                                // Basic profanity check - real check happens in _saveProfile
-                                final text = value.trim().toLowerCase();
-                                if (text.contains('fuck') ||
-                                    text.contains('shit') ||
-                                    text.contains('ass') ||
-                                    text.contains('damn') ||
-                                    text.contains('cunt') ||
-                                    text.contains('dick') ||
-                                    text.contains('cock') ||
-                                    text.contains('bitch')) {
-                                  return 'Callsign cannot contain profanity';
+                                // Use proper profanity checker
+                                final error = ProfanityChecker.instance.check(
+                                  value.trim(),
+                                );
+                                if (error != null) {
+                                  return 'Callsign cannot contain inappropriate content';
                                 }
                                 return null;
                               },

@@ -129,6 +129,7 @@ flutter:
     - .env
     - assets/app_icons/source/
     - assets/rtttl_library.json
+    - assets/banned_words.json
     - assets/lottie/
     - assets/models/
     - assets/globe/

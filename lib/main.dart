@@ -37,6 +37,7 @@ import 'services/app_intents/app_intents_service.dart';
 import 'services/deep_link_service.dart';
 import 'services/profile/profile_cloud_sync_service.dart';
 import 'services/notifications/push_notification_service.dart';
+import 'services/content_moderation/profanity_checker.dart';
 import 'features/scanner/scanner_screen.dart';
 import 'features/messaging/messaging_screen.dart';
 import 'features/channels/channels_screen.dart';
@@ -79,6 +80,9 @@ Future<void> main() async {
   await dotenv.load(fileName: '.env');
 
   FlutterBluePlus.setLogLevel(LogLevel.none);
+
+  // Initialize profanity checker (load banned words from assets)
+  await ProfanityChecker.instance.load();
 
   // Initialize Firebase in background - don't block app startup
   // This ensures the app works fully offline
