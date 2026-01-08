@@ -320,6 +320,8 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     }
 
     // Dismiss keyboard before submitting
+    if (!mounted) return;
+
     FocusScope.of(context).unfocus();
 
     setState(() => _isSubmitting = true);
