@@ -141,15 +141,16 @@ class ContentModerationService {
         final result = await _functions.httpsCallable('checkTextContent').call({
           'text': text,
         });
-        final data = result.data as Map<String, dynamic>;
+        final data = Map<String, dynamic>.from(result.data as Map);
         return TextModerationResult(
           passed: data['passed'] as bool? ?? true,
           action: data['action'] as String? ?? 'approve',
           categories:
               (data['categories'] as List<dynamic>?)
                   ?.map(
-                    (c) =>
-                        ModerationCategory.fromMap(c as Map<String, dynamic>),
+                    (c) => ModerationCategory.fromMap(
+                      Map<String, dynamic>.from(c as Map),
+                    ),
                   )
                   .toList() ??
               [],
