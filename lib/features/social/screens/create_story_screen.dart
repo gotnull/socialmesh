@@ -84,6 +84,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
   bool _isEditingText = false;
   bool _isTextInputMode = false; // Whether keyboard is open for input
   final TextEditingController _textController = TextEditingController();
+  final FocusNode _textFocusNode = FocusNode();
   Offset _textPosition = const Offset(0.5, 0.4); // Normalized position (0-1)
   double _textScale = 1.0; // Scale factor for pinch-to-resize
   double _textRotation = 0.0; // Rotation angle in radians
@@ -106,6 +107,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
   @override
   void dispose() {
     _textController.dispose();
+    _textFocusNode.dispose();
     super.dispose();
   }
 
@@ -425,49 +427,141 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
   Future<void> _createStory() async {
     if (_selectedMedia == null) return;
 
-    // Pre-submission content moderation check for text overlay
-    if (_textOverlay != null && _textOverlay!.text.isNotEmpty) {
-      final moderationService = ref.read(contentModerationServiceProvider);
-      final checkResult = await moderationService.checkText(
-        _textOverlay!.text,
-        useServerCheck: true,
-      );
-
-      if (!checkResult.passed || checkResult.action == 'reject') {
-        // Content blocked - show warning and don't proceed
-        if (mounted) {
-          await ContentModerationWarning.show(
-            context,
-            result: ContentModerationCheckResult(
-              passed: false,
-              action: 'reject',
-              categories: checkResult.categories.map((c) => c.name).toList(),
-              details: checkResult.details,
-            ),
-          );
-        }
-        return;
-      } else if (checkResult.action == 'review' ||
-          checkResult.action == 'flag') {
-        // Content flagged - show warning but allow to proceed
-        if (mounted) {
-          final shouldProceed = await ContentModerationWarning.show(
-            context,
-            result: ContentModerationCheckResult(
-              passed: true,
-              action: checkResult.action,
-              categories: checkResult.categories.map((c) => c.name).toList(),
-              details: checkResult.details,
-            ),
-          );
-          if (!shouldProceed) return;
-        }
-      }
-    }
-
     setState(() => _isUploading = true);
 
     try {
+      // Pre-submission content moderation check for text overlay
+      if (_textOverlay != null && _textOverlay!.text.isNotEmpty) {
+        final moderationService = ref.read(contentModerationServiceProvider);
+        final checkResult = await moderationService.checkText(
+          _textOverlay!.text,
+          useServerCheck: true,
+        );
+
+        if (!checkResult.passed || checkResult.action == 'reject') {
+          // Content blocked - show warning and don't proceed
+          if (mounted) {
+            final action = await ContentModerationWarning.show(
+              context,
+              result: ContentModerationCheckResult(
+                passed: false,
+                action: 'reject',
+                categories: checkResult.categories.map((c) => c.name).toList(),
+                details: checkResult.details,
+              ),
+            );
+            if (action == ContentModerationAction.edit) {
+              // User wants to edit - focus on text field
+              setState(() {
+                _isTextInputMode = true;
+                _isEditingText = true;
+              });
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _textFocusNode.requestFocus();
+              });
+            }
+          }
+          setState(() => _isUploading = false);
+          return;
+        } else if (checkResult.action == 'review' ||
+            checkResult.action == 'flag') {
+          // Content flagged - show warning but allow to proceed
+          if (mounted) {
+            final action = await ContentModerationWarning.show(
+              context,
+              result: ContentModerationCheckResult(
+                passed: true,
+                action: checkResult.action,
+                categories: checkResult.categories.map((c) => c.name).toList(),
+                details: checkResult.details,
+              ),
+            );
+            if (action == ContentModerationAction.edit) {
+              // User wants to edit - focus on text field
+              setState(() {
+                _isTextInputMode = true;
+                _isEditingText = true;
+              });
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _textFocusNode.requestFocus();
+              });
+              setState(() => _isUploading = false);
+              return;
+            } else if (action == ContentModerationAction.cancel) {
+              setState(() => _isUploading = false);
+              return;
+            }
+          }
+        }
+      }
+
+      // Pre-submission image moderation check
+      if (_mediaType == StoryMediaType.image) {
+        final moderationService = ref.read(contentModerationServiceProvider);
+        final imageCheckResult = await moderationService.checkImage(
+          _selectedMedia!,
+          useServerCheck: true,
+        );
+
+        if (!imageCheckResult.passed || imageCheckResult.action == 'reject') {
+          // Image blocked - show warning and don't proceed
+          if (mounted) {
+            final action = await ContentModerationWarning.show(
+              context,
+              result: ContentModerationCheckResult(
+                passed: false,
+                action: 'reject',
+                categories: imageCheckResult.categories
+                    .map((c) => c.name)
+                    .toList(),
+                details: imageCheckResult.details,
+              ),
+            );
+            if (action == ContentModerationAction.edit) {
+              // User wants to edit - for images, just dismiss (they need to pick different image)
+              setState(() {
+                _selectedMedia = null;
+                _selectedAsset = null;
+              });
+            }
+          }
+          setState(() => _isUploading = false);
+          return;
+        } else if (imageCheckResult.action == 'review' ||
+            imageCheckResult.action == 'flag') {
+          // Image flagged - show warning but allow to proceed
+          if (mounted) {
+            final action = await ContentModerationWarning.show(
+              context,
+              result: ContentModerationCheckResult(
+                passed: true,
+                action: imageCheckResult.action,
+                categories: imageCheckResult.categories
+                    .map((c) => c.name)
+                    .toList(),
+                details: imageCheckResult.details,
+              ),
+            );
+            if (action == ContentModerationAction.cancel) {
+              setState(() => _isUploading = false);
+              return;
+            } else if (action == ContentModerationAction.edit) {
+              // User wants to edit - let them pick different image
+              setState(() {
+                _selectedMedia = null;
+                _selectedAsset = null;
+                _isUploading = false;
+              });
+              return;
+            }
+            // If action is proceed, continue with upload
+          }
+        }
+      }
+          }
+        }
+      }
+
       final story = await ref
           .read(createStoryProvider.notifier)
           .createStory(
@@ -983,6 +1077,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 32),
                     child: TextField(
                       controller: _textController,
+                      focusNode: _textFocusNode,
                       autofocus: true,
                       textAlign: TextAlign.center,
                       maxLines: null,

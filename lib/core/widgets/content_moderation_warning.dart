@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import '../theme.dart';
 import 'app_bottom_sheet.dart';
 
+/// Action taken by user in content moderation dialog
+enum ContentModerationAction { edit, cancel, proceed }
+
 /// Result from content moderation check
 class ContentModerationCheckResult {
   const ContentModerationCheckResult({
@@ -38,12 +41,12 @@ class ContentModerationWarning extends StatelessWidget {
   final VoidCallback? onProceedAnyway;
 
   /// Show the moderation warning as a bottom sheet.
-  /// Returns true if user chose to proceed, false otherwise.
-  static Future<bool> show(
+  /// Returns ContentModerationAction indicating what user chose.
+  static Future<ContentModerationAction> show(
     BuildContext context, {
     required ContentModerationCheckResult result,
   }) async {
-    final shouldProceed = await showModalBottomSheet<bool>(
+    final action = await showModalBottomSheet<ContentModerationAction>(
       context: context,
       isDismissible: false,
       enableDrag: false,
@@ -56,7 +59,7 @@ class ContentModerationWarning extends StatelessWidget {
         ),
       ),
     );
-    return shouldProceed ?? false;
+    return action ?? ContentModerationAction.cancel;
   }
 
   @override
@@ -231,7 +234,7 @@ class _ContentModerationWarningContent extends StatelessWidget {
                     if (onEdit != null) {
                       onEdit!();
                     } else {
-                      Navigator.pop(context, false);
+                      Navigator.pop(context, ContentModerationAction.edit);
                     }
                   },
                   icon: const Icon(Icons.edit_outlined, size: 18),
@@ -251,7 +254,10 @@ class _ContentModerationWarningContent extends StatelessWidget {
                         if (onCancel != null) {
                           onCancel!();
                         } else {
-                          Navigator.pop(context, false);
+                          Navigator.pop(
+                            context,
+                            ContentModerationAction.cancel,
+                          );
                         }
                       },
                       style: OutlinedButton.styleFrom(
@@ -268,7 +274,10 @@ class _ContentModerationWarningContent extends StatelessWidget {
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () {
-                          Navigator.pop(context, true);
+                          Navigator.pop(
+                            context,
+                            ContentModerationAction.proceed,
+                          );
                           onProceedAnyway?.call();
                         },
                         style: OutlinedButton.styleFrom(
