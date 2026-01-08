@@ -346,11 +346,13 @@ service cloud.firestore {
           resource.data.targetId == request.auth.uid));
       
       // Create: authenticated, must be requesting as yourself, cannot self-request
-      allow create: if isAuthenticated() &&
-        request.resource.data.requesterId == request.auth.uid &&
-        request.resource.data.requesterId != request.resource.data.targetId &&
-        request.resource.data.status == 'pending' &&
-        requestId == request.resource.data.requesterId + '_' + request.resource.data.targetId;
+      // Admins can create on behalf of others (for seeding/testing)
+      allow create: if isAdmin() ||
+        (isAuthenticated() &&
+         request.resource.data.requesterId == request.auth.uid &&
+         request.resource.data.requesterId != request.resource.data.targetId &&
+         request.resource.data.status == 'pending' &&
+         requestId == request.resource.data.requesterId + '_' + request.resource.data.targetId);
       
       // Update: only target can update status (approve/decline), or admin
       allow update: if isAdmin() ||

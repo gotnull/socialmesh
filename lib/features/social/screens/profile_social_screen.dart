@@ -356,40 +356,47 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
           child: FlexibleSpaceBar(
             background: Stack(
               clipBehavior: Clip.none,
+              fit: StackFit.expand,
               children: [
                 // Banner image with shimmer loading
                 Positioned.fill(
                   bottom: avatarOverlap,
-                  child: BouncyTap(
-                    onTap: isOwnProfile
-                        ? () => _showBannerOptions(profile)
-                        : null,
-                    scaleFactor: 0.98,
-                    enabled: isOwnProfile,
-                    child: profile.bannerUrl != null
-                        ? Image.network(
-                            profile.bannerUrl!,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                            frameBuilder:
-                                (
-                                  context,
-                                  child,
-                                  frame,
-                                  wasSynchronouslyLoaded,
-                                ) {
-                                  if (wasSynchronouslyLoaded) return child;
-                                  return AnimatedSwitcher(
-                                    duration: const Duration(milliseconds: 300),
-                                    child: frame != null
-                                        ? child
-                                        : const DefaultBanner(),
-                                  );
-                                },
-                            errorBuilder: (context, error, stackTrace) =>
-                                const DefaultBanner(),
-                          )
-                        : const DefaultBanner(),
+                  child: ClipRect(
+                    child: BouncyTap(
+                      onTap: isOwnProfile
+                          ? () => _showBannerOptions(profile)
+                          : null,
+                      scaleFactor: 0.98,
+                      enabled: isOwnProfile,
+                      child: profile.bannerUrl != null
+                          ? Image.network(
+                              profile.bannerUrl!,
+                              width: double.infinity,
+                              height: double.infinity,
+                              fit: BoxFit.cover,
+                              alignment: Alignment.center,
+                              frameBuilder:
+                                  (
+                                    context,
+                                    child,
+                                    frame,
+                                    wasSynchronouslyLoaded,
+                                  ) {
+                                    if (wasSynchronouslyLoaded) return child;
+                                    return AnimatedSwitcher(
+                                      duration: const Duration(
+                                        milliseconds: 300,
+                                      ),
+                                      child: frame != null
+                                          ? child
+                                          : const DefaultBanner(),
+                                    );
+                                  },
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const DefaultBanner(),
+                            )
+                          : const DefaultBanner(),
+                    ),
                   ),
                 ),
                 // Gradient overlay for readability
