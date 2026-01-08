@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
@@ -1155,54 +1156,22 @@ class SocialService {
 
   /// Approve content from moderation queue (admin only).
   /// This keeps the content visible and removes it from the queue.
+  /// Uses Cloud Function for proper permissions.
   Future<void> approveModerationItem(String itemId) async {
-    await _firestore.collection('moderation_queue').doc(itemId).update({
-      'status': 'approved',
-      'reviewedAt': FieldValue.serverTimestamp(),
-      'reviewedBy': _currentUserId,
-    });
+    final functions = FirebaseFunctions.instance;
+    final callable = functions.httpsCallable('reviewModerationItem');
+    await callable.call<dynamic>({'itemId': itemId, 'action': 'approve'});
   }
 
   /// Reject content from moderation queue and delete it (admin only).
+  /// Uses Cloud Function for proper permissions and strike recording.
   Future<void> rejectModerationItem(String itemId) async {
-    final itemDoc = await _firestore
-        .collection('moderation_queue')
-        .doc(itemId)
-        .get();
-    if (!itemDoc.exists) return;
-
-    final data = itemDoc.data()!;
-    final contentType = data['contentType'] as String;
-    final contentId = data['contentId'] as String;
-    final userId = data['userId'] as String;
-
-    // Delete the content based on type
-    if (contentType == 'comment') {
-      await _firestore.collection('comments').doc(contentId).delete();
-    } else if (contentType == 'post') {
-      await _firestore.collection('posts').doc(contentId).delete();
-    } else if (contentType == 'story') {
-      await _firestore.collection('stories').doc(contentId).delete();
-    }
-
-    // Mark as rejected in queue
-    await _firestore.collection('moderation_queue').doc(itemId).update({
-      'status': 'rejected',
-      'reviewedAt': FieldValue.serverTimestamp(),
-      'reviewedBy': _currentUserId,
-    });
-
-    // Record a strike against the user
-    await _firestore.collection('user_strikes').add({
-      'userId': userId,
-      'type': 'warning',
-      'reason': 'Content violated community guidelines',
-      'contentId': contentId,
-      'contentType': contentType,
-      'createdAt': FieldValue.serverTimestamp(),
-      'expiresAt': Timestamp.fromDate(
-        DateTime.now().add(const Duration(days: 90)),
-      ),
+    final functions = FirebaseFunctions.instance;
+    final callable = functions.httpsCallable('reviewModerationItem');
+    await callable.call<dynamic>({
+      'itemId': itemId,
+      'action': 'reject',
+      'notes': 'Content violated community guidelines',
     });
   }
 
