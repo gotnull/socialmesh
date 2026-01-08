@@ -596,17 +596,17 @@ export const moderateUploadedMedia = onObjectFinalized(
       }
     }
 
-    // Get download URL for analysis
-    const bucket = admin.storage().bucket(event.data.bucket);
-    const file = bucket.file(filePath);
-    const [signedUrl] = await file.getSignedUrl({
-      action: 'read',
-      expires: Date.now() + 15 * 60 * 1000, // 15 minutes
-    });
+    // Use GCS URI for Vision API (doesn't require signBlob permission)
+    // The Vision API service account has access to read from GCS
+    const gcsUri = `gs://${event.data.bucket}/${filePath}`;
 
     // Analyze image
-    console.log(`Analyzing ${moderationContentType}: ${contentId}`);
-    const result = await analyzeImageWithVision(signedUrl);
+    console.log(`Analyzing ${moderationContentType}: ${contentId} from ${gcsUri}`);
+    const result = await analyzeImageWithVision(gcsUri);
+
+    // Get a public URL for storing in queue (for admin preview)
+    const bucket = admin.storage().bucket(event.data.bucket);
+    const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${event.data.bucket}/o/${encodeURIComponent(filePath)}?alt=media`;
 
     // Store moderation result
     await db.collection('content_moderation').doc(`${moderationContentType}_${contentId}`).set({
@@ -645,7 +645,7 @@ export const moderateUploadedMedia = onObjectFinalized(
         contentId,
         userId,
         result,
-        signedUrl,
+        publicUrl,
       );
 
     } else if (result.action === 'flag') {
