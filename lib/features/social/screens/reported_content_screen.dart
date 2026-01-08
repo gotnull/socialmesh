@@ -156,6 +156,17 @@ class _ModerationQueueListState extends ConsumerState<_ModerationQueueList> {
           itemCount: items.length,
           itemBuilder: (context, index) {
             final item = items[index];
+            final contentType = item['contentType'] as String? ?? '';
+
+            // Special handling for user moderation entries (suspensions/strikes)
+            if (contentType == 'user_moderation') {
+              return _UserModerationCard(
+                item: item,
+                onUnsuspend: () => _unsuspendUser(context, ref, item),
+                onDismiss: () => _approveItem(context, ref, item['id']),
+              );
+            }
+
             return _ModerationCard(
               item: item,
               onApprove: () => _approveItem(context, ref, item['id']),
@@ -165,6 +176,64 @@ class _ModerationQueueListState extends ConsumerState<_ModerationQueueList> {
         );
       },
     );
+  }
+
+  Future<void> _unsuspendUser(
+    BuildContext context,
+    WidgetRef ref,
+    Map<String, dynamic> item,
+  ) async {
+    final metadata = item['metadata'] as Map<String, dynamic>?;
+    final userId =
+        metadata?['userId'] as String? ?? item['contentId'] as String?;
+    final displayName = metadata?['displayName'] as String? ?? 'User';
+
+    if (userId == null) {
+      if (context.mounted) {
+        showErrorSnackBar(context, 'Cannot identify user');
+      }
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Unsuspend User'),
+        content: Text(
+          'Are you sure you want to lift the suspension for $displayName?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.green),
+            child: const Text('Unsuspend'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      try {
+        final functions = FirebaseFunctions.instance;
+        final callable = functions.httpsCallable('unsuspendUser');
+        await callable.call<dynamic>({
+          'userId': userId,
+          'queueItemId': item['id'],
+          'reason': 'Admin lifted suspension',
+        });
+        if (context.mounted) {
+          showSuccessSnackBar(context, 'User unsuspended successfully');
+        }
+      } catch (e) {
+        if (context.mounted) {
+          showErrorSnackBar(context, 'Error: $e');
+        }
+      }
+    }
   }
 
   Future<void> _approveItem(
@@ -536,6 +605,210 @@ class _ModerationCard extends StatelessWidget {
                     ),
                   ),
                 ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Card for displaying user moderation entries (suspensions/strikes).
+class _UserModerationCard extends StatelessWidget {
+  const _UserModerationCard({
+    required this.item,
+    required this.onUnsuspend,
+    required this.onDismiss,
+  });
+
+  final Map<String, dynamic> item;
+  final VoidCallback onUnsuspend;
+  final VoidCallback onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final createdAt = item['createdAt'];
+    final DateTime? timestamp = createdAt is Timestamp
+        ? createdAt.toDate()
+        : (createdAt is DateTime ? createdAt : null);
+
+    // Extract metadata
+    final metadata = item['metadata'] as Map<String, dynamic>? ?? {};
+    final moderationResult =
+        item['moderationResult'] as Map<String, dynamic>? ?? {};
+    final displayName = metadata['displayName'] as String? ?? 'Unknown User';
+    final actionType =
+        metadata['actionType'] as String? ??
+        moderationResult['actionType'] as String? ??
+        'unknown';
+    final isSuspension =
+        metadata['isSuspension'] == true || actionType == 'suspension';
+    final reason =
+        moderationResult['reason'] as String? ?? 'No reason provided';
+    final userId =
+        metadata['userId'] as String? ?? item['contentId'] as String?;
+
+    // Styling based on action type
+    final (Color bgColor, Color fgColor, IconData icon) = isSuspension
+        ? (Colors.red.withAlpha(30), Colors.red, Icons.block)
+        : (Colors.orange.withAlpha(30), Colors.orange, Icons.warning_amber);
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header row
+            Row(
+              children: [
+                // Action type badge
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: bgColor,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(icon, size: 14, color: fgColor),
+                      const SizedBox(width: 6),
+                      Text(
+                        isSuspension ? 'SUSPENDED' : 'STRIKE',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: fgColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Spacer(),
+                if (timestamp != null)
+                  Text(
+                    timeago.format(timestamp),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.hintColor,
+                    ),
+                  ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            // User info
+            Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                  radius: 24,
+                  child: Icon(Icons.person, size: 28, color: theme.hintColor),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        displayName,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (userId != null)
+                        Text(
+                          'ID: ${userId.substring(0, 8)}...',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.hintColor,
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 12),
+
+            // Reason
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.errorContainer.withAlpha(50),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: theme.colorScheme.error.withAlpha(50),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.gpp_bad_outlined,
+                        size: 16,
+                        color: theme.colorScheme.error,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Reason',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.error,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    reason,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurface.withAlpha(200),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Actions
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: onDismiss,
+                    icon: const Icon(Icons.done, size: 18),
+                    label: const Text('Dismiss'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: theme.hintColor,
+                    ),
+                  ),
+                ),
+                if (isSuspension) ...[
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: onUnsuspend,
+                      icon: const Icon(Icons.lock_open, size: 18),
+                      label: const Text('Unsuspend'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Colors.green,
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ],

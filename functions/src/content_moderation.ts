@@ -137,7 +137,7 @@ interface UserStrike {
 
 interface ModerationQueueItem {
   id: string;
-  contentType: 'story' | 'post' | 'comment' | 'profile';
+  contentType: 'story' | 'post' | 'comment' | 'profile' | 'user_moderation';
   contentId: string;
   userId: string;
   contentUrl?: string;
@@ -521,25 +521,30 @@ async function notifyAdminsOfModeration(
       return;
     }
 
-    // Create a reported content entry for admin review
-    const reportDoc = await db.collection('reported_content').add({
-      type: 'auto_moderation',
-      contentType: 'user',
+    // Create entry in moderation_queue for admin review
+    // This will show up in the "Auto" tab of the Reported Content screen
+    const queueDoc = await db.collection('moderation_queue').add({
+      contentType: 'user_moderation',
       contentId: userId,
-      reporterId: 'system',
-      reason: actionType === 'suspension' ? 'User suspended' : 'Strike issued',
-      details: reason,
+      authorId: userId,
       status: 'pending',
       createdAt: admin.firestore.Timestamp.now(),
+      moderationResult: {
+        decision: actionType === 'suspension' ? 'suspended' : 'strike_issued',
+        reason,
+        strikeId,
+        actionType,
+      },
       metadata: {
         strikeId,
         actionType,
         userId,
         displayName,
+        isSuspension: actionType === 'suspension',
       },
     });
 
-    console.log(`Created moderation report ${reportDoc.id} for admin review`);
+    console.log(`Created moderation queue entry ${queueDoc.id} for admin review`);
 
     // Send push notification to each admin
     for (const adminDoc of adminsSnap.docs) {
@@ -565,7 +570,7 @@ async function notifyAdminsOfModeration(
           userId,
           actionType,
           strikeId,
-          reportId: reportDoc.id,
+          queueItemId: queueDoc.id,
         },
         tokens,
         apns: {
@@ -641,6 +646,7 @@ async function removeViolatingContent(
     post: 'posts',
     comment: 'comments',
     profile: 'profiles',
+    user_moderation: '', // No content to delete for user moderation entries
   };
 
   const collection = collectionMap[contentType];
@@ -1172,16 +1178,20 @@ export const reviewModerationItem = onCall(
     });
 
     if (action === 'reject') {
-      // Remove the content
-      await removeViolatingContent(item.contentType, item.contentId, false);
+      // Skip content removal and strike for user_moderation items
+      // These are informational entries about suspensions/strikes, not content
+      if (item.contentType !== 'user_moderation') {
+        // Remove the content
+        await removeViolatingContent(item.contentType, item.contentId, false);
 
-      // Record strike against user
-      await recordUserStrike(
-        item.userId,
-        `Manual review rejection: ${notes || 'Policy violation'}`,
-        item.contentId,
-        item.contentType,
-      );
+        // Record strike against user
+        await recordUserStrike(
+          item.userId,
+          `Manual review rejection: ${notes || 'Policy violation'}`,
+          item.contentId,
+          item.contentType,
+        );
+      }
     }
 
     // Log the review
@@ -1300,6 +1310,88 @@ export const moderateProfileUpdate = onDocumentUpdated(
         'profile',
       );
     }
+  },
+);
+
+// =============================================================================
+// CALLABLE: Admin - Unsuspend user
+// =============================================================================
+
+export const unsuspendUser = onCall(
+  { cors: true },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError('unauthenticated', 'Must be signed in');
+    }
+
+    // Check admin status
+    const adminDoc = await db.collection('admins').doc(request.auth.uid).get();
+    if (!adminDoc.exists) {
+      throw new HttpsError('permission-denied', 'Admin access required');
+    }
+
+    const { userId, reason, queueItemId } = request.data as {
+      userId: string;
+      reason?: string;
+      queueItemId?: string;
+    };
+
+    if (!userId) {
+      throw new HttpsError('invalid-argument', 'User ID required');
+    }
+
+    // Lift the suspension and reset moderation status
+    await db.collection('users').doc(userId).update({
+      'moderationStatus.isSuspended': false,
+      'moderationStatus.suspendedUntil': null,
+      'moderationStatus.activeStrikes': 0,
+      'moderationStatus.activeWarnings': 0,
+    });
+
+    // Mark the queue item as resolved if provided
+    if (queueItemId) {
+      await db.collection('moderation_queue').doc(queueItemId).update({
+        status: 'approved',
+        reviewedBy: request.auth.uid,
+        reviewedAt: admin.firestore.FieldValue.serverTimestamp(),
+        reviewNotes: reason || 'Suspension lifted by admin',
+      });
+    }
+
+    // Also resolve ALL pending user_moderation queue items for this user
+    const pendingQueueSnap = await db.collection('moderation_queue')
+      .where('contentType', '==', 'user_moderation')
+      .where('contentId', '==', userId)
+      .where('status', '==', 'pending')
+      .get();
+
+    for (const queueDoc of pendingQueueSnap.docs) {
+      await queueDoc.ref.update({
+        status: 'approved',
+        reviewedBy: request.auth.uid,
+        reviewedAt: admin.firestore.FieldValue.serverTimestamp(),
+        reviewNotes: reason || 'Cleared when admin lifted suspension',
+      });
+    }
+
+    // Expire ALL active strikes for this user (not just suspension type)
+    const allStrikesSnap = await db.collection('user_strikes')
+      .where('userId', '==', userId)
+      .where('expiresAt', '>', admin.firestore.Timestamp.now())
+      .get();
+
+    for (const strikeDoc of allStrikesSnap.docs) {
+      await strikeDoc.ref.update({
+        expiresAt: admin.firestore.Timestamp.now(),
+        liftedBy: request.auth.uid,
+        liftedAt: admin.firestore.FieldValue.serverTimestamp(),
+        liftReason: reason || 'Admin lifted suspension and cleared strikes',
+      });
+    }
+
+    console.log(`Admin ${request.auth.uid} unsuspended user ${userId}, cleared ${allStrikesSnap.size} strikes and ${pendingQueueSnap.size} pending queue items`);
+
+    return { success: true, clearedStrikes: allStrikesSnap.size, clearedQueueItems: pendingQueueSnap.size };
   },
 );
 

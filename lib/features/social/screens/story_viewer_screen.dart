@@ -376,16 +376,7 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
               fit: StackFit.expand,
               children: [
                 // Story content
-                _StoryContent(
-                  story: story,
-                  onLoadError: () {
-                    // Image failed to load (likely removed by moderation)
-                    // Skip to next story
-                    if (groupIndex == _currentGroupIndex) {
-                      _goToNextStory();
-                    }
-                  },
-                ),
+                _StoryContent(story: story),
 
                 // Gradient overlay for readability
                 _GradientOverlay(),
@@ -474,10 +465,9 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
 }
 
 class _StoryContent extends StatefulWidget {
-  const _StoryContent({required this.story, this.onLoadError});
+  const _StoryContent({required this.story});
 
   final Story story;
-  final VoidCallback? onLoadError;
 
   @override
   State<_StoryContent> createState() => _StoryContentState();
@@ -487,14 +477,57 @@ class _StoryContentState extends State<_StoryContent> {
   bool _hasError = false;
 
   @override
+  void didUpdateWidget(covariant _StoryContent oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Reset error state when story changes
+    if (oldWidget.story.id != widget.story.id) {
+      _hasError = false;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // If image failed to load (likely removed by moderation), skip this story
+    // Show placeholder for broken/removed content
     if (_hasError) {
-      // Notify parent to skip to next story
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        widget.onLoadError?.call();
-      });
-      return const SizedBox.shrink();
+      return Container(
+        color: Colors.black,
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white.withAlpha(20),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.image_not_supported_outlined,
+                  color: Colors.white54,
+                  size: 48,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Content unavailable',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'This story may have been removed',
+                style: TextStyle(
+                  color: Colors.white.withAlpha(100),
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
     return ClipRRect(
@@ -511,17 +544,18 @@ class _StoryContentState extends State<_StoryContent> {
           );
         },
         errorBuilder: (_, error, stackTrace) {
-          // Mark as error and trigger skip
-          if (!_hasError) {
+          // Mark as error - show placeholder instead of skipping
+          if (!_hasError && mounted) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) {
                 setState(() => _hasError = true);
-                widget.onLoadError?.call();
               }
             });
           }
-          // Show nothing while transitioning
-          return Container(color: Colors.black);
+          // Show loading while transitioning to error state
+          return const Center(
+            child: CircularProgressIndicator(color: Colors.white),
+          );
         },
       ),
     );

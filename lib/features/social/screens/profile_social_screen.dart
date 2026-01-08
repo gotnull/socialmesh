@@ -493,153 +493,161 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                           }
                         },
                         scaleFactor: 0.95,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: context.background,
-                              width: 4,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.2),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
+                        // Explicit size: avatar + ring (if stories) + border (4px each side)
+                        child: SizedBox(
+                          width: (hasStories ? totalRingSize : avatarSize) + 8,
+                          height: (hasStories ? totalRingSize : avatarSize) + 8,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: context.background,
+                                width: 4,
                               ),
-                            ],
-                          ),
-                          child: Stack(
-                            children: [
-                              // Gradient ring for stories (animated shatter effect or static)
-                              if (hasStories)
-                                showShatterAnimation
-                                    ? AnimatedBuilder(
-                                        animation: _shatterController!,
-                                        builder: (context, _) {
-                                          return CustomPaint(
-                                            size: Size(
-                                              totalRingSize,
-                                              totalRingSize,
-                                            ),
-                                            painter: _ShatteredRingPainter(
-                                              progress:
-                                                  _shatterController!.value,
-                                              gradientColors: hasUnviewed
-                                                  ? gradientColors
-                                                  : [
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.2),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                // Gradient ring for stories (animated shatter effect or static)
+                                if (hasStories)
+                                  showShatterAnimation
+                                      ? AnimatedBuilder(
+                                          animation: _shatterController!,
+                                          builder: (context, _) {
+                                            return CustomPaint(
+                                              size: Size(
+                                                totalRingSize,
+                                                totalRingSize,
+                                              ),
+                                              painter: _ShatteredRingPainter(
+                                                progress:
+                                                    _shatterController!.value,
+                                                gradientColors: hasUnviewed
+                                                    ? gradientColors
+                                                    : [
+                                                        Colors.grey.shade500,
+                                                        Colors.grey.shade400,
+                                                        Colors.grey.shade500,
+                                                      ],
+                                                ringWidth: ringWidth,
+                                                backgroundColor:
+                                                    context.background,
+                                              ),
+                                            );
+                                          },
+                                        )
+                                      : Container(
+                                          width: totalRingSize,
+                                          height: totalRingSize,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            gradient: hasUnviewed
+                                                ? SweepGradient(
+                                                    colors: [
+                                                      gradientColors[0],
+                                                      gradientColors[1],
+                                                      gradientColors[2],
+                                                      gradientColors[1],
+                                                      gradientColors[0],
+                                                    ],
+                                                    stops: const [
+                                                      0.0,
+                                                      0.25,
+                                                      0.5,
+                                                      0.75,
+                                                      1.0,
+                                                    ],
+                                                    // Offset seam to bottom where it's less visible
+                                                    startAngle: math.pi / 2,
+                                                  )
+                                                : SweepGradient(
+                                                    colors: [
+                                                      Colors.grey.shade500,
+                                                      Colors.grey.shade400,
                                                       Colors.grey.shade500,
                                                       Colors.grey.shade400,
                                                       Colors.grey.shade500,
                                                     ],
-                                              ringWidth: ringWidth,
-                                              backgroundColor:
-                                                  context.background,
-                                            ),
-                                          );
-                                        },
-                                      )
-                                    : Container(
-                                        width: totalRingSize,
-                                        height: totalRingSize,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          gradient: hasUnviewed
-                                              ? SweepGradient(
-                                                  colors: [
-                                                    gradientColors[0],
-                                                    gradientColors[1],
-                                                    gradientColors[2],
-                                                    gradientColors[1],
-                                                    gradientColors[0],
-                                                  ],
-                                                  stops: const [
-                                                    0.0,
-                                                    0.25,
-                                                    0.5,
-                                                    0.75,
-                                                    1.0,
-                                                  ],
-                                                  // Offset seam to bottom where it's less visible
-                                                  startAngle: math.pi / 2,
-                                                )
-                                              : SweepGradient(
-                                                  colors: [
-                                                    Colors.grey.shade500,
-                                                    Colors.grey.shade400,
-                                                    Colors.grey.shade500,
-                                                    Colors.grey.shade400,
-                                                    Colors.grey.shade500,
-                                                  ],
-                                                  stops: const [
-                                                    0.0,
-                                                    0.25,
-                                                    0.5,
-                                                    0.75,
-                                                    1.0,
-                                                  ],
-                                                  // Offset seam to bottom where it's less visible
-                                                  startAngle: math.pi / 2,
-                                                ),
-                                        ),
-                                        child: Center(
-                                          child: Container(
-                                            width:
-                                                totalRingSize - ringWidth * 2,
-                                            height:
-                                                totalRingSize - ringWidth * 2,
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              color: context.background,
+                                                    stops: const [
+                                                      0.0,
+                                                      0.25,
+                                                      0.5,
+                                                      0.75,
+                                                      1.0,
+                                                    ],
+                                                    // Offset seam to bottom where it's less visible
+                                                    startAngle: math.pi / 2,
+                                                  ),
+                                          ),
+                                          child: Center(
+                                            child: Container(
+                                              width:
+                                                  totalRingSize - ringWidth * 2,
+                                              height:
+                                                  totalRingSize - ringWidth * 2,
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                color: context.background,
+                                              ),
                                             ),
                                           ),
                                         ),
-                                      ),
-                              // Avatar with shimmer loading and scale-in animation
-                              Positioned(
-                                left: hasStories
-                                    ? (ringWidth + ringPadding)
-                                    : 0,
-                                top: hasStories ? (ringWidth + ringPadding) : 0,
-                                child: ShimmerAvatar(
-                                  imageUrl: profile.avatarUrl,
-                                  radius: avatarSize / 2,
-                                  fallbackText: profile.displayName[0]
-                                      .toUpperCase(),
-                                  backgroundColor: context.accentColor
-                                      .withValues(alpha: 0.2),
-                                  animateIn: true,
-                                  animationDelay: const Duration(
-                                    milliseconds: 100,
-                                  ),
-                                ),
-                              ),
-                              // Add story button for own profile (always visible)
-                              if (isOwnProfile)
+                                // Avatar with shimmer loading and scale-in animation
                                 Positioned(
-                                  right: 0,
-                                  bottom: 0,
-                                  child: BouncyTap(
-                                    onTap: _navigateToCreateStory,
-                                    scaleFactor: 0.85,
-                                    child: Container(
-                                      padding: const EdgeInsets.all(4),
-                                      decoration: BoxDecoration(
-                                        color: context.accentColor,
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: context.background,
-                                          width: 2,
-                                        ),
-                                      ),
-                                      child: const Icon(
-                                        Icons.add,
-                                        color: Colors.white,
-                                        size: 12,
-                                      ),
+                                  left: hasStories
+                                      ? (ringWidth + ringPadding)
+                                      : 0,
+                                  top: hasStories
+                                      ? (ringWidth + ringPadding)
+                                      : 0,
+                                  child: ShimmerAvatar(
+                                    imageUrl: profile.avatarUrl,
+                                    radius: avatarSize / 2,
+                                    fallbackText: profile.displayName[0]
+                                        .toUpperCase(),
+                                    backgroundColor: context.accentColor
+                                        .withValues(alpha: 0.2),
+                                    animateIn: true,
+                                    animationDelay: const Duration(
+                                      milliseconds: 100,
                                     ),
                                   ),
                                 ),
-                            ],
+                                // Add story button for own profile (always visible)
+                                if (isOwnProfile)
+                                  Positioned(
+                                    right: 0,
+                                    bottom: 0,
+                                    child: BouncyTap(
+                                      onTap: _navigateToCreateStory,
+                                      scaleFactor: 0.85,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: BoxDecoration(
+                                          color: context.accentColor,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: context.background,
+                                            width: 2,
+                                          ),
+                                        ),
+                                        child: const Icon(
+                                          Icons.add,
+                                          color: Colors.white,
+                                          size: 12,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
                           ),
                         ),
                       );

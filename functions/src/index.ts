@@ -2238,6 +2238,7 @@ export {
   // Admin functions
   reviewModerationItem,
   getModerationQueue,
+  unsuspendUser,
   // Scheduled cleanup
   cleanupExpiredStrikes,
   liftExpiredSuspensions,
