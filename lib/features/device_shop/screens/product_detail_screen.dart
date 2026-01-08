@@ -4,8 +4,10 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
+import '../../../core/widgets/content_moderation_warning.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/profile_providers.dart';
+import '../../../providers/social_providers.dart';
 import '../../../utils/share_utils.dart';
 import '../../../utils/snackbar.dart';
 import '../models/shop_models.dart';
@@ -1507,6 +1509,51 @@ class _WriteReviewSheetState extends ConsumerState<_WriteReviewSheet> {
     }
 
     final reviewText = _bodyController.text.trim();
+
+    // Pre-submission content moderation check
+    final moderationService = ref.read(contentModerationServiceProvider);
+    final checkResult = await moderationService.checkText(
+      reviewText,
+      useServerCheck: true,
+    );
+
+    if (!checkResult.passed || checkResult.action == 'reject') {
+      // Content blocked - show warning and don't proceed
+      if (mounted) {
+        await ContentModerationWarning.show(
+          context,
+          result: ContentModerationCheckResult(
+            passed: false,
+            action: 'reject',
+            categories: checkResult.categories.map((c) => c.name).toList(),
+            details: checkResult.details,
+          ),
+        );
+      }
+      return;
+    } else if (checkResult.action == 'review' || checkResult.action == 'flag') {
+      // Content flagged - show warning but allow to proceed
+      if (mounted) {
+        final action = await ContentModerationWarning.show(
+          context,
+          result: ContentModerationCheckResult(
+            passed: true,
+            action: checkResult.action,
+            categories: checkResult.categories.map((c) => c.name).toList(),
+            details: checkResult.details,
+          ),
+        );
+        if (action == ContentModerationAction.cancel) return;
+        if (action == ContentModerationAction.edit) {
+          // User wants to edit - focus on review field
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _bodyFocusNode.requestFocus();
+          });
+          return;
+        }
+        // If action is proceed, continue with review submission
+      }
+    }
 
     setState(() => _isSubmitting = true);
 

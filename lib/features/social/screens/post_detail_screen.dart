@@ -278,9 +278,6 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     final content = _commentController.text.trim();
     if (content.isEmpty) return;
 
-    // Dismiss keyboard immediately
-    FocusScope.of(context).unfocus();
-
     // Pre-submission content moderation check
     final moderationService = ref.read(contentModerationServiceProvider);
     final checkResult = await moderationService.checkText(
@@ -290,41 +287,40 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
 
     if (!checkResult.passed || checkResult.action == 'reject') {
       // Content blocked - show warning and don't proceed
-      if (mounted) {
-        await ContentModerationWarning.show(
-          context,
-          result: ContentModerationCheckResult(
-            passed: false,
-            action: 'reject',
-            categories: checkResult.categories.map((c) => c.name).toList(),
-            details: checkResult.details,
-          ),
-        );
-      }
+      if (!mounted) return;
+      await ContentModerationWarning.show(
+        context,
+        result: ContentModerationCheckResult(
+          passed: false,
+          action: 'reject',
+          categories: checkResult.categories.map((c) => c.name).toList(),
+          details: checkResult.details,
+        ),
+      );
       return;
     } else if (checkResult.action == 'review' || checkResult.action == 'flag') {
       // Content flagged - show warning but allow to proceed
-      if (mounted) {
-        final action = await ContentModerationWarning.show(
-          context,
-          result: ContentModerationCheckResult(
-            passed: true,
-            action: checkResult.action,
-            categories: checkResult.categories.map((c) => c.name).toList(),
-            details: checkResult.details,
-          ),
-        );
-        if (action == ContentModerationAction.cancel) return;
-        if (action == ContentModerationAction.edit) {
-          // User wants to edit - focus on comment field
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _commentFocusNode.requestFocus();
-          });
-          return;
-        }
-        // If action is proceed, continue with comment submission
+      if (!mounted) return;
+      final action = await ContentModerationWarning.show(
+        context,
+        result: ContentModerationCheckResult(
+          passed: true,
+          action: checkResult.action,
+          categories: checkResult.categories.map((c) => c.name).toList(),
+          details: checkResult.details,
+        ),
+      );
+      if (action == ContentModerationAction.cancel) return;
+      if (action == ContentModerationAction.edit) {
+        // User wants to edit - focus on comment field
+        _commentFocusNode.requestFocus();
+        return;
       }
+      // If action is proceed, continue with comment submission
     }
+
+    // Dismiss keyboard before submitting
+    FocusScope.of(context).unfocus();
 
     setState(() => _isSubmitting = true);
 
