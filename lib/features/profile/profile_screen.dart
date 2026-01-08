@@ -1802,62 +1802,103 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // Pre-submission content moderation check for bio and display name
-    final textToCheck = [
-      _displayNameController.text.trim(),
-      _bioController.text.trim(),
-    ].where((t) => t.isNotEmpty).join(' ');
+    final moderationService = ref.read(contentModerationServiceProvider);
 
-    if (textToCheck.isNotEmpty) {
-      final moderationService = ref.read(contentModerationServiceProvider);
-      final checkResult = await moderationService.checkText(
-        textToCheck,
+    // 1. Check Display Name - REJECT immediately if violates (no "post anyway")
+    final displayName = _displayNameController.text.trim();
+    if (displayName.isNotEmpty) {
+      final displayNameCheck = await moderationService.checkText(
+        displayName,
         useServerCheck: true,
       );
 
-      if (!checkResult.passed || checkResult.action == 'reject') {
-        // Content blocked - show warning and don't proceed
-        if (mounted) {
-          final action = await ContentModerationWarning.show(
-            context,
-            result: ContentModerationCheckResult(
-              passed: false,
-              action: 'reject',
-              categories: checkResult.categories.map((c) => c.name).toList(),
-              details: checkResult.details,
-            ),
-          );
-          if (action == ContentModerationAction.edit) {
-            // User wants to edit - focus on bio field
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              _bioFocusNode.requestFocus();
-            });
-          }
-        }
+      if (!displayNameCheck.passed ||
+          displayNameCheck.action == 'reject' ||
+          displayNameCheck.action == 'review' ||
+          displayNameCheck.action == 'flag') {
+        // Display name violations are NOT allowed - reject outright
+        if (!mounted) return;
+        await ContentModerationWarning.show(
+          context,
+          result: ContentModerationCheckResult(
+            passed: false,
+            action: 'reject',
+            categories: displayNameCheck.categories.map((c) => c.name).toList(),
+            details:
+                'Display names cannot contain inappropriate content. Please choose a different name.',
+          ),
+        );
         return;
-      } else if (checkResult.action == 'review' ||
-          checkResult.action == 'flag') {
-        // Content flagged - show warning but allow to proceed
-        if (mounted) {
-          final action = await ContentModerationWarning.show(
-            context,
-            result: ContentModerationCheckResult(
-              passed: true,
-              action: checkResult.action,
-              categories: checkResult.categories.map((c) => c.name).toList(),
-              details: checkResult.details,
-            ),
-          );
-          if (action == ContentModerationAction.cancel) return;
-          if (action == ContentModerationAction.edit) {
-            // User wants to edit - focus on bio field
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              _bioFocusNode.requestFocus();
-            });
-            return;
-          }
-          // If action is proceed, continue with save
+      }
+    }
+
+    // 2. Check Callsign - REJECT immediately if violates (no "post anyway")
+    final callsign = _callsignController.text.trim();
+    if (callsign.isNotEmpty) {
+      final callsignCheck = await moderationService.checkText(
+        callsign,
+        useServerCheck: true,
+      );
+
+      if (!callsignCheck.passed ||
+          callsignCheck.action == 'reject' ||
+          callsignCheck.action == 'review' ||
+          callsignCheck.action == 'flag') {
+        // Callsign violations are NOT allowed - reject outright
+        if (!mounted) return;
+        await ContentModerationWarning.show(
+          context,
+          result: ContentModerationCheckResult(
+            passed: false,
+            action: 'reject',
+            categories: callsignCheck.categories.map((c) => c.name).toList(),
+            details:
+                'Callsigns cannot contain inappropriate content. Please use a valid callsign.',
+          ),
+        );
+        return;
+      }
+    }
+
+    // 3. Check Bio - Allow flagged content but show warning
+    final bio = _bioController.text.trim();
+    if (bio.isNotEmpty) {
+      final bioCheck = await moderationService.checkText(
+        bio,
+        useServerCheck: true,
+      );
+
+      if (!bioCheck.passed || bioCheck.action == 'reject') {
+        // Bio content blocked completely
+        if (!mounted) return;
+        await ContentModerationWarning.show(
+          context,
+          result: ContentModerationCheckResult(
+            passed: false,
+            action: 'reject',
+            categories: bioCheck.categories.map((c) => c.name).toList(),
+            details: bioCheck.details,
+          ),
+        );
+        return;
+      } else if (bioCheck.action == 'review' || bioCheck.action == 'flag') {
+        // Bio content flagged - show warning but allow to proceed
+        if (!mounted) return;
+        final action = await ContentModerationWarning.show(
+          context,
+          result: ContentModerationCheckResult(
+            passed: true,
+            action: bioCheck.action,
+            categories: bioCheck.categories.map((c) => c.name).toList(),
+            details: bioCheck.details,
+          ),
+        );
+        if (action == ContentModerationAction.cancel) return;
+        if (action == ContentModerationAction.edit) {
+          _bioFocusNode.requestFocus();
+          return;
         }
+        // User chose to proceed - server-side trigger will create reported content
       }
     }
 

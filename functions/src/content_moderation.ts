@@ -18,7 +18,7 @@ import * as path from 'path';
 import { onObjectFinalized } from 'firebase-functions/v2/storage';
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
-import { onDocumentCreated } from 'firebase-functions/v2/firestore';
+import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
 
 const db = admin.firestore();
 
@@ -986,6 +986,64 @@ export const getModerationQueue = onCall(
     }));
 
     return { items };
+  },
+);
+
+// =============================================================================
+// FIRESTORE TRIGGER: Moderate profile updates (bio only - displayName/callsign rejected client-side)
+// =============================================================================
+
+export const moderateProfileUpdate = onDocumentUpdated(
+  'profiles/{userId}',
+  async (event) => {
+    const beforeData = event.data?.before.data();
+    const afterData = event.data?.after.data();
+    if (!beforeData || !afterData) return;
+
+    const userId = event.params.userId;
+    const oldBio = beforeData.bio as string | undefined;
+    const newBio = afterData.bio as string | undefined;
+
+    // Only check if bio changed and is not empty
+    if (oldBio === newBio || !newBio || newBio.trim().length === 0) {
+      return;
+    }
+
+    console.log(`Moderating profile bio update for user ${userId}`);
+    const result = analyzeText(newBio);
+
+    // Only create reported content if flagged/review action
+    // (reject action should have been caught client-side)
+    if (result.action === 'review' || result.action === 'flag') {
+      console.log(`Profile bio flagged for ${userId}: ${result.details}`);
+
+      await addToModerationQueue(
+        'profile',
+        userId,
+        userId,
+        result,
+        undefined,
+        `Bio: ${newBio}`,
+      );
+
+      // Don't auto-reject - let human review decide
+      // This allows the bio to stay until reviewed
+    } else if (result.action === 'reject') {
+      // Shouldn't happen (client-side check), but handle it
+      console.log(`Profile bio violation for ${userId}: ${result.details}`);
+
+      // Revert bio to previous value
+      await db.collection('profiles').doc(userId).update({
+        bio: oldBio || null,
+      });
+
+      await recordUserStrike(
+        userId,
+        `Profile bio violation: ${result.details}`,
+        userId,
+        'profile',
+      );
+    }
   },
 );
 
