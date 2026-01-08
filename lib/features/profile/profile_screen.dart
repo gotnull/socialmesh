@@ -1840,7 +1840,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
               details: checkResult.details,
             ),
           );
-          if (!shouldProceed) return;
+          if (shouldProceed != ContentModerationAction.proceed) return;
         }
       }
     }

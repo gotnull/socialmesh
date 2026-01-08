@@ -314,7 +314,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
             details: checkResult.details,
           ),
         );
-        if (!shouldProceed) return;
+        if (shouldProceed != ContentModerationAction.proceed) return;
       }
     }
 

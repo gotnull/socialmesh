@@ -1077,7 +1077,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
               details: checkResult.details,
             ),
           );
-          if (!shouldProceed) return;
+          if (shouldProceed != ContentModerationAction.proceed) return;
         }
       }
     }
