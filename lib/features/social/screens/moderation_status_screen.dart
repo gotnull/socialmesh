@@ -120,6 +120,14 @@ class _ModerationStatusScreenState
   }
 
   Widget _buildStatusContent(ModerationStatus status) {
+    // If no active warnings or strikes, show good standing
+    if (status.activeWarnings == 0 &&
+        status.activeStrikes == 0 &&
+        !status.isSuspended &&
+        status.history.isEmpty) {
+      return _buildGoodStanding();
+    }
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(

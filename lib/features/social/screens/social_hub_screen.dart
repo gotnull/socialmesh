@@ -117,16 +117,22 @@ class _AuthenticatedSocialHubState
   Widget build(BuildContext context) {
     // Wrap with suspended user overlay for full blocking
     return SuspendedUserOverlay(
-      child: Column(
+      child: Stack(
         children: [
-          // Moderation status banner (for warnings/strikes)
-          const ModerationStatusBanner(),
           // Main content
-          Expanded(
-            child: ProfileSocialScreen(
-              userId: widget.userId,
-              showAppBar: true,
-              showStoryBar: true,
+          ProfileSocialScreen(
+            userId: widget.userId,
+            showAppBar: true,
+            showStoryBar: true,
+          ),
+          // Moderation status banner (for warnings/strikes) - positioned at top with safe area
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              bottom: false,
+              child: const ModerationStatusBanner(),
             ),
           ),
         ],
