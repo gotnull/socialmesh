@@ -38,6 +38,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   PostLocation? _location;
   String? _nodeId;
   final List<String> _imageUrls = [];
+  final Set<String> _failedImageUrls = {};
 
   @override
   void initState() {
@@ -594,6 +595,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
           scrollDirection: Axis.horizontal,
           itemCount: _imageUrls.length,
           itemBuilder: (context, index) {
+            final imageUrl = _imageUrls[index];
             return Padding(
               padding: EdgeInsets.only(
                 right: index < _imageUrls.length - 1 ? 8 : 0,
@@ -610,10 +612,54 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(12),
                       child: Image.network(
-                        _imageUrls[index],
+                        imageUrl,
                         width: 120,
                         height: 120,
                         fit: BoxFit.cover,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            color: context.card,
+                            child: const Center(
+                              child: SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) {
+                          final scaffoldContext = this.context;
+                          final shouldHandle = _failedImageUrls.add(imageUrl);
+                          if (shouldHandle) {
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (!mounted) return;
+                              final removalIndex = _imageUrls.indexOf(imageUrl);
+                              if (removalIndex != -1) {
+                                setState(() {
+                                  _imageUrls.removeAt(removalIndex);
+                                  _failedImageUrls.remove(imageUrl);
+                                });
+                                showErrorSnackBar(
+                                  scaffoldContext,
+                                  'Image was blocked or removed. Please pick another photo.',
+                                );
+                              }
+                            });
+                          }
+
+                          return Container(
+                            width: 120,
+                            height: 120,
+                            color: context.card,
+                            child: const Center(
+                              child: Icon(Icons.broken_image),
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ),
@@ -623,6 +669,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                     child: BouncyTap(
                       onTap: () {
                         setState(() {
+                          _failedImageUrls.remove(imageUrl);
                           _imageUrls.removeAt(index);
                         });
                       },
