@@ -426,7 +426,7 @@ class ProfileCloudSyncService {
     );
     return UserProfile(
       id: uid,
-      displayName: data['displayName'] as String? ?? 'Mesh User',
+      displayName: data['displayName'] as String? ?? 'MeshUser',
       bio: data['bio'] as String?,
       callsign: data['callsign'] as String?,
       email: data['email'] as String?,

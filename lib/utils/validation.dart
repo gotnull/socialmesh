@@ -250,7 +250,7 @@ String? validateDisplayName(String name, {String? userId}) {
 
   // Only letters, numbers, periods, underscores allowed
   if (!_validUsernameChars.hasMatch(trimmed)) {
-    return 'Only letters, numbers, periods, and underscores allowed';
+    return 'Only letters, numbers, periods and underscores (no spaces)';
   }
 
   // Cannot start or end with a period

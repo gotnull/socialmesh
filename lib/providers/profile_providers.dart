@@ -477,7 +477,7 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
       final updated = current.copyWith(
         id: uid,
         email: email,
-        displayName: current.displayName == 'Mesh User'
+        displayName: current.displayName == 'MeshUser'
             ? (displayName ?? email?.split('@').first)
             : null,
         avatarUrl: current.avatarUrl == null ? photoUrl : null,
@@ -628,13 +628,13 @@ final isProfileCompleteProvider = Provider<bool>((ref) {
   if (profile == null) return false;
 
   // Profile is considered complete if it has at least a display name
-  return profile.displayName.isNotEmpty && profile.displayName != 'Mesh User';
+  return profile.displayName.isNotEmpty && profile.displayName != 'MeshUser';
 });
 
 /// Provider for profile display name
 final profileDisplayNameProvider = Provider<String>((ref) {
   final profile = ref.watch(userProfileProvider).value;
-  return profile?.displayName ?? 'Mesh User';
+  return profile?.displayName ?? 'MeshUser';
 });
 
 /// Provider for profile avatar URL

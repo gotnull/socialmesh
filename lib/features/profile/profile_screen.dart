@@ -2391,6 +2391,24 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                               icon: Icons.badge_outlined,
                               textCapitalization: TextCapitalization.characters,
                               maxLength: 10,
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return null; // Callsign is optional
+                                }
+                                // Basic profanity check - real check happens in _saveProfile
+                                final text = value.trim().toLowerCase();
+                                if (text.contains('fuck') ||
+                                    text.contains('shit') ||
+                                    text.contains('ass') ||
+                                    text.contains('damn') ||
+                                    text.contains('cunt') ||
+                                    text.contains('dick') ||
+                                    text.contains('cock') ||
+                                    text.contains('bitch')) {
+                                  return 'Callsign cannot contain profanity';
+                                }
+                                return null;
+                              },
                             ),
                             const SizedBox(height: 12),
                             // Bio field - no prefix icon for multiline

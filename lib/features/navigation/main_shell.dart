@@ -825,7 +825,7 @@ class _MainShellState extends ConsumerState<MainShell> {
     final accentColor = theme.colorScheme.primary;
     final syncStatus = ref.watch(syncStatusProvider);
 
-    final displayName = profile?.displayName ?? 'Mesh User';
+    final displayName = profile?.displayName ?? 'MeshUser';
     final initials = profile?.initials ?? '?';
     final avatarUrl = profile?.avatarUrl;
 

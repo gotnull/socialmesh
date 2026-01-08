@@ -407,7 +407,7 @@ class UserProfile {
     final now = DateTime.now();
     return UserProfile(
       id: uid,
-      displayName: displayName ?? email?.split('@').first ?? 'Mesh User',
+      displayName: displayName ?? email?.split('@').first ?? 'MeshUser',
       email: email,
       avatarUrl: photoUrl,
       createdAt: now,

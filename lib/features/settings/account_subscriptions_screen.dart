@@ -989,7 +989,7 @@ class _ProfilePreviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accentColor = context.accentColor;
-    final displayName = profile?.displayName ?? 'Mesh User';
+    final displayName = profile?.displayName ?? 'MeshUser';
     final avatarUrl = profile?.avatarUrl;
     final initials = profile?.initials ?? '?';
 
