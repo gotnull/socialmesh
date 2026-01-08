@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -239,8 +240,26 @@ class ProfileCloudSyncService {
       // Get download URL
       final downloadUrl = await ref.getDownloadURL();
 
-      // Note: Image validation is handled automatically by Storage triggers
-      // when the file is uploaded. Inappropriate content will be auto-deleted.
+      // Validate image with Cloud Function
+      try {
+        final validation = await FirebaseFunctions.instance
+            .httpsCallable('validateImages')
+            .call({
+              'imageUrls': [downloadUrl],
+            });
+
+        if (validation.data['passed'] == false) {
+          // Delete uploaded file
+          await ref.delete();
+          throw Exception(
+            validation.data['message'] ?? 'Content policy violation',
+          );
+        }
+      } catch (e) {
+        // Cleanup on error
+        await ref.delete().catchError((_) {});
+        rethrow;
+      }
 
       AppLogging.auth('ProfileSync: Avatar uploaded: $downloadUrl');
       return downloadUrl;
@@ -328,8 +347,26 @@ class ProfileCloudSyncService {
       // Get download URL
       final downloadUrl = await ref.getDownloadURL();
 
-      // Note: Image validation is handled automatically by Storage triggers
-      // when the file is uploaded. Inappropriate content will be auto-deleted.
+      // Validate image with Cloud Function
+      try {
+        final validation = await FirebaseFunctions.instance
+            .httpsCallable('validateImages')
+            .call({
+              'imageUrls': [downloadUrl],
+            });
+
+        if (validation.data['passed'] == false) {
+          // Delete uploaded file
+          await ref.delete();
+          throw Exception(
+            validation.data['message'] ?? 'Content policy violation',
+          );
+        }
+      } catch (e) {
+        // Cleanup on error
+        await ref.delete().catchError((_) {});
+        rethrow;
+      }
 
       AppLogging.auth('ProfileSync: Banner uploaded: $downloadUrl');
       return downloadUrl;

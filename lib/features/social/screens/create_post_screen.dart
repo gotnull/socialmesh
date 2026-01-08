@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -1162,8 +1163,50 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     setState(() => _isSubmitting = true);
 
     try {
-      // Note: Image validation is handled automatically by Storage triggers
-      // when files are uploaded. Inappropriate content will be auto-deleted.
+      // CRITICAL: Validate images with Cloud Function (synchronous check)
+      if (_imageUrls.isNotEmpty) {
+        try {
+          final functions = FirebaseFunctions.instance;
+          final result = await functions.httpsCallable('validateImages').call({
+            'imageUrls': _imageUrls,
+          });
+
+          final validationResult = result.data as Map<String, dynamic>;
+          if (validationResult['passed'] == false) {
+            if (mounted) {
+              setState(() => _isSubmitting = false);
+              showErrorSnackBar(
+                context,
+                validationResult['message'] ?? 'Image validation failed',
+              );
+            }
+            return;
+          }
+        } catch (e) {
+          // If validation fails, check if images still exist
+          final validUrls = <String>[];
+          for (final url in _imageUrls) {
+            try {
+              final ref = FirebaseStorage.instance.refFromURL(url);
+              await ref.getMetadata();
+              validUrls.add(url);
+            } catch (e) {
+              debugPrint('Image was removed: $url');
+            }
+          }
+
+          if (validUrls.length != _imageUrls.length) {
+            if (mounted) {
+              setState(() => _isSubmitting = false);
+              showErrorSnackBar(
+                context,
+                'One or more images violated content policy.',
+              );
+            }
+            return;
+          }
+        }
+      }
 
       // Use createPostProvider to get optimistic post count updates
       final post = await ref
