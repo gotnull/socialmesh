@@ -215,6 +215,12 @@ class CreateStoryNotifier extends Notifier<CreateStoryState> {
       // Refresh story groups to include the new story
       ref.read(storyGroupsProvider.notifier).refresh();
 
+      // Also invalidate user stories provider for the current user
+      final currentUser = ref.read(currentUserProvider);
+      if (currentUser != null) {
+        ref.invalidate(userStoriesProvider(currentUser.uid));
+      }
+
       return story;
     } catch (e) {
       state = CreateStoryState(error: e.toString());

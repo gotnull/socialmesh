@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
+import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
 import '../../../models/story.dart';
 import '../../../providers/story_providers.dart';
@@ -126,8 +127,9 @@ class _StoryAvatarState extends State<StoryAvatar>
       gradientColors[0],
     ];
 
-    return GestureDetector(
+    return BouncyTap(
       onTap: widget.onTap,
+      scaleFactor: 0.95,
       child: SizedBox(
         width: totalSize,
         child: Column(

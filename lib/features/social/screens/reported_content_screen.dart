@@ -252,6 +252,65 @@ class _ReportsList extends ConsumerWidget {
       } else {
         showErrorSnackBar(context, 'Post not found for this comment');
       }
+    } else if (type == 'story') {
+      // Show story details in a dialog since stories may have expired
+      final reportContext = report['context'] as Map<String, dynamic>?;
+      final mediaUrl = reportContext?['mediaUrl'] as String?;
+      final mediaType = reportContext?['mediaType'] as String?;
+      final authorId = reportContext?['authorId'] as String?;
+
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Reported Story'),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (mediaUrl != null) ...[
+                  Text(
+                    'Media Type: ${mediaType ?? 'unknown'}',
+                    style: Theme.of(ctx).textTheme.bodySmall,
+                  ),
+                  const SizedBox(height: 8),
+                  if (mediaType == 'image')
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        mediaUrl,
+                        height: 200,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          height: 100,
+                          color: Colors.grey[800],
+                          child: const Center(
+                            child: Icon(Icons.broken_image, size: 48),
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    Text('Video URL: $mediaUrl'),
+                ],
+                if (authorId != null) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    'Author ID: $authorId',
+                    style: Theme.of(ctx).textTheme.bodySmall,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Close'),
+            ),
+          ],
+        ),
+      );
     }
   }
 }
@@ -299,6 +358,11 @@ class _ReportCard extends StatelessWidget {
         Colors.purple.withAlpha(30),
         Colors.purple,
         Icons.person_outlined,
+      ),
+      'story' => (
+        Colors.orange.withAlpha(30),
+        Colors.orange,
+        Icons.auto_stories_outlined,
       ),
       _ => (
         theme.colorScheme.errorContainer,

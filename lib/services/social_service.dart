@@ -1122,6 +1122,8 @@ class SocialService {
       await _firestore.collection('comments').doc(targetId).delete();
     } else if (type == 'post') {
       await _firestore.collection('posts').doc(targetId).delete();
+    } else if (type == 'story') {
+      await _firestore.collection('stories').doc(targetId).delete();
     }
 
     // Mark report as resolved
@@ -1717,6 +1719,34 @@ class SocialService {
       'reason': reason,
       'status': 'pending',
       'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  /// Report a story for moderation.
+  Future<void> reportStory({
+    required String storyId,
+    required String authorId,
+    required String reason,
+    String? mediaUrl,
+    String? mediaType,
+  }) async {
+    final currentUserId = _currentUserId;
+    if (currentUserId == null) {
+      throw StateError('Must be signed in to report stories');
+    }
+
+    await _firestore.collection('reports').add({
+      'type': 'story',
+      'targetId': storyId,
+      'reporterId': currentUserId,
+      'reason': reason,
+      'status': 'pending',
+      'createdAt': FieldValue.serverTimestamp(),
+      'context': {
+        'authorId': authorId,
+        if (mediaUrl != null) 'mediaUrl': mediaUrl,
+        if (mediaType != null) 'mediaType': mediaType,
+      },
     });
   }
 

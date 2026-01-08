@@ -10,6 +10,7 @@ import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/verified_badge.dart';
 import '../../../models/story.dart';
 import '../../../providers/auth_providers.dart';
+import '../../../providers/social_providers.dart';
 import '../../../providers/story_providers.dart';
 import '../../../utils/snackbar.dart';
 import 'profile_social_screen.dart';
@@ -201,39 +202,149 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
     // Capture values before showing sheet (for use in async callback)
     final storyId = _currentStory.id;
     final storyService = ref.read(storyServiceProvider);
+    final story = _currentStory;
+    final isOwnStory = _isOwnStory;
 
-    AppBottomSheet.show(
-      context: context,
-      child: _StoryOptionsSheet(
-        story: _currentStory,
-        isOwnStory: _isOwnStory,
-        onDelete: () async {
-          debugPrint(
-            '🗑️ [StoryViewer.onDelete] Delete tapped for story: $storyId',
-          );
-          // Bottom sheet closes itself before calling this callback
-          try {
-            debugPrint(
-              '🗑️ [StoryViewer.onDelete] Calling storyService.deleteStory...',
+    final actions = <BottomSheetAction>[];
+
+    // Delete option for own stories
+    if (isOwnStory) {
+      actions.add(
+        BottomSheetAction(
+          icon: Icons.delete_outline,
+          label: 'Delete story',
+          isDestructive: true,
+          onTap: () async {
+            final confirm = await AppBottomSheet.showConfirm(
+              context: context,
+              title: 'Delete story?',
+              message: 'This story will be permanently deleted.',
+              confirmLabel: 'Delete',
+              isDestructive: true,
             );
-            await storyService.deleteStory(storyId);
-            debugPrint(
-              '🗑️ [StoryViewer.onDelete] deleteStory completed successfully',
-            );
-            if (mounted) {
-              showSuccessSnackBar(context, 'Story deleted');
-              // Close the story viewer - data is stale and needs refresh
-              Navigator.pop(context);
+            if (confirm == true && mounted) {
+              try {
+                await storyService.deleteStory(storyId);
+                if (mounted) {
+                  showSuccessSnackBar(context, 'Story deleted');
+                  Navigator.pop(context);
+                }
+              } catch (e) {
+                if (mounted) {
+                  showErrorSnackBar(context, 'Failed to delete story: $e');
+                }
+              }
             }
-          } catch (e, stack) {
-            debugPrint('🗑️ [StoryViewer.onDelete] ERROR: $e');
-            debugPrint('🗑️ [StoryViewer.onDelete] Stack: $stack');
-            if (mounted) {
-              showErrorSnackBar(context, 'Failed to delete story: $e');
-            }
-          }
+          },
+        ),
+      );
+    }
+
+    // Location option
+    if (story.location != null) {
+      actions.add(
+        BottomSheetAction(
+          icon: Icons.location_on_outlined,
+          label: story.location!.name ?? 'View location',
+          subtitle:
+              '${story.location!.latitude.toStringAsFixed(4)}, ${story.location!.longitude.toStringAsFixed(4)}',
+        ),
+      );
+    }
+
+    // Share option
+    actions.add(
+      BottomSheetAction(
+        icon: Icons.share_outlined,
+        label: 'Share',
+        onTap: () {
+          // Share functionality would go here
         },
       ),
+    );
+
+    // Report option for other people's stories
+    if (!isOwnStory) {
+      actions.add(
+        BottomSheetAction(
+          icon: Icons.flag_outlined,
+          label: 'Report story',
+          isDestructive: true,
+          onTap: () => _reportStory(story),
+        ),
+      );
+    }
+
+    AppBottomSheet.showActions(context: context, actions: actions);
+  }
+
+  Future<void> _reportStory(Story story) async {
+    final reason = await _showReportReasonPicker();
+    if (reason == null || !mounted) return;
+
+    try {
+      final socialService = ref.read(socialServiceProvider);
+      await socialService.reportStory(
+        storyId: story.id,
+        authorId: story.authorId,
+        reason: reason,
+        mediaUrl: story.mediaUrl,
+        mediaType: story.mediaType.name,
+      );
+
+      if (mounted) {
+        showSuccessSnackBar(context, 'Story reported. We\'ll review it soon.');
+      }
+    } catch (e) {
+      if (mounted) {
+        showErrorSnackBar(context, 'Failed to report story: $e');
+      }
+    }
+  }
+
+  Future<String?> _showReportReasonPicker() async {
+    return AppBottomSheet.showActions<String>(
+      context: context,
+      header: Text(
+        'Why are you reporting this story?',
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: context.textPrimary,
+        ),
+      ),
+      actions: [
+        BottomSheetAction(
+          icon: Icons.warning_outlined,
+          label: 'Spam or misleading',
+          value: 'spam',
+        ),
+        BottomSheetAction(
+          icon: Icons.person_off_outlined,
+          label: 'Harassment or bullying',
+          value: 'harassment',
+        ),
+        BottomSheetAction(
+          icon: Icons.dangerous_outlined,
+          label: 'Violence or dangerous content',
+          value: 'violence',
+        ),
+        BottomSheetAction(
+          icon: Icons.no_adult_content,
+          label: 'Nudity or sexual content',
+          value: 'nudity',
+        ),
+        BottomSheetAction(
+          icon: Icons.copyright,
+          label: 'Copyright violation',
+          value: 'copyright',
+        ),
+        BottomSheetAction(
+          icon: Icons.more_horiz,
+          label: 'Other',
+          value: 'other',
+        ),
+      ],
     );
   }
 
@@ -831,99 +942,6 @@ class _ViewerTile extends ConsumerWidget {
           },
         );
       },
-    );
-  }
-}
-
-class _StoryOptionsSheet extends StatelessWidget {
-  const _StoryOptionsSheet({
-    required this.story,
-    required this.isOwnStory,
-    required this.onDelete,
-  });
-
-  final Story story;
-  final bool isOwnStory;
-  final VoidCallback onDelete;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (isOwnStory) ...[
-          ListTile(
-            leading: const Icon(Icons.delete_outline, color: Colors.red),
-            title: const Text(
-              'Delete story',
-              style: TextStyle(color: Colors.red),
-            ),
-            onTap: () async {
-              final confirm = await showDialog<bool>(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  backgroundColor: context.card,
-                  title: Text(
-                    'Delete story?',
-                    style: TextStyle(color: context.textPrimary),
-                  ),
-                  content: Text(
-                    'This story will be permanently deleted.',
-                    style: TextStyle(color: context.textSecondary),
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx, false),
-                      child: Text(
-                        'Cancel',
-                        style: TextStyle(color: context.textSecondary),
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx, true),
-                      style: TextButton.styleFrom(foregroundColor: Colors.red),
-                      child: const Text('Delete'),
-                    ),
-                  ],
-                ),
-              );
-              if (confirm == true) {
-                // Close the bottom sheet first, then trigger deletion
-                if (context.mounted) {
-                  Navigator.pop(context);
-                }
-                onDelete();
-              }
-            },
-          ),
-        ],
-        if (story.location != null)
-          ListTile(
-            leading: Icon(
-              Icons.location_on_outlined,
-              color: context.textPrimary,
-            ),
-            title: Text(
-              story.location!.name ?? 'View location',
-              style: TextStyle(color: context.textPrimary),
-            ),
-            subtitle: story.location!.name != null
-                ? Text(
-                    '${story.location!.latitude.toStringAsFixed(4)}, ${story.location!.longitude.toStringAsFixed(4)}',
-                    style: TextStyle(color: context.textTertiary, fontSize: 12),
-                  )
-                : null,
-          ),
-        ListTile(
-          leading: Icon(Icons.share_outlined, color: context.textPrimary),
-          title: Text('Share', style: TextStyle(color: context.textPrimary)),
-          onTap: () {
-            Navigator.pop(context);
-            // Share functionality would go here
-          },
-        ),
-        const SizedBox(height: 8),
-      ],
     );
   }
 }

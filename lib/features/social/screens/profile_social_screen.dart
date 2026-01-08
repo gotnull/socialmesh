@@ -695,31 +695,46 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              Consumer(
-                builder: (context, ref, _) {
-                  final postsState = ref.watch(
-                    userPostsStateProvider(widget.userId),
-                  );
-                  return _StatColumn(
-                    count: postsState.posts.length,
-                    label: 'Posts',
-                    singularLabel: 'Post',
-                    onTap: null,
-                  );
-                },
+              SlideInAnimation(
+                delay: const Duration(milliseconds: 0),
+                duration: const Duration(milliseconds: 300),
+                beginOffset: const Offset(0, 0.3),
+                child: Consumer(
+                  builder: (context, ref, _) {
+                    final postsState = ref.watch(
+                      userPostsStateProvider(widget.userId),
+                    );
+                    return _StatColumn(
+                      count: postsState.posts.length,
+                      label: 'Posts',
+                      singularLabel: 'Post',
+                      onTap: null,
+                    );
+                  },
+                ),
               ),
-              _StatColumn(
-                count: profile.followerCount,
-                label: 'Followers',
-                singularLabel: 'Follower',
-                onTap: () =>
-                    _navigateToFollowers(FollowersScreenMode.followers),
+              SlideInAnimation(
+                delay: const Duration(milliseconds: 50),
+                duration: const Duration(milliseconds: 300),
+                beginOffset: const Offset(0, 0.3),
+                child: _StatColumn(
+                  count: profile.followerCount,
+                  label: 'Followers',
+                  singularLabel: 'Follower',
+                  onTap: () =>
+                      _navigateToFollowers(FollowersScreenMode.followers),
+                ),
               ),
-              _StatColumn(
-                count: profile.followingCount,
-                label: 'Following',
-                onTap: () =>
-                    _navigateToFollowers(FollowersScreenMode.following),
+              SlideInAnimation(
+                delay: const Duration(milliseconds: 100),
+                duration: const Duration(milliseconds: 300),
+                beginOffset: const Offset(0, 0.3),
+                child: _StatColumn(
+                  count: profile.followingCount,
+                  label: 'Following',
+                  onTap: () =>
+                      _navigateToFollowers(FollowersScreenMode.following),
+                ),
               ),
             ],
           ),
@@ -825,80 +840,9 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
             SizedBox(
               height: 44,
               child: EdgeFade.end(
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  children: [
-                    if (profile.website != null)
-                      _SocialIconButton(
-                        icon: Icons.language,
-                        color: context.accentColor,
-                        onTap: () => _launchUrl(profile.website!),
-                        tooltip: _formatUrl(profile.website!),
-                      ),
-                    if (profile.socialLinks?.twitter != null)
-                      _SocialIconButton(
-                        icon: SocialMediaIcons.twitter,
-                        color: const Color(0xFF000000),
-                        onTap: () => _launchUrl(
-                          'https://x.com/${profile.socialLinks!.twitter}',
-                        ),
-                        tooltip: '@${profile.socialLinks!.twitter}',
-                      ),
-                    if (profile.socialLinks?.github != null)
-                      _SocialIconButton(
-                        icon: SocialMediaIcons.github_circled,
-                        color: const Color(0xFF6E5494),
-                        onTap: () => _launchUrl(
-                          'https://github.com/${profile.socialLinks!.github}',
-                        ),
-                        tooltip: profile.socialLinks!.github!,
-                      ),
-                    if (profile.socialLinks?.discord != null)
-                      _SocialIconButton(
-                        icon: Icons.discord,
-                        color: const Color(0xFF5865F2),
-                        onTap: () {
-                          // Discord usernames - copy to clipboard since no direct link
-                          Clipboard.setData(
-                            ClipboardData(text: profile.socialLinks!.discord!),
-                          );
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Discord username copied: ${profile.socialLinks!.discord}',
-                              ),
-                              duration: const Duration(seconds: 2),
-                            ),
-                          );
-                        },
-                        tooltip: profile.socialLinks!.discord!,
-                      ),
-                    if (profile.socialLinks?.telegram != null)
-                      _SocialIconButton(
-                        icon: Icons.telegram,
-                        color: const Color(0xFF0088CC),
-                        onTap: () => _launchUrl(
-                          'https://t.me/${profile.socialLinks!.telegram}',
-                        ),
-                        tooltip: '@${profile.socialLinks!.telegram}',
-                      ),
-                    if (profile.socialLinks?.linkedin != null)
-                      _SocialIconButton(
-                        icon: SocialMediaIcons.linkedin,
-                        color: const Color(0xFF0A66C2),
-                        onTap: () => _launchUrl(
-                          'https://linkedin.com/in/${profile.socialLinks!.linkedin}',
-                        ),
-                        tooltip: profile.socialLinks!.linkedin!,
-                      ),
-                    if (profile.socialLinks?.mastodon != null)
-                      _SocialIconButton(
-                        icon: Icons.tag,
-                        color: const Color(0xFF6364FF),
-                        onTap: null,
-                        tooltip: profile.socialLinks!.mastodon!,
-                      ),
-                  ],
+                child: _AnimatedSocialIconsRow(
+                  profile: profile,
+                  onLaunchUrl: _launchUrl,
                 ),
               ),
             ),
@@ -912,51 +856,84 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
             Row(
               children: [
                 Expanded(
-                  child: OutlinedButton(
-                    onPressed: _navigateToEditProfile,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: context.textPrimary,
-                      side: BorderSide(color: context.border),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: SlideInAnimation(
+                    delay: const Duration(milliseconds: 150),
+                    duration: const Duration(milliseconds: 300),
+                    beginOffset: const Offset(0, 0.3),
+                    child: OutlinedButton(
+                      onPressed: _navigateToEditProfile,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: context.textPrimary,
+                        side: BorderSide(color: context.border),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                      ),
+                      child: const Text('Edit profile'),
                     ),
-                    child: const Text('Edit profile'),
                   ),
                 ),
                 const SizedBox(width: 8),
-                _ActionIconButton(
-                  icon: Icons.share,
-                  onTap: () => ref
-                      .read(shareLinkServiceProvider)
-                      .shareProfile(
-                        userId: widget.userId,
-                        displayName: profile.displayName,
-                      ),
-                ),
-                _FollowRequestsBadge(
+                ScaleInAnimation(
+                  delay: const Duration(milliseconds: 200),
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOutBack,
                   child: _ActionIconButton(
-                    icon: Icons.person_add_outlined,
-                    onTap: _navigateToFollowRequests,
+                    icon: Icons.share,
+                    onTap: () => ref
+                        .read(shareLinkServiceProvider)
+                        .shareProfile(
+                          userId: widget.userId,
+                          displayName: profile.displayName,
+                        ),
                   ),
                 ),
-                _ActivityBadge(
-                  child: _ActionIconButton(
-                    icon: Icons.favorite_border,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const ActivityTimelineScreen(),
+                const SizedBox(width: 8),
+                ScaleInAnimation(
+                  delay: const Duration(milliseconds: 250),
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOutBack,
+                  child: _FollowRequestsBadge(
+                    child: _ActionIconButton(
+                      icon: Icons.person_add_outlined,
+                      onTap: _navigateToFollowRequests,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                ScaleInAnimation(
+                  delay: const Duration(milliseconds: 300),
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOutBack,
+                  child: _ActivityBadge(
+                    child: _ActionIconButton(
+                      icon: Icons.favorite_border,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const ActivityTimelineScreen(),
+                        ),
                       ),
                     ),
                   ),
                 ),
-                _ActionIconButton(
-                  icon: Icons.add_box_outlined,
-                  onTap: _navigateToCreatePost,
+                const SizedBox(width: 8),
+                ScaleInAnimation(
+                  delay: const Duration(milliseconds: 350),
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOutBack,
+                  child: _ActionIconButton(
+                    icon: Icons.add_box_outlined,
+                    onTap: _navigateToCreatePost,
+                  ),
                 ),
               ],
             ),
           ] else
-            FollowButton(targetUserId: widget.userId),
+            SlideInAnimation(
+              delay: const Duration(milliseconds: 150),
+              duration: const Duration(milliseconds: 300),
+              beginOffset: const Offset(0, 0.3),
+              child: FollowButton(targetUserId: widget.userId),
+            ),
         ],
       ),
     );
@@ -1341,13 +1318,6 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
     ref.invalidate(publicProfileStreamProvider(widget.userId));
   }
 
-  String _formatUrl(String url) {
-    return url
-        .replaceAll('https://', '')
-        .replaceAll('http://', '')
-        .replaceAll('www.', '');
-  }
-
   String _formatJoinedDate(DateTime date) {
     const months = [
       'January',
@@ -1627,11 +1597,16 @@ class _LinkedDevicesSection extends ConsumerWidget {
                       final cachedInfo = linkedNodeMetadata[nodeId];
                       final isPrimary = nodeId == primaryNodeId;
 
-                      return _LinkedDeviceChip(
-                        nodeId: nodeId,
-                        node: node,
-                        cachedInfo: cachedInfo,
-                        isPrimary: isPrimary,
+                      return ScaleInAnimation(
+                        delay: Duration(milliseconds: 50 * index),
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeOutBack,
+                        child: _LinkedDeviceChip(
+                          nodeId: nodeId,
+                          node: node,
+                          cachedInfo: cachedInfo,
+                          isPrimary: isPrimary,
+                        ),
                       );
                     },
                   ),
@@ -1694,8 +1669,9 @@ class _LinkedDeviceChip extends StatelessWidget {
     final accentColor = context.accentColor;
     final gradientColors = AccentColors.gradientFor(accentColor);
 
-    return GestureDetector(
+    return BouncyTap(
       onTap: () => _showNodeBottomSheet(context),
+      scaleFactor: 0.95,
       child: SizedBox(
         width: 56,
         child: Column(
@@ -1833,6 +1809,132 @@ class _SocialIconButton extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// Animated row of social icons with staggered entry animation
+class _AnimatedSocialIconsRow extends StatelessWidget {
+  const _AnimatedSocialIconsRow({
+    required this.profile,
+    required this.onLaunchUrl,
+  });
+
+  final PublicProfile profile;
+  final void Function(String url) onLaunchUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final icons = <Widget>[];
+    var index = 0;
+
+    void addIcon(Widget icon) {
+      icons.add(
+        ScaleInAnimation(
+          delay: Duration(milliseconds: 50 * index),
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutBack,
+          child: icon,
+        ),
+      );
+      index++;
+    }
+
+    if (profile.website != null) {
+      addIcon(
+        _SocialIconButton(
+          icon: Icons.language,
+          color: context.accentColor,
+          onTap: () => onLaunchUrl(profile.website!),
+          tooltip: _formatUrl(profile.website!),
+        ),
+      );
+    }
+    if (profile.socialLinks?.twitter != null) {
+      addIcon(
+        _SocialIconButton(
+          icon: SocialMediaIcons.twitter,
+          color: const Color(0xFF000000),
+          onTap: () =>
+              onLaunchUrl('https://x.com/${profile.socialLinks!.twitter}'),
+          tooltip: '@${profile.socialLinks!.twitter}',
+        ),
+      );
+    }
+    if (profile.socialLinks?.github != null) {
+      addIcon(
+        _SocialIconButton(
+          icon: SocialMediaIcons.github_circled,
+          color: const Color(0xFF6E5494),
+          onTap: () =>
+              onLaunchUrl('https://github.com/${profile.socialLinks!.github}'),
+          tooltip: profile.socialLinks!.github!,
+        ),
+      );
+    }
+    if (profile.socialLinks?.discord != null) {
+      addIcon(
+        _SocialIconButton(
+          icon: Icons.discord,
+          color: const Color(0xFF5865F2),
+          onTap: () {
+            Clipboard.setData(
+              ClipboardData(text: profile.socialLinks!.discord!),
+            );
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Discord username copied: ${profile.socialLinks!.discord}',
+                ),
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          },
+          tooltip: profile.socialLinks!.discord!,
+        ),
+      );
+    }
+    if (profile.socialLinks?.telegram != null) {
+      addIcon(
+        _SocialIconButton(
+          icon: Icons.telegram,
+          color: const Color(0xFF0088CC),
+          onTap: () =>
+              onLaunchUrl('https://t.me/${profile.socialLinks!.telegram}'),
+          tooltip: '@${profile.socialLinks!.telegram}',
+        ),
+      );
+    }
+    if (profile.socialLinks?.linkedin != null) {
+      addIcon(
+        _SocialIconButton(
+          icon: SocialMediaIcons.linkedin,
+          color: const Color(0xFF0A66C2),
+          onTap: () => onLaunchUrl(
+            'https://linkedin.com/in/${profile.socialLinks!.linkedin}',
+          ),
+          tooltip: profile.socialLinks!.linkedin!,
+        ),
+      );
+    }
+    if (profile.socialLinks?.mastodon != null) {
+      addIcon(
+        _SocialIconButton(
+          icon: Icons.tag,
+          color: const Color(0xFF6364FF),
+          onTap: null,
+          tooltip: profile.socialLinks!.mastodon!,
+        ),
+      );
+    }
+
+    return ListView(scrollDirection: Axis.horizontal, children: icons);
+  }
+
+  static String _formatUrl(String url) {
+    return url
+        .replaceFirst('https://', '')
+        .replaceFirst('http://', '')
+        .replaceFirst('www.', '');
   }
 }
 
