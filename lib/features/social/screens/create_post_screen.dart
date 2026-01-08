@@ -1102,6 +1102,10 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     final content = _contentController.text.trim();
     if (content.isEmpty && _imageUrls.isEmpty) return;
 
+    // Prevent double-tap by setting loading state immediately
+    if (_isSubmitting) return;
+    setState(() => _isSubmitting = true);
+
     // Dismiss keyboard immediately using multiple methods for reliability
     _contentFocusNode.unfocus();
     FocusManager.instance.primaryFocus?.unfocus();
@@ -1126,6 +1130,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
               details: checkResult.details,
             ),
           );
+          setState(() => _isSubmitting = false);
           if (action == ContentModerationAction.edit) {
             // User wants to edit - focus on content field
             WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1147,9 +1152,13 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
               details: checkResult.details,
             ),
           );
-          if (action == ContentModerationAction.cancel) return;
+          if (action == ContentModerationAction.cancel) {
+            setState(() => _isSubmitting = false);
+            return;
+          }
           if (action == ContentModerationAction.edit) {
             // User wants to edit - focus on content field
+            setState(() => _isSubmitting = false);
             WidgetsBinding.instance.addPostFrameCallback((_) {
               _contentFocusNode.requestFocus();
             });
@@ -1159,8 +1168,6 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         }
       }
     }
-
-    setState(() => _isSubmitting = true);
 
     try {
       // CRITICAL: Validate images with Cloud Function (synchronous check)
