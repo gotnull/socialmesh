@@ -1200,7 +1200,7 @@ export const reviewModerationItem = onCall(
       adminId: request.auth.uid,
       itemId,
       decision: action,
-      notes,
+      notes: notes || null,
       contentType: item.contentType,
       contentId: item.contentId,
       targetUserId: item.userId,
