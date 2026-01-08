@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/social_providers.dart';
-import '../widgets/moderation_status_banner.dart';
 import '../widgets/strike_acknowledgment_dialog.dart';
 import '../widgets/suspended_user_overlay.dart';
 import 'profile_social_screen.dart';
@@ -117,25 +116,11 @@ class _AuthenticatedSocialHubState
   Widget build(BuildContext context) {
     // Wrap with suspended user overlay for full blocking
     return SuspendedUserOverlay(
-      child: Stack(
-        children: [
-          // Main content
-          ProfileSocialScreen(
-            userId: widget.userId,
-            showAppBar: true,
-            showStoryBar: true,
-          ),
-          // Moderation status banner (for warnings/strikes) - positioned at top with safe area
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: SafeArea(
-              bottom: false,
-              child: const ModerationStatusBanner(),
-            ),
-          ),
-        ],
+      child: ProfileSocialScreen(
+        userId: widget.userId,
+        showAppBar: true,
+        showStoryBar: true,
+        showModerationBanner: true,
       ),
     );
   }

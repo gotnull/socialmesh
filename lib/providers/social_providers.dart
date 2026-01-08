@@ -1375,27 +1375,35 @@ Future<void> unblockUser(WidgetRef ref, String userId) async {
 class ModerationStatusNotifier extends AsyncNotifier<ModerationStatus?> {
   @override
   Future<ModerationStatus?> build() async {
-    // Watch for real-time updates via stream
     final service = ref.watch(contentModerationServiceProvider);
-    final statusStream = service.watchModerationStatus();
 
-    // Subscribe to stream and update state
+    // Subscribe to stream for real-time updates, but only update state
+    // if the stream returns actual moderation data (not empty clear status)
+    final statusStream = service.watchModerationStatus();
     statusStream.listen((status) {
-      if (status != null) {
+      if (status != null && _hasActualModerationData(status)) {
+        // Only enrich if stream has real moderation data
         _enrichStatus(status);
-      } else {
-        state = AsyncData(status);
       }
+      // Ignore null or clear status from stream - we use initial fetch for that
     });
 
-    // Initial fetch with full details
+    // Initial fetch with full details (Cloud Function has all data)
     try {
       final fullStatus = await service.getModerationStatus();
       return _enrichWithHistory(fullStatus);
     } catch (e) {
-      // Fall back to basic status if function call fails
+      // Fall back to null status if function call fails
       return null;
     }
+  }
+
+  /// Check if status has actual moderation data (not just default clear status)
+  bool _hasActualModerationData(ModerationStatus status) {
+    return status.activeStrikes > 0 ||
+        status.activeWarnings > 0 ||
+        status.isSuspended ||
+        status.isPermanentlyBanned;
   }
 
   /// Enrich status from stream with unacknowledged count
@@ -1455,26 +1463,98 @@ class ModerationStatusNotifier extends AsyncNotifier<ModerationStatus?> {
     );
     if (currentStatus == null) return;
 
+    // Find unacknowledged strikes
+    final unacknowledged = currentStatus.strikes.where((s) => !s.acknowledged);
+    if (unacknowledged.isEmpty) {
+      // Nothing to acknowledge - don't invalidate (prevents flash)
+      return;
+    }
+
     final service = ref.read(contentModerationServiceProvider);
-    for (final strike in currentStatus.strikes) {
-      if (!strike.acknowledged) {
-        try {
-          await service.acknowledgeStrike(strike.id);
-        } catch (e) {
-          debugPrint('Error acknowledging strike ${strike.id}: $e');
-        }
+    for (final strike in unacknowledged) {
+      try {
+        await service.acknowledgeStrike(strike.id);
+      } catch (e) {
+        debugPrint('Error acknowledging strike ${strike.id}: $e');
       }
     }
 
-    // Refresh status
-    ref.invalidateSelf();
+    // Update local state immediately instead of full invalidation
+    // This prevents the flash from re-fetching
+    state = AsyncData(
+      ModerationStatus(
+        activeStrikes: currentStatus.activeStrikes,
+        activeWarnings: currentStatus.activeWarnings,
+        isSuspended: currentStatus.isSuspended,
+        suspendedUntil: currentStatus.suspendedUntil,
+        isPermanentlyBanned: currentStatus.isPermanentlyBanned,
+        strikes: currentStatus.strikes
+            .map(
+              (s) => UserStrike(
+                id: s.id,
+                userId: s.userId,
+                type: s.type,
+                reason: s.reason,
+                createdAt: s.createdAt,
+                expiresAt: s.expiresAt,
+                contentId: s.contentId,
+                contentType: s.contentType,
+                acknowledged: true, // Mark all as acknowledged
+              ),
+            )
+            .toList(),
+        unacknowledgedCount: 0,
+        lastReason: currentStatus.lastReason,
+        history: currentStatus.history,
+      ),
+    );
   }
 
   /// Acknowledge a specific strike
   Future<void> acknowledgeStrike(String strikeId) async {
+    final currentStatus = state.maybeWhen(
+      data: (status) => status,
+      orElse: () => null,
+    );
+
     final service = ref.read(contentModerationServiceProvider);
     await service.acknowledgeStrike(strikeId);
-    ref.invalidateSelf();
+
+    // Update local state immediately instead of invalidating
+    if (currentStatus != null) {
+      final updatedStrikes = currentStatus.strikes.map((s) {
+        if (s.id == strikeId) {
+          return UserStrike(
+            id: s.id,
+            userId: s.userId,
+            type: s.type,
+            reason: s.reason,
+            createdAt: s.createdAt,
+            expiresAt: s.expiresAt,
+            contentId: s.contentId,
+            contentType: s.contentType,
+            acknowledged: true,
+          );
+        }
+        return s;
+      }).toList();
+
+      state = AsyncData(
+        ModerationStatus(
+          activeStrikes: currentStatus.activeStrikes,
+          activeWarnings: currentStatus.activeWarnings,
+          isSuspended: currentStatus.isSuspended,
+          suspendedUntil: currentStatus.suspendedUntil,
+          isPermanentlyBanned: currentStatus.isPermanentlyBanned,
+          strikes: updatedStrikes,
+          unacknowledgedCount: updatedStrikes
+              .where((s) => !s.acknowledged)
+              .length,
+          lastReason: currentStatus.lastReason,
+          history: currentStatus.history,
+        ),
+      );
+    }
   }
 }
 

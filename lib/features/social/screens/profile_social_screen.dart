@@ -37,6 +37,7 @@ import '../../profile/profile_screen.dart';
 import '../../settings/linked_devices_screen.dart';
 import '../../settings/settings_screen.dart';
 import '../widgets/follow_button.dart';
+import '../widgets/moderation_status_banner.dart';
 import '../widgets/story_bar.dart';
 import 'activity_timeline_screen.dart';
 import 'create_post_screen.dart';
@@ -67,6 +68,7 @@ class ProfileSocialScreen extends ConsumerStatefulWidget {
     required this.userId,
     this.showAppBar = true,
     this.showStoryBar = false,
+    this.showModerationBanner = false,
   });
 
   final String userId;
@@ -76,6 +78,9 @@ class ProfileSocialScreen extends ConsumerStatefulWidget {
 
   /// Whether to show the StoryBar at the top (only for own profile in Social tab).
   final bool showStoryBar;
+
+  /// Whether to show the moderation status banner (only for own profile in Social tab).
+  final bool showModerationBanner;
 
   @override
   ConsumerState<ProfileSocialScreen> createState() =>
@@ -202,6 +207,9 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                 // Show StoryBar at top if enabled (for Social hub screen)
                 if (widget.showStoryBar)
                   const SliverToBoxAdapter(child: StoryBar()),
+                // Show moderation banner if enabled (for own profile)
+                if (widget.showModerationBanner && isOwnProfile)
+                  const SliverToBoxAdapter(child: ModerationStatusBanner()),
                 SliverToBoxAdapter(
                   child: _buildProfileHeader(
                     context,
