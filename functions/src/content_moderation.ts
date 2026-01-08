@@ -486,12 +486,115 @@ async function recordUserStrike(
     await triggerPermanentBan(userId, 'Exceeded maximum strike count');
   }
 
+  // Notify admins for suspensions and strikes
+  if (strikeType === 'suspension' || strikeType === 'strike') {
+    await notifyAdminsOfModeration(userId, strikeType, reason, docRef.id);
+  }
+
   console.log(`Recorded ${strikeType} for user ${userId}: ${reason}`);
 
   return {
     id: docRef.id,
     ...strike,
   } as UserStrike;
+}
+
+/**
+ * Notify all admins about a moderation action (suspension/strike)
+ */
+async function notifyAdminsOfModeration(
+  userId: string,
+  actionType: 'strike' | 'suspension',
+  reason: string,
+  strikeId: string,
+): Promise<void> {
+  try {
+    // Get user profile for context
+    const profileDoc = await db.collection('profiles').doc(userId).get();
+    const profileData = profileDoc.data();
+    const displayName = profileData?.displayName || 'Unknown User';
+
+    // Get all admins
+    const adminsSnap = await db.collection('admins').get();
+    if (adminsSnap.empty) {
+      console.log('No admins to notify');
+      return;
+    }
+
+    // Create a reported content entry for admin review
+    const reportDoc = await db.collection('reported_content').add({
+      type: 'auto_moderation',
+      contentType: 'user',
+      contentId: userId,
+      reporterId: 'system',
+      reason: actionType === 'suspension' ? 'User suspended' : 'Strike issued',
+      details: reason,
+      status: 'pending',
+      createdAt: admin.firestore.Timestamp.now(),
+      metadata: {
+        strikeId,
+        actionType,
+        userId,
+        displayName,
+      },
+    });
+
+    console.log(`Created moderation report ${reportDoc.id} for admin review`);
+
+    // Send push notification to each admin
+    for (const adminDoc of adminsSnap.docs) {
+      const adminId = adminDoc.id;
+      const title = actionType === 'suspension'
+        ? '🚨 User Suspended'
+        : '⚠️ Strike Issued';
+      const body = `${displayName} has been ${actionType === 'suspension' ? 'suspended' : 'given a strike'}: ${reason.substring(0, 100)}`;
+
+      // Get admin's FCM tokens
+      const tokensSnap = await db.collection('users').doc(adminId).collection('fcm_tokens').get();
+      const tokens = tokensSnap.docs.map(doc => doc.id);
+
+      if (tokens.length === 0) continue;
+
+      const message: admin.messaging.MulticastMessage = {
+        notification: {
+          title,
+          body,
+        },
+        data: {
+          type: 'moderation_action',
+          userId,
+          actionType,
+          strikeId,
+          reportId: reportDoc.id,
+        },
+        tokens,
+        apns: {
+          payload: {
+            aps: {
+              sound: 'default',
+              badge: 1,
+            },
+          },
+        },
+        android: {
+          notification: {
+            sound: 'default',
+            channelId: 'admin_notifications',
+          },
+        },
+      };
+
+      try {
+        await admin.messaging().sendEachForMulticast(message);
+        console.log(`Notified admin ${adminId} of moderation action`);
+      } catch (e) {
+        console.error(`Failed to notify admin ${adminId}:`, e);
+      }
+    }
+  } catch (error) {
+    console.error('Error notifying admins:', error);
+    // Don't throw - this is a best-effort notification
+  }
 }
 
 /**

@@ -1373,29 +1373,73 @@ Future<void> unblockUser(WidgetRef ref, String userId) async {
 /// AsyncNotifier for managing user's moderation status with acknowledgment.
 /// Supports real-time updates and action methods.
 class ModerationStatusNotifier extends AsyncNotifier<ModerationStatus?> {
+  /// Track the last known "severe" status to prevent downgrade flicker
+  ModerationStatus? _lastKnownSevereStatus;
+
   @override
   Future<ModerationStatus?> build() async {
     final service = ref.watch(contentModerationServiceProvider);
 
-    // Subscribe to stream for real-time updates, but only update state
-    // if the stream returns actual moderation data (not empty clear status)
-    final statusStream = service.watchModerationStatus();
-    statusStream.listen((status) {
-      if (status != null && _hasActualModerationData(status)) {
-        // Only enrich if stream has real moderation data
-        _enrichStatus(status);
-      }
-      // Ignore null or clear status from stream - we use initial fetch for that
+    // Subscribe to stream for real-time updates
+    final subscription = service.watchModerationStatus().listen((status) {
+      _handleStreamUpdate(status);
     });
 
-    // Initial fetch with full details (Cloud Function has all data)
+    // Clean up subscription when provider is disposed
+    ref.onDispose(() {
+      subscription.cancel();
+    });
+
+    // Initial fetch with full details (Cloud Function is authoritative)
     try {
       final fullStatus = await service.getModerationStatus();
-      return _enrichWithHistory(fullStatus);
+      final enriched = _enrichWithHistory(fullStatus);
+
+      // Track severe status
+      if (_isSevereStatus(enriched)) {
+        _lastKnownSevereStatus = enriched;
+      }
+
+      return enriched;
     } catch (e) {
-      // Fall back to null status if function call fails
+      debugPrint('Error fetching moderation status: $e');
+      // Return last known severe status if we had one (prevents flicker)
+      if (_lastKnownSevereStatus != null) {
+        return _lastKnownSevereStatus;
+      }
       return null;
     }
+  }
+
+  /// Handle stream updates - only update if data is "more severe" or matches
+  void _handleStreamUpdate(ModerationStatus? status) {
+    if (status == null) return;
+
+    final currentStatus = state.maybeWhen(data: (s) => s, orElse: () => null);
+
+    // If current status is suspended/banned, don't let stream downgrade it
+    // unless the stream ALSO shows suspended/banned (real lift)
+    if (currentStatus != null && _isSevereStatus(currentStatus)) {
+      if (!_isSevereStatus(status)) {
+        // Stream is trying to downgrade from severe - ignore it
+        // This prevents the flicker where Firestore hasn't synced yet
+        debugPrint(
+          '[ModerationStatus] Ignoring stream downgrade from severe status',
+        );
+        return;
+      }
+    }
+
+    // Stream has actual data - update if it shows issues
+    if (_hasActualModerationData(status)) {
+      _enrichStatus(status);
+      _lastKnownSevereStatus = status;
+    }
+  }
+
+  /// Check if status represents a severe restriction (suspended or banned)
+  bool _isSevereStatus(ModerationStatus status) {
+    return status.isSuspended || status.isPermanentlyBanned;
   }
 
   /// Check if status has actual moderation data (not just default clear status)

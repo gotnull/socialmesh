@@ -45,8 +45,14 @@ class SuspendedUserOverlay extends ConsumerWidget {
           ],
         );
       },
+      // During loading, show child but keep checking
+      // This prevents flash on initial load
       loading: () => child,
-      error: (_, _) => child,
+      // On error, show child (fail open for UX, but log it)
+      error: (e, _) {
+        debugPrint('Error loading moderation status: $e');
+        return child;
+      },
     );
   }
 }
@@ -83,15 +89,12 @@ class _SuspensionNotice extends StatelessWidget {
   }
 
   Future<void> _contactSupport() async {
-    final uri = Uri(
-      scheme: 'mailto',
-      path: 'support@socialmesh.app',
-      queryParameters: {
-        'subject': 'Account Suspension Appeal',
-        'body':
-            'Hi,\n\nI would like to appeal my account suspension.\n\n'
-            'Please review my case.\n\nThank you.',
-      },
+    // Use Uri.encodeFull to avoid + encoding for spaces
+    const subject = 'Account Suspension Appeal';
+    const body =
+        'Hi,\n\nI would like to appeal my account suspension.\n\nPlease review my case.\n\nThank you.';
+    final uri = Uri.parse(
+      'mailto:support@socialmesh.app?subject=${Uri.encodeComponent(subject)}&body=${Uri.encodeComponent(body)}',
     );
 
     if (await canLaunchUrl(uri)) {
@@ -107,280 +110,300 @@ class _SuspensionNotice extends StatelessWidget {
     return Material(
       color: Colors.black.withValues(alpha: 0.85),
       child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Warning icon with glow
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.red.withValues(alpha: 0.15),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.red.withValues(alpha: 0.3),
-                      blurRadius: 30,
-                      spreadRadius: 10,
+        child: Stack(
+          children: [
+            // Back button at top-left
+            Positioned(
+              top: 8,
+              left: 8,
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white70),
+                onPressed: () => Navigator.of(context).pop(),
+                tooltip: 'Go back',
+              ),
+            ),
+            // Main content
+            Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Warning icon with glow
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.red.withValues(alpha: 0.15),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.red.withValues(alpha: 0.3),
+                          blurRadius: 30,
+                          spreadRadius: 10,
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.block_rounded,
-                  size: 64,
-                  color: Colors.red,
-                ),
-              ),
-              const SizedBox(height: 32),
-
-              // Title
-              Text(
-                isPermanent
-                    ? 'Account Suspended'
-                    : 'Posting Temporarily Suspended',
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-
-              // Duration info
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.timer_outlined,
+                    child: const Icon(
+                      Icons.block_rounded,
+                      size: 64,
                       color: Colors.red,
-                      size: 20,
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      isPermanent
-                          ? 'Indefinite suspension'
-                          : 'Remaining: ${_formatDuration(suspendedUntil)}',
-                      style: const TextStyle(
-                        color: Colors.red,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
+                  ),
+                  const SizedBox(height: 32),
+
+                  // Title
+                  Text(
+                    isPermanent
+                        ? 'Account Suspended'
+                        : 'Posting Temporarily Suspended',
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Duration info
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.red.withValues(alpha: 0.3),
                       ),
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Explanation
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          Icons.info_outline,
-                          color: Colors.white.withValues(alpha: 0.7),
-                          size: 18,
+                        const Icon(
+                          Icons.timer_outlined,
+                          color: Colors.red,
+                          size: 20,
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'Why am I seeing this?',
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.9),
+                          isPermanent
+                              ? 'Indefinite suspension'
+                              : 'Remaining: ${_formatDuration(suspendedUntil)}',
+                          style: const TextStyle(
+                            color: Colors.red,
                             fontWeight: FontWeight.w600,
                             fontSize: 15,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    Text(
-                      reason ??
-                          'Your account has been suspended due to repeated '
-                              'violations of our community guidelines.',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.7),
-                        fontSize: 14,
-                        height: 1.5,
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Explanation
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.info_outline,
+                              color: Colors.white.withValues(alpha: 0.7),
+                              size: 18,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Why am I seeing this?',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.9),
+                                fontWeight: FontWeight.w600,
+                                fontSize: 15,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          reason ??
+                              'Your account has been suspended due to repeated '
+                                  'violations of our community guidelines.',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.7),
+                            fontSize: 14,
+                            height: 1.5,
+                          ),
+                        ),
+                        if (strikeCount > 0) ...[
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.warning_amber_rounded,
+                                color: Colors.orange,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                '$strikeCount strike${strikeCount > 1 ? 's' : ''} on your account',
+                                style: const TextStyle(
+                                  color: Colors.orange,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // What you can do
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: accentColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: accentColor.withValues(alpha: 0.3),
                       ),
                     ),
-                    if (strikeCount > 0) ...[
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.warning_amber_rounded,
-                            color: Colors.orange,
-                            size: 16,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.help_outline,
+                              color: accentColor.withValues(alpha: 0.9),
+                              size: 18,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'What can I do?',
+                              style: TextStyle(
+                                color: accentColor.withValues(alpha: 0.9),
+                                fontWeight: FontWeight.w600,
+                                fontSize: 15,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        _BulletPoint(
+                          text: isPermanent
+                              ? 'Wait for your appeal to be reviewed'
+                              : 'Wait for the suspension period to end',
+                          accentColor: accentColor,
+                        ),
+                        const SizedBox(height: 8),
+                        _BulletPoint(
+                          text: 'Review our community guidelines',
+                          accentColor: accentColor,
+                        ),
+                        const SizedBox(height: 8),
+                        _BulletPoint(
+                          text: 'Contact support to appeal this decision',
+                          accentColor: accentColor,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+
+                  // Contact support button
+                  BouncyTap(
+                    onTap: _contactSupport,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 16,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            accentColor,
+                            HSLColor.fromColor(accentColor)
+                                .withLightness(
+                                  (HSLColor.fromColor(accentColor).lightness *
+                                          0.7)
+                                      .clamp(0.0, 1.0),
+                                )
+                                .toColor(),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(30),
+                        boxShadow: [
+                          BoxShadow(
+                            color: accentColor.withValues(alpha: 0.4),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
                           ),
-                          const SizedBox(width: 8),
+                        ],
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.email_outlined, color: Colors.white),
+                          SizedBox(width: 12),
                           Text(
-                            '$strikeCount strike${strikeCount > 1 ? 's' : ''} on your account',
-                            style: const TextStyle(
-                              color: Colors.orange,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
+                            'Contact Support',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
                             ),
                           ),
                         ],
                       ),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
 
-              // What you can do
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: accentColor.withValues(alpha: 0.3)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+                  // Email hint
+                  BouncyTap(
+                    onTap: () {
+                      Clipboard.setData(
+                        const ClipboardData(text: 'support@socialmesh.app'),
+                      );
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Email copied to clipboard'),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
-                          Icons.help_outline,
-                          color: accentColor.withValues(alpha: 0.9),
-                          size: 18,
+                          Icons.copy,
+                          size: 14,
+                          color: Colors.white.withValues(alpha: 0.5),
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'What can I do?',
+                          'support@socialmesh.app',
                           style: TextStyle(
-                            color: accentColor.withValues(alpha: 0.9),
-                            fontWeight: FontWeight.w600,
-                            fontSize: 15,
+                            color: Colors.white.withValues(alpha: 0.5),
+                            fontSize: 13,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    _BulletPoint(
-                      text: isPermanent
-                          ? 'Wait for your appeal to be reviewed'
-                          : 'Wait for the suspension period to end',
-                      accentColor: accentColor,
-                    ),
-                    const SizedBox(height: 8),
-                    _BulletPoint(
-                      text: 'Review our community guidelines',
-                      accentColor: accentColor,
-                    ),
-                    const SizedBox(height: 8),
-                    _BulletPoint(
-                      text: 'Contact support to appeal this decision',
-                      accentColor: accentColor,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 32),
-
-              // Contact support button
-              BouncyTap(
-                onTap: _contactSupport,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 32,
-                    vertical: 16,
                   ),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        accentColor,
-                        HSLColor.fromColor(accentColor)
-                            .withLightness(
-                              (HSLColor.fromColor(accentColor).lightness * 0.7)
-                                  .clamp(0.0, 1.0),
-                            )
-                            .toColor(),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(30),
-                    boxShadow: [
-                      BoxShadow(
-                        color: accentColor.withValues(alpha: 0.4),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.email_outlined, color: Colors.white),
-                      SizedBox(width: 12),
-                      Text(
-                        'Contact Support',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                ],
               ),
-              const SizedBox(height: 16),
-
-              // Email hint
-              BouncyTap(
-                onTap: () {
-                  Clipboard.setData(
-                    const ClipboardData(text: 'support@socialmesh.app'),
-                  );
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Email copied to clipboard'),
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
-                },
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.copy,
-                      size: 14,
-                      color: Colors.white.withValues(alpha: 0.5),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'support@socialmesh.app',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.5),
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
