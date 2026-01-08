@@ -241,10 +241,7 @@ class _ProfileView extends ConsumerWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              if (hasAllPremium) ...[
-                const SizedBox(width: 8),
-                const SimpleVerifiedBadge(size: 24),
-              ],
+              if (hasAllPremium) ...[const SimpleVerifiedBadge(size: 24)],
             ],
           ),
           if (profile.callsign != null) ...[
