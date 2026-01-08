@@ -812,7 +812,7 @@ export const checkTextContent = onCall(
 // =============================================================================
 
 export const validateImages = onCall(
-  { cors: true, memory: '512MiB', timeoutSeconds: 60 },
+  { cors: true, timeoutSeconds: 60 },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError('unauthenticated', 'Must be signed in');
