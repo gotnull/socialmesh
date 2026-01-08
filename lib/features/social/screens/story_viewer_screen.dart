@@ -201,7 +201,6 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
   void _showOptions() {
     // Capture values before showing sheet (for use in async callback)
     final storyId = _currentStory.id;
-    final storyService = ref.read(storyServiceProvider);
     final story = _currentStory;
     final isOwnStory = _isOwnStory;
 
@@ -224,7 +223,8 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
             );
             if (confirm == true && mounted) {
               try {
-                await storyService.deleteStory(storyId);
+                // Use provider function which also refreshes story groups
+                await deleteStory(ref, storyId);
                 if (mounted) {
                   showSuccessSnackBar(context, 'Story deleted');
                   Navigator.pop(context);

@@ -493,10 +493,10 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                           }
                         },
                         scaleFactor: 0.95,
-                        // Explicit size: avatar + ring (if stories) + border (4px each side)
+                        // Always use totalRingSize for consistent layout (no shifting)
                         child: SizedBox(
-                          width: (hasStories ? totalRingSize : avatarSize) + 8,
-                          height: (hasStories ? totalRingSize : avatarSize) + 8,
+                          width: totalRingSize + 8,
+                          height: totalRingSize + 8,
                           child: Container(
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
@@ -516,6 +516,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                               clipBehavior: Clip.none,
                               children: [
                                 // Gradient ring for stories (animated shatter effect or static)
+                                // Always render the ring container for consistent sizing
                                 if (hasStories)
                                   showShatterAnimation
                                       ? AnimatedBuilder(
@@ -600,13 +601,10 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                                           ),
                                         ),
                                 // Avatar with shimmer loading and scale-in animation
+                                // Always positioned with ring offset for consistent placement
                                 Positioned(
-                                  left: hasStories
-                                      ? (ringWidth + ringPadding)
-                                      : 0,
-                                  top: hasStories
-                                      ? (ringWidth + ringPadding)
-                                      : 0,
+                                  left: ringWidth + ringPadding,
+                                  top: ringWidth + ringPadding,
                                   child: ShimmerAvatar(
                                     imageUrl: profile.avatarUrl,
                                     radius: avatarSize / 2,

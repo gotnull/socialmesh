@@ -337,6 +337,19 @@ Future<void> deleteStory(WidgetRef ref, String storyId) async {
     debugPrint('🗑️ [deleteStory provider] Refreshing story groups...');
     ref.read(storyGroupsProvider.notifier).refresh();
     debugPrint('🗑️ [deleteStory provider] Story groups refreshed');
+
+    // Also invalidate user stories provider for the current user
+    final currentUser = ref.read(currentUserProvider);
+    if (currentUser != null) {
+      debugPrint(
+        '🗑️ [deleteStory provider] Invalidating userStoriesProvider for ${currentUser.uid}',
+      );
+      ref.invalidate(userStoriesProvider(currentUser.uid));
+    }
+
+    // Invalidate myStoriesProvider as well
+    ref.invalidate(myStoriesProvider);
+    debugPrint('🗑️ [deleteStory provider] All providers invalidated');
   } catch (e, stack) {
     debugPrint('🗑️ [deleteStory provider] ERROR: $e');
     debugPrint('🗑️ [deleteStory provider] Stack: $stack');
