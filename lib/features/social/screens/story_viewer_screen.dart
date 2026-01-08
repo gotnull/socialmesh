@@ -222,16 +222,23 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
               isDestructive: true,
             );
             if (confirm == true && mounted) {
+              // Stop progress to prevent auto-advance race condition
+              _progressController.stop();
               try {
                 // Use provider function which also refreshes story groups
                 await deleteStory(ref, storyId);
                 if (mounted) {
                   showSuccessSnackBar(context, 'Story deleted');
-                  Navigator.pop(context);
+                  // Pop only the story viewer (not additional routes)
+                  if (Navigator.canPop(context)) {
+                    Navigator.pop(context);
+                  }
                 }
               } catch (e) {
                 if (mounted) {
                   showErrorSnackBar(context, 'Failed to delete story: $e');
+                  // Resume progress if delete failed
+                  _startProgress();
                 }
               }
             }
