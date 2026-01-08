@@ -1,7 +1,7 @@
 /**
  * Content Moderation System
  *
- * Instagram-inspired AI content moderation using Google Cloud Vision API
+ * AI content moderation using Google Cloud Vision API
  * for image analysis and custom text filtering.
  *
  * Architecture:

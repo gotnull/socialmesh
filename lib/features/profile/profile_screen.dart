@@ -2007,7 +2007,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Banner + Avatar header (like Twitter/Instagram)
+                            // Banner + Avatar header
                             SizedBox(
                               height: 180,
                               child: Stack(

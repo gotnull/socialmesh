@@ -7,7 +7,7 @@ import '../../../providers/social_providers.dart';
 import '../../../services/content_moderation_service.dart';
 
 /// Settings screen for sensitive content controls.
-/// Similar to Instagram's "Sensitive Content Control" feature.
+/// Allows users to control how sensitive content is displayed.
 class SensitiveContentSettingsScreen extends ConsumerStatefulWidget {
   const SensitiveContentSettingsScreen({super.key});
 

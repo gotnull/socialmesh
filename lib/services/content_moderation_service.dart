@@ -562,7 +562,7 @@ class SensitiveContentSettings {
   );
 }
 
-/// Filter levels for sensitive content (like Instagram's Sensitive Content Control)
+/// Filter levels for sensitive content display
 enum SensitiveContentFilterLevel {
   /// Don't show sensitive content at all
   strict,

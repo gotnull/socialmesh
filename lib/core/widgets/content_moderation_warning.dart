@@ -21,7 +21,7 @@ class ContentModerationCheckResult {
   bool get shouldWarn => action == 'review' || action == 'flag';
 }
 
-/// Instagram-style content moderation warning dialog.
+/// Content moderation warning dialog.
 /// Shows when user attempts to post content that violates guidelines.
 class ContentModerationWarning extends StatelessWidget {
   const ContentModerationWarning({
