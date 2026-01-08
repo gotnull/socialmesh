@@ -1882,7 +1882,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
       }
     }
 
-    // 3. Check Bio - Allow flagged content but show warning
+    // 3. Check Bio - REJECT immediately if violates (no "post anyway")
     final bio = _bioController.text.trim();
     if (bio.isNotEmpty) {
       final bioCheck = await moderationService.checkText(
@@ -1891,7 +1891,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
       );
 
       if (!bioCheck.passed || bioCheck.action == 'reject') {
-        // Bio content blocked completely
+        // Bio content blocked - show error and stop
         if (!mounted) return;
         await ContentModerationWarning.show(
           context,
@@ -1903,24 +1903,144 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
           ),
         );
         return;
-      } else if (bioCheck.action == 'review' || bioCheck.action == 'flag') {
-        // Bio content flagged - show warning but allow to proceed
+      }
+    }
+
+    // 4. Check Website - REJECT immediately if violates
+    final website = _websiteController.text.trim();
+    if (website.isNotEmpty) {
+      final websiteCheck = await moderationService.checkText(
+        website,
+        useServerCheck: true,
+      );
+
+      if (!websiteCheck.passed || websiteCheck.action == 'reject') {
         if (!mounted) return;
-        final action = await ContentModerationWarning.show(
+        await ContentModerationWarning.show(
           context,
           result: ContentModerationCheckResult(
-            passed: true,
-            action: bioCheck.action,
-            categories: bioCheck.categories.map((c) => c.name).toList(),
-            details: bioCheck.details,
+            passed: false,
+            action: 'reject',
+            categories: websiteCheck.categories.map((c) => c.name).toList(),
+            details: 'Website URL contains inappropriate content.',
           ),
         );
-        if (action == ContentModerationAction.cancel) return;
-        if (action == ContentModerationAction.edit) {
-          _bioFocusNode.requestFocus();
-          return;
-        }
-        // User chose to proceed - server-side trigger will create reported content
+        return;
+      }
+    }
+
+    // 5. Check Twitter - REJECT immediately if violates
+    final twitter = _twitterController.text.trim();
+    if (twitter.isNotEmpty) {
+      final twitterCheck = await moderationService.checkText(
+        twitter,
+        useServerCheck: true,
+      );
+
+      if (!twitterCheck.passed || twitterCheck.action == 'reject') {
+        if (!mounted) return;
+        await ContentModerationWarning.show(
+          context,
+          result: ContentModerationCheckResult(
+            passed: false,
+            action: 'reject',
+            categories: twitterCheck.categories.map((c) => c.name).toList(),
+            details: 'Twitter username contains inappropriate content.',
+          ),
+        );
+        return;
+      }
+    }
+
+    // 6. Check Mastodon - REJECT immediately if violates
+    final mastodon = _mastodonController.text.trim();
+    if (mastodon.isNotEmpty) {
+      final mastodonCheck = await moderationService.checkText(
+        mastodon,
+        useServerCheck: true,
+      );
+
+      if (!mastodonCheck.passed || mastodonCheck.action == 'reject') {
+        if (!mounted) return;
+        await ContentModerationWarning.show(
+          context,
+          result: ContentModerationCheckResult(
+            passed: false,
+            action: 'reject',
+            categories: mastodonCheck.categories.map((c) => c.name).toList(),
+            details: 'Mastodon handle contains inappropriate content.',
+          ),
+        );
+        return;
+      }
+    }
+
+    // 7. Check GitHub - REJECT immediately if violates
+    final github = _githubController.text.trim();
+    if (github.isNotEmpty) {
+      final githubCheck = await moderationService.checkText(
+        github,
+        useServerCheck: true,
+      );
+
+      if (!githubCheck.passed || githubCheck.action == 'reject') {
+        if (!mounted) return;
+        await ContentModerationWarning.show(
+          context,
+          result: ContentModerationCheckResult(
+            passed: false,
+            action: 'reject',
+            categories: githubCheck.categories.map((c) => c.name).toList(),
+            details: 'GitHub username contains inappropriate content.',
+          ),
+        );
+        return;
+      }
+    }
+
+    // 8. Check Discord - REJECT immediately if violates
+    final discord = _discordController.text.trim();
+    if (discord.isNotEmpty) {
+      final discordCheck = await moderationService.checkText(
+        discord,
+        useServerCheck: true,
+      );
+
+      if (!discordCheck.passed || discordCheck.action == 'reject') {
+        if (!mounted) return;
+        await ContentModerationWarning.show(
+          context,
+          result: ContentModerationCheckResult(
+            passed: false,
+            action: 'reject',
+            categories: discordCheck.categories.map((c) => c.name).toList(),
+            details: 'Discord username contains inappropriate content.',
+          ),
+        );
+        return;
+      }
+    }
+
+    // 9. Check Telegram - REJECT immediately if violates
+    final telegram = _telegramController.text.trim();
+    if (telegram.isNotEmpty) {
+      final telegramCheck = await moderationService.checkText(
+        telegram,
+        useServerCheck: true,
+      );
+
+      if (!telegramCheck.passed || telegramCheck.action == 'reject') {
+        if (!mounted) return;
+        await ContentModerationWarning.show(
+          context,
+          result: ContentModerationCheckResult(
+            passed: false,
+            action: 'reject',
+            categories: telegramCheck.categories.map((c) => c.name).toList(),
+            details: 'Telegram username contains inappropriate content.',
+          ),
+        );
+        return;
       }
     }
 
@@ -2412,10 +2532,12 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                               hint: 'Amateur radio callsign or identifier',
                               icon: Icons.badge_outlined,
                               textCapitalization: TextCapitalization.characters,
-                              maxLength: 10,
                               validator: (value) {
                                 if (value == null || value.trim().isEmpty) {
                                   return null; // Callsign is optional
+                                }
+                                if (value.trim().length > 10) {
+                                  return 'Max 10 characters';
                                 }
                                 // Use proper profanity checker
                                 final error = ProfanityChecker.instance.check(
