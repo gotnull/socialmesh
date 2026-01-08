@@ -776,15 +776,17 @@ export const checkTextContent = onCall(
 
     const result = analyzeText(text);
 
-    // Log the check
-    await db.collection('moderation_checks').add({
+    // Log the check (only include defined fields)
+    const logData: Record<string, unknown> = {
       userId: request.auth.uid,
       text: text.substring(0, 500), // Truncate for storage
       result,
-      contentType,
-      contentId,
       timestamp: admin.firestore.FieldValue.serverTimestamp(),
-    });
+    };
+    if (contentType) logData.contentType = contentType;
+    if (contentId) logData.contentId = contentId;
+
+    await db.collection('moderation_checks').add(logData);
 
     return result;
   },
