@@ -17,6 +17,7 @@ import '../../../core/widgets/auto_scroll_text.dart';
 import '../../../core/widgets/default_banner.dart';
 import '../../../core/widgets/edge_fade.dart';
 import '../../../core/widgets/node_avatar.dart';
+import '../../../core/widgets/shimmer_image.dart';
 import '../../../core/widgets/verified_badge.dart';
 import '../../../models/mesh_models.dart';
 import '../../../models/social.dart';
@@ -341,7 +342,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
             background: Stack(
               clipBehavior: Clip.none,
               children: [
-                // Banner image
+                // Banner image with shimmer loading
                 Positioned.fill(
                   bottom: avatarOverlap,
                   child: BouncyTap(
@@ -350,14 +351,11 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                         : null,
                     scaleFactor: 0.98,
                     enabled: isOwnProfile,
-                    child: profile.bannerUrl != null
-                        ? Image.network(
-                            profile.bannerUrl!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const DefaultBanner(),
-                          )
-                        : const DefaultBanner(),
+                    child: ShimmerBanner(
+                      imageUrl: profile.bannerUrl,
+                      height: bannerHeight,
+                      fallback: const DefaultBanner(),
+                    ),
                   ),
                 ),
                 // Gradient overlay for readability
@@ -568,29 +566,23 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                                           ),
                                         ),
                                       ),
-                              // Avatar
+                              // Avatar with shimmer loading and scale-in animation
                               Positioned(
                                 left: hasStories
                                     ? (ringWidth + ringPadding)
                                     : 0,
                                 top: hasStories ? (ringWidth + ringPadding) : 0,
-                                child: CircleAvatar(
+                                child: ShimmerAvatar(
+                                  imageUrl: profile.avatarUrl,
                                   radius: avatarSize / 2,
+                                  fallbackText: profile.displayName[0]
+                                      .toUpperCase(),
                                   backgroundColor: context.accentColor
                                       .withValues(alpha: 0.2),
-                                  backgroundImage: profile.avatarUrl != null
-                                      ? NetworkImage(profile.avatarUrl!)
-                                      : null,
-                                  child: profile.avatarUrl == null
-                                      ? Text(
-                                          profile.displayName[0].toUpperCase(),
-                                          style: TextStyle(
-                                            fontSize: 28,
-                                            fontWeight: FontWeight.bold,
-                                            color: context.accentColor,
-                                          ),
-                                        )
-                                      : null,
+                                  animateIn: true,
+                                  animationDelay: const Duration(
+                                    milliseconds: 100,
+                                  ),
                                 ),
                               ),
                               // Add story button for own profile (always visible)
