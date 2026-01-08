@@ -239,15 +239,62 @@ Future<void> toggleFollow(WidgetRef ref, String targetUserId) async {
   final currentUser = ref.read(currentUserProvider);
   final currentState = await ref.read(followStateProvider(targetUserId).future);
 
+  // Get target profile for optimistic updates (needed to know current counts)
+  final targetProfile = ref
+      .read(publicProfileStreamProvider(targetUserId))
+      .value;
+  final myProfile = currentUser != null
+      ? ref.read(publicProfileStreamProvider(currentUser.uid)).value
+      : null;
+
   if (currentState.isFollowing) {
-    // Unfollow
+    // Unfollow - apply optimistic decrements
+    if (targetProfile != null) {
+      ref
+          .read(profileCountAdjustmentsProvider.notifier)
+          .decrement(
+            targetUserId,
+            ProfileCountType.followers,
+            targetProfile.followerCount,
+          );
+    }
+    if (myProfile != null && currentUser != null) {
+      ref
+          .read(profileCountAdjustmentsProvider.notifier)
+          .decrement(
+            currentUser.uid,
+            ProfileCountType.following,
+            myProfile.followingCount,
+          );
+    }
     await service.unfollowUser(targetUserId);
   } else if (currentState.hasPendingRequest) {
-    // Cancel pending request
+    // Cancel pending request - no count changes
     await service.cancelFollowRequest(targetUserId);
   } else {
-    // Follow or send request (followUser handles private accounts internally)
-    await service.followUser(targetUserId);
+    // Follow or send request
+    final result = await service.followUser(targetUserId);
+    // Only apply optimistic counts if it's an instant follow (not a request)
+    if (result == 'followed') {
+      if (targetProfile != null) {
+        ref
+            .read(profileCountAdjustmentsProvider.notifier)
+            .increment(
+              targetUserId,
+              ProfileCountType.followers,
+              targetProfile.followerCount,
+            );
+      }
+      if (myProfile != null && currentUser != null) {
+        ref
+            .read(profileCountAdjustmentsProvider.notifier)
+            .increment(
+              currentUser.uid,
+              ProfileCountType.following,
+              myProfile.followingCount,
+            );
+      }
+    }
   }
 
   // Update batch cache immediately for responsive UI
@@ -291,6 +338,37 @@ final pendingFollowRequestsProvider =
 Future<void> acceptFollowRequest(WidgetRef ref, String requesterId) async {
   final service = ref.read(socialServiceProvider);
   final currentUser = ref.read(currentUserProvider);
+
+  // Get profiles for optimistic updates
+  final requesterProfile = ref
+      .read(publicProfileStreamProvider(requesterId))
+      .value;
+  final myProfile = currentUser != null
+      ? ref.read(publicProfileStreamProvider(currentUser.uid)).value
+      : null;
+
+  // Apply optimistic count updates:
+  // - requester's following count goes up
+  // - my follower count goes up
+  if (requesterProfile != null) {
+    ref
+        .read(profileCountAdjustmentsProvider.notifier)
+        .increment(
+          requesterId,
+          ProfileCountType.following,
+          requesterProfile.followingCount,
+        );
+  }
+  if (myProfile != null && currentUser != null) {
+    ref
+        .read(profileCountAdjustmentsProvider.notifier)
+        .increment(
+          currentUser.uid,
+          ProfileCountType.followers,
+          myProfile.followerCount,
+        );
+  }
+
   await service.acceptFollowRequest(requesterId);
 
   // Invalidate related providers
@@ -320,6 +398,37 @@ Future<void> declineFollowRequest(WidgetRef ref, String requesterId) async {
 Future<void> removeFollower(WidgetRef ref, String followerId) async {
   final service = ref.read(socialServiceProvider);
   final currentUser = ref.read(currentUserProvider);
+
+  // Get profiles for optimistic updates
+  final followerProfile = ref
+      .read(publicProfileStreamProvider(followerId))
+      .value;
+  final myProfile = currentUser != null
+      ? ref.read(publicProfileStreamProvider(currentUser.uid)).value
+      : null;
+
+  // Apply optimistic count updates:
+  // - follower's following count goes down
+  // - my follower count goes down
+  if (followerProfile != null) {
+    ref
+        .read(profileCountAdjustmentsProvider.notifier)
+        .decrement(
+          followerId,
+          ProfileCountType.following,
+          followerProfile.followingCount,
+        );
+  }
+  if (myProfile != null && currentUser != null) {
+    ref
+        .read(profileCountAdjustmentsProvider.notifier)
+        .decrement(
+          currentUser.uid,
+          ProfileCountType.followers,
+          myProfile.followerCount,
+        );
+  }
+
   await service.removeFollower(followerId);
 
   // Invalidate related providers
@@ -1176,7 +1285,7 @@ class CreatePostNotifier extends Notifier<CreatePostState> {
 
       ref
           .read(profileCountAdjustmentsProvider.notifier)
-          .increment(post.authorId, currentCount);
+          .increment(post.authorId, ProfileCountType.posts, currentCount);
 
       return post;
     } catch (e) {
@@ -1280,85 +1389,98 @@ Future<void> toggleLike(WidgetRef ref, String postId) async {
 // PUBLIC PROFILE
 // ===========================================================================
 
-/// Tracks optimistic post count updates.
-/// Stores the expected post count after optimistic updates.
+/// Types of profile counts we can optimistically update.
+enum ProfileCountType { posts, followers, following }
+
+/// Tracks optimistic count updates for posts, followers, and following.
+/// Stores the expected counts after optimistic updates.
 /// When stream emits the expected count, we know server has synced.
 class ProfileCountAdjustmentsNotifier
-    extends Notifier<Map<String, OptimisticCount>> {
+    extends Notifier<Map<String, OptimisticCounts>> {
   @override
-  Map<String, OptimisticCount> build() => {};
+  Map<String, OptimisticCounts> build() => {};
 
-  /// Record an optimistic increment. Stores the baseline and expected count.
-  void increment(String userId, int currentServerCount) {
-    final existing = state[userId];
-    final baseline = existing?.baselineCount ?? currentServerCount;
-    final newExpected = (existing?.expectedCount ?? currentServerCount) + 1;
-    state = {
-      ...state,
-      userId: OptimisticCount(
-        baselineCount: baseline,
-        expectedCount: newExpected,
-      ),
-    };
+  /// Record an optimistic increment for a specific count type.
+  void increment(String userId, ProfileCountType type, int currentServerCount) {
+    final existing = state[userId] ?? const OptimisticCounts();
+    final updated = existing.increment(type, currentServerCount);
+    state = {...state, userId: updated};
   }
 
-  /// Record an optimistic decrement.
-  void decrement(String userId, int currentServerCount) {
-    final existing = state[userId];
-    final baseline = existing?.baselineCount ?? currentServerCount;
-    final newExpected = (existing?.expectedCount ?? currentServerCount) - 1;
-    state = {
-      ...state,
-      userId: OptimisticCount(
-        baselineCount: baseline,
-        expectedCount: newExpected.clamp(0, 999999),
-      ),
-    };
+  /// Record an optimistic decrement for a specific count type.
+  void decrement(String userId, ProfileCountType type, int currentServerCount) {
+    final existing = state[userId] ?? const OptimisticCounts();
+    final updated = existing.decrement(type, currentServerCount);
+    state = {...state, userId: updated};
   }
 
   void reset(String userId) {
-    final newState = Map<String, OptimisticCount>.from(state);
+    final newState = Map<String, OptimisticCounts>.from(state);
     newState.remove(userId);
     state = newState;
   }
 
-  /// Get the adjustment to apply given the current server count.
+  void resetType(String userId, ProfileCountType type) {
+    final existing = state[userId];
+    if (existing == null) return;
+
+    final updated = existing.resetType(type);
+    if (updated.isEmpty) {
+      final newState = Map<String, OptimisticCounts>.from(state);
+      newState.remove(userId);
+      state = newState;
+    } else {
+      state = {...state, userId: updated};
+    }
+  }
+
+  /// Get the adjustment to apply for a specific count type given server count.
   /// Returns 0 if server has caught up to expected count.
-  int getAdjustment(String userId, int serverCount) {
+  int getAdjustment(String userId, ProfileCountType type, int serverCount) {
     final optimistic = state[userId];
     if (optimistic == null) return 0;
 
+    final count = optimistic.getCount(type);
+    if (count == null) return 0;
+
     // Server has synced when it matches the expected count
-    if (serverCount == optimistic.expectedCount) {
-      // Auto-clear the optimistic state since server caught up
-      Future.microtask(() => reset(userId));
+    if (serverCount == count.expectedCount) {
+      // Auto-clear the optimistic state for this type since server caught up
+      Future.microtask(() => resetType(userId, type));
       return 0;
     }
 
     // If server moved past our baseline in the expected direction, it synced
-    // For increments: baseline=5, expected=6, server becomes 6+ means synced
-    // For decrements: baseline=5, expected=4, server becomes 4 or less means synced
-    final isIncrement = optimistic.expectedCount > optimistic.baselineCount;
-    if (isIncrement && serverCount >= optimistic.expectedCount) {
-      Future.microtask(() => reset(userId));
+    final isIncrement = count.expectedCount > count.baselineCount;
+    if (isIncrement && serverCount >= count.expectedCount) {
+      Future.microtask(() => resetType(userId, type));
       return 0;
     }
-    if (!isIncrement && serverCount <= optimistic.expectedCount) {
-      Future.microtask(() => reset(userId));
+    if (!isIncrement && serverCount <= count.expectedCount) {
+      Future.microtask(() => resetType(userId, type));
       return 0;
     }
 
     // Server hasn't caught up yet, apply the difference
-    return optimistic.expectedCount - serverCount;
+    return count.expectedCount - serverCount;
+  }
+
+  /// Legacy method for backwards compatibility with post count adjustments.
+  @Deprecated('Use increment(userId, ProfileCountType.posts, count) instead')
+  void incrementPosts(String userId, int currentServerCount) {
+    increment(userId, ProfileCountType.posts, currentServerCount);
+  }
+
+  /// Legacy method for backwards compatibility.
+  @Deprecated('Use decrement(userId, ProfileCountType.posts, count) instead')
+  void decrementPosts(String userId, int currentServerCount) {
+    decrement(userId, ProfileCountType.posts, currentServerCount);
   }
 }
 
-/// Class to track optimistic counts for post count updates.
+/// Single optimistic count tracker.
 class OptimisticCount {
-  /// The server count when we started tracking.
   final int baselineCount;
-
-  /// The expected count after optimistic updates.
   final int expectedCount;
 
   const OptimisticCount({
@@ -1367,11 +1489,107 @@ class OptimisticCount {
   });
 }
 
+/// Container for all optimistic counts for a profile.
+class OptimisticCounts {
+  final OptimisticCount? posts;
+  final OptimisticCount? followers;
+  final OptimisticCount? following;
+
+  const OptimisticCounts({this.posts, this.followers, this.following});
+
+  bool get isEmpty => posts == null && followers == null && following == null;
+
+  OptimisticCount? getCount(ProfileCountType type) {
+    switch (type) {
+      case ProfileCountType.posts:
+        return posts;
+      case ProfileCountType.followers:
+        return followers;
+      case ProfileCountType.following:
+        return following;
+    }
+  }
+
+  OptimisticCounts increment(ProfileCountType type, int currentServerCount) {
+    final existing = getCount(type);
+    final baseline = existing?.baselineCount ?? currentServerCount;
+    final newExpected = (existing?.expectedCount ?? currentServerCount) + 1;
+    final newCount = OptimisticCount(
+      baselineCount: baseline,
+      expectedCount: newExpected,
+    );
+
+    switch (type) {
+      case ProfileCountType.posts:
+        return OptimisticCounts(
+          posts: newCount,
+          followers: followers,
+          following: following,
+        );
+      case ProfileCountType.followers:
+        return OptimisticCounts(
+          posts: posts,
+          followers: newCount,
+          following: following,
+        );
+      case ProfileCountType.following:
+        return OptimisticCounts(
+          posts: posts,
+          followers: followers,
+          following: newCount,
+        );
+    }
+  }
+
+  OptimisticCounts decrement(ProfileCountType type, int currentServerCount) {
+    final existing = getCount(type);
+    final baseline = existing?.baselineCount ?? currentServerCount;
+    final newExpected = ((existing?.expectedCount ?? currentServerCount) - 1)
+        .clamp(0, 999999);
+    final newCount = OptimisticCount(
+      baselineCount: baseline,
+      expectedCount: newExpected,
+    );
+
+    switch (type) {
+      case ProfileCountType.posts:
+        return OptimisticCounts(
+          posts: newCount,
+          followers: followers,
+          following: following,
+        );
+      case ProfileCountType.followers:
+        return OptimisticCounts(
+          posts: posts,
+          followers: newCount,
+          following: following,
+        );
+      case ProfileCountType.following:
+        return OptimisticCounts(
+          posts: posts,
+          followers: followers,
+          following: newCount,
+        );
+    }
+  }
+
+  OptimisticCounts resetType(ProfileCountType type) {
+    switch (type) {
+      case ProfileCountType.posts:
+        return OptimisticCounts(followers: followers, following: following);
+      case ProfileCountType.followers:
+        return OptimisticCounts(posts: posts, following: following);
+      case ProfileCountType.following:
+        return OptimisticCounts(posts: posts, followers: followers);
+    }
+  }
+}
+
 /// Global provider for all profile count adjustments.
 final profileCountAdjustmentsProvider =
     NotifierProvider<
       ProfileCountAdjustmentsNotifier,
-      Map<String, OptimisticCount>
+      Map<String, OptimisticCounts>
     >(ProfileCountAdjustmentsNotifier.new);
 
 /// Provider for a public profile (async).
@@ -1400,16 +1618,43 @@ final optimisticProfileProvider =
       return profileAsync.whenData((profile) {
         if (profile == null) return profile;
 
-        // Get dynamic adjustment based on current server count
-        final adjustment = ref
-            .read(profileCountAdjustmentsProvider.notifier)
-            .getAdjustment(userId, profile.postCount);
+        final notifier = ref.read(profileCountAdjustmentsProvider.notifier);
 
-        if (adjustment == 0) return profile;
+        // Get adjustments for all count types
+        final postAdjustment = notifier.getAdjustment(
+          userId,
+          ProfileCountType.posts,
+          profile.postCount,
+        );
+        final followerAdjustment = notifier.getAdjustment(
+          userId,
+          ProfileCountType.followers,
+          profile.followerCount,
+        );
+        final followingAdjustment = notifier.getAdjustment(
+          userId,
+          ProfileCountType.following,
+          profile.followingCount,
+        );
 
-        // Apply optimistic adjustment to post count
+        // If no adjustments needed, return original profile
+        if (postAdjustment == 0 &&
+            followerAdjustment == 0 &&
+            followingAdjustment == 0) {
+          return profile;
+        }
+
+        // Apply all optimistic adjustments
         return profile.copyWith(
-          postCount: (profile.postCount + adjustment).clamp(0, 999999),
+          postCount: (profile.postCount + postAdjustment).clamp(0, 999999),
+          followerCount: (profile.followerCount + followerAdjustment).clamp(
+            0,
+            999999,
+          ),
+          followingCount: (profile.followingCount + followingAdjustment).clamp(
+            0,
+            999999,
+          ),
         );
       });
     });

@@ -513,7 +513,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
         final currentCount = currentProfile?.postCount ?? 0;
         ref
             .read(profileCountAdjustmentsProvider.notifier)
-            .decrement(post.authorId, currentCount);
+            .decrement(post.authorId, ProfileCountType.posts, currentCount);
 
         if (mounted) {
           Navigator.pop(context);
