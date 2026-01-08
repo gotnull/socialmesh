@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -379,9 +380,23 @@ class _ReportsList extends ConsumerWidget {
         Navigator.pop(context); // Close loading
         showSuccessSnackBar(context, 'User banned and $type deleted');
       }
-    } on FirebaseFunctionsException catch (e) {
+    } on FirebaseFunctionsException catch (e, stackTrace) {
       AppLogging.social(
         '[BanUser] FirebaseFunctionsException: code=${e.code}, message=${e.message}, details=${e.details}',
+      );
+
+      // Record to Crashlytics for debugging
+      await FirebaseCrashlytics.instance.recordError(
+        e,
+        stackTrace,
+        reason: 'banUser Firebase Function failed',
+        information: [
+          'code: ${e.code}',
+          'message: ${e.message}',
+          'details: ${e.details}',
+          'userId: $authorId',
+          'reportId: ${report['id']}',
+        ],
       );
 
       // Log to Firebase Analytics for monitoring
@@ -406,6 +421,14 @@ class _ReportsList extends ConsumerWidget {
     } catch (e, stackTrace) {
       AppLogging.social('[BanUser] Unexpected error: $e');
       AppLogging.social('[BanUser] Stack trace: $stackTrace');
+
+      // Record to Crashlytics for debugging
+      await FirebaseCrashlytics.instance.recordError(
+        e,
+        stackTrace,
+        reason: 'banUser unexpected error',
+        information: ['userId: $authorId', 'reportId: ${report['id']}'],
+      );
 
       // Log to Firebase Analytics for monitoring
       await FirebaseAnalytics.instance.logEvent(

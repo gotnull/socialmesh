@@ -2034,37 +2034,58 @@ export const banUser = onCall({ cors: true }, async (request) => {
   try {
     // Get user's email before disabling (for notification)
     let userEmail: string | undefined;
+    let authUserExists = false;
     try {
       const userRecord = await admin.auth().getUser(userId);
       userEmail = userRecord.email;
-    } catch {
-      console.log('Could not fetch user email');
+      authUserExists = true;
+      console.log(`[banUser] Found auth user with email: ${userEmail}`);
+    } catch (authError) {
+      console.log(`[banUser] User ${userId} not found in Firebase Auth (may be a dummy user): ${authError}`);
+      // Continue - user might only exist in Firestore (dummy data)
     }
 
-    // 1. Disable the Firebase Auth account
-    await admin.auth().updateUser(userId, {
-      disabled: true,
-    });
-    console.log(`Disabled auth account for ${userId}`);
+    // 1. Disable the Firebase Auth account (if it exists)
+    if (authUserExists) {
+      try {
+        await admin.auth().updateUser(userId, {
+          disabled: true,
+        });
+        console.log(`[banUser] Disabled auth account for ${userId}`);
+      } catch (disableError) {
+        console.error(`[banUser] Error disabling auth account: ${disableError}`);
+        // Continue - user might not exist in Auth
+      }
 
-    // 2. Revoke all refresh tokens (force sign out everywhere)
-    await admin.auth().revokeRefreshTokens(userId);
-    console.log(`Revoked refresh tokens for ${userId}`);
+      // 2. Revoke all refresh tokens (force sign out everywhere)
+      try {
+        await admin.auth().revokeRefreshTokens(userId);
+        console.log(`[banUser] Revoked refresh tokens for ${userId}`);
+      } catch (revokeError) {
+        console.error(`[banUser] Error revoking tokens: ${revokeError}`);
+      }
+    } else {
+      console.log('[banUser] Skipping auth operations for non-existent auth user');
+    }
 
     // 3. Mark user as banned in Firestore
+    console.log('[banUser] Marking user as banned in Firestore...');
     await db.collection('users').doc(userId).set({
       banned: true,
       bannedAt: admin.firestore.FieldValue.serverTimestamp(),
       bannedBy: callerUid,
       banReason: reason,
     }, { merge: true });
+    console.log('[banUser] User marked as banned in Firestore');
 
     // 4. Delete user's public profile
-    await db.collection('profiles').doc(userId).delete().catch(() => {
-      console.log('No profile to delete');
+    console.log('[banUser] Deleting user profile...');
+    await db.collection('profiles').doc(userId).delete().catch((err) => {
+      console.log(`[banUser] No profile to delete or error: ${err}`);
     });
 
     // 5. Delete user's stories
+    console.log('[banUser] Deleting user stories...');
     const storiesSnap = await db.collection('stories')
       .where('authorId', '==', userId)
       .get();
@@ -2137,8 +2158,11 @@ export const banUser = onCall({ cors: true }, async (request) => {
     };
 
   } catch (error) {
-    console.error('Error banning user:', error);
-    throw new HttpsError('internal', `Failed to ban user: ${error}`);
+    console.error('[banUser] CRITICAL ERROR:', error);
+    console.error('[banUser] Error name:', (error as Error).name);
+    console.error('[banUser] Error message:', (error as Error).message);
+    console.error('[banUser] Error stack:', (error as Error).stack);
+    throw new HttpsError('internal', `Failed to ban user: ${(error as Error).message}`);
   }
 });
 

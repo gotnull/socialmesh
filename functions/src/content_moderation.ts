@@ -13,12 +13,95 @@
  */
 
 import * as admin from 'firebase-admin';
+import * as fs from 'fs';
+import * as path from 'path';
 import { onObjectFinalized } from 'firebase-functions/v2/storage';
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 
 const db = admin.firestore();
+
+// =============================================================================
+// BANNED WORDS CONFIGURATION (loaded from JSON)
+// =============================================================================
+
+interface BannedWordsCategory {
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  words: string[];
+  patterns: string[];
+}
+
+interface BannedWordsConfig {
+  version: string;
+  lastUpdated: string;
+  categories: Record<string, BannedWordsCategory>;
+}
+
+/**
+ * Load banned words configuration from JSON file.
+ * Compiled patterns are cached for performance.
+ */
+let cachedBlockedPatterns: Record<string, RegExp[]> | null = null;
+let cachedCategorySeverity: Record<string, 'low' | 'medium' | 'high' | 'critical'> | null = null;
+
+function loadBannedWordsConfig(): BannedWordsConfig {
+  const configPath = path.join(__dirname, 'banned_words.json');
+  const rawData = fs.readFileSync(configPath, 'utf-8');
+  return JSON.parse(rawData) as BannedWordsConfig;
+}
+
+/**
+ * Build regex patterns from banned words config.
+ * - Simple words: Convert to word boundary pattern (\bword\b)
+ * - Complex patterns: Compile as-is (already regex strings)
+ */
+function buildBlockedPatterns(): Record<string, RegExp[]> {
+  if (cachedBlockedPatterns) {
+    return cachedBlockedPatterns;
+  }
+
+  const config = loadBannedWordsConfig();
+  const patterns: Record<string, RegExp[]> = {};
+  cachedCategorySeverity = {};
+
+  for (const [category, categoryConfig] of Object.entries(config.categories)) {
+    const categoryPatterns: RegExp[] = [];
+    cachedCategorySeverity[category] = categoryConfig.severity;
+
+    // Convert simple words to word boundary patterns
+    for (const word of categoryConfig.words) {
+      // Escape special regex characters in the word, then wrap with \b
+      const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      categoryPatterns.push(new RegExp(`\\b${escaped}\\b`, 'i'));
+    }
+
+    // Add complex patterns as-is (they're already regex strings)
+    for (const pattern of categoryConfig.patterns) {
+      try {
+        categoryPatterns.push(new RegExp(pattern, 'i'));
+      } catch (e) {
+        console.error(`Invalid regex pattern in ${category}: ${pattern}`, e);
+      }
+    }
+
+    patterns[category] = categoryPatterns;
+  }
+
+  cachedBlockedPatterns = patterns;
+  console.log(`Loaded banned words config v${config.version}, last updated: ${config.lastUpdated}`);
+  return patterns;
+}
+
+/**
+ * Get category severity map (built alongside patterns)
+ */
+function getCategorySeverity(): Record<string, 'low' | 'medium' | 'high' | 'critical'> {
+  if (!cachedCategorySeverity) {
+    buildBlockedPatterns();
+  }
+  return cachedCategorySeverity!;
+}
 
 // =============================================================================
 // TYPES & CONSTANTS
@@ -86,69 +169,6 @@ const STRIKE_RULES = {
   STRIKE_EXPIRY_DAYS: 90,
   // Permanent ban threshold
   PERMANENT_BAN_STRIKES: 5,
-};
-
-// Blocked words and phrases (basic list - extend as needed)
-const BLOCKED_PATTERNS = {
-  // Extreme violence and threats
-  violence: [
-    /\b(kill|murder|shoot|stab|attack)\s+(you|him|her|them|everyone)/i,
-    /\b(i\s+will|gonna|going\s+to)\s+(kill|murder|hurt|attack)/i,
-    /\bdeath\s+threat/i,
-    /\bterrorist|terrorism\b/i,
-  ],
-  // Hate speech patterns
-  hate: [
-    /\b(hate|kill|death\s+to)\s+(all\s+)?(jews|muslims|christians|blacks|whites|asians|gays|trans)/i,
-    /\b(n[i1]gg[ae3]r|f[a4]gg?[o0]t|k[i1]k[e3]|sp[i1]c|ch[i1]nk)/i,
-    /\bheil\s+hitler|nazi\s+salute|white\s+power\b/i,
-  ],
-  // Sexual content / solicitation
-  sexual: [
-    /\b(buy|sell|trade)\s+(nudes?|pics|explicit)/i,
-    /\bchild\s+(porn|exploitation|abuse)/i,
-    /\bunderage|minor/i,
-    /\bcp\b.*\b(trade|sell|buy)/i,
-  ],
-  // Illegal activities
-  illegal: [
-    /\b(buy|sell|trade)\s+(drugs?|cocaine|heroin|meth|fentanyl|guns?|weapons?)/i,
-    /\bh[i1]t\s*man|assassin\s+for\s+hire/i,
-    /\bfake\s+(id|passport|documents?)/i,
-    /\bcredit\s+card\s+(fraud|scam|numbers?)/i,
-    /\bhack(ed|ing)?\s+(account|password|bank)/i,
-  ],
-  // Self-harm
-  selfHarm: [
-    /\b(how\s+to|ways?\s+to)\s+(kill|hurt)\s+(myself|yourself)/i,
-    /\bsucide\s+(method|guide|instructions?)/i,
-    /\bpro[- ]?ana|pro[- ]?mia/i, // Pro-anorexia/bulimia
-  ],
-  // Scams and fraud
-  scam: [
-    /\bsend\s+me\s+\$?\d+\b/i,
-    /\b(free|get)\s+(money|cash|bitcoin|crypto)\s+(now|fast|quick)/i,
-    /\b(investment|crypto)\s+(opportunity|guaranteed|returns)/i,
-    /\bpyramid\s+scheme|mlm\s+opportunity/i,
-    /\bclick\s+(here|this\s+link)\s+to\s+(win|claim|get)/i,
-  ],
-  // Spam patterns
-  spam: [
-    /\bfollow\s+me\s+@/i,
-    /\bcheck\s+(out\s+)?my\s+(bio|link|profile)/i,
-    /\b(dm|message)\s+me\s+for\s+(deals?|prices?|info)/i,
-  ],
-};
-
-// Severity mapping for categories
-const CATEGORY_SEVERITY: Record<string, 'low' | 'medium' | 'high' | 'critical'> = {
-  spam: 'low',
-  scam: 'medium',
-  hate: 'critical',
-  violence: 'critical',
-  sexual: 'high',
-  illegal: 'critical',
-  selfHarm: 'high',
 };
 
 // =============================================================================
@@ -252,7 +272,7 @@ async function analyzeImageWithVision(imageUrl: string): Promise<ModerationResul
 }
 
 /**
- * Analyze text content for policy violations
+ * Analyze text content for policy violations using patterns loaded from JSON config.
  */
 function analyzeText(text: string): ModerationResult {
   if (!text || text.trim().length === 0) {
@@ -268,11 +288,15 @@ function analyzeText(text: string): ModerationResult {
   const flaggedCategories: ModerationCategory[] = [];
   let maxSeverity: 'low' | 'medium' | 'high' | 'critical' = 'low';
 
+  // Load patterns from JSON config (cached after first load)
+  const blockedPatterns = buildBlockedPatterns();
+  const categorySeverity = getCategorySeverity();
+
   // Check against all blocked patterns
-  for (const [category, patterns] of Object.entries(BLOCKED_PATTERNS)) {
+  for (const [category, patterns] of Object.entries(blockedPatterns)) {
     for (const pattern of patterns) {
       if (pattern.test(text)) {
-        const severity = CATEGORY_SEVERITY[category] || 'medium';
+        const severity = categorySeverity[category] || 'medium';
         if (severityToScore(severity) > severityToScore(maxSeverity)) {
           maxSeverity = severity;
         }
@@ -282,6 +306,8 @@ function analyzeText(text: string): ModerationResult {
           likelihood: severityToLikelihood(severity),
           score: severityToScore(severity),
         });
+
+        console.log(`[ContentModeration] Pattern matched: category=${category}, pattern=${pattern}, text="${text.substring(0, 100)}..."`);
 
         // Only add one match per category
         break;

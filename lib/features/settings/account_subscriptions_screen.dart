@@ -741,7 +741,7 @@ class _AccountSubscriptionsScreenState
   // ACTIONS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  Future<void> _signInWithGoogle(BuildContext context) async {
+  Future<void> _signInWithGoogle(BuildContext _) async {
     if (_isSigningIn) return;
     setState(() => _isSigningIn = true);
 
@@ -758,7 +758,7 @@ class _AccountSubscriptionsScreenState
     }
   }
 
-  Future<void> _signInWithApple(BuildContext context) async {
+  Future<void> _signInWithApple(BuildContext _) async {
     if (_isSigningIn) return;
     setState(() => _isSigningIn = true);
 
@@ -775,7 +775,7 @@ class _AccountSubscriptionsScreenState
     }
   }
 
-  Future<void> _signInWithGitHub(BuildContext context) async {
+  Future<void> _signInWithGitHub(BuildContext _) async {
     if (_isSigningIn) return;
     setState(() => _isSigningIn = true);
 
@@ -792,19 +792,19 @@ class _AccountSubscriptionsScreenState
     }
   }
 
-  Future<void> _signOut(BuildContext context) async {
+  Future<void> _signOut(BuildContext _) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Sign Out'),
         content: const Text('Are you sure you want to sign out?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(dialogContext, false),
             child: const Text('Cancel'),
           ),
           FilledButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(dialogContext, true),
             child: const Text('Sign Out'),
           ),
         ],
