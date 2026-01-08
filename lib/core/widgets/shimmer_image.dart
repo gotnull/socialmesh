@@ -346,7 +346,12 @@ class _ShimmerBannerState extends State<ShimmerBanner>
   @override
   Widget build(BuildContext context) {
     if (widget.imageUrl == null || _hasError) {
-      return widget.fallback ?? _buildShimmer(context);
+      final fallbackWidget = widget.fallback ?? _buildShimmer(context);
+      return SizedBox(
+        height: widget.height,
+        width: double.infinity,
+        child: fallbackWidget,
+      );
     }
 
     return Image.network(
@@ -365,7 +370,12 @@ class _ShimmerBannerState extends State<ShimmerBanner>
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) setState(() => _hasError = true);
         });
-        return widget.fallback ?? _buildShimmer(context);
+        final fallbackWidget = widget.fallback ?? _buildShimmer(context);
+        return SizedBox(
+          height: widget.height,
+          width: double.infinity,
+          child: fallbackWidget,
+        );
       },
     );
   }
