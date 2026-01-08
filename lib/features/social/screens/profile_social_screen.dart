@@ -344,10 +344,12 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                 // Banner image
                 Positioned.fill(
                   bottom: avatarOverlap,
-                  child: GestureDetector(
+                  child: BouncyTap(
                     onTap: isOwnProfile
                         ? () => _showBannerOptions(profile)
                         : null,
+                    scaleFactor: 0.98,
+                    enabled: isOwnProfile,
                     child: profile.bannerUrl != null
                         ? Image.network(
                             profile.bannerUrl!,
@@ -438,7 +440,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                           _hasPlayedShatterAnimation &&
                           _shatterController != null;
 
-                      return GestureDetector(
+                      return BouncyTap(
                         onTap: () {
                           if (hasStories) {
                             // Open story viewer
@@ -460,9 +462,11 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                               );
                             }
                           } else if (isOwnProfile) {
+                            // No stories - add new story
                             _navigateToCreateStory();
                           }
                         },
+                        scaleFactor: 0.95,
                         child: Container(
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
@@ -589,25 +593,29 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                                       : null,
                                 ),
                               ),
-                              // Add story button for own profile (only if no stories)
-                              if (isOwnProfile && !hasStories)
+                              // Add story button for own profile (always visible)
+                              if (isOwnProfile)
                                 Positioned(
                                   right: 0,
                                   bottom: 0,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(4),
-                                    decoration: BoxDecoration(
-                                      color: context.accentColor,
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: context.background,
-                                        width: 2,
+                                  child: BouncyTap(
+                                    onTap: _navigateToCreateStory,
+                                    scaleFactor: 0.85,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: BoxDecoration(
+                                        color: context.accentColor,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: context.background,
+                                          width: 2,
+                                        ),
                                       ),
-                                    ),
-                                    child: const Icon(
-                                      Icons.add,
-                                      color: Colors.white,
-                                      size: 12,
+                                      child: const Icon(
+                                        Icons.add,
+                                        color: Colors.white,
+                                        size: 12,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -695,6 +703,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                   return _StatColumn(
                     count: postsState.posts.length,
                     label: 'Posts',
+                    singularLabel: 'Post',
                     onTap: null,
                   );
                 },
@@ -702,6 +711,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
               _StatColumn(
                 count: profile.followerCount,
                 label: 'Followers',
+                singularLabel: 'Follower',
                 onTap: () =>
                     _navigateToFollowers(FollowersScreenMode.followers),
               ),
@@ -1446,22 +1456,32 @@ class _ActionIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      onPressed: onTap,
-      icon: Icon(icon, color: context.textPrimary, size: 20),
-      style: IconButton.styleFrom(
-        side: BorderSide(color: context.border),
+    return BouncyTap(
+      onTap: onTap,
+      scaleFactor: 0.9,
+      child: Container(
         padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          border: Border.all(color: context.border),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(icon, color: context.textPrimary, size: 20),
       ),
     );
   }
 }
 
 class _StatColumn extends StatelessWidget {
-  const _StatColumn({required this.count, required this.label, this.onTap});
+  const _StatColumn({
+    required this.count,
+    required this.label,
+    this.singularLabel,
+    this.onTap,
+  });
 
   final int count;
   final String label;
+  final String? singularLabel;
   final VoidCallback? onTap;
 
   String _formatCount(int count) {
@@ -1473,29 +1493,36 @@ class _StatColumn extends StatelessWidget {
     return count.toString();
   }
 
+  String _getLabel() {
+    if (count == 1 && singularLabel != null) {
+      return singularLabel!;
+    }
+    return label;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Column(
-        children: [
-          Text(
-            _formatCount(count),
-            style: TextStyle(
-              color: context.textPrimary,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+    final content = Column(
+      children: [
+        Text(
+          _formatCount(count),
+          style: TextStyle(
+            color: context.textPrimary,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
           ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: TextStyle(color: context.textSecondary, fontSize: 13),
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          _getLabel(),
+          style: TextStyle(color: context.textSecondary, fontSize: 13),
+        ),
+      ],
     );
+
+    if (onTap == null) return content;
+
+    return BouncyTap(onTap: onTap, scaleFactor: 0.95, child: content);
   }
 }
 
@@ -1862,8 +1889,9 @@ class _PostGridTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return BouncyTap(
       onTap: onTap,
+      scaleFactor: 0.95,
       child: Stack(
         fit: StackFit.expand,
         children: [

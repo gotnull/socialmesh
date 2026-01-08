@@ -365,10 +365,14 @@ final myStoryGroupProvider = Provider<StoryGroup?>((ref) {
 });
 
 /// Provider to get following users' story groups (excluding own).
+/// All groups with stories are shown - viewed status affects ring color only.
 final followingStoryGroupsProvider = Provider<List<StoryGroup>>((ref) {
   final currentUser = ref.watch(currentUserProvider);
   if (currentUser == null) return [];
 
   final groupsState = ref.watch(storyGroupsProvider);
+
+  // Return all groups except own - don't filter by hasUnviewed
+  // The ring color will show viewed/unviewed status
   return groupsState.groups.where((g) => g.userId != currentUser.uid).toList();
 });

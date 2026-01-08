@@ -1,10 +1,12 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
 import '../../../models/story.dart';
+import '../../../providers/story_providers.dart';
 
 /// A circular avatar with a gradient ring for displaying story status.
 ///
@@ -327,7 +329,7 @@ class SmallStoryAvatar extends StatelessWidget {
 }
 
 /// Animated story avatar with pulsing gradient for unviewed stories
-class AnimatedStoryAvatar extends StatefulWidget {
+class AnimatedStoryAvatar extends ConsumerStatefulWidget {
   const AnimatedStoryAvatar({
     super.key,
     required this.storyGroup,
@@ -342,10 +344,11 @@ class AnimatedStoryAvatar extends StatefulWidget {
   final VoidCallback? onTap;
 
   @override
-  State<AnimatedStoryAvatar> createState() => _AnimatedStoryAvatarState();
+  ConsumerState<AnimatedStoryAvatar> createState() =>
+      _AnimatedStoryAvatarState();
 }
 
-class _AnimatedStoryAvatarState extends State<AnimatedStoryAvatar>
+class _AnimatedStoryAvatarState extends ConsumerState<AnimatedStoryAvatar>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _animation;
@@ -359,19 +362,9 @@ class _AnimatedStoryAvatarState extends State<AnimatedStoryAvatar>
     );
     _animation = Tween<double>(begin: 0.0, end: 1.0).animate(_controller);
 
+    // Start animation based on initial hasUnviewed state
     if (widget.storyGroup.hasUnviewed) {
       _controller.repeat();
-    }
-  }
-
-  @override
-  void didUpdateWidget(AnimatedStoryAvatar oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.storyGroup.hasUnviewed && !_controller.isAnimating) {
-      _controller.repeat();
-    } else if (!widget.storyGroup.hasUnviewed && _controller.isAnimating) {
-      _controller.stop();
-      _controller.reset();
     }
   }
 
@@ -385,7 +378,21 @@ class _AnimatedStoryAvatarState extends State<AnimatedStoryAvatar>
   Widget build(BuildContext context) {
     final profile = widget.storyGroup.profile;
 
-    if (!widget.storyGroup.hasUnviewed) {
+    // Check local viewed state - this updates immediately when viewing
+    final viewedState = ref.watch(viewedStoriesProvider);
+    final hasUnviewed = widget.storyGroup.stories.any(
+      (s) => !viewedState.hasViewed(s.id),
+    );
+
+    // Update animation based on current viewed state
+    if (hasUnviewed && !_controller.isAnimating) {
+      _controller.repeat();
+    } else if (!hasUnviewed && _controller.isAnimating) {
+      _controller.stop();
+      _controller.reset();
+    }
+
+    if (!hasUnviewed) {
       return StoryAvatar(
         userId: widget.storyGroup.userId,
         avatarUrl: profile?.avatarUrl,

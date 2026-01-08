@@ -5,7 +5,6 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/edge_fade.dart';
 import '../../../models/story.dart';
 import '../../../providers/auth_providers.dart';
-import '../../../providers/profile_providers.dart';
 import '../../../providers/story_providers.dart';
 import '../screens/create_story_screen.dart';
 import '../screens/story_viewer_screen.dart';
@@ -14,7 +13,6 @@ import 'story_avatar.dart';
 /// Horizontal scrollable bar showing story avatars at the top of the social feed.
 ///
 /// Displays:
-/// - Current user's "Add Story" button (always first)
 /// - Story groups from followed users
 /// - Unviewed stories have gradient rings
 /// - Viewed stories have gray rings
@@ -25,16 +23,11 @@ class StoryBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final currentUser = ref.watch(currentUserProvider);
     final storyGroupsState = ref.watch(storyGroupsProvider);
-    final myStoriesAsync = ref.watch(
-      myStoriesProvider,
-    ); // Direct stream of own stories
-    final myAvatarUrl = ref.watch(profileAvatarUrlProvider);
 
     if (currentUser == null) {
       return const SizedBox.shrink();
     }
 
-    final myGroup = ref.watch(myStoryGroupProvider);
     final followingGroups = ref.watch(followingStoryGroupsProvider);
 
     debugPrint(
@@ -46,20 +39,16 @@ class StoryBar extends ConsumerWidget {
       );
     }
 
-    // Check if user has stories from direct provider (more reliable)
-    final hasOwnStories = myStoriesAsync.when(
-      data: (stories) => stories.isNotEmpty,
-      loading: () => myGroup?.stories.isNotEmpty ?? false,
-      error: (_, _) => false,
-    );
-
     // Show loading shimmer if loading and no data yet
     if (storyGroupsState.isLoading && storyGroupsState.groups.isEmpty) {
       return const _StoryBarShimmer();
     }
 
-    // Show nothing if there are no stories and user hasn't posted
-    // (we still show the add button though)
+    // Show nothing if there are no stories from others
+    if (followingGroups.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return Padding(
       padding: const EdgeInsets.only(top: 16),
       child: SizedBox(
@@ -68,26 +57,9 @@ class StoryBar extends ConsumerWidget {
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            itemCount:
-                1 + followingGroups.length, // +1 for add/own story button
+            itemCount: followingGroups.length,
             itemBuilder: (context, index) {
-              if (index == 0) {
-                // "Add Story" / Own stories button
-                return Padding(
-                  padding: const EdgeInsets.only(right: 16),
-                  child: StoryAvatar(
-                    userId: currentUser.uid,
-                    avatarUrl: myAvatarUrl,
-                    displayName: hasOwnStories ? 'Your story' : 'Add story',
-                    hasUnviewed: hasOwnStories,
-                    isAddButton: !hasOwnStories,
-                    onTap: () =>
-                        _onOwnStoryTap(context, myGroup, myStoriesAsync),
-                  ),
-                );
-              }
-
-              final group = followingGroups[index - 1];
+              final group = followingGroups[index];
               return Padding(
                 padding: const EdgeInsets.only(right: 16),
                 child: AnimatedStoryAvatar(
@@ -101,43 +73,6 @@ class StoryBar extends ConsumerWidget {
         ),
       ),
     );
-  }
-
-  void _onOwnStoryTap(
-    BuildContext context,
-    StoryGroup? myGroup,
-    AsyncValue<List<Story>> myStoriesAsync,
-  ) {
-    final stories = myStoriesAsync.when(
-      data: (list) => list,
-      loading: () => <Story>[],
-      error: (_, _) => <Story>[],
-    );
-
-    if (stories.isNotEmpty) {
-      // View own stories
-      final group =
-          myGroup ??
-          StoryGroup(
-            userId: stories.first.authorId,
-            stories: stories,
-            lastStoryAt: stories.first.createdAt,
-            profile: stories.first.authorSnapshot,
-          );
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) =>
-              StoryViewerScreen(storyGroups: [group], initialGroupIndex: 0),
-        ),
-      );
-    } else {
-      // No stories - create new story
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const CreateStoryScreen()),
-      );
-    }
   }
 
   void _onStoryGroupTap(
