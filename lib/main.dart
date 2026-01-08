@@ -428,11 +428,27 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
   }
 
   /// Initialize push notification navigation handling
-  void _initializePushNotificationNavigation() {
-    _pushNotificationSubscription = PushNotificationService()
-        .onNotificationNavigation
-        .listen(_handlePushNotificationNavigation);
-    AppLogging.notifications('🔔 Push notification navigation initialized');
+  /// Must wait for Firebase to be ready before accessing PushNotificationService
+  Future<void> _initializePushNotificationNavigation() async {
+    try {
+      // Wait for Firebase to be ready - if it fails, skip push notifications
+      final isReady = await firebaseReady;
+      if (!isReady) {
+        AppLogging.notifications(
+          '🔔 Push notification navigation skipped - Firebase not available',
+        );
+        return;
+      }
+
+      _pushNotificationSubscription = PushNotificationService()
+          .onNotificationNavigation
+          .listen(_handlePushNotificationNavigation);
+      AppLogging.notifications('🔔 Push notification navigation initialized');
+    } catch (e) {
+      AppLogging.notifications(
+        '🔔 Push notification navigation init failed: $e',
+      );
+    }
   }
 
   /// Handle navigation from push notification tap
