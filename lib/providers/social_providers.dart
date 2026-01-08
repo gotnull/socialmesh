@@ -1370,14 +1370,120 @@ Future<void> unblockUser(WidgetRef ref, String userId) async {
 // CONTENT MODERATION
 // ===========================================================================
 
+/// AsyncNotifier for managing user's moderation status with acknowledgment.
+/// Supports real-time updates and action methods.
+class ModerationStatusNotifier extends AsyncNotifier<ModerationStatus?> {
+  @override
+  Future<ModerationStatus?> build() async {
+    // Watch for real-time updates via stream
+    final service = ref.watch(contentModerationServiceProvider);
+    final statusStream = service.watchModerationStatus();
+
+    // Subscribe to stream and update state
+    statusStream.listen((status) {
+      if (status != null) {
+        _enrichStatus(status);
+      } else {
+        state = AsyncData(status);
+      }
+    });
+
+    // Initial fetch with full details
+    try {
+      final fullStatus = await service.getModerationStatus();
+      return _enrichWithHistory(fullStatus);
+    } catch (e) {
+      // Fall back to basic status if function call fails
+      return null;
+    }
+  }
+
+  /// Enrich status from stream with unacknowledged count
+  Future<void> _enrichStatus(ModerationStatus status) async {
+    final service = ref.read(contentModerationServiceProvider);
+    try {
+      final strikes = await service.getUnacknowledgedStrikes();
+      final history = strikes
+          .map((s) => ModerationHistoryItem.fromStrike(s))
+          .toList();
+
+      state = AsyncData(
+        ModerationStatus(
+          activeStrikes: status.activeStrikes,
+          activeWarnings: status.activeWarnings,
+          isSuspended: status.isSuspended,
+          suspendedUntil: status.suspendedUntil,
+          isPermanentlyBanned: status.isPermanentlyBanned,
+          strikes: strikes,
+          unacknowledgedCount: strikes.where((s) => !s.acknowledged).length,
+          lastReason: strikes.isNotEmpty ? strikes.first.reason : null,
+          history: history,
+        ),
+      );
+    } catch (e) {
+      // Use basic status if enrichment fails
+      state = AsyncData(status);
+    }
+  }
+
+  /// Enrich full status with history items
+  ModerationStatus _enrichWithHistory(ModerationStatus status) {
+    final history = status.strikes
+        .map((s) => ModerationHistoryItem.fromStrike(s))
+        .toList();
+
+    return ModerationStatus(
+      activeStrikes: status.activeStrikes,
+      activeWarnings: status.activeWarnings,
+      isSuspended: status.isSuspended,
+      suspendedUntil: status.suspendedUntil,
+      isPermanentlyBanned: status.isPermanentlyBanned,
+      strikes: status.strikes,
+      unacknowledgedCount: status.strikes.where((s) => !s.acknowledged).length,
+      lastReason: status.strikes.isNotEmpty
+          ? status.strikes.first.reason
+          : null,
+      history: history,
+    );
+  }
+
+  /// Acknowledge all unacknowledged strikes/warnings
+  Future<void> acknowledgeAll() async {
+    final currentStatus = state.maybeWhen(
+      data: (status) => status,
+      orElse: () => null,
+    );
+    if (currentStatus == null) return;
+
+    final service = ref.read(contentModerationServiceProvider);
+    for (final strike in currentStatus.strikes) {
+      if (!strike.acknowledged) {
+        try {
+          await service.acknowledgeStrike(strike.id);
+        } catch (e) {
+          debugPrint('Error acknowledging strike ${strike.id}: $e');
+        }
+      }
+    }
+
+    // Refresh status
+    ref.invalidateSelf();
+  }
+
+  /// Acknowledge a specific strike
+  Future<void> acknowledgeStrike(String strikeId) async {
+    final service = ref.read(contentModerationServiceProvider);
+    await service.acknowledgeStrike(strikeId);
+    ref.invalidateSelf();
+  }
+}
+
 /// Provider for the current user's moderation status.
-/// Watches Firestore for real-time updates to suspension/strike status.
-final moderationStatusProvider = StreamProvider.autoDispose<ModerationStatus?>((
-  ref,
-) {
-  final service = ref.watch(contentModerationServiceProvider);
-  return service.watchModerationStatus();
-});
+/// Uses AsyncNotifier for rich functionality including acknowledgment.
+final moderationStatusProvider =
+    AsyncNotifierProvider<ModerationStatusNotifier, ModerationStatus?>(
+      ModerationStatusNotifier.new,
+    );
 
 /// Provider for fetching full moderation status with strike history.
 final fullModerationStatusProvider =

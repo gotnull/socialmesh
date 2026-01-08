@@ -151,13 +151,18 @@ interface ModerationQueueItem {
 
 // Thresholds for automated decisions
 const MODERATION_THRESHOLDS = {
-  // Auto-reject if any category score exceeds this
-  AUTO_REJECT: 0.9,
+  // Auto-reject if any category score exceeds this (only VERY_LIKELY triggers)
+  AUTO_REJECT: 0.95,
   // Flag for human review if score is between FLAG and AUTO_REJECT
-  FLAG_FOR_REVIEW: 0.6,
+  FLAG_FOR_REVIEW: 0.75,
   // Auto-approve if all scores are below this
-  AUTO_APPROVE: 0.3,
+  AUTO_APPROVE: 0.5,
 };
+
+// Categories that require stricter thresholds (these often have false positives)
+const LENIENT_CATEGORIES = ['racy', 'medical', 'spoof'];
+// Only adult and violence should auto-reject at lower thresholds
+const STRICT_CATEGORIES = ['adult', 'violence'];
 
 // Strike escalation rules
 const STRIKE_RULES = {
@@ -236,17 +241,39 @@ async function analyzeImageWithVision(imageUrl: string): Promise<ModerationResul
       },
     ];
 
-    // Determine action based on highest score
-    const maxScore = Math.max(...categories.map(c => c.score));
-    const flaggedCategories = categories.filter(c => c.score >= MODERATION_THRESHOLDS.FLAG_FOR_REVIEW);
+    // Determine action based on category-specific thresholds
+    // Strict categories (adult, violence) use normal thresholds
+    // Lenient categories (racy, medical, spoof) need VERY_LIKELY to reject
+    let maxStrictScore = 0;
+    let maxLenientScore = 0;
+
+    for (const cat of categories) {
+      if (STRICT_CATEGORIES.includes(cat.name)) {
+        maxStrictScore = Math.max(maxStrictScore, cat.score);
+      } else if (LENIENT_CATEGORIES.includes(cat.name)) {
+        maxLenientScore = Math.max(maxLenientScore, cat.score);
+      }
+    }
+
+    // Only flag strict categories that exceed threshold, or lenient at VERY_LIKELY
+    const flaggedCategories = categories.filter(c => {
+      if (STRICT_CATEGORIES.includes(c.name)) {
+        return c.score >= MODERATION_THRESHOLDS.FLAG_FOR_REVIEW;
+      } else {
+        // Lenient categories only flagged at VERY_LIKELY (1.0)
+        return c.score >= 0.95;
+      }
+    });
 
     let action: ModerationResult['action'] = 'approve';
     let passed = true;
 
-    if (maxScore >= MODERATION_THRESHOLDS.AUTO_REJECT) {
+    // Auto-reject only for strict categories at very high confidence
+    // or lenient categories at VERY_LIKELY
+    if (maxStrictScore >= MODERATION_THRESHOLDS.AUTO_REJECT || maxLenientScore >= 0.95) {
       action = 'reject';
       passed = false;
-    } else if (maxScore >= MODERATION_THRESHOLDS.FLAG_FOR_REVIEW) {
+    } else if (maxStrictScore >= MODERATION_THRESHOLDS.FLAG_FOR_REVIEW) {
       action = 'review';
       passed = true; // Allow but queue for review
     }
@@ -254,7 +281,7 @@ async function analyzeImageWithVision(imageUrl: string): Promise<ModerationResul
     return {
       passed,
       action,
-      confidence: maxScore,
+      confidence: Math.max(maxStrictScore, maxLenientScore),
       categories: flaggedCategories.length > 0 ? flaggedCategories : categories,
       details: flaggedCategories.length > 0
         ? `Flagged: ${flaggedCategories.map(c => c.name).join(', ')}`

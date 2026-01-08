@@ -362,6 +362,9 @@ class ModerationStatus {
     this.suspendedUntil,
     required this.isPermanentlyBanned,
     this.strikes = const [],
+    this.unacknowledgedCount = 0,
+    this.lastReason,
+    this.history = const [],
   });
 
   factory ModerationStatus.clear() => const ModerationStatus(
@@ -377,6 +380,9 @@ class ModerationStatus {
   final DateTime? suspendedUntil;
   final bool isPermanentlyBanned;
   final List<UserStrike> strikes;
+  final int unacknowledgedCount;
+  final String? lastReason;
+  final List<ModerationHistoryItem> history;
 
   bool get isInGoodStanding =>
       activeStrikes == 0 && !isSuspended && !isPermanentlyBanned;
@@ -617,4 +623,74 @@ class ModerationQueueItem {
   final DateTime createdAt;
   final String? reviewedBy;
   final DateTime? reviewedAt;
+}
+
+// =============================================================================
+// MODERATION HISTORY MODELS
+// =============================================================================
+
+/// Type of moderation action taken
+enum ModerationActionType {
+  warning,
+  strike,
+  suspension,
+  cleared;
+
+  String get displayName {
+    switch (this) {
+      case ModerationActionType.warning:
+        return 'Warning';
+      case ModerationActionType.strike:
+        return 'Strike';
+      case ModerationActionType.suspension:
+        return 'Suspension';
+      case ModerationActionType.cleared:
+        return 'Cleared';
+    }
+  }
+}
+
+/// A single moderation history entry
+class ModerationHistoryItem {
+  const ModerationHistoryItem({
+    required this.id,
+    required this.type,
+    required this.timestamp,
+    this.reason,
+    this.contentType,
+    this.expiresAt,
+    this.acknowledged = false,
+  });
+
+  factory ModerationHistoryItem.fromStrike(UserStrike strike) {
+    ModerationActionType actionType;
+    switch (strike.type) {
+      case 'warning':
+        actionType = ModerationActionType.warning;
+      case 'strike':
+        actionType = ModerationActionType.strike;
+      case 'suspension':
+        actionType = ModerationActionType.suspension;
+      default:
+        actionType = ModerationActionType.warning;
+    }
+
+    return ModerationHistoryItem(
+      id: strike.id,
+      type: actionType,
+      timestamp: strike.createdAt,
+      reason: strike.reason,
+      contentType: strike.contentType,
+      expiresAt: strike.expiresAt,
+      acknowledged: strike.acknowledged,
+    );
+  }
+
+  final String id;
+  final ModerationActionType type;
+  final DateTime timestamp;
+  final String? reason;
+  final String? contentType;
+  final DateTime? expiresAt;
+  final bool acknowledged;
 }
