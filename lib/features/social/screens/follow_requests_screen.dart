@@ -172,16 +172,6 @@ class _RequestTile extends ConsumerWidget {
     final profile = request.profile;
     final createdAt = request.request.createdAt;
 
-    // Check if current user is following this requester
-    final followState = ref.watch(
-      followStateProvider(request.request.requesterId),
-    );
-    final isFollowingThem = followState.when(
-      data: (state) => state.isFollowing,
-      loading: () => false,
-      error: (_, _) => false,
-    );
-
     return ListTile(
       onTap: onTap,
       leading: CircleAvatar(
@@ -230,30 +220,26 @@ class _RequestTile extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           SizedBox(
-            width: 110,
             height: 32,
             child: FilledButton(
               onPressed: onAccept,
               style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                minimumSize: const Size(110, 32),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
               ),
-              child: Text(isFollowingThem ? 'Follow Back' : 'Confirm'),
+              child: const Text('Confirm', maxLines: 1),
             ),
           ),
           const SizedBox(width: 8),
           SizedBox(
-            width: 80,
             height: 32,
             child: FilledButton(
               onPressed: onDecline,
               style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                minimumSize: const Size(80, 32),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 backgroundColor: Colors.grey,
                 foregroundColor: Colors.white,
               ),
-              child: const Text('Delete'),
+              child: const Text('Delete', maxLines: 1),
             ),
           ),
         ],

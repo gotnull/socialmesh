@@ -329,6 +329,90 @@ class SocialService {
         .map((doc) => doc.exists);
   }
 
+  /// Batch check if current user follows multiple target users.
+  /// Returns a map of targetUserId -> isFollowing.
+  /// Much more efficient than calling isFollowing() for each user individually.
+  Future<Map<String, bool>> batchIsFollowing(List<String> targetUserIds) async {
+    final currentUserId = _currentUserId;
+    if (currentUserId == null) {
+      return {for (final id in targetUserIds) id: false};
+    }
+
+    if (targetUserIds.isEmpty) return {};
+
+    // Firestore 'in' queries limited to 30 items, batch if needed
+    final results = <String, bool>{};
+    final batches = <List<String>>[];
+
+    for (var i = 0; i < targetUserIds.length; i += 30) {
+      batches.add(
+        targetUserIds.sublist(
+          i,
+          i + 30 > targetUserIds.length ? targetUserIds.length : i + 30,
+        ),
+      );
+    }
+
+    for (final batch in batches) {
+      // Create document IDs for this batch
+      final docIds = batch.map((id) => '${currentUserId}_$id').toList();
+
+      // Fetch all documents in parallel using getAll
+      final docs = await Future.wait(
+        docIds.map(
+          (docId) => _firestore.collection('follows').doc(docId).get(),
+        ),
+      );
+
+      for (var i = 0; i < batch.length; i++) {
+        results[batch[i]] = docs[i].exists;
+      }
+    }
+
+    return results;
+  }
+
+  /// Batch check if current user has pending follow requests to multiple users.
+  Future<Map<String, bool>> batchHasPendingRequests(
+    List<String> targetUserIds,
+  ) async {
+    final currentUserId = _currentUserId;
+    if (currentUserId == null) {
+      return {for (final id in targetUserIds) id: false};
+    }
+
+    if (targetUserIds.isEmpty) return {};
+
+    final results = <String, bool>{};
+    final batches = <List<String>>[];
+
+    for (var i = 0; i < targetUserIds.length; i += 30) {
+      batches.add(
+        targetUserIds.sublist(
+          i,
+          i + 30 > targetUserIds.length ? targetUserIds.length : i + 30,
+        ),
+      );
+    }
+
+    for (final batch in batches) {
+      final docIds = batch.map((id) => '${currentUserId}_$id').toList();
+
+      final docs = await Future.wait(
+        docIds.map(
+          (docId) => _firestore.collection('follow_requests').doc(docId).get(),
+        ),
+      );
+
+      for (var i = 0; i < batch.length; i++) {
+        final doc = docs[i];
+        results[batch[i]] = doc.exists && doc.data()?['status'] == 'pending';
+      }
+    }
+
+    return results;
+  }
+
   /// Get paginated list of followers for a user.
   Future<PaginatedResult<FollowWithProfile>> getFollowers(
     String userId, {

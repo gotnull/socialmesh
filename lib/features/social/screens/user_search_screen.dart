@@ -153,6 +153,11 @@ class _SuggestionsView extends ConsumerWidget {
                 ),
               );
             }
+            // Preload follow states for all users in the list
+            final userIds = users.map((u) => u.id).toList();
+            ref
+                .read(batchFollowStatesProvider.notifier)
+                .preloadFollowStates(userIds);
             return Column(
               children: users.map((user) => _UserTile(user: user)).toList(),
             );
@@ -193,6 +198,11 @@ class _SuggestionsView extends ConsumerWidget {
                 ),
               );
             }
+            // Preload follow states for all users in the list
+            final userIds = users.map((u) => u.id).toList();
+            ref
+                .read(batchFollowStatesProvider.notifier)
+                .preloadFollowStates(userIds);
             return Column(
               children: users.map((user) => _UserTile(user: user)).toList(),
             );
@@ -258,8 +268,15 @@ class _SearchResultsView extends ConsumerWidget {
           );
         }
 
+        // Preload follow states for all users in the search results
+        final userIds = users.map((u) => u.id).toList();
+        ref
+            .read(batchFollowStatesProvider.notifier)
+            .preloadFollowStates(userIds);
+
         return RefreshIndicator(
           onRefresh: () async {
+            ref.read(batchFollowStatesProvider.notifier).clear();
             ref.invalidate(userSearchProvider(query));
           },
           child: ListView.builder(

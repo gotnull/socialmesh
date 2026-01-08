@@ -46,9 +46,9 @@ let cachedBlockedPatterns: Record<string, RegExp[]> | null = null;
 let cachedCategorySeverity: Record<string, 'low' | 'medium' | 'high' | 'critical'> | null = null;
 
 function loadBannedWordsConfig(): BannedWordsConfig {
-  // Load from assets directory (single source of truth)
-  // __dirname is functions/lib/, so go up to project root
-  const configPath = path.join(__dirname, '..', '..', 'assets', 'banned_words.json');
+  // Load from assets directory bundled with functions deployment
+  // __dirname is functions/lib/, assets is at functions/assets/
+  const configPath = path.join(__dirname, '..', 'assets', 'banned_words.json');
   const rawData = fs.readFileSync(configPath, 'utf-8');
   return JSON.parse(rawData) as BannedWordsConfig;
 }

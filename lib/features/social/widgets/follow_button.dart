@@ -57,7 +57,10 @@ class _FollowButtonState extends ConsumerState<FollowButton> {
       );
     }
 
-    final followState = ref.watch(followStateProvider(widget.targetUserId));
+    // Use cached provider for efficiency in lists
+    final followState = ref.watch(
+      cachedFollowStateProvider(widget.targetUserId),
+    );
 
     return followState.when(
       data: (state) => _buildButton(
@@ -263,7 +266,10 @@ class _FollowTextButtonState extends ConsumerState<FollowTextButton> {
       return const SizedBox.shrink();
     }
 
-    final followState = ref.watch(followStateProvider(widget.targetUserId));
+    // Use cached provider for efficiency in lists
+    final followState = ref.watch(
+      cachedFollowStateProvider(widget.targetUserId),
+    );
 
     return followState.when(
       data: (state) => TextButton(

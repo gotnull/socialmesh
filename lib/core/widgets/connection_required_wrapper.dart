@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../features/navigation/main_shell.dart';
 import '../../providers/app_providers.dart';
 import '../theme.dart';
 import '../transport.dart';
@@ -91,6 +92,7 @@ class ConnectionRequiredWrapper extends ConsumerWidget {
       backgroundColor: context.background,
       appBar: AppBar(
         backgroundColor: context.background,
+        leading: const HamburgerMenuButton(),
         centerTitle: true,
         title: Text(
           screenTitle ?? 'Disconnected',
@@ -175,6 +177,7 @@ class ConnectionRequiredWrapper extends ConsumerWidget {
       backgroundColor: context.background,
       appBar: AppBar(
         backgroundColor: context.background,
+        leading: const HamburgerMenuButton(),
         centerTitle: true,
         title: Text(
           screenTitle ?? 'Reconnecting...',

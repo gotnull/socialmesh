@@ -88,8 +88,19 @@ class _FollowersList extends ConsumerWidget {
           );
         }
 
+        // Preload follow states for all users in the list to avoid N+1 queries
+        final userIds = followers
+            .map((f) => f.profile?.id ?? f.follow.followerId)
+            .toList();
+        ref
+            .read(batchFollowStatesProvider.notifier)
+            .preloadFollowStates(userIds);
+
         return RefreshIndicator(
-          onRefresh: () async => ref.invalidate(followersProvider(userId)),
+          onRefresh: () async {
+            ref.read(batchFollowStatesProvider.notifier).clear();
+            ref.invalidate(followersProvider(userId));
+          },
           child: ListView.builder(
             itemCount: followers.length,
             itemBuilder: (context, index) {
@@ -133,8 +144,19 @@ class _FollowingList extends ConsumerWidget {
           );
         }
 
+        // Preload follow states for all users in the list to avoid N+1 queries
+        final userIds = following
+            .map((f) => f.profile?.id ?? f.follow.followeeId)
+            .toList();
+        ref
+            .read(batchFollowStatesProvider.notifier)
+            .preloadFollowStates(userIds);
+
         return RefreshIndicator(
-          onRefresh: () async => ref.invalidate(followingProvider(userId)),
+          onRefresh: () async {
+            ref.read(batchFollowStatesProvider.notifier).clear();
+            ref.invalidate(followingProvider(userId));
+          },
           child: ListView.builder(
             itemCount: following.length,
             itemBuilder: (context, index) {

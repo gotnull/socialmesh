@@ -316,11 +316,14 @@ service cloud.firestore {
     match /follows/{followId} {
       allow read: if true; // Public - anyone can see follow relationships
       
-      // Create: authenticated, must be following as yourself, cannot self-follow
+      // Create: authenticated, valid ID format, cannot self-follow
+      // Either: 1) following as yourself (direct follow)
+      //     or: 2) you're the followee accepting a follow request
       allow create: if isAuthenticated() &&
-        request.resource.data.followerId == request.auth.uid &&
         request.resource.data.followerId != request.resource.data.followeeId &&
-        followId == request.resource.data.followerId + '_' + request.resource.data.followeeId;
+        followId == request.resource.data.followerId + '_' + request.resource.data.followeeId &&
+        (request.resource.data.followerId == request.auth.uid ||
+         request.resource.data.followeeId == request.auth.uid);
       
       // Delete: only the follower can unfollow (or admin for testing)
       allow delete: if isAdmin() || (isAuthenticated() &&
@@ -335,9 +338,11 @@ service cloud.firestore {
     match /follow_requests/{requestId} {
       // Admins can read all requests (for testing/moderation)
       // Users can read requests they sent or received
+      // Also allow read if document doesn't exist (to check existence)
       allow read: if isAdmin() || 
         (isAuthenticated() &&
-         (resource.data.requesterId == request.auth.uid ||
+         (resource == null ||
+          resource.data.requesterId == request.auth.uid ||
           resource.data.targetId == request.auth.uid));
       
       // Create: authenticated, must be requesting as yourself, cannot self-request

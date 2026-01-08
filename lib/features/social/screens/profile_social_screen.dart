@@ -49,6 +49,7 @@ import 'story_viewer_screen.dart';
 import 'user_search_screen.dart';
 import '../../../providers/story_providers.dart';
 import '../../../models/story.dart';
+import '../../navigation/main_shell.dart';
 
 /// Filter options for posts
 enum PostFilter {
@@ -69,6 +70,7 @@ class ProfileSocialScreen extends ConsumerStatefulWidget {
     this.showAppBar = true,
     this.showStoryBar = false,
     this.showModerationBanner = false,
+    this.showHamburgerMenu = false,
   });
 
   final String userId;
@@ -81,6 +83,9 @@ class ProfileSocialScreen extends ConsumerStatefulWidget {
 
   /// Whether to show the moderation status banner (only for own profile in Social tab).
   final bool showModerationBanner;
+
+  /// Whether to show the hamburger menu instead of back button (for main drawer screens).
+  final bool showHamburgerMenu;
 
   @override
   ConsumerState<ProfileSocialScreen> createState() =>
@@ -344,6 +349,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
       collapsedHeight: kToolbarHeight,
       elevation: 0,
       scrolledUnderElevation: 0,
+      leading: widget.showHamburgerMenu ? const HamburgerMenuButton() : null,
       flexibleSpace: ClipRect(
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),

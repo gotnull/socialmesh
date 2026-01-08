@@ -97,27 +97,6 @@ class HamburgerMenuButton extends ConsumerWidget {
     final theme = Theme.of(context);
     final adminNotificationCount = ref.watch(adminNotificationCountProvider);
 
-    // Check if we're NOT at the first route (meaning we were pushed onto the stack)
-    // Using ModalRoute.of(context)?.isFirst is more reliable than canPop()
-    // as it checks if this specific route is the first in the navigator
-    final modalRoute = ModalRoute.of(context);
-    final isFirstRoute = modalRoute?.isFirst ?? true;
-    final canPop = !isFirstRoute && Navigator.of(context).canPop();
-
-    if (canPop) {
-      return IconButton(
-        icon: Icon(
-          Icons.arrow_back,
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-        ),
-        onPressed: () {
-          HapticFeedback.lightImpact();
-          Navigator.of(context).pop();
-        },
-        tooltip: 'Back',
-      );
-    }
-
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -128,18 +107,9 @@ class HamburgerMenuButton extends ConsumerWidget {
           ),
           onPressed: () {
             HapticFeedback.lightImpact();
-            // Try multiple ways to open the drawer:
-            // 1. First try Scaffold.maybeOf(context) - works if we're inside a Scaffold
-            // 2. Then try the provider-stored scaffold key
-            // 3. Fall back to showing a bottom sheet if neither works
-            final scaffoldState = Scaffold.maybeOf(context);
-            if (scaffoldState?.hasDrawer ?? false) {
-              scaffoldState!.openDrawer();
-            } else if (scaffoldKey?.currentState != null) {
-              scaffoldKey!.currentState!.openDrawer();
-            } else {
-              _showQuickAccessSheet(context, ref);
-            }
+            // Open the drawer using the provider-stored scaffold key
+            // This key is from MainShell which has the drawer
+            scaffoldKey?.currentState?.openDrawer();
           },
           tooltip: 'Menu',
         ),
@@ -174,204 +144,6 @@ class HamburgerMenuButton extends ConsumerWidget {
             ),
           ),
       ],
-    );
-  }
-
-  void _showQuickAccessSheet(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final accentColor = theme.colorScheme.primary;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.7,
-        ),
-        decoration: BoxDecoration(
-          color: theme.scaffoldBackgroundColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Handle bar
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: theme.dividerColor,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            // Header
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          accentColor,
-                          accentColor.withValues(alpha: 0.7),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: const Icon(
-                      Icons.bolt,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Text(
-                    'Quick Access',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: AppTheme.fontFamily,
-                      color: theme.colorScheme.onSurface,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Divider(color: theme.dividerColor.withValues(alpha: 0.1)),
-            // Quick access items
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                children: [
-                  _QuickAccessTile(
-                    icon: Icons.public,
-                    label: 'World Map',
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const WorldMeshScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  _QuickAccessTile(
-                    icon: Icons.view_in_ar,
-                    label: '3D Mesh View',
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const Mesh3DScreen()),
-                      );
-                    },
-                  ),
-                  _QuickAccessTile(
-                    icon: Icons.timeline,
-                    label: 'Timeline',
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const TimelineScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  _QuickAccessTile(
-                    icon: Icons.people_alt_outlined,
-                    label: 'Presence',
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const PresenceScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  _QuickAccessTile(
-                    icon: Icons.route,
-                    label: 'Routes',
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const RoutesScreen()),
-                      );
-                    },
-                  ),
-                  _QuickAccessTile(
-                    icon: Icons.auto_awesome,
-                    label: 'Automations',
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const AutomationsScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  _QuickAccessTile(
-                    icon: Icons.settings,
-                    label: 'Settings',
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const SettingsScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Quick access tile for modal sheet
-class _QuickAccessTile extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _QuickAccessTile({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return ListTile(
-      leading: Icon(icon, color: theme.colorScheme.primary),
-      title: Text(
-        label,
-        style: TextStyle(
-          fontFamily: AppTheme.fontFamily,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      trailing: Icon(
-        Icons.chevron_right,
-        color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-      ),
-      onTap: onTap,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     );
   }
 }
@@ -467,7 +239,9 @@ class _MainShellState extends ConsumerState<MainShell> {
   void initState() {
     super.initState();
     // Set the scaffold key provider so screens can access the drawer
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    // Use Future.microtask to ensure it runs after the widget tree is built
+    // but before the first frame renders
+    Future.microtask(() {
       ref.read(mainShellScaffoldKeyProvider.notifier).setKey(_scaffoldKey);
     });
   }

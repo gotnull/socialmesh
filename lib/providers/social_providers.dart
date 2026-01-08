@@ -157,6 +157,80 @@ final followStateProvider = FutureProvider.autoDispose
       );
     });
 
+/// Notifier to cache batch-loaded follow states for efficiency.
+/// Used by lists to avoid N+1 queries when displaying follow buttons.
+class BatchFollowStatesNotifier extends Notifier<Map<String, FollowState>> {
+  @override
+  Map<String, FollowState> build() => {};
+
+  /// Pre-load follow states for a list of user IDs.
+  /// Call this before rendering a list with follow buttons.
+  Future<void> preloadFollowStates(List<String> userIds) async {
+    if (userIds.isEmpty) return;
+
+    final service = ref.read(socialServiceProvider);
+
+    // Filter out IDs we already have cached
+    final uncachedIds = userIds.where((id) => !state.containsKey(id)).toList();
+    if (uncachedIds.isEmpty) return;
+
+    // Batch fetch follow states
+    final followingMap = await service.batchIsFollowing(uncachedIds);
+    final pendingMap = await service.batchHasPendingRequests(uncachedIds);
+
+    // Update cache with new states
+    final newStates = <String, FollowState>{};
+    for (final id in uncachedIds) {
+      newStates[id] = FollowState(
+        isFollowing: followingMap[id] ?? false,
+        hasPendingRequest: pendingMap[id] ?? false,
+      );
+    }
+
+    state = {...state, ...newStates};
+  }
+
+  /// Get cached follow state for a user, or null if not loaded.
+  FollowState? getFollowState(String userId) => state[userId];
+
+  /// Update a single user's follow state (after toggle).
+  void updateFollowState(String userId, FollowState newState) {
+    state = Map<String, FollowState>.from(state)..[userId] = newState;
+  }
+
+  /// Clear cached state for a user (to force refresh).
+  void invalidateUser(String userId) {
+    final newState = Map<String, FollowState>.from(state);
+    newState.remove(userId);
+    state = newState;
+  }
+
+  /// Clear all cached states.
+  void clear() => state = {};
+}
+
+/// Provider for batch-loaded follow states cache.
+final batchFollowStatesProvider =
+    NotifierProvider<BatchFollowStatesNotifier, Map<String, FollowState>>(
+      BatchFollowStatesNotifier.new,
+    );
+
+/// Provider to get follow state from batch cache, with fallback to individual provider.
+/// Use this in lists where batch loading has been done.
+final cachedFollowStateProvider = Provider.autoDispose
+    .family<AsyncValue<FollowState>, String>((ref, targetUserId) {
+      // First check the batch cache
+      final cache = ref.watch(batchFollowStatesProvider);
+      final cached = cache[targetUserId];
+
+      if (cached != null) {
+        return AsyncValue.data(cached);
+      }
+
+      // Fall back to individual provider if not in cache
+      return ref.watch(followStateProvider(targetUserId));
+    });
+
 /// Helper to toggle follow status.
 /// For private accounts, sends a follow request instead of instant follow.
 /// For accounts with pending requests, cancels the request.
@@ -175,6 +249,15 @@ Future<void> toggleFollow(WidgetRef ref, String targetUserId) async {
     // Follow or send request (followUser handles private accounts internally)
     await service.followUser(targetUserId);
   }
+
+  // Update batch cache immediately for responsive UI
+  final newState = FollowState(
+    isFollowing: !currentState.isFollowing && !currentState.hasPendingRequest,
+    hasPendingRequest: false,
+  );
+  ref
+      .read(batchFollowStatesProvider.notifier)
+      .updateFollowState(targetUserId, newState);
 
   // Invalidate to refresh both users' states
   ref.invalidate(followStateProvider(targetUserId));
@@ -216,8 +299,10 @@ Future<void> acceptFollowRequest(WidgetRef ref, String requesterId) async {
   ref.invalidate(followStateProvider(requesterId));
   // Invalidate profile streams so follower counts update immediately
   ref.invalidate(publicProfileStreamProvider(requesterId));
+  ref.invalidate(optimisticProfileProvider(requesterId));
   if (currentUser != null) {
     ref.invalidate(publicProfileStreamProvider(currentUser.uid));
+    ref.invalidate(optimisticProfileProvider(currentUser.uid));
   }
 }
 

@@ -53,7 +53,7 @@ class StoryBar extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.only(top: 16),
       child: SizedBox(
-        height: 100,
+        height: 104,
         child: EdgeFade.end(
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
@@ -304,7 +304,7 @@ class _StoryBarShimmer extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(top: 16),
       child: SizedBox(
-        height: 100,
+        height: 104,
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
           physics: const NeverScrollableScrollPhysics(),
