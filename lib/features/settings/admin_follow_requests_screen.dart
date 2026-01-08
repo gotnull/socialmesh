@@ -1032,16 +1032,22 @@ class _SeedDataTabState extends State<_SeedDataTab> {
         );
       }
 
-      // Delete dummy user profiles
-      _log.add('  Deleting profiles...');
+      // Delete dummy user profiles and users documents
+      _log.add('  Deleting profiles and users...');
       for (final userId in dummyUserIds) {
         final profileRef = widget.firestore.collection('profiles').doc(userId);
         final profileDoc = await profileRef.get();
         if (profileDoc.exists) {
           await profileRef.delete();
         }
+        // Also delete the users collection document
+        final userRef = widget.firestore.collection('users').doc(userId);
+        final userDoc = await userRef.get();
+        if (userDoc.exists) {
+          await userRef.delete();
+        }
       }
-      _log.add('  ✓ Deleted ${dummyUserIds.length} profiles');
+      _log.add('  ✓ Deleted ${dummyUserIds.length} profiles and users');
 
       _log.add('');
       _log.add('✓ Cleanup complete!');
@@ -1070,7 +1076,7 @@ class _SeedDataTabState extends State<_SeedDataTab> {
 
   Future<void> _doSeed() async {
     try {
-      // Step 1: Create users
+      // Step 1: Create users (both profiles and users collections)
       final userBatch = widget.firestore.batch();
 
       for (final user in _dummyUsers) {
@@ -1079,8 +1085,10 @@ class _SeedDataTabState extends State<_SeedDataTab> {
         final callsign = user['callsign'] as String;
         final avatarUrl = user['avatarUrl'] as String?;
         final bannerUrl = user['bannerUrl'] as String?;
+        // Generate email from user ID (e.g., dummy_user_alice -> dummy_user_alice@socialmesh.app)
+        final email = '$userId@socialmesh.app';
         setState(() => _status = 'Creating $displayName...');
-        _log.add('+ $displayName');
+        _log.add('+ $displayName ($email)');
 
         // Create profile document
         // Note: postCount starts at 0 - Cloud Functions will increment when posts are created
@@ -1102,13 +1110,22 @@ class _SeedDataTabState extends State<_SeedDataTab> {
           'createdAt': FieldValue.serverTimestamp(),
         });
 
+        // Create users document with email for testing
+        final userRef = widget.firestore.collection('users').doc(userId);
+        userBatch.set(userRef, {
+          'email': email,
+          'displayName': displayName,
+          'createdAt': FieldValue.serverTimestamp(),
+          'hasActiveStory': false,
+        }, SetOptions(merge: true));
+
         await Future.delayed(const Duration(milliseconds: 50));
       }
 
       setState(() => _status = 'Committing users...');
       await userBatch.commit();
       _log.add('');
-      _log.add('✓ ${_dummyUsers.length} users created');
+      _log.add('✓ ${_dummyUsers.length} users created (profiles + users)');
 
       // Step 2: Create posts
       setState(() => _status = 'Creating posts...');
