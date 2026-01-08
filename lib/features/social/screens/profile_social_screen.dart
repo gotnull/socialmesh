@@ -351,11 +351,30 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                         : null,
                     scaleFactor: 0.98,
                     enabled: isOwnProfile,
-                    child: ShimmerBanner(
-                      imageUrl: profile.bannerUrl,
-                      height: bannerHeight,
-                      fallback: const DefaultBanner(),
-                    ),
+                    child: profile.bannerUrl != null
+                        ? Image.network(
+                            profile.bannerUrl!,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            frameBuilder:
+                                (
+                                  context,
+                                  child,
+                                  frame,
+                                  wasSynchronouslyLoaded,
+                                ) {
+                                  if (wasSynchronouslyLoaded) return child;
+                                  return AnimatedSwitcher(
+                                    duration: const Duration(milliseconds: 300),
+                                    child: frame != null
+                                        ? child
+                                        : const DefaultBanner(),
+                                  );
+                                },
+                            errorBuilder: (context, error, stackTrace) =>
+                                const DefaultBanner(),
+                          )
+                        : const DefaultBanner(),
                   ),
                 ),
                 // Gradient overlay for readability
