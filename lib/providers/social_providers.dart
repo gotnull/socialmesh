@@ -6,17 +6,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/mesh_models.dart';
 import '../models/social.dart';
 import '../services/social_service.dart';
+import '../services/content_moderation_service.dart';
 import 'app_providers.dart';
 import 'auth_providers.dart';
 import 'profile_providers.dart';
 
 // ===========================================================================
-// SERVICE PROVIDER
+// SERVICE PROVIDERS
 // ===========================================================================
 
 /// Provider for the SocialService singleton.
 final socialServiceProvider = Provider<SocialService>((ref) {
   return SocialService();
+});
+
+/// Provider for the ContentModerationService singleton.
+final contentModerationServiceProvider = Provider<ContentModerationService>((
+  ref,
+) {
+  return ContentModerationService();
 });
 
 /// Provider for pending reported content count (for badge)
@@ -1331,4 +1339,102 @@ Future<void> unblockUser(WidgetRef ref, String userId) async {
   await service.unblockUser(userId);
   ref.invalidate(isBlockedProvider(userId));
   ref.invalidate(blockedUsersProvider);
+}
+
+// ===========================================================================
+// CONTENT MODERATION
+// ===========================================================================
+
+/// Provider for the current user's moderation status.
+/// Watches Firestore for real-time updates to suspension/strike status.
+final moderationStatusProvider = StreamProvider.autoDispose<ModerationStatus?>((
+  ref,
+) {
+  final service = ref.watch(contentModerationServiceProvider);
+  return service.watchModerationStatus();
+});
+
+/// Provider for fetching full moderation status with strike history.
+final fullModerationStatusProvider =
+    FutureProvider.autoDispose<ModerationStatus>((ref) async {
+      final service = ref.watch(contentModerationServiceProvider);
+      return service.getModerationStatus();
+    });
+
+/// Provider for unacknowledged strikes (to show warning dialogs).
+final unacknowledgedStrikesProvider =
+    FutureProvider.autoDispose<List<UserStrike>>((ref) async {
+      final service = ref.watch(contentModerationServiceProvider);
+      return service.getUnacknowledgedStrikes();
+    });
+
+/// Provider for the user's sensitive content settings.
+final sensitiveContentSettingsProvider =
+    StreamProvider.autoDispose<SensitiveContentSettings>((ref) {
+      final service = ref.watch(contentModerationServiceProvider);
+      return service.watchSensitiveContentSettings();
+    });
+
+/// Helper to check if user can post content (not suspended/banned).
+final canPostContentProvider = Provider.autoDispose<bool>((ref) {
+  final status = ref.watch(moderationStatusProvider);
+  return status.maybeWhen(
+    data: (s) => s?.canPost ?? true,
+    orElse: () => true, // Allow by default if status unknown
+  );
+});
+
+/// Helper to acknowledge a strike.
+Future<void> acknowledgeStrike(WidgetRef ref, String strikeId) async {
+  final service = ref.read(contentModerationServiceProvider);
+  await service.acknowledgeStrike(strikeId);
+  ref.invalidate(unacknowledgedStrikesProvider);
+  ref.invalidate(fullModerationStatusProvider);
+}
+
+/// Helper to update sensitive content settings.
+Future<void> updateSensitiveContentSettings(
+  WidgetRef ref,
+  SensitiveContentSettings settings,
+) async {
+  final service = ref.read(contentModerationServiceProvider);
+  await service.updateSensitiveContentSettings(settings);
+}
+
+/// Helper to pre-screen text content before posting.
+Future<TextModerationResult> checkTextContent(
+  WidgetRef ref,
+  String text, {
+  bool useServerCheck = false,
+}) async {
+  final service = ref.read(contentModerationServiceProvider);
+  return service.checkText(text, useServerCheck: useServerCheck);
+}
+
+// ===========================================================================
+// ADMIN: MODERATION QUEUE
+// ===========================================================================
+
+/// Provider for the moderation queue (admin only).
+final moderationQueueProvider = FutureProvider.autoDispose
+    .family<List<ModerationQueueItem>, String?>((ref, status) async {
+      final service = ref.watch(contentModerationServiceProvider);
+      return service.getModerationQueue(status: status);
+    });
+
+/// Helper to review a moderation queue item (admin only).
+Future<void> reviewModerationItem(
+  WidgetRef ref, {
+  required String itemId,
+  required String action,
+  String? notes,
+}) async {
+  final service = ref.read(contentModerationServiceProvider);
+  await service.reviewModerationItem(
+    itemId: itemId,
+    action: action,
+    notes: notes,
+  );
+  ref.invalidate(moderationQueueProvider(null));
+  ref.invalidate(moderationQueueProvider('pending'));
 }

@@ -996,10 +996,15 @@ extension ThemeAwareColors on BuildContext {
       isDarkMode ? AppTheme.darkBackground : AppTheme.lightBackground;
   Color get surface =>
       isDarkMode ? AppTheme.darkSurface : AppTheme.lightSurface;
+  Color get surfaceVariant =>
+      Theme.of(this).colorScheme.surfaceContainerHighest;
   Color get card => isDarkMode ? AppTheme.darkCard : AppTheme.lightCard;
   Color get cardAlt =>
       isDarkMode ? AppTheme.darkCardAlt : AppTheme.lightCardAlt;
   Color get border => isDarkMode ? AppTheme.darkBorder : AppTheme.lightBorder;
+
+  // Accent colors
+  Color get primary => Theme.of(this).colorScheme.primary;
 
   // Text colors
   Color get textPrimary =>

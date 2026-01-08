@@ -1993,19 +1993,27 @@ const BAN_REASONS: Record<string, string> = {
  * This is a callable function that requires admin privileges.
  */
 export const banUser = onCall({ cors: true }, async (request) => {
-  // Verify the caller is an admin
+  console.log('[banUser] Function invoked');
+
+  // Verify the caller is authenticated
   if (!request.auth) {
+    console.log('[banUser] ERROR: No auth context');
     throw new HttpsError('unauthenticated', 'Must be authenticated');
   }
 
   const callerUid = request.auth.uid;
+  console.log(`[banUser] Caller UID: ${callerUid}`);
 
-  // Check if caller is admin
-  const callerDoc = await db.collection('users').doc(callerUid).get();
-  const callerData = callerDoc.data();
-  if (!callerData?.isAdmin) {
+  // Check if caller is admin using the admins collection
+  const adminDoc = await db.collection('admins').doc(callerUid).get();
+  console.log(`[banUser] Admin doc exists: ${adminDoc.exists}`);
+
+  if (!adminDoc.exists) {
+    console.log(`[banUser] ERROR: User ${callerUid} is not an admin`);
     throw new HttpsError('permission-denied', 'Only admins can ban users');
   }
+
+  console.log('[banUser] Admin check passed');
 
   const { userId, reason, sendEmail, reportId } = request.data as {
     userId: string;
@@ -2014,11 +2022,14 @@ export const banUser = onCall({ cors: true }, async (request) => {
     reportId?: string;
   };
 
+  console.log(`[banUser] Request data: userId=${userId}, reason=${reason}, sendEmail=${sendEmail}, reportId=${reportId}`);
+
   if (!userId || !reason) {
+    console.log('[banUser] ERROR: Missing required fields');
     throw new HttpsError('invalid-argument', 'userId and reason are required');
   }
 
-  console.log(`Admin ${callerUid} banning user ${userId} for reason: ${reason}`);
+  console.log(`[banUser] Admin ${callerUid} banning user ${userId} for reason: ${reason}`);
 
   try {
     // Get user's email before disabling (for notification)
@@ -2183,3 +2194,26 @@ export {
   onCommentCreatedNotification,
   sendTestPushNotification,
 } from './push_notifications';
+
+// =============================================================================
+// CONTENT MODERATION (AI-powered)
+// =============================================================================
+
+export {
+  // Storage triggers - auto-scan uploads
+  moderateUploadedMedia,
+  // Firestore triggers - auto-scan new content
+  moderateNewStory,
+  moderateNewPost,
+  moderateNewComment,
+  // Callable functions
+  checkTextContent,
+  getModerationStatus,
+  acknowledgeStrike,
+  // Admin functions
+  reviewModerationItem,
+  getModerationQueue,
+  // Scheduled cleanup
+  cleanupExpiredStrikes,
+  liftExpiredSuspensions,
+} from './content_moderation';

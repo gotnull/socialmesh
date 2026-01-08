@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
+import '../../../core/logging.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../providers/social_providers.dart';
@@ -286,12 +288,27 @@ class _ReportsList extends ConsumerWidget {
     WidgetRef ref,
     Map<String, dynamic> report,
   ) async {
+    AppLogging.social('[BanUser] Starting ban user flow');
+    AppLogging.social('[BanUser] Report data: $report');
+
     final reportContext = report['context'] as Map<String, dynamic>?;
     final authorId = reportContext?['authorId'] as String?;
     final type = report['type'] as String? ?? 'content';
 
+    AppLogging.social('[BanUser] Extracted authorId: $authorId, type: $type');
+
     if (authorId == null) {
-      showErrorSnackBar(context, 'Cannot identify user to ban');
+      AppLogging.social('[BanUser] ERROR: authorId is null, cannot proceed');
+      await FirebaseAnalytics.instance.logEvent(
+        name: 'ban_user_error',
+        parameters: {
+          'error_type': 'missing_author_id',
+          'report_id': report['id'] ?? 'unknown',
+        },
+      );
+      if (context.mounted) {
+        showErrorSnackBar(context, 'Cannot identify user to ban');
+      }
       return;
     }
 
@@ -301,10 +318,17 @@ class _ReportsList extends ConsumerWidget {
       child: _BanUserSheet(authorId: authorId, contentType: type),
     );
 
-    if (result == null || !context.mounted) return;
+    if (result == null || !context.mounted) {
+      AppLogging.social('[BanUser] User cancelled ban flow');
+      return;
+    }
 
     final reason = result['reason'] as String;
     final sendEmail = result['sendEmail'] as bool;
+
+    AppLogging.social(
+      '[BanUser] Ban params - reason: $reason, sendEmail: $sendEmail',
+    );
 
     try {
       // Show loading
@@ -314,24 +338,89 @@ class _ReportsList extends ConsumerWidget {
         builder: (ctx) => const Center(child: CircularProgressIndicator()),
       );
 
+      AppLogging.social('[BanUser] Calling Firebase Function banUser');
+      AppLogging.social(
+        '[BanUser] Payload: userId=$authorId, reason=$reason, sendEmail=$sendEmail, reportId=${report['id']}',
+      );
+
       // Call Firebase Function to ban user
       final functions = FirebaseFunctions.instance;
       final callable = functions.httpsCallable('banUser');
-      await callable.call<dynamic>({
+
+      AppLogging.social('[BanUser] httpsCallable created, calling...');
+
+      final response = await callable.call<dynamic>({
         'userId': authorId,
         'reason': reason,
         'sendEmail': sendEmail,
         'reportId': report['id'],
       });
 
+      AppLogging.social(
+        '[BanUser] Firebase Function response: ${response.data}',
+      );
+
+      // Log success to analytics
+      await FirebaseAnalytics.instance.logEvent(
+        name: 'ban_user_success',
+        parameters: {
+          'user_id': authorId,
+          'reason': reason,
+          'report_id': report['id'] ?? 'unknown',
+        },
+      );
+
       // Delete the content
+      AppLogging.social('[BanUser] Deleting reported content...');
       await ref.read(socialServiceProvider).deleteReportedContent(report['id']);
+      AppLogging.social('[BanUser] Reported content deleted');
 
       if (context.mounted) {
         Navigator.pop(context); // Close loading
         showSuccessSnackBar(context, 'User banned and $type deleted');
       }
-    } catch (e) {
+    } on FirebaseFunctionsException catch (e) {
+      AppLogging.social(
+        '[BanUser] FirebaseFunctionsException: code=${e.code}, message=${e.message}, details=${e.details}',
+      );
+
+      // Log to Firebase Analytics for monitoring
+      await FirebaseAnalytics.instance.logEvent(
+        name: 'ban_user_error',
+        parameters: {
+          'error_type': 'firebase_functions_exception',
+          'error_code': e.code,
+          'error_message': e.message ?? 'unknown',
+          'user_id': authorId,
+          'report_id': report['id'] ?? 'unknown',
+        },
+      );
+
+      if (context.mounted) {
+        Navigator.pop(context); // Close loading
+        showErrorSnackBar(
+          context,
+          'Failed to ban user: [${e.code}] ${e.message}',
+        );
+      }
+    } catch (e, stackTrace) {
+      AppLogging.social('[BanUser] Unexpected error: $e');
+      AppLogging.social('[BanUser] Stack trace: $stackTrace');
+
+      // Log to Firebase Analytics for monitoring
+      await FirebaseAnalytics.instance.logEvent(
+        name: 'ban_user_error',
+        parameters: {
+          'error_type': 'unexpected_exception',
+          'error_message': e.toString().substring(
+            0,
+            (e.toString().length > 100) ? 100 : e.toString().length,
+          ),
+          'user_id': authorId,
+          'report_id': report['id'] ?? 'unknown',
+        },
+      );
+
       if (context.mounted) {
         Navigator.pop(context); // Close loading
         showErrorSnackBar(context, 'Failed to ban user: $e');

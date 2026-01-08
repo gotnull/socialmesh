@@ -42,6 +42,7 @@ class AppLogging {
   static bool? _settingsLoggingEnabled;
   static bool? _debugLoggingEnabled;
   static bool? _authLoggingEnabled;
+  static bool? _socialLoggingEnabled;
   static Logger? _bleLogger;
   static Logger? _noOpLogger;
 
@@ -165,6 +166,12 @@ class AppLogging {
     return _authLoggingEnabled!;
   }
 
+  static bool get socialLoggingEnabled {
+    _socialLoggingEnabled ??=
+        _safeGetEnv('SOCIAL_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    return _socialLoggingEnabled!;
+  }
+
   static Logger get bleLogger {
     if (bleLoggingEnabled) {
       _bleLogger ??= Logger(
@@ -257,6 +264,10 @@ class AppLogging {
     if (authLoggingEnabled) debugPrint('🔐 Auth: $message');
   }
 
+  static void social(String message) {
+    if (socialLoggingEnabled) debugPrint('👥 Social: $message');
+  }
+
   static void reset() {
     _bleLoggingEnabled = null;
     _protocolLoggingEnabled = null;
@@ -278,6 +289,7 @@ class AppLogging {
     _settingsLoggingEnabled = null;
     _debugLoggingEnabled = null;
     _authLoggingEnabled = null;
+    _socialLoggingEnabled = null;
     _bleLogger = null;
     _noOpLogger = null;
   }

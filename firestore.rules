@@ -486,6 +486,56 @@ service cloud.firestore {
     }
 
     // =============================================================================
+    // CONTENT MODERATION SYSTEM
+    // =============================================================================
+
+    // Moderation results - AI scan results (Cloud Functions write, admin read)
+    match /content_moderation/{docId} {
+      allow read: if isAdmin();
+      allow write: if false; // Cloud Functions only
+    }
+
+    // Moderation queue - items pending human review (Cloud Functions write, admin read/update)
+    match /moderation_queue/{itemId} {
+      allow read: if isAdmin();
+      allow create: if false; // Cloud Functions only
+      allow update: if isAdmin(); // Admin reviews
+      allow delete: if isAdmin();
+    }
+
+    // Moderation checks - text content checks log (Cloud Functions only)
+    match /moderation_checks/{checkId} {
+      allow read: if isAdmin();
+      allow write: if false; // Cloud Functions only
+    }
+
+    // User strikes - violations tracking
+    match /user_strikes/{strikeId} {
+      // Users can read their own strikes, admins can read all
+      allow read: if isAdmin() || 
+        (isAuthenticated() && resource.data.userId == request.auth.uid);
+      // Cloud Functions create strikes
+      allow create: if false;
+      // Users can acknowledge their strikes
+      allow update: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['acknowledged', 'acknowledgedAt']);
+      // Only admins can delete strikes
+      allow delete: if isAdmin();
+    }
+
+    // Admin logs - audit trail (Cloud Functions write, admin read)
+    match /adminLogs/{logId} {
+      allow read: if isAdmin();
+      allow write: if false; // Cloud Functions only
+    }
+
+    // Email queue - for ban notifications (Cloud Functions only)
+    match /mail/{mailId} {
+      allow read, write: if false; // Cloud Functions / Firebase Extensions only
+    }
+
+    // =============================================================================
     // STORIES (ephemeral content)
     // =============================================================================
 
