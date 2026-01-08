@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/auto_scroll_text.dart';
+import '../../core/widgets/device_privacy_warning.dart';
 import '../../core/widgets/node_avatar.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
@@ -305,6 +306,37 @@ class _LinkedDevicesScreenState extends ConsumerState<LinkedDevicesScreen> {
 
   Future<void> _linkCurrentDevice(int nodeNum) async {
     if (_isLinking) return;
+
+    // Get node details to check position config
+    final nodes = ref.read(nodesProvider);
+    final node = nodes[nodeNum];
+
+    if (node == null) {
+      if (mounted) {
+        showErrorSnackBar(context, 'Device not found');
+      }
+      return;
+    }
+
+    // Check if device shares location based on position config
+    final positionConfig = node.deviceMetrics?.position;
+    final sharesLocation =
+        positionConfig != null &&
+        positionConfig.positionBroadcastSecs > 0 &&
+        positionConfig.positionEnabled;
+
+    // Show privacy warning before linking
+    final action = await DevicePrivacyWarning.show(
+      context,
+      nodeNum: nodeNum,
+      deviceName: node.longName,
+      sharesLocation: sharesLocation,
+      positionConfig: positionConfig,
+    );
+
+    if (action != DevicePrivacyAction.proceed) {
+      return;
+    }
 
     setState(() => _isLinking = true);
 
