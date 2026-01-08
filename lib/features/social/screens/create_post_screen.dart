@@ -789,8 +789,12 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       setState(() => _isSubmitting = true);
 
       for (final file in filesToUpload) {
-        if (file.path == null) continue;
+        if (file.path == null) {
+          debugPrint('[CreatePost] Skipping file with null path');
+          continue;
+        }
 
+        debugPrint('[CreatePost] Uploading image: ${file.name}');
         final imageFile = File(file.path!);
         final fileName =
             '${DateTime.now().millisecondsSinceEpoch}_${file.name}';
@@ -808,12 +812,16 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
           },
         );
 
+        debugPrint('[CreatePost] Uploading to: post_images/$fileName');
         await ref.putFile(imageFile, metadata);
         final url = await ref.getDownloadURL();
+        debugPrint('[CreatePost] Upload complete, URL: $url');
 
         setState(() => _imageUrls.add(url));
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('[CreatePost] Image upload error: $e');
+      debugPrint('[CreatePost] Stack trace: $stackTrace');
       if (mounted) {
         showErrorSnackBar(context, 'Failed to upload image: $e');
       }
@@ -1172,14 +1180,21 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     try {
       // CRITICAL: Validate images with Cloud Function (synchronous check)
       if (_imageUrls.isNotEmpty) {
+        debugPrint(
+          '[CreatePost] Validating ${_imageUrls.length} images with Cloud Function',
+        );
         try {
           final functions = FirebaseFunctions.instance;
           final result = await functions.httpsCallable('validateImages').call({
             'imageUrls': _imageUrls,
           });
+          debugPrint('[CreatePost] validateImages response: ${result.data}');
 
           final validationResult = result.data as Map<String, dynamic>;
           if (validationResult['passed'] == false) {
+            debugPrint(
+              '[CreatePost] Image validation failed: ${validationResult['message']}',
+            );
             if (mounted) {
               setState(() => _isSubmitting = false);
               showErrorSnackBar(
@@ -1189,7 +1204,10 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
             }
             return;
           }
-        } catch (e) {
+          debugPrint('[CreatePost] All images passed validation');
+        } catch (e, stackTrace) {
+          debugPrint('[CreatePost] validateImages error: $e');
+          debugPrint('[CreatePost] Stack trace: $stackTrace');
           // If validation fails, check if images still exist
           final validUrls = <String>[];
           for (final url in _imageUrls) {
@@ -1198,11 +1216,14 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
               await ref.getMetadata();
               validUrls.add(url);
             } catch (e) {
-              debugPrint('Image was removed: $url');
+              debugPrint('[CreatePost] Image was removed: $url');
             }
           }
 
           if (validUrls.length != _imageUrls.length) {
+            debugPrint(
+              '[CreatePost] ${_imageUrls.length - validUrls.length} images were removed',
+            );
             if (mounted) {
               setState(() => _isSubmitting = false);
               showErrorSnackBar(
