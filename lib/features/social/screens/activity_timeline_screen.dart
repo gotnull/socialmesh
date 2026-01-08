@@ -6,6 +6,7 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/verified_badge.dart';
 import '../../../models/social_activity.dart';
 import '../../../providers/activity_providers.dart';
+import 'post_detail_screen.dart';
 import 'profile_social_screen.dart';
 
 /// Activity timeline screen showing social interactions.
@@ -239,8 +240,18 @@ class _ActivityTimelineScreenState
     // Navigate based on activity type
     switch (activity.type) {
       case SocialActivityType.follow:
+      case SocialActivityType.followRequest:
+        // User-focused activities - go to their profile
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ProfileSocialScreen(userId: activity.actorId),
+          ),
+        );
+        break;
       case SocialActivityType.storyLike:
       case SocialActivityType.storyView:
+        // Story activities - go to actor's profile (stories are on profile)
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -252,9 +263,17 @@ class _ActivityTimelineScreenState
       case SocialActivityType.postComment:
       case SocialActivityType.mention:
       case SocialActivityType.commentReply:
-        // Navigate to post if content ID exists
+      case SocialActivityType.commentLike:
+        // Post-related activities - navigate to post if content ID exists
         if (activity.contentId != null) {
-          // Navigate to post detail screen
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => PostDetailScreen(postId: activity.contentId!),
+            ),
+          );
+        } else {
+          // Fallback to profile if no content ID
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -515,10 +534,12 @@ class _ActivityTile extends StatelessWidget {
     switch (type) {
       case SocialActivityType.storyLike:
       case SocialActivityType.postLike:
+      case SocialActivityType.commentLike:
         return Icons.favorite;
       case SocialActivityType.storyView:
         return Icons.visibility;
       case SocialActivityType.follow:
+      case SocialActivityType.followRequest:
         return Icons.person_add;
       case SocialActivityType.postComment:
       case SocialActivityType.commentReply:
@@ -532,10 +553,12 @@ class _ActivityTile extends StatelessWidget {
     switch (type) {
       case SocialActivityType.storyLike:
       case SocialActivityType.postLike:
+      case SocialActivityType.commentLike:
         return Colors.redAccent;
       case SocialActivityType.storyView:
         return Colors.blueAccent;
       case SocialActivityType.follow:
+      case SocialActivityType.followRequest:
         return Colors.teal;
       case SocialActivityType.postComment:
       case SocialActivityType.commentReply:
@@ -553,6 +576,8 @@ class _ActivityTile extends StatelessWidget {
         return 'viewed your story';
       case SocialActivityType.follow:
         return 'started following you';
+      case SocialActivityType.followRequest:
+        return 'requested to follow you';
       case SocialActivityType.postLike:
         return 'liked your post';
       case SocialActivityType.postComment:
@@ -561,6 +586,8 @@ class _ActivityTile extends StatelessWidget {
         return 'mentioned you';
       case SocialActivityType.commentReply:
         return 'replied to your comment';
+      case SocialActivityType.commentLike:
+        return 'liked your comment';
     }
   }
 }

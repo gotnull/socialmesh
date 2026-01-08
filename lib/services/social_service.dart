@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import '../core/logging.dart';
 import '../models/social.dart';
 import '../models/user_profile.dart';
+import 'social_activity_service.dart';
 
 /// Service for social features: follows, posts, comments, likes.
 ///
@@ -62,6 +63,19 @@ class SocialService {
         .collection('follows')
         .doc(followId)
         .set(follow.toFirestore());
+
+    // Create activity for the followed user
+    try {
+      final activityService = SocialActivityService(
+        firestore: _firestore,
+        auth: _auth,
+      );
+      await activityService.createFollowActivity(followedUserId: targetUserId);
+    } catch (e) {
+      // Don't fail the follow if activity creation fails
+      debugPrint('Failed to create follow activity: $e');
+    }
+
     return 'followed';
   }
 
@@ -85,6 +99,19 @@ class SocialService {
         .collection('follow_requests')
         .doc(requestId)
         .set(request.toFirestore());
+
+    // Create activity for target user (they received a follow request)
+    try {
+      final activityService = SocialActivityService(
+        firestore: _firestore,
+        auth: _auth,
+      );
+      await activityService.createFollowRequestActivity(
+        targetUserId: targetUserId,
+      );
+    } catch (e) {
+      debugPrint('Failed to create follow request activity: $e');
+    }
   }
 
   /// Send a follow request to a private account.
@@ -104,6 +131,7 @@ class SocialService {
   }
 
   /// Accept a follow request (creates follow and deletes request).
+  /// Creates activity for the requester to notify them their request was accepted.
   Future<void> acceptFollowRequest(String requesterId) async {
     final currentUserId = _currentUserId;
     if (currentUserId == null) {
@@ -132,6 +160,19 @@ class SocialService {
     batch.delete(_firestore.collection('follow_requests').doc(requestId));
 
     await batch.commit();
+
+    // Create activity for the requester (they now follow you, so notify them)
+    // This shows as "X started following you" for the requester
+    try {
+      final activityService = SocialActivityService(
+        firestore: _firestore,
+        auth: _auth,
+      );
+      await activityService.createFollowActivity(followedUserId: requesterId);
+    } catch (e) {
+      // Don't fail the accept if activity creation fails
+      debugPrint('Failed to create follow activity on accept: $e');
+    }
   }
 
   /// Decline a follow request.
@@ -683,6 +724,13 @@ class SocialService {
     // Create the post - Cloud Functions handle postCount increment
     await docRef.set(data);
 
+    // Parse and notify mentions in the post content
+    final activityService = SocialActivityService(
+      firestore: _firestore,
+      auth: _auth,
+    );
+    await _processMentions(content, post.id, activityService);
+
     return post;
   }
 
@@ -943,7 +991,109 @@ class SocialService {
     );
 
     await docRef.set(comment.toFirestore());
+
+    final activityService = SocialActivityService(
+      firestore: _firestore,
+      auth: _auth,
+    );
+    final preview = content.length > 100
+        ? '${content.substring(0, 100)}...'
+        : content;
+
+    if (parentId == null) {
+      // Root comment - notify post owner
+      try {
+        final postDoc = await _firestore.collection('posts').doc(postId).get();
+        if (postDoc.exists) {
+          final postData = postDoc.data()!;
+          final postOwnerId = postData['authorId'] as String?;
+
+          if (postOwnerId != null && postOwnerId != currentUserId) {
+            await activityService.createCommentActivity(
+              postId: postId,
+              postOwnerId: postOwnerId,
+              commentPreview: preview,
+            );
+          }
+        }
+      } catch (e) {
+        debugPrint('Failed to create comment activity: $e');
+      }
+    } else {
+      // Reply - notify original comment author
+      try {
+        final parentCommentDoc = await _firestore
+            .collection('comments')
+            .doc(parentId)
+            .get();
+        if (parentCommentDoc.exists) {
+          final parentData = parentCommentDoc.data()!;
+          final originalAuthorId = parentData['authorId'] as String?;
+
+          if (originalAuthorId != null && originalAuthorId != currentUserId) {
+            await activityService.createCommentReplyActivity(
+              postId: postId,
+              originalCommentAuthorId: originalAuthorId,
+              replyPreview: preview,
+            );
+          }
+        }
+      } catch (e) {
+        debugPrint('Failed to create comment reply activity: $e');
+      }
+    }
+
+    // Parse and notify mentions in the comment
+    await _processMentions(content, postId, activityService);
+
     return comment;
+  }
+
+  /// Parse @mentions from text and create activities for mentioned users
+  Future<void> _processMentions(
+    String content,
+    String postId,
+    SocialActivityService activityService,
+  ) async {
+    final currentUserId = _currentUserId;
+    if (currentUserId == null) return;
+
+    // Match @username patterns (alphanumeric and underscores)
+    final mentionRegex = RegExp(r'@(\w+)');
+    final matches = mentionRegex.allMatches(content);
+
+    for (final match in matches) {
+      final username = match.group(1);
+      if (username == null) continue;
+
+      try {
+        // Look up user by displayName (case-insensitive)
+        final userQuery = await _firestore
+            .collection('profiles')
+            .where('displayNameLower', isEqualTo: username.toLowerCase())
+            .limit(1)
+            .get();
+
+        if (userQuery.docs.isNotEmpty) {
+          final mentionedUserId = userQuery.docs.first.id;
+
+          // Don't notify yourself
+          if (mentionedUserId != currentUserId) {
+            final preview = content.length > 100
+                ? '${content.substring(0, 100)}...'
+                : content;
+
+            await activityService.createMentionActivity(
+              mentionedUserId: mentionedUserId,
+              contentId: postId,
+              textContent: preview,
+            );
+          }
+        }
+      } catch (e) {
+        debugPrint('Failed to process mention @$username: $e');
+      }
+    }
   }
 
   /// Delete a comment. Only the author can delete.
@@ -1035,6 +1185,7 @@ class SocialService {
   // ===========================================================================
 
   /// Like a post. Creates a like document with composite ID.
+  /// Also creates an activity for the post owner.
   Future<void> likePost(String postId) async {
     final currentUserId = _currentUserId;
     if (currentUserId == null) {
@@ -1050,6 +1201,34 @@ class SocialService {
     );
 
     await _firestore.collection('likes').doc(likeId).set(like.toFirestore());
+
+    // Create activity for post owner
+    try {
+      final postDoc = await _firestore.collection('posts').doc(postId).get();
+      if (postDoc.exists) {
+        final postData = postDoc.data()!;
+        final postOwnerId = postData['authorId'] as String?;
+        final mediaUrls = postData['mediaUrls'] as List<dynamic>?;
+        final thumbnailUrl = mediaUrls?.isNotEmpty == true
+            ? mediaUrls!.first as String
+            : null;
+
+        if (postOwnerId != null && postOwnerId != currentUserId) {
+          final activityService = SocialActivityService(
+            firestore: _firestore,
+            auth: _auth,
+          );
+          await activityService.createPostLikeActivity(
+            postId: postId,
+            postOwnerId: postOwnerId,
+            postThumbnailUrl: thumbnailUrl,
+          );
+        }
+      }
+    } catch (e) {
+      // Don't fail the like if activity creation fails
+      debugPrint('Failed to create post like activity: $e');
+    }
   }
 
   /// Unlike a post. Deletes the like document.
@@ -1073,7 +1252,7 @@ class SocialService {
     return doc.exists;
   }
 
-  /// Like a comment. Creates a like document.
+  /// Like a comment. Creates a like document and activity.
   Future<void> likeComment(String commentId) async {
     final currentUserId = _currentUserId;
     if (currentUserId == null) {
@@ -1087,6 +1266,34 @@ class SocialService {
       'targetType': 'comment',
       'createdAt': FieldValue.serverTimestamp(),
     });
+
+    // Create activity for comment author
+    try {
+      final commentDoc = await _firestore
+          .collection('comments')
+          .doc(commentId)
+          .get();
+      if (commentDoc.exists) {
+        final commentData = commentDoc.data()!;
+        final commentAuthorId = commentData['authorId'] as String?;
+        final postId = commentData['postId'] as String?;
+
+        if (commentAuthorId != null &&
+            commentAuthorId != currentUserId &&
+            postId != null) {
+          final activityService = SocialActivityService(
+            firestore: _firestore,
+            auth: _auth,
+          );
+          await activityService.createCommentLikeActivity(
+            postId: postId,
+            commentAuthorId: commentAuthorId,
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Failed to create comment like activity: $e');
+    }
   }
 
   /// Unlike a comment. Deletes the like document.

@@ -13,6 +13,9 @@ enum SocialActivityType {
   /// Someone started following you
   follow,
 
+  /// Someone requested to follow you (private account)
+  followRequest,
+
   /// Someone liked your post
   postLike,
 
@@ -24,6 +27,9 @@ enum SocialActivityType {
 
   /// Someone replied to your comment
   commentReply,
+
+  /// Someone liked your comment
+  commentLike,
 }
 
 /// A single activity item in the activity feed.
@@ -83,6 +89,8 @@ class SocialActivity {
         return '$actorName viewed your story';
       case SocialActivityType.follow:
         return '$actorName started following you';
+      case SocialActivityType.followRequest:
+        return '$actorName requested to follow you';
       case SocialActivityType.postLike:
         return '$actorName liked your post';
       case SocialActivityType.postComment:
@@ -91,6 +99,8 @@ class SocialActivity {
         return '$actorName mentioned you';
       case SocialActivityType.commentReply:
         return '$actorName replied to your comment';
+      case SocialActivityType.commentLike:
+        return '$actorName liked your comment';
     }
   }
 
@@ -99,10 +109,12 @@ class SocialActivity {
     switch (type) {
       case SocialActivityType.storyLike:
       case SocialActivityType.postLike:
+      case SocialActivityType.commentLike:
         return 'favorite';
       case SocialActivityType.storyView:
         return 'visibility';
       case SocialActivityType.follow:
+      case SocialActivityType.followRequest:
         return 'person_add';
       case SocialActivityType.postComment:
       case SocialActivityType.commentReply:

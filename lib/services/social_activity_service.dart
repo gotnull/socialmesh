@@ -125,6 +125,42 @@ class SocialActivityService {
     );
   }
 
+  /// Create a comment reply activity (when someone replies to your comment)
+  Future<void> createCommentReplyActivity({
+    required String postId,
+    required String originalCommentAuthorId,
+    required String replyPreview,
+  }) async {
+    await createActivity(
+      type: SocialActivityType.commentReply,
+      targetUserId: originalCommentAuthorId,
+      contentId: postId,
+      textContent: replyPreview,
+    );
+  }
+
+  /// Create a comment like activity
+  Future<void> createCommentLikeActivity({
+    required String postId,
+    required String commentAuthorId,
+  }) async {
+    await createActivity(
+      type: SocialActivityType.commentLike,
+      targetUserId: commentAuthorId,
+      contentId: postId,
+    );
+  }
+
+  /// Create a follow request activity (for private accounts)
+  Future<void> createFollowRequestActivity({
+    required String targetUserId,
+  }) async {
+    await createActivity(
+      type: SocialActivityType.followRequest,
+      targetUserId: targetUserId,
+    );
+  }
+
   /// Create a mention activity
   Future<void> createMentionActivity({
     required String mentionedUserId,
