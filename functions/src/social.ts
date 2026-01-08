@@ -907,7 +907,7 @@ async function updateFeedItemCount(
  */
 export const onProfileUpdated = onDocumentDeleted(
   'profiles/{userId}',
-  async (event) => {
+  async (_event) => {
     // Note: Using onDocumentUpdated causes issues, so we rely on
     // feed items being refreshed periodically or on view.
     // For MVP, feed author snapshots are set at fan-out time only.
@@ -929,9 +929,9 @@ export const onProfileUpdated = onDocumentDeleted(
  * - Profile followerCount from actual follows
  * - Profile followingCount from actual follows
  */
-export const recalculateAllCounts = onCall(async (request) => {
+export const recalculateAllCounts = onCall(async (_request) => {
   // Optional: Add admin check here
-  // if (!request.auth?.token.admin) {
+  // if (_request.auth?.token.admin) {
   //   throw new HttpsError('permission-denied', 'Admin only');
   // }
 

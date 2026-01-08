@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
@@ -72,6 +73,36 @@ class StoryService {
       file: mediaFile,
       isVideo: mediaType == StoryMediaType.video,
     );
+
+    // Validate image with Cloud Function (only for images, not videos)
+    if (mediaType == StoryMediaType.image) {
+      try {
+        final validation = await FirebaseFunctions.instance
+            .httpsCallable('validateImages')
+            .call({
+              'imageUrls': [mediaUrl],
+            });
+
+        if (validation.data['passed'] == false) {
+          // Delete uploaded file
+          await _storage
+              .ref()
+              .child('stories/$currentUserId/$storyId')
+              .delete();
+          throw Exception(
+            validation.data['message'] ?? 'Content policy violation',
+          );
+        }
+      } catch (e) {
+        // Cleanup on error
+        await _storage
+            .ref()
+            .child('stories/$currentUserId/$storyId')
+            .delete()
+            .catchError((_) {});
+        rethrow;
+      }
+    }
 
     // Get author snapshot
     final authorSnapshot = await _getAuthorSnapshot(currentUserId);

@@ -808,6 +808,94 @@ export const checkTextContent = onCall(
 );
 
 // =============================================================================
+// CALLABLE: Validate post images before submission
+// =============================================================================
+
+export const validateImages = onCall(
+  { cors: true, memory: '512MiB', timeoutSeconds: 60 },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError('unauthenticated', 'Must be signed in');
+    }
+
+    const { imageUrls } = request.data as { imageUrls: string[] };
+
+    if (!imageUrls || !Array.isArray(imageUrls) || imageUrls.length === 0) {
+      throw new HttpsError('invalid-argument', 'imageUrls array is required');
+    }
+
+    const userId = request.auth.uid;
+
+    // Check if user is suspended
+    const userDoc = await db.collection('users').doc(userId).get();
+    const userData = userDoc.data();
+    if (userData?.moderationStatus?.isSuspended) {
+      const suspendedUntil = userData.moderationStatus.suspendedUntil?.toDate();
+      if (suspendedUntil && suspendedUntil > new Date()) {
+        throw new HttpsError(
+          'permission-denied',
+          'Account is suspended until ' + suspendedUntil.toISOString(),
+        );
+      }
+    }
+
+    // Validate each image with Vision API
+    for (const url of imageUrls) {
+      try {
+        // Extract GCS path from URL
+        const urlObj = new URL(url);
+        const pathMatch = urlObj.pathname.match(/\/o\/(.+?)\?/);
+        if (!pathMatch) {
+          console.warn(`Could not parse GCS path from URL: ${url}`);
+          continue;
+        }
+
+        const filePath = decodeURIComponent(pathMatch[1]);
+        const gcsUri = `gs://${process.env.STORAGE_BUCKET || 'social-mesh-app.firebasestorage.app'}/${filePath}`;
+
+        console.log(`Validating image: ${gcsUri}`);
+        const result = await analyzeImageWithVision(gcsUri);
+
+        if (result.action === 'reject') {
+          console.log(`Image rejected: ${gcsUri} - ${result.details}`);
+
+          // Delete the violating image
+          const bucket = admin.storage().bucket();
+          await bucket.file(filePath).delete().catch((e) => {
+            console.error(`Failed to delete image ${filePath}:`, e);
+          });
+
+          // Record strike
+          await recordUserStrike(
+            userId,
+            `Image policy violation: ${result.details}`,
+            filePath,
+            'image',
+          );
+
+          return {
+            passed: false,
+            message: 'Image contains inappropriate content and has been removed.',
+            details: result.details,
+          };
+        } else if (result.action === 'review') {
+          console.log(`Image flagged for review: ${gcsUri} - ${result.details}`);
+          // Allow but log for review
+        }
+      } catch (error) {
+        console.error(`Error validating image ${url}:`, error);
+        // Continue checking other images
+      }
+    }
+
+    return {
+      passed: true,
+      message: 'All images passed validation',
+    };
+  },
+);
+
+// =============================================================================
 // CALLABLE: Get user's moderation status
 // =============================================================================
 

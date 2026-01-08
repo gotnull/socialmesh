@@ -14,6 +14,7 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
+import '../../../core/widgets/content_moderation_warning.dart';
 import '../../../core/widgets/default_banner.dart';
 import '../../../core/widgets/edge_fade.dart';
 import '../../../core/widgets/node_avatar.dart';
@@ -1292,7 +1293,19 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
         }
       } catch (e) {
         if (mounted) {
-          showErrorSnackBar(context, 'Failed to upload banner: $e');
+          if (e.toString().contains('Content policy violation') ||
+              e.toString().contains('violates content policy')) {
+            await ContentModerationWarning.show(
+              context,
+              result: ContentModerationCheckResult(
+                passed: false,
+                action: 'reject',
+                categories: ['Inappropriate Content'],
+              ),
+            );
+          } else {
+            showErrorSnackBar(context, 'Failed to upload banner: $e');
+          }
         }
       }
     }

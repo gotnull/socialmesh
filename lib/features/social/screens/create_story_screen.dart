@@ -511,13 +511,37 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
         Navigator.pop(context);
       } else if (mounted) {
         final error = ref.read(createStoryProvider).error;
-        showErrorSnackBar(context, error ?? 'Failed to create story');
-        setState(() => _isUploading = false);
+        if (error != null && error.contains('Content policy violation')) {
+          setState(() => _isUploading = false);
+          await ContentModerationWarning.show(
+            context,
+            result: ContentModerationCheckResult(
+              passed: false,
+              action: 'reject',
+              categories: ['Inappropriate Content'],
+            ),
+          );
+        } else {
+          showErrorSnackBar(context, error ?? 'Failed to create story');
+          setState(() => _isUploading = false);
+        }
       }
     } catch (e) {
       if (mounted) {
-        showErrorSnackBar(context, 'Failed to create story: $e');
-        setState(() => _isUploading = false);
+        if (e.toString().contains('Content policy violation')) {
+          setState(() => _isUploading = false);
+          await ContentModerationWarning.show(
+            context,
+            result: ContentModerationCheckResult(
+              passed: false,
+              action: 'reject',
+              categories: ['Inappropriate Content'],
+            ),
+          );
+        } else {
+          showErrorSnackBar(context, 'Failed to create story: $e');
+          setState(() => _isUploading = false);
+        }
       }
     }
   }

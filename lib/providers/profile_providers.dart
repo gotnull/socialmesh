@@ -340,6 +340,18 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
           state = AsyncValue.data(cloudUpdated);
           AppLogging.auth('UserProfile: Avatar uploaded to cloud: $cloudUrl');
         } catch (e) {
+          // Check if content violation
+          if (e.toString().contains('Content policy violation')) {
+            // Delete local avatar since it violates policy
+            await profileService.saveProfile(
+              localUpdated.copyWith(avatarUrl: null),
+            );
+            state = AsyncValue.error(
+              'Avatar violates content policy',
+              StackTrace.current,
+            );
+            rethrow;
+          }
           // Cloud upload failed, but local save succeeded
           AppLogging.auth(
             'UserProfile: Cloud upload failed (local save OK): $e',
@@ -414,6 +426,18 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
           state = AsyncValue.data(cloudUpdated);
           AppLogging.auth('UserProfile: Banner uploaded to cloud: $cloudUrl');
         } catch (e) {
+          // Check if content violation
+          if (e.toString().contains('Content policy violation')) {
+            // Delete local banner since it violates policy
+            await profileService.saveProfile(
+              localUpdated.copyWith(bannerUrl: null),
+            );
+            state = AsyncValue.error(
+              'Banner violates content policy',
+              StackTrace.current,
+            );
+            rethrow;
+          }
           // Cloud upload failed, but local save succeeded
           AppLogging.auth(
             'UserProfile: Cloud banner upload failed (local save OK): $e',

@@ -66,9 +66,17 @@ class _ReportedContentScreenState extends ConsumerState<ReportedContentScreen>
 }
 
 /// Shows auto-moderated content from the moderation queue.
-class _ModerationQueueList extends ConsumerWidget {
+class _ModerationQueueList extends ConsumerStatefulWidget {
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_ModerationQueueList> createState() =>
+      _ModerationQueueListState();
+}
+
+class _ModerationQueueListState extends ConsumerState<_ModerationQueueList> {
+  bool _isProcessing = false;
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final socialService = ref.watch(socialServiceProvider);
 
@@ -181,6 +189,8 @@ class _ModerationQueueList extends ConsumerWidget {
     WidgetRef ref,
     Map<String, dynamic> item,
   ) async {
+    if (_isProcessing) return; // Prevent double-tap
+
     final contentType = item['contentType'] as String? ?? 'content';
     final confirmed = await showDialog<bool>(
       context: context,
@@ -206,6 +216,7 @@ class _ModerationQueueList extends ConsumerWidget {
     );
 
     if (confirmed == true && context.mounted) {
+      setState(() => _isProcessing = true);
       try {
         await ref.read(socialServiceProvider).rejectModerationItem(item['id']);
         if (context.mounted) {
@@ -214,6 +225,10 @@ class _ModerationQueueList extends ConsumerWidget {
       } catch (e) {
         if (context.mounted) {
           showErrorSnackBar(context, 'Error: $e');
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isProcessing = false);
         }
       }
     }

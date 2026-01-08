@@ -2232,6 +2232,7 @@ export {
   moderateNewComment,
   // Callable functions
   checkTextContent,
+  validateImages,
   getModerationStatus,
   acknowledgeStrike,
   // Admin functions

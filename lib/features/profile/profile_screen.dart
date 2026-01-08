@@ -1719,7 +1719,19 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
         }
       } catch (e) {
         if (mounted) {
-          showErrorSnackBar(context, 'Failed to upload avatar: $e');
+          if (e.toString().contains('Content policy violation') ||
+              e.toString().contains('violates content policy')) {
+            await ContentModerationWarning.show(
+              context,
+              result: ContentModerationCheckResult(
+                passed: false,
+                action: 'reject',
+                categories: ['Inappropriate Content'],
+              ),
+            );
+          } else {
+            showErrorSnackBar(context, 'Failed to upload avatar: $e');
+          }
         }
       } finally {
         if (mounted) {
@@ -1769,7 +1781,19 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
         }
       } catch (e) {
         if (mounted) {
-          showErrorSnackBar(context, 'Failed to upload banner: $e');
+          if (e.toString().contains('Content policy violation') ||
+              e.toString().contains('violates content policy')) {
+            await ContentModerationWarning.show(
+              context,
+              result: ContentModerationCheckResult(
+                passed: false,
+                action: 'reject',
+                categories: ['Inappropriate Content'],
+              ),
+            );
+          } else {
+            showErrorSnackBar(context, 'Failed to upload banner: $e');
+          }
         }
       } finally {
         if (mounted) {
