@@ -51,7 +51,6 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
   late int _currentGroupIndex;
   late int _currentStoryIndex;
   late AnimationController _progressController;
-  Timer? _autoAdvanceTimer;
   bool _isPaused = false;
 
   @override
@@ -77,7 +76,6 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
 
   @override
   void dispose() {
-    _autoAdvanceTimer?.cancel();
     _progressController.removeStatusListener(_onProgressComplete);
     _progressController.dispose();
     _groupPageController.dispose();

@@ -153,7 +153,7 @@ class FollowRequestsScreen extends ConsumerWidget {
   }
 }
 
-class _RequestTile extends ConsumerWidget {
+class _RequestTile extends ConsumerStatefulWidget {
   const _RequestTile({
     required this.request,
     required this.onAccept,
@@ -162,25 +162,61 @@ class _RequestTile extends ConsumerWidget {
   });
 
   final FollowRequestWithProfile request;
-  final VoidCallback onAccept;
-  final VoidCallback onDecline;
+  final Future<void> Function() onAccept;
+  final Future<void> Function() onDecline;
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_RequestTile> createState() => _RequestTileState();
+}
+
+class _RequestTileState extends ConsumerState<_RequestTile> {
+  bool _isAccepting = false;
+  bool _isDeclining = false;
+
+  bool get _isProcessing => _isAccepting || _isDeclining;
+
+  Future<void> _handleAccept() async {
+    if (_isProcessing) return;
+    setState(() => _isAccepting = true);
+    try {
+      await widget.onAccept();
+    } finally {
+      if (mounted) {
+        setState(() => _isAccepting = false);
+      }
+    }
+  }
+
+  Future<void> _handleDecline() async {
+    if (_isProcessing) return;
+    setState(() => _isDeclining = true);
+    try {
+      await widget.onDecline();
+    } finally {
+      if (mounted) {
+        setState(() => _isDeclining = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final profile = request.profile;
-    final createdAt = request.request.createdAt;
+    final profile = widget.request.profile;
+    final createdAt = widget.request.request.createdAt;
 
     return ListTile(
-      onTap: onTap,
+      onTap: widget.onTap,
       leading: CircleAvatar(
         backgroundImage: profile?.avatarUrl != null
             ? NetworkImage(profile!.avatarUrl!)
             : null,
         child: profile?.avatarUrl == null
             ? Text(
-                (profile?.displayName ?? 'U')[0].toUpperCase(),
+                (profile?.displayName ?? 'U').isNotEmpty
+                    ? (profile?.displayName ?? 'U')[0].toUpperCase()
+                    : '?',
                 style: const TextStyle(fontWeight: FontWeight.bold),
               )
             : null,
@@ -221,25 +257,45 @@ class _RequestTile extends ConsumerWidget {
         children: [
           SizedBox(
             height: 32,
+            width: 80,
             child: FilledButton(
-              onPressed: onAccept,
+              onPressed: _isProcessing ? null : _handleAccept,
               style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
               ),
-              child: const Text('Confirm', maxLines: 1),
+              child: _isAccepting
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text('Confirm', maxLines: 1),
             ),
           ),
           const SizedBox(width: 8),
           SizedBox(
             height: 32,
+            width: 70,
             child: FilledButton(
-              onPressed: onDecline,
+              onPressed: _isProcessing ? null : _handleDecline,
               style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
                 backgroundColor: Colors.grey,
                 foregroundColor: Colors.white,
               ),
-              child: const Text('Delete', maxLines: 1),
+              child: _isDeclining
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text('Delete', maxLines: 1),
             ),
           ),
         ],

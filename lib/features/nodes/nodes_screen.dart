@@ -2839,7 +2839,9 @@ class _LinkedProfileSection extends ConsumerWidget {
                   backgroundColor: context.accentColor.withValues(alpha: 0.2),
                   child: profile.avatarUrl == null
                       ? Text(
-                          profile.displayName[0].toUpperCase(),
+                          profile.displayName.isNotEmpty
+                              ? profile.displayName[0].toUpperCase()
+                              : '?',
                           style: TextStyle(
                             color: context.accentColor,
                             fontWeight: FontWeight.bold,

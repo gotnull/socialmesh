@@ -119,7 +119,9 @@ class _FeedAuthorHeader extends StatelessWidget {
                 : null,
             child: authorSnapshot.avatarUrl == null
                 ? Text(
-                    authorSnapshot.displayName[0].toUpperCase(),
+                    authorSnapshot.displayName.isNotEmpty
+                        ? authorSnapshot.displayName[0].toUpperCase()
+                        : '?',
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   )
                 : null,

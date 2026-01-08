@@ -324,7 +324,9 @@ class _UserTile extends StatelessWidget {
             : null,
         child: user.avatarUrl == null
             ? Text(
-                user.displayName[0].toUpperCase(),
+                user.displayName.isNotEmpty
+                    ? user.displayName[0].toUpperCase()
+                    : '?',
                 style: const TextStyle(fontWeight: FontWeight.bold),
               )
             : null,

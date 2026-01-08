@@ -12,6 +12,14 @@ import 'auth_providers.dart';
 import 'profile_providers.dart';
 
 // ===========================================================================
+// FOLLOW OPERATION LOCKS
+// ===========================================================================
+
+/// Set of user IDs currently being processed by toggleFollow to prevent
+/// concurrent operations that could cause race conditions.
+final _followOperationsInProgress = <String>{};
+
+// ===========================================================================
 // SERVICE PROVIDERS
 // ===========================================================================
 
@@ -235,51 +243,33 @@ final cachedFollowStateProvider = Provider.autoDispose
 /// For private accounts, sends a follow request instead of instant follow.
 /// For accounts with pending requests, cancels the request.
 Future<void> toggleFollow(WidgetRef ref, String targetUserId) async {
-  final service = ref.read(socialServiceProvider);
-  final currentUser = ref.read(currentUserProvider);
-  final currentState = await ref.read(followStateProvider(targetUserId).future);
+  // Prevent concurrent operations on the same user
+  if (_followOperationsInProgress.contains(targetUserId)) {
+    return;
+  }
+  _followOperationsInProgress.add(targetUserId);
 
-  // Get target profile for optimistic updates (needed to know current counts)
-  final targetProfile = ref
-      .read(publicProfileStreamProvider(targetUserId))
-      .value;
-  final myProfile = currentUser != null
-      ? ref.read(publicProfileStreamProvider(currentUser.uid)).value
-      : null;
+  try {
+    final service = ref.read(socialServiceProvider);
+    final currentUser = ref.read(currentUserProvider);
+    final currentState = await ref.read(
+      followStateProvider(targetUserId).future,
+    );
 
-  if (currentState.isFollowing) {
-    // Unfollow - apply optimistic decrements
-    if (targetProfile != null) {
-      ref
-          .read(profileCountAdjustmentsProvider.notifier)
-          .decrement(
-            targetUserId,
-            ProfileCountType.followers,
-            targetProfile.followerCount,
-          );
-    }
-    if (myProfile != null && currentUser != null) {
-      ref
-          .read(profileCountAdjustmentsProvider.notifier)
-          .decrement(
-            currentUser.uid,
-            ProfileCountType.following,
-            myProfile.followingCount,
-          );
-    }
-    await service.unfollowUser(targetUserId);
-  } else if (currentState.hasPendingRequest) {
-    // Cancel pending request - no count changes
-    await service.cancelFollowRequest(targetUserId);
-  } else {
-    // Follow or send request
-    final result = await service.followUser(targetUserId);
-    // Only apply optimistic counts if it's an instant follow (not a request)
-    if (result == 'followed') {
+    // Get target profile for optimistic updates (needed to know current counts)
+    final targetProfile = ref
+        .read(publicProfileStreamProvider(targetUserId))
+        .value;
+    final myProfile = currentUser != null
+        ? ref.read(publicProfileStreamProvider(currentUser.uid)).value
+        : null;
+
+    if (currentState.isFollowing) {
+      // Unfollow - apply optimistic decrements
       if (targetProfile != null) {
         ref
             .read(profileCountAdjustmentsProvider.notifier)
-            .increment(
+            .decrement(
               targetUserId,
               ProfileCountType.followers,
               targetProfile.followerCount,
@@ -288,30 +278,60 @@ Future<void> toggleFollow(WidgetRef ref, String targetUserId) async {
       if (myProfile != null && currentUser != null) {
         ref
             .read(profileCountAdjustmentsProvider.notifier)
-            .increment(
+            .decrement(
               currentUser.uid,
               ProfileCountType.following,
               myProfile.followingCount,
             );
       }
+      await service.unfollowUser(targetUserId);
+    } else if (currentState.hasPendingRequest) {
+      // Cancel pending request - no count changes
+      await service.cancelFollowRequest(targetUserId);
+    } else {
+      // Follow or send request
+      final result = await service.followUser(targetUserId);
+      // Only apply optimistic counts if it's an instant follow (not a request)
+      if (result == 'followed') {
+        if (targetProfile != null) {
+          ref
+              .read(profileCountAdjustmentsProvider.notifier)
+              .increment(
+                targetUserId,
+                ProfileCountType.followers,
+                targetProfile.followerCount,
+              );
+        }
+        if (myProfile != null && currentUser != null) {
+          ref
+              .read(profileCountAdjustmentsProvider.notifier)
+              .increment(
+                currentUser.uid,
+                ProfileCountType.following,
+                myProfile.followingCount,
+              );
+        }
+      }
     }
-  }
 
-  // Update batch cache immediately for responsive UI
-  final newState = FollowState(
-    isFollowing: !currentState.isFollowing && !currentState.hasPendingRequest,
-    hasPendingRequest: false,
-  );
-  ref
-      .read(batchFollowStatesProvider.notifier)
-      .updateFollowState(targetUserId, newState);
+    // Update batch cache immediately for responsive UI
+    final newState = FollowState(
+      isFollowing: !currentState.isFollowing && !currentState.hasPendingRequest,
+      hasPendingRequest: false,
+    );
+    ref
+        .read(batchFollowStatesProvider.notifier)
+        .updateFollowState(targetUserId, newState);
 
-  // Invalidate to refresh both users' states
-  ref.invalidate(followStateProvider(targetUserId));
-  // Invalidate profile streams so follower/following counts update immediately
-  ref.invalidate(publicProfileStreamProvider(targetUserId));
-  if (currentUser != null) {
-    ref.invalidate(publicProfileStreamProvider(currentUser.uid));
+    // Invalidate to refresh both users' states
+    ref.invalidate(followStateProvider(targetUserId));
+    // Invalidate profile streams so follower/following counts update immediately
+    ref.invalidate(publicProfileStreamProvider(targetUserId));
+    if (currentUser != null) {
+      ref.invalidate(publicProfileStreamProvider(currentUser.uid));
+    }
+  } finally {
+    _followOperationsInProgress.remove(targetUserId);
   }
 }
 
@@ -369,7 +389,30 @@ Future<void> acceptFollowRequest(WidgetRef ref, String requesterId) async {
         );
   }
 
-  await service.acceptFollowRequest(requesterId);
+  try {
+    await service.acceptFollowRequest(requesterId);
+  } catch (e) {
+    // Rollback optimistic updates on failure
+    if (requesterProfile != null) {
+      ref
+          .read(profileCountAdjustmentsProvider.notifier)
+          .decrement(
+            requesterId,
+            ProfileCountType.following,
+            requesterProfile.followingCount,
+          );
+    }
+    if (myProfile != null && currentUser != null) {
+      ref
+          .read(profileCountAdjustmentsProvider.notifier)
+          .decrement(
+            currentUser.uid,
+            ProfileCountType.followers,
+            myProfile.followerCount,
+          );
+    }
+    rethrow;
+  }
 
   // Invalidate related providers
   ref.invalidate(pendingFollowRequestsProvider);
@@ -387,7 +430,12 @@ Future<void> acceptFollowRequest(WidgetRef ref, String requesterId) async {
 /// Decline a follow request
 Future<void> declineFollowRequest(WidgetRef ref, String requesterId) async {
   final service = ref.read(socialServiceProvider);
-  await service.declineFollowRequest(requesterId);
+  try {
+    await service.declineFollowRequest(requesterId);
+  } catch (e) {
+    // Re-throw to allow caller to handle the error
+    rethrow;
+  }
 
   // Invalidate related providers
   ref.invalidate(pendingFollowRequestsProvider);
@@ -1109,15 +1157,21 @@ class UserPostsNotifier extends Notifier<Map<String, UserPostsState>> {
 
   UserPostsState getOrCreate(String userId) {
     if (!state.containsKey(userId)) {
-      _startWatching(userId);
       state = {...state, userId: const UserPostsState(isLoading: true)};
+      _startWatching(userId);
     }
     return state[userId]!;
   }
 
   void _startWatching(String userId) {
+    // Cancel any existing subscription first to prevent race conditions
+    final existing = _subscriptions[userId];
+    if (existing != null) {
+      existing.cancel();
+      _subscriptions.remove(userId);
+    }
+
     final service = ref.read(socialServiceProvider);
-    _subscriptions[userId]?.cancel();
     _subscriptions[userId] = service
         .watchUserPosts(userId, limit: 20)
         .listen(
@@ -1324,33 +1378,26 @@ final commentsProvider = FutureProvider.autoDispose
     });
 
 /// Helper to add a comment
-Future<Comment?> addComment(
+/// Throws on error for caller to handle
+Future<Comment> addComment(
   WidgetRef ref,
   String postId,
   String content, {
   String? parentId,
 }) async {
   final service = ref.read(socialServiceProvider);
-  try {
-    return await service.createComment(
-      postId: postId,
-      content: content,
-      parentId: parentId,
-    );
-  } catch (e) {
-    return null;
-  }
+  return service.createComment(
+    postId: postId,
+    content: content,
+    parentId: parentId,
+  );
 }
 
 /// Helper to delete a comment
-Future<bool> deleteComment(WidgetRef ref, String commentId) async {
+/// Throws on error for caller to handle
+Future<void> deleteComment(WidgetRef ref, String commentId) async {
   final service = ref.read(socialServiceProvider);
-  try {
-    await service.deleteComment(commentId);
-    return true;
-  } catch (e) {
-    return false;
-  }
+  await service.deleteComment(commentId);
 }
 
 // ===========================================================================
