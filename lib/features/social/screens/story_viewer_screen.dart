@@ -382,10 +382,19 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  // Story content with border radius
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: _StoryContent(story: story),
+                  // Story content with border radius - positioned below header
+                  Positioned(
+                    top:
+                        MediaQuery.of(context).padding.top + 56, // Below header
+                    left: 0,
+                    right: 0,
+                    bottom:
+                        MediaQuery.of(context).padding.bottom +
+                        60, // Above footer
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: _StoryContent(story: story),
+                    ),
                   ),
 
                   // Gradient overlay for readability
@@ -544,29 +553,104 @@ class _StoryContentState extends State<_StoryContent> {
       );
     }
 
-    return Image.network(
-      widget.story.mediaUrl,
-      fit: BoxFit.cover,
-      width: double.infinity,
-      height: double.infinity,
-      loadingBuilder: (context, child, loadingProgress) {
-        if (loadingProgress == null) return child;
-        return const Center(
-          child: CircularProgressIndicator(color: Colors.white),
-        );
-      },
-      errorBuilder: (_, error, stackTrace) {
-        // Mark as error - show placeholder instead of skipping
-        if (!_hasError && mounted) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              setState(() => _hasError = true);
-            }
-          });
-        }
-        // Show loading while transitioning to error state
-        return const Center(
-          child: CircularProgressIndicator(color: Colors.white),
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // Black background
+        Container(color: Colors.black),
+        // Image with contain fit and border radius to match preview
+        Center(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.network(
+              widget.story.mediaUrl,
+              fit: BoxFit.contain,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return const Center(
+                  child: CircularProgressIndicator(color: Colors.white),
+                );
+              },
+              errorBuilder: (_, error, stackTrace) {
+                // Mark as error - show placeholder instead of skipping
+                if (!_hasError && mounted) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted) {
+                      setState(() => _hasError = true);
+                    }
+                  });
+                }
+                // Show loading while transitioning to error state
+                return const Center(
+                  child: CircularProgressIndicator(color: Colors.white),
+                );
+              },
+            ),
+          ),
+        ),
+        // Render text overlay if present (for legacy stories with metadata)
+        if (widget.story.textOverlay != null)
+          _buildTextOverlay(widget.story.textOverlay!),
+      ],
+    );
+  }
+
+  Widget _buildTextOverlay(TextOverlay overlay) {
+    // Parse color from hex string
+    Color textColor = Colors.white;
+    try {
+      final colorHex = overlay.color.replaceFirst('#', '');
+      textColor = Color(int.parse('FF$colorHex', radix: 16));
+    } catch (_) {}
+
+    // Parse background color if present
+    Color? backgroundColor;
+    if (overlay.backgroundColor != null) {
+      try {
+        final bgHex = overlay.backgroundColor!.replaceFirst('#', '');
+        backgroundColor = Color(int.parse('FF$bgHex', radix: 16));
+      } catch (_) {}
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final pixelX = overlay.x * constraints.maxWidth;
+        final pixelY = overlay.y * constraints.maxHeight;
+
+        return Positioned(
+          left: pixelX - 140,
+          top: pixelY - 30,
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 280),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: backgroundColor ?? Colors.transparent,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              overlay.text,
+              style: TextStyle(
+                color: textColor,
+                fontSize: overlay.fontSize,
+                fontWeight: FontWeight.w600,
+                shadows: backgroundColor == null
+                    ? [
+                        Shadow(
+                          color: Colors.black.withValues(alpha: 0.8),
+                          blurRadius: 4,
+                          offset: const Offset(1, 1),
+                        ),
+                        Shadow(
+                          color: Colors.black.withValues(alpha: 0.5),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : null,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
         );
       },
     );

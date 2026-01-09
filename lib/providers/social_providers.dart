@@ -1163,6 +1163,14 @@ class UserPostsNotifier extends Notifier<Map<String, UserPostsState>> {
     return state[userId]!;
   }
 
+  /// Ensures we are watching posts for a user (safe to call during provider build via microtask)
+  void ensureWatching(String userId) {
+    if (!state.containsKey(userId)) {
+      state = {...state, userId: const UserPostsState(isLoading: true)};
+      _startWatching(userId);
+    }
+  }
+
   void _startWatching(String userId) {
     // Cancel any existing subscription first to prevent race conditions
     final existing = _subscriptions[userId];
@@ -1260,9 +1268,20 @@ final userPostsStateProvider = Provider.family<UserPostsState, String>((
   ref,
   userId,
 ) {
-  final notifier = ref.watch(userPostsNotifierProvider.notifier);
   final allStates = ref.watch(userPostsNotifierProvider);
-  return allStates[userId] ?? notifier.getOrCreate(userId);
+  final existingState = allStates[userId];
+
+  // If no state exists for this user, schedule initialization after build
+  if (existingState == null) {
+    // Use Future.microtask to avoid modifying state during build
+    Future.microtask(() {
+      ref.read(userPostsNotifierProvider.notifier).ensureWatching(userId);
+    });
+    // Return loading state while we wait for initialization
+    return const UserPostsState(isLoading: true);
+  }
+
+  return existingState;
 });
 
 /// Stream provider for real-time user posts (deprecated - use userPostsNotifierProvider).

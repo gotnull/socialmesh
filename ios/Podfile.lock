@@ -1649,6 +1649,8 @@ PODS:
   - sqflite_darwin (0.0.4):
     - Flutter
     - FlutterMacOS
+  - sticker_view (0.0.1):
+    - Flutter
   - SwiftyGif (5.4.5)
   - three_js_sensors (0.1.2):
     - Flutter
@@ -1692,6 +1694,7 @@ DEPENDENCIES:
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
   - sign_in_with_apple (from `.symlinks/plugins/sign_in_with_apple/ios`)
   - sqflite_darwin (from `.symlinks/plugins/sqflite_darwin/darwin`)
+  - sticker_view (from `.symlinks/plugins/sticker_view/ios`)
   - three_js_sensors (from `.symlinks/plugins/three_js_sensors/ios`)
   - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
 
@@ -1816,6 +1819,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/sign_in_with_apple/ios"
   sqflite_darwin:
     :path: ".symlinks/plugins/sqflite_darwin/darwin"
+  sticker_view:
+    :path: ".symlinks/plugins/sticker_view/ios"
   three_js_sensors:
     :path: ".symlinks/plugins/three_js_sensors/ios"
   url_launcher_ios:
@@ -1902,6 +1907,7 @@ SPEC CHECKSUMS:
   shared_preferences_foundation: 7036424c3d8ec98dfe75ff1667cb0cd531ec82bb
   sign_in_with_apple: c5dcc141574c8c54d5ac99dd2163c0c72ad22418
   sqflite_darwin: 20b2a3a3b70e43edae938624ce550a3cbf66a3d0
+  sticker_view: 70c8064192685c6f50213e1e9dc3d93728e91def
   SwiftyGif: 706c60cf65fa2bc5ee0313beece843c8eb8194d4
   three_js_sensors: f516b092803411e05b1e3dc7625efa36acd8f455
   url_launcher_ios: 7a95fa5b60cc718a708b8f2966718e93db0cef1b
