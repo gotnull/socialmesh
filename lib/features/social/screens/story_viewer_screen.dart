@@ -382,19 +382,10 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  // Story content with border radius - positioned below header
-                  Positioned(
-                    top:
-                        MediaQuery.of(context).padding.top + 56, // Below header
-                    left: 0,
-                    right: 0,
-                    bottom:
-                        MediaQuery.of(context).padding.bottom +
-                        60, // Above footer
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: _StoryContent(story: story),
-                    ),
+                  // Story content with border radius - fills the area like preview
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: _StoryContent(story: story),
                   ),
 
                   // Gradient overlay for readability
@@ -556,37 +547,32 @@ class _StoryContentState extends State<_StoryContent> {
     return Stack(
       fit: StackFit.expand,
       children: [
-        // Black background
-        Container(color: Colors.black),
-        // Image with contain fit and border radius to match preview
-        Center(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.network(
-              widget.story.mediaUrl,
-              fit: BoxFit.contain,
-              loadingBuilder: (context, child, loadingProgress) {
-                if (loadingProgress == null) return child;
-                return const Center(
-                  child: CircularProgressIndicator(color: Colors.white),
-                );
-              },
-              errorBuilder: (_, error, stackTrace) {
-                // Mark as error - show placeholder instead of skipping
-                if (!_hasError && mounted) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (mounted) {
-                      setState(() => _hasError = true);
-                    }
-                  });
+        // Image with cover fit to match preview exactly
+        Image.network(
+          widget.story.mediaUrl,
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: double.infinity,
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return const Center(
+              child: CircularProgressIndicator(color: Colors.white),
+            );
+          },
+          errorBuilder: (_, error, stackTrace) {
+            // Mark as error - show placeholder instead of skipping
+            if (!_hasError && mounted) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  setState(() => _hasError = true);
                 }
-                // Show loading while transitioning to error state
-                return const Center(
-                  child: CircularProgressIndicator(color: Colors.white),
-                );
-              },
-            ),
-          ),
+              });
+            }
+            // Show loading while transitioning to error state
+            return const Center(
+              child: CircularProgressIndicator(color: Colors.white),
+            );
+          },
         ),
         // Render text overlay if present (for legacy stories with metadata)
         if (widget.story.textOverlay != null)

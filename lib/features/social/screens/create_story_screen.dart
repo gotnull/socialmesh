@@ -15,7 +15,6 @@ import 'package:vector_math/vector_math_64.dart' show Vector3;
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/content_moderation_warning.dart';
-import '../../../core/widgets/draggable_text_widget.dart';
 import '../../../core/widgets/node_selector_sheet.dart';
 import '../../../models/social.dart';
 import '../../../models/story.dart';
@@ -100,6 +99,9 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
   // Gesture tracking
   double _baseScale = 1.0;
   double _baseRotation = 0.0;
+
+  // Fixed preview size - captured once before keyboard opens
+  Size? _fixedPreviewSize;
 
   // Key for capturing the story preview as an image
   final GlobalKey _storyPreviewKey = GlobalKey();
@@ -843,30 +845,77 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
               padding: const EdgeInsets.all(8),
               child: Row(
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: _isEditingText
-                        ? () {
-                            if (_isTextInputMode) {
-                              _finishTextInput();
-                            } else {
-                              _confirmText();
-                            }
-                          }
-                        : () {
-                            setState(() {
-                              _selectedMedia = null;
-                              _selectedAsset = null;
-                              _textOverlay = null;
-                              _textController.clear();
-                              _textScale = 1.0;
-                              _textRotation = 0.0;
-                            });
-                          },
-                  ),
+                  if (_isTextInputMode)
+                    TextButton(
+                      onPressed: () {
+                        if (_textOverlay == null) {
+                          _textController.clear();
+                        }
+                        _finishTextInput();
+                      },
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(color: Colors.white, fontSize: 17),
+                      ),
+                    )
+                  else
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      onPressed: _isEditingText
+                          ? _confirmText
+                          : () {
+                              setState(() {
+                                _selectedMedia = null;
+                                _selectedAsset = null;
+                                _textOverlay = null;
+                                _textController.clear();
+                                _textScale = 1.0;
+                                _textRotation = 0.0;
+                                _fixedPreviewSize = null;
+                              });
+                            },
+                    ),
                   const Spacer(),
-                  if (_isEditingText && !_isTextInputMode) ...[
-                    // Show done button when repositioning text
+                  if (_isTextInputMode) ...[
+                    // Font icon for text style
+                    IconButton(
+                      icon: const Icon(Icons.text_format, color: Colors.white),
+                      onPressed: () {
+                        // Cycle through font sizes
+                        setState(() {
+                          if (_textSize <= 22) {
+                            _textSize = 28;
+                          } else if (_textSize <= 34) {
+                            _textSize = 42;
+                          } else {
+                            _textSize = 18;
+                          }
+                        });
+                      },
+                    ),
+                    // Location icon
+                    IconButton(
+                      icon: Icon(
+                        Icons.location_on_outlined,
+                        color: _location != null
+                            ? context.accentColor
+                            : Colors.white,
+                      ),
+                      onPressed: _toggleLocation,
+                    ),
+                    // Done button
+                    TextButton(
+                      onPressed: _finishTextInput,
+                      child: const Text(
+                        'Done',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ] else if (_isEditingText && !_isTextInputMode) ...[
                     TextButton(
                       onPressed: _confirmText,
                       child: Text(
@@ -921,10 +970,13 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
                       )
                     : LayoutBuilder(
                         builder: (context, constraints) {
-                          final containerSize = Size(
+                          // Capture the size once before keyboard opens
+                          _fixedPreviewSize ??= Size(
                             constraints.maxWidth,
                             constraints.maxHeight,
                           );
+                          // Always use the fixed size for text positioning
+                          final containerSize = _fixedPreviewSize!;
                           return RepaintBoundary(
                             key: _storyPreviewKey,
                             child: ClipRRect(
@@ -942,8 +994,9 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
                                       fit: BoxFit.cover,
                                     ),
                                   ),
-                                  // Draggable text overlay
-                                  if (_textController.text.isNotEmpty ||
+                                  // Draggable text overlay (also show when typing)
+                                  if (_isTextInputMode ||
+                                      _textController.text.isNotEmpty ||
                                       _textOverlay != null)
                                     _buildDraggableText(containerSize),
                                 ],
@@ -955,13 +1008,20 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
               ),
             ),
 
-            // Bottom bar (hide when editing text)
-            if (!_isEditingText) _buildBottomBar(),
-            if (_isEditingText && !_isTextInputMode) _buildTextEditingToolbar(),
+            // Bottom area - hide when keyboard is up for text input
+            if (!_isTextInputMode)
+              SizedBox(
+                height: 100,
+                child: ClipRect(
+                  child: _isEditingText
+                      ? _buildTextEditingToolbar()
+                      : _buildBottomBar(),
+                ),
+              ),
           ],
         ),
 
-        // Full-screen text input overlay
+        // Text input controls (color picker above keyboard)
         if (_isTextInputMode) _buildTextInputOverlay(),
       ],
     );
@@ -972,7 +1032,11 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
         ? _textController.text
         : _textOverlay?.text ?? '';
 
-    if (displayText.isEmpty) return const SizedBox.shrink();
+    // Show placeholder when in text input mode with empty text
+    final showPlaceholder = _isTextInputMode && displayText.isEmpty;
+    final textToShow = showPlaceholder ? 'Type something...' : displayText;
+
+    if (textToShow.isEmpty) return const SizedBox.shrink();
 
     // Calculate pixel position from normalized values
     final pixelX = _textPosition.dx * containerSize.width;
@@ -1021,7 +1085,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
                         ? Colors.black54
                         : Colors.transparent,
                     borderRadius: BorderRadius.circular(8),
-                    border: _isEditingText
+                    border: _isEditingText || _isTextInputMode
                         ? Border.all(
                             color: Colors.white.withValues(alpha: 0.5),
                             width: 1.5,
@@ -1029,9 +1093,11 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
                         : null,
                   ),
                   child: Text(
-                    displayText,
+                    textToShow,
                     style: TextStyle(
-                      color: _textColor,
+                      color: showPlaceholder
+                          ? _textColor.withValues(alpha: 0.5)
+                          : _textColor,
                       fontSize: _textSize,
                       fontWeight: FontWeight.w600,
                       shadows: _hasTextBackground
@@ -1082,36 +1148,123 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
   }
 
   Widget _buildTextInputOverlay() {
-    return Positioned.fill(
-      child: StoryTextEditor(
-        initialText: _textController.text,
-        initialColor: _textColor,
-        initialSize: _textSize,
-        initialHasBackground: _hasTextBackground,
-        onDone: (text, color, size, hasBackground) {
-          setState(() {
-            _textController.text = text;
-            _textColor = color;
-            _textSize = size;
-            _hasTextBackground = hasBackground;
-          });
-          _finishTextInput();
-        },
-        onCancel: () {
-          if (_textOverlay == null) {
-            _textController.clear();
-          }
-          _finishTextInput();
-        },
+    // Show controls below the preview, text stays in-place on preview
+    return Positioned(
+      left: 0,
+      right: 0,
+      bottom: 0,
+      child: Material(
+        color: Colors.black,
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Color picker row
+              SizedBox(
+                height: 56,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  itemCount: _availableColors.length + 1,
+                  itemBuilder: (context, index) {
+                    if (index == 0) {
+                      return GestureDetector(
+                        onTap: () => setState(
+                          () => _hasTextBackground = !_hasTextBackground,
+                        ),
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _hasTextBackground
+                                ? Colors.white
+                                : Colors.transparent,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                          ),
+                          child: Icon(
+                            Icons.format_color_fill,
+                            color: _hasTextBackground
+                                ? Colors.black
+                                : Colors.white,
+                            size: 18,
+                          ),
+                        ),
+                      );
+                    }
+                    final color = _availableColors[index - 1];
+                    final isSelected = _textColor == color;
+                    return GestureDetector(
+                      onTap: () => setState(() => _textColor = color),
+                      child: Container(
+                        width: 36,
+                        height: 36,
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: color,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isSelected
+                                ? Colors.white
+                                : Colors.transparent,
+                            width: 3,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              // Hidden text field to capture keyboard input
+              SizedBox(
+                height: 1,
+                child: Opacity(
+                  opacity: 0,
+                  child: TextField(
+                    controller: _textController,
+                    focusNode: _textFocusNode,
+                    autofocus: true,
+                    onChanged: (_) => setState(() {}),
+                    onSubmitted: (_) => _finishTextInput(),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 
+  static const List<Color> _availableColors = [
+    Colors.white,
+    Colors.black,
+    Color(0xFFFF3B30),
+    Color(0xFFFF9500),
+    Color(0xFFFFCC00),
+    Color(0xFF34C759),
+    Color(0xFF00C7BE),
+    Color(0xFF007AFF),
+    Color(0xFF5856D6),
+    Color(0xFFFF2D55),
+    Color(0xFFAF52DE),
+    Color(0xFF8E8E93),
+  ];
+
   Widget _buildTextEditingToolbar() {
-    return Container(
-      padding: const EdgeInsets.all(16),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           // Instructions
           Text(
@@ -1122,16 +1275,23 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           // Action buttons
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               _buildToolbarButton(
                 icon: Icons.edit,
                 label: 'Edit',
                 onTap: _startTextEditing,
               ),
+              const SizedBox(width: 16),
+              _buildToolbarButton(
+                icon: Icons.check,
+                label: 'Done',
+                onTap: _confirmText,
+              ),
+              const SizedBox(width: 16),
               _buildToolbarButton(
                 icon: Icons.delete_outline,
                 label: 'Delete',
@@ -1183,12 +1343,14 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
 
   Widget _buildBottomBar() {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           if (_location != null || _nodeId != null)
             Padding(
-              padding: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.only(bottom: 8),
               child: Wrap(
                 spacing: 8,
                 children: [
@@ -1203,6 +1365,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
                       deleteIconColor: context.textSecondary,
                       backgroundColor: context.card,
                       side: BorderSide.none,
+                      visualDensity: VisualDensity.compact,
                     ),
                   if (_nodeId != null)
                     Chip(
@@ -1215,6 +1378,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
                       deleteIconColor: context.textSecondary,
                       backgroundColor: context.card,
                       side: BorderSide.none,
+                      visualDensity: VisualDensity.compact,
                     ),
                 ],
               ),
