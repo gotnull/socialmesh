@@ -99,6 +99,7 @@ dependencies:
   # Deep linking
   app_links: ^6.3.3
   timeago: ^3.7.1
+  align_positioned: ^5.0.1
 
 dev_dependencies:
   flutter_test:

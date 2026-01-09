@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -20,20 +21,37 @@ final socialActivityServiceProvider = Provider<SocialActivityService>((ref) {
 // ===========================================================================
 
 /// Notifier for the activity feed.
+///
+/// Listens to auth state changes to restart the activity stream when the user
+/// signs in or out.
 class ActivityFeedNotifier extends Notifier<ActivityFeedState> {
-  StreamSubscription<List<SocialActivity>>? _subscription;
+  StreamSubscription<List<SocialActivity>>? _activitySubscription;
+  StreamSubscription<User?>? _authSubscription;
 
   @override
   ActivityFeedState build() {
-    ref.onDispose(() => _subscription?.cancel());
+    ref.onDispose(() {
+      _activitySubscription?.cancel();
+      _authSubscription?.cancel();
+    });
+    _listenToAuthChanges();
     _startWatching();
     return const ActivityFeedState(isLoading: true);
   }
 
+  void _listenToAuthChanges() {
+    _authSubscription?.cancel();
+    _authSubscription = FirebaseAuth.instance.authStateChanges().listen((_) {
+      // Auth state changed - restart the activity stream
+      debugPrint('📬 [ActivityFeed] Auth state changed, restarting stream');
+      _startWatching();
+    });
+  }
+
   void _startWatching() {
     final service = ref.read(socialActivityServiceProvider);
-    _subscription?.cancel();
-    _subscription = service.watchActivities().listen(
+    _activitySubscription?.cancel();
+    _activitySubscription = service.watchActivities().listen(
       (activities) {
         final unreadCount = activities.where((a) => !a.isRead).length;
         state = ActivityFeedState(

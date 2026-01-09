@@ -263,7 +263,7 @@ export const onFollowRequestAcceptedNotification = onDocumentUpdated(
 // =============================================================================
 
 /**
- * Send notification when someone likes a post
+ * Send notification when someone likes a post or comment
  */
 export const onLikeCreatedNotification = onDocumentCreated(
   'likes/{likeId}',
@@ -271,7 +271,46 @@ export const onLikeCreatedNotification = onDocumentCreated(
     const data = event.data?.data();
     if (!data) return;
 
-    const { userId: likerId, postId } = data;
+    const { userId: likerId, targetType } = data;
+
+    // Handle comment likes separately (they have targetType: 'comment')
+    if (targetType === 'comment') {
+      const commentId = data.targetId as string;
+      if (!commentId) return;
+
+      const commentDoc = await db.collection('comments').doc(commentId).get();
+      if (!commentDoc.exists) return;
+
+      const commentData = commentDoc.data()!;
+      const authorId = commentData.authorId as string;
+
+      // Don't notify if user liked their own comment
+      if (likerId === authorId) return;
+
+      // Check if user has like notifications enabled
+      if (!await isNotificationEnabled(authorId, 'likes')) {
+        console.log(`Like notifications disabled for user ${authorId}`);
+        return;
+      }
+
+      const likerProfile = await getProfile(likerId);
+      const likerName = likerProfile?.displayName || 'Someone';
+
+      await sendPushNotification(
+        authorId,
+        'New Like',
+        `${likerName} liked your comment`,
+        {
+          type: 'comment_like',
+          targetId: commentData.postId as string,
+        }
+      );
+      return;
+    }
+
+    // Handle post likes
+    const postId = data.postId as string;
+    if (!postId) return;
 
     // Get the post to find the author
     const postDoc = await db.collection('posts').doc(postId).get();

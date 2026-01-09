@@ -1,7 +1,8 @@
 import 'dart:io';
-import 'dart:typed_data';
 
+import 'package:align_positioned/align_positioned.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
@@ -390,31 +391,16 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
     });
   }
 
-  void _onTextPanUpdate(DragUpdateDetails details, Size containerSize) {
-    setState(() {
-      _textPosition = Offset(
-        (_textPosition.dx + details.delta.dx / containerSize.width).clamp(
-          0.1,
-          0.9,
-        ),
-        (_textPosition.dy + details.delta.dy / containerSize.height).clamp(
-          0.1,
-          0.9,
-        ),
-      );
-    });
-  }
-
   void _onTextScaleStart(ScaleStartDetails details) {
     _baseScale = _textScale;
     _baseRotation = _textRotation;
+    _startFocalPoint = details.focalPoint;
+    _basePosition = _textPosition;
+    HapticFeedback.selectionClick();
   }
 
-  void _onTextScaleUpdate(ScaleUpdateDetails details) {
-    setState(() {
-      _textScale = (_baseScale * details.scale).clamp(0.5, 3.0);
-      _textRotation = _baseRotation + details.rotation;
-    });
+  void _onTextScaleEnd() {
+    HapticFeedback.lightImpact();
   }
 
   void _cycleVisibility() {
@@ -880,41 +866,54 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
 
         // Media preview with text overlay
         Expanded(
-          child: _isLoadingMedia
-              ? const Center(
-                  child: CircularProgressIndicator(color: Colors.white),
-                )
-              : LayoutBuilder(
-                  builder: (context, constraints) {
-                    final containerSize = Size(
-                      constraints.maxWidth,
-                      constraints.maxHeight,
-                    );
-                    return GestureDetector(
-                      onTap: _isEditingText && !_isTextInputMode
-                          ? _confirmText
-                          : null,
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(16),
-                            child: Image.file(
-                              _selectedMedia!,
-                              fit: BoxFit.contain,
-                            ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: _isLoadingMedia
+                ? const Center(
+                    child: CircularProgressIndicator(color: Colors.white),
+                  )
+                : LayoutBuilder(
+                    builder: (context, constraints) {
+                      final containerSize = Size(
+                        constraints.maxWidth,
+                        constraints.maxHeight,
+                      );
+                      return GestureDetector(
+                        // Parent gesture detector handles all scale gestures when editing text
+                        onScaleStart: _isEditingText && !_isTextInputMode
+                            ? _onTextScaleStart
+                            : null,
+                        onScaleUpdate: _isEditingText && !_isTextInputMode
+                            ? (details) => _onTextScaleUpdateCombined(
+                                details,
+                                containerSize,
+                              )
+                            : null,
+                        onScaleEnd: _isEditingText && !_isTextInputMode
+                            ? (_) => _onTextScaleEnd()
+                            : null,
+                        onTap: _isEditingText && !_isTextInputMode
+                            ? _confirmText
+                            : null,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              Image.file(_selectedMedia!, fit: BoxFit.cover),
+                              // Show draggable text when editing or when text exists
+                              if (_textController.text.isNotEmpty ||
+                                  _textOverlay != null)
+                                _buildDraggableText(containerSize),
+                              // Text input overlay
+                              if (_isTextInputMode) _buildTextInputOverlay(),
+                            ],
                           ),
-                          // Show draggable text when editing or when text exists
-                          if (_textController.text.isNotEmpty ||
-                              _textOverlay != null)
-                            _buildDraggableText(containerSize),
-                          // Text input overlay
-                          if (_isTextInputMode) _buildTextInputOverlay(),
-                        ],
-                      ),
-                    );
-                  },
-                ),
+                        ),
+                      );
+                    },
+                  ),
+          ),
         ),
 
         // Bottom bar (hide when editing text)
@@ -931,33 +930,35 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
 
     if (displayText.isEmpty) return const SizedBox.shrink();
 
-    return Positioned(
-      left:
+    // Use AlignPositioned for proper centering and positioning
+    // Position is stored as normalized values (0-1), converted to pixel offsets
+    return AlignPositioned(
+      alignment: Alignment.center,
+      dx:
           _textPosition.dx * containerSize.width -
-          (containerSize.width * 0.4 / 2),
-      top: _textPosition.dy * containerSize.height - 30,
-      child: GestureDetector(
-        onTap: _isEditingText
-            ? _startTextEditing
-            : () => setState(() => _isEditingText = true),
-        onPanUpdate: _isEditingText
-            ? (details) => _onTextPanUpdate(details, containerSize)
-            : null,
-        onScaleStart: _isEditingText ? _onTextScaleStart : null,
-        onScaleUpdate: _isEditingText ? _onTextScaleUpdate : null,
-        onLongPress: _isEditingText ? _removeText : null,
+          containerSize.width / 2, // Offset from center
+      dy:
+          _textPosition.dy * containerSize.height -
+          containerSize.height / 2, // Offset from center
+      child: Transform.scale(
+        scale: _textScale,
         child: Transform.rotate(
           angle: _textRotation,
-          child: Transform.scale(
-            scale: _textScale,
+          child: GestureDetector(
+            // Tap to edit text
+            onTap: _isEditingText
+                ? _startTextEditing
+                : () => setState(() => _isEditingText = true),
+            // Long press to delete
+            onLongPress: _isEditingText ? _removeText : null,
             child: Container(
-              constraints: BoxConstraints(maxWidth: containerSize.width * 0.8),
+              constraints: const BoxConstraints(maxWidth: 280),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
                 color: _hasTextBackground ? Colors.black54 : Colors.transparent,
                 borderRadius: BorderRadius.circular(8),
                 border: _isEditingText
-                    ? Border.all(color: Colors.white38, width: 1)
+                    ? Border.all(color: Colors.white38, width: 1.5)
                     : null,
               ),
               child: Text(
@@ -974,6 +975,11 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
                             blurRadius: 4,
                             offset: const Offset(1, 1),
                           ),
+                          Shadow(
+                            color: Colors.black.withValues(alpha: 0.5),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
                         ],
                 ),
                 textAlign: TextAlign.center,
@@ -983,6 +989,32 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
         ),
       ),
     );
+  }
+
+  // Store start focal point for combined gesture
+  Offset? _startFocalPoint;
+  Offset _basePosition = const Offset(0.5, 0.4);
+
+  void _onTextScaleUpdateCombined(
+    ScaleUpdateDetails details,
+    Size containerSize,
+  ) {
+    setState(() {
+      // Update scale (with limits)
+      _textScale = (_baseScale * details.scale).clamp(0.5, 3.0);
+
+      // Update rotation
+      _textRotation = _baseRotation + details.rotation;
+
+      // Update position based on drag
+      if (_startFocalPoint != null) {
+        final delta = details.focalPoint - _startFocalPoint!;
+        _textPosition = Offset(
+          (_basePosition.dx + delta.dx / containerSize.width).clamp(0.1, 0.9),
+          (_basePosition.dy + delta.dy / containerSize.height).clamp(0.1, 0.9),
+        );
+      }
+    });
   }
 
   Widget _buildTextInputOverlay() {

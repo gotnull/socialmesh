@@ -24,15 +24,6 @@ class ActivityTimelineScreen extends ConsumerStatefulWidget {
 class _ActivityTimelineScreenState
     extends ConsumerState<ActivityTimelineScreen> {
   @override
-  void initState() {
-    super.initState();
-    // Mark all as read when opening the screen
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(activityFeedProvider.notifier).markAllAsRead();
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     final feedState = ref.watch(activityFeedProvider);
 
@@ -49,9 +40,22 @@ class _ActivityTimelineScreenState
               onSelected: (value) {
                 if (value == 'clear') {
                   _showClearConfirmation();
+                } else if (value == 'markAllRead') {
+                  ref.read(activityFeedProvider.notifier).markAllAsRead();
                 }
               },
               itemBuilder: (context) => [
+                if (feedState.unreadCount > 0)
+                  const PopupMenuItem(
+                    value: 'markAllRead',
+                    child: Row(
+                      children: [
+                        Icon(Icons.done_all, size: 20),
+                        SizedBox(width: 12),
+                        Text('Mark all as read'),
+                      ],
+                    ),
+                  ),
                 const PopupMenuItem(
                   value: 'clear',
                   child: Row(
@@ -237,6 +241,11 @@ class _ActivityTimelineScreenState
   }
 
   void _handleActivityTap(SocialActivity activity) {
+    // Mark as read when tapped
+    if (!activity.isRead) {
+      ref.read(activityFeedProvider.notifier).markAsRead(activity.id);
+    }
+
     // Navigate based on activity type
     switch (activity.type) {
       case SocialActivityType.follow:

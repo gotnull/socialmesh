@@ -10,6 +10,7 @@
 
 // Mock firebase-admin before importing anything
 jest.mock('firebase-admin', () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mockDoc = (data: any, exists = true) => ({
     exists,
     data: () => data,
@@ -232,6 +233,7 @@ describe('Moderation Queue Item Validation', () => {
 describe('Error Handling', () => {
   describe('HttpsError creation', () => {
     it('should create error with correct code and message', () => {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { HttpsError } = require('firebase-functions/v2/https');
 
       const error = new HttpsError('unauthenticated', 'Must be signed in');
