@@ -36,11 +36,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final profileAsync = ref.watch(userProfileProvider);
     final authState = ref.watch(authStateProvider);
 
+    // If this screen was pushed (can pop), show back button
+    // If it's a root drawer screen, show hamburger menu
+    final canPop = Navigator.canPop(context);
+
     return Scaffold(
       backgroundColor: context.background,
       appBar: AppBar(
         backgroundColor: context.background,
-        leading: const HamburgerMenuButton(),
+        leading: canPop ? const BackButton() : const HamburgerMenuButton(),
         centerTitle: true,
         title: Text(
           'Profile',

@@ -79,6 +79,11 @@ class ProfileService {
   /// Get the current user profile
   Future<UserProfile?> getProfile() async {
     AppLogging.auth('ProfileService: getProfile() - START');
+
+    // Force reload SharedPreferences from disk to avoid stale cache
+    // This is important on iOS where NSUserDefaults can cache values
+    await _preferences.reload();
+
     final json = _preferences.getString(_profileKey);
     if (json == null) {
       AppLogging.auth(

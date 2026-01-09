@@ -115,22 +115,49 @@ class _AccountSubscriptionsScreenState
     AsyncValue<UserProfile?> profileAsync,
     Color accentColor,
   ) {
+    debugPrint('');
+    debugPrint(
+      '╔══════════════════════════════════════════════════════════════',
+    );
+    debugPrint('║ 🏗️ _buildProfileCard() called');
+    debugPrint('║ 📦 profileAsync state:');
+    debugPrint('║    - isLoading: ${profileAsync.isLoading}');
+    debugPrint('║    - hasValue: ${profileAsync.hasValue}');
+    debugPrint('║    - hasError: ${profileAsync.hasError}');
+    if (profileAsync.hasValue && !profileAsync.hasError) {
+      debugPrint('║    - value: ${profileAsync.value?.displayName ?? "NULL"}');
+    }
+    debugPrint(
+      '╚══════════════════════════════════════════════════════════════',
+    );
+
     return profileAsync.when(
-      data: (profile) => _ProfilePreviewCard(
-        profile: profile,
-        onEditTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const ProfileScreen()),
-        ),
-      ),
-      loading: () => const _LoadingCard(),
-      error: (e, _) => _ProfilePreviewCard(
-        profile: null,
-        onEditTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const ProfileScreen()),
-        ),
-      ),
+      data: (profile) {
+        debugPrint(
+          '║ 📤 profileAsync.when -> data: ${profile?.displayName ?? "NULL"}',
+        );
+        return _ProfilePreviewCard(
+          profile: profile,
+          onEditTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ProfileScreen()),
+          ),
+        );
+      },
+      loading: () {
+        debugPrint('║ ⏳ profileAsync.when -> loading');
+        return const _LoadingCard();
+      },
+      error: (e, _) {
+        debugPrint('║ ❌ profileAsync.when -> error: $e');
+        return _ProfilePreviewCard(
+          profile: null,
+          onEditTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ProfileScreen()),
+          ),
+        );
+      },
     );
   }
 
@@ -744,11 +771,36 @@ class _AccountSubscriptionsScreenState
   Future<void> _signInWithGoogle(BuildContext _) async {
     if (_isSigningIn) return;
     setState(() => _isSigningIn = true);
+    debugPrint('');
+    debugPrint(
+      '╔══════════════════════════════════════════════════════════════',
+    );
+    debugPrint('║ 🔐 SIGN IN WITH GOOGLE STARTED');
+    debugPrint(
+      '╚══════════════════════════════════════════════════════════════',
+    );
 
     try {
       final authService = ref.read(authServiceProvider);
       await authService.signInWithGoogle();
+      debugPrint(
+        '╔══════════════════════════════════════════════════════════════',
+      );
+      debugPrint('║ ✅ Google sign-in SUCCESS');
+      debugPrint('║ 🔄 Invalidating userProfileProvider...');
+      debugPrint(
+        '╚══════════════════════════════════════════════════════════════',
+      );
+      // Force profile to reload with new auth state
+      ref.invalidate(userProfileProvider);
     } catch (e) {
+      debugPrint(
+        '╔══════════════════════════════════════════════════════════════',
+      );
+      debugPrint('║ ❌ Google sign-in FAILED: $e');
+      debugPrint(
+        '╚══════════════════════════════════════════════════════════════',
+      );
       AppLogging.app('Google sign-in error: $e');
       if (mounted) {
         showErrorSnackBar(context, 'Sign in failed: $e');
@@ -761,11 +813,36 @@ class _AccountSubscriptionsScreenState
   Future<void> _signInWithApple(BuildContext _) async {
     if (_isSigningIn) return;
     setState(() => _isSigningIn = true);
+    debugPrint('');
+    debugPrint(
+      '╔══════════════════════════════════════════════════════════════',
+    );
+    debugPrint('║ 🔐 SIGN IN WITH APPLE STARTED');
+    debugPrint(
+      '╚══════════════════════════════════════════════════════════════',
+    );
 
     try {
       final authService = ref.read(authServiceProvider);
       await authService.signInWithApple();
+      debugPrint(
+        '╔══════════════════════════════════════════════════════════════',
+      );
+      debugPrint('║ ✅ Apple sign-in SUCCESS');
+      debugPrint('║ 🔄 Invalidating userProfileProvider...');
+      debugPrint(
+        '╚══════════════════════════════════════════════════════════════',
+      );
+      // Force profile to reload with new auth state
+      ref.invalidate(userProfileProvider);
     } catch (e) {
+      debugPrint(
+        '╔══════════════════════════════════════════════════════════════',
+      );
+      debugPrint('║ ❌ Apple sign-in FAILED: $e');
+      debugPrint(
+        '╚══════════════════════════════════════════════════════════════',
+      );
       AppLogging.app('Apple sign-in error: $e');
       if (mounted) {
         showErrorSnackBar(context, 'Sign in failed: $e');
@@ -778,11 +855,36 @@ class _AccountSubscriptionsScreenState
   Future<void> _signInWithGitHub(BuildContext _) async {
     if (_isSigningIn) return;
     setState(() => _isSigningIn = true);
+    debugPrint('');
+    debugPrint(
+      '╔══════════════════════════════════════════════════════════════',
+    );
+    debugPrint('║ 🔐 SIGN IN WITH GITHUB STARTED');
+    debugPrint(
+      '╚══════════════════════════════════════════════════════════════',
+    );
 
     try {
       final authService = ref.read(authServiceProvider);
       await authService.signInWithGitHub();
+      debugPrint(
+        '╔══════════════════════════════════════════════════════════════',
+      );
+      debugPrint('║ ✅ GitHub sign-in SUCCESS');
+      debugPrint('║ 🔄 Invalidating userProfileProvider...');
+      debugPrint(
+        '╚══════════════════════════════════════════════════════════════',
+      );
+      // Force profile to reload with new auth state
+      ref.invalidate(userProfileProvider);
     } catch (e) {
+      debugPrint(
+        '╔══════════════════════════════════════════════════════════════',
+      );
+      debugPrint('║ ❌ GitHub sign-in FAILED: $e');
+      debugPrint(
+        '╚══════════════════════════════════════════════════════════════',
+      );
       AppLogging.app('GitHub sign-in error: $e');
       if (mounted) {
         showErrorSnackBar(context, 'Sign in failed: $e');
@@ -813,12 +915,37 @@ class _AccountSubscriptionsScreenState
 
     if (confirmed == true && mounted) {
       try {
+        debugPrint('');
+        debugPrint(
+          '╔══════════════════════════════════════════════════════════════',
+        );
+        debugPrint('║ 🚪 SIGN OUT INITIATED');
+        debugPrint(
+          '╚══════════════════════════════════════════════════════════════',
+        );
         final authService = ref.read(authServiceProvider);
         await authService.signOut();
+        debugPrint(
+          '╔══════════════════════════════════════════════════════════════',
+        );
+        debugPrint('║ ✅ Auth signOut() completed');
+        debugPrint('║ 🔄 Invalidating userProfileProvider...');
+        debugPrint(
+          '╚══════════════════════════════════════════════════════════════',
+        );
+        // Force the provider to rebuild with new auth state
+        ref.invalidate(userProfileProvider);
         if (mounted) {
           showSuccessSnackBar(context, 'Signed out');
         }
       } catch (e) {
+        debugPrint(
+          '╔══════════════════════════════════════════════════════════════',
+        );
+        debugPrint('║ ❌ Sign out ERROR: $e');
+        debugPrint(
+          '╚══════════════════════════════════════════════════════════════',
+        );
         if (mounted) {
           showErrorSnackBar(context, 'Error: $e');
         }
@@ -988,6 +1115,21 @@ class _ProfilePreviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('');
+    debugPrint(
+      '╔══════════════════════════════════════════════════════════════',
+    );
+    debugPrint('║ 🎨 _ProfilePreviewCard.build()');
+    debugPrint('║ 📋 Profile received:');
+    debugPrint('║    - profile is null: ${profile == null}');
+    debugPrint('║    - displayName: ${profile?.displayName ?? "NULL"}');
+    debugPrint('║    - callsign: ${profile?.callsign ?? "NULL"}');
+    debugPrint('║    - id: ${profile?.id ?? "NULL"}');
+    debugPrint('║    - isSynced: ${profile?.isSynced ?? "NULL"}');
+    debugPrint(
+      '╚══════════════════════════════════════════════════════════════',
+    );
+
     final accentColor = context.accentColor;
     final displayName = profile?.displayName ?? 'MeshUser';
     final avatarUrl = profile?.avatarUrl;

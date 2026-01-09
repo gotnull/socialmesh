@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/logging.dart';
@@ -24,39 +25,72 @@ final profileCloudSyncServiceProvider = Provider<ProfileCloudSyncService>((
 class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
   @override
   Future<UserProfile?> build() async {
-    AppLogging.auth('UserProfile: build() called - loading profile');
+    debugPrint('');
+    debugPrint(
+      '╔══════════════════════════════════════════════════════════════',
+    );
+    debugPrint('║ 🔄 UserProfileNotifier.build() CALLED');
+    debugPrint(
+      '╠══════════════════════════════════════════════════════════════',
+    );
 
     // Watch auth state - this ensures we rebuild when user signs in/out
     final authState = ref.watch(authStateProvider);
 
+    debugPrint('║ 📡 authState: $authState');
+    debugPrint('║ 📡 authState.isLoading: ${authState.isLoading}');
+    debugPrint('║ 📡 authState.hasValue: ${authState.hasValue}');
+
+    // CRITICAL: If auth is still loading, we should NOT return stale data
+    // Poll Firebase Auth directly to get current user synchronously
+    // This avoids race conditions with the stream provider
+    final firebaseAuth = ref.read(firebaseAuthProvider);
+    final currentUser = firebaseAuth.currentUser;
+
+    debugPrint(
+      '║ 🔥 Firebase currentUser (direct): ${currentUser?.uid ?? "NULL"}',
+    );
+
+    // Use the direct Firebase check as source of truth
+    final user = currentUser;
+
+    debugPrint('║ 👤 Resolved user: ${user?.uid ?? "NULL"}');
+
     // Initialize and load local profile
     await profileService.initialize();
     final localProfile = await profileService.getOrCreateProfile();
-    AppLogging.auth(
-      'UserProfile: Loaded local profile: ${localProfile.displayName}, avatarUrl: ${localProfile.avatarUrl}',
-    );
+    debugPrint('║ 💾 Local profile loaded:');
+    debugPrint('║    - displayName: ${localProfile.displayName}');
+    debugPrint('║    - id: ${localProfile.id}');
+    debugPrint('║    - isSynced: ${localProfile.isSynced}');
 
     // Check if user is signed in
-    final user = authState.value;
     if (user != null) {
-      AppLogging.auth(
-        'UserProfile: User signed in (${user.uid}), syncing from cloud',
-      );
+      debugPrint('║ 🔐 User IS signed in (${user.uid}), will sync from cloud');
       // Update sync status
       ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.syncing);
 
       try {
         // Perform full sync with cloud
+        debugPrint(
+          '║ ☁️ Calling profileCloudSyncService.fullSync(${user.uid})',
+        );
         final synced = await profileCloudSyncService.fullSync(user.uid);
+        debugPrint('║ ☁️ fullSync returned: ${synced?.displayName ?? "NULL"}');
         if (synced != null) {
-          AppLogging.auth(
-            'UserProfile: Cloud sync complete: ${synced.displayName}, avatarUrl: ${synced.avatarUrl}',
+          debugPrint('║ ✅ Cloud sync SUCCESS:');
+          debugPrint('║    - displayName: ${synced.displayName}');
+          debugPrint('║    - id: ${synced.id}');
+          debugPrint('║    - isSynced: ${synced.isSynced}');
+          debugPrint(
+            '╚══════════════════════════════════════════════════════════════',
           );
+          debugPrint('');
           ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.synced);
           return synced;
         }
       } catch (e) {
-        AppLogging.auth('UserProfile: Cloud sync failed: $e');
+        debugPrint('║ ❌ Cloud sync FAILED: $e');
         final errorString = e.toString();
 
         // Check if this is a transient network error
@@ -68,21 +102,44 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
 
         if (isTransientError) {
           // For transient errors, treat as idle - user is logged in, just offline
-          AppLogging.auth(
-            'UserProfile: Transient network error, treating as idle',
-          );
+          debugPrint('║ ⚠️ Transient network error, treating as idle');
           ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.idle);
         } else {
           // For actual errors (permissions, etc), show error state
+          debugPrint('║ ❌ Non-transient error, setting error status');
           ref.read(syncStatusProvider.notifier).setStatus(SyncStatus.error);
           ref.read(syncErrorProvider.notifier).setError(errorString);
         }
         // Fall back to local profile on error
       }
     } else {
-      AppLogging.auth('UserProfile: No user signed in');
+      debugPrint('║ 🚫 User is NULL - not signed in');
+      // When signed out, return a fresh guest profile to avoid showing old user's data
+      if (localProfile.isSynced) {
+        debugPrint(
+          '║ ⚠️ Local profile WAS synced (isSynced=${localProfile.isSynced})',
+        );
+        debugPrint('║ 🆕 Creating fresh guest profile');
+        final freshGuest = UserProfile.guest();
+        await profileService.saveProfile(freshGuest);
+        debugPrint('║ ✅ Returning fresh guest: ${freshGuest.displayName}');
+        debugPrint(
+          '╚══════════════════════════════════════════════════════════════',
+        );
+        debugPrint('');
+        return freshGuest;
+      } else {
+        debugPrint('║ ℹ️ Local profile NOT synced, keeping local');
+      }
     }
 
+    debugPrint(
+      '║ 📤 FALLBACK: Returning local profile: ${localProfile.displayName}',
+    );
+    debugPrint(
+      '╚══════════════════════════════════════════════════════════════',
+    );
+    debugPrint('');
     return localProfile;
   }
 
