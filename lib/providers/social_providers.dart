@@ -37,12 +37,24 @@ final contentModerationServiceProvider = Provider<ContentModerationService>((
 
 /// Provider for pending reported content count (for badge)
 final pendingReportCountProvider = StreamProvider<int>((ref) {
+  // Only query reports if user is admin
+  final profile = ref.watch(userProfileProvider).value;
+  if (profile?.isAdmin != true) {
+    return Stream.value(0);
+  }
+
   final service = ref.watch(socialServiceProvider);
   return service.watchPendingReports().map((reports) => reports.length);
 });
 
 /// Provider for pending moderation queue count (for badge)
 final pendingModerationCountProvider = StreamProvider<int>((ref) {
+  // Only query moderation queue if user is admin
+  final profile = ref.watch(userProfileProvider).value;
+  if (profile?.isAdmin != true) {
+    return Stream.value(0);
+  }
+
   final service = ref.watch(socialServiceProvider);
   return service.watchModerationQueue().map((items) => items.length);
 });
