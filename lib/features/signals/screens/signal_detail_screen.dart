@@ -940,24 +940,10 @@ class _ResponseTile extends StatelessWidget {
                   const SizedBox(height: 12),
 
                   // Action bar
-                  Row(
-                    children: [
-                      _ActionChip(
-                        icon: Icons.reply_rounded,
-                        label: 'Reply',
-                        onTap: onReplyTap,
-                      ),
-                      const Spacer(),
-                      // Depth indicator
-                      if (depth > 0)
-                        Text(
-                          'Level $depth',
-                          style: TextStyle(
-                            color: context.textTertiary.withValues(alpha: 0.5),
-                            fontSize: 10,
-                          ),
-                        ),
-                    ],
+                  _ActionChip(
+                    icon: Icons.reply_rounded,
+                    label: 'Reply',
+                    onTap: onReplyTap,
                   ),
                 ],
               ),
@@ -1087,24 +1073,28 @@ class _ConnectorPainter extends CustomPainter {
       ..color = color
       ..strokeWidth = lineWidth
       ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
+      ..strokeCap = StrokeCap.square; // Square caps prevent overlap artifacts
 
     final centerX = size.width / 2;
 
-    // Vertical line from top to avatar center
-    canvas.drawLine(Offset(centerX, 0), Offset(centerX, avatarCenterY), paint);
+    // Draw as a single path to avoid overlap at corners
+    final path = Path();
 
-    // Horizontal line from center to right edge (plus extension towards avatar)
-    canvas.drawLine(
-      Offset(centerX, avatarCenterY),
-      Offset(size.width + extendHorizontal, avatarCenterY),
-      paint,
-    );
+    // Start from top, go down to corner (subtract 1 to avoid overlap at L corner)
+    path.moveTo(centerX, 0);
+    path.lineTo(centerX, avatarCenterY - 1);
+
+    // Go right to avatar
+    path.moveTo(centerX, avatarCenterY);
+    path.lineTo(size.width + extendHorizontal, avatarCenterY);
+
+    canvas.drawPath(path, paint);
 
     // Continue vertical line below if there are more siblings
+    // Draw separately to avoid path overlap
     if (showContinuation) {
       canvas.drawLine(
-        Offset(centerX, avatarCenterY),
+        Offset(centerX, avatarCenterY + lineWidth / 2),
         Offset(centerX, size.height),
         paint,
       );
