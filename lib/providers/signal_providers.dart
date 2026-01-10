@@ -25,31 +25,80 @@ final signalServiceProvider = Provider<SignalService>((ref) {
 // =============================================================================
 
 /// State for the presence feed (local signals view).
+/// Uses a Map keyed by signalId as the single source of truth to prevent duplicates.
 class SignalFeedState {
-  final List<Post> signals;
+  /// Internal map keyed by signalId - the single source of truth.
+  final Map<String, Post> _signalMap;
   final bool isLoading;
   final String? error;
   final DateTime? lastRefresh;
 
-  const SignalFeedState({
-    this.signals = const [],
+  SignalFeedState({
+    Map<String, Post>? signalMap,
     this.isLoading = false,
     this.error,
     this.lastRefresh,
-  });
+  }) : _signalMap = signalMap ?? {};
+
+  /// Get signals as sorted list (computed from map).
+  List<Post> get signals => List<Post>.from(_signalMap.values);
+
+  /// Check if a signal exists by ID.
+  bool hasSignal(String id) => _signalMap.containsKey(id);
+
+  /// Get a signal by ID.
+  Post? getSignal(String id) => _signalMap[id];
 
   SignalFeedState copyWith({
-    List<Post>? signals,
+    Map<String, Post>? signalMap,
     bool? isLoading,
     String? error,
     DateTime? lastRefresh,
   }) {
     return SignalFeedState(
-      signals: signals ?? this.signals,
+      signalMap: signalMap ?? Map.from(_signalMap),
       isLoading: isLoading ?? this.isLoading,
       error: error,
       lastRefresh: lastRefresh ?? this.lastRefresh,
     );
+  }
+
+  /// Create a new state with a signal added/updated.
+  /// Uses upsert semantics - updates if exists, inserts if not.
+  SignalFeedState withSignal(Post signal, {required String source}) {
+    final newMap = Map<String, Post>.from(_signalMap);
+    final existed = newMap.containsKey(signal.id);
+
+    if (existed) {
+      AppLogging.signals(
+        '📡 Signals: ⚠️ Duplicate insert prevented for ${signal.id} (source=$source) - updating instead',
+      );
+    }
+
+    newMap[signal.id] = signal;
+    return copyWith(signalMap: newMap);
+  }
+
+  /// Create a new state with a signal removed.
+  SignalFeedState withoutSignal(String signalId) {
+    final newMap = Map<String, Post>.from(_signalMap);
+    newMap.remove(signalId);
+    return copyWith(signalMap: newMap);
+  }
+
+  /// Create a new state with multiple signals (replaces all).
+  /// Used for refresh - builds map from list.
+  SignalFeedState withSignals(List<Post> signals) {
+    final newMap = <String, Post>{};
+    for (final signal in signals) {
+      if (newMap.containsKey(signal.id)) {
+        AppLogging.signals(
+          '📡 Signals: ⚠️ Duplicate in batch for ${signal.id} - keeping latest',
+        );
+      }
+      newMap[signal.id] = signal;
+    }
+    return copyWith(signalMap: newMap);
   }
 }
 
@@ -95,7 +144,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
     // Load signals immediately
     Future.microtask(() => refresh());
 
-    return const SignalFeedState(isLoading: true);
+    return SignalFeedState(isLoading: true);
   }
 
   /// Wire up mesh broadcast callback and incoming signal subscription.
@@ -227,12 +276,12 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
       }
     }
 
-    // Remove expired signals from state
+    // Remove expired signals from state using map-based removal
+    var newState = state;
     if (expiredIds.isNotEmpty) {
-      final remaining = currentSignals
-          .where((s) => !expiredIds.contains(s.id))
-          .toList();
-      state = state.copyWith(signals: remaining);
+      for (final id in expiredIds) {
+        newState = newState.withoutSignal(id);
+      }
       AppLogging.signals(
         'Countdown tick: removed ${expiredIds.length} expired signals',
       );
@@ -240,7 +289,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
 
     // Force UI rebuild for countdown updates
     // This triggers widget rebuilds to recompute remaining time from expiresAt
-    state = state.copyWith(lastRefresh: now);
+    state = newState.copyWith(lastRefresh: now);
   }
 
   /// Refresh the signal feed from local storage.
@@ -259,11 +308,10 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
 
       AppLogging.signals('Feed refreshed: ${sorted.length} active signals');
 
-      state = SignalFeedState(
-        signals: sorted,
-        isLoading: false,
-        lastRefresh: DateTime.now(),
-      );
+      // Use withSignals to build map - handles deduplication
+      state = state
+          .withSignals(sorted)
+          .copyWith(isLoading: false, lastRefresh: DateTime.now());
     } catch (e) {
       AppLogging.signals('Feed refresh error: $e');
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -341,8 +389,8 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
             : null,
       );
 
-      // Add to state immediately
-      state = state.copyWith(signals: [signal, ...state.signals]);
+      // Add to state using map-based upsert (handles duplicates)
+      state = state.withSignal(signal, source: 'local');
 
       AppLogging.signals('Signal created successfully: ${signal.id}');
       return signal;
@@ -363,6 +411,14 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
   }) async {
     final service = ref.read(signalServiceProvider);
 
+    // Check if signal already exists in state (early dedupe)
+    if (signalId != null && state.hasSignal(signalId)) {
+      AppLogging.signals(
+        '📡 Signals: ⚠️ Duplicate insert prevented for $signalId (source=mesh) - already in state',
+      );
+      return;
+    }
+
     AppLogging.signals(
       'Processing mesh signal from node !${senderNodeId.toRadixString(16)}'
       '${signalId != null ? ' (id=$signalId)' : ' (legacy)'}',
@@ -377,15 +433,16 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
         location: location,
       );
 
-      // If null, it was a duplicate
+      // If null, it was a duplicate in DB
       if (signal == null) {
-        AppLogging.signals('Mesh signal was duplicate, ignoring');
+        AppLogging.signals(
+          '📡 Signals: ⚠️ Duplicate insert prevented for ${signalId ?? "legacy"} (source=db)',
+        );
         return;
       }
 
-      // Add to state immediately
-      final signals = [signal, ...state.signals];
-      state = state.copyWith(signals: _sortSignals(signals));
+      // Add to state using map-based upsert
+      state = state.withSignal(signal, source: 'mesh');
 
       AppLogging.signals('Mesh signal added to feed: ${signal.id}');
     } catch (e) {
@@ -401,9 +458,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
 
     try {
       await service.deleteSignal(signalId);
-      state = state.copyWith(
-        signals: state.signals.where((s) => s.id != signalId).toList(),
-      );
+      state = state.withoutSignal(signalId);
       AppLogging.signals('Signal deleted successfully');
     } catch (e) {
       AppLogging.signals('Failed to delete signal: $e');
@@ -419,15 +474,15 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
     try {
       final url = await service.uploadSignalImage(signalId, localPath);
       if (url != null) {
-        // Update state with new image URL
-        final signals = state.signals.map((s) {
-          if (s.id == signalId) {
-            return s.copyWith(mediaUrls: [url], imageState: ImageState.cloud);
-          }
-          return s;
-        }).toList();
-
-        state = state.copyWith(signals: signals);
+        // Update state with new image URL using map-based update
+        final existingSignal = state.getSignal(signalId);
+        if (existingSignal != null) {
+          final updated = existingSignal.copyWith(
+            mediaUrls: [url],
+            imageState: ImageState.cloud,
+          );
+          state = state.withSignal(updated, source: 'upload');
+        }
         AppLogging.signals('Image uploaded successfully: $url');
       }
       return url;

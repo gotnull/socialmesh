@@ -259,6 +259,78 @@ export const onFollowRequestAcceptedNotification = onDocumentUpdated(
 );
 
 // =============================================================================
+// SIGNAL NOTIFICATIONS
+// =============================================================================
+
+/**
+ * Send notification to followers when someone creates a new signal
+ */
+export const onSignalCreatedNotification = onDocumentCreated(
+  'posts/{postId}',
+  async (event) => {
+    const data = event.data?.data();
+    if (!data) return;
+
+    // Only handle signals (not regular social posts)
+    const postMode = data.postMode as string;
+    if (postMode !== 'signal') {
+      console.log('Not a signal, skipping notification');
+      return;
+    }
+
+    const authorId = data.authorId as string;
+    const content = data.content as string;
+    const postId = event.params.postId;
+
+    // Truncate content for notification
+    const truncatedContent = content.length > 50
+      ? `${content.substring(0, 50)}...`
+      : content;
+
+    // Get author's profile
+    const authorProfile = await getProfile(authorId);
+    const authorName = authorProfile?.displayName || 'Someone';
+
+    // Get all followers of this user
+    const followersSnapshot = await db.collection('follows')
+      .where('followeeId', '==', authorId)
+      .get();
+
+    if (followersSnapshot.empty) {
+      console.log(`No followers to notify for signal by ${authorId}`);
+      return;
+    }
+
+    console.log(`Notifying ${followersSnapshot.size} followers of new signal by ${authorName}`);
+
+    // Send notification to each follower
+    const notificationPromises = followersSnapshot.docs.map(async (doc) => {
+      const followerData = doc.data();
+      const followerId = followerData.followerId as string;
+
+      // Check if follower has signal notifications enabled (uses follows setting)
+      if (!await isNotificationEnabled(followerId, 'follows')) {
+        console.log(`Signal notifications disabled for user ${followerId}`);
+        return;
+      }
+
+      return sendPushNotification(
+        followerId,
+        `${authorName} is active 📡`,
+        truncatedContent,
+        {
+          type: 'new_signal',
+          targetId: postId,
+          authorId: authorId,
+        }
+      );
+    });
+
+    await Promise.all(notificationPromises);
+  }
+);
+
+// =============================================================================
 // LIKE NOTIFICATIONS
 // =============================================================================
 
@@ -571,6 +643,11 @@ export const sendTestPushNotification = onCall(async (request) => {
       title = 'You were mentioned';
       body = 'Debug User mentioned you: "Hey @you check this out!"';
       data = { type: 'mention', targetId: 'debug_post', commentId: 'debug_comment' };
+      break;
+    case 'signal':
+      title = 'Debug User is active 📡';
+      body = 'This is a test signal notification!';
+      data = { type: 'new_signal', targetId: 'debug_signal', authorId: 'debug_user' };
       break;
     default:
       title = 'Test Notification';

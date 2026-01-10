@@ -7,10 +7,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 
+import '../../../core/logging.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../models/social.dart';
 import '../../../providers/app_providers.dart';
+import '../../../providers/auth_providers.dart';
+import '../../../providers/connection_providers.dart';
 import '../../../providers/signal_providers.dart';
 import '../../../services/signal_service.dart';
 import '../../../utils/snackbar.dart';
@@ -55,10 +58,28 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
     super.dispose();
   }
 
-  bool get _canSubmit =>
+  /// Check basic content requirements (text not empty, within length limit)
+  bool get _hasValidContent =>
       _contentController.text.trim().isNotEmpty &&
       _contentController.text.length <= _maxLength &&
       !_isSubmitting;
+
+  /// Check if device is connected to mesh
+  bool get _isDeviceConnected => ref.read(isDeviceConnectedProvider);
+
+  /// Check if user is authenticated
+  bool get _isAuthenticated => ref.read(isSignedInProvider);
+
+  /// Combined check for whether signal can be submitted
+  bool get _canSubmit =>
+      _hasValidContent && _isDeviceConnected && _isAuthenticated;
+
+  /// Get the reason why submission is blocked (for UI feedback)
+  String? get _submitBlockedReason {
+    if (!_isAuthenticated) return 'Sign in required';
+    if (!_isDeviceConnected) return 'Device not connected';
+    return null;
+  }
 
   int get _remainingChars => _maxLength - _contentController.text.length;
 
@@ -105,7 +126,21 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
   }
 
   Future<void> _submitSignal() async {
-    if (!_canSubmit) return;
+    // Auth gating check
+    if (!_isAuthenticated) {
+      AppLogging.signals('🔒 Send blocked: user not authenticated');
+      showErrorSnackBar(context, 'Sign in required to send signals');
+      return;
+    }
+
+    // Connection gating check
+    if (!_isDeviceConnected) {
+      AppLogging.signals('🚫 Send blocked: device not connected');
+      showErrorSnackBar(context, 'Connect to a device to send signals');
+      return;
+    }
+
+    if (!_hasValidContent) return;
 
     _dismissKeyboard();
     setState(() => _isSubmitting = true);
@@ -239,54 +274,57 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12),
-            child: BouncyTap(
-              onTap: _canSubmit ? _submitSignal : null,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  gradient: _canSubmit
-                      ? AppTheme.brandGradientHorizontal
-                      : null,
-                  color: _canSubmit
-                      ? null
-                      : context.border.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: _isSubmitting
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.sensors,
-                            size: 18,
-                            color: _canSubmit
-                                ? Colors.white
-                                : context.textTertiary,
+            child: Tooltip(
+              message: _submitBlockedReason ?? '',
+              child: BouncyTap(
+                onTap: _canSubmit ? _submitSignal : null,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: _canSubmit
+                        ? AppTheme.brandGradientHorizontal
+                        : null,
+                    color: _canSubmit
+                        ? null
+                        : context.border.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
                           ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Send signal',
-                            style: TextStyle(
+                        )
+                      : Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.sensors,
+                              size: 18,
                               color: _canSubmit
                                   ? Colors.white
                                   : context.textTertiary,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
                             ),
-                          ),
-                        ],
-                      ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Send signal',
+                              style: TextStyle(
+                                color: _canSubmit
+                                    ? Colors.white
+                                    : context.textTertiary,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
               ),
             ),
           ),

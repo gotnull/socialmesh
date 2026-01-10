@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/logging.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../models/social.dart';
 import '../../../providers/auth_providers.dart';
+import '../../../providers/connection_providers.dart';
 import '../../../providers/signal_providers.dart';
+import '../../../utils/snackbar.dart';
 import '../widgets/signal_card.dart';
 import 'create_signal_screen.dart';
 import 'signal_detail_screen.dart';
@@ -39,6 +42,20 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
   }
 
   void _openCreateSignal() {
+    // Auth gating check
+    if (!ref.read(isSignedInProvider)) {
+      AppLogging.signals('🔒 Go Active blocked: user not authenticated');
+      showErrorSnackBar(context, 'Sign in required to go active');
+      return;
+    }
+
+    // Connection gating check
+    if (!ref.read(isDeviceConnectedProvider)) {
+      AppLogging.signals('🚫 Go Active blocked: device not connected');
+      showErrorSnackBar(context, 'Connect to a device to go active');
+      return;
+    }
+
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (context) => const CreateSignalScreen(),
@@ -50,6 +67,11 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
   @override
   Widget build(BuildContext context) {
     final feedState = ref.watch(signalFeedProvider);
+
+    // Watch providers for reactive updates
+    final isSignedIn = ref.watch(isSignedInProvider);
+    final isConnected = ref.watch(isDeviceConnectedProvider);
+    final canGoActive = isSignedIn && isConnected;
 
     return Scaffold(
       backgroundColor: context.background,
@@ -69,6 +91,7 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
           ],
         ),
         actions: [
+          // Active signals count badge
           if (feedState.signals.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(right: 8),
@@ -93,6 +116,11 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                 ),
               ),
             ),
+          // Go Active button in AppBar
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: _buildGoActiveButton(canGoActive, isSignedIn, isConnected),
+          ),
         ],
       ),
       body: feedState.isLoading && feedState.signals.isEmpty
@@ -100,13 +128,51 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
           : feedState.signals.isEmpty
           ? _buildEmptyState()
           : _buildSignalList(feedState),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _openCreateSignal,
-        backgroundColor: context.accentColor,
-        icon: const Icon(Icons.sensors, color: Colors.white),
-        label: const Text(
-          'Go active',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+    );
+  }
+
+  Widget _buildGoActiveButton(
+    bool canGoActive,
+    bool isSignedIn,
+    bool isConnected,
+  ) {
+    String? blockedReason;
+    if (!isSignedIn) {
+      blockedReason = 'Sign in required';
+    } else if (!isConnected) {
+      blockedReason = 'Device not connected';
+    }
+
+    return Tooltip(
+      message: blockedReason ?? 'Broadcast your presence',
+      child: BouncyTap(
+        onTap: _openCreateSignal,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            gradient: canGoActive ? AppTheme.brandGradientHorizontal : null,
+            color: canGoActive ? null : context.border.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.sensors,
+                size: 18,
+                color: canGoActive ? Colors.white : context.textTertiary,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                'Go Active',
+                style: TextStyle(
+                  color: canGoActive ? Colors.white : context.textTertiary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -129,6 +195,18 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
   }
 
   Widget _buildEmptyState() {
+    // Watch providers for reactive updates
+    final isSignedIn = ref.watch(isSignedInProvider);
+    final isConnected = ref.watch(isDeviceConnectedProvider);
+    final canGoActive = isSignedIn && isConnected;
+
+    String? blockedReason;
+    if (!isSignedIn) {
+      blockedReason = 'Sign in required';
+    } else if (!isConnected) {
+      blockedReason = 'Device not connected';
+    }
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -163,30 +241,46 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
-            BouncyTap(
-              onTap: _openCreateSignal,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  gradient: AppTheme.brandGradientHorizontal,
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.sensors, color: Colors.white, size: 20),
-                    SizedBox(width: 8),
-                    Text(
-                      'Go active',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
+            Tooltip(
+              message: blockedReason ?? '',
+              child: BouncyTap(
+                onTap: _openCreateSignal,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: canGoActive
+                        ? AppTheme.brandGradientHorizontal
+                        : null,
+                    color: canGoActive
+                        ? null
+                        : context.border.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.sensors,
+                        color: canGoActive
+                            ? Colors.white
+                            : context.textTertiary,
+                        size: 20,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 8),
+                      Text(
+                        'Go active',
+                        style: TextStyle(
+                          color: canGoActive
+                              ? Colors.white
+                              : context.textTertiary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -242,12 +336,14 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
               final isOwnSignal =
                   currentUser != null && signal.authorId == currentUser.uid;
               return Padding(
+                key: ValueKey(signal.id), // Use signalId as stable key
                 padding: EdgeInsets.only(
                   left: 16,
                   right: 16,
                   bottom: index == feedState.signals.length - 1 ? 100 : 12,
                 ),
                 child: SignalCard(
+                  key: ValueKey('card_${signal.id}'), // Stable key for card
                   signal: signal,
                   onTap: () => _openSignalDetail(signal),
                   onComment: () => _openSignalDetail(signal),

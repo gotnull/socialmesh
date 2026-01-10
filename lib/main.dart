@@ -482,7 +482,8 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
         case 'new_comment':
         case 'new_reply':
         case 'mention':
-          // Navigate to the post
+        case 'new_signal':
+          // Navigate to the post/signal
           if (nav.targetId != null) {
             navigator.pushNamed(
               '/post-detail',

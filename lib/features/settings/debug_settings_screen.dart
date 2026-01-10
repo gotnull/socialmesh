@@ -1299,6 +1299,15 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
           color: AccentColors.purple,
           onTap: () => _sendTestPushNotification('mention'),
         ),
+        const SizedBox(height: 8),
+
+        // Test Signal Notification
+        _buildPushTestButton(
+          icon: Icons.sensors_rounded,
+          label: 'Test Signal Notification',
+          color: AccentColors.teal,
+          onTap: () => _sendTestPushNotification('signal'),
+        ),
 
         const SizedBox(height: 16),
 
