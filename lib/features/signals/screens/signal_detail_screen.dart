@@ -708,6 +708,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
           ),
 
           // Sticky header overlay - slides in/out from top with blur
+          // Positioned 1px higher to overlap with AppBar and hide seam
           Positioned(
             top: MediaQuery.of(context).padding.top + kToolbarHeight,
             left: 0,
