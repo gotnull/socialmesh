@@ -464,14 +464,17 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
       ),
       body: Column(
         children: [
-          // Sticky header - appears when scrolled past threshold
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            height: _showStickyHeader ? null : 0,
+          // Sticky header - slides in with animation when scrolled past threshold
+          AnimatedSlide(
+            offset: _showStickyHeader ? Offset.zero : const Offset(0, -1),
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutCubic,
             child: AnimatedOpacity(
               opacity: _showStickyHeader ? 1.0 : 0.0,
               duration: const Duration(milliseconds: 200),
-              child: _StickySignalHeader(signal: signal, onTap: _scrollToTop),
+              child: _showStickyHeader
+                  ? _StickySignalHeader(signal: signal, onTap: _scrollToTop)
+                  : const SizedBox.shrink(),
             ),
           ),
 
@@ -720,280 +723,153 @@ class _ResponseTile extends StatelessWidget {
   final VoidCallback? onReplyTap;
 
   static const double _avatarSize = 32.0;
-  static const double _lineWidth = 2.0;
-  static const double _indentWidth =
-      40.0; // Must match avatar column width (avatarSize + 8)
+  static const double _indentWidth = 12.0;
+  static const int _maxVisualDepth = 5; // Cap indentation like Reddit
 
   @override
   Widget build(BuildContext context) {
-    final avatarSize = _avatarSize;
+    // Cap the visual depth to prevent cramping
+    final visualDepth = depth.clamp(0, _maxVisualDepth);
 
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // For non-first root items, add incoming connector column
-          // This aligns with column 0 of nested items
-          if (depth == 0 && !isFirstChild)
-            SizedBox(
-              width: _indentWidth,
-              child: CustomPaint(
-                painter: _ConnectorPainter(
-                  color: context.accentColor.withValues(alpha: 0.3),
-                  lineWidth: _lineWidth,
-                  avatarCenterY: avatarSize / 2,
-                  showContinuation:
-                      !isLastChild, // Continue if more root siblings
-                  extendHorizontal: 4, // Reach into avatar column
+    return Padding(
+      padding: const EdgeInsets.only(left: 12, right: 12),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Thread bars for each depth level (capped)
+            for (int i = 0; i < visualDepth; i++)
+              Container(
+                width: _indentWidth,
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  width: 2,
+                  color: context.accentColor.withValues(alpha: 0.15),
                 ),
+              ),
+
+            // Avatar
+            Container(
+              width: _avatarSize,
+              height: _avatarSize,
+              margin: const EdgeInsets.only(top: 4, right: 10),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    context.accentColor.withValues(alpha: 0.3),
+                    context.accentColor.withValues(alpha: 0.1),
+                  ],
+                ),
+                border: Border.all(
+                  color: context.accentColor.withValues(alpha: 0.5),
+                  width: 1.5,
+                ),
+              ),
+              child: Icon(
+                Icons.person_rounded,
+                size: _avatarSize * 0.5,
+                color: context.accentColor,
               ),
             ),
 
-          // Thread columns for depth levels (nested items)
-          for (int i = 0; i < depth; i++)
-            SizedBox(
-              width: _indentWidth,
-              child: _buildThreadColumn(context, i, avatarSize),
-            ),
-
-          // Avatar column
-          SizedBox(
-            width: avatarSize + 8,
-            child: Column(
-              children: [
-                // Avatar
-                Container(
-                  width: avatarSize,
-                  height: avatarSize,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        context.accentColor.withValues(alpha: 0.3),
-                        context.accentColor.withValues(alpha: 0.1),
+            // Content
+            Expanded(
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: context.card,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: context.border.withValues(alpha: 0.2),
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header row
+                    Row(
+                      children: [
+                        Text(
+                          response.authorName ?? 'Anonymous',
+                          style: TextStyle(
+                            color: context.textPrimary,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        if (response.isLocal) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 5,
+                              vertical: 1,
+                            ),
+                            decoration: BoxDecoration(
+                              color: context.accentColor.withValues(
+                                alpha: 0.15,
+                              ),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              'You',
+                              style: TextStyle(
+                                color: context.accentColor,
+                                fontSize: 9,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                        const SizedBox(width: 6),
+                        Text(
+                          '· ${_timeAgo(response.createdAt)}',
+                          style: TextStyle(
+                            color: context.textTertiary,
+                            fontSize: 11,
+                          ),
+                        ),
                       ],
                     ),
-                    border: Border.all(
-                      color: context.accentColor.withValues(alpha: 0.5),
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: context.accentColor.withValues(alpha: 0.2),
-                        blurRadius: 8,
-                        spreadRadius: 0,
-                      ),
-                    ],
-                  ),
-                  child: Icon(
-                    Icons.person_rounded,
-                    size: avatarSize * 0.5,
-                    color: context.accentColor,
-                  ),
-                ),
 
-                // Line below avatar to children (or first root to siblings via children)
-                if (hasDirectReplyBelow ||
-                    (isFirstChild && !isLastChild && depth == 0))
-                  Expanded(
-                    child: Center(
-                      child: Container(
-                        width: _lineWidth,
-                        color: context.accentColor.withValues(alpha: 0.3),
+                    const SizedBox(height: 6),
+
+                    // Content text
+                    Text(
+                      response.content,
+                      style: TextStyle(
+                        color: context.textPrimary,
+                        fontSize: 14,
+                        height: 1.4,
                       ),
                     ),
-                  ),
-              ],
-            ),
-          ),
 
-          const SizedBox(width: 8),
+                    const SizedBox(height: 8),
 
-          // Content
-          Expanded(
-            child: Container(
-              margin: const EdgeInsets.only(bottom: 16),
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: context.card,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: depth > 0
-                      ? context.accentColor.withValues(alpha: 0.2)
-                      : context.border.withValues(alpha: 0.3),
-                  width: 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header row
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Text(
-                                  response.authorName ?? 'Anonymous',
-                                  style: TextStyle(
-                                    color: context.textPrimary,
-                                    fontSize: depth > 0 ? 13 : 14,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                if (response.isLocal) ...[
-                                  const SizedBox(width: 6),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 6,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: context.accentColor.withValues(
-                                        alpha: 0.15,
-                                      ),
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: Text(
-                                      'You',
-                                      style: TextStyle(
-                                        color: context.accentColor,
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              _timeAgo(response.createdAt),
-                              style: TextStyle(
-                                color: context.textTertiary,
-                                fontSize: 11,
-                              ),
-                            ),
-                          ],
+                    // Reply button
+                    GestureDetector(
+                      onTap: onReplyTap,
+                      child: Text(
+                        'Reply',
+                        style: TextStyle(
+                          color: context.textTertiary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                      // Reply count badge (if has replies)
-                      if (hasReplies)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: context.accentColor.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.subdirectory_arrow_right_rounded,
-                                size: 12,
-                                color: context.accentColor,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'Has replies',
-                                style: TextStyle(
-                                  color: context.accentColor,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  // Content text
-                  Text(
-                    response.content,
-                    style: TextStyle(
-                      color: context.textPrimary,
-                      fontSize: depth > 0 ? 13 : 14,
-                      height: 1.4,
                     ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Action bar
-                  _ActionChip(
-                    icon: Icons.reply_rounded,
-                    label: 'Reply',
-                    onTap: onReplyTap,
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
-  }
-
-  /// Builds a thread column showing vertical/horizontal lines.
-  /// For the last column (i == depth - 1), shows an L-connector to the avatar.
-  /// For earlier columns, shows a straight line if ancestor has more siblings.
-  Widget _buildThreadColumn(
-    BuildContext context,
-    int columnIndex,
-    double avatarSize,
-  ) {
-    final isLastColumn = columnIndex == depth - 1;
-    final ancestorHasSiblings =
-        columnIndex < ancestorHasMoreSiblings.length &&
-        ancestorHasMoreSiblings[columnIndex];
-
-    if (isLastColumn) {
-      // Last column: draw L-shaped connector to avatar.
-      // Show continuation below if:
-      // - THIS item has more siblings (!isLastChild), OR
-      // - The PARENT at this depth level has more siblings (ancestorHasSiblings)
-      return CustomPaint(
-        painter: _ConnectorPainter(
-          color: context.accentColor.withValues(alpha: 0.3),
-          lineWidth: _lineWidth,
-          avatarCenterY: avatarSize / 2,
-          showContinuation: !isLastChild || ancestorHasSiblings,
-          extendHorizontal: 4, // Reach into avatar column
-        ),
-      );
-    } else {
-      // Earlier columns: show vertical continuation if ancestor at this level
-      // has more siblings below its current child.
-      if (ancestorHasSiblings) {
-        return Center(
-          child: Container(
-            width: _lineWidth,
-            color: context.accentColor.withValues(alpha: 0.3),
-          ),
-        );
-      }
-      return const SizedBox.shrink();
-    }
   }
 
   String _timeAgo(DateTime dateTime) {
@@ -1007,211 +883,164 @@ class _ResponseTile extends StatelessWidget {
   }
 }
 
-/// Styled action chip for response actions.
-class _ActionChip extends StatelessWidget {
-  const _ActionChip({required this.icon, required this.label, this.onTap});
-
-  final IconData icon;
-  final String label;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: context.textTertiary.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 14, color: context.textSecondary),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  color: context.textSecondary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Custom painter for thread connector lines.
-/// Draws an L-shaped connector from the top-center to the right edge (at avatar height).
-/// If showContinuation is true, extends the line below as well (T-shape).
-class _ConnectorPainter extends CustomPainter {
-  _ConnectorPainter({
-    required this.color,
-    required this.lineWidth,
-    required this.avatarCenterY,
-    required this.showContinuation,
-    this.extendHorizontal = 0,
-  });
-
-  final Color color;
-  final double lineWidth;
-  final double avatarCenterY;
-  final bool showContinuation;
-  final double extendHorizontal; // Extra distance past column edge
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = lineWidth
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.square; // Square caps prevent overlap artifacts
-
-    final centerX = size.width / 2;
-
-    // Draw as a single path to avoid overlap at corners
-    final path = Path();
-
-    // Start from top, go down to corner (subtract 1 to avoid overlap at L corner)
-    path.moveTo(centerX, 0);
-    path.lineTo(centerX, avatarCenterY - 1);
-
-    // Go right to avatar
-    path.moveTo(centerX, avatarCenterY);
-    path.lineTo(size.width + extendHorizontal, avatarCenterY);
-
-    canvas.drawPath(path, paint);
-
-    // Continue vertical line below if there are more siblings
-    // Draw separately to avoid path overlap
-    if (showContinuation) {
-      canvas.drawLine(
-        Offset(centerX, avatarCenterY + lineWidth / 2),
-        Offset(centerX, size.height),
-        paint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(_ConnectorPainter oldDelegate) =>
-      color != oldDelegate.color ||
-      lineWidth != oldDelegate.lineWidth ||
-      avatarCenterY != oldDelegate.avatarCenterY ||
-      showContinuation != oldDelegate.showContinuation ||
-      extendHorizontal != oldDelegate.extendHorizontal;
-}
-
 /// Sticky header showing compact signal info when scrolled.
-class _StickySignalHeader extends StatelessWidget {
+class _StickySignalHeader extends StatefulWidget {
   const _StickySignalHeader({required this.signal, this.onTap});
 
   final Post signal;
   final VoidCallback? onTap;
 
   @override
+  State<_StickySignalHeader> createState() => _StickySignalHeaderState();
+}
+
+class _StickySignalHeaderState extends State<_StickySignalHeader>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+    _pulseAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _pulseController, curve: Curves.easeOut));
+    _pulseController.forward();
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final signal = widget.signal;
     final hasImage = signal.mediaUrls.isNotEmpty;
     final imageUrl = hasImage ? signal.mediaUrls.first : null;
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: context.card,
-          border: Border(
-            bottom: BorderSide(color: context.border.withValues(alpha: 0.3)),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            // Thumbnail
-            if (hasImage && imageUrl != null)
-              Container(
-                width: 44,
-                height: 44,
-                margin: const EdgeInsets.only(right: 12),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: context.accentColor.withValues(alpha: 0.3),
-                    width: 1.5,
+    return AnimatedBuilder(
+      animation: _pulseAnimation,
+      builder: (context, child) {
+        return GestureDetector(
+          onTap: widget.onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: context.card,
+              border: Border(
+                bottom: BorderSide(
+                  color: context.accentColor.withValues(
+                    alpha: 0.2 + (_pulseAnimation.value * 0.1),
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: context.accentColor.withValues(alpha: 0.15),
-                      blurRadius: 8,
-                      spreadRadius: 0,
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(7),
-                  child: Image.network(
-                    imageUrl,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => Container(
-                      color: context.accentColor.withValues(alpha: 0.1),
-                      child: Icon(
-                        Icons.image_outlined,
-                        size: 20,
-                        color: context.accentColor,
-                      ),
-                    ),
-                  ),
-                ),
-              )
-            else
-              // Avatar placeholder when no image
-              Container(
-                width: 44,
-                height: 44,
-                margin: const EdgeInsets.only(right: 12),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      context.accentColor.withValues(alpha: 0.3),
-                      context.accentColor.withValues(alpha: 0.1),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: context.accentColor.withValues(alpha: 0.3),
-                    width: 1.5,
-                  ),
-                ),
-                child: Icon(
-                  Icons.signal_cellular_alt_rounded,
-                  size: 20,
-                  color: context.accentColor,
+                  width: 1,
                 ),
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: context.accentColor.withValues(
+                    alpha: 0.05 + (_pulseAnimation.value * 0.05),
+                  ),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: child,
+          ),
+        );
+      },
+      child: Row(
+        children: [
+          // Thumbnail with scale animation
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.8, end: 1.0),
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.elasticOut,
+            builder: (context, scale, child) {
+              return Transform.scale(scale: scale, child: child);
+            },
+            child: hasImage && imageUrl != null
+                ? Container(
+                    width: 44,
+                    height: 44,
+                    margin: const EdgeInsets.only(right: 12),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: context.accentColor.withValues(alpha: 0.3),
+                        width: 1.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: context.accentColor.withValues(alpha: 0.15),
+                          blurRadius: 8,
+                          spreadRadius: 0,
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(7),
+                      child: Image.network(
+                        imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => Container(
+                          color: context.accentColor.withValues(alpha: 0.1),
+                          child: Icon(
+                            Icons.image_outlined,
+                            size: 20,
+                            color: context.accentColor,
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                : Container(
+                    width: 44,
+                    height: 44,
+                    margin: const EdgeInsets.only(right: 12),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          context.accentColor.withValues(alpha: 0.3),
+                          context.accentColor.withValues(alpha: 0.1),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: context.accentColor.withValues(alpha: 0.3),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.signal_cellular_alt_rounded,
+                      size: 20,
+                      color: context.accentColor,
+                    ),
+                  ),
+          ),
 
-            // Content preview
-            Expanded(
+          // Content preview with fade-in
+          Expanded(
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.0, end: 1.0),
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+              builder: (context, opacity, child) {
+                return Opacity(opacity: opacity, child: child);
+              },
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Author
                   Row(
                     children: [
                       Text(
@@ -1226,7 +1055,7 @@ class _StickySignalHeader extends StatelessWidget {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        '•',
+                        '·',
                         style: TextStyle(
                           color: context.textTertiary,
                           fontSize: 10,
@@ -1243,7 +1072,6 @@ class _StickySignalHeader extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 2),
-                  // Content preview
                   Text(
                     signal.content,
                     style: TextStyle(
@@ -1257,11 +1085,19 @@ class _StickySignalHeader extends StatelessWidget {
                 ],
               ),
             ),
+          ),
 
-            const SizedBox(width: 12),
+          const SizedBox(width: 12),
 
-            // Response count badge
-            Container(
+          // Response count badge
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.0, end: 1.0),
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.easeOutBack,
+            builder: (context, scale, child) {
+              return Transform.scale(scale: scale, child: child);
+            },
+            child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
                 color: context.accentColor.withValues(alpha: 0.1),
@@ -1287,25 +1123,33 @@ class _StickySignalHeader extends StatelessWidget {
                 ],
               ),
             ),
+          ),
 
-            const SizedBox(width: 8),
+          const SizedBox(width: 8),
 
-            // Scroll up indicator
-            Container(
+          // Scroll up indicator with bounce
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.5, end: 1.0),
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.elasticOut,
+            builder: (context, scale, child) {
+              return Transform.scale(scale: scale, child: child);
+            },
+            child: Container(
               width: 28,
               height: 28,
               decoration: BoxDecoration(
-                color: context.textTertiary.withValues(alpha: 0.1),
+                color: context.accentColor.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.keyboard_arrow_up_rounded,
                 size: 18,
-                color: context.textTertiary,
+                color: context.accentColor,
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
