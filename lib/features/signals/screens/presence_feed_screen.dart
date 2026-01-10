@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/logging.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
-import '../../../core/widgets/auto_scroll_text.dart';
 import '../../../models/social.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/connection_providers.dart';

@@ -85,12 +85,12 @@ final totalPendingContentCountProvider = StreamProvider<int>((ref) {
   final moderation = ref.watch(pendingModerationCountProvider);
 
   final reportCount = reports.when(
-    data: (count) => count,
+    data: (cnt) => cnt,
     loading: () => 0,
     error: (e, s) => 0,
   );
   final moderationCount = moderation.when(
-    data: (count) => count,
+    data: (cnt) => cnt,
     loading: () => 0,
     error: (e, s) => 0,
   );

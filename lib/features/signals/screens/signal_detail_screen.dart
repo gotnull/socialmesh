@@ -26,6 +26,13 @@ class SignalDetailScreen extends ConsumerStatefulWidget {
 class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
   final TextEditingController _replyController = TextEditingController();
   bool _isSubmittingReply = false;
+  Post? _currentSignal; // Track updated signal with current commentCount
+
+  @override
+  void initState() {
+    super.initState();
+    _currentSignal = widget.signal;
+  }
 
   @override
   void dispose() {
@@ -127,7 +134,15 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
           '📝 SignalDetailScreen: Response created: ${response.id}',
         );
         _replyController.clear();
-        // Refresh replies
+
+        // Reload signal from DB to get updated commentCount
+        final service = ref.read(signalServiceProvider);
+        final updatedSignal = await service.getSignalById(widget.signal.id);
+        if (updatedSignal != null) {
+          _currentSignal = updatedSignal;
+        }
+
+        // Refresh UI
         if (mounted) setState(() {});
       } else {
         AppLogging.signals(
@@ -169,7 +184,10 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                SignalCard(signal: widget.signal, showActions: false),
+                SignalCard(
+                  signal: _currentSignal ?? widget.signal,
+                  showActions: false,
+                ),
                 const SizedBox(height: 24),
 
                 // Replies header

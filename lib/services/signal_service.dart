@@ -179,10 +179,6 @@ class SignalService {
   Database? _db;
   final _uuid = const Uuid();
 
-  /// Active Firestore response listeners keyed by signalId.
-  /// Used to receive real-time response updates from other users.
-  final Map<String, StreamSubscription<QuerySnapshot>> _responseListeners = {};
-
   /// Active Firestore comments listeners keyed by signalId.
   /// Used to receive real-time comments from posts/{signalId}/comments.
   final Map<String, StreamSubscription<QuerySnapshot>> _commentsListeners = {};
@@ -733,7 +729,6 @@ class SignalService {
 
     // Start listening for cloud responses and comments on this signal
     _startCommentsListener(signal.id);
-    _startResponseListener(signal.id);
 
     return signal;
   }
@@ -876,7 +871,6 @@ class SignalService {
     // Start listening for cloud responses (only for non-legacy authenticated users)
     if (!isLegacySignal && _currentUserId != null) {
       _startCommentsListener(signal.id);
-      _startResponseListener(signal.id);
       // Also listen for post doc updates (e.g. image upload completing)
       _startPostListener(signal.id);
     }
@@ -1148,9 +1142,9 @@ class SignalService {
 
     AppLogging.signals('Deleting signal: $signalId');
 
-    // Stop response listener for this signal
+    // Stop listeners for this signal
     _stopCommentsListener(signalId);
-    _stopResponseListener(signalId);
+    _stopPostListener(signalId);
 
     // Get signal to delete its image file
     final signal = await getSignalById(signalId);
@@ -1229,7 +1223,6 @@ class SignalService {
 
       // Stop cloud listeners for this signal
       _stopCommentsListener(id);
-      _stopResponseListener(id);
       _stopPostListener(id);
 
       expiredIds.add(id);
@@ -1685,6 +1678,24 @@ class SignalService {
             // Update cloud responses cache (replaces, not appends)
             _cloudResponses[signalId] = comments;
 
+            // Persist cloud comments to local DB for offline access
+            if (_db != null) {
+              for (final comment in comments) {
+                await _db!.insert(_responsesTable, {
+                  'id': comment.id,
+                  'signalId': comment.signalId,
+                  'content': comment.content,
+                  'authorId': comment.authorId,
+                  'authorName': comment.authorName,
+                  'createdAt': comment.createdAt.millisecondsSinceEpoch,
+                  'expiresAt': comment.expiresAt.millisecondsSinceEpoch,
+                }, conflictAlgorithm: ConflictAlgorithm.replace);
+              }
+              AppLogging.signals(
+                '📡 Comments listener: persisted ${comments.length} comments to local DB',
+              );
+            }
+
             // Update local DB comment count
             final signal = await getSignalById(signalId);
             if (signal != null && signal.commentCount != comments.length) {
@@ -1718,43 +1729,6 @@ class SignalService {
     );
   }
 
-  /// Start listening for cloud responses on a signal (DEPRECATED - use comments).
-  /// Called when signal is created or received via mesh.
-  void _startResponseListener(String signalId) {
-    // Skip if not authenticated or already listening
-    if (_currentUserId == null) return;
-    if (_responseListeners.containsKey(signalId)) return;
-
-    AppLogging.signals('Starting response listener for signal $signalId');
-
-    final subscription = _firestore
-        .collection('responses')
-        .doc(signalId)
-        .collection('items')
-        .where('expiresAt', isGreaterThan: Timestamp.now())
-        .orderBy('expiresAt')
-        .orderBy('createdAt')
-        .snapshots()
-        .listen(
-          (snapshot) {
-            final responses = snapshot.docs
-                .map((doc) => SignalResponse.fromFirestore(doc.id, doc.data()))
-                .where((r) => !r.isExpired)
-                .toList();
-
-            _cloudResponses[signalId] = responses;
-            AppLogging.signals(
-              'Cloud responses updated for $signalId: ${responses.length} responses',
-            );
-          },
-          onError: (e) {
-            AppLogging.signals('Response listener error for $signalId: $e');
-          },
-        );
-
-    _responseListeners[signalId] = subscription;
-  }
-
   /// Stop listening for cloud comments on a signal.
   /// Called when signal expires or is deleted.
   void _stopCommentsListener(String signalId) {
@@ -1774,27 +1748,6 @@ class SignalService {
       );
     }
     _commentsListeners.clear();
-  }
-
-  /// Stop listening for cloud responses on a signal.
-  /// Called when signal expires or is deleted.
-  void _stopResponseListener(String signalId) {
-    final subscription = _responseListeners.remove(signalId);
-    if (subscription != null) {
-      subscription.cancel();
-      AppLogging.signals('Stopped response listener for signal $signalId');
-    }
-    _cloudResponses.remove(signalId);
-  }
-
-  /// Stop all response listeners (for cleanup on dispose).
-  void _stopAllResponseListeners() {
-    for (final entry in _responseListeners.entries) {
-      entry.value.cancel();
-      AppLogging.signals('Stopped response listener for signal ${entry.key}');
-    }
-    _responseListeners.clear();
-    _cloudResponses.clear();
   }
 
   // ===========================================================================
@@ -2258,7 +2211,6 @@ class SignalService {
     _imageRetryTimer = null;
     _pendingImageUpdates.clear();
     _stopAllCommentsListeners();
-    _stopAllResponseListeners();
     _stopAllPostListeners();
     await _db?.close();
     _db = null;

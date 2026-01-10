@@ -24,7 +24,6 @@ import '../messaging/messaging_screen.dart';
 import '../map/map_screen.dart';
 import '../navigation/main_shell.dart';
 import '../social/screens/profile_social_screen.dart';
-import 'widgets/link_device_banner.dart';
 
 // Battery helper functions
 // Meshtastic uses 101 for charging, 100 for plugged in fully charged
@@ -189,7 +188,8 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
               ),
             ),
             // Link device banner (shows when connected to unlinked device)
-            const LinkDeviceBanner(),
+            // DEPRECATED: Part of old social mechanism, no longer showing
+            // const LinkDeviceBanner(),
             // Filter chips row with static controls at end
             SizedBox(
               height: 44,
