@@ -1714,6 +1714,7 @@ class SignalService {
                   'content': comment.content,
                   'authorId': comment.authorId,
                   'authorName': comment.authorName,
+                  'parentId': comment.parentId,
                   'createdAt': comment.createdAt.millisecondsSinceEpoch,
                   'expiresAt': comment.expiresAt.millisecondsSinceEpoch,
                 }, conflictAlgorithm: ConflictAlgorithm.replace);
@@ -1964,6 +1965,10 @@ class SignalService {
   }) async {
     await init();
 
+    AppLogging.signals(
+      '📝 createResponse: signalId=$signalId, parentId=$parentId',
+    );
+
     // Get parent signal to inherit expiresAt
     final signal = await getSignalById(signalId);
     if (signal == null) {
@@ -2124,6 +2129,15 @@ class SignalService {
 
     final merged = [...localResponses, ...uniqueCloudResponses];
     merged.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+
+    // Debug: log parentIds
+    for (final r in merged) {
+      if (r.parentId != null) {
+        AppLogging.signals(
+          '📝 Response ${r.id.substring(0, 8)} has parentId=${r.parentId?.substring(0, 8)}',
+        );
+      }
+    }
 
     return merged;
   }
