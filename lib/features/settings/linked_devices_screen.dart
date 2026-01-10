@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/logging.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/auto_scroll_text.dart';
@@ -366,7 +367,9 @@ class _LinkedDevicesScreenState extends ConsumerState<LinkedDevicesScreen> {
   }
 
   Future<void> _unlinkDevice(int nodeId) async {
-    debugPrint('🔗 [UnlinkDevice] Starting unlink for nodeId: $nodeId');
+    AppLogging.settings(
+      '🔗 [UnlinkDevice] Starting unlink for nodeId: $nodeId',
+    );
 
     // Capture all the services and data we need BEFORE showing dialog
     // since widget may unmount during dialog due to provider rebuilds
@@ -412,24 +415,28 @@ class _LinkedDevicesScreenState extends ConsumerState<LinkedDevicesScreen> {
       ),
     );
 
-    debugPrint('🔗 [UnlinkDevice] Dialog result: confirmed=$confirmed');
+    AppLogging.settings(
+      '🔗 [UnlinkDevice] Dialog result: confirmed=$confirmed',
+    );
     if (confirmed != true) {
-      debugPrint('🔗 [UnlinkDevice] User cancelled or dialog dismissed');
+      AppLogging.settings(
+        '🔗 [UnlinkDevice] User cancelled or dialog dismissed',
+      );
       return;
     }
 
     if (mounted) {
       setState(() => _isUnlinking = true);
     }
-    debugPrint(
+    AppLogging.settings(
       '🔗 [UnlinkDevice] Starting unlink operation (mounted=$mounted)...',
     );
 
     try {
       // Use captured service directly - doesn't rely on widget being mounted
-      debugPrint('🔗 [UnlinkDevice] Calling unlinkNodeFromProfile...');
+      AppLogging.settings('🔗 [UnlinkDevice] Calling unlinkNodeFromProfile...');
       await socialService.unlinkNodeFromProfile(nodeId);
-      debugPrint('🔗 [UnlinkDevice] Firestore unlink completed');
+      AppLogging.settings('🔗 [UnlinkDevice] Firestore unlink completed');
 
       // Update local profile if we have it
       if (currentProfile != null) {
@@ -438,7 +445,7 @@ class _LinkedDevicesScreenState extends ConsumerState<LinkedDevicesScreen> {
         final newPrimaryId = currentProfile.primaryNodeId == nodeId
             ? (updatedLinkedNodes.isNotEmpty ? updatedLinkedNodes.first : null)
             : currentProfile.primaryNodeId;
-        debugPrint(
+        AppLogging.settings(
           '🔗 [UnlinkDevice] Updating local profile: '
           'updatedLinkedNodes=$updatedLinkedNodes, newPrimaryId=$newPrimaryId',
         );
@@ -448,15 +455,21 @@ class _LinkedDevicesScreenState extends ConsumerState<LinkedDevicesScreen> {
             primaryNodeId: newPrimaryId,
             clearPrimaryNodeId: newPrimaryId == null,
           );
-          debugPrint('🔗 [UnlinkDevice] Local profile update completed');
+          AppLogging.settings(
+            '🔗 [UnlinkDevice] Local profile update completed',
+          );
         } catch (e) {
-          debugPrint('🔗 [UnlinkDevice] Local profile update failed: $e');
+          AppLogging.settings(
+            '🔗 [UnlinkDevice] Local profile update failed: $e',
+          );
           // Don't rethrow - Firestore already updated
         }
       }
 
       // Invalidate providers using the container (works even if widget unmounted)
-      debugPrint('🔗 [UnlinkDevice] Invalidating providers via container...');
+      AppLogging.settings(
+        '🔗 [UnlinkDevice] Invalidating providers via container...',
+      );
       container.invalidate(linkedNodeIdsProvider);
       container.invalidate(isNodeLinkedProvider(nodeId));
       container.invalidate(profileByNodeIdProvider(nodeId));
@@ -464,26 +477,28 @@ class _LinkedDevicesScreenState extends ConsumerState<LinkedDevicesScreen> {
         container.invalidate(publicProfileProvider(currentUser.uid));
         container.invalidate(publicProfileStreamProvider(currentUser.uid));
       }
-      debugPrint('🔗 [UnlinkDevice] Providers invalidated');
+      AppLogging.settings('🔗 [UnlinkDevice] Providers invalidated');
 
       // Reset banner dismissed state for this specific node so it can show again
       await resetLinkDeviceBannerDismissState(nodeId: nodeId);
-      debugPrint('🔗 [UnlinkDevice] Banner state reset for node $nodeId');
+      AppLogging.settings(
+        '🔗 [UnlinkDevice] Banner state reset for node $nodeId',
+      );
 
       if (mounted) {
         showSuccessSnackBar(context, 'Device unlinked');
-        debugPrint('🔗 [UnlinkDevice] Success snackbar shown');
+        AppLogging.settings('🔗 [UnlinkDevice] Success snackbar shown');
       }
     } catch (e, stackTrace) {
-      debugPrint('🔗 [UnlinkDevice] ERROR: $e');
-      debugPrint('🔗 [UnlinkDevice] Stack trace: $stackTrace');
+      AppLogging.settings('🔗 [UnlinkDevice] ERROR: $e');
+      AppLogging.settings('🔗 [UnlinkDevice] Stack trace: $stackTrace');
       if (mounted) {
         showErrorSnackBar(context, 'Failed to unlink: $e');
       }
     } finally {
       if (mounted) {
         setState(() => _isUnlinking = false);
-        debugPrint('🔗 [UnlinkDevice] Unlink operation finished');
+        AppLogging.settings('🔗 [UnlinkDevice] Unlink operation finished');
       }
     }
   }

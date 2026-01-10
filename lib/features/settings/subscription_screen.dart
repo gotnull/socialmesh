@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
 import '../../config/revenuecat_config.dart';
+import '../../core/logging.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/legal_document_sheet.dart';
 import '../../models/subscription_models.dart';
@@ -835,78 +836,88 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   }
 
   Future<void> _restorePurchases() async {
-    debugPrint(
+    AppLogging.subscriptions(
       '💳 [SubscriptionScreen] ═══════════════════════════════════════════════',
     );
-    debugPrint('💳 [SubscriptionScreen] _restorePurchases() called');
-    debugPrint('💳 [SubscriptionScreen] mounted: $mounted');
+    AppLogging.subscriptions(
+      '💳 [SubscriptionScreen] _restorePurchases() called',
+    );
+    AppLogging.subscriptions('💳 [SubscriptionScreen] mounted: $mounted');
 
     ref.haptics.buttonTap();
 
     // Log current state before restore
     final stateBefore = ref.read(purchaseStateProvider);
-    debugPrint('💳 [SubscriptionScreen] State BEFORE restore:');
-    debugPrint(
+    AppLogging.subscriptions('💳 [SubscriptionScreen] State BEFORE restore:');
+    AppLogging.subscriptions(
       '💳 [SubscriptionScreen]   purchasedProductIds: ${stateBefore.purchasedProductIds}',
     );
-    debugPrint(
+    AppLogging.subscriptions(
       '💳 [SubscriptionScreen]   customerId: ${stateBefore.customerId}',
     );
 
-    debugPrint('💳 [SubscriptionScreen] Calling restorePurchases(ref)...');
+    AppLogging.subscriptions(
+      '💳 [SubscriptionScreen] Calling restorePurchases(ref)...',
+    );
     final stopwatch = Stopwatch()..start();
     final success = await restorePurchases(ref);
     stopwatch.stop();
 
-    debugPrint('💳 [SubscriptionScreen] restorePurchases returned: $success');
-    debugPrint(
+    AppLogging.subscriptions(
+      '💳 [SubscriptionScreen] restorePurchases returned: $success',
+    );
+    AppLogging.subscriptions(
       '💳 [SubscriptionScreen] Duration: ${stopwatch.elapsedMilliseconds}ms',
     );
 
     // Log state after restore
     final stateAfter = ref.read(purchaseStateProvider);
-    debugPrint('💳 [SubscriptionScreen] State AFTER restore:');
-    debugPrint(
+    AppLogging.subscriptions('💳 [SubscriptionScreen] State AFTER restore:');
+    AppLogging.subscriptions(
       '💳 [SubscriptionScreen]   purchasedProductIds: ${stateAfter.purchasedProductIds}',
     );
-    debugPrint(
+    AppLogging.subscriptions(
       '💳 [SubscriptionScreen]   customerId: ${stateAfter.customerId}',
     );
 
     // Check each feature
-    debugPrint('💳 [SubscriptionScreen] Feature status after restore:');
-    debugPrint(
+    AppLogging.subscriptions(
+      '💳 [SubscriptionScreen] Feature status after restore:',
+    );
+    AppLogging.subscriptions(
       '💳 [SubscriptionScreen]   premiumThemes: ${stateAfter.hasFeature(PremiumFeature.premiumThemes)}',
     );
-    debugPrint(
+    AppLogging.subscriptions(
       '💳 [SubscriptionScreen]   customRingtones: ${stateAfter.hasFeature(PremiumFeature.customRingtones)}',
     );
-    debugPrint(
+    AppLogging.subscriptions(
       '💳 [SubscriptionScreen]   homeWidgets: ${stateAfter.hasFeature(PremiumFeature.homeWidgets)}',
     );
-    debugPrint(
+    AppLogging.subscriptions(
       '💳 [SubscriptionScreen]   automations: ${stateAfter.hasFeature(PremiumFeature.automations)}',
     );
-    debugPrint(
+    AppLogging.subscriptions(
       '💳 [SubscriptionScreen]   iftttIntegration: ${stateAfter.hasFeature(PremiumFeature.iftttIntegration)}',
     );
-    debugPrint(
+    AppLogging.subscriptions(
       '💳 [SubscriptionScreen] ═══════════════════════════════════════════════',
     );
 
     if (mounted) {
       if (success) {
-        debugPrint('💳 [SubscriptionScreen] Showing success snackbar');
+        AppLogging.subscriptions(
+          '💳 [SubscriptionScreen] Showing success snackbar',
+        );
         ref.haptics.success();
         showSuccessSnackBar(context, 'Purchases restored successfully');
       } else {
-        debugPrint(
+        AppLogging.subscriptions(
           '💳 [SubscriptionScreen] Showing info snackbar (no purchases)',
         );
         showInfoSnackBar(context, 'No purchases to restore');
       }
     } else {
-      debugPrint(
+      AppLogging.subscriptions(
         '💳 [SubscriptionScreen] Widget not mounted, skipping snackbar',
       );
     }

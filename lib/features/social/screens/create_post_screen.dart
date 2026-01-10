@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 
+import '../../../core/logging.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/content_moderation_warning.dart';
@@ -66,9 +67,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       try {
         final ref = FirebaseStorage.instance.refFromURL(url);
         await ref.delete();
-        debugPrint('Deleted orphaned image: $url');
+        AppLogging.social('Deleted orphaned image: $url');
       } catch (e) {
-        debugPrint('Failed to delete orphaned image: $e');
+        AppLogging.social('Failed to delete orphaned image: $e');
       }
     }
   }
@@ -796,11 +797,11 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
 
       for (final file in filesToUpload) {
         if (file.path == null) {
-          debugPrint('[CreatePost] Skipping file with null path');
+          AppLogging.social('[CreatePost] Skipping file with null path');
           continue;
         }
 
-        debugPrint('[CreatePost] Uploading image: ${file.name}');
+        AppLogging.social('[CreatePost] Uploading image: ${file.name}');
         final imageFile = File(file.path!);
         final fileName =
             '${DateTime.now().millisecondsSinceEpoch}_${file.name}';
@@ -818,7 +819,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
           },
         );
 
-        debugPrint('[CreatePost] Uploading to: post_images/$fileName');
+        AppLogging.social('[CreatePost] Uploading to: post_images/$fileName');
         await ref.putFile(imageFile, metadata);
 
         // Small delay to allow moderation trigger to process
@@ -827,12 +828,14 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         // Try to get download URL - if file was moderated, it won't exist
         try {
           final url = await ref.getDownloadURL();
-          debugPrint('[CreatePost] Upload complete, URL: $url');
+          AppLogging.social('[CreatePost] Upload complete, URL: $url');
           setState(() => _imageUrls.add(url));
         } on FirebaseException catch (e) {
           if (e.code == 'object-not-found') {
             // Image was deleted by content moderation
-            debugPrint('[CreatePost] Image blocked by content moderation');
+            AppLogging.social(
+              '[CreatePost] Image blocked by content moderation',
+            );
             if (mounted) {
               showErrorSnackBar(
                 context,
@@ -845,8 +848,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         }
       }
     } catch (e, stackTrace) {
-      debugPrint('[CreatePost] Image upload error: $e');
-      debugPrint('[CreatePost] Stack trace: $stackTrace');
+      AppLogging.social('[CreatePost] Image upload error: $e');
+      AppLogging.social('[CreatePost] Stack trace: $stackTrace');
       if (mounted) {
         // Check for object-not-found which indicates moderation
         final errorStr = e.toString();
@@ -1214,7 +1217,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     try {
       // CRITICAL: Validate images with Cloud Function (synchronous check)
       if (_imageUrls.isNotEmpty) {
-        debugPrint(
+        AppLogging.social(
           '[CreatePost] Validating ${_imageUrls.length} images with Cloud Function',
         );
         try {
@@ -1222,11 +1225,13 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
           final result = await functions.httpsCallable('validateImages').call({
             'imageUrls': _imageUrls,
           });
-          debugPrint('[CreatePost] validateImages response: ${result.data}');
+          AppLogging.social(
+            '[CreatePost] validateImages response: ${result.data}',
+          );
 
           final validationResult = result.data as Map<String, dynamic>;
           if (validationResult['passed'] == false) {
-            debugPrint(
+            AppLogging.social(
               '[CreatePost] Image validation failed: ${validationResult['message']}',
             );
             if (mounted) {
@@ -1238,10 +1243,10 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
             }
             return;
           }
-          debugPrint('[CreatePost] All images passed validation');
+          AppLogging.social('[CreatePost] All images passed validation');
         } catch (e, stackTrace) {
-          debugPrint('[CreatePost] validateImages error: $e');
-          debugPrint('[CreatePost] Stack trace: $stackTrace');
+          AppLogging.social('[CreatePost] validateImages error: $e');
+          AppLogging.social('[CreatePost] Stack trace: $stackTrace');
           // If validation fails, check if images still exist
           final validUrls = <String>[];
           for (final url in _imageUrls) {
@@ -1250,12 +1255,12 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
               await ref.getMetadata();
               validUrls.add(url);
             } catch (e) {
-              debugPrint('[CreatePost] Image was removed: $url');
+              AppLogging.social('[CreatePost] Image was removed: $url');
             }
           }
 
           if (validUrls.length != _imageUrls.length) {
-            debugPrint(
+            AppLogging.social(
               '[CreatePost] ${_imageUrls.length - validUrls.length} images were removed',
             );
             if (mounted) {

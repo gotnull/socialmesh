@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:socialmesh/core/logging.dart';
 
 import '../models/social_activity.dart';
 import '../services/social_activity_service.dart';
@@ -43,7 +43,9 @@ class ActivityFeedNotifier extends Notifier<ActivityFeedState> {
     _authSubscription?.cancel();
     _authSubscription = FirebaseAuth.instance.authStateChanges().listen((_) {
       // Auth state changed - restart the activity stream
-      AppLogging.social('📬 [ActivityFeed] Auth state changed, restarting stream');
+      AppLogging.social(
+        '📬 [ActivityFeed] Auth state changed, restarting stream',
+      );
       _startWatching();
     });
   }

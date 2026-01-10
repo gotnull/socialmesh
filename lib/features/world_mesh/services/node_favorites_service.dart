@@ -1,8 +1,8 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/logging.dart';
 import '../../../models/world_mesh_node.dart';
 
 /// Service for persisting and retrieving favorite nodes.
@@ -12,7 +12,7 @@ class NodeFavoritesService {
 
   /// Get all favorite node IDs (normalized to 8-char padded hex)
   Future<List<String>> getFavoriteIds() async {
-    debugPrint('[NodeFavoritesService] getFavoriteIds() called');
+    AppLogging.nodes('[NodeFavoritesService] getFavoriteIds() called');
     final prefs = await SharedPreferences.getInstance();
     final rawIds = prefs.getStringList(_favoritesKey) ?? [];
 
@@ -23,7 +23,7 @@ class NodeFavoritesService {
       return trimmed.padLeft(8, '0');
     }).toList();
 
-    debugPrint(
+    AppLogging.nodes(
       '[NodeFavoritesService] Found ${normalizedIds.length} IDs: $normalizedIds',
     );
     return normalizedIds;
@@ -31,10 +31,10 @@ class NodeFavoritesService {
 
   /// Get all favorite nodes with their metadata
   Future<List<FavoriteNodeMetadata>> getFavorites() async {
-    debugPrint('[NodeFavoritesService] getFavorites() called');
+    AppLogging.nodes('[NodeFavoritesService] getFavorites() called');
     final prefs = await SharedPreferences.getInstance();
     final rawIds = prefs.getStringList(_favoritesKey) ?? [];
-    debugPrint(
+    AppLogging.nodes(
       '[NodeFavoritesService] Loading metadata for ${rawIds.length} IDs',
     );
     final favorites = <FavoriteNodeMetadata>[];
@@ -50,7 +50,7 @@ class NodeFavoritesService {
       String? metadataJson = prefs.getString('${_favoritesKey}_meta_$rawId');
       metadataJson ??= prefs.getString('${_favoritesKey}_meta_$normalizedId');
 
-      debugPrint(
+      AppLogging.nodes(
         '[NodeFavoritesService] Checking metadata for $rawId (normalized: $normalizedId): ${metadataJson != null ? "found" : "NOT FOUND"}',
       );
       if (metadataJson != null) {
@@ -71,18 +71,18 @@ class NodeFavoritesService {
               longitude: meta.longitude,
             ),
           );
-          debugPrint(
+          AppLogging.nodes(
             '[NodeFavoritesService] Parsed metadata for $normalizedId: ${meta.longName}',
           );
         } catch (e) {
-          debugPrint(
+          AppLogging.nodes(
             '[NodeFavoritesService] ERROR parsing metadata for $normalizedId: $e',
           );
         }
       }
     }
 
-    debugPrint(
+    AppLogging.nodes(
       '[NodeFavoritesService] Returning ${favorites.length} favorites',
     );
     return favorites;

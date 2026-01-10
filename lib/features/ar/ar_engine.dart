@@ -2,11 +2,11 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui';
 
-import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:vector_math/vector_math_64.dart' as vm;
 
+import '../../core/logging.dart';
 import '../../models/mesh_models.dart';
 import 'ar_calibration.dart';
 
@@ -130,12 +130,12 @@ class AREngine {
   Future<void> start() async {
     if (_isRunning || _isDisposed) return;
 
-    debugPrint('[AREngine] Starting...');
+    AppLogging.app('[AREngine] Starting...');
 
     try {
       // Initialize calibration service
       await _calibration.initialize();
-      debugPrint(
+      AppLogging.app(
         '[AREngine] Calibration initialized - FOV: ${_calibration.state.horizontalFov.toStringAsFixed(1)}°×${_calibration.state.verticalFov.toStringAsFixed(1)}°',
       );
 
@@ -168,9 +168,9 @@ class AREngine {
       );
 
       _isRunning = true;
-      debugPrint('[AREngine] Started successfully');
+      AppLogging.app('[AREngine] Started successfully');
     } catch (e) {
-      debugPrint('[AREngine] Failed to start: $e');
+      AppLogging.app('[AREngine] Failed to start: $e');
       rethrow;
     }
   }
@@ -178,7 +178,7 @@ class AREngine {
   void stop() {
     if (!_isRunning) return;
 
-    debugPrint('[AREngine] Stopping...');
+    AppLogging.app('[AREngine] Stopping...');
 
     _accelerometerSub?.cancel();
     _magnetometerSub?.cancel();
@@ -195,7 +195,7 @@ class AREngine {
     _alertTimer = null;
 
     _isRunning = false;
-    debugPrint('[AREngine] Stopped');
+    AppLogging.app('[AREngine] Stopped');
   }
 
   void dispose() {
@@ -423,7 +423,7 @@ class AREngine {
 
     if (permission == LocationPermission.denied ||
         permission == LocationPermission.deniedForever) {
-      debugPrint('[AREngine] Location permission denied');
+      AppLogging.app('[AREngine] Location permission denied');
       return;
     }
 
@@ -436,7 +436,7 @@ class AREngine {
       );
       _lastPositionUpdate = DateTime.now();
     } catch (e) {
-      debugPrint('[AREngine] Failed to get initial position: $e');
+      AppLogging.app('[AREngine] Failed to get initial position: $e');
     }
 
     // High-accuracy position stream
@@ -449,7 +449,7 @@ class AREngine {
         ).listen(
           _onPosition,
           onError: (error) {
-            debugPrint('[AREngine] Position stream error: $error');
+            AppLogging.app('[AREngine] Position stream error: $error');
           },
           cancelOnError: false,
         );

@@ -1,5 +1,6 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:socialmesh/core/logging.dart';
+
 
 import '../features/world_mesh/services/node_favorites_service.dart';
 import '../models/world_mesh_node.dart';
@@ -45,7 +46,9 @@ class NodeFavoritesNotifier extends AsyncNotifier<NodeFavoritesData> {
       favoriteIds: ids.map((id) => id.toUpperCase()).toSet(),
       favorites: favorites,
     );
-    AppLogging.nodes('[NodeFavorites] Load complete: ${data.favoriteIds.length} IDs');
+    AppLogging.nodes(
+      '[NodeFavorites] Load complete: ${data.favoriteIds.length} IDs',
+    );
     return data;
   }
 

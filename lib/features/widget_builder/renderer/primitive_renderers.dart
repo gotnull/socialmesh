@@ -551,7 +551,9 @@ class _ChartRendererState extends State<ChartRenderer> {
   @override
   void initState() {
     super.initState();
-    AppLogging.widgetBuilder('[RENDERER] initState: chartType=${widget.element.chartType}');
+    AppLogging.widgetBuilder(
+      '[RENDERER] initState: chartType=${widget.element.chartType}',
+    );
     AppLogging.widgetBuilder(
       '[RENDERER] initState: chartLegendColors=${widget.element.chartLegendColors}',
     );
@@ -573,7 +575,9 @@ class _ChartRendererState extends State<ChartRenderer> {
     }
 
     // For preview mode, generate sample data so the chart isn't empty
-    AppLogging.widgetBuilder('[RENDERER] initState: isPreview=${widget.isPreview}');
+    AppLogging.widgetBuilder(
+      '[RENDERER] initState: isPreview=${widget.isPreview}',
+    );
     if (widget.isPreview) {
       _initPreviewData();
       AppLogging.widgetBuilder(
@@ -637,8 +641,12 @@ class _ChartRendererState extends State<ChartRenderer> {
     final maxPointsChanged = oldMaxPoints != newMaxPoints;
 
     if (pathsChanged || typeChanged || maxPointsChanged) {
-      AppLogging.widgetBuilder('[RENDERER] didUpdateWidget: config changed, reinitializing');
-      AppLogging.widgetBuilder('[RENDERER] oldPaths=$oldPaths, newPaths=$newPaths');
+      AppLogging.widgetBuilder(
+        '[RENDERER] didUpdateWidget: config changed, reinitializing',
+      );
+      AppLogging.widgetBuilder(
+        '[RENDERER] oldPaths=$oldPaths, newPaths=$newPaths',
+      );
       AppLogging.widgetBuilder('[RENDERER] oldType=$oldType, newType=$newType');
       AppLogging.widgetBuilder(
         '[RENDERER] oldMaxPoints=$oldMaxPoints, newMaxPoints=$newMaxPoints',
@@ -843,7 +851,9 @@ class _ChartRendererState extends State<ChartRenderer> {
   @override
   Widget build(BuildContext context) {
     AppLogging.widgetBuilder('[RENDERER] === ChartRenderer.build() START ===');
-    AppLogging.widgetBuilder('[RENDERER] chartType=${widget.element.chartType}');
+    AppLogging.widgetBuilder(
+      '[RENDERER] chartType=${widget.element.chartType}',
+    );
     AppLogging.widgetBuilder(
       '[RENDERER] chartBindingPaths=${widget.element.chartBindingPaths}',
     );
@@ -851,8 +861,12 @@ class _ChartRendererState extends State<ChartRenderer> {
       '[RENDERER] chartLegendColors=${widget.element.chartLegendColors}',
     );
     AppLogging.widgetBuilder('[RENDERER] isPreview=${widget.isPreview}');
-    AppLogging.widgetBuilder('[RENDERER] style.height=${widget.element.style.height}');
-    AppLogging.widgetBuilder('[RENDERER] style.width=${widget.element.style.width}');
+    AppLogging.widgetBuilder(
+      '[RENDERER] style.height=${widget.element.style.height}',
+    );
+    AppLogging.widgetBuilder(
+      '[RENDERER] style.width=${widget.element.style.width}',
+    );
 
     // Handle multi-line chart separately
     if (_isMultiLine) {
@@ -862,7 +876,9 @@ class _ChartRendererState extends State<ChartRenderer> {
 
     AppLogging.widgetBuilder('[RENDERER] Taking single-line path');
     AppLogging.widgetBuilder('[RENDERER] _history.length=${_history.length}');
-    AppLogging.widgetBuilder('[RENDERER] widget.historyData=${widget.historyData}');
+    AppLogging.widgetBuilder(
+      '[RENDERER] widget.historyData=${widget.historyData}',
+    );
     // Use provided history, built-up history, or sample data for preview
     List<double> rawData;
     if (widget.historyData != null) {
@@ -925,7 +941,9 @@ class _ChartRendererState extends State<ChartRenderer> {
     final paths = widget.element.chartBindingPaths!;
     final colors = widget.element.chartLegendColors ?? [];
     AppLogging.widgetBuilder('[RENDERER] paths=$paths, colors=$colors');
-    AppLogging.widgetBuilder('[RENDERER] _multiHistory.keys=${_multiHistory.keys}');
+    AppLogging.widgetBuilder(
+      '[RENDERER] _multiHistory.keys=${_multiHistory.keys}',
+    );
     AppLogging.widgetBuilder('[RENDERER] _mergeMode=$_mergeMode');
 
     // Collect raw data for each series
@@ -933,7 +951,9 @@ class _ChartRendererState extends State<ChartRenderer> {
     for (int i = 0; i < paths.length; i++) {
       final path = paths[i];
       final history = _multiHistory[path] ?? [];
-      AppLogging.widgetBuilder('[RENDERER] path=$path, history.length=${history.length}');
+      AppLogging.widgetBuilder(
+        '[RENDERER] path=$path, history.length=${history.length}',
+      );
 
       List<double> data;
       if (history.isNotEmpty) {
@@ -953,10 +973,14 @@ class _ChartRendererState extends State<ChartRenderer> {
         );
       }
       seriesData[path] = data;
-      AppLogging.widgetBuilder('[RENDERER] seriesData[$path].length=${data.length}');
+      AppLogging.widgetBuilder(
+        '[RENDERER] seriesData[$path].length=${data.length}',
+      );
     }
 
-    AppLogging.widgetBuilder('[RENDERER] seriesData complete, keys=${seriesData.keys}');
+    AppLogging.widgetBuilder(
+      '[RENDERER] seriesData complete, keys=${seriesData.keys}',
+    );
 
     // Handle stacked modes
     if (_mergeMode == ChartMergeMode.stackedArea ||
@@ -1009,7 +1033,9 @@ class _ChartRendererState extends State<ChartRenderer> {
         'first=${spots.isNotEmpty ? spots.first : "N/A"}, '
         'last=${spots.isNotEmpty ? spots.last : "N/A"}',
       );
-      AppLogging.widgetBuilder('[RENDERER] Line $i: minY=$minVal, maxY=$maxVal');
+      AppLogging.widgetBuilder(
+        '[RENDERER] Line $i: minY=$minVal, maxY=$maxVal',
+      );
       AppLogging.widgetBuilder(
         '[RENDERER] Line $i: gradientFill=$_gradientFill, color=$lineColor',
       );
@@ -1056,7 +1082,9 @@ class _ChartRendererState extends State<ChartRenderer> {
       );
     }
 
-    AppLogging.widgetBuilder('[RENDERER] lineBarsData.length=${lineBarsData.length}');
+    AppLogging.widgetBuilder(
+      '[RENDERER] lineBarsData.length=${lineBarsData.length}',
+    );
     if (lineBarsData.isEmpty) {
       AppLogging.widgetBuilder('[RENDERER] WARNING: lineBarsData is EMPTY!');
       return const SizedBox.shrink();
@@ -1083,7 +1111,9 @@ class _ChartRendererState extends State<ChartRenderer> {
     globalMinY -= padding;
     globalMaxY += padding;
 
-    AppLogging.widgetBuilder('[RENDERER] Chart Y range: minY=$globalMinY, maxY=$globalMaxY');
+    AppLogging.widgetBuilder(
+      '[RENDERER] Chart Y range: minY=$globalMinY, maxY=$globalMaxY',
+    );
 
     final interval = (globalMaxY - globalMinY) / 4;
 

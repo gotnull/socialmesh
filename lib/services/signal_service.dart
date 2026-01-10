@@ -99,6 +99,35 @@ class SignalResponse {
       isLocal: false,
     );
   }
+
+  /// Factory from Firestore comment format (canonical posts/{signalId}/comments path).
+  factory SignalResponse.fromFirestoreComment(
+    String id,
+    Map<String, dynamic> data,
+  ) {
+    // Comments store signalId in parent doc, not in each comment doc
+    // createdAt uses server timestamp, expiresAt inherited from parent signal
+    final createdAt = data['createdAt'] != null
+        ? (data['createdAt'] as Timestamp).toDate()
+        : DateTime.now();
+    
+    // For comments, expiresAt is optional (inherit from signal)
+    // Use a reasonable default if not present
+    final expiresAt = data['expiresAt'] != null
+        ? (data['expiresAt'] as Timestamp).toDate()
+        : createdAt.add(const Duration(hours: 24));
+
+    return SignalResponse(
+      id: id,
+      signalId: data['signalId'] as String? ?? '',
+      content: data['content'] as String? ?? '',
+      authorId: data['authorId'] as String? ?? 'unknown',
+      authorName: data['authorName'] as String?,
+      createdAt: createdAt,
+      expiresAt: expiresAt,
+      isLocal: false,
+    );
+  }
 }
 
 /// Pending image update awaiting Firestore retry.
@@ -152,6 +181,10 @@ class SignalService {
   /// Active Firestore response listeners keyed by signalId.
   /// Used to receive real-time response updates from other users.
   final Map<String, StreamSubscription<QuerySnapshot>> _responseListeners = {};
+
+  /// Active Firestore comments listeners keyed by signalId.
+  /// Used to receive real-time comments from posts/{signalId}/comments.
+  final Map<String, StreamSubscription<QuerySnapshot>> _commentsListeners = {};
 
   /// Active Firestore post document listeners keyed by signalId.
   /// Used to receive real-time updates when cloud doc appears/changes (e.g. image upload completes).
@@ -695,7 +728,8 @@ class SignalService {
       _autoUploadImage(signal.id, persistentImagePath);
     }
 
-    // Start listening for cloud responses on this signal
+    // Start listening for cloud responses and comments on this signal
+    _startCommentsListener(signal.id);
     _startResponseListener(signal.id);
 
     return signal;
@@ -836,6 +870,7 @@ class SignalService {
 
     // Start listening for cloud responses (only for non-legacy authenticated users)
     if (!isLegacySignal && _currentUserId != null) {
+      _startCommentsListener(signal.id);
       _startResponseListener(signal.id);
       // Also listen for post doc updates (e.g. image upload completing)
       _startPostListener(signal.id);
@@ -1098,6 +1133,7 @@ class SignalService {
     AppLogging.signals('Deleting signal: $signalId');
 
     // Stop response listener for this signal
+    _stopCommentsListener(signalId);
     _stopResponseListener(signalId);
 
     // Get signal to delete its image file
@@ -1176,6 +1212,7 @@ class SignalService {
       await _deleteSignalImage(imagePath);
 
       // Stop cloud listeners for this signal
+      _stopCommentsListener(id);
       _stopResponseListener(id);
       _stopPostListener(id);
 
@@ -1545,7 +1582,90 @@ class SignalService {
   // RESPONSE CLOUD SYNC (Real-time sync for shared signals)
   // ===========================================================================
 
-  /// Start listening for cloud responses on a signal.
+  /// Start listening for cloud comments on a signal.
+  /// Called when signal is created or received via mesh.
+  /// Uses canonical path: posts/{signalId}/comments
+  void _startCommentsListener(String signalId) {
+    // Skip if not authenticated or already listening
+    if (_currentUserId == null) {
+      AppLogging.signals(
+        '📡 Comments listener: skipping $signalId - not authenticated',
+      );
+      return;
+    }
+    if (_commentsListeners.containsKey(signalId)) {
+      AppLogging.signals(
+        '📡 Comments listener: already active for $signalId',
+      );
+      return;
+    }
+
+    AppLogging.signals(
+      '📡 Comments listener: ATTACHING posts/$signalId/comments',
+    );
+
+    final subscription = _firestore
+        .collection('posts')
+        .doc(signalId)
+        .collection('comments')
+        .orderBy('createdAt', descending: false)
+        .limit(200)
+        .snapshots()
+        .listen(
+          (snapshot) async {
+            final comments = snapshot.docs
+                .map((doc) =>
+                    SignalResponse.fromFirestoreComment(doc.id, doc.data()))
+                .toList();
+
+            // Get latest timestamp for logging
+            final latestCreatedAt = comments.isNotEmpty
+                ? comments.last.createdAt.toIso8601String()
+                : 'none';
+
+            AppLogging.signals(
+              '📡 Comments listener: snapshot for $signalId: '
+              'docs=${snapshot.docs.length}, latestCreatedAt=$latestCreatedAt',
+            );
+
+            // Update cloud responses cache (replaces, not appends)
+            _cloudResponses[signalId] = comments;
+
+            // Update local DB comment count
+            final signal = await getSignalById(signalId);
+            if (signal != null &&
+                signal.commentCount != comments.length) {
+              await _db!.update(
+                _tableName,
+                {'commentCount': comments.length},
+                where: 'id = ?',
+                whereArgs: [signalId],
+              );
+              AppLogging.signals(
+                '📡 Comments listener: updated local commentCount to ${comments.length}',
+              );
+            }
+
+            // UI will refresh via periodic timer in signal_providers.dart
+          },
+          onError: (e, stackTrace) {
+            AppLogging.signals(
+              '📡 Comments listener ERROR for $signalId: $e\n'
+              'StackTrace: $stackTrace\n'
+              'UserId: $_currentUserId\n'
+              'Path: posts/$signalId/comments',
+            );
+          },
+        );
+
+    _commentsListeners[signalId] = subscription;
+    AppLogging.signals(
+      '📡 Comments listener: subscription stored for $signalId '
+      '(total active: ${_commentsListeners.length})',
+    );
+  }
+
+  /// Start listening for cloud responses on a signal (DEPRECATED - use comments).
   /// Called when signal is created or received via mesh.
   void _startResponseListener(String signalId) {
     // Skip if not authenticated or already listening
@@ -1580,6 +1700,25 @@ class SignalService {
         );
 
     _responseListeners[signalId] = subscription;
+  }
+
+  /// Stop listening for cloud comments on a signal.
+  /// Called when signal expires or is deleted.
+  void _stopCommentsListener(String signalId) {
+    final subscription = _commentsListeners.remove(signalId);
+    if (subscription != null) {
+      subscription.cancel();
+      AppLogging.signals('📡 Stopped comments listener for signal $signalId');
+    }
+  }
+
+  /// Stop all comments listeners (for cleanup on dispose).
+  void _stopAllCommentsListeners() {
+    for (final entry in _commentsListeners.entries) {
+      entry.value.cancel();
+      AppLogging.signals('📡 Stopped comments listener for signal ${entry.key}');
+    }
+    _commentsListeners.clear();
   }
 
   /// Stop listening for cloud responses on a signal.
@@ -1841,20 +1980,63 @@ class SignalService {
     return response;
   }
 
-  /// Sync a response to Firestore (background, non-blocking).
-  void _syncResponseToFirestore(SignalResponse response) {
-    _firestore
-        .collection('responses')
-        .doc(response.signalId)
-        .collection('items')
-        .doc(response.id)
-        .set(response.toFirestore())
-        .then((_) {
-          AppLogging.signals('Response ${response.id} synced to Firestore');
-        })
-        .catchError((e) {
-          AppLogging.signals('Failed to sync response to Firestore: $e');
-        });
+  /// Sync a response to Firestore using canonical comments path.
+  /// Writes to posts/{signalId}/comments/{commentId} with serverTimestamp.
+  void _syncResponseToFirestore(SignalResponse response) async {
+    if (_currentUserId == null) {
+      AppLogging.signals(
+        '📡 Cannot sync comment: user not authenticated. '
+        'SignalId: ${response.signalId}, CommentId: ${response.id}',
+      );
+      return;
+    }
+
+    try {
+      // Write to canonical path: posts/{signalId}/comments/{commentId}
+      await _firestore
+          .collection('posts')
+          .doc(response.signalId)
+          .collection('comments')
+          .doc(response.id)
+          .set({
+        'signalId': response.signalId,
+        'content': response.content,
+        'authorId': response.authorId,
+        'authorName': response.authorName,
+        'createdAt': FieldValue.serverTimestamp(),
+        'origin': 'cloud',
+      });
+
+      // Update parent post's commentCount using transaction
+      await _firestore.runTransaction((transaction) async {
+        final postRef =
+            _firestore.collection('posts').doc(response.signalId);
+        final snapshot = await transaction.get(postRef);
+        
+        if (snapshot.exists) {
+          final currentCount = snapshot.data()?['commentCount'] as int? ?? 0;
+          transaction.update(postRef, {'commentCount': currentCount + 1});
+        } else {
+          // Post doesn't exist yet - create stub with commentCount
+          transaction.set(postRef, {
+            'commentCount': 1,
+            'createdAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+        }
+      });
+
+      AppLogging.signals(
+        '📡 Comment ${response.id} synced to posts/${response.signalId}/comments',
+      );
+    } catch (e, stackTrace) {
+      AppLogging.signals(
+        '📡 Failed to sync comment to Firestore: $e\n'
+        'StackTrace: $stackTrace\n'
+        'UserId: $_currentUserId\n'
+        'SignalId: ${response.signalId}\n'
+        'Path: posts/${response.signalId}/comments/${response.id}',
+      );
+    }
   }
 
   /// Get responses for a signal.
@@ -2019,6 +2201,7 @@ class SignalService {
     _imageRetryTimer?.cancel();
     _imageRetryTimer = null;
     _pendingImageUpdates.clear();
+    _stopAllCommentsListeners();
     _stopAllResponseListeners();
     _stopAllPostListeners();
     await _db?.close();
