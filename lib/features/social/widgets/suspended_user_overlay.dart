@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/logging.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../providers/social_providers.dart';
@@ -50,7 +51,7 @@ class SuspendedUserOverlay extends ConsumerWidget {
       loading: () => child,
       // On error, show child (fail open for UX, but log it)
       error: (e, _) {
-        debugPrint('Error loading moderation status: $e');
+        AppLogging.social('Error loading moderation status: $e');
         return child;
       },
     );

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:socialmesh/core/logging.dart';
 import 'package:socialmesh/features/widget_builder/storage/widget_storage_service.dart';
 
 /// Run this test to export all widget templates as JSON files
@@ -27,7 +28,7 @@ void main() {
     for (final (filename, widget) in templates) {
       final file = File('${outputDir.path}/$filename');
       file.writeAsStringSync(widget.toJsonString());
-      debugPrint('Exported: $filename');
+      AppLogging.widgetBuilder('Exported: $filename');
     }
 
     // Verify files were created
@@ -35,6 +36,6 @@ void main() {
       expect(File('${outputDir.path}/$filename').existsSync(), isTrue);
     }
 
-    debugPrint('\n✅ All widget templates exported to assets/widget_templates/');
+    AppLogging.widgetBuilder('\n✅ All widget templates exported to assets/widget_templates/');
   });
 }

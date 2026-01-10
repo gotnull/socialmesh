@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import '../../core/logging.dart';
 import '../../core/constants.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/node_avatar.dart';
@@ -300,7 +301,7 @@ class _FollowRequestCard extends StatelessWidget {
         return PublicProfile.fromFirestore(doc);
       }
     } catch (e) {
-      debugPrint('Error fetching profile: $e');
+      AppLogging.social('Error fetching profile: $e');
     }
     return null;
   }

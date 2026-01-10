@@ -8,10 +8,11 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:camera/camera.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../core/logging.dart';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CALIBRATION STATE
@@ -212,7 +213,7 @@ class ARCalibrationService {
         model = 'Android';
       }
     } catch (e) {
-      debugPrint('[ARCalibration] Device model detection failed: $e');
+      AppLogging.app('[ARCalibration] Device model detection failed: $e');
     }
 
     _updateState(_state.copyWith(deviceModel: model));
@@ -245,13 +246,13 @@ class ARCalibrationService {
         ),
       );
 
-      debugPrint(
+      AppLogging.app(
         '[ARCalibration] Detected FOV: ${fov.horizontal}° × ${fov.vertical}°',
       );
 
       return fov;
     } catch (e) {
-      debugPrint('[ARCalibration] FOV detection error: $e');
+      AppLogging.app('[ARCalibration] FOV detection error: $e');
       return _getDefaultFov();
     }
   }
@@ -672,7 +673,7 @@ class ARCalibrationService {
         ),
       );
     } catch (e) {
-      debugPrint('[ARCalibration] Failed to load prefs: $e');
+      AppLogging.app('[ARCalibration] Failed to load prefs: $e');
     }
   }
 
@@ -682,7 +683,7 @@ class ARCalibrationService {
       await prefs.setDouble('ar_horizontal_fov', _state.horizontalFov);
       await prefs.setDouble('ar_vertical_fov', _state.verticalFov);
     } catch (e) {
-      debugPrint('[ARCalibration] Failed to save FOV: $e');
+      AppLogging.app('[ARCalibration] Failed to save FOV: $e');
     }
   }
 
@@ -701,7 +702,7 @@ class ARCalibrationService {
         );
       }
     } catch (e) {
-      debugPrint('[ARCalibration] Failed to save calibration: $e');
+      AppLogging.app('[ARCalibration] Failed to save calibration: $e');
     }
   }
 

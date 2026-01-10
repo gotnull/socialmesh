@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import '../constants.dart';
 import '../theme.dart';
+import '../logging.dart';
 
 /// Opens legal documents (Terms, Privacy, Support) in an in-app webview.
 /// Uses the socialmesh.app website for consistent, up-to-date content.
@@ -146,7 +147,7 @@ class _LegalWebViewScreenState extends State<_LegalWebViewScreen> {
                 }
               },
               onReceivedError: (controller, request, error) {
-                debugPrint('WebView error: ${error.description}');
+                AppLogging.app('WebView error: ${error.description}');
               },
             ),
           ),

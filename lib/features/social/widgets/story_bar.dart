@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/logging.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/edge_fade.dart';
@@ -31,11 +32,11 @@ class StoryBar extends ConsumerWidget {
 
     final followingGroups = ref.watch(followingStoryGroupsProvider);
 
-    debugPrint(
+    AppLogging.social(
       '📖 [StoryBar] Total groups: ${storyGroupsState.groups.length}, Following groups: ${followingGroups.length}',
     );
     for (final g in storyGroupsState.groups) {
-      debugPrint(
+      AppLogging.social(
         '📖 [StoryBar]   Group: ${g.userId}, stories: ${g.stories.length}',
       );
     }

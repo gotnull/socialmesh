@@ -1,10 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../core/widgets/animations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../core/logging.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
@@ -145,7 +146,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
         _publicKey = base64Encode(Uint8List.fromList(publicKey.bytes));
       });
     } catch (e) {
-      debugPrint('Failed to recalculate public key: $e');
+      AppLogging.settings('Failed to recalculate public key: $e');
     }
   }
 

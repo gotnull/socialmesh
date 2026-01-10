@@ -12,6 +12,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:vector_math/vector_math_64.dart' show Vector3;
 
+import '../../../core/logging.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/content_moderation_warning.dart';
@@ -433,7 +434,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
 
       return file;
     } catch (e) {
-      debugPrint('Failed to capture composite image: $e');
+      AppLogging.social('Failed to capture composite image: $e');
       return null;
     }
   }

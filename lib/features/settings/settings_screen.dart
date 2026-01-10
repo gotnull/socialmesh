@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../core/logging.dart';
 import '../../config/admin_config.dart';
 import '../../config/revenuecat_config.dart';
 import '../../core/transport.dart' show DeviceConnectionState;
@@ -3757,7 +3759,7 @@ class _MeshtasticWebViewScreenState extends State<MeshtasticWebViewScreen> {
                 }
               },
               onReceivedError: (controller, request, error) {
-                debugPrint('WebView error: ${error.description}');
+                AppLogging.settings('WebView error: ${error.description}');
               },
             ),
           ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/logging.dart';
 import '../../../core/theme.dart';
 import '../../../models/social.dart';
 import '../../../providers/profile_providers.dart';
@@ -36,7 +37,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
     try {
       final service = ref.read(signalServiceProvider);
       final profile = ref.read(userProfileProvider).value;
-      debugPrint(
+      AppLogging.signals(
         '📝 SignalDetailScreen: Submitting response to signal ${widget.signal.id}',
       );
       final response = await service.createResponse(
@@ -46,9 +47,13 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
       );
 
       if (response != null) {
-        debugPrint('📝 SignalDetailScreen: Response created: ${response.id}');
+        AppLogging.signals(
+          '📝 SignalDetailScreen: Response created: ${response.id}',
+        );
       } else {
-        debugPrint('📝 SignalDetailScreen: Response creation returned null');
+        AppLogging.signals(
+          '📝 SignalDetailScreen: Response creation returned null',
+        );
       }
 
       _replyController.clear();

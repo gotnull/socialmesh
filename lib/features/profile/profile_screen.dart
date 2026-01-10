@@ -18,6 +18,7 @@ import '../../providers/splash_mesh_provider.dart';
 import '../../providers/subscription_providers.dart';
 import '../../services/content_moderation/profanity_checker.dart';
 import '../../services/profile/profile_cloud_sync_service.dart';
+import '../../core/logging.dart';
 import '../../utils/snackbar.dart';
 import '../../utils/validation.dart';
 import '../navigation/main_shell.dart';
@@ -783,7 +784,7 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
     } catch (e) {
       if (context.mounted) {
         // User cancelled
-        debugPrint('Apple sign in: $e');
+        AppLogging.auth('Apple sign in: $e');
       }
     } finally {
       if (mounted) setState(() => _isSigningIn = false);
@@ -815,7 +816,7 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
     } catch (e) {
       if (context.mounted) {
         // User cancelled or other error
-        debugPrint('GitHub sign in: $e');
+        AppLogging.auth('GitHub sign in: $e');
       }
     } finally {
       if (mounted) setState(() => _isSigningIn = false);
@@ -875,7 +876,7 @@ class _CloudBackupSectionState extends ConsumerState<_CloudBackupSection> {
       } catch (linkError) {
         if (context.mounted) {
           showErrorSnackBar(context, 'Failed to link accounts');
-          debugPrint('Account linking error: $linkError');
+          AppLogging.auth('Account linking error: $linkError');
         }
       }
     }

@@ -4,6 +4,7 @@ import 'package:flutter_globe_3d/flutter_globe_3d.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../theme.dart';
+import '../logging.dart';
 
 /// 3D Interactive Globe widget showing mesh node positions
 /// Uses flutter_globe_3d for GPU-accelerated rendering
@@ -214,7 +215,7 @@ class MeshGlobeState extends State<MeshGlobe> {
       behavior: HitTestBehavior.opaque,
       onPointerUp: (event) {
         // Only trigger on short taps (not drags)
-        debugPrint(
+        AppLogging.app(
           '=== NODE POINTER UP: ${node.longName ?? node.shortName} ===',
         );
         HapticFeedback.selectionClick();

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:three_js/three_js.dart' as three;
 import '../theme.dart';
+import '../logging.dart';
 
 /// 3D Hexagonal terrain widget - Full port of HexTerrain
 /// Uses three_js for WebGL rendering with support for trees, grass, clouds
@@ -168,7 +169,7 @@ class _HexTerrainState extends State<HexTerrain> {
         });
       }
     } catch (e) {
-      debugPrint('HexTerrain setup error: $e');
+      AppLogging.app('HexTerrain setup error: $e');
       if (mounted) {
         setState(() => _hasError = true);
       }

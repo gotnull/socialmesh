@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:socialmesh/core/logging.dart';
 
 /// Audit tests for social feature screens
 /// Verifies implementation patterns and code quality
@@ -258,9 +259,9 @@ void main() {
       // This is informational - some patterns may be safe
       if (violations.isNotEmpty) {
         // Log but don't fail - these need manual review
-        debugPrint('INFO: Methods that may need mounted check review:');
+        AppLogging.app('INFO: Methods that may need mounted check review:');
         for (final v in violations) {
-          debugPrint('  $v');
+          AppLogging.app('  $v');
         }
       }
     });
