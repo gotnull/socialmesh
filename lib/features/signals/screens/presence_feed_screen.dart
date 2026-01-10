@@ -91,7 +91,7 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
           ],
         ),
         actions: [
-          // Active signals count badge
+          // Signal count badge
           if (feedState.signals.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(right: 8),
@@ -104,14 +104,29 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                   decoration: BoxDecoration(
                     color: context.accentColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '${feedState.signals.length} active',
-                    style: TextStyle(
-                      color: context.accentColor,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                    border: Border.all(
+                      color: context.accentColor.withValues(alpha: 0.3),
+                      width: 1,
                     ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.radio_button_checked,
+                        size: 12,
+                        color: context.accentColor,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${feedState.signals.length}',
+                        style: TextStyle(
+                          color: context.accentColor,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
