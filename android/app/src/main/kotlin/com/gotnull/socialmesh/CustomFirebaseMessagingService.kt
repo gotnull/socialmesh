@@ -6,8 +6,15 @@ import android.util.Log
 
 /**
  * Custom Firebase Messaging Service to handle push notifications.
- * This service intercepts messages before they reach plugin services,
- * preventing crashes from plugins that expect specific message formats.
+ * 
+ * This service intercepts FCM messages before they reach plugin services,
+ * specifically to prevent crashes from the live_activities plugin which
+ * is iOS-only but still receives Android FCM broadcasts.
+ * 
+ * The service:
+ * 1. Logs message details for debugging
+ * 2. Safely passes messages to parent (firebase_messaging plugin)
+ * 3. Catches and logs any exceptions from downstream handlers
  */
 class CustomFirebaseMessagingService : FirebaseMessagingService() {
     
@@ -18,34 +25,32 @@ class CustomFirebaseMessagingService : FirebaseMessagingService() {
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         Log.d(TAG, "Message received from: ${remoteMessage.from}")
         
-        // Check if message contains data payload
+        // Log data payload
         if (remoteMessage.data.isNotEmpty()) {
             Log.d(TAG, "Message data payload: ${remoteMessage.data}")
-            
-            // Handle the message data here if needed
-            // For now, we just log it and let the Flutter app handle it via the plugin
         }
 
-        // Check if message contains notification payload
+        // Log notification payload
         remoteMessage.notification?.let {
             Log.d(TAG, "Message Notification Body: ${it.body}")
-            // The firebase_messaging plugin will automatically handle notification display
         }
 
-        // Important: Call super to allow firebase_messaging plugin to process the message
-        // But this prevents it from reaching live_activities plugin which crashes on Android
+        // Pass to firebase_messaging plugin, catching any downstream errors
+        // This prevents crashes from live_activities plugin (iOS-only) which
+        // registers for FCM broadcasts but crashes with NullPointerException on Android
         try {
             super.onMessageReceived(remoteMessage)
+        } catch (e: NullPointerException) {
+            // Expected from live_activities plugin on Android - safe to ignore
+            Log.w(TAG, "NullPointerException in downstream handler (likely live_activities): ${e.message}")
         } catch (e: Exception) {
-            Log.e(TAG, "Error in super.onMessageReceived", e)
-            // Swallow the exception to prevent app crash
+            // Unexpected error - log full stack trace for debugging
+            Log.e(TAG, "Unexpected error in downstream message handler", e)
         }
     }
 
     override fun onNewToken(token: String) {
-        Log.d(TAG, "Refreshed token: $token")
+        Log.d(TAG, "FCM token refreshed")
         super.onNewToken(token)
-        
-        // If you want to send tokens to your app server, do it here
     }
 }
