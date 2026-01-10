@@ -459,14 +459,17 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
         child: ClipRRect(
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-            child: AppBar(
-              backgroundColor: context.card.withValues(alpha: 0.7),
-              elevation: 0,
-              title: Text(
-                'Signal',
-                style: TextStyle(
-                  color: context.textPrimary,
-                  fontWeight: FontWeight.w600,
+            child: Container(
+              color: context.card.withValues(alpha: 0.7),
+              child: AppBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                title: Text(
+                  'Signal',
+                  style: TextStyle(
+                    color: context.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
