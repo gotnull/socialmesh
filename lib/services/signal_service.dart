@@ -1102,7 +1102,18 @@ class SignalService {
       orderBy: 'expiresAt ASC, createdAt DESC',
     );
 
-    return rows.map((row) => _postFromDbMap(row)).toList();
+    final signals = rows.map((row) => _postFromDbMap(row)).toList();
+
+    // Ensure comment listeners are attached for all active signals
+    if (_currentUserId != null) {
+      for (final signal in signals) {
+        if (!_commentsListeners.containsKey(signal.id)) {
+          _startCommentsListener(signal.id);
+        }
+      }
+    }
+
+    return signals;
   }
 
   /// Get a signal by ID.

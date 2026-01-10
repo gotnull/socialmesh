@@ -79,62 +79,19 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
       appBar: AppBar(
         backgroundColor: context.background,
         title: Row(
-          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.sensors, color: context.accentColor, size: 24),
             const SizedBox(width: 8),
-            Flexible(
-              child: AutoScrollText(
-                'Presence',
-                style: TextStyle(
-                  color: context.textPrimary,
-                  fontWeight: FontWeight.w600,
-                ),
+            Text(
+              'Presence',
+              style: TextStyle(
+                color: context.textPrimary,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],
         ),
         actions: [
-          // Signal count badge
-          if (feedState.signals.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: context.accentColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: context.accentColor.withValues(alpha: 0.3),
-                      width: 1,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.radio_button_checked,
-                        size: 12,
-                        color: context.accentColor,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${feedState.signals.length}',
-                        style: TextStyle(
-                          color: context.accentColor,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
           // Go Active button in AppBar
           Padding(
             padding: const EdgeInsets.only(right: 12),
@@ -317,10 +274,52 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
         controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
+          // Active count badge header
+          if (feedState.signals.isNotEmpty)
+            SliverToBoxAdapter(
+              child: Container(
+                margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: context.card,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: context.accentColor.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.radio_button_checked,
+                      size: 18,
+                      color: context.accentColor,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${feedState.signals.length} ${feedState.signals.length == 1 ? "signal" : "signals"} active',
+                      style: TextStyle(
+                        color: context.accentColor,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           // TTL info banner
           SliverToBoxAdapter(
             child: Container(
-              margin: const EdgeInsets.all(16),
+              margin: EdgeInsets.fromLTRB(
+                16,
+                feedState.signals.isEmpty ? 16 : 8,
+                16,
+                16,
+              ),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 color: context.card,
