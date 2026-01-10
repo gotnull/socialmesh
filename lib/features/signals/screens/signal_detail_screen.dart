@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -462,219 +463,222 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
           ),
         ),
       ),
-      body: Column(
+      body: Stack(
         children: [
-          // Sticky header - slides in with animation when scrolled past threshold
-          AnimatedSlide(
-            offset: _showStickyHeader ? Offset.zero : const Offset(0, -1),
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOutCubic,
-            child: AnimatedOpacity(
-              opacity: _showStickyHeader ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 200),
-              child: _showStickyHeader
-                  ? _StickySignalHeader(signal: signal, onTap: _scrollToTop)
-                  : const SizedBox.shrink(),
-            ),
-          ),
+          // Main content - with bottom padding for reply input
+          ListView(
+            controller: _scrollController,
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+            children: [
+              SignalCard(signal: signal, showActions: false),
+              const SizedBox(height: 24),
 
-          Expanded(
-            child: ListView(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(16),
-              children: [
-                SignalCard(signal: signal, showActions: false),
-                const SizedBox(height: 24),
-
-                // Responses header
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: context.accentColor.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: context.accentColor.withValues(alpha: 0.1),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: context.accentColor.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(
-                          Icons.forum_rounded,
-                          size: 16,
-                          color: context.accentColor,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Conversation',
-                              style: TextStyle(
-                                color: context.textPrimary,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            if (_responses != null && _responses!.isNotEmpty)
-                              Text(
-                                '${_responses!.length} ${_responses!.length == 1 ? 'response' : 'responses'}',
-                                style: TextStyle(
-                                  color: context.textTertiary,
-                                  fontSize: 12,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                      if (_isLoadingResponses)
-                        SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: context.accentColor,
-                          ),
-                        ),
-                    ],
+              // Responses header
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: context.accentColor.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: context.accentColor.withValues(alpha: 0.1),
                   ),
                 ),
-                const SizedBox(height: 20),
-
-                // Responses list
-                _buildResponsesList(context),
-              ],
-            ),
-          ),
-
-          // Reply input
-          Container(
-            decoration: BoxDecoration(
-              color: context.card,
-              border: Border(
-                top: BorderSide(color: context.border.withValues(alpha: 0.5)),
-              ),
-            ),
-            child: SafeArea(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Reply indicator
-                  if (_replyingToAuthor != null)
+                child: Row(
+                  children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: context.accentColor.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      color: context.accentColor.withValues(alpha: 0.1),
-                      child: Row(
+                      child: Icon(
+                        Icons.forum_rounded,
+                        size: 16,
+                        color: context.accentColor,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(
-                            Icons.reply,
-                            size: 16,
-                            color: context.accentColor,
-                          ),
-                          const SizedBox(width: 8),
                           Text(
-                            'Replying to $_replyingToAuthor',
+                            'Conversation',
                             style: TextStyle(
-                              color: context.textSecondary,
-                              fontSize: 13,
+                              color: context.textPrimary,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                          const Spacer(),
-                          GestureDetector(
-                            onTap: _cancelReply,
-                            child: Icon(
-                              Icons.close,
-                              size: 18,
-                              color: context.textTertiary,
+                          if (_responses != null && _responses!.isNotEmpty)
+                            Text(
+                              '${_responses!.length} ${_responses!.length == 1 ? 'response' : 'responses'}',
+                              style: TextStyle(
+                                color: context.textTertiary,
+                                fontSize: 12,
+                              ),
                             ),
-                          ),
                         ],
                       ),
                     ),
+                    if (_isLoadingResponses)
+                      SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: context.accentColor,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
 
-                  // Input field
-                  Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _replyController,
-                            focusNode: _replyFocusNode,
-                            enabled: !_isSubmittingReply,
-                            style: TextStyle(color: context.textPrimary),
-                            decoration: InputDecoration(
-                              hintText: _replyingToAuthor != null
-                                  ? 'Write a reply...'
-                                  : 'Respond to this signal...',
-                              hintStyle: TextStyle(color: context.textTertiary),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(24),
-                                borderSide: BorderSide.none,
-                              ),
-                              filled: true,
-                              fillColor: context.background,
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 10,
+              // Responses list
+              _buildResponsesList(context),
+            ],
+          ),
+
+          // Reply input - positioned at bottom
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              decoration: BoxDecoration(
+                color: context.card,
+                border: Border(
+                  top: BorderSide(color: context.border.withValues(alpha: 0.5)),
+                ),
+              ),
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Reply indicator
+                    if (_replyingToAuthor != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        color: context.accentColor.withValues(alpha: 0.1),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.reply,
+                              size: 16,
+                              color: context.accentColor,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Replying to $_replyingToAuthor',
+                              style: TextStyle(
+                                color: context.textSecondary,
+                                fontSize: 13,
                               ),
                             ),
-                            maxLines: 1,
-                            textInputAction: TextInputAction.send,
-                            onSubmitted: (_) => _submitReply(),
-                            textCapitalization: TextCapitalization.sentences,
-                            onChanged: (_) => setState(() {}),
-                          ),
+                            const Spacer(),
+                            GestureDetector(
+                              onTap: _cancelReply,
+                              child: Icon(
+                                Icons.close,
+                                size: 18,
+                                color: context.textTertiary,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 8),
-                        _isSubmittingReply
-                            ? SizedBox(
-                                width: 48,
-                                height: 48,
-                                child: Center(
-                                  child: SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: context.accentColor,
-                                    ),
-                                  ),
+                      ),
+
+                    // Input field
+                    Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _replyController,
+                              focusNode: _replyFocusNode,
+                              enabled: !_isSubmittingReply,
+                              style: TextStyle(color: context.textPrimary),
+                              decoration: InputDecoration(
+                                hintText: _replyingToAuthor != null
+                                    ? 'Write a reply...'
+                                    : 'Respond to this signal...',
+                                hintStyle: TextStyle(
+                                  color: context.textTertiary,
                                 ),
-                              )
-                            : IconButton(
-                                onPressed:
-                                    _replyController.text.trim().isNotEmpty
-                                    ? _submitReply
-                                    : null,
-                                icon: Icon(
-                                  Icons.send,
-                                  color: _replyController.text.trim().isNotEmpty
-                                      ? context.accentColor
-                                      : context.textTertiary,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(24),
+                                  borderSide: BorderSide.none,
+                                ),
+                                filled: true,
+                                fillColor: context.background,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 10,
                                 ),
                               ),
-                      ],
+                              maxLines: 1,
+                              textInputAction: TextInputAction.send,
+                              onSubmitted: (_) => _submitReply(),
+                              textCapitalization: TextCapitalization.sentences,
+                              onChanged: (_) => setState(() {}),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          _isSubmittingReply
+                              ? SizedBox(
+                                  width: 48,
+                                  height: 48,
+                                  child: Center(
+                                    child: SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: context.accentColor,
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              : IconButton(
+                                  onPressed:
+                                      _replyController.text.trim().isNotEmpty
+                                      ? _submitReply
+                                      : null,
+                                  icon: Icon(
+                                    Icons.send,
+                                    color:
+                                        _replyController.text.trim().isNotEmpty
+                                        ? context.accentColor
+                                        : context.textTertiary,
+                                  ),
+                                ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
+
+          // Sticky header overlay - slides in from top with blur
+          if (_showStickyHeader)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: _StickySignalHeader(signal: signal, onTap: _scrollToTop),
+            ),
         ],
       ),
     );
@@ -722,8 +726,8 @@ class _ResponseTile extends StatelessWidget {
   final List<bool> ancestorHasMoreSiblings;
   final VoidCallback? onReplyTap;
 
-  static const double _avatarSize = 32.0;
-  static const double _indentWidth = 12.0;
+  static const double _avatarSize = 24.0;
+  static const double _indentWidth = 16.0;
   static const int _maxVisualDepth = 5; // Cap indentation like Reddit
 
   @override
@@ -732,19 +736,26 @@ class _ResponseTile extends StatelessWidget {
     final visualDepth = depth.clamp(0, _maxVisualDepth);
 
     return Padding(
-      padding: const EdgeInsets.only(left: 12, right: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       child: IntrinsicHeight(
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Thread bars for each depth level (capped)
             for (int i = 0; i < visualDepth; i++)
-              Container(
-                width: _indentWidth,
-                alignment: Alignment.centerLeft,
+              GestureDetector(
+                onTap: () {}, // Could collapse thread on tap
                 child: Container(
-                  width: 2,
-                  color: context.accentColor.withValues(alpha: 0.15),
+                  width: _indentWidth,
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    width: 2,
+                    margin: const EdgeInsets.only(left: 6),
+                    decoration: BoxDecoration(
+                      color: context.accentColor.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(1),
+                    ),
+                  ),
                 ),
               ),
 
@@ -752,118 +763,121 @@ class _ResponseTile extends StatelessWidget {
             Container(
               width: _avatarSize,
               height: _avatarSize,
-              margin: const EdgeInsets.only(top: 4, right: 10),
+              margin: const EdgeInsets.only(top: 2, right: 8),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    context.accentColor.withValues(alpha: 0.3),
-                    context.accentColor.withValues(alpha: 0.1),
-                  ],
-                ),
-                border: Border.all(
-                  color: context.accentColor.withValues(alpha: 0.5),
-                  width: 1.5,
-                ),
+                color: context.accentColor.withValues(alpha: 0.15),
               ),
               child: Icon(
                 Icons.person_rounded,
-                size: _avatarSize * 0.5,
-                color: context.accentColor,
+                size: _avatarSize * 0.6,
+                color: context.accentColor.withValues(alpha: 0.7),
               ),
             ),
 
-            // Content
+            // Content - Reddit style: flat, no card
             Expanded(
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: context.card,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: context.border.withValues(alpha: 0.2),
-                    width: 1,
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header row
-                    Row(
-                      children: [
-                        Text(
-                          response.authorName ?? 'Anonymous',
-                          style: TextStyle(
-                            color: context.textPrimary,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header row - username and time inline
+                  Row(
+                    children: [
+                      Text(
+                        response.authorName ?? 'Anonymous',
+                        style: TextStyle(
+                          color: context.textPrimary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
                         ),
-                        if (response.isLocal) ...[
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 5,
-                              vertical: 1,
-                            ),
-                            decoration: BoxDecoration(
-                              color: context.accentColor.withValues(
-                                alpha: 0.15,
-                              ),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              'You',
-                              style: TextStyle(
-                                color: context.accentColor,
-                                fontSize: 9,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
+                      ),
+                      if (response.isLocal) ...[
+                        const SizedBox(width: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 1,
                           ),
-                        ],
-                        const SizedBox(width: 6),
-                        Text(
-                          '· ${_timeAgo(response.createdAt)}',
-                          style: TextStyle(
-                            color: context.textTertiary,
-                            fontSize: 11,
+                          decoration: BoxDecoration(
+                            color: context.accentColor.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                          child: Text(
+                            'you',
+                            style: TextStyle(
+                              color: context.accentColor,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
                       ],
-                    ),
-
-                    const SizedBox(height: 6),
-
-                    // Content text
-                    Text(
-                      response.content,
-                      style: TextStyle(
-                        color: context.textPrimary,
-                        fontSize: 14,
-                        height: 1.4,
-                      ),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    // Reply button
-                    GestureDetector(
-                      onTap: onReplyTap,
-                      child: Text(
-                        'Reply',
+                      const SizedBox(width: 4),
+                      Text(
+                        '· ${_timeAgo(response.createdAt)}',
                         style: TextStyle(
                           color: context.textTertiary,
                           fontSize: 12,
-                          fontWeight: FontWeight.w500,
                         ),
                       ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 4),
+
+                  // Content text
+                  Text(
+                    response.content,
+                    style: TextStyle(
+                      color: context.textPrimary,
+                      fontSize: 14,
+                      height: 1.4,
                     ),
-                  ],
-                ),
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  // Actions row
+                  Row(
+                    children: [
+                      _ActionButton(
+                        icon: Icons.arrow_upward_rounded,
+                        onTap: () {}, // Vote up
+                        context: context,
+                      ),
+                      const SizedBox(width: 4),
+                      _ActionButton(
+                        icon: Icons.arrow_downward_rounded,
+                        onTap: () {}, // Vote down
+                        context: context,
+                      ),
+                      const SizedBox(width: 12),
+                      GestureDetector(
+                        onTap: onReplyTap,
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.chat_bubble_outline_rounded,
+                              size: 14,
+                              color: context.textTertiary,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Reply',
+                              style: TextStyle(
+                                color: context.textTertiary,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 8),
+                ],
               ),
             ),
           ],
@@ -883,6 +897,30 @@ class _ResponseTile extends StatelessWidget {
   }
 }
 
+/// Small action button for vote actions.
+class _ActionButton extends StatelessWidget {
+  const _ActionButton({
+    required this.icon,
+    required this.onTap,
+    required this.context,
+  });
+
+  final IconData icon;
+  final VoidCallback onTap;
+  final BuildContext context;
+
+  @override
+  Widget build(BuildContext _) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        child: Icon(icon, size: 16, color: context.textTertiary),
+      ),
+    );
+  }
+}
+
 /// Sticky header showing compact signal info when scrolled.
 class _StickySignalHeader extends StatefulWidget {
   const _StickySignalHeader({required this.signal, this.onTap});
@@ -896,26 +934,31 @@ class _StickySignalHeader extends StatefulWidget {
 
 class _StickySignalHeaderState extends State<_StickySignalHeader>
     with SingleTickerProviderStateMixin {
-  late AnimationController _pulseController;
-  late Animation<double> _pulseAnimation;
+  late AnimationController _slideController;
+  late Animation<Offset> _slideAnimation;
+  late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
-    _pulseController = AnimationController(
+    _slideController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 300),
     );
-    _pulseAnimation = Tween<double>(
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, -1), end: Offset.zero).animate(
+          CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
+        );
+    _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
-    ).animate(CurvedAnimation(parent: _pulseController, curve: Curves.easeOut));
-    _pulseController.forward();
+    ).animate(CurvedAnimation(parent: _slideController, curve: Curves.easeOut));
+    _slideController.forward();
   }
 
   @override
   void dispose() {
-    _pulseController.dispose();
+    _slideController.dispose();
     super.dispose();
   }
 
@@ -925,231 +968,186 @@ class _StickySignalHeaderState extends State<_StickySignalHeader>
     final hasImage = signal.mediaUrls.isNotEmpty;
     final imageUrl = hasImage ? signal.mediaUrls.first : null;
 
-    return AnimatedBuilder(
-      animation: _pulseAnimation,
-      builder: (context, child) {
-        return GestureDetector(
-          onTap: widget.onTap,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: BoxDecoration(
-              color: context.card,
-              border: Border(
-                bottom: BorderSide(
-                  color: context.accentColor.withValues(
-                    alpha: 0.2 + (_pulseAnimation.value * 0.1),
-                  ),
-                  width: 1,
+    return SlideTransition(
+      position: _slideAnimation,
+      child: FadeTransition(
+        opacity: _fadeAnimation,
+        child: ClipRRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+            child: GestureDetector(
+              onTap: widget.onTap,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
                 ),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: context.accentColor.withValues(
-                    alpha: 0.05 + (_pulseAnimation.value * 0.05),
+                decoration: BoxDecoration(
+                  color: context.card.withValues(alpha: 0.7),
+                  border: Border(
+                    bottom: BorderSide(
+                      color: context.accentColor.withValues(alpha: 0.3),
+                      width: 1,
+                    ),
                   ),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
                 ),
-              ],
-            ),
-            child: child,
-          ),
-        );
-      },
-      child: Row(
-        children: [
-          // Thumbnail with scale animation
-          TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0.8, end: 1.0),
-            duration: const Duration(milliseconds: 400),
-            curve: Curves.elasticOut,
-            builder: (context, scale, child) {
-              return Transform.scale(scale: scale, child: child);
-            },
-            child: hasImage && imageUrl != null
-                ? Container(
-                    width: 44,
-                    height: 44,
-                    margin: const EdgeInsets.only(right: 12),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: context.accentColor.withValues(alpha: 0.3),
-                        width: 1.5,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: context.accentColor.withValues(alpha: 0.15),
-                          blurRadius: 8,
-                          spreadRadius: 0,
-                        ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(7),
-                      child: Image.network(
-                        imageUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => Container(
-                          color: context.accentColor.withValues(alpha: 0.1),
-                          child: Icon(
-                            Icons.image_outlined,
-                            size: 20,
-                            color: context.accentColor,
-                          ),
-                        ),
-                      ),
-                    ),
-                  )
-                : Container(
-                    width: 44,
-                    height: 44,
-                    margin: const EdgeInsets.only(right: 12),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          context.accentColor.withValues(alpha: 0.3),
-                          context.accentColor.withValues(alpha: 0.1),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: context.accentColor.withValues(alpha: 0.3),
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Icon(
-                      Icons.signal_cellular_alt_rounded,
-                      size: 20,
-                      color: context.accentColor,
-                    ),
-                  ),
-          ),
-
-          // Content preview with fade-in
-          Expanded(
-            child: TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0.0, end: 1.0),
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeOut,
-              builder: (context, opacity, child) {
-                return Opacity(opacity: opacity, child: child);
-              },
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
+                child: SafeArea(
+                  bottom: false,
+                  child: Row(
                     children: [
-                      Text(
-                        signal.authorSnapshot?.displayName ?? 'Anonymous',
-                        style: TextStyle(
-                          color: context.textPrimary,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
+                      // Thumbnail
+                      _buildThumbnail(context, hasImage, imageUrl),
+
+                      const SizedBox(width: 12),
+
+                      // Content
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  signal.authorSnapshot?.displayName ??
+                                      'Anonymous',
+                                  style: TextStyle(
+                                    color: context.textPrimary,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  '· ${_timeAgo(signal.createdAt)}',
+                                  style: TextStyle(
+                                    color: context.textTertiary,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              signal.content,
+                              style: TextStyle(
+                                color: context.textSecondary,
+                                fontSize: 13,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(width: 6),
-                      Text(
-                        '·',
-                        style: TextStyle(
-                          color: context.textTertiary,
-                          fontSize: 10,
+
+                      const SizedBox(width: 12),
+
+                      // Response count
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: context.accentColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.chat_bubble_outline_rounded,
+                              size: 12,
+                              color: context.accentColor,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${signal.commentCount}',
+                              style: TextStyle(
+                                color: context.accentColor,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(width: 6),
-                      Text(
-                        _timeAgo(signal.createdAt),
-                        style: TextStyle(
-                          color: context.textTertiary,
-                          fontSize: 11,
-                        ),
+
+                      const SizedBox(width: 8),
+
+                      // Scroll up
+                      Icon(
+                        Icons.expand_less_rounded,
+                        size: 24,
+                        color: context.textTertiary,
                       ),
                     ],
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    signal.content,
-                    style: TextStyle(
-                      color: context.textSecondary,
-                      fontSize: 12,
-                      height: 1.3,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+                ),
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
 
-          const SizedBox(width: 12),
-
-          // Response count badge
-          TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0.0, end: 1.0),
-            duration: const Duration(milliseconds: 400),
-            curve: Curves.easeOutBack,
-            builder: (context, scale, child) {
-              return Transform.scale(scale: scale, child: child);
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: context.accentColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.forum_rounded,
-                    size: 12,
-                    color: context.accentColor,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${signal.commentCount}',
-                    style: TextStyle(
-                      color: context.accentColor,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+  Widget _buildThumbnail(
+    BuildContext context,
+    bool hasImage,
+    String? imageUrl,
+  ) {
+    if (hasImage && imageUrl != null) {
+      return Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: context.accentColor.withValues(alpha: 0.3),
+            width: 1,
           ),
-
-          const SizedBox(width: 8),
-
-          // Scroll up indicator with bounce
-          TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0.5, end: 1.0),
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.elasticOut,
-            builder: (context, scale, child) {
-              return Transform.scale(scale: scale, child: child);
-            },
-            child: Container(
-              width: 28,
-              height: 28,
-              decoration: BoxDecoration(
-                color: context.accentColor.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(7),
+          child: Image.network(
+            imageUrl,
+            fit: BoxFit.cover,
+            errorBuilder: (_, _, _) => Container(
+              color: context.accentColor.withValues(alpha: 0.1),
               child: Icon(
-                Icons.keyboard_arrow_up_rounded,
+                Icons.image_outlined,
                 size: 18,
                 color: context.accentColor,
               ),
             ),
           ),
-        ],
+        ),
+      );
+    }
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            context.accentColor.withValues(alpha: 0.3),
+            context.accentColor.withValues(alpha: 0.1),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: context.accentColor.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Icon(
+        Icons.signal_cellular_alt_rounded,
+        size: 18,
+        color: context.accentColor,
       ),
     );
   }
