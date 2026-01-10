@@ -709,7 +709,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
 
           // Sticky header overlay - slides in/out from top with blur
           Positioned(
-            top: 0,
+            top: MediaQuery.of(context).padding.top + kToolbarHeight,
             left: 0,
             right: 0,
             child: _StickySignalHeader(
@@ -1053,99 +1053,96 @@ class _StickySignalHeaderState extends State<_StickySignalHeader>
                       ),
                     ),
                   ),
-                  child: SafeArea(
-                    bottom: false,
-                    child: Row(
-                      children: [
-                        // Thumbnail
-                        _buildThumbnail(context, hasImage, imageUrl),
+                  child: Row(
+                    children: [
+                      // Thumbnail
+                      _buildThumbnail(context, hasImage, imageUrl),
 
-                        const SizedBox(width: 12),
+                      const SizedBox(width: 12),
 
-                        // Content
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Row(
-                                children: [
-                                  Text(
-                                    signal.authorSnapshot?.displayName ??
-                                        'Anonymous',
-                                    style: TextStyle(
-                                      color: context.textPrimary,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                      // Content
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  signal.authorSnapshot?.displayName ??
+                                      'Anonymous',
+                                  style: TextStyle(
+                                    color: context.textPrimary,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
                                   ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    '· ${_timeAgo(signal.createdAt)}',
-                                    style: TextStyle(
-                                      color: context.textTertiary,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                signal.content,
-                                style: TextStyle(
-                                  color: context.textSecondary,
-                                  fontSize: 13,
                                 ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                                const SizedBox(width: 6),
+                                Text(
+                                  '· ${_timeAgo(signal.createdAt)}',
+                                  style: TextStyle(
+                                    color: context.textTertiary,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              signal.content,
+                              style: TextStyle(
+                                color: context.textSecondary,
+                                fontSize: 13,
                               ),
-                            ],
-                          ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
                         ),
+                      ),
 
-                        const SizedBox(width: 12),
+                      const SizedBox(width: 12),
 
-                        // Response count
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: context.accentColor.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.chat_bubble_outline_rounded,
-                                size: 12,
+                      // Response count
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: context.accentColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.chat_bubble_outline_rounded,
+                              size: 12,
+                              color: context.accentColor,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${signal.commentCount}',
+                              style: TextStyle(
                                 color: context.accentColor,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
                               ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '${signal.commentCount}',
-                                style: TextStyle(
-                                  color: context.accentColor,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
+                      ),
 
-                        const SizedBox(width: 8),
+                      const SizedBox(width: 8),
 
-                        // Scroll up
-                        Icon(
-                          Icons.expand_less_rounded,
-                          size: 24,
-                          color: context.textTertiary,
-                        ),
-                      ],
-                    ),
+                      // Scroll up
+                      Icon(
+                        Icons.expand_less_rounded,
+                        size: 24,
+                        color: context.textTertiary,
+                      ),
+                    ],
                   ),
                 ),
               ),
