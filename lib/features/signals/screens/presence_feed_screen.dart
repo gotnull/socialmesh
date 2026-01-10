@@ -155,16 +155,21 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
 
   Widget _buildLoading() {
     return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          CircularProgressIndicator(color: context.accentColor, strokeWidth: 2),
-          const SizedBox(height: 16),
-          Text(
-            'Scanning for active signals...',
-            style: TextStyle(color: context.textSecondary, fontSize: 14),
-          ),
-        ],
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(
+              color: context.accentColor,
+              strokeWidth: 2,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Scanning for active signals...',
+              style: TextStyle(color: context.textSecondary, fontSize: 14),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -183,7 +188,7 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
     }
 
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
