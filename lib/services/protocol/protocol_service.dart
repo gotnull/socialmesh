@@ -35,6 +35,7 @@ class MeshSignalPacket {
   final int ttlMinutes;
   final double? latitude;
   final double? longitude;
+  final int? hopCount; // null = unknown, 0 = local, 1+ = hops away
   final DateTime receivedAt;
 
   /// Whether this is a legacy signal (no id field in packet).
@@ -47,13 +48,18 @@ class MeshSignalPacket {
     required this.ttlMinutes,
     this.latitude,
     this.longitude,
+    this.hopCount,
     required this.receivedAt,
   });
 
   /// Parse from mesh packet payload (JSON).
   /// Supports both new format (with 'id') and legacy format (without).
   /// Compressed keys: id, c (content), t (ttl), la (lat), ln (lng)
-  factory MeshSignalPacket.fromPayload(int senderNodeId, List<int> payload) {
+  factory MeshSignalPacket.fromPayload(
+    int senderNodeId,
+    List<int> payload, {
+    int? hopCount,
+  }) {
     final jsonStr = utf8.decode(payload);
     final json = jsonDecode(jsonStr) as Map<String, dynamic>;
 
@@ -72,6 +78,7 @@ class MeshSignalPacket {
       ttlMinutes: ttl,
       latitude: lat,
       longitude: lng,
+      hopCount: hopCount,
       receivedAt: DateTime.now(),
     );
   }
@@ -781,9 +788,23 @@ class ProtocolService {
         return;
       }
 
+      // Calculate hop count from mesh packet metadata
+      // Meshtastic uses hopLimit that decrements per relay
+      // hopCount = max_hops - remaining_hops
+      // Typical max is 3, so: hopCount = 3 - hopLimit
+      int? hopCount;
+      if (packet.hasHopLimit()) {
+        const maxHops = 3; // Meshtastic default
+        hopCount = maxHops - packet.hopLimit;
+        // Clamp to reasonable range [0, maxHops]
+        if (hopCount < 0) hopCount = 0;
+        if (hopCount > maxHops) hopCount = maxHops;
+      }
+
       final signalPacket = MeshSignalPacket.fromPayload(
         packet.from,
         data.payload,
+        hopCount: hopCount,
       );
 
       AppLogging.signals(

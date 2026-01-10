@@ -762,6 +762,7 @@ class SignalService {
     String? signalId, // null for legacy packets
     int ttlMinutes = SignalTTL.defaultTTL,
     PostLocation? location,
+    int? hopCount,
   }) async {
     await init();
 
@@ -847,6 +848,7 @@ class SignalService {
       origin: SignalOrigin.mesh,
       expiresAt: expiresAt,
       meshNodeId: senderNodeId,
+      hopCount: hopCount,
       imageState: cloudImageUrl != null ? ImageState.cloud : ImageState.none,
     );
 

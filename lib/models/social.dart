@@ -315,6 +315,13 @@ class Post {
   /// Used for proximity sorting in presence feed.
   final int? meshNodeId;
 
+  /// Hop count from local device (mesh proximity).
+  /// - 0 = local device
+  /// - 1 = direct neighbor
+  /// - higher = further away
+  /// - null = unknown / lowest priority
+  final int? hopCount;
+
   /// Current state of image attachment.
   /// Signals defer image upload for mesh-first behavior.
   final ImageState imageState;
@@ -347,6 +354,7 @@ class Post {
     this.origin = SignalOrigin.cloud,
     this.expiresAt,
     this.meshNodeId,
+    this.hopCount,
     this.imageState = ImageState.none,
     this.imageLocalPath,
   });
@@ -385,6 +393,7 @@ class Post {
       ),
       expiresAt: (data['expiresAt'] as Timestamp?)?.toDate(),
       meshNodeId: data['meshNodeId'] as int?,
+      hopCount: data['hopCount'] as int?,
       imageState: ImageState.values.firstWhere(
         (e) => e.name == (data['imageState'] as String?),
         orElse: () => ImageState.none,
@@ -411,6 +420,7 @@ class Post {
       'origin': origin.name,
       if (expiresAt != null) 'expiresAt': Timestamp.fromDate(expiresAt!),
       if (meshNodeId != null) 'meshNodeId': meshNodeId,
+      if (hopCount != null) 'hopCount': hopCount,
       'imageState': imageState.name,
       // NOTE: imageLocalPath is LOCAL-ONLY - never store device paths in Firestore
     };
@@ -431,6 +441,7 @@ class Post {
     SignalOrigin? origin,
     DateTime? expiresAt,
     int? meshNodeId,
+    int? hopCount,
     ImageState? imageState,
     String? imageLocalPath,
   }) {
@@ -449,6 +460,7 @@ class Post {
       origin: origin ?? this.origin,
       expiresAt: expiresAt ?? this.expiresAt,
       meshNodeId: meshNodeId ?? this.meshNodeId,
+      hopCount: hopCount ?? this.hopCount,
       imageState: imageState ?? this.imageState,
       imageLocalPath: imageLocalPath ?? this.imageLocalPath,
     );

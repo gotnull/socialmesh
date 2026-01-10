@@ -209,6 +209,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
       signalId: packet.signalId, // null for legacy packets
       ttlMinutes: packet.ttlMinutes,
       location: location,
+      hopCount: packet.hopCount,
     );
   }
 
@@ -319,29 +320,47 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
   }
 
   /// Sort signals by proximity, expiry, and creation time.
+  /// Priority order:
+  /// 1. Same meshNodeId as myNodeNum (local device)
+  /// 2. hopCount ascending (lower = closer, null = unknown/lowest priority)
+  /// 3. expiresAt ascending (expiring soon first)
+  /// 4. createdAt descending (newest first)
   List<Post> _sortSignals(List<Post> signals) {
     // Get current node position for proximity sorting
     final myNodeNum = ref.read(myNodeNumProvider);
 
     return List<Post>.from(signals)..sort((a, b) {
-      // 1. Proximity sort (if we have mesh node data)
+      // 1. Same node = highest priority
       if (myNodeNum != null && a.meshNodeId != null && b.meshNodeId != null) {
-        // Same node = highest priority
         final aIsMe = a.meshNodeId == myNodeNum;
         final bIsMe = b.meshNodeId == myNodeNum;
         if (aIsMe && !bIsMe) return -1;
         if (!aIsMe && bIsMe) return 1;
-
-        // TODO: Add hop count comparison when available
       }
 
-      // 2. Expiry sort (expiring soon first)
+      // 2. hopCount sort (lower = closer, null = lowest priority)
+      final aHop = a.hopCount;
+      final bHop = b.hopCount;
+      if (aHop != null && bHop != null) {
+        if (aHop != bHop) {
+          AppLogging.signals(
+            '📡 Signals: Sorting by hopCount (a=$aHop, b=$bHop)',
+          );
+          return aHop.compareTo(bHop); // ascending
+        }
+      } else if (aHop != null) {
+        return -1; // non-null beats null
+      } else if (bHop != null) {
+        return 1; // non-null beats null
+      }
+
+      // 3. Expiry sort (expiring soon first)
       if (a.expiresAt != null && b.expiresAt != null) {
         final expiryCompare = a.expiresAt!.compareTo(b.expiresAt!);
         if (expiryCompare != 0) return expiryCompare;
       }
 
-      // 3. Creation time (newest first)
+      // 4. Creation time (newest first)
       return b.createdAt.compareTo(a.createdAt);
     });
   }
@@ -408,6 +427,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
     String? signalId,
     int ttlMinutes = SignalTTL.defaultTTL,
     PostLocation? location,
+    int? hopCount,
   }) async {
     final service = ref.read(signalServiceProvider);
 
@@ -431,6 +451,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
         signalId: signalId,
         ttlMinutes: ttlMinutes,
         location: location,
+        hopCount: hopCount,
       );
 
       // If null, it was a duplicate in DB
