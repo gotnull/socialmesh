@@ -36,6 +36,8 @@ void main() {
       expect(File('${outputDir.path}/$filename').existsSync(), isTrue);
     }
 
-    AppLogging.widgetBuilder('\n✅ All widget templates exported to assets/widget_templates/');
+    AppLogging.widgetBuilder(
+      '\n✅ All widget templates exported to assets/widget_templates/',
+    );
   });
 }
