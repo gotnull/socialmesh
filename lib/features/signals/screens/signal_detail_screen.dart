@@ -6,6 +6,7 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/content_moderation_warning.dart';
 import '../../../utils/snackbar.dart';
 import '../../../models/social.dart';
+import '../../../providers/auth_providers.dart';
 import '../../../providers/profile_providers.dart';
 import '../../../providers/signal_providers.dart';
 import '../../../providers/social_providers.dart';
@@ -35,6 +36,16 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
   Future<void> _submitReply() async {
     final content = _replyController.text.trim();
     if (content.isEmpty) return;
+
+    // Auth gating check
+    final isAuthenticated = ref.read(isSignedInProvider);
+    if (!isAuthenticated) {
+      AppLogging.signals('🔒 Response blocked: user not authenticated');
+      if (mounted) {
+        showErrorSnackBar(context, 'Sign in required to comment');
+      }
+      return;
+    }
 
     setState(() => _isSubmittingReply = true);
 

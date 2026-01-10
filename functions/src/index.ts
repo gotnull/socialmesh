@@ -2217,6 +2217,7 @@ export {
   onStoryLikeCreatedNotification,
   onCommentCreatedNotification,
   onSignalCreatedNotification,
+  onSignalCommentNotification,
   sendTestPushNotification,
 } from './push_notifications';
 

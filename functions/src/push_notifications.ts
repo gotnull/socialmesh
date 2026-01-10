@@ -596,6 +596,77 @@ export const onCommentCreatedNotification = onDocumentCreated(
 );
 
 // =============================================================================
+// SIGNAL COMMENT NOTIFICATIONS (Subcollection)
+// =============================================================================
+
+/**
+ * Send notification when someone comments on a signal
+ * Handles comments in the posts/{postId}/comments/{commentId} subcollection path
+ */
+export const onSignalCommentNotification = onDocumentCreated(
+  'posts/{postId}/comments/{commentId}',
+  async (event) => {
+    const data = event.data?.data();
+    if (!data) return;
+
+    const postId = event.params.postId;
+    const commentId = event.params.commentId;
+    const { authorId: commenterId, content, signalId } = data;
+
+    // Verify this is a signal comment
+    if (signalId !== postId) {
+      console.log('Not a signal comment, skipping notification');
+      return;
+    }
+
+    // Skip if no content
+    if (!content) return;
+
+    // Get the signal/post to find the author
+    const postDoc = await db.collection('posts').doc(postId).get();
+    if (!postDoc.exists) return;
+
+    const postData = postDoc.data()!;
+    const postAuthorId = postData.authorId;
+
+    // Don't notify the comment author
+    if (postAuthorId === commenterId) {
+      console.log('Signal author commented on own signal, skipping notification');
+      return;
+    }
+
+    // Truncate content for notification
+    const truncatedContent = content.length > 50
+      ? `${content.substring(0, 50)}...`
+      : content;
+
+    // Get commenter's profile
+    const commenterProfile = await getProfile(commenterId);
+    const commenterName = commenterProfile?.displayName || 'Someone';
+
+    // Check if signal author has comment notifications enabled
+    if (!await isNotificationEnabled(postAuthorId, 'comments')) {
+      console.log(`Signal comment notifications disabled for user ${postAuthorId}`);
+      return;
+    }
+
+    console.log(`Notifying signal author ${postAuthorId} of new comment by ${commenterName}`);
+
+    // Send notification to signal author
+    await sendPushNotification(
+      postAuthorId,
+      'New comment on your signal',
+      `${commenterName}: ${truncatedContent}`,
+      {
+        type: 'signal_comment',
+        targetId: postId,
+        commentId: commentId,
+      }
+    );
+  }
+);
+
+// =============================================================================
 // TEST NOTIFICATION (Debug only)
 // =============================================================================
 

@@ -248,13 +248,7 @@ class SignalService {
         if (oldVersion < 3) {
           await _createResponsesTable(db);
         }
-        if (oldVersion < 4) {
-          // Add hopCount column for local proximity tracking
-          await db.execute(
-            'ALTER TABLE $_tableName ADD COLUMN hopCount INTEGER',
-          );
-          AppLogging.signals('Added hopCount column to signals table');
-        }
+        // No migration for hopCount - dev can reset DB if needed
       },
     );
 

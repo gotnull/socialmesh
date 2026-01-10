@@ -373,12 +373,19 @@ service cloud.firestore {
       allow read: if true; // Public posts
       
       // Create: authenticated, must be author, content required
+      // Signals must have expiresAt and valid TTL
       // Admins can create posts for seeding test data
       allow create: if isAdmin() || (isAuthenticated() &&
         request.resource.data.authorId == request.auth.uid &&
         request.resource.data.content is string &&
         request.resource.data.content.size() > 0 &&
         request.resource.data.content.size() <= 2000 &&
+        // Signal-specific validation
+        (request.resource.data.postMode != 'signal' || (
+          request.resource.data.expiresAt is timestamp &&
+          request.resource.data.expiresAt.toMillis() > request.time.toMillis() &&
+          request.resource.data.expiresAt.toMillis() <= request.time.toMillis() + (86400 * 1000) // max 24h TTL
+        )) &&
         isValidSize());
       
       // Delete: only author can delete their post (or admin)
@@ -392,6 +399,26 @@ service cloud.firestore {
         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['commentCount', 'likeCount']) ||
          (resource.data.authorId == request.auth.uid &&
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['mediaUrls', 'imageState', 'imageUrl'])));
+      
+      // Signal comments subcollection (canonical path)
+      match /comments/{commentId} {
+        allow read: if true; // Public comments on signals
+        
+        // Create: authenticated, must be author, valid content
+        allow create: if isAuthenticated() &&
+          request.resource.data.authorId == request.auth.uid &&
+          request.resource.data.signalId == postId &&
+          request.resource.data.content is string &&
+          request.resource.data.content.size() > 0 &&
+          request.resource.data.content.size() <= 500;
+        
+        // Delete: only author (or admin)
+        allow delete: if isAdmin() || (isAuthenticated() &&
+          resource.data.authorId == request.auth.uid);
+        
+        // No updates allowed - comments are immutable
+        allow update: if false;
+      }
     }
 
     // Signal Responses - ephemeral replies to mesh signals

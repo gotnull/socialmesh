@@ -393,7 +393,8 @@ class Post {
       ),
       expiresAt: (data['expiresAt'] as Timestamp?)?.toDate(),
       meshNodeId: data['meshNodeId'] as int?,
-      hopCount: data['hopCount'] as int?,
+      // hopCount is LOCAL-ONLY, never stored in Firestore
+      hopCount: null,
       imageState: ImageState.values.firstWhere(
         (e) => e.name == (data['imageState'] as String?),
         orElse: () => ImageState.none,
