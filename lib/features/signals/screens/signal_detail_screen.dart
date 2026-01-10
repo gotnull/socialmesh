@@ -686,14 +686,17 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
             ),
           ),
 
-          // Sticky header overlay - slides in from top with blur
-          if (_showStickyHeader)
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: _StickySignalHeader(signal: signal, onTap: _scrollToTop),
+          // Sticky header overlay - slides in/out from top with blur
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: _StickySignalHeader(
+              signal: signal,
+              isVisible: _showStickyHeader,
+              onTap: _scrollToTop,
             ),
+          ),
         ],
       ),
     );
@@ -938,9 +941,14 @@ class _ActionButton extends StatelessWidget {
 
 /// Sticky header showing compact signal info when scrolled.
 class _StickySignalHeader extends StatefulWidget {
-  const _StickySignalHeader({required this.signal, this.onTap});
+  const _StickySignalHeader({
+    required this.signal,
+    required this.isVisible,
+    this.onTap,
+  });
 
   final Post signal;
+  final bool isVisible;
   final VoidCallback? onTap;
 
   @override
@@ -958,7 +966,7 @@ class _StickySignalHeaderState extends State<_StickySignalHeader>
     super.initState();
     _slideController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 250),
     );
     _slideAnimation =
         Tween<Offset>(begin: const Offset(0, -1), end: Offset.zero).animate(
@@ -968,7 +976,23 @@ class _StickySignalHeaderState extends State<_StickySignalHeader>
       begin: 0.0,
       end: 1.0,
     ).animate(CurvedAnimation(parent: _slideController, curve: Curves.easeOut));
-    _slideController.forward();
+
+    // Start with correct state
+    if (widget.isVisible) {
+      _slideController.forward();
+    }
+  }
+
+  @override
+  void didUpdateWidget(_StickySignalHeader oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isVisible != oldWidget.isVisible) {
+      if (widget.isVisible) {
+        _slideController.forward();
+      } else {
+        _slideController.reverse();
+      }
+    }
   }
 
   @override
@@ -983,121 +1007,124 @@ class _StickySignalHeaderState extends State<_StickySignalHeader>
     final hasImage = signal.mediaUrls.isNotEmpty;
     final imageUrl = hasImage ? signal.mediaUrls.first : null;
 
-    return SlideTransition(
-      position: _slideAnimation,
-      child: FadeTransition(
-        opacity: _fadeAnimation,
-        child: ClipRRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-            child: GestureDetector(
-              onTap: widget.onTap,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: context.card.withValues(alpha: 0.7),
-                  border: Border(
-                    bottom: BorderSide(
-                      color: context.accentColor.withValues(alpha: 0.3),
-                      width: 1,
+    return IgnorePointer(
+      ignoring: !widget.isVisible,
+      child: SlideTransition(
+        position: _slideAnimation,
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: ClipRRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+              child: GestureDetector(
+                onTap: widget.onTap,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: context.card.withValues(alpha: 0.7),
+                    border: Border(
+                      bottom: BorderSide(
+                        color: context.accentColor.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
                     ),
                   ),
-                ),
-                child: SafeArea(
-                  bottom: false,
-                  child: Row(
-                    children: [
-                      // Thumbnail
-                      _buildThumbnail(context, hasImage, imageUrl),
+                  child: SafeArea(
+                    bottom: false,
+                    child: Row(
+                      children: [
+                        // Thumbnail
+                        _buildThumbnail(context, hasImage, imageUrl),
 
-                      const SizedBox(width: 12),
+                        const SizedBox(width: 12),
 
-                      // Content
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Row(
-                              children: [
-                                Text(
-                                  signal.authorSnapshot?.displayName ??
-                                      'Anonymous',
-                                  style: TextStyle(
-                                    color: context.textPrimary,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
+                        // Content
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    signal.authorSnapshot?.displayName ??
+                                        'Anonymous',
+                                    style: TextStyle(
+                                      color: context.textPrimary,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  '· ${_timeAgo(signal.createdAt)}',
-                                  style: TextStyle(
-                                    color: context.textTertiary,
-                                    fontSize: 12,
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    '· ${_timeAgo(signal.createdAt)}',
+                                    style: TextStyle(
+                                      color: context.textTertiary,
+                                      fontSize: 12,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              signal.content,
-                              style: TextStyle(
-                                color: context.textSecondary,
-                                fontSize: 13,
+                                ],
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
+                              const SizedBox(height: 2),
+                              Text(
+                                signal.content,
+                                style: TextStyle(
+                                  color: context.textSecondary,
+                                  fontSize: 13,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
 
-                      const SizedBox(width: 12),
+                        const SizedBox(width: 12),
 
-                      // Response count
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: context.accentColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.chat_bubble_outline_rounded,
-                              size: 12,
-                              color: context.accentColor,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${signal.commentCount}',
-                              style: TextStyle(
+                        // Response count
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: context.accentColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.chat_bubble_outline_rounded,
+                                size: 12,
                                 color: context.accentColor,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
                               ),
-                            ),
-                          ],
+                              const SizedBox(width: 4),
+                              Text(
+                                '${signal.commentCount}',
+                                style: TextStyle(
+                                  color: context.accentColor,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
 
-                      const SizedBox(width: 8),
+                        const SizedBox(width: 8),
 
-                      // Scroll up
-                      Icon(
-                        Icons.expand_less_rounded,
-                        size: 24,
-                        color: context.textTertiary,
-                      ),
-                    ],
+                        // Scroll up
+                        Icon(
+                          Icons.expand_less_rounded,
+                          size: 24,
+                          color: context.textTertiary,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
