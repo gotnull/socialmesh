@@ -719,15 +719,14 @@ class _ResponseTile extends StatelessWidget {
   final List<bool> ancestorHasMoreSiblings;
   final VoidCallback? onReplyTap;
 
-  static const double _avatarSize = 36.0;
-  static const double _smallAvatarSize = 32.0;
+  static const double _avatarSize = 32.0;
   static const double _lineWidth = 2.0;
-  static const double _indentWidth = 28.0;
+  static const double _indentWidth =
+      40.0; // Must match avatar column width (avatarSize + 8)
 
   @override
   Widget build(BuildContext context) {
-    final isReply = depth > 0;
-    final avatarSize = isReply ? _smallAvatarSize : _avatarSize;
+    final avatarSize = _avatarSize;
 
     return IntrinsicHeight(
       child: Row(
@@ -742,9 +741,10 @@ class _ResponseTile extends StatelessWidget {
                 painter: _ConnectorPainter(
                   color: context.accentColor.withValues(alpha: 0.3),
                   lineWidth: _lineWidth,
-                  avatarSize: avatarSize,
+                  avatarCenterY: avatarSize / 2,
                   showContinuation:
                       !isLastChild, // Continue if more root siblings
+                  extendHorizontal: 4, // Reach into avatar column
                 ),
               ),
             ),
@@ -820,7 +820,7 @@ class _ResponseTile extends StatelessWidget {
                 color: context.card,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: isReply
+                  color: depth > 0
                       ? context.accentColor.withValues(alpha: 0.2)
                       : context.border.withValues(alpha: 0.3),
                   width: 1,
@@ -849,7 +849,7 @@ class _ResponseTile extends StatelessWidget {
                                   response.authorName ?? 'Anonymous',
                                   style: TextStyle(
                                     color: context.textPrimary,
-                                    fontSize: isReply ? 13 : 14,
+                                    fontSize: depth > 0 ? 13 : 14,
                                     fontWeight: FontWeight.w600,
                                   ),
                                   maxLines: 1,
@@ -932,7 +932,7 @@ class _ResponseTile extends StatelessWidget {
                     response.content,
                     style: TextStyle(
                       color: context.textPrimary,
-                      fontSize: isReply ? 13 : 14,
+                      fontSize: depth > 0 ? 13 : 14,
                       height: 1.4,
                     ),
                   ),
@@ -990,8 +990,9 @@ class _ResponseTile extends StatelessWidget {
         painter: _ConnectorPainter(
           color: context.accentColor.withValues(alpha: 0.3),
           lineWidth: _lineWidth,
-          avatarSize: avatarSize,
+          avatarCenterY: avatarSize / 2,
           showContinuation: !isLastChild || ancestorHasSiblings,
+          extendHorizontal: 4, // Reach into avatar column
         ),
       );
     } else {
@@ -1063,20 +1064,22 @@ class _ActionChip extends StatelessWidget {
 }
 
 /// Custom painter for thread connector lines.
-/// Draws an L-shaped connector from the top-center to the right-center (at avatar height).
+/// Draws an L-shaped connector from the top-center to the right edge (at avatar height).
 /// If showContinuation is true, extends the line below as well (T-shape).
 class _ConnectorPainter extends CustomPainter {
   _ConnectorPainter({
     required this.color,
     required this.lineWidth,
-    required this.avatarSize,
+    required this.avatarCenterY,
     required this.showContinuation,
+    this.extendHorizontal = 0,
   });
 
   final Color color;
   final double lineWidth;
-  final double avatarSize;
+  final double avatarCenterY;
   final bool showContinuation;
+  final double extendHorizontal; // Extra distance past column edge
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1087,15 +1090,14 @@ class _ConnectorPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
 
     final centerX = size.width / 2;
-    final avatarCenterY = avatarSize / 2;
 
     // Vertical line from top to avatar center
     canvas.drawLine(Offset(centerX, 0), Offset(centerX, avatarCenterY), paint);
 
-    // Horizontal line from center to right edge (towards avatar)
+    // Horizontal line from center to right edge (plus extension towards avatar)
     canvas.drawLine(
       Offset(centerX, avatarCenterY),
-      Offset(size.width, avatarCenterY),
+      Offset(size.width + extendHorizontal, avatarCenterY),
       paint,
     );
 
@@ -1113,8 +1115,9 @@ class _ConnectorPainter extends CustomPainter {
   bool shouldRepaint(_ConnectorPainter oldDelegate) =>
       color != oldDelegate.color ||
       lineWidth != oldDelegate.lineWidth ||
-      avatarSize != oldDelegate.avatarSize ||
-      showContinuation != oldDelegate.showContinuation;
+      avatarCenterY != oldDelegate.avatarCenterY ||
+      showContinuation != oldDelegate.showContinuation ||
+      extendHorizontal != oldDelegate.extendHorizontal;
 }
 
 /// Sticky header showing compact signal info when scrolled.
