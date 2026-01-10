@@ -42,6 +42,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
 
   static const int _maxLength = 280;
   bool _isSubmitting = false;
+  bool _isLoadingLocation = false;
   int _ttlMinutes = SignalTTL.defaultTTL;
   PostLocation? _location;
   String? _imageLocalPath;
@@ -314,6 +315,8 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
   }
 
   Future<void> _getLocation() async {
+    setState(() => _isLoadingLocation = true);
+
     try {
       final permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
@@ -346,16 +349,22 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
         // Geocoding failed, use coordinates
       }
 
-      setState(() {
-        _location = PostLocation(
-          latitude: position.latitude,
-          longitude: position.longitude,
-          name: locationName,
-        );
-      });
+      if (mounted) {
+        setState(() {
+          _location = PostLocation(
+            latitude: position.latitude,
+            longitude: position.longitude,
+            name: locationName,
+          );
+        });
+      }
     } catch (e) {
       if (mounted) {
         showErrorSnackBar(context, 'Failed to get location');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingLocation = false);
       }
     }
   }
@@ -733,8 +742,11 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
                   _ActionButton(
                     icon: Icons.location_on_outlined,
                     label: 'Location',
-                    onTap: _isSubmitting ? null : _getLocation,
+                    onTap: _isSubmitting || _isLoadingLocation
+                        ? null
+                        : _getLocation,
                     isSelected: _location != null,
+                    isLoading: _isLoadingLocation,
                   ),
                 ],
               ),
@@ -786,12 +798,14 @@ class _ActionButton extends StatelessWidget {
     required this.label,
     required this.onTap,
     this.isSelected = false,
+    this.isLoading = false,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback? onTap;
   final bool isSelected;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -813,14 +827,24 @@ class _ActionButton extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 18,
-              color: isSelected ? context.accentColor : context.textSecondary,
-            ),
+            if (isLoading)
+              SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: context.accentColor,
+                ),
+              )
+            else
+              Icon(
+                icon,
+                size: 18,
+                color: isSelected ? context.accentColor : context.textSecondary,
+              ),
             const SizedBox(width: 8),
             Text(
-              label,
+              isLoading ? 'Getting...' : label,
               style: TextStyle(
                 color: isSelected ? context.accentColor : context.textSecondary,
                 fontSize: 13,
