@@ -173,7 +173,6 @@ class _DraggableTextWidgetState extends State<DraggableTextWidget> {
 }
 
 /// A simple text editor overlay for story creation.
-/// Instagram-style with color picker and size slider.
 class StoryTextEditor extends StatefulWidget {
   const StoryTextEditor({
     super.key,

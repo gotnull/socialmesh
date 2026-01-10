@@ -5,7 +5,7 @@ import '../theme.dart';
 
 /// A text overlay that can be dragged, scaled, and rotated with gestures.
 ///
-/// This widget provides Instagram-style text editing capabilities:
+/// This widget provides text editing capabilities:
 /// - Drag to move
 /// - Two-finger pinch to scale
 /// - Two-finger rotate to rotate

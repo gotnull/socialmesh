@@ -1930,7 +1930,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
         return;
       }
 
-      // 1b. Check display name uniqueness (like Instagram usernames)
+      // 1b. Check display name uniqueness
       if (currentUser != null) {
         final isTaken = await profileCloudSyncService.isDisplayNameTaken(
           displayName,

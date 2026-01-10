@@ -29,6 +29,7 @@ class SignalDetailScreen extends ConsumerStatefulWidget {
 class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
   final TextEditingController _replyController = TextEditingController();
   final FocusNode _replyFocusNode = FocusNode();
+  final ScrollController _scrollController = ScrollController();
   bool _isSubmittingReply = false;
   Post? _currentSignal; // Track updated signal with current commentCount
   List<SignalResponse>? _responses;
@@ -40,15 +41,27 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
   String? _replyingToId;
   String? _replyingToAuthor;
 
+  // Sticky header state
+  bool _showStickyHeader = false;
+  static const double _stickyThreshold = 150.0;
+
   @override
   void initState() {
     super.initState();
     _currentSignal = widget.signal;
     _loadResponses();
     _setupRefreshListeners();
+    _scrollController.addListener(_onScroll);
 
     // Ensure the Firestore comments listener is active for this signal
     ref.read(signalServiceProvider).ensureCommentsListener(widget.signal.id);
+  }
+
+  void _onScroll() {
+    final shouldShow = _scrollController.offset > _stickyThreshold;
+    if (shouldShow != _showStickyHeader) {
+      setState(() => _showStickyHeader = shouldShow);
+    }
   }
 
   void _setupRefreshListeners() {
@@ -125,6 +138,8 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
   void dispose() {
     _refreshSubscription?.cancel();
     _responseUpdateSubscription?.cancel();
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
     _replyController.dispose();
     _replyFocusNode.dispose();
     super.dispose();
@@ -273,10 +288,24 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
 
   Widget _buildResponsesList(BuildContext context) {
     if (_isLoadingResponses) {
-      return Center(
-        child: CircularProgressIndicator(
-          color: context.accentColor,
-          strokeWidth: 2,
+      return Container(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          children: [
+            SizedBox(
+              width: 32,
+              height: 32,
+              child: CircularProgressIndicator(
+                color: context.accentColor,
+                strokeWidth: 2,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Loading responses...',
+              style: TextStyle(color: context.textTertiary, fontSize: 13),
+            ),
+          ],
         ),
       );
     }
@@ -285,19 +314,47 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
 
     if (allResponses.isEmpty) {
       return Container(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(32),
         decoration: BoxDecoration(
           color: context.card,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: context.border.withValues(alpha: 0.5)),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: context.border.withValues(alpha: 0.3)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Column(
           children: [
-            Icon(Icons.forum_outlined, size: 32, color: context.textTertiary),
-            const SizedBox(height: 8),
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: context.accentColor.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.chat_bubble_outline_rounded,
+                size: 28,
+                color: context.accentColor.withValues(alpha: 0.7),
+              ),
+            ),
+            const SizedBox(height: 16),
             Text(
               'No responses yet',
-              style: TextStyle(color: context.textSecondary, fontSize: 14),
+              style: TextStyle(
+                color: context.textPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Be the first to respond to this signal',
+              style: TextStyle(color: context.textTertiary, fontSize: 13),
             ),
           ],
         ),
@@ -316,36 +373,83 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
       }
     }
 
-    // Flatten tree into display list with depth info
+    // Flatten tree into display list with depth and sibling info
     final displayList = <_ResponseDisplayItem>[];
-    void addWithReplies(SignalResponse response, int depth) {
-      displayList.add(_ResponseDisplayItem(response: response, depth: depth));
+
+    void addWithReplies(
+      SignalResponse response,
+      int depth,
+      List<bool> ancestorHasMoreSiblings,
+      bool isFirstChild,
+      bool isLastChild,
+    ) {
       final replies = repliesMap[response.id] ?? [];
-      // Sort replies by createdAt
       replies.sort((a, b) => a.createdAt.compareTo(b.createdAt));
-      for (final reply in replies) {
-        addWithReplies(reply, depth + 1);
+      final hasReplies = replies.isNotEmpty;
+
+      displayList.add(
+        _ResponseDisplayItem(
+          response: response,
+          depth: depth,
+          hasReplies: hasReplies,
+          isFirstChild: isFirstChild,
+          isLastChild: isLastChild,
+          ancestorHasMoreSiblings: List.from(ancestorHasMoreSiblings),
+        ),
+      );
+
+      for (var i = 0; i < replies.length; i++) {
+        final isFirst = i == 0;
+        final isLast = i == replies.length - 1;
+        // For children, pass down whether THIS node has more siblings after it
+        final newAncestors = List<bool>.from(ancestorHasMoreSiblings);
+        newAncestors.add(!isLastChild); // Add current node's sibling status
+        addWithReplies(replies[i], depth + 1, newAncestors, isFirst, isLast);
       }
     }
 
-    for (final root in rootResponses) {
-      addWithReplies(root, 0);
+    for (var i = 0; i < rootResponses.length; i++) {
+      final isFirst = i == 0;
+      final isLast = i == rootResponses.length - 1;
+      addWithReplies(rootResponses[i], 0, [], isFirst, isLast);
     }
 
     return Column(
-      children: displayList.map((item) {
+      children: displayList.asMap().entries.map((entry) {
+        final index = entry.key;
+        final item = entry.value;
+        // Check if next item is a direct reply to this one
+        final hasDirectReplyBelow =
+            index < displayList.length - 1 &&
+            displayList[index + 1].response.parentId == item.response.id;
+
         return _ResponseTile(
           key: ValueKey(item.response.id),
           response: item.response,
           depth: item.depth,
+          hasReplies: item.hasReplies,
+          hasDirectReplyBelow: hasDirectReplyBelow,
+          isFirstChild: item.isFirstChild,
+          isLastChild: item.isLastChild,
+          ancestorHasMoreSiblings: item.ancestorHasMoreSiblings,
           onReplyTap: () => _handleReplyTo(item.response),
         );
       }).toList(),
     );
   }
 
+  void _scrollToTop() {
+    _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final signal = _currentSignal ?? widget.signal;
+
     return Scaffold(
       backgroundColor: context.background,
       appBar: AppBar(
@@ -360,34 +464,92 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
       ),
       body: Column(
         children: [
+          // Sticky header - appears when scrolled past threshold
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            height: _showStickyHeader ? null : 0,
+            child: AnimatedOpacity(
+              opacity: _showStickyHeader ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 200),
+              child: _StickySignalHeader(signal: signal, onTap: _scrollToTop),
+            ),
+          ),
+
           Expanded(
             child: ListView(
+              controller: _scrollController,
               padding: const EdgeInsets.all(16),
               children: [
-                SignalCard(
-                  signal: _currentSignal ?? widget.signal,
-                  showActions: false,
-                ),
+                SignalCard(signal: signal, showActions: false),
                 const SizedBox(height: 24),
 
-                // Replies header
-                Row(
-                  children: [
-                    Icon(Icons.reply, size: 18, color: context.textSecondary),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Responses',
-                      style: TextStyle(
-                        color: context.textSecondary,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
+                // Responses header
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: context.accentColor.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: context.accentColor.withValues(alpha: 0.1),
                     ),
-                  ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: context.accentColor.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          Icons.forum_rounded,
+                          size: 16,
+                          color: context.accentColor,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Conversation',
+                              style: TextStyle(
+                                color: context.textPrimary,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            if (_responses != null && _responses!.isNotEmpty)
+                              Text(
+                                '${_responses!.length} ${_responses!.length == 1 ? 'response' : 'responses'}',
+                                style: TextStyle(
+                                  color: context.textTertiary,
+                                  fontSize: 12,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      if (_isLoadingResponses)
+                        SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: context.accentColor,
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
 
-                // Replies list
+                // Responses list
                 _buildResponsesList(context),
               ],
             ),
@@ -520,8 +682,19 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
 class _ResponseDisplayItem {
   final SignalResponse response;
   final int depth;
+  final bool hasReplies;
+  final bool isFirstChild;
+  final bool isLastChild;
+  final List<bool> ancestorHasMoreSiblings;
 
-  const _ResponseDisplayItem({required this.response, required this.depth});
+  const _ResponseDisplayItem({
+    required this.response,
+    required this.depth,
+    this.hasReplies = false,
+    this.isFirstChild = true,
+    this.isLastChild = true,
+    this.ancestorHasMoreSiblings = const [],
+  });
 }
 
 class _ResponseTile extends StatelessWidget {
@@ -529,102 +702,265 @@ class _ResponseTile extends StatelessWidget {
     super.key,
     required this.response,
     required this.depth,
+    this.hasReplies = false,
+    this.hasDirectReplyBelow = false,
+    this.isFirstChild = true,
+    this.isLastChild = true,
+    this.ancestorHasMoreSiblings = const [],
     this.onReplyTap,
   });
 
   final SignalResponse response;
   final int depth;
+  final bool hasReplies;
+  final bool hasDirectReplyBelow;
+  final bool isFirstChild;
+  final bool isLastChild;
+  final List<bool> ancestorHasMoreSiblings;
   final VoidCallback? onReplyTap;
+
+  static const double _avatarSize = 36.0;
+  static const double _smallAvatarSize = 32.0;
+  static const double _lineWidth = 2.0;
+  static const double _indentWidth = 28.0;
 
   @override
   Widget build(BuildContext context) {
     final isReply = depth > 0;
-    // Indent replies but cap at 2 levels for readability
-    final leftPadding = isReply ? 40.0 * depth.clamp(1, 2) : 0.0;
+    final avatarSize = isReply ? _smallAvatarSize : _avatarSize;
 
-    return Container(
-      margin: EdgeInsets.only(left: leftPadding, bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isReply
-              ? context.accentColor.withValues(alpha: 0.3)
-              : context.border.withValues(alpha: 0.5),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Container(
-                width: isReply ? 28 : 32,
-                height: isReply ? 28 : 32,
-                decoration: BoxDecoration(
-                  color: context.accentColor.withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.person,
-                  size: isReply ? 16 : 18,
-                  color: context.accentColor,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      response.authorName ?? 'Anonymous',
-                      style: TextStyle(
-                        color: context.textPrimary,
-                        fontSize: isReply ? 12 : 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      _timeAgo(response.createdAt),
-                      style: TextStyle(
-                        color: context.textTertiary,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
+          // For non-first root items, add incoming connector column
+          // This aligns with column 0 of nested items
+          if (depth == 0 && !isFirstChild)
+            SizedBox(
+              width: _indentWidth,
+              child: CustomPaint(
+                painter: _ConnectorPainter(
+                  color: context.accentColor.withValues(alpha: 0.3),
+                  lineWidth: _lineWidth,
+                  avatarSize: avatarSize,
+                  showContinuation:
+                      !isLastChild, // Continue if more root siblings
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            response.content,
-            style: TextStyle(
-              color: context.textPrimary,
-              fontSize: isReply ? 13 : 14,
             ),
-          ),
-          // Reply button
-          const SizedBox(height: 8),
-          GestureDetector(
-            onTap: onReplyTap,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
+
+          // Thread columns for depth levels (nested items)
+          for (int i = 0; i < depth; i++)
+            SizedBox(
+              width: _indentWidth,
+              child: _buildThreadColumn(context, i, avatarSize),
+            ),
+
+          // Avatar column
+          SizedBox(
+            width: avatarSize + 8,
+            child: Column(
               children: [
-                Icon(Icons.reply, size: 14, color: context.textTertiary),
-                const SizedBox(width: 4),
-                Text(
-                  'Reply',
-                  style: TextStyle(
-                    color: context.textTertiary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+                // Avatar
+                Container(
+                  width: avatarSize,
+                  height: avatarSize,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        context.accentColor.withValues(alpha: 0.3),
+                        context.accentColor.withValues(alpha: 0.1),
+                      ],
+                    ),
+                    border: Border.all(
+                      color: context.accentColor.withValues(alpha: 0.5),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: context.accentColor.withValues(alpha: 0.2),
+                        blurRadius: 8,
+                        spreadRadius: 0,
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    Icons.person_rounded,
+                    size: avatarSize * 0.5,
+                    color: context.accentColor,
                   ),
                 ),
+
+                // Line below avatar to children (or first root to siblings via children)
+                if (hasDirectReplyBelow ||
+                    (isFirstChild && !isLastChild && depth == 0))
+                  Expanded(
+                    child: Center(
+                      child: Container(
+                        width: _lineWidth,
+                        color: context.accentColor.withValues(alpha: 0.3),
+                      ),
+                    ),
+                  ),
               ],
+            ),
+          ),
+
+          const SizedBox(width: 8),
+
+          // Content
+          Expanded(
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: context.card,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isReply
+                      ? context.accentColor.withValues(alpha: 0.2)
+                      : context.border.withValues(alpha: 0.3),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header row
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  response.authorName ?? 'Anonymous',
+                                  style: TextStyle(
+                                    color: context.textPrimary,
+                                    fontSize: isReply ? 13 : 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                if (response.isLocal) ...[
+                                  const SizedBox(width: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: context.accentColor.withValues(
+                                        alpha: 0.15,
+                                      ),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      'You',
+                                      style: TextStyle(
+                                        color: context.accentColor,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              _timeAgo(response.createdAt),
+                              style: TextStyle(
+                                color: context.textTertiary,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Reply count badge (if has replies)
+                      if (hasReplies)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: context.accentColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.subdirectory_arrow_right_rounded,
+                                size: 12,
+                                color: context.accentColor,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Has replies',
+                                style: TextStyle(
+                                  color: context.accentColor,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  // Content text
+                  Text(
+                    response.content,
+                    style: TextStyle(
+                      color: context.textPrimary,
+                      fontSize: isReply ? 13 : 14,
+                      height: 1.4,
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Action bar
+                  Row(
+                    children: [
+                      _ActionChip(
+                        icon: Icons.reply_rounded,
+                        label: 'Reply',
+                        onTap: onReplyTap,
+                      ),
+                      const Spacer(),
+                      // Depth indicator
+                      if (depth > 0)
+                        Text(
+                          'Level $depth',
+                          style: TextStyle(
+                            color: context.textTertiary.withValues(alpha: 0.5),
+                            fontSize: 10,
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -632,10 +968,359 @@ class _ResponseTile extends StatelessWidget {
     );
   }
 
+  /// Builds a thread column showing vertical/horizontal lines.
+  /// For the last column (i == depth - 1), shows an L-connector to the avatar.
+  /// For earlier columns, shows a straight line if ancestor has more siblings.
+  Widget _buildThreadColumn(
+    BuildContext context,
+    int columnIndex,
+    double avatarSize,
+  ) {
+    final isLastColumn = columnIndex == depth - 1;
+    final ancestorHasSiblings =
+        columnIndex < ancestorHasMoreSiblings.length &&
+        ancestorHasMoreSiblings[columnIndex];
+
+    if (isLastColumn) {
+      // Last column: draw L-shaped connector to avatar.
+      // Show continuation below if:
+      // - THIS item has more siblings (!isLastChild), OR
+      // - The PARENT at this depth level has more siblings (ancestorHasSiblings)
+      return CustomPaint(
+        painter: _ConnectorPainter(
+          color: context.accentColor.withValues(alpha: 0.3),
+          lineWidth: _lineWidth,
+          avatarSize: avatarSize,
+          showContinuation: !isLastChild || ancestorHasSiblings,
+        ),
+      );
+    } else {
+      // Earlier columns: show vertical continuation if ancestor at this level
+      // has more siblings below its current child.
+      if (ancestorHasSiblings) {
+        return Center(
+          child: Container(
+            width: _lineWidth,
+            color: context.accentColor.withValues(alpha: 0.3),
+          ),
+        );
+      }
+      return const SizedBox.shrink();
+    }
+  }
+
   String _timeAgo(DateTime dateTime) {
     final diff = DateTime.now().difference(dateTime);
 
     if (diff.inMinutes < 1) return 'just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    if (diff.inDays < 7) return '${diff.inDays}d ago';
+    return '${(diff.inDays / 7).floor()}w ago';
+  }
+}
+
+/// Styled action chip for response actions.
+class _ActionChip extends StatelessWidget {
+  const _ActionChip({required this.icon, required this.label, this.onTap});
+
+  final IconData icon;
+  final String label;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: context.textTertiary.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 14, color: context.textSecondary),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  color: context.textSecondary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Custom painter for thread connector lines.
+/// Draws an L-shaped connector from the top-center to the right-center (at avatar height).
+/// If showContinuation is true, extends the line below as well (T-shape).
+class _ConnectorPainter extends CustomPainter {
+  _ConnectorPainter({
+    required this.color,
+    required this.lineWidth,
+    required this.avatarSize,
+    required this.showContinuation,
+  });
+
+  final Color color;
+  final double lineWidth;
+  final double avatarSize;
+  final bool showContinuation;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = lineWidth
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    final centerX = size.width / 2;
+    final avatarCenterY = avatarSize / 2;
+
+    // Vertical line from top to avatar center
+    canvas.drawLine(Offset(centerX, 0), Offset(centerX, avatarCenterY), paint);
+
+    // Horizontal line from center to right edge (towards avatar)
+    canvas.drawLine(
+      Offset(centerX, avatarCenterY),
+      Offset(size.width, avatarCenterY),
+      paint,
+    );
+
+    // Continue vertical line below if there are more siblings
+    if (showContinuation) {
+      canvas.drawLine(
+        Offset(centerX, avatarCenterY),
+        Offset(centerX, size.height),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ConnectorPainter oldDelegate) =>
+      color != oldDelegate.color ||
+      lineWidth != oldDelegate.lineWidth ||
+      avatarSize != oldDelegate.avatarSize ||
+      showContinuation != oldDelegate.showContinuation;
+}
+
+/// Sticky header showing compact signal info when scrolled.
+class _StickySignalHeader extends StatelessWidget {
+  const _StickySignalHeader({required this.signal, this.onTap});
+
+  final Post signal;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasImage = signal.mediaUrls.isNotEmpty;
+    final imageUrl = hasImage ? signal.mediaUrls.first : null;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: context.card,
+          border: Border(
+            bottom: BorderSide(color: context.border.withValues(alpha: 0.3)),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Thumbnail
+            if (hasImage && imageUrl != null)
+              Container(
+                width: 44,
+                height: 44,
+                margin: const EdgeInsets.only(right: 12),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: context.accentColor.withValues(alpha: 0.3),
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: context.accentColor.withValues(alpha: 0.15),
+                      blurRadius: 8,
+                      spreadRadius: 0,
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(7),
+                  child: Image.network(
+                    imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => Container(
+                      color: context.accentColor.withValues(alpha: 0.1),
+                      child: Icon(
+                        Icons.image_outlined,
+                        size: 20,
+                        color: context.accentColor,
+                      ),
+                    ),
+                  ),
+                ),
+              )
+            else
+              // Avatar placeholder when no image
+              Container(
+                width: 44,
+                height: 44,
+                margin: const EdgeInsets.only(right: 12),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      context.accentColor.withValues(alpha: 0.3),
+                      context.accentColor.withValues(alpha: 0.1),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: context.accentColor.withValues(alpha: 0.3),
+                    width: 1.5,
+                  ),
+                ),
+                child: Icon(
+                  Icons.signal_cellular_alt_rounded,
+                  size: 20,
+                  color: context.accentColor,
+                ),
+              ),
+
+            // Content preview
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Author
+                  Row(
+                    children: [
+                      Text(
+                        signal.authorSnapshot?.displayName ?? 'Anonymous',
+                        style: TextStyle(
+                          color: context.textPrimary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '•',
+                        style: TextStyle(
+                          color: context.textTertiary,
+                          fontSize: 10,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        _timeAgo(signal.createdAt),
+                        style: TextStyle(
+                          color: context.textTertiary,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  // Content preview
+                  Text(
+                    signal.content,
+                    style: TextStyle(
+                      color: context.textSecondary,
+                      fontSize: 12,
+                      height: 1.3,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(width: 12),
+
+            // Response count badge
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: context.accentColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.forum_rounded,
+                    size: 12,
+                    color: context.accentColor,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${signal.commentCount}',
+                    style: TextStyle(
+                      color: context.accentColor,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(width: 8),
+
+            // Scroll up indicator
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: context.textTertiary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.keyboard_arrow_up_rounded,
+                size: 18,
+                color: context.textTertiary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _timeAgo(DateTime dateTime) {
+    final diff = DateTime.now().difference(dateTime);
+
+    if (diff.inMinutes < 1) return 'now';
     if (diff.inMinutes < 60) return '${diff.inMinutes}m';
     if (diff.inHours < 24) return '${diff.inHours}h';
     return '${diff.inDays}d';
