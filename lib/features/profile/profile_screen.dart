@@ -17,6 +17,7 @@ import '../../providers/social_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../providers/subscription_providers.dart';
 import '../../services/content_moderation/profanity_checker.dart';
+import '../../services/profile/profile_cloud_sync_service.dart';
 import '../../utils/snackbar.dart';
 import '../../utils/validation.dart';
 import '../navigation/main_shell.dart';
@@ -100,14 +101,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  void _showEditSheet(BuildContext context) {
-    showModalBottomSheet(
+  Future<void> _showEditSheet(BuildContext context) async {
+    await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withValues(alpha: 0.6),
       builder: (context) => const _EditProfileSheet(),
     );
+
+    // Force refresh after sheet closes - always refresh to be safe
+    if (mounted) {
+      ref.invalidate(userProfileProvider);
+      // Wait for the provider to reload
+      await ref.read(userProfileProvider.future);
+      // Force rebuild
+      setState(() {});
+    }
   }
 }
 
@@ -217,36 +227,40 @@ class _ProfileView extends ConsumerWidget {
     final hasAllPremium = ref.watch(hasAllPremiumFeaturesProvider);
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
       child: Column(
         children: [
           // Sync error banner (if any)
           if (syncError != null) ...[
-            _SyncErrorBanner(error: syncError),
-            SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: _SyncErrorBanner(error: syncError),
+            ),
           ],
 
-          // Avatar section
-          _AvatarSection(profile: profile),
-          const SizedBox(height: 24),
+          // Banner and Avatar section
+          _BannerAvatarSection(profile: profile, accentColor: accentColor),
+          const SizedBox(height: 16),
 
           // Display name and verified badge
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Flexible(
-                child: Text(
-                  profile.displayName,
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: context.textPrimary,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Flexible(
+                  child: Text(
+                    profile.displayName,
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: context.textPrimary,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              if (hasAllPremium) ...[const SimpleVerifiedBadge(size: 24)],
-            ],
+                if (hasAllPremium) ...[const SimpleVerifiedBadge(size: 24)],
+              ],
+            ),
           ),
           if (profile.callsign != null) ...[
             const SizedBox(height: 4),
@@ -270,122 +284,130 @@ class _ProfileView extends ConsumerWidget {
           ],
           const SizedBox(height: 24),
 
-          // Bio
-          if (profile.bio != null && profile.bio!.isNotEmpty) ...[
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: context.card,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: context.border.withValues(alpha: 0.3),
-                ),
-              ),
-              child: Text(
-                profile.bio!,
-                style: TextStyle(
-                  fontSize: 15,
-                  color: context.textSecondary,
-                  height: 1.5,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-            const SizedBox(height: 16),
-          ],
+          // Padded content section
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              children: [
+                // Bio
+                if (profile.bio != null && profile.bio!.isNotEmpty) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: context.card,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: context.border.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Text(
+                      profile.bio!,
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: context.textSecondary,
+                        height: 1.5,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
 
-          // Info cards
-          _ProfileInfoCard(
-            title: 'Details',
-            items: [
-              if (profile.email != null)
-                _InfoItem(
-                  icon: Icons.email_outlined,
-                  label: 'Email',
-                  value: profile.email!,
+                // Info cards
+                _ProfileInfoCard(
+                  title: 'Details',
+                  items: [
+                    if (profile.email != null)
+                      _InfoItem(
+                        icon: Icons.email_outlined,
+                        label: 'Email',
+                        value: profile.email!,
+                      ),
+                    if (user != null)
+                      _InfoItem(
+                        icon: Icons.fingerprint,
+                        label: 'UID',
+                        value: user!.uid,
+                        copyable: true,
+                      ),
+                    _InfoItem(
+                      icon: Icons.calendar_today_outlined,
+                      label: 'Member since',
+                      value: _formatDate(profile.createdAt),
+                    ),
+                  ],
                 ),
-              if (user != null)
-                _InfoItem(
-                  icon: Icons.fingerprint,
-                  label: 'UID',
-                  value: user!.uid,
-                  copyable: true,
-                ),
-              _InfoItem(
-                icon: Icons.calendar_today_outlined,
-                label: 'Member since',
-                value: _formatDate(profile.createdAt),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
+                const SizedBox(height: 12),
 
-          if (profile.website != null ||
-              profile.socialLinks?.isEmpty == false) ...[
-            _ProfileInfoCard(
-              title: 'Links',
-              items: [
-                if (profile.website != null)
-                  _InfoItem(
-                    icon: Icons.link,
-                    label: 'Website',
-                    value: profile.website!,
+                if (profile.website != null ||
+                    profile.socialLinks?.isEmpty == false) ...[
+                  _ProfileInfoCard(
+                    title: 'Links',
+                    items: [
+                      if (profile.website != null)
+                        _InfoItem(
+                          icon: Icons.link,
+                          label: 'Website',
+                          value: profile.website!,
+                        ),
+                      if (profile.socialLinks?.twitter != null)
+                        _InfoItem(
+                          icon: Icons.alternate_email,
+                          label: 'Twitter',
+                          value: '@${profile.socialLinks!.twitter}',
+                        ),
+                      if (profile.socialLinks?.mastodon != null)
+                        _InfoItem(
+                          icon: Icons.tag,
+                          label: 'Mastodon',
+                          value: profile.socialLinks!.mastodon!,
+                        ),
+                      if (profile.socialLinks?.github != null)
+                        _InfoItem(
+                          icon: Icons.code,
+                          label: 'GitHub',
+                          value: profile.socialLinks!.github!,
+                        ),
+                      if (profile.socialLinks?.discord != null)
+                        _InfoItem(
+                          icon: Icons.discord,
+                          label: 'Discord',
+                          value: profile.socialLinks!.discord!,
+                        ),
+                      if (profile.socialLinks?.telegram != null)
+                        _InfoItem(
+                          icon: Icons.send,
+                          label: 'Telegram',
+                          value: profile.socialLinks!.telegram!,
+                        ),
+                    ],
                   ),
-                if (profile.socialLinks?.twitter != null)
-                  _InfoItem(
-                    icon: Icons.alternate_email,
-                    label: 'Twitter',
-                    value: '@${profile.socialLinks!.twitter}',
+                  const SizedBox(height: 12),
+                ],
+
+                // Edit profile button
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: onEditTap,
+                    icon: const Icon(Icons.edit),
+                    label: const Text('Edit Profile'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
                   ),
-                if (profile.socialLinks?.mastodon != null)
-                  _InfoItem(
-                    icon: Icons.tag,
-                    label: 'Mastodon',
-                    value: profile.socialLinks!.mastodon!,
-                  ),
-                if (profile.socialLinks?.github != null)
-                  _InfoItem(
-                    icon: Icons.code,
-                    label: 'GitHub',
-                    value: profile.socialLinks!.github!,
-                  ),
-                if (profile.socialLinks?.discord != null)
-                  _InfoItem(
-                    icon: Icons.discord,
-                    label: 'Discord',
-                    value: profile.socialLinks!.discord!,
-                  ),
-                if (profile.socialLinks?.telegram != null)
-                  _InfoItem(
-                    icon: Icons.send,
-                    label: 'Telegram',
-                    value: profile.socialLinks!.telegram!,
-                  ),
+                ),
+
+                // Cloud Backup Section (collapsible)
+                const SizedBox(height: 24),
+                _CloudBackupSection(user: user),
+
+                const SizedBox(height: 32),
               ],
             ),
-            const SizedBox(height: 12),
-          ],
-
-          // Edit profile button
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: onEditTap,
-              icon: const Icon(Icons.edit),
-              label: const Text('Edit Profile'),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-            ),
           ),
-
-          // Cloud Backup Section (collapsible)
-          const SizedBox(height: 24),
-          _CloudBackupSection(user: user),
-
-          const SizedBox(height: 32),
         ],
       ),
     );
@@ -1395,79 +1417,110 @@ class _GitHubLogoPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-class _AvatarSection extends StatelessWidget {
+/// Combined banner and avatar section for profile view
+class _BannerAvatarSection extends StatelessWidget {
   final UserProfile profile;
+  final Color accentColor;
 
-  const _AvatarSection({required this.profile});
+  const _BannerAvatarSection({
+    required this.profile,
+    required this.accentColor,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final accentColor = context.accentColor;
-
-    return Container(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: accentColor.withValues(alpha: 0.3),
-            blurRadius: 24,
-            spreadRadius: 4,
-          ),
-        ],
-      ),
+    // Use a SizedBox to give the Stack a fixed height (banner + avatar overflow)
+    return SizedBox(
+      height: 190, // 140 banner + 50 avatar overflow
       child: Stack(
-        alignment: Alignment.center,
+        clipBehavior: Clip.none,
         children: [
-          // Outer glow ring
-          Container(
-            width: 140,
+          // Banner
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
             height: 140,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  accentColor.withValues(alpha: 0.5),
-                  accentColor.withValues(alpha: 0.2),
-                ],
-              ),
+            child: Container(
+              decoration: BoxDecoration(color: context.card),
+              child: _buildBannerContent(context),
             ),
           ),
-          // Avatar
-          Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: context.card,
-              border: Border.all(color: accentColor, width: 3),
-            ),
-            child: ClipOval(child: _buildAvatarContent(context)),
-          ),
-          // Verified badge
-          if (profile.isVerified)
-            Positioned(
-              right: 8,
-              bottom: 8,
+          // Avatar positioned at bottom of banner, overlapping
+          Positioned(
+            top: 90, // 140 - 50 (half of avatar)
+            left: 0,
+            right: 0,
+            child: Center(
               child: Container(
-                padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: AccentColors.blue,
                   shape: BoxShape.circle,
-                  border: Border.all(color: context.background, width: 2),
+                  border: Border.all(color: context.background, width: 4),
+                  boxShadow: [
+                    BoxShadow(
+                      color: accentColor.withValues(alpha: 0.3),
+                      blurRadius: 16,
+                      spreadRadius: 2,
+                    ),
+                  ],
                 ),
-                child: const Icon(Icons.check, size: 16, color: Colors.white),
+                child: _buildAvatar(context),
               ),
             ),
+          ),
         ],
       ),
     );
   }
 
+  Widget _buildBannerContent(BuildContext context) {
+    if (profile.bannerUrl == null) {
+      return DefaultBanner(accentColor: accentColor);
+    }
+
+    if (profile.bannerUrl!.startsWith('http')) {
+      return Image.network(
+        profile.bannerUrl!,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Center(
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: accentColor,
+            ),
+          );
+        },
+        errorBuilder: (ctx, err, stack) =>
+            DefaultBanner(accentColor: accentColor),
+      );
+    } else {
+      return Image.file(
+        File(profile.bannerUrl!),
+        fit: BoxFit.cover,
+        width: double.infinity,
+        errorBuilder: (ctx, err, stack) =>
+            DefaultBanner(accentColor: accentColor),
+      );
+    }
+  }
+
+  Widget _buildAvatar(BuildContext context) {
+    return Container(
+      width: 100,
+      height: 100,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: context.card,
+        border: Border.all(color: accentColor, width: 3),
+      ),
+      child: ClipOval(child: _buildAvatarContent(context)),
+    );
+  }
+
   Widget _buildAvatarContent(BuildContext context) {
     if (profile.avatarUrl != null) {
-      // Check if it's a local file or URL
       if (profile.avatarUrl!.startsWith('http')) {
         return Image.network(
           profile.avatarUrl!,
@@ -1477,11 +1530,7 @@ class _AvatarSection extends StatelessWidget {
             return Center(
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                value: loadingProgress.expectedTotalBytes != null
-                    ? loadingProgress.cumulativeBytesLoaded /
-                          loadingProgress.expectedTotalBytes!
-                    : null,
-                color: context.accentColor,
+                color: accentColor,
               ),
             );
           },
@@ -1499,13 +1548,19 @@ class _AvatarSection extends StatelessWidget {
   }
 
   Widget _buildInitials(BuildContext context) {
-    return Center(
-      child: Text(
-        profile.initials,
-        style: TextStyle(
-          fontSize: 40,
-          fontWeight: FontWeight.bold,
-          color: context.accentColor,
+    final initials = profile.displayName.isNotEmpty
+        ? profile.displayName[0].toUpperCase()
+        : '?';
+    return Container(
+      color: accentColor.withValues(alpha: 0.2),
+      child: Center(
+        child: Text(
+          initials,
+          style: TextStyle(
+            fontSize: 36,
+            fontWeight: FontWeight.bold,
+            color: accentColor,
+          ),
         ),
       ),
     );
@@ -1829,6 +1884,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
     if (!_formKey.currentState!.validate()) return;
 
     final moderationService = ref.read(contentModerationServiceProvider);
+    final currentUser = ref.read(currentUserProvider);
 
     // 1. Check Display Name - REJECT immediately if violates (no "post anyway")
     final displayName = _displayNameController.text.trim();
@@ -1855,6 +1911,22 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
           ),
         );
         return;
+      }
+
+      // 1b. Check display name uniqueness (like Instagram usernames)
+      if (currentUser != null) {
+        final isTaken = await profileCloudSyncService.isDisplayNameTaken(
+          displayName,
+          currentUser.uid,
+        );
+        if (isTaken) {
+          if (!mounted) return;
+          showErrorSnackBar(
+            context,
+            'This display name is already taken. Please choose a different one.',
+          );
+          return;
+        }
       }
     }
 
@@ -2087,12 +2159,16 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
             clearSocialLinks: socialLinks.isEmpty,
           );
 
-      // Force refresh to ensure UI updates
-      ref.invalidate(userProfileProvider);
-
       if (mounted) {
-        Navigator.pop(context);
+        Navigator.pop(
+          context,
+          true,
+        ); // Return true to indicate profile was updated
         showSuccessSnackBar(context, 'Profile updated');
+      }
+    } on DisplayNameTakenException catch (e) {
+      if (mounted) {
+        showErrorSnackBar(context, e.toString());
       }
     } catch (e) {
       if (mounted) {

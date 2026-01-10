@@ -1508,12 +1508,15 @@ class SocialService {
 
     if (!doc.exists) {
       // Create profile - prefer users collection displayName over OAuth name
-      final displayName =
+      var displayName =
           userProfileDisplayName ??
           user.displayName ??
           user.email?.split('@').first ??
           'User';
       final avatarUrl = userProfileAvatarUrl ?? user.photoURL;
+
+      // Ensure display name is unique - append numbers if taken
+      displayName = await _generateUniqueDisplayName(displayName, user.uid);
 
       await docRef.set({
         'displayName': displayName,
@@ -1533,17 +1536,25 @@ class SocialService {
       if (userProfileDisplayName != null &&
           userProfileDisplayName.isNotEmpty &&
           userProfileDisplayName != currentDisplayName) {
-        // Sync the displayName from users collection to profiles collection
-        final updates = <String, dynamic>{
-          'displayName': userProfileDisplayName,
-          'displayNameLower': userProfileDisplayName.toLowerCase(),
-          'updatedAt': FieldValue.serverTimestamp(),
-        };
-        // Also sync avatar if users collection has one
-        if (userProfileAvatarUrl != null && userProfileAvatarUrl.isNotEmpty) {
-          updates['avatarUrl'] = userProfileAvatarUrl;
+        // Check if the new display name is available before syncing
+        final isTaken = await isDisplayNameTaken(
+          userProfileDisplayName,
+          user.uid,
+        );
+        if (!isTaken) {
+          // Sync the displayName from users collection to profiles collection
+          final updates = <String, dynamic>{
+            'displayName': userProfileDisplayName,
+            'displayNameLower': userProfileDisplayName.toLowerCase(),
+            'updatedAt': FieldValue.serverTimestamp(),
+          };
+          // Also sync avatar if users collection has one
+          if (userProfileAvatarUrl != null && userProfileAvatarUrl.isNotEmpty) {
+            updates['avatarUrl'] = userProfileAvatarUrl;
+          }
+          await docRef.update(updates);
         }
-        await docRef.update(updates);
+        // If taken, silently skip - user will need to choose a different name manually
       }
     }
   }
@@ -1920,6 +1931,44 @@ class SocialService {
       }
     }
     return false;
+  }
+
+  /// Generate a unique display name by appending numbers if the base name is taken.
+  /// Sanitizes the name to match validation rules (no spaces, valid chars only).
+  Future<String> _generateUniqueDisplayName(
+    String baseName,
+    String excludeUserId,
+  ) async {
+    // Sanitize: replace spaces with underscores, remove invalid chars
+    var sanitized = baseName
+        .replaceAll(' ', '_')
+        .replaceAll(RegExp(r'[^a-zA-Z0-9._]'), '');
+
+    // Ensure not empty and meets minimum length
+    if (sanitized.length < 2) {
+      sanitized = 'user_$sanitized';
+    }
+
+    // Truncate to leave room for numbers (max 30 chars)
+    if (sanitized.length > 25) {
+      sanitized = sanitized.substring(0, 25);
+    }
+
+    // Check if base name is available
+    if (!await isDisplayNameTaken(sanitized, excludeUserId)) {
+      return sanitized;
+    }
+
+    // Try appending numbers until we find an available name
+    for (var i = 1; i < 1000; i++) {
+      final candidate = '$sanitized$i';
+      if (!await isDisplayNameTaken(candidate, excludeUserId)) {
+        return candidate;
+      }
+    }
+
+    // Fallback: use timestamp-based unique name
+    return 'user_${DateTime.now().millisecondsSinceEpoch}';
   }
 
   /// Upload a profile avatar image.

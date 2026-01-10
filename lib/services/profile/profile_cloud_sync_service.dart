@@ -84,10 +84,43 @@ class ProfileCloudSyncService {
     }
   }
 
+  /// Check if a display name is already taken by another user.
+  /// Returns true if the name is taken, false if available.
+  Future<bool> isDisplayNameTaken(
+    String displayName, [
+    String? excludeUserId,
+  ]) async {
+    final normalizedName = displayName.trim().toLowerCase();
+    if (normalizedName.isEmpty) return false;
+
+    // Query for profiles with this display name (case-insensitive via lowercase field)
+    final query = await _firestore
+        .collection(_profilesCollection)
+        .where('displayNameLower', isEqualTo: normalizedName)
+        .limit(2)
+        .get();
+
+    // Check if any results belong to a different user
+    for (final doc in query.docs) {
+      if (excludeUserId == null || doc.id != excludeUserId) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   /// Sync only the public-facing profile fields to `profiles` collection
   /// This is the collection used by social features (followers, posts, etc.)
   Future<void> _syncPublicProfile(String uid, UserProfile profile) async {
     AppLogging.auth('ProfileSync: Syncing public profile for uid: $uid');
+
+    // Check display name uniqueness before syncing
+    if (profile.displayName.isNotEmpty) {
+      final isTaken = await isDisplayNameTaken(profile.displayName, uid);
+      if (isTaken) {
+        throw DisplayNameTakenException(profile.displayName);
+      }
+    }
 
     final docRef = _publicProfileDoc(uid);
     final doc = await docRef.get();
@@ -663,6 +696,17 @@ class ProfileCloudSyncService {
     );
     return cloud;
   }
+}
+
+/// Exception thrown when a display name is already taken.
+class DisplayNameTakenException implements Exception {
+  DisplayNameTakenException(this.displayName);
+
+  final String displayName;
+
+  @override
+  String toString() =>
+      'The display name "$displayName" is already taken. Please choose a different name.';
 }
 
 /// Singleton instance

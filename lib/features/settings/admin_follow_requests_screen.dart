@@ -405,10 +405,11 @@ class _SeedDataTabState extends State<_SeedDataTab> {
   String? get _currentUserId => FirebaseAuth.instance.currentUser?.uid;
 
   // Dummy user data with avatar and banner URLs
+  // Note: displayName must follow validation rules (no spaces, use underscores)
   static const _dummyUsers = [
     {
       'id': 'dummy_user_alice',
-      'displayName': 'Alice Anderson',
+      'displayName': 'alice.anderson',
       'bio': 'Mesh networking enthusiast. Off-grid living advocate.',
       'callsign': 'AA1',
       'isPrivate': false,
@@ -418,7 +419,7 @@ class _SeedDataTabState extends State<_SeedDataTab> {
     },
     {
       'id': 'dummy_user_bob',
-      'displayName': 'Bob Builder',
+      'displayName': 'bob_builder',
       'bio': 'Building mesh networks one node at a time.',
       'callsign': 'BB2',
       'isPrivate': true,
@@ -428,7 +429,7 @@ class _SeedDataTabState extends State<_SeedDataTab> {
     },
     {
       'id': 'dummy_user_carol',
-      'displayName': 'Carol Chen',
+      'displayName': 'carol.chen',
       'bio': 'Radio amateur since 2015. KD7ABC.',
       'callsign': 'CC3',
       'isPrivate': true,
@@ -438,7 +439,7 @@ class _SeedDataTabState extends State<_SeedDataTab> {
     },
     {
       'id': 'dummy_user_dave',
-      'displayName': 'Dave Davidson',
+      'displayName': 'dave_davidson',
       'bio': 'Emergency preparedness instructor.',
       'callsign': 'DD4',
       'isPrivate': false,
@@ -448,7 +449,7 @@ class _SeedDataTabState extends State<_SeedDataTab> {
     },
     {
       'id': 'dummy_user_eve',
-      'displayName': 'Eve Edwards',
+      'displayName': 'eve.edwards',
       'bio': 'Privacy advocate. Decentralization maximalist.',
       'callsign': 'EE5',
       'isPrivate': true,
@@ -458,7 +459,7 @@ class _SeedDataTabState extends State<_SeedDataTab> {
     },
     {
       'id': 'dummy_user_frank',
-      'displayName': 'Frank Fisher',
+      'displayName': 'frank_fisher',
       'bio': 'Mountain rescue volunteer. SAR team member.',
       'callsign': 'FF6',
       'isPrivate': false,
@@ -468,7 +469,7 @@ class _SeedDataTabState extends State<_SeedDataTab> {
     },
     {
       'id': 'dummy_user_grace',
-      'displayName': 'Grace Garcia',
+      'displayName': 'grace.garcia',
       'bio': 'Solar powered mesh node operator.',
       'callsign': 'GG7',
       'isPrivate': true,
@@ -478,7 +479,7 @@ class _SeedDataTabState extends State<_SeedDataTab> {
     },
     {
       'id': 'dummy_user_henry',
-      'displayName': 'Henry Huang',
+      'displayName': 'henry_huang',
       'bio': 'Electronics hobbyist. DIY antenna builder.',
       'callsign': 'HH8',
       'isPrivate': false,
