@@ -52,6 +52,7 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
   late int _currentStoryIndex;
   late AnimationController _progressController;
   bool _isPaused = false;
+  bool _isClosing = false; // Prevent double-pop race condition
 
   @override
   void initState() {
@@ -110,7 +111,7 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
   }
 
   void _onProgressComplete(AnimationStatus status) {
-    if (status == AnimationStatus.completed) {
+    if (status == AnimationStatus.completed && mounted) {
       _goToNextStory();
     }
   }
@@ -122,6 +123,8 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
   }
 
   void _goToNextStory() {
+    if (!mounted || _isClosing) return;
+
     if (_currentStoryIndex < _currentGroup.stories.length - 1) {
       // Next story in current group
       setState(() => _currentStoryIndex++);
@@ -140,8 +143,13 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
       _markCurrentStoryViewed();
       _startProgress();
     } else {
-      // End of all stories
-      Navigator.pop(context);
+      // End of all stories - pop only story viewer
+      // Set flag BEFORE popping to prevent race condition with animation callback
+      _isClosing = true;
+      _progressController.stop(); // Stop animation to prevent callback
+      if (Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
     }
   }
 
@@ -362,8 +370,12 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
         onLongPressStart: (_) => _pauseProgress(),
         onLongPressEnd: (_) => _resumeProgress(),
         onVerticalDragEnd: (details) {
+          if (_isClosing) return;
           if (details.primaryVelocity != null &&
-              details.primaryVelocity! > 300) {
+              details.primaryVelocity! > 300 &&
+              Navigator.canPop(context)) {
+            _isClosing = true;
+            _progressController.stop();
             Navigator.pop(context);
           }
         },
@@ -399,10 +411,22 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
                         // User info header
                         _StoryHeader(
                           story: story,
-                          onClose: () => Navigator.pop(context),
+                          onClose: () {
+                            if (_isClosing) return;
+                            _isClosing = true;
+                            _progressController.stop();
+                            if (Navigator.canPop(context)) {
+                              Navigator.pop(context);
+                            }
+                          },
                           onOptions: _showOptions,
                           onProfileTap: () {
-                            Navigator.pop(context);
+                            if (_isClosing) return;
+                            _isClosing = true;
+                            _progressController.stop();
+                            if (Navigator.canPop(context)) {
+                              Navigator.pop(context);
+                            }
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -1085,7 +1109,9 @@ class _ViewerTile extends ConsumerWidget {
             style: TextStyle(color: context.textTertiary, fontSize: 12),
           ),
           onTap: () {
-            Navigator.pop(context);
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
             Navigator.push(
               context,
               MaterialPageRoute(
