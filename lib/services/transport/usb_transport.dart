@@ -1,13 +1,11 @@
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:usb_serial/usb_serial.dart';
-import 'package:logger/logger.dart';
 import '../../core/logging.dart';
 import '../../core/transport.dart';
 
 /// USB Serial implementation of DeviceTransport
 class UsbTransport implements DeviceTransport {
-  late final Logger _logger;
   final StreamController<DeviceConnectionState> _stateController;
   final StreamController<List<int>> _dataController;
 
@@ -19,9 +17,7 @@ class UsbTransport implements DeviceTransport {
 
   UsbTransport()
     : _stateController = StreamController<DeviceConnectionState>.broadcast(),
-      _dataController = StreamController<List<int>>.broadcast() {
-    _logger = AppLogging.bleLogger; // USB uses same logging config
-  }
+      _dataController = StreamController<List<int>>.broadcast();
 
   @override
   TransportType get type => TransportType.usb;
@@ -51,13 +47,13 @@ class UsbTransport implements DeviceTransport {
     if (_state != newState) {
       _state = newState;
       _stateController.add(newState);
-      _logger.d('USB state changed to: $newState');
+      AppLogging.debug('USB state changed to: $newState');
     }
   }
 
   @override
   Stream<DeviceInfo> scan({Duration? timeout}) async* {
-    _logger.i('Scanning for USB devices...');
+    AppLogging.debug('Scanning for USB devices...');
 
     try {
       final devices = await UsbSerial.listDevices();
@@ -71,7 +67,7 @@ class UsbTransport implements DeviceTransport {
         );
       }
     } catch (e) {
-      _logger.e('USB scan error: $e');
+      AppLogging.debug('⚠️ USB scan error: $e');
     }
   }
 
@@ -79,14 +75,14 @@ class UsbTransport implements DeviceTransport {
   Future<void> connect(DeviceInfo device) async {
     if (_state == DeviceConnectionState.connected ||
         _state == DeviceConnectionState.connecting) {
-      _logger.w('Already connected or connecting');
+      AppLogging.debug('⚠️ Already connected or connecting');
       return;
     }
 
     _updateState(DeviceConnectionState.connecting);
 
     try {
-      _logger.i('Connecting to ${device.name}...');
+      AppLogging.debug('Connecting to ${device.name}...');
 
       // Find the device
       final devices = await UsbSerial.listDevices();
@@ -121,24 +117,24 @@ class UsbTransport implements DeviceTransport {
       _portSubscription = _port!.inputStream?.listen(
         (data) {
           if (data.isNotEmpty) {
-            _logger.d('Received ${data.length} bytes');
+            AppLogging.debug('USB received ${data.length} bytes');
             _dataController.add(data.toList());
           }
         },
         onError: (error) {
-          _logger.e('Port error: $error');
+          AppLogging.debug('⚠️ Port error: $error');
           _updateState(DeviceConnectionState.error);
         },
         onDone: () {
-          _logger.i('Port closed');
+          AppLogging.debug('Port closed');
           _updateState(DeviceConnectionState.disconnected);
         },
       );
 
       _updateState(DeviceConnectionState.connected);
-      _logger.i('Connected successfully');
+      AppLogging.debug('Connected successfully');
     } catch (e) {
-      _logger.e('Connection error: $e');
+      AppLogging.debug('⚠️ Connection error: $e');
       _updateState(DeviceConnectionState.error);
       rethrow;
     }
@@ -164,9 +160,9 @@ class UsbTransport implements DeviceTransport {
       _device = null;
 
       _updateState(DeviceConnectionState.disconnected);
-      _logger.i('Disconnected');
+      AppLogging.debug('Disconnected');
     } catch (e) {
-      _logger.e('Disconnect error: $e');
+      AppLogging.debug('⚠️ Disconnect error: $e');
       _updateState(DeviceConnectionState.error);
     }
   }
@@ -182,11 +178,11 @@ class UsbTransport implements DeviceTransport {
     }
 
     try {
-      _logger.d('Sending ${data.length} bytes');
+      AppLogging.debug('USB sending ${data.length} bytes');
       await _port!.write(Uint8List.fromList(data));
-      _logger.d('Sent successfully');
+      AppLogging.debug('USB sent successfully');
     } catch (e) {
-      _logger.e('Send error: $e');
+      AppLogging.debug('⚠️ Send error: $e');
       rethrow;
     }
   }

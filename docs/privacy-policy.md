@@ -29,6 +29,16 @@ The following data is stored locally on your device and is never transmitted to 
 - Saved routes and waypoints
 - Ringtone and theme preferences
 
+## Signals Feature
+
+Signals are ephemeral messages broadcast over the Meshtastic mesh network. They:
+- Are stored locally on your device until they expire
+- Are never uploaded to any server unless you sign in and attach an image
+- Expire automatically based on the TTL you select (15 minutes to 24 hours)
+- Never contain analytics or tracking data
+
+When signed in, image uploads are stored temporarily in secure cloud storage for mesh sharing. Images inherit the Signal's TTL and are deleted when the Signal expires.
+
 ## Third-Party Services
 
 ### RevenueCat (In-App Purchases)

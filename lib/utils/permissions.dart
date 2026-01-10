@@ -1,11 +1,9 @@
 import 'package:permission_handler/permission_handler.dart';
-import 'package:logger/logger.dart';
+import '../core/logging.dart';
 
 /// Permission helper for managing app permissions
 class PermissionHelper {
-  final Logger _logger;
-
-  PermissionHelper({Logger? logger}) : _logger = logger ?? Logger();
+  PermissionHelper();
 
   /// Request Bluetooth permissions
   Future<bool> requestBluetoothPermissions() async {
@@ -22,12 +20,14 @@ class PermissionHelper {
       );
 
       if (!allGranted) {
-        _logger.w('Some Bluetooth permissions were not granted: $statuses');
+        AppLogging.permissions(
+          '⚠️ Some Bluetooth permissions were not granted: $statuses',
+        );
       }
 
       return allGranted;
     } catch (e) {
-      _logger.e('Error requesting Bluetooth permissions: $e');
+      AppLogging.permissions('⚠️ Error requesting Bluetooth permissions: $e');
       return false;
     }
   }
@@ -45,7 +45,7 @@ class PermissionHelper {
           (bluetoothConnect.isGranted || bluetoothConnect.isLimited) &&
           (location.isGranted || location.isLimited);
     } catch (e) {
-      _logger.e('Error checking Bluetooth permissions: $e');
+      AppLogging.permissions('⚠️ Error checking Bluetooth permissions: $e');
       return false;
     }
   }
@@ -55,11 +55,11 @@ class PermissionHelper {
     try {
       final status = await Permission.camera.request();
       if (!status.isGranted) {
-        _logger.w('Camera permission not granted: $status');
+        AppLogging.permissions('⚠️ Camera permission not granted: $status');
       }
       return status.isGranted;
     } catch (e) {
-      _logger.e('Error requesting camera permission: $e');
+      AppLogging.permissions('⚠️ Error requesting camera permission: $e');
       return false;
     }
   }
@@ -70,7 +70,7 @@ class PermissionHelper {
       final status = await Permission.camera.status;
       return status.isGranted;
     } catch (e) {
-      _logger.e('Error checking camera permission: $e');
+      AppLogging.permissions('⚠️ Error checking camera permission: $e');
       return false;
     }
   }
@@ -80,11 +80,11 @@ class PermissionHelper {
     try {
       final status = await Permission.storage.request();
       if (!status.isGranted) {
-        _logger.w('Storage permission not granted: $status');
+        AppLogging.permissions('⚠️ Storage permission not granted: $status');
       }
       return status.isGranted;
     } catch (e) {
-      _logger.e('Error requesting storage permission: $e');
+      AppLogging.permissions('⚠️ Error requesting storage permission: $e');
       return false;
     }
   }

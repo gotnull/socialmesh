@@ -44,9 +44,9 @@ import '../device_shop/screens/shop_admin_dashboard.dart';
 import '../device_shop/screens/review_moderation_screen.dart';
 import '../device_shop/providers/admin_shop_providers.dart';
 import '../mesh_health/widgets/mesh_health_dashboard.dart';
-import '../social/social.dart';
 import '../social/screens/reported_content_screen.dart';
 import '../settings/admin_follow_requests_screen.dart';
+import '../signals/signals.dart';
 
 /// Combined admin notification count provider
 /// Uses FutureProvider to properly handle the async stream states
@@ -249,12 +249,12 @@ class _MainShellState extends ConsumerState<MainShell> {
   /// Drawer menu items for quick access screens not in bottom nav
   /// Organized into logical sections with headers
   final List<_DrawerMenuItem> _drawerMenuItems = [
-    // Social - index 0, account tile navigates here
+    // Signals - mesh-first ephemeral presence (v1)
     _DrawerMenuItem(
-      icon: Icons.forum_outlined,
-      label: 'Social',
-      screen: const SocialHubScreen(),
-      iconColor: Colors.deepPurple.shade400,
+      icon: Icons.sensors_outlined,
+      label: 'Signals',
+      screen: const PresenceFeedScreen(),
+      iconColor: Colors.teal.shade400,
     ),
 
     // Activity

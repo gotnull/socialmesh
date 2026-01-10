@@ -14,6 +14,42 @@ enum PostVisibility {
   private,
 }
 
+// =============================================================================
+// SIGNAL MODE (v1 Mesh-First)
+// =============================================================================
+
+/// Determines whether a post is a social post (v2+) or a mesh signal (v1).
+/// v1 creates only signals; social mode activates later.
+enum PostMode {
+  /// Mesh-first ephemeral signal - no fan-out, no likes, local-only feed
+  signal,
+
+  /// Full social post - fan-out to followers, likes, comments, global feed
+  social,
+}
+
+/// Origin of the post/signal content.
+enum SignalOrigin {
+  /// Created via mesh packet (primary for v1)
+  mesh,
+
+  /// Created directly in cloud (authenticated, optional)
+  cloud,
+}
+
+/// State of image attachment for signals.
+/// Images are deferred-upload for mesh-first behavior.
+enum ImageState {
+  /// No image attached
+  none,
+
+  /// Image stored locally, not yet uploaded to cloud
+  local,
+
+  /// Image uploaded to Firebase Storage
+  cloud,
+}
+
 /// Follow request status for private accounts
 enum FollowRequestStatus {
   /// Request is pending approval
@@ -222,6 +258,13 @@ class PostAuthorSnapshot {
 ///
 /// Posts are immutable except for deletion.
 /// Stored in `posts/{postId}` collection.
+///
+/// Signal Mode (v1):
+/// - postMode = signal: Mesh-first ephemeral content
+/// - origin = mesh: Created via mesh packet
+/// - expiresAt: TTL for automatic cleanup
+/// - meshNodeId: Source mesh node (int as string)
+/// - imageState: Deferred image upload state
 class Post {
   /// Unique post identifier
   final String id;
@@ -238,7 +281,7 @@ class Post {
   /// Optional location data
   final PostLocation? location;
 
-  /// Optional mesh node reference (as hex string)
+  /// Optional mesh node reference (as hex string) - legacy field
   final String? nodeId;
 
   /// When the post was created
@@ -253,8 +296,40 @@ class Post {
   /// Optional author snapshot (populated when fetching posts)
   final PostAuthorSnapshot? authorSnapshot;
 
+  // =========================================================================
+  // SIGNAL MODE FIELDS (v1 Mesh-First)
+  // =========================================================================
+
+  /// Whether this is a signal (v1) or social post (v2+).
+  /// v1 only creates signals; social features activate later.
+  final PostMode postMode;
+
+  /// Origin of this content - mesh packet or cloud-created.
+  final SignalOrigin origin;
+
+  /// When this signal expires (null = never expires, social posts).
+  /// Signals are ephemeral and auto-cleanup after TTL.
+  final DateTime? expiresAt;
+
+  /// Source mesh node ID (as int, stored as string for Firestore).
+  /// Used for proximity sorting in presence feed.
+  final int? meshNodeId;
+
+  /// Current state of image attachment.
+  /// Signals defer image upload for mesh-first behavior.
+  final ImageState imageState;
+
+  /// Local path to image file (before cloud upload).
+  final String? imageLocalPath;
+
   /// Convenience getter for image URLs (alias for mediaUrls)
   List<String> get imageUrls => mediaUrls;
+
+  /// Whether this signal has expired
+  bool get isExpired => expiresAt != null && DateTime.now().isAfter(expiresAt!);
+
+  /// Whether this is a mesh signal (not a social post)
+  bool get isSignal => postMode == PostMode.signal;
 
   const Post({
     required this.id,
@@ -267,6 +342,13 @@ class Post {
     this.commentCount = 0,
     this.likeCount = 0,
     this.authorSnapshot,
+    // Signal mode fields - defaults for backward compatibility
+    this.postMode = PostMode.social,
+    this.origin = SignalOrigin.cloud,
+    this.expiresAt,
+    this.meshNodeId,
+    this.imageState = ImageState.none,
+    this.imageLocalPath,
   });
 
   factory Post.fromFirestore(DocumentSnapshot doc) {
@@ -274,7 +356,7 @@ class Post {
     return Post(
       id: doc.id,
       authorId: data['authorId'] as String,
-      content: data['content'] as String,
+      content: data['content'] as String? ?? '',
       mediaUrls:
           (data['mediaUrls'] as List<dynamic>?)
               ?.map((e) => e as String)
@@ -292,6 +374,22 @@ class Post {
               data['authorSnapshot'] as Map<String, dynamic>,
             )
           : null,
+      // Signal mode fields
+      postMode: PostMode.values.firstWhere(
+        (e) => e.name == (data['postMode'] as String?),
+        orElse: () => PostMode.social,
+      ),
+      origin: SignalOrigin.values.firstWhere(
+        (e) => e.name == (data['origin'] as String?),
+        orElse: () => SignalOrigin.cloud,
+      ),
+      expiresAt: (data['expiresAt'] as Timestamp?)?.toDate(),
+      meshNodeId: data['meshNodeId'] as int?,
+      imageState: ImageState.values.firstWhere(
+        (e) => e.name == (data['imageState'] as String?),
+        orElse: () => ImageState.none,
+      ),
+      imageLocalPath: data['imageLocalPath'] as String?,
     );
   }
 
@@ -300,12 +398,21 @@ class Post {
       'authorId': authorId,
       'content': content,
       'mediaUrls': mediaUrls,
+      // Also set imageUrl for compatibility with receivers checking single field
+      if (mediaUrls.isNotEmpty) 'imageUrl': mediaUrls.first,
       if (location != null) 'location': location!.toMap(),
       if (nodeId != null) 'nodeId': nodeId,
       if (authorSnapshot != null) 'authorSnapshot': authorSnapshot!.toMap(),
       'createdAt': FieldValue.serverTimestamp(),
       'commentCount': 0,
       'likeCount': 0,
+      // Signal mode fields
+      'postMode': postMode.name,
+      'origin': origin.name,
+      if (expiresAt != null) 'expiresAt': Timestamp.fromDate(expiresAt!),
+      if (meshNodeId != null) 'meshNodeId': meshNodeId,
+      'imageState': imageState.name,
+      // NOTE: imageLocalPath is LOCAL-ONLY - never store device paths in Firestore
     };
   }
 
@@ -320,6 +427,12 @@ class Post {
     int? commentCount,
     int? likeCount,
     PostAuthorSnapshot? authorSnapshot,
+    PostMode? postMode,
+    SignalOrigin? origin,
+    DateTime? expiresAt,
+    int? meshNodeId,
+    ImageState? imageState,
+    String? imageLocalPath,
   }) {
     return Post(
       id: id ?? this.id,
@@ -332,6 +445,12 @@ class Post {
       commentCount: commentCount ?? this.commentCount,
       likeCount: likeCount ?? this.likeCount,
       authorSnapshot: authorSnapshot ?? this.authorSnapshot,
+      postMode: postMode ?? this.postMode,
+      origin: origin ?? this.origin,
+      expiresAt: expiresAt ?? this.expiresAt,
+      meshNodeId: meshNodeId ?? this.meshNodeId,
+      imageState: imageState ?? this.imageState,
+      imageLocalPath: imageLocalPath ?? this.imageLocalPath,
     );
   }
 

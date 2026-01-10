@@ -3,15 +3,14 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
-import 'package:logger/logger.dart';
 import '../../../core/constants.dart';
+import '../../../core/logging.dart';
 import '../models/widget_schema.dart';
 
 /// Service for interacting with the widget marketplace
 class WidgetMarketplaceService {
   // Base URL for the marketplace API - configured via .env
   final String baseUrl;
-  final Logger _logger;
   final http.Client _client;
 
   /// Maximum number of retry attempts for transient network errors
@@ -34,10 +33,8 @@ class WidgetMarketplaceService {
 
   WidgetMarketplaceService({
     String? baseUrl,
-    Logger? logger,
     http.Client? client,
   }) : baseUrl = baseUrl ?? _defaultBaseUrl,
-       _logger = logger ?? Logger(),
        _client = client ?? http.Client();
 
   /// Execute a GET request with retry logic for transient failures
@@ -68,16 +65,16 @@ class WidgetMarketplaceService {
         return response;
       } on SocketException catch (e) {
         lastException = e;
-        _logger.w('Socket error (attempt $attempt): $e');
+        AppLogging.marketplace('⚠️ Socket error (attempt $attempt): $e');
       } on HttpException catch (e) {
         lastException = e;
-        _logger.w('HTTP error (attempt $attempt): $e');
+        AppLogging.marketplace('⚠️ HTTP error (attempt $attempt): $e');
       } on http.ClientException catch (e) {
         lastException = e;
-        _logger.w('Client error (attempt $attempt): $e');
+        AppLogging.marketplace('⚠️ Client error (attempt $attempt): $e');
       } on TimeoutException catch (e) {
         lastException = e;
-        _logger.w('Timeout (attempt $attempt): $e');
+        AppLogging.marketplace('⚠️ Timeout (attempt $attempt): $e');
       }
     }
 
@@ -112,14 +109,16 @@ class WidgetMarketplaceService {
         final json = jsonDecode(response.body) as Map<String, dynamic>;
         return MarketplaceResponse.fromJson(json);
       } else {
-        _logger.e('Marketplace browse failed: ${response.statusCode}');
+        AppLogging.marketplace(
+          '⚠️ Marketplace browse failed: ${response.statusCode}',
+        );
         throw MarketplaceException(
           'Failed to load widgets: ${response.statusCode}',
         );
       }
     } catch (e) {
       if (e is MarketplaceException) rethrow;
-      _logger.e('Marketplace browse error: $e');
+      AppLogging.marketplace('⚠️ Marketplace browse error: $e');
       throw MarketplaceException('Failed to load widgets: $e');
     }
   }
@@ -143,7 +142,7 @@ class WidgetMarketplaceService {
       }
     } catch (e) {
       if (e is MarketplaceException) rethrow;
-      _logger.e('Featured widgets error: $e');
+      AppLogging.marketplace('⚠️ Featured widgets error: $e');
       throw MarketplaceException('Failed to load featured widgets: $e');
     }
   }
@@ -164,7 +163,7 @@ class WidgetMarketplaceService {
       }
     } catch (e) {
       if (e is MarketplaceException) rethrow;
-      _logger.e('Get widget error: $e');
+      AppLogging.marketplace('⚠️ Get widget error: $e');
       rethrow;
     }
   }
@@ -185,7 +184,7 @@ class WidgetMarketplaceService {
       }
     } catch (e) {
       if (e is MarketplaceException) rethrow;
-      _logger.e('Download widget error: $e');
+      AppLogging.marketplace('⚠️ Download widget error: $e');
       throw MarketplaceException('Failed to download widget: $e');
     }
   }
@@ -206,7 +205,7 @@ class WidgetMarketplaceService {
       }
     } catch (e) {
       if (e is MarketplaceException) rethrow;
-      _logger.e('Preview widget error: $e');
+      AppLogging.marketplace('⚠️ Preview widget error: $e');
       throw MarketplaceException('Failed to preview widget: $e');
     }
   }
@@ -238,7 +237,7 @@ class WidgetMarketplaceService {
       }
     } catch (e) {
       if (e is MarketplaceException) rethrow;
-      _logger.e('Upload widget error: $e');
+      AppLogging.marketplace('⚠️ Upload widget error: $e');
       rethrow;
     }
   }
@@ -264,7 +263,7 @@ class WidgetMarketplaceService {
       }
     } catch (e) {
       if (e is MarketplaceException) rethrow;
-      _logger.e('Rate widget error: $e');
+      AppLogging.marketplace('⚠️ Rate widget error: $e');
       rethrow;
     }
   }
@@ -288,7 +287,7 @@ class WidgetMarketplaceService {
       }
     } catch (e) {
       if (e is MarketplaceException) rethrow;
-      _logger.e('Report widget error: $e');
+      AppLogging.marketplace('⚠️ Report widget error: $e');
       rethrow;
     }
   }
@@ -348,7 +347,7 @@ class WidgetMarketplaceService {
       }
     } catch (e) {
       if (e is MarketplaceException) rethrow;
-      _logger.e('Get pending widgets error: $e');
+      AppLogging.marketplace('⚠️ Get pending widgets error: $e');
       rethrow;
     }
   }
@@ -372,7 +371,7 @@ class WidgetMarketplaceService {
       }
     } catch (e) {
       if (e is MarketplaceException) rethrow;
-      _logger.e('Approve widget error: $e');
+      AppLogging.marketplace('⚠️ Approve widget error: $e');
       rethrow;
     }
   }
@@ -400,7 +399,7 @@ class WidgetMarketplaceService {
       }
     } catch (e) {
       if (e is MarketplaceException) rethrow;
-      _logger.e('Reject widget error: $e');
+      AppLogging.marketplace('⚠️ Reject widget error: $e');
       rethrow;
     }
   }
@@ -428,7 +427,7 @@ class WidgetMarketplaceService {
       }
     } catch (e) {
       if (e is MarketplaceException) rethrow;
-      _logger.e('Get my widgets error: $e');
+      AppLogging.marketplace('⚠️ Get my widgets error: $e');
       rethrow;
     }
   }
@@ -465,12 +464,14 @@ class WidgetMarketplaceService {
         );
       } else {
         final body = response.body;
-        _logger.e('Submit widget failed: ${response.statusCode} - $body');
+        AppLogging.marketplace(
+          '⚠️ Submit widget failed: ${response.statusCode} - $body',
+        );
         throw MarketplaceException('Failed to submit widget');
       }
     } catch (e) {
       if (e is MarketplaceException) rethrow;
-      _logger.e('Submit widget error: $e');
+      AppLogging.marketplace('⚠️ Submit widget error: $e');
       rethrow;
     }
   }
@@ -500,7 +501,7 @@ class WidgetMarketplaceService {
       }
     } catch (e) {
       if (e is MarketplaceException) rethrow;
-      _logger.e('Check duplicate error: $e');
+      AppLogging.marketplace('⚠️ Check duplicate error: $e');
       // Return no duplicate on error to allow submission
       return DuplicateCheckResult(isDuplicate: false);
     }
@@ -531,7 +532,7 @@ class WidgetMarketplaceService {
       }
     } catch (e) {
       if (e is MarketplaceException) rethrow;
-      _logger.e('Get pending for admin error: $e');
+      AppLogging.marketplace('⚠️ Get pending for admin error: $e');
       rethrow;
     }
   }

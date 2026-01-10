@@ -1,7 +1,7 @@
 # Support
 
 **Socialmesh**  
-**Your Off-Grid Communication Companion**
+**Meshtastic Companion for iOS & Android**
 
 ---
 
@@ -55,6 +55,23 @@ Socialmesh is a mobile app for communicating over Meshtastic mesh radio networks
 - Typical line-of-sight range: 1-10+ km
 - Urban areas with obstacles: 0.5-2 km
 - Using repeater nodes can extend range significantly
+
+### Signals
+
+**Q: What is a Signal?**
+A Signal is a short, ephemeral message broadcast to nearby mesh nodes. Unlike regular messages, Signals expire automatically (from 15 minutes to 24 hours) and are sorted by proximity, not popularity.
+
+**Q: Do Signals last forever?**
+No. Every Signal has a time-to-live (TTL). When it expires, it fades from all devices. There is no archive.
+
+**Q: Why can't I see images on some Signals?**
+Images unlock based on presence. If you've been near the sender's node for a sustained period, or if you're signed in, images become visible. This prevents images from spreading beyond local context.
+
+**Q: Do I need an account to use Signals?**
+No. Signals work entirely over the mesh without authentication. Signing in enables optional cloud backup and image uploads, but is not required.
+
+**Q: Is there a global feed of Signals?**
+No. You only see Signals from nearby nodes. There is no discovery, no trending, and no algorithm.
 
 ### In-App Purchases
 

@@ -1,35 +1,43 @@
 # Socialmesh
 
 ## Tagline
-**Stay Connected. Stay Private. No Internet Required.**
+**Off-Grid Communication. No Internet Required.**
 
 ---
 
 ## Short Description (App Store - 30 words)
-Communicate off-grid with Meshtastic mesh radios. Send encrypted messages, track friends on maps, and build private communities—all without cellular or WiFi. Your data, your network.
+Communicate off-grid with Meshtastic mesh radios. Send encrypted messages, see nearby nodes on maps, and leave ephemeral signals — all without cellular or WiFi.
 
 ---
 
 ## Full Description (App Store)
 
-### Break Free from Big Tech
+### Mesh-First Communication
 
-Socialmesh turns Meshtastic mesh radios into a private, decentralized social network. Messages hop between devices, creating community-owned infrastructure that works anywhere—mountains, festivals, emergencies, or just your neighborhood.
+Socialmesh connects you to Meshtastic radios for off-grid communication. Messages hop between devices, reaching people nearby without cell towers or internet.
+
+### Signals: Presence, Not Performance
+
+Leave short, ephemeral traces for people nearby. Signals expire automatically and never get ranked or promoted. No followers. No likes. Just nearby awareness.
+
+- Signals are temporary (15 min to 24 hours)
+- Signals stay local — no global feed
+- Images unlock based on proximity or authentication
+- Works without an account
 
 ### No Internet? No Problem.
 Connect via Bluetooth to affordable Meshtastic radios (~$30). Your messages travel through the mesh, bouncing between devices until they reach their destination. Works in remote wilderness, underground, or during network outages.
 
 ### Privacy by Design
 - End-to-end encryption on all messages
-- No accounts, no email, no phone number
-- Ephemeral identities that auto-rotate
+- No accounts required
 - No servers storing your data
-- Open source and auditable
+- Works fully offline
 
 ### See Your Mesh
 - Interactive map showing all nodes with GPS
-- Track friends and family in real-time
-- Drop waypoints to share locations
+- See node positions in real-time
+- Drop waypoints for coordination
 - Download maps for offline use
 
 ### Safety Features
@@ -49,10 +57,10 @@ Configure every aspect of your Meshtastic radio:
 ### 7,000+ Ringtones
 Browse a massive library of RTTTL ringtones. Preview, customize, and push directly to your device.
 
-### Powerful Integrations
-- IFTTT Webhooks for smart automations
+### Integrations
+- IFTTT Webhooks for automations
 - MQTT Bridge for home automation
-- QR Code Import for easy channel sharing
+- QR Code Import for easy channel configuration
 
 ---
 
@@ -61,14 +69,15 @@ Browse a massive library of RTTTL ringtones. Preview, customize, and push direct
 - Off-Grid Messaging – No cellular, no WiFi, no problem
 - Mesh Network – Messages hop between devices automatically
 - End-to-End Encryption – Private by default
-- Interactive Maps – See everyone on your mesh
+- Signals – Ephemeral traces for people nearby
+- Interactive Maps – See nodes on your mesh
 - Offline Maps – Download regions for wilderness use
 - Emergency SOS – One-tap broadcast to entire mesh
-- Node Discovery – Find everyone on your network
+- Node Discovery – See who's on the mesh
 - Full Device Config – Complete Meshtastic control
 - 7,000+ Ringtones – Massive RTTTL library
 - IFTTT Integration – Automate with webhooks
-- Cloud Backup – Never lose your settings
+- Cloud Backup – Never lose your settings (optional)
 - Cross-Platform – iOS and Android
 
 ---
@@ -76,13 +85,13 @@ Browse a massive library of RTTTL ringtones. Preview, customize, and push direct
 ## Use Cases
 
 ### Backcountry Adventures
-Stay connected with your hiking or skiing group miles from any cell tower. Share GPS positions and coordinate meetups.
+Stay connected with your hiking or skiing group miles from any cell tower. Coordinate meetups and leave signals for others to find.
 
 ### Festivals & Events
-Build your own network at crowded events where cellular is overloaded. Find friends in the chaos.
+Communicate at crowded events where cellular is overloaded. Coordinate with friends via mesh messages.
 
 ### Neighborhood Networks
-Create resilient local communication for your community. Perfect for emergencies or just staying in touch.
+Create resilient local communication for your community. Useful for emergencies or everyday coordination.
 
 ### Emergency Preparedness
 When cell towers go down, mesh networks keep working. Essential for disaster preparedness kits.
@@ -95,9 +104,9 @@ For those who value digital privacy—no accounts, no tracking, no data collecti
 ## Screenshots Captions
 
 1. **Dashboard** – Connect to your Meshtastic device and see network status at a glance
-2. **Mesh Map** – View all nodes on an interactive map with real-time positions
-3. **Messaging** – Send encrypted messages to individuals or broadcast to all
-4. **Node List** – See everyone on your mesh with signal strength and battery
+2. **Mesh Map** – View all nodes on an interactive map with positions
+3. **Messaging** – Send encrypted messages to individuals or channels
+4. **Node List** – See nearby nodes with signal strength and battery
 5. **Device Config** – Full control over your Meshtastic radio settings
 6. **Ringtone Library** – Browse 7,000+ tones and push to your device
 
@@ -126,19 +135,19 @@ meshtastic, mesh network, off-grid, offline messaging, lora, radio, emergency, p
 ## Social Media Copy
 
 ### Twitter/X (280 chars)
-Introducing Socialmesh — the off-grid social network for Meshtastic radios. No internet, no accounts, no tracking. Just encrypted messages hopping through the mesh. Perfect for adventures, emergencies, or escaping Big Tech.
+Socialmesh — a Meshtastic companion app for iOS & Android. Send encrypted messages, see nearby nodes, leave ephemeral signals. Works offline without accounts or tracking. For adventures, emergencies, or everyday off-grid communication.
 
 ### Instagram
 Go off-grid without going offline.
 
-Socialmesh connects your Meshtastic radio to create a private, encrypted network with friends and family. No cell towers. No WiFi. No data harvesting.
+Socialmesh connects to your Meshtastic radio for encrypted, off-grid communication. No cell towers. No WiFi. No data harvesting.
 
 - Encrypted messaging
-- Real-time GPS tracking
-- Works anywhere
+- Node positions on maps
+- Ephemeral signals for people nearby
 - No accounts needed
 
-Download now and own your communication.
+Download now.
 
 #meshtastic #offgrid #meshnetwork #privacyfirst #decentralized #prepper #hiking #camping #emergency #nointernet
 
@@ -154,25 +163,9 @@ Download now and own your communication.
 **Website:** [Your website]
 **Press Contact:** [Email]
 
-**One-liner:** A privacy-first social network built on Meshtastic mesh radios.
+**One-liner:** A Meshtastic companion app for off-grid mesh communication.
 
-**Elevator Pitch:** Socialmesh transforms affordable Meshtastic radios into a decentralized communication network. Send encrypted messages, track friends on maps, and stay connected in places where traditional networks fail—all without internet, accounts, or data harvesting.
-
----
-
-## Competitive Advantages
-
-| Feature | Socialmesh | Signal | WhatsApp | Zello |
-|---------|------------|--------|----------|-------|
-| Works without internet | Yes | No | No | No |
-| No account required | Yes | No | No | No |
-| No phone number | Yes | No | No | No |
-| End-to-end encrypted | Yes | Yes | Yes | No |
-| Decentralized | Yes | No | No | No |
-| GPS tracking | Yes | No | Yes | No |
-| Offline maps | Yes | No | No | No |
-| Device configuration | Yes | N/A | N/A | N/A |
-| Open source compatible | Yes | Yes | No | No |
+**Elevator Pitch:** Socialmesh connects to affordable Meshtastic radios for off-grid communication. Send encrypted messages, see nearby nodes on maps, leave ephemeral signals, and stay connected in places where traditional networks fail—all without internet or accounts.
 
 ---
 
@@ -181,7 +174,7 @@ Download now and own your communication.
 1. **Outdoor Enthusiasts** – Hikers, campers, skiers, climbers
 2. **Privacy Advocates** – People seeking alternatives to Big Tech
 3. **Emergency Preparedness** – Preppers, survivalists, first responders
-4. **Event Organizers** – Festival-goers, conference attendees
+4. **Event Coordinators** – Festivals, conferences, group activities
 5. **Ham Radio Hobbyists** – Technical users expanding their toolkit
 6. **Rural Communities** – Areas with poor cell coverage
 7. **International Travelers** – Avoiding roaming charges

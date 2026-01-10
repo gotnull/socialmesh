@@ -1,7 +1,7 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:logger/logger.dart';
 import 'dart:convert';
+import '../../core/logging.dart';
 import '../../models/mesh_models.dart';
 import '../../models/canned_response.dart';
 import '../../models/tapback.dart';
@@ -9,22 +9,20 @@ import '../../models/tapback.dart';
 /// Secure storage service for sensitive data
 class SecureStorageService {
   final FlutterSecureStorage _storage;
-  final Logger _logger;
 
-  SecureStorageService({Logger? logger})
+  SecureStorageService()
     : _storage = const FlutterSecureStorage(
         aOptions: AndroidOptions(encryptedSharedPreferences: true),
-      ),
-      _logger = logger ?? Logger();
+      );
 
   /// Store channel key
   Future<void> storeChannelKey(String name, List<int> key) async {
     try {
       final keyString = base64Encode(key);
       await _storage.write(key: 'channel_$name', value: keyString);
-      _logger.d('Stored channel key: $name');
+      AppLogging.debug('Stored channel key: $name');
     } catch (e) {
-      _logger.e('Error storing channel key: $e');
+      AppLogging.storage('⚠️ Error storing channel key: $e');
       rethrow;
     }
   }
@@ -37,7 +35,7 @@ class SecureStorageService {
 
       return base64Decode(keyString);
     } catch (e) {
-      _logger.e('Error retrieving channel key: $e');
+      AppLogging.storage('⚠️ Error retrieving channel key: $e');
       return null;
     }
   }
@@ -46,9 +44,9 @@ class SecureStorageService {
   Future<void> deleteChannelKey(String name) async {
     try {
       await _storage.delete(key: 'channel_$name');
-      _logger.d('Deleted channel key: $name');
+      AppLogging.debug('Deleted channel key: $name');
     } catch (e) {
-      _logger.e('Error deleting channel key: $e');
+      AppLogging.storage('⚠️ Error deleting channel key: $e');
     }
   }
 
@@ -67,7 +65,7 @@ class SecureStorageService {
 
       return keys;
     } catch (e) {
-      _logger.e('Error getting all channel keys: $e');
+      AppLogging.storage('⚠️ Error getting all channel keys: $e');
       return {};
     }
   }
@@ -76,19 +74,18 @@ class SecureStorageService {
   Future<void> clearAll() async {
     try {
       await _storage.deleteAll();
-      _logger.i('Cleared all secure storage');
+      AppLogging.storage('Cleared all secure storage');
     } catch (e) {
-      _logger.e('Error clearing storage: $e');
+      AppLogging.storage('⚠️ Error clearing storage: $e');
     }
   }
 }
 
 /// Settings storage service
 class SettingsService {
-  final Logger _logger;
   SharedPreferences? _prefs;
 
-  SettingsService({Logger? logger}) : _logger = logger ?? Logger();
+  SettingsService();
 
   /// Initialize the service
   Future<void> init() async {
@@ -249,7 +246,7 @@ class SettingsService {
   // Clear all settings
   Future<void> clearAll() async {
     await _preferences.clear();
-    _logger.i('Cleared all settings');
+    AppLogging.storage('Cleared all settings');
   }
 
   // Onboarding completion
@@ -287,7 +284,7 @@ class SettingsService {
       responses.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
       return responses;
     } catch (e) {
-      _logger.e('Error parsing canned responses: $e');
+      AppLogging.storage('⚠️ Error parsing canned responses: $e');
       return DefaultCannedResponses.all;
     }
   }
@@ -353,7 +350,7 @@ class SettingsService {
       configs.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
       return configs;
     } catch (e) {
-      _logger.e('Error parsing tapback configs: $e');
+      AppLogging.storage('⚠️ Error parsing tapback configs: $e');
       return DefaultTapbacks.all;
     }
   }
@@ -521,12 +518,11 @@ class SettingsService {
 /// Device favorites storage service - persists favorite node numbers
 /// independently of node data so favorites survive device reconnects/clears
 class DeviceFavoritesService {
-  final Logger _logger;
   SharedPreferences? _prefs;
   static const String _favoritesKey = 'device_favorites';
   static const String _ignoredKey = 'device_ignored';
 
-  DeviceFavoritesService({Logger? logger}) : _logger = logger ?? Logger();
+  DeviceFavoritesService();
 
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
@@ -556,7 +552,7 @@ class DeviceFavoritesService {
       _favoritesKey,
       set.map((n) => n.toString()).toList(),
     );
-    _logger.d('Added node $nodeNum to favorites');
+    AppLogging.debug('Added node $nodeNum to favorites');
   }
 
   /// Remove a node from favorites
@@ -567,7 +563,7 @@ class DeviceFavoritesService {
       _favoritesKey,
       set.map((n) => n.toString()).toList(),
     );
-    _logger.d('Removed node $nodeNum from favorites');
+    AppLogging.debug('Removed node $nodeNum from favorites');
   }
 
   /// Get all ignored node numbers
@@ -587,7 +583,7 @@ class DeviceFavoritesService {
       _ignoredKey,
       set.map((n) => n.toString()).toList(),
     );
-    _logger.d('Added node $nodeNum to ignored');
+    AppLogging.debug('Added node $nodeNum to ignored');
   }
 
   /// Remove a node from ignored list
@@ -598,25 +594,24 @@ class DeviceFavoritesService {
       _ignoredKey,
       set.map((n) => n.toString()).toList(),
     );
-    _logger.d('Removed node $nodeNum from ignored');
+    AppLogging.debug('Removed node $nodeNum from ignored');
   }
 
   /// Clear all favorites (used when switching devices)
   Future<void> clearAll() async {
     await _preferences.remove(_favoritesKey);
     await _preferences.remove(_ignoredKey);
-    _logger.i('Cleared all device favorites and ignored');
+    AppLogging.storage('Cleared all device favorites and ignored');
   }
 }
 
 /// Message storage service - persists messages locally
 class MessageStorageService {
-  final Logger _logger;
   SharedPreferences? _prefs;
   static const String _messagesKey = 'messages';
   static const int _maxMessages = 500;
 
-  MessageStorageService({Logger? logger}) : _logger = logger ?? Logger();
+  MessageStorageService();
 
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
@@ -651,7 +646,7 @@ class MessageStorageService {
       final jsonList = messages.map((m) => _messageToJson(m)).toList();
       await _preferences.setString(_messagesKey, jsonEncode(jsonList));
     } catch (e) {
-      _logger.e('Error saving message: $e');
+      AppLogging.storage('⚠️ Error saving message: $e');
     }
   }
 
@@ -680,7 +675,7 @@ class MessageStorageService {
 
       // If duplicates were found, save the cleaned list
       if (deduped.length < messages.length) {
-        _logger.i(
+        AppLogging.storage(
           'Removed ${messages.length - deduped.length} duplicate messages',
         );
         final jsonList = deduped.map((m) => _messageToJson(m)).toList();
@@ -689,7 +684,7 @@ class MessageStorageService {
 
       return deduped;
     } catch (e) {
-      _logger.e('Error loading messages: $e');
+      AppLogging.storage('⚠️ Error loading messages: $e');
       return [];
     }
   }
@@ -701,9 +696,9 @@ class MessageStorageService {
       messages.removeWhere((m) => m.id == messageId);
       final jsonList = messages.map((m) => _messageToJson(m)).toList();
       await _preferences.setString(_messagesKey, jsonEncode(jsonList));
-      _logger.i('Deleted message: $messageId');
+      AppLogging.storage('Deleted message: $messageId');
     } catch (e) {
-      _logger.e('Error deleting message: $e');
+      AppLogging.storage('⚠️ Error deleting message: $e');
     }
   }
 
@@ -711,9 +706,9 @@ class MessageStorageService {
   Future<void> clearMessages() async {
     try {
       await _preferences.remove(_messagesKey);
-      _logger.i('Cleared all messages');
+      AppLogging.storage('Cleared all messages');
     } catch (e) {
-      _logger.e('Error clearing messages: $e');
+      AppLogging.storage('⚠️ Error clearing messages: $e');
     }
   }
 
@@ -766,11 +761,10 @@ class MessageStorageService {
 
 /// Node storage service - persists nodes and positions locally
 class NodeStorageService {
-  final Logger _logger;
   SharedPreferences? _prefs;
   static const String _nodesKey = 'nodes';
 
-  NodeStorageService({Logger? logger}) : _logger = logger ?? Logger();
+  NodeStorageService();
 
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
@@ -813,9 +807,9 @@ class NodeStorageService {
 
       final jsonList = nodes.map((n) => _nodeToJson(n)).toList();
       await _preferences.setString(_nodesKey, jsonEncode(jsonList));
-      _logger.d('Saved node ${node.nodeNum} to storage');
+      AppLogging.debug('Saved node ${node.nodeNum} to storage');
     } catch (e) {
-      _logger.e('Error saving node: $e');
+      AppLogging.storage('⚠️ Error saving node: $e');
     }
   }
 
@@ -857,9 +851,9 @@ class NodeStorageService {
 
       final jsonList = nodeMap.values.map((n) => _nodeToJson(n)).toList();
       await _preferences.setString(_nodesKey, jsonEncode(jsonList));
-      _logger.d('Saved ${nodesToSave.length} nodes to storage');
+      AppLogging.debug('Saved ${nodesToSave.length} nodes to storage');
     } catch (e) {
-      _logger.e('Error saving nodes: $e');
+      AppLogging.storage('⚠️ Error saving nodes: $e');
     }
   }
 
@@ -876,7 +870,7 @@ class NodeStorageService {
           .map((j) => _nodeFromJson(j as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      _logger.e('Error loading nodes: $e');
+      AppLogging.storage('⚠️ Error loading nodes: $e');
       return [];
     }
   }
@@ -887,7 +881,7 @@ class NodeStorageService {
       final nodes = await loadNodes();
       return nodes.where((n) => n.nodeNum == nodeNum).firstOrNull;
     } catch (e) {
-      _logger.e('Error getting node: $e');
+      AppLogging.storage('⚠️ Error getting node: $e');
       return null;
     }
   }
@@ -896,9 +890,9 @@ class NodeStorageService {
   Future<void> clearNodes() async {
     try {
       await _preferences.remove(_nodesKey);
-      _logger.i('Cleared all nodes');
+      AppLogging.storage('Cleared all nodes');
     } catch (e) {
-      _logger.e('Error clearing nodes: $e');
+      AppLogging.storage('⚠️ Error clearing nodes: $e');
     }
   }
 
@@ -909,9 +903,9 @@ class NodeStorageService {
       nodes.removeWhere((n) => n.nodeNum == nodeNum);
       final jsonList = nodes.map((n) => _nodeToJson(n)).toList();
       await _preferences.setString(_nodesKey, jsonEncode(jsonList));
-      _logger.i('Deleted node $nodeNum from storage');
+      AppLogging.storage('Deleted node $nodeNum from storage');
     } catch (e) {
-      _logger.e('Error deleting node $nodeNum: $e');
+      AppLogging.storage('⚠️ Error deleting node $nodeNum: $e');
     }
   }
 

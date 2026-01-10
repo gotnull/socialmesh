@@ -1,12 +1,10 @@
 import 'dart:async';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-import 'package:logger/logger.dart';
 import '../../core/logging.dart';
 import '../../core/transport.dart';
 
 /// BLE implementation of DeviceTransport
 class BleTransport implements DeviceTransport {
-  late final Logger _logger;
   final StreamController<DeviceConnectionState> _stateController;
   final StreamController<List<int>> _dataController;
 
@@ -47,9 +45,7 @@ class BleTransport implements DeviceTransport {
 
   BleTransport()
     : _stateController = StreamController<DeviceConnectionState>.broadcast(),
-      _dataController = StreamController<List<int>>.broadcast() {
-    _logger = AppLogging.bleLogger;
-  }
+      _dataController = StreamController<List<int>>.broadcast();
 
   @override
   TransportType get type => TransportType.ble;
@@ -73,25 +69,25 @@ class BleTransport implements DeviceTransport {
     if (_state != newState) {
       _state = newState;
       _stateController.add(newState);
-      _logger.d('BLE state changed to: $newState');
+      AppLogging.ble('BLE state changed to: $newState');
     }
   }
 
   @override
   Stream<DeviceInfo> scan({Duration? timeout}) async* {
-    _logger.i('📡 BLE_TRANSPORT: scan() called');
+    AppLogging.ble('📡 BLE_TRANSPORT: scan() called');
 
     try {
       // Check if Bluetooth is supported
-      _logger.i('📡 BLE_TRANSPORT: Checking if BT is supported...');
+      AppLogging.ble('📡 BLE_TRANSPORT: Checking if BT is supported...');
       if (!await FlutterBluePlus.isSupported) {
-        _logger.e('📡 BLE_TRANSPORT: Bluetooth not supported');
+        AppLogging.ble('⚠️ 📡 BLE_TRANSPORT: Bluetooth not supported');
         throw Exception('Bluetooth is not supported on this device');
       }
-      _logger.i('📡 BLE_TRANSPORT: BT is supported');
+      AppLogging.ble('📡 BLE_TRANSPORT: BT is supported');
 
       // Wait for Bluetooth adapter to be ready (up to 3 seconds)
-      _logger.i('📡 BLE_TRANSPORT: Checking adapter state...');
+      AppLogging.ble('📡 BLE_TRANSPORT: Checking adapter state...');
       final adapterState = await FlutterBluePlus.adapterState
           .where(
             (s) =>
@@ -103,61 +99,67 @@ class BleTransport implements DeviceTransport {
             onTimeout: () => BluetoothAdapterState.unknown,
           );
 
-      _logger.i('📡 BLE_TRANSPORT: Adapter state = $adapterState');
+      AppLogging.ble('📡 BLE_TRANSPORT: Adapter state = $adapterState');
 
       if (adapterState == BluetoothAdapterState.off) {
-        _logger.e('📡 BLE_TRANSPORT: Bluetooth is turned off');
+        AppLogging.ble('⚠️ 📡 BLE_TRANSPORT: Bluetooth is turned off');
         throw Exception('Please turn on Bluetooth to scan for devices');
       }
 
       if (adapterState == BluetoothAdapterState.unknown) {
-        _logger.w(
-          '📡 BLE_TRANSPORT: Bluetooth state unknown, attempting scan anyway...',
+        AppLogging.ble(
+          '⚠️ 📡 BLE_TRANSPORT: Bluetooth state unknown, attempting scan anyway...',
         );
       }
 
       final scanDuration = timeout ?? const Duration(seconds: 10);
-      _logger.i('📡 BLE_TRANSPORT: Scan duration = ${scanDuration.inSeconds}s');
+      AppLogging.ble(
+        '📡 BLE_TRANSPORT: Scan duration = ${scanDuration.inSeconds}s',
+      );
 
       // Stop any existing scan first
-      _logger.i('📡 BLE_TRANSPORT: Stopping any existing scan...');
+      AppLogging.ble('📡 BLE_TRANSPORT: Stopping any existing scan...');
       try {
         await FlutterBluePlus.stopScan();
       } catch (e) {
-        _logger.w('📡 BLE_TRANSPORT: stopScan error (ignored): $e');
+        AppLogging.ble('⚠️ 📡 BLE_TRANSPORT: stopScan error (ignored): $e');
       }
 
       // Small delay to let BLE subsystem settle
-      _logger.i('📡 BLE_TRANSPORT: Waiting 300ms for BLE to settle...');
+      AppLogging.ble('📡 BLE_TRANSPORT: Waiting 300ms for BLE to settle...');
       await Future.delayed(const Duration(milliseconds: 300));
 
       // Try to start scan with retry for transient states
       int retryCount = 0;
       const maxRetries = 3;
-      _logger.i('📡 BLE_TRANSPORT: Starting scan (max $maxRetries retries)...');
+      AppLogging.ble(
+        '📡 BLE_TRANSPORT: Starting scan (max $maxRetries retries)...',
+      );
 
       while (retryCount < maxRetries) {
         try {
-          _logger.i(
+          AppLogging.ble(
             '📡 BLE_TRANSPORT: Calling FlutterBluePlus.startScan() (attempt ${retryCount + 1})...',
           );
           await FlutterBluePlus.startScan(
             timeout: scanDuration,
             withServices: [Guid(_serviceUuid)],
           );
-          _logger.i('📡 BLE_TRANSPORT: startScan() completed successfully');
+          AppLogging.ble(
+            '📡 BLE_TRANSPORT: startScan() completed successfully',
+          );
           break; // Success, exit retry loop
         } catch (e) {
           retryCount++;
           final errorStr = e.toString();
-          _logger.w('📡 BLE_TRANSPORT: startScan() error: $errorStr');
+          AppLogging.ble('⚠️ 📡 BLE_TRANSPORT: startScan() error: $errorStr');
           // Handle transient Bluetooth states
           if (errorStr.contains('CBManagerStateUnknown') ||
               errorStr.contains('bluetooth must be turned on') ||
               errorStr.contains('Bluetooth adapter is not available')) {
             if (retryCount < maxRetries) {
-              _logger.w(
-                '📡 BLE_TRANSPORT: Bluetooth not ready (attempt $retryCount/$maxRetries), retrying...',
+              AppLogging.ble(
+                '⚠️ 📡 BLE_TRANSPORT: Bluetooth not ready (attempt $retryCount/$maxRetries), retrying...',
               );
               await Future.delayed(Duration(milliseconds: 500 * retryCount));
               continue;
@@ -174,27 +176,29 @@ class BleTransport implements DeviceTransport {
       // Create timer to complete scan after timeout
       final scanCompleter = Completer<void>();
       final timer = Timer(scanDuration + const Duration(milliseconds: 500), () {
-        _logger.i('📡 BLE_TRANSPORT: Scan timeout timer fired');
+        AppLogging.ble('📡 BLE_TRANSPORT: Scan timeout timer fired');
         if (!scanCompleter.isCompleted) {
           scanCompleter.complete();
         }
       });
 
       // Yield results until timeout
-      _logger.i('📡 BLE_TRANSPORT: Listening to scanResults stream...');
+      AppLogging.ble('📡 BLE_TRANSPORT: Listening to scanResults stream...');
       int deviceCount = 0;
       await for (final result in FlutterBluePlus.scanResults) {
         if (scanCompleter.isCompleted) {
-          _logger.i('📡 BLE_TRANSPORT: Scan completer completed, breaking');
+          AppLogging.ble(
+            '📡 BLE_TRANSPORT: Scan completer completed, breaking',
+          );
           break;
         }
 
-        _logger.d(
+        AppLogging.ble(
           '📡 BLE_TRANSPORT: scanResults batch received, ${result.length} items',
         );
         for (final r in result) {
           deviceCount++;
-          _logger.i(
+          AppLogging.ble(
             '📡 BLE_TRANSPORT: Found device #$deviceCount: ${r.device.remoteId} (${r.device.platformName})',
           );
           yield DeviceInfo(
@@ -209,17 +213,17 @@ class BleTransport implements DeviceTransport {
         }
       }
 
-      _logger.i(
+      AppLogging.ble(
         '📡 BLE_TRANSPORT: Scan stream ended, found $deviceCount devices total',
       );
       timer.cancel();
     } catch (e) {
-      _logger.e('📡 BLE_TRANSPORT: BLE scan error: $e');
+      AppLogging.ble('⚠️ 📡 BLE_TRANSPORT: BLE scan error: $e');
       rethrow;
     } finally {
-      _logger.i('📡 BLE_TRANSPORT: Finally block, stopping scan...');
+      AppLogging.ble('📡 BLE_TRANSPORT: Finally block, stopping scan...');
       await FlutterBluePlus.stopScan();
-      _logger.i('📡 BLE_TRANSPORT: Scan stopped');
+      AppLogging.ble('📡 BLE_TRANSPORT: Scan stopped');
     }
   }
 
@@ -228,14 +232,14 @@ class BleTransport implements DeviceTransport {
     // Force cleanup any stale state before connecting
     // This fixes issues where PIN cancellation leaves BLE in a weird state
     if (_state == DeviceConnectionState.connecting) {
-      _logger.w('Already connecting - forcing cleanup first');
+      AppLogging.ble('⚠️ Already connecting - forcing cleanup first');
       await disconnect();
       await Future.delayed(const Duration(milliseconds: 300));
     } else if (_state == DeviceConnectionState.connected) {
-      _logger.w('Already connected');
+      AppLogging.ble('⚠️ Already connected');
       return;
     } else if (_state == DeviceConnectionState.error) {
-      _logger.w('Was in error state - cleaning up first');
+      AppLogging.ble('⚠️ Was in error state - cleaning up first');
       await disconnect();
       await Future.delayed(const Duration(milliseconds: 300));
     }
@@ -243,7 +247,7 @@ class BleTransport implements DeviceTransport {
     _updateState(DeviceConnectionState.connecting);
 
     try {
-      _logger.i('Connecting to ${device.name}...');
+      AppLogging.ble('Connecting to ${device.name}...');
 
       // Find the device
       final List<BluetoothDevice> systemDevices =
@@ -255,11 +259,11 @@ class BleTransport implements DeviceTransport {
 
         // If device is already connected from another app or stale connection, disconnect first
         if (_device!.isConnected) {
-          _logger.w('Device already connected, forcing disconnect...');
+          AppLogging.ble('⚠️ Device already connected, forcing disconnect...');
           try {
             await _device!.disconnect();
           } catch (e) {
-            _logger.w('Pre-connect disconnect error (ignored): $e');
+            AppLogging.ble('⚠️ Pre-connect disconnect error (ignored): $e');
           }
           await Future.delayed(const Duration(milliseconds: 500));
         }
@@ -268,31 +272,31 @@ class BleTransport implements DeviceTransport {
       }
 
       // Connect to device - simple and reliable
-      _logger.d('Initiating BLE connection...');
+      AppLogging.ble('Initiating BLE connection...');
       await _device!.connect(license: License.free, autoConnect: false);
 
       // Device is now connected, discover services immediately
-      _logger.i('Connection established, discovering services...');
+      AppLogging.ble('Connection established, discovering services...');
 
       // Request MTU size 512 per Meshtastic docs
       try {
         await _device!.requestMtu(512);
       } catch (e) {
-        _logger.w('MTU request failed (may not be supported): $e');
+        AppLogging.ble('⚠️ MTU request failed (may not be supported): $e');
       }
 
       await _discoverServices();
 
       // Set up listener for disconnection events
       _deviceStateSubscription = _device!.connectionState.listen((state) {
-        _logger.d('Connection state changed: $state');
+        AppLogging.ble('Connection state changed: $state');
         if (state == BluetoothConnectionState.disconnected) {
-          _logger.w('Device disconnected');
+          AppLogging.ble('⚠️ Device disconnected');
           _updateState(DeviceConnectionState.disconnected);
         }
       });
     } catch (e) {
-      _logger.e('Connection error: $e');
+      AppLogging.ble('⚠️ Connection error: $e');
       await disconnect();
       _updateState(DeviceConnectionState.error);
       rethrow;
@@ -301,16 +305,16 @@ class BleTransport implements DeviceTransport {
 
   Future<void> _discoverServices() async {
     try {
-      _logger.d('Discovering services...');
+      AppLogging.ble('Discovering services...');
 
       final services = await _device!.discoverServices();
 
       // Log all discovered services and characteristics
-      _logger.d('Found ${services.length} services');
+      AppLogging.ble('Found ${services.length} services');
       for (final svc in services) {
-        _logger.d('Service: ${svc.uuid}');
+        AppLogging.ble('Service: ${svc.uuid}');
         for (final char in svc.characteristics) {
-          _logger.d('  Characteristic: ${char.uuid}');
+          AppLogging.ble('  Characteristic: ${char.uuid}');
         }
       }
 
@@ -325,23 +329,23 @@ class BleTransport implements DeviceTransport {
       // Find characteristics
       for (final characteristic in service.characteristics) {
         final uuid = characteristic.uuid.toString().toLowerCase();
-        _logger.d('Checking characteristic: $uuid');
+        AppLogging.ble('Checking characteristic: $uuid');
 
         if (uuid == _toRadioUuid.toLowerCase()) {
           _txCharacteristic = characteristic;
-          _logger.d('Found TX characteristic (toRadio)');
+          AppLogging.ble('Found TX characteristic (toRadio)');
         } else if (uuid == _fromRadioUuid.toLowerCase()) {
           _rxCharacteristic = characteristic;
-          _logger.d('Found RX characteristic (fromRadio)');
+          AppLogging.ble('Found RX characteristic (fromRadio)');
         } else if (uuid == _fromNumUuid.toLowerCase()) {
           _fromNumCharacteristic = characteristic;
-          _logger.d('Found fromNum characteristic');
+          AppLogging.ble('Found fromNum characteristic');
         }
       }
 
       if (_txCharacteristic != null && _rxCharacteristic != null) {
         _updateState(DeviceConnectionState.connected);
-        _logger.i('Connected successfully');
+        AppLogging.ble('Connected successfully');
 
         // Perform initial read from fromRadio to wake up the device
         if (_rxCharacteristic != null) {
@@ -351,27 +355,27 @@ class BleTransport implements DeviceTransport {
               _dataController.add(initialData);
             }
           } catch (e) {
-            _logger.d('Initial read error (ignored): $e');
+            AppLogging.ble('Initial read error (ignored): $e');
           }
         }
 
         // If fromNum is not available, fall back to polling
         if (_fromNumCharacteristic == null) {
-          _logger.w('fromNum not available, using polling fallback');
+          AppLogging.ble('⚠️ fromNum not available, using polling fallback');
           _startPolling();
         }
       } else {
         final missing = <String>[];
         if (_txCharacteristic == null) missing.add('TX');
         if (_rxCharacteristic == null) missing.add('RX');
-        _logger.e('Missing characteristics: ${missing.join(", ")}');
+        AppLogging.ble('⚠️ Missing characteristics: ${missing.join(", ")}');
         throw Exception(
           'Missing ${missing.join(" and ")} characteristic(s). '
           'Try power cycling the device.',
         );
       }
     } catch (e) {
-      _logger.e('Service discovery error: $e');
+      AppLogging.ble('⚠️ Service discovery error: $e');
       await disconnect();
       _updateState(DeviceConnectionState.error);
       rethrow;
@@ -390,7 +394,6 @@ class BleTransport implements DeviceTransport {
 
       if (deviceInfoService == null) {
         AppLogging.ble('Device Information Service (0x180A) not found');
-        _logger.d('Device Information Service (0x180A) not found');
         return;
       }
       AppLogging.ble('Found Device Information Service');
@@ -419,7 +422,6 @@ class BleTransport implements DeviceTransport {
       );
     } catch (e) {
       AppLogging.ble('Device Info read error: $e');
-      _logger.d('Could not read device info: $e');
     }
   }
 
@@ -437,8 +439,8 @@ class BleTransport implements DeviceTransport {
   @override
   Future<void> enableNotifications() async {
     if (_fromNumCharacteristic == null) {
-      _logger.w(
-        'Cannot enable notifications: fromNum characteristic not found',
+      AppLogging.ble(
+        '⚠️ Cannot enable notifications: fromNum characteristic not found',
       );
       return;
     }
@@ -448,7 +450,7 @@ class BleTransport implements DeviceTransport {
       final canIndicate = _fromNumCharacteristic!.properties.indicate;
 
       if (!canNotify && !canIndicate) {
-        _logger.w('fromNum does not support notifications');
+        AppLogging.ble('⚠️ fromNum does not support notifications');
         return;
       }
 
@@ -458,40 +460,42 @@ class BleTransport implements DeviceTransport {
         (value) async {
           // fromNum value is just a counter - read fromRadio regardless
           if (_rxCharacteristic != null) {
-            _logger.d('fromNum notified, reading fromRadio');
+            AppLogging.ble('fromNum notified, reading fromRadio');
             try {
               // Read from fromRadio until empty
               while (true) {
                 final data = await _rxCharacteristic!.read();
                 if (data.isEmpty) break;
-                _logger.d('Read ${data.length} bytes from fromRadio');
+                AppLogging.ble('Read ${data.length} bytes from fromRadio');
                 _dataController.add(data);
               }
             } catch (e) {
-              _logger.e('Error reading fromRadio: $e');
+              AppLogging.ble('⚠️ Error reading fromRadio: $e');
               if (_isAuthenticationError(e)) {
-                _logger.e('Authentication error - PIN may have been cancelled');
+                AppLogging.ble(
+                  '⚠️ Authentication error - PIN may have been cancelled',
+                );
                 _updateState(DeviceConnectionState.error);
               }
             }
           }
         },
         onError: (error) {
-          _logger.e('fromNum error: $error');
+          AppLogging.ble('⚠️ fromNum error: $error');
           if (_isAuthenticationError(error)) {
-            _logger.e(
-              'Authentication error in notification - PIN may have been cancelled',
+            AppLogging.ble(
+              '⚠️ Authentication error in notification - PIN may have been cancelled',
             );
             _updateState(DeviceConnectionState.error);
           }
         },
       );
-      _logger.i('fromNum notifications enabled');
+      AppLogging.ble('fromNum notifications enabled');
     } catch (e) {
-      _logger.e('Error enabling notifications: $e');
+      AppLogging.ble('⚠️ Error enabling notifications: $e');
       if (_isAuthenticationError(e)) {
-        _logger.e(
-          'Authentication error enabling notifications - PIN cancelled',
+        AppLogging.ble(
+          '⚠️ Authentication error enabling notifications - PIN cancelled',
         );
         _updateState(DeviceConnectionState.error);
         rethrow;
@@ -500,7 +504,7 @@ class BleTransport implements DeviceTransport {
   }
 
   void _startPolling() {
-    _logger.d('Starting polling for fromRadio characteristic');
+    AppLogging.ble('Starting polling for fromRadio characteristic');
 
     // Poll every 100ms for new data
     _pollingTimer = Timer.periodic(const Duration(milliseconds: 100), (
@@ -515,11 +519,11 @@ class BleTransport implements DeviceTransport {
       try {
         final value = await _rxCharacteristic!.read();
         if (value.isNotEmpty) {
-          _logger.d('Polled ${value.length} bytes');
+          AppLogging.ble('Polled ${value.length} bytes');
           _dataController.add(value);
         }
       } catch (e) {
-        _logger.e('Polling error: $e');
+        AppLogging.ble('⚠️ Polling error: $e');
       }
     });
   }
@@ -538,20 +542,20 @@ class BleTransport implements DeviceTransport {
       final value = await _rxCharacteristic!.read();
       _consecutiveAuthErrors = 0; // Reset on success
       if (value.isNotEmpty) {
-        _logger.d('Polled ${value.length} bytes');
+        AppLogging.ble('Polled ${value.length} bytes');
         _dataController.add(value);
       }
     } catch (e) {
-      _logger.e('Polling error: $e');
+      AppLogging.ble('⚠️ Polling error: $e');
       if (_isAuthenticationError(e)) {
         _consecutiveAuthErrors++;
-        _logger.e(
-          'Authentication error during poll (count: $_consecutiveAuthErrors)',
+        AppLogging.ble(
+          '⚠️ Authentication error during poll (count: $_consecutiveAuthErrors)',
         );
         // After 3 consecutive auth errors, assume PIN was cancelled
         if (_consecutiveAuthErrors >= 3) {
-          _logger.e(
-            'Multiple auth errors - PIN likely cancelled, transitioning to error state',
+          AppLogging.ble(
+            '⚠️ Multiple auth errors - PIN likely cancelled, transitioning to error state',
           );
           _updateState(DeviceConnectionState.error);
         }
@@ -580,7 +584,7 @@ class BleTransport implements DeviceTransport {
         try {
           await _device!.disconnect();
         } catch (e) {
-          _logger.w('Device disconnect error (ignored): $e');
+          AppLogging.ble('⚠️ Device disconnect error (ignored): $e');
         }
       }
 
@@ -594,10 +598,10 @@ class BleTransport implements DeviceTransport {
 
       if (!wasDisconnected) {
         _updateState(DeviceConnectionState.disconnected);
-        _logger.i('Disconnected');
+        AppLogging.ble('Disconnected');
       }
     } catch (e) {
-      _logger.e('Disconnect error: $e');
+      AppLogging.ble('⚠️ Disconnect error: $e');
       // Still clean up state even on error
       _device = null;
       _txCharacteristic = null;
@@ -617,7 +621,7 @@ class BleTransport implements DeviceTransport {
     }
 
     try {
-      _logger.d('Sending ${data.length} bytes');
+      AppLogging.ble('Sending ${data.length} bytes');
 
       // Use flutter_blue_plus's built-in long write support.
       // Meshtastic expects complete ToRadio protobuf messages in a single
@@ -630,9 +634,9 @@ class BleTransport implements DeviceTransport {
         allowLongWrite: true,
       );
 
-      _logger.d('Sent successfully');
+      AppLogging.ble('Sent successfully');
     } catch (e) {
-      _logger.e('Send error: $e');
+      AppLogging.ble('⚠️ Send error: $e');
 
       // Check if this is a disconnection error and update state accordingly
       final errorStr = e.toString().toLowerCase();
@@ -641,7 +645,7 @@ class BleTransport implements DeviceTransport {
           errorStr.contains('connection') ||
           errorStr.contains('invalid') ||
           errorStr.contains('peripheral')) {
-        _logger.w('Device appears to have disconnected during send');
+        AppLogging.ble('⚠️ Device appears to have disconnected during send');
         // Trigger disconnection cleanup if device disconnected mid-send
         if (_state == DeviceConnectionState.connected) {
           _txCharacteristic = null;
@@ -665,7 +669,7 @@ class BleTransport implements DeviceTransport {
       final rssi = await _device!.readRssi();
       return rssi;
     } catch (e) {
-      _logger.w('Failed to read RSSI: $e');
+      AppLogging.ble('⚠️ Failed to read RSSI: $e');
       return null;
     }
   }

@@ -114,5 +114,21 @@ service firebase.storage {
       // Owner can delete their story media
       allow delete: if isOwner(userId);
     }
+
+    // =============================================================================
+    // SIGNAL IMAGES (ephemeral mesh signals)
+    // =============================================================================
+    
+    // Signal images - stored at signals/{userId}/{signalId}.jpg
+    match /signals/{userId}/{fileName} {
+      // Public read for signal images (needed for mesh recipients to download)
+      allow read: if true;
+      
+      // Only owner can upload their signal images
+      allow write: if isOwner(userId) && isValidImage();
+      
+      // Owner can delete their signal images
+      allow delete: if isOwner(userId);
+    }
   }
 }

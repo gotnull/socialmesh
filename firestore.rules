@@ -385,9 +385,42 @@ service cloud.firestore {
       allow delete: if isAdmin() || (isAuthenticated() &&
         resource.data.authorId == request.auth.uid);
       
-      // Allow authenticated users to update only commentCount and likeCount
+      // Allow authenticated users to update limited fields:
+      // - commentCount/likeCount for social interactions
+      // - mediaUrls/imageState for image upload after signal creation
       allow update: if isAuthenticated() &&
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['commentCount', 'likeCount']);
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['commentCount', 'likeCount']) ||
+         (resource.data.authorId == request.auth.uid &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['mediaUrls', 'imageState'])));
+    }
+
+    // Signal Responses - ephemeral replies to mesh signals
+    // Responses are gated by having the signal locally (mesh receipt)
+    // Structure: responses/{signalId}/items/{responseId}
+    match /responses/{signalId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated(); // Allow creating container doc
+      
+      match /items/{responseId} {
+        // Read: any authenticated user (gating is done client-side by signal presence)
+        allow read: if isAuthenticated();
+        
+        // Create: authenticated, must be author, valid content
+        allow create: if isAuthenticated() &&
+          request.resource.data.authorId == request.auth.uid &&
+          request.resource.data.content is string &&
+          request.resource.data.content.size() > 0 &&
+          request.resource.data.content.size() <= 500 &&
+          request.resource.data.signalId == signalId &&
+          request.resource.data.expiresAt is timestamp;
+        
+        // Delete: only author can delete (or admin)
+        allow delete: if isAdmin() || (isAuthenticated() &&
+          resource.data.authorId == request.auth.uid);
+        
+        // No updates allowed - responses are immutable
+        allow update: if false;
+      }
     }
 
     // Feeds - precomputed personalized feeds (Cloud Functions write only)

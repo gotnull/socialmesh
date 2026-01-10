@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:logger/logger.dart';
+import '../../core/logging.dart';
 import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../core/transport.dart';
@@ -21,7 +21,6 @@ class QrImportScreen extends ConsumerStatefulWidget {
 
 class _QrImportScreenState extends ConsumerState<QrImportScreen> {
   final MobileScannerController _controller = MobileScannerController();
-  final Logger _logger = Logger();
   bool _isProcessing = false;
 
   @override
@@ -48,7 +47,7 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
 
   Future<void> _processQrCode(String code) async {
     try {
-      _logger.i('Processing QR code: $code');
+      AppLogging.qr('Processing QR code: $code');
 
       // Channel QR codes format: "socialmesh://channel/<base64data>"
       // Also supports legacy formats:
@@ -79,7 +78,7 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
         base64Data = Uri.decodeComponent(code);
       }
 
-      _logger.i('Decoded base64 data: $base64Data');
+      AppLogging.qr('Decoded base64 data: $base64Data');
 
       if (base64Data.isEmpty) {
         throw Exception('Empty channel data');
@@ -87,7 +86,7 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
 
       // Decode base64 to bytes
       final bytes = base64Decode(base64Data);
-      _logger.i('Decoded ${bytes.length} bytes');
+      AppLogging.qr('Decoded ${bytes.length} bytes');
 
       // Try to parse as different protobuf formats
       ChannelConfig? channel;
@@ -97,7 +96,7 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
       // Try parsing as Channel first
       try {
         final pbChannel = pb.Channel.fromBuffer(bytes);
-        _logger.i(
+        AppLogging.qr(
           'Parsed as Channel: index=${pbChannel.index}, hasSettings=${pbChannel.hasSettings()}',
         );
 
@@ -106,19 +105,19 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
           channelName = settings.name.isNotEmpty ? settings.name : null;
           psk = settings.psk.isNotEmpty ? settings.psk : null;
 
-          _logger.i(
+          AppLogging.qr(
             'Channel settings: name="$channelName", psk length=${psk?.length ?? 0}',
           );
         }
       } catch (e) {
-        _logger.w('Failed to parse as Channel: $e');
+        AppLogging.qr('⚠️ Failed to parse as Channel: $e');
       }
 
       // Try parsing as ChannelSettings if Channel parsing failed or had no PSK
       if (psk == null || psk.isEmpty) {
         try {
           final pbSettings = pb.ChannelSettings.fromBuffer(bytes);
-          _logger.i(
+          AppLogging.qr(
             'Parsed as ChannelSettings: name="${pbSettings.name}", psk length=${pbSettings.psk.length}',
           );
 
@@ -127,13 +126,13 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
             psk = pbSettings.psk;
           }
         } catch (e) {
-          _logger.w('Failed to parse as ChannelSettings: $e');
+          AppLogging.qr('⚠️ Failed to parse as ChannelSettings: $e');
         }
       }
 
       // If still no PSK, treat the raw bytes as the PSK (legacy format)
       if (psk == null || psk.isEmpty) {
-        _logger.i('Using raw bytes as PSK (${bytes.length} bytes)');
+        AppLogging.qr('Using raw bytes as PSK (${bytes.length} bytes)');
         // Validate PSK length (should be 16 or 32 bytes for AES)
         if (bytes.length == 16 || bytes.length == 32) {
           psk = bytes;
@@ -180,7 +179,7 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
         role: 'SECONDARY',
       );
 
-      _logger.i(
+      AppLogging.qr(
         'Created channel: index=${channel.index}, name="${channel.name}", psk=${channel.psk.length} bytes',
       );
 
@@ -211,7 +210,7 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
         });
       }
     } catch (e) {
-      _logger.e('QR import error: $e');
+      AppLogging.qr('⚠️ QR import error: $e');
       if (mounted) {
         showErrorSnackBar(context, 'Failed to import: $e');
         setState(() {
@@ -404,9 +403,7 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
           if (_isProcessing)
             Container(
               color: Colors.black54,
-              child: Center(
-                child: LoadingIndicator(size: 48),
-              ),
+              child: Center(child: LoadingIndicator(size: 48)),
             ),
           Positioned(
             bottom: 0,

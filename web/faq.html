@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FAQ — Socialmesh</title>
   <meta name="description"
-    content="Frequently asked questions about Socialmesh, the most advanced Meshtastic client for iOS and Android.">
+    content="Frequently asked questions about Socialmesh, a Meshtastic companion app for iOS and Android.">
 
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-6HX9J47JRF"></script>
@@ -401,6 +401,59 @@
             <li>Hop limit is too low to reach the destination</li>
           </ul>
           <p>Socialmesh will show message status so you know if delivery succeeded.</p>
+        </div>
+      </div>
+    </div>
+
+    <h2>Signals</h2>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        <h3>What are Signals?</h3>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-answer">
+        <div class="faq-answer-inner">
+          <p>Signals are short, ephemeral messages you broadcast to nearby mesh nodes. Unlike direct messages, Signals:
+          </p>
+          <ul>
+            <li>Expire automatically (15 minutes to 24 hours)</li>
+            <li>Are sorted by proximity, not time or popularity</li>
+            <li>Have no likes, comments, or followers</li>
+            <li>Stay local — there is no global feed</li>
+          </ul>
+          <p>Think of Signals as leaving a temporary trace for people nearby.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        <h3>Why do some Signal images appear locked?</h3>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-answer">
+        <div class="faq-answer-inner">
+          <p>Images unlock based on presence:</p>
+          <ul>
+            <li><strong>Authenticated:</strong> If you're signed in, all images are unlocked</li>
+            <li><strong>Proximity:</strong> If you've been near the sender's node for 5+ minutes, images unlock</li>
+          </ul>
+          <p>This ensures images don't spread beyond their intended local context.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        <h3>Do Signals require an account?</h3>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-answer">
+        <div class="faq-answer-inner">
+          <p>No. Signals work entirely over the mesh without authentication. Your mesh node ID is your identity.</p>
+          <p>Signing in enables optional features like cloud backup and image uploads, but the core Signal functionality
+            works offline without an account.</p>
         </div>
       </div>
     </div>

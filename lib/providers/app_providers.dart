@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:logger/logger.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../core/logging.dart';
 import '../core/transport.dart';
@@ -22,20 +21,6 @@ import '../generated/meshtastic/mesh.pbenum.dart' as pbenum;
 import 'social_providers.dart';
 import 'telemetry_providers.dart';
 import 'connection_providers.dart';
-
-// Logger
-final loggerProvider = Provider<Logger>((ref) {
-  return Logger(
-    printer: PrettyPrinter(
-      methodCount: 2,
-      errorMethodCount: 8,
-      lineLength: 120,
-      colors: true,
-      printEmojis: true,
-      dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart,
-    ),
-  );
-});
 
 // App initialization state - purely about app lifecycle, NOT device connection
 // Device connection is handled separately by DeviceConnectionNotifier in connection_providers.dart
@@ -151,8 +136,7 @@ final appInitProvider = NotifierProvider<AppInitNotifier, AppInitState>(
 
 // Storage services
 final secureStorageProvider = Provider<SecureStorageService>((ref) {
-  final logger = ref.watch(loggerProvider);
-  return SecureStorageService(logger: logger);
+  return SecureStorageService();
 });
 
 /// Settings refresh trigger - increment this to force settings UI to rebuild
@@ -184,9 +168,8 @@ final settingsServiceProvider = FutureProvider<SettingsService>((ref) async {
   if (_cachedSettingsService != null) {
     return _cachedSettingsService!;
   }
-  final logger = ref.watch(loggerProvider);
 
-  final service = SettingsService(logger: logger);
+  final service = SettingsService();
   await service.init();
   _cachedSettingsService = service;
   return service;
@@ -214,16 +197,14 @@ final animations3DEnabledProvider = Provider<bool>((ref) {
 final messageStorageProvider = FutureProvider<MessageStorageService>((
   ref,
 ) async {
-  final logger = ref.watch(loggerProvider);
-  final service = MessageStorageService(logger: logger);
+  final service = MessageStorageService();
   await service.init();
   return service;
 });
 
 // Node storage service - persists nodes and positions
 final nodeStorageProvider = FutureProvider<NodeStorageService>((ref) async {
-  final logger = ref.watch(loggerProvider);
-  final service = NodeStorageService(logger: logger);
+  final service = NodeStorageService();
   await service.init();
   return service;
 });
@@ -232,8 +213,7 @@ final nodeStorageProvider = FutureProvider<NodeStorageService>((ref) async {
 final deviceFavoritesProvider = FutureProvider<DeviceFavoritesService>((
   ref,
 ) async {
-  final logger = ref.watch(loggerProvider);
-  final service = DeviceFavoritesService(logger: logger);
+  final service = DeviceFavoritesService();
   await service.init();
   return service;
 });
@@ -984,8 +964,7 @@ final currentChannelUtilProvider = StreamProvider<double>((ref) async* {
 // Protocol service - singleton instance that persists across rebuilds
 final protocolServiceProvider = Provider<ProtocolService>((ref) {
   final transport = ref.watch(transportProvider);
-  final logger = ref.watch(loggerProvider);
-  final service = ProtocolService(transport, logger: logger);
+  final service = ProtocolService(transport);
 
   AppLogging.debug(
     '🟢 ProtocolService provider created - instance: ${service.hashCode}',

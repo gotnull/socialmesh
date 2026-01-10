@@ -1,6 +1,8 @@
 # Socialmesh
 
-A powerful Meshtastic companion app for iOS and Android. Connect to your mesh radio, send messages, track nodes, and configure your device — all without internet.
+A Meshtastic companion app for iOS and Android. Connect to your mesh radio, exchange messages, track nearby nodes, and configure your device — all without internet.
+
+**Signals** — Leave short, ephemeral traces for people nearby. Signals expire automatically and never leave the mesh. No followers. No likes. Just presence.
 
 ## Features
 

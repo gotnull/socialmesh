@@ -1,4 +1,4 @@
-import 'package:logger/logger.dart';
+import '../../core/logging.dart';
 
 /// Meshtastic packet framing
 ///
@@ -10,10 +10,9 @@ class PacketFramer {
   static const int _headerSize = 4;
   static const int _maxPacketSize = 512;
 
-  final Logger _logger;
   final List<int> _buffer = [];
 
-  PacketFramer({Logger? logger}) : _logger = logger ?? Logger();
+  PacketFramer();
 
   /// Frame a packet for transmission
   static List<int> frame(List<int> payload) {
@@ -42,7 +41,7 @@ class PacketFramer {
 
     // Prevent buffer from growing indefinitely
     if (_buffer.length > _maxPacketSize * 2) {
-      _logger.w('Buffer too large (${_buffer.length}), clearing');
+      AppLogging.protocol('⚠️ Buffer too large (${_buffer.length}), clearing');
       _buffer.clear();
     }
 
@@ -76,7 +75,7 @@ class PacketFramer {
 
     // Remove bytes before magic
     if (magicIndex > 0) {
-      _logger.w('Discarding $magicIndex bytes before magic');
+      AppLogging.protocol('⚠️ Discarding $magicIndex bytes before magic');
       _buffer.removeRange(0, magicIndex);
     }
 
@@ -92,7 +91,7 @@ class PacketFramer {
 
     // Validate length
     if (length < 0 || length > _maxPacketSize) {
-      _logger.e('Invalid packet length: $length');
+      AppLogging.protocol('⚠️ Invalid packet length: $length');
       _buffer.removeRange(0, 2); // Remove magic and try again
       return null;
     }
@@ -107,7 +106,7 @@ class PacketFramer {
     final payload = _buffer.sublist(_headerSize, totalSize);
     _buffer.removeRange(0, totalSize);
 
-    _logger.d('Extracted packet: $length bytes');
+    AppLogging.protocol('Extracted packet: $length bytes');
     return payload;
   }
 

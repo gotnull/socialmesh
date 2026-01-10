@@ -43,6 +43,11 @@ class AppLogging {
   static bool? _debugLoggingEnabled;
   static bool? _authLoggingEnabled;
   static bool? _socialLoggingEnabled;
+  static bool? _signalsLoggingEnabled;
+  static bool? _storageLoggingEnabled;
+  static bool? _permissionsLoggingEnabled;
+  static bool? _marketplaceLoggingEnabled;
+  static bool? _qrLoggingEnabled;
   static Logger? _bleLogger;
   static Logger? _noOpLogger;
 
@@ -172,6 +177,36 @@ class AppLogging {
     return _socialLoggingEnabled!;
   }
 
+  static bool get signalsLoggingEnabled {
+    _signalsLoggingEnabled ??=
+        _safeGetEnv('SIGNALS_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    return _signalsLoggingEnabled!;
+  }
+
+  static bool get storageLoggingEnabled {
+    _storageLoggingEnabled ??=
+        _safeGetEnv('STORAGE_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    return _storageLoggingEnabled!;
+  }
+
+  static bool get permissionsLoggingEnabled {
+    _permissionsLoggingEnabled ??=
+        _safeGetEnv('PERMISSIONS_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    return _permissionsLoggingEnabled!;
+  }
+
+  static bool get marketplaceLoggingEnabled {
+    _marketplaceLoggingEnabled ??=
+        _safeGetEnv('MARKETPLACE_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    return _marketplaceLoggingEnabled!;
+  }
+
+  static bool get qrLoggingEnabled {
+    _qrLoggingEnabled ??=
+        _safeGetEnv('QR_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    return _qrLoggingEnabled!;
+  }
+
   static Logger get bleLogger {
     if (bleLoggingEnabled) {
       _bleLogger ??= Logger(
@@ -268,6 +303,26 @@ class AppLogging {
     if (socialLoggingEnabled) debugPrint('👥 Social: $message');
   }
 
+  static void signals(String message) {
+    if (signalsLoggingEnabled) debugPrint('📡 Signals: $message');
+  }
+
+  static void storage(String message) {
+    if (storageLoggingEnabled) debugPrint('💾 Storage: $message');
+  }
+
+  static void permissions(String message) {
+    if (permissionsLoggingEnabled) debugPrint('🔒 Permissions: $message');
+  }
+
+  static void marketplace(String message) {
+    if (marketplaceLoggingEnabled) debugPrint('🛒 Marketplace: $message');
+  }
+
+  static void qr(String message) {
+    if (qrLoggingEnabled) debugPrint('📱 QR: $message');
+  }
+
   static void reset() {
     _bleLoggingEnabled = null;
     _protocolLoggingEnabled = null;
@@ -290,6 +345,11 @@ class AppLogging {
     _debugLoggingEnabled = null;
     _authLoggingEnabled = null;
     _socialLoggingEnabled = null;
+    _signalsLoggingEnabled = null;
+    _storageLoggingEnabled = null;
+    _permissionsLoggingEnabled = null;
+    _marketplaceLoggingEnabled = null;
+    _qrLoggingEnabled = null;
     _bleLogger = null;
     _noOpLogger = null;
   }

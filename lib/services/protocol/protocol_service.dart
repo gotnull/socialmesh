@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
-import 'package:logger/logger.dart';
 import '../../core/logging.dart';
 import '../../core/transport.dart';
 import '../../models/mesh_models.dart';
@@ -13,6 +12,89 @@ import '../../generated/meshtastic/mesh.pbenum.dart' as pbenum;
 import '../../generated/meshtastic/portnums.pb.dart' as pn;
 import '../../generated/meshtastic/telemetry.pb.dart' as telemetry;
 import 'packet_framer.dart';
+
+/// Mesh signal packet received from PRIVATE_APP portnum.
+///
+/// This is the over-the-air format for Signals (ephemeral posts).
+/// Format: JSON with fields:
+/// - id: Signal ID (UUID) - required for cloud sync, null for legacy signals
+/// - c: Signal text content (compressed key)
+/// - t: Time-to-live in minutes (compressed key)
+/// - la/ln: Optional location coordinates (compressed keys)
+///
+/// The id field enables deterministic matching:
+/// - Firestore document: posts/{id}
+/// - Storage path: signals/{userId}/{id}.jpg
+/// - Responses: responses/{id}/items/{responseId}
+///
+/// Legacy signals (without id) are treated as local-only.
+class MeshSignalPacket {
+  final int senderNodeId;
+  final String? signalId; // null for legacy signals
+  final String content;
+  final int ttlMinutes;
+  final double? latitude;
+  final double? longitude;
+  final DateTime receivedAt;
+
+  /// Whether this is a legacy signal (no id field in packet).
+  bool get isLegacy => signalId == null;
+
+  const MeshSignalPacket({
+    required this.senderNodeId,
+    this.signalId,
+    required this.content,
+    required this.ttlMinutes,
+    this.latitude,
+    this.longitude,
+    required this.receivedAt,
+  });
+
+  /// Parse from mesh packet payload (JSON).
+  /// Supports both new format (with 'id') and legacy format (without).
+  /// Compressed keys: id, c (content), t (ttl), la (lat), ln (lng)
+  factory MeshSignalPacket.fromPayload(int senderNodeId, List<int> payload) {
+    final jsonStr = utf8.decode(payload);
+    final json = jsonDecode(jsonStr) as Map<String, dynamic>;
+
+    // Support both compressed and legacy keys
+    final content = json['c'] as String? ?? json['content'] as String? ?? '';
+    final ttl = json['t'] as int? ?? json['ttl'] as int? ?? 60;
+    final lat =
+        (json['la'] as num?)?.toDouble() ?? (json['lat'] as num?)?.toDouble();
+    final lng =
+        (json['ln'] as num?)?.toDouble() ?? (json['lng'] as num?)?.toDouble();
+
+    return MeshSignalPacket(
+      senderNodeId: senderNodeId,
+      signalId: json['id'] as String?, // null for legacy packets
+      content: content,
+      ttlMinutes: ttl,
+      latitude: lat,
+      longitude: lng,
+      receivedAt: DateTime.now(),
+    );
+  }
+
+  /// Serialize to mesh packet payload (JSON).
+  /// Uses compressed keys to minimize payload size:
+  /// - id: signal ID (required for cloud sync)
+  /// - c: content
+  /// - t: ttl
+  /// - la/ln: latitude/longitude
+  List<int> toPayload() {
+    final json = <String, dynamic>{'c': content, 't': ttlMinutes};
+    // signalId is required for new signals
+    if (signalId != null) {
+      json['id'] = signalId;
+    }
+    if (latitude != null && longitude != null) {
+      json['la'] = latitude;
+      json['ln'] = longitude;
+    }
+    return utf8.encode(jsonEncode(json));
+  }
+}
 
 /// Debug flags to control verbose logging
 class ProtocolDebugFlags {
@@ -38,13 +120,13 @@ class ProtocolDebugFlags {
 /// Protocol service for handling Meshtastic protocol
 class ProtocolService {
   final DeviceTransport _transport;
-  final Logger _logger;
   final PacketFramer _framer;
 
   final StreamController<Message> _messageController;
   final StreamController<MeshNode> _nodeController;
   final StreamController<ChannelConfig> _channelController;
   final StreamController<DeviceError> _errorController;
+  final StreamController<MeshSignalPacket> _signalController;
   final StreamController<int> _myNodeNumController;
   final StreamController<int> _rssiController;
   final StreamController<double> _snrController;
@@ -118,13 +200,13 @@ class ProtocolService {
   // BLE device name for hardware model inference
   String? _deviceName;
 
-  ProtocolService(this._transport, {Logger? logger})
-    : _logger = logger ?? Logger(),
-      _framer = PacketFramer(logger: logger),
+  ProtocolService(this._transport)
+    : _framer = PacketFramer(),
       _messageController = StreamController<Message>.broadcast(),
       _nodeController = StreamController<MeshNode>.broadcast(),
       _channelController = StreamController<ChannelConfig>.broadcast(),
       _errorController = StreamController<DeviceError>.broadcast(),
+      _signalController = StreamController<MeshSignalPacket>.broadcast(),
       _myNodeNumController = StreamController<int>.broadcast(),
       _rssiController = StreamController<int>.broadcast(),
       _snrController = StreamController<double>.broadcast(),
@@ -173,14 +255,14 @@ class ProtocolService {
   /// Set the BLE device name for hardware model inference
   void setDeviceName(String? name) {
     _deviceName = name;
-    _logger.i('Device name set to: $name');
+    AppLogging.protocol('Device name set to: $name');
   }
 
   /// Set the BLE model number (from Device Information Service 0x180A)
   void setBleModelNumber(String? modelNumber) {
     _bleModelNumber = modelNumber;
     if (modelNumber != null) {
-      _logger.i('BLE model number set to: $modelNumber');
+      AppLogging.protocol('BLE model number set to: $modelNumber');
     }
   }
 
@@ -188,7 +270,7 @@ class ProtocolService {
   void setBleManufacturerName(String? manufacturerName) {
     _bleManufacturerName = manufacturerName;
     if (manufacturerName != null) {
-      _logger.i('BLE manufacturer name set to: $manufacturerName');
+      AppLogging.protocol('BLE manufacturer name set to: $manufacturerName');
     }
   }
 
@@ -203,6 +285,9 @@ class ProtocolService {
 
   /// Stream of channel updates
   Stream<ChannelConfig> get channelStream => _channelController.stream;
+
+  /// Stream of received mesh signal packets (PRIVATE_APP portnum)
+  Stream<MeshSignalPacket> get signalStream => _signalController.stream;
 
   /// Stream of region updates
   Stream<pbenum.RegionCode> get regionStream => _regionController.stream;
@@ -375,7 +460,7 @@ class ProtocolService {
   /// Start listening to transport and wait for configuration
   Future<void> start() async {
     AppLogging.debug('🔵 Protocol.start() called - instance: $hashCode');
-    _logger.i('Starting protocol service');
+    AppLogging.protocol('Starting protocol service');
 
     // Clear previous connection state
     _channels.clear();
@@ -389,7 +474,7 @@ class ProtocolService {
     _dataSubscription = _transport.dataStream.listen(
       _handleData,
       onError: (error) {
-        _logger.e('Transport error: $error');
+        AppLogging.protocol('Transport error: $error');
       },
     );
 
@@ -397,7 +482,7 @@ class ProtocolService {
     _transportStateSubscription = _transport.stateStream.listen((state) {
       if (state == DeviceConnectionState.disconnected ||
           state == DeviceConnectionState.error) {
-        _logger.w('Transport disconnected/error during config wait');
+        AppLogging.protocol('Transport disconnected/error during config wait');
         // Only complete with error if we're actually waiting for config
         // This prevents double-errors when enableNotifications throws directly
         if (waitingForConfig &&
@@ -457,7 +542,7 @@ class ProtocolService {
     // Start RSSI polling timer (every 2 seconds)
     _startRssiPolling();
 
-    _logger.i('Protocol service started');
+    AppLogging.protocol('Protocol service started');
   }
 
   /// Start periodic RSSI polling from BLE connection
@@ -487,7 +572,7 @@ class ProtocolService {
         pollCount++;
         await Future.delayed(const Duration(milliseconds: 100));
       } catch (e) {
-        _logger.w('Poll error: $e');
+        AppLogging.protocol('Poll error: $e');
       }
       return true; // Continue polling
     });
@@ -495,7 +580,7 @@ class ProtocolService {
 
   /// Stop listening
   void stop() {
-    _logger.i('Stopping protocol service');
+    AppLogging.protocol('Stopping protocol service');
     _rssiTimer?.cancel();
     _rssiTimer = null;
     _transportStateSubscription?.cancel();
@@ -512,7 +597,7 @@ class ProtocolService {
 
   /// Handle incoming data from transport
   void _handleData(List<int> data) {
-    _logger.d('Received ${data.length} bytes');
+    AppLogging.protocol('Received ${data.length} bytes');
 
     if (_transport.requiresFraming) {
       // Serial/USB: Extract packets using framer
@@ -532,7 +617,7 @@ class ProtocolService {
   /// Process a complete packet
   void _processPacket(List<int> packet) {
     try {
-      _logger.d('Processing packet: ${packet.length} bytes');
+      AppLogging.protocol('Processing packet: ${packet.length} bytes');
 
       final fromRadio = pn.FromRadio.fromBuffer(packet);
 
@@ -557,29 +642,31 @@ class ProtocolService {
         AppLogging.protocol(
           'Configuration complete! ID: ${fromRadio.configCompleteId}',
         );
-        _logger.i('Configuration complete: ${fromRadio.configCompleteId}');
+        AppLogging.protocol(
+          'Configuration complete: ${fromRadio.configCompleteId}',
+        );
         _configurationComplete = true;
         if (_configCompleter != null && !_configCompleter!.isCompleted) {
           _configCompleter!.complete();
         }
 
         // Log summary of all nodes and their position status
-        _logger.i('=== NODE SUMMARY AFTER CONFIG COMPLETE ===');
-        _logger.i('Total nodes: ${_nodes.length}');
+        AppLogging.protocol('=== NODE SUMMARY AFTER CONFIG COMPLETE ===');
+        AppLogging.protocol('Total nodes: ${_nodes.length}');
         for (final node in _nodes.values) {
-          _logger.i(
+          AppLogging.protocol(
             '  Node ${node.nodeNum}: "${node.longName}" hasPosition=${node.hasPosition}, '
             'lat=${node.latitude}, lng=${node.longitude}',
           );
         }
-        _logger.i('==========================================');
+        AppLogging.protocol('==========================================');
 
         // Request additional config after initial sync
         // Using unawaited calls with error handling to prevent crashes on disconnect
         _requestPostConfigData();
       }
     } catch (e, stack) {
-      _logger.e('Error processing packet: $e', error: e, stackTrace: stack);
+      AppLogging.protocol('Error processing packet: $e\n$stack');
     }
   }
 
@@ -592,7 +679,7 @@ class ProtocolService {
       try {
         await getLoRaConfig();
       } catch (e) {
-        _logger.w('Failed to get LoRa config: $e');
+        AppLogging.protocol('Failed to get LoRa config: $e');
       }
     });
 
@@ -601,7 +688,7 @@ class ProtocolService {
       try {
         await getPositionConfig();
       } catch (e) {
-        _logger.w('Failed to get Position config: $e');
+        AppLogging.protocol('Failed to get Position config: $e');
       }
     });
 
@@ -610,7 +697,7 @@ class ProtocolService {
       try {
         await getDeviceMetadata();
       } catch (e) {
-        _logger.w('Failed to get device metadata: $e');
+        AppLogging.protocol('Failed to get device metadata: $e');
       }
     });
 
@@ -619,7 +706,7 @@ class ProtocolService {
       try {
         await _requestAllChannelDetails();
       } catch (e) {
-        _logger.w('Failed to request channel details: $e');
+        AppLogging.protocol('Failed to request channel details: $e');
       }
     });
 
@@ -628,14 +715,16 @@ class ProtocolService {
       try {
         await requestAllPositions();
       } catch (e) {
-        _logger.w('Failed to request positions: $e');
+        AppLogging.protocol('Failed to request positions: $e');
       }
     });
   }
 
   /// Handle incoming mesh packet
   void _handleMeshPacket(pb.MeshPacket packet) {
-    _logger.d('Handling mesh packet from ${packet.from} to ${packet.to}');
+    AppLogging.protocol(
+      'Handling mesh packet from ${packet.from} to ${packet.to}',
+    );
 
     // Update lastHeard for the sender node (keeps node online status accurate)
     // This ensures any packet from a node updates its online status
@@ -672,11 +761,40 @@ class ProtocolService {
         case pb.PortNum.ADMIN_APP:
           _handleAdminMessage(packet, data);
           break;
+        case pb.PortNum.PRIVATE_APP:
+          _handleSignalMessage(packet, data);
+          break;
         default:
-          _logger.d(
+          AppLogging.protocol(
             'Received message with portnum: ${data.portnum} (${data.portnum.value})',
           );
       }
+    }
+  }
+
+  /// Handle incoming signal packets (PRIVATE_APP portnum)
+  void _handleSignalMessage(pb.MeshPacket packet, pb.Data data) {
+    try {
+      // Ignore our own signals echoed back
+      if (packet.from == _myNodeNum) {
+        AppLogging.signals('Ignoring own signal echo');
+        return;
+      }
+
+      final signalPacket = MeshSignalPacket.fromPayload(
+        packet.from,
+        data.payload,
+      );
+
+      AppLogging.signals(
+        'Received mesh signal from !${packet.from.toRadixString(16)}: '
+        '"${signalPacket.content.length > 30 ? '${signalPacket.content.substring(0, 30)}...' : signalPacket.content}" '
+        '(ttl=${signalPacket.ttlMinutes}m)',
+      );
+
+      _signalController.add(signalPacket);
+    } catch (e) {
+      AppLogging.signals('Failed to parse signal packet: $e');
     }
   }
 
@@ -684,7 +802,9 @@ class ProtocolService {
   void _handleAdminMessage(pb.MeshPacket packet, pb.Data data) {
     try {
       final adminMsg = pb.AdminMessage.fromBuffer(data.payload);
-      _logger.d('Admin message variant: ${adminMsg.whichPayloadVariant()}');
+      AppLogging.protocol(
+        'Admin message variant: ${adminMsg.whichPayloadVariant()}',
+      );
 
       if (adminMsg.hasGetConfigResponse()) {
         final config = adminMsg.getConfigResponse;
@@ -692,7 +812,9 @@ class ProtocolService {
         // Handle LoRa config
         if (config.hasLora()) {
           final loraConfig = config.lora;
-          _logger.i('Received LoRa config - region: ${loraConfig.region.name}');
+          AppLogging.protocol(
+            'Received LoRa config - region: ${loraConfig.region.name}',
+          );
           _currentRegion = loraConfig.region;
           _currentLoraConfig = loraConfig;
           _regionController.add(loraConfig.region);
@@ -717,7 +839,9 @@ class ProtocolService {
         // Handle Device config
         if (config.hasDevice()) {
           final deviceConfig = config.device;
-          _logger.i('Received Device config - role: ${deviceConfig.role.name}');
+          AppLogging.protocol(
+            'Received Device config - role: ${deviceConfig.role.name}',
+          );
           _currentDeviceConfig = deviceConfig;
           _deviceConfigController.add(deviceConfig);
         }
@@ -725,7 +849,7 @@ class ProtocolService {
         // Handle Display config
         if (config.hasDisplay()) {
           final displayConfig = config.display;
-          _logger.i(
+          AppLogging.protocol(
             'Received Display config - screenOnSecs: ${displayConfig.screenOnSecs}',
           );
           _currentDisplayConfig = displayConfig;
@@ -735,7 +859,7 @@ class ProtocolService {
         // Handle Power config
         if (config.hasPower()) {
           final powerConfig = config.power;
-          _logger.i(
+          AppLogging.protocol(
             'Received Power config - isPowerSaving: ${powerConfig.isPowerSaving}',
           );
           _currentPowerConfig = powerConfig;
@@ -745,7 +869,7 @@ class ProtocolService {
         // Handle Network config
         if (config.hasNetwork()) {
           final networkConfig = config.network;
-          _logger.i(
+          AppLogging.protocol(
             'Received Network config - wifiEnabled: ${networkConfig.wifiEnabled}',
           );
           _currentNetworkConfig = networkConfig;
@@ -755,7 +879,9 @@ class ProtocolService {
         // Handle Bluetooth config
         if (config.hasBluetooth()) {
           final btConfig = config.bluetooth;
-          _logger.i('Received Bluetooth config - enabled: ${btConfig.enabled}');
+          AppLogging.protocol(
+            'Received Bluetooth config - enabled: ${btConfig.enabled}',
+          );
           _currentBluetoothConfig = btConfig;
           _bluetoothConfigController.add(btConfig);
         }
@@ -763,7 +889,7 @@ class ProtocolService {
         // Handle Security config
         if (config.hasSecurity()) {
           final secConfig = config.security;
-          _logger.i(
+          AppLogging.protocol(
             'Received Security config - isManaged: ${secConfig.isManaged}',
           );
           _currentSecurityConfig = secConfig;
@@ -775,7 +901,9 @@ class ProtocolService {
         // Handle MQTT config
         if (moduleConfig.hasMqtt()) {
           final mqttConfig = moduleConfig.mqtt;
-          _logger.i('Received MQTT config - enabled: ${mqttConfig.enabled}');
+          AppLogging.protocol(
+            'Received MQTT config - enabled: ${mqttConfig.enabled}',
+          );
           _currentMqttConfig = mqttConfig;
           _mqttConfigController.add(mqttConfig);
         }
@@ -783,7 +911,7 @@ class ProtocolService {
         // Handle Telemetry config
         if (moduleConfig.hasTelemetry()) {
           final telemetryConfig = moduleConfig.telemetry;
-          _logger.i(
+          AppLogging.protocol(
             'Received Telemetry config - deviceInterval: ${telemetryConfig.deviceUpdateInterval}',
           );
           _currentTelemetryConfig = telemetryConfig;
@@ -793,7 +921,7 @@ class ProtocolService {
         // Handle PAX counter config
         if (moduleConfig.hasPaxcounter()) {
           final paxConfig = moduleConfig.paxcounter;
-          _logger.i(
+          AppLogging.protocol(
             'Received PAX counter config - enabled: ${paxConfig.enabled}',
           );
           _currentPaxCounterConfig = paxConfig;
@@ -803,7 +931,7 @@ class ProtocolService {
         // Handle Ambient Lighting config
         if (moduleConfig.hasAmbientLighting()) {
           final ambientConfig = moduleConfig.ambientLighting;
-          _logger.i(
+          AppLogging.protocol(
             'Received Ambient Lighting config - ledState: ${ambientConfig.ledState}',
           );
           _currentAmbientLightingConfig = ambientConfig;
@@ -813,7 +941,7 @@ class ProtocolService {
         // Handle Serial config
         if (moduleConfig.hasSerial()) {
           final serialConfig = moduleConfig.serial;
-          _logger.i(
+          AppLogging.protocol(
             'Received Serial config - enabled: ${serialConfig.enabled}',
           );
           _currentSerialConfig = serialConfig;
@@ -823,7 +951,7 @@ class ProtocolService {
         // Handle Store Forward config
         if (moduleConfig.hasStoreForward()) {
           final sfConfig = moduleConfig.storeForward;
-          _logger.i(
+          AppLogging.protocol(
             'Received Store Forward config - enabled: ${sfConfig.enabled}',
           );
           _currentStoreForwardConfig = sfConfig;
@@ -833,7 +961,7 @@ class ProtocolService {
         // Handle Detection Sensor config
         if (moduleConfig.hasDetectionSensor()) {
           final dsConfig = moduleConfig.detectionSensor;
-          _logger.i(
+          AppLogging.protocol(
             'Received Detection Sensor config - enabled: ${dsConfig.enabled}',
           );
           _currentDetectionSensorConfig = dsConfig;
@@ -843,7 +971,7 @@ class ProtocolService {
         // Handle Range Test config
         if (moduleConfig.hasRangeTest()) {
           final rtConfig = moduleConfig.rangeTest;
-          _logger.i(
+          AppLogging.protocol(
             'Received Range Test config - enabled: ${rtConfig.enabled}',
           );
           _currentRangeTestConfig = rtConfig;
@@ -853,7 +981,7 @@ class ProtocolService {
         // Handle External Notification config
         if (moduleConfig.hasExternalNotification()) {
           final extNotifConfig = moduleConfig.externalNotification;
-          _logger.i(
+          AppLogging.protocol(
             'Received External Notification config - enabled: ${extNotifConfig.enabled}',
           );
           _currentExternalNotificationConfig = extNotifConfig;
@@ -863,7 +991,7 @@ class ProtocolService {
         // Handle Canned Message config
         if (moduleConfig.hasCannedMessage()) {
           final cannedConfig = moduleConfig.cannedMessage;
-          _logger.i(
+          AppLogging.protocol(
             'Received Canned Message config - enabled: ${cannedConfig.enabled}',
           );
           _currentCannedMessageConfig = cannedConfig;
@@ -872,7 +1000,7 @@ class ProtocolService {
       } else if (adminMsg.hasGetChannelResponse()) {
         // Handle channel response - update local channel list
         final channel = adminMsg.getChannelResponse;
-        _logger.i(
+        AppLogging.protocol(
           'Received channel response: index=${channel.index}, role=${channel.role.name}',
         );
         _handleChannel(channel);
@@ -883,7 +1011,7 @@ class ProtocolService {
           '📋 Received device metadata: firmware="${metadata.firmwareVersion}", '
           'hwModel=${metadata.hwModel.name}',
         );
-        _logger.i(
+        AppLogging.protocol(
           'Received device metadata: firmwareVersion=${metadata.firmwareVersion}, '
           'hwModel=${metadata.hwModel.name}, hasWifi=${metadata.hasWifi}',
         );
@@ -896,15 +1024,15 @@ class ProtocolService {
           String? hwModelName;
           if (metadata.hwModel != pb.HardwareModel.UNSET) {
             hwModelName = _formatHardwareModel(metadata.hwModel);
-            _logger.i('Hardware model from metadata: $hwModelName');
+            AppLogging.protocol('Hardware model from metadata: $hwModelName');
           } else {
             // Try to infer from BLE model number or device name
-            _logger.i(
+            AppLogging.protocol(
               'Hardware model UNSET in metadata, attempting to infer (bleModel="$_bleModelNumber", deviceName="$_deviceName")',
             );
             hwModelName = _inferHardwareModel();
             if (hwModelName == null) {
-              _logger.w(
+              AppLogging.protocol(
                 'Could not infer hardware model - device firmware may need update',
               );
             }
@@ -920,7 +1048,7 @@ class ProtocolService {
           );
           _nodes[_myNodeNum!] = updatedNode;
           _nodeController.add(updatedNode);
-          _logger.i('Updated node $_myNodeNum with device metadata');
+          AppLogging.protocol('Updated node $_myNodeNum with device metadata');
         }
       } else if (adminMsg.hasGetOwnerResponse()) {
         // Handle response to getOwnerRequest - contains remote node's User info
@@ -931,7 +1059,9 @@ class ProtocolService {
         debugPrint(
           '🔑 📥 Public key present: ${user.publicKey.isNotEmpty} (${user.publicKey.length} bytes)',
         );
-        _logger.i('Received owner info from ${packet.from}: ${user.longName}');
+        AppLogging.protocol(
+          'Received owner info from ${packet.from}: ${user.longName}',
+        );
 
         // Update the node with the received user info
         final existingNode = _nodes[packet.from];
@@ -997,7 +1127,7 @@ class ProtocolService {
         }
       }
     } catch (e) {
-      _logger.e('Error handling admin message: $e');
+      AppLogging.protocol('Error handling admin message: $e');
     }
   }
 
@@ -1080,7 +1210,7 @@ class ProtocolService {
       '📋 FromRadio metadata: firmware="${metadata.firmwareVersion}", '
       'hwModel=${metadata.hwModel.name}',
     );
-    _logger.i(
+    AppLogging.protocol(
       'FromRadio metadata: firmwareVersion=${metadata.firmwareVersion}, '
       'hwModel=${metadata.hwModel.name}, hasWifi=${metadata.hasWifi}',
     );
@@ -1093,10 +1223,12 @@ class ProtocolService {
       String? hwModelName;
       if (metadata.hwModel != pb.HardwareModel.UNSET) {
         hwModelName = _formatHardwareModel(metadata.hwModel);
-        _logger.i('Hardware model from FromRadio metadata: $hwModelName');
+        AppLogging.protocol(
+          'Hardware model from FromRadio metadata: $hwModelName',
+        );
       } else {
         // Try to infer from BLE model number or device name
-        _logger.i(
+        AppLogging.protocol(
           'Hardware model UNSET in FromRadio metadata, attempting to infer',
         );
         hwModelName = _inferHardwareModel();
@@ -1132,7 +1264,7 @@ class ProtocolService {
   void _handleTextMessage(pb.MeshPacket packet, pb.Data data) {
     try {
       final text = utf8.decode(data.payload);
-      _logger.i('Text message from ${packet.from}: $text');
+      AppLogging.protocol('Text message from ${packet.from}: $text');
 
       // Look up sender node info to cache in message
       final senderNode = _nodes[packet.from];
@@ -1148,7 +1280,7 @@ class ProtocolService {
 
       // If sender is unknown, create a placeholder node
       if (senderNode == null) {
-        _logger.i(
+        AppLogging.protocol(
           'Creating placeholder node for unknown sender ${packet.from}',
         );
         final placeholderNode = MeshNode(
@@ -1173,7 +1305,7 @@ class ProtocolService {
 
       _messageController.add(message);
     } catch (e) {
-      _logger.e('Error decoding text message: $e');
+      AppLogging.protocol('Error decoding text message: $e');
     }
   }
 
@@ -1183,13 +1315,13 @@ class ProtocolService {
       // If requestId is set, it references the original packet that this is a response to
       final requestId = data.requestId;
 
-      _logger.d(
+      AppLogging.protocol(
         'Routing message received: requestId=$requestId, from=${packet.from}, '
         'to=${packet.to}, packetId=${packet.id}',
       );
 
       if (requestId == 0) {
-        _logger.d('Routing message with no requestId, ignoring');
+        AppLogging.protocol('Routing message with no requestId, ignoring');
         return;
       }
 
@@ -1197,7 +1329,7 @@ class ProtocolService {
       final routing = pb.Routing.fromBuffer(data.payload);
       final variant = routing.whichVariant();
 
-      _logger.d('Routing variant: $variant');
+      AppLogging.protocol('Routing variant: $variant');
 
       RoutingError routingError;
       bool delivered;
@@ -1208,18 +1340,18 @@ class ProtocolService {
           final errorCode = routing.errorReason.value;
           routingError = RoutingError.fromCode(errorCode);
           delivered = routingError.isSuccess;
-          _logger.i(
+          AppLogging.protocol(
             'Routing error for packet $requestId: ${routingError.message} (code=$errorCode, name=${routing.errorReason.name})',
           );
           break;
 
         case pb.Routing_Variant.routeRequest:
-          _logger.d('Route request received for packet $requestId');
+          AppLogging.protocol('Route request received for packet $requestId');
           // Route requests don't indicate delivery status
           return;
 
         case pb.Routing_Variant.routeReply:
-          _logger.d('Route reply received for packet $requestId');
+          AppLogging.protocol('Route reply received for packet $requestId');
           // Route replies don't indicate delivery status
           return;
 
@@ -1227,7 +1359,9 @@ class ProtocolService {
           // Empty routing message typically means success (ACK)
           routingError = RoutingError.fromCode(0);
           delivered = true;
-          _logger.d('Empty routing message (ACK) for packet $requestId');
+          AppLogging.protocol(
+            'Empty routing message (ACK) for packet $requestId',
+          );
           break;
       }
 
@@ -1245,7 +1379,7 @@ class ProtocolService {
       );
       _deliveryController.add(update);
     } catch (e) {
-      _logger.e('Error handling routing message: $e');
+      AppLogging.protocol('Error handling routing message: $e');
     }
   }
 
@@ -1257,7 +1391,7 @@ class ProtocolService {
 
       // Check which variant we received
       final variant = telem.whichVariant();
-      _logger.d('Telemetry variant: $variant from ${packet.from}');
+      AppLogging.protocol('Telemetry variant: $variant from ${packet.from}');
 
       int? batteryLevel;
       double? voltage;
@@ -1285,7 +1419,7 @@ class ProtocolService {
               : null;
 
           if (ProtocolDebugFlags.logTelemetry) {
-            _logger.i(
+            AppLogging.protocol(
               'DeviceMetrics from ${packet.from}: battery=$batteryLevel%, voltage=${voltage}V, '
               'channelUtil=$channelUtil%, airUtilTx=$airUtilTx%, uptime=${uptimeSeconds}s',
             );
@@ -1310,7 +1444,7 @@ class ProtocolService {
         case telemetry.Telemetry_Variant.environmentMetrics:
           final envMetrics = telem.environmentMetrics;
           if (ProtocolDebugFlags.logTelemetry) {
-            _logger.i(
+            AppLogging.protocol(
               'EnvironmentMetrics from ${packet.from}: '
               'temp=${envMetrics.hasTemperature() ? envMetrics.temperature : "N/A"}°C, '
               'humidity=${envMetrics.hasRelativeHumidity() ? envMetrics.relativeHumidity : "N/A"}%, '
@@ -1389,7 +1523,7 @@ class ProtocolService {
         case telemetry.Telemetry_Variant.airQualityMetrics:
           final aqMetrics = telem.airQualityMetrics;
           if (ProtocolDebugFlags.logTelemetry) {
-            _logger.i(
+            AppLogging.protocol(
               'AirQualityMetrics from ${packet.from}: '
               'PM2.5=${aqMetrics.hasPm25Standard() ? aqMetrics.pm25Standard : "N/A"}ug/m3, '
               'CO2=${aqMetrics.hasCo2() ? aqMetrics.co2 : "N/A"}ppm',
@@ -1446,7 +1580,7 @@ class ProtocolService {
         case telemetry.Telemetry_Variant.powerMetrics:
           final pwrMetrics = telem.powerMetrics;
           if (ProtocolDebugFlags.logTelemetry) {
-            _logger.i(
+            AppLogging.protocol(
               'PowerMetrics from ${packet.from}: '
               'ch1=${pwrMetrics.hasCh1Voltage() ? pwrMetrics.ch1Voltage : "N/A"}V, '
               'ch2=${pwrMetrics.hasCh2Voltage() ? pwrMetrics.ch2Voltage : "N/A"}V, '
@@ -1485,7 +1619,7 @@ class ProtocolService {
         case telemetry.Telemetry_Variant.localStats:
           final stats = telem.localStats;
           if (ProtocolDebugFlags.logTelemetry) {
-            _logger.i(
+            AppLogging.protocol(
               'LocalStats from ${packet.from}: '
               'channelUtil=${stats.channelUtilization}%, airUtilTx=${stats.airUtilTx}%, '
               'numOnlineNodes=${stats.numOnlineNodes}, numTotalNodes=${stats.numTotalNodes}',
@@ -1529,13 +1663,15 @@ class ProtocolService {
 
         case telemetry.Telemetry_Variant.healthMetrics:
           if (ProtocolDebugFlags.logTelemetry) {
-            _logger.i('HealthMetrics from ${packet.from}');
+            AppLogging.protocol('HealthMetrics from ${packet.from}');
           }
           return;
 
         case telemetry.Telemetry_Variant.notSet:
           if (ProtocolDebugFlags.logTelemetry) {
-            _logger.d('Telemetry with no variant set from ${packet.from}');
+            AppLogging.protocol(
+              'Telemetry with no variant set from ${packet.from}',
+            );
           }
           return;
       }
@@ -1551,7 +1687,9 @@ class ProtocolService {
       if (_nodes[packet.from] == null &&
           batteryLevel != null &&
           batteryLevel > 0) {
-        _logger.d('Creating new node entry for ${packet.from} from telemetry');
+        AppLogging.protocol(
+          'Creating new node entry for ${packet.from} from telemetry',
+        );
         final colors = [
           0xFF1976D2,
           0xFFD32F2F,
@@ -1578,9 +1716,9 @@ class ProtocolService {
         _nodeController.add(newNode);
       }
     } catch (e) {
-      _logger.e('Error decoding telemetry: $e');
+      AppLogging.protocol('Error decoding telemetry: $e');
       // Log the raw payload for debugging
-      _logger.d('Raw telemetry payload: ${data.payload}');
+      AppLogging.protocol('Raw telemetry payload: ${data.payload}');
     }
   }
 
@@ -1608,7 +1746,7 @@ class ProtocolService {
 
       final node = _nodes[packet.from];
       if (node != null && hasValidPosition) {
-        _logger.i(
+        AppLogging.protocol(
           '✅ UPDATING NODE ${node.displayName} (!${packet.from.toRadixString(16)}) WITH VALID POSITION: '
           '${position.latitudeI / 1e7}, ${position.longitudeI / 1e7}',
         );
@@ -1637,7 +1775,7 @@ class ProtocolService {
         );
         _nodes[packet.from] = updatedNode;
         _nodeController.add(updatedNode);
-        _logger.i(
+        AppLogging.protocol(
           '✅ Node ${updatedNode.displayName} now hasPosition=${updatedNode.hasPosition}',
         );
       } else if (node != null) {
@@ -1648,7 +1786,7 @@ class ProtocolService {
       } else if (hasValidPosition) {
         // Node doesn't exist yet but we have valid position - create placeholder
         // This handles cases where position arrives before NodeInfo
-        _logger.i(
+        AppLogging.protocol(
           'Creating placeholder node ${packet.from} from position update',
         );
         final colors = [
@@ -1700,7 +1838,7 @@ class ProtocolService {
         _nodeController.add(newNode);
       }
     } catch (e) {
-      _logger.e('Error decoding position: $e');
+      AppLogging.protocol('Error decoding position: $e');
     }
   }
 
@@ -1714,7 +1852,7 @@ class ProtocolService {
       debugPrint(
         '🔑 📥 Public key present: ${user.publicKey.isNotEmpty} (${user.publicKey.length} bytes)',
       );
-      _logger.i('Node info from ${packet.from}: ${user.longName}');
+      AppLogging.protocol('Node info from ${packet.from}: ${user.longName}');
 
       final colors = [
         0xFF1976D2,
@@ -1735,7 +1873,9 @@ class ProtocolService {
         // For our own node, try to infer from BLE model number or device name
         hwModel = _inferHardwareModel();
         if (hwModel != null) {
-          _logger.i('Hardware model UNSET in User packet, inferred: $hwModel');
+          AppLogging.protocol(
+            'Hardware model UNSET in User packet, inferred: $hwModel',
+          );
         }
       }
 
@@ -1769,7 +1909,7 @@ class ProtocolService {
       _nodes[packet.from] = updatedNode;
       _nodeController.add(updatedNode);
     } catch (e) {
-      _logger.e('Error decoding node info: $e');
+      AppLogging.protocol('Error decoding node info: $e');
     }
   }
 
@@ -1788,7 +1928,7 @@ class ProtocolService {
   void _handleMyNodeInfo(pb.MyNodeInfo myInfo) {
     _myNodeNum = myInfo.myNodeNum;
     AppLogging.protocol('Protocol: My node number set to: $_myNodeNum');
-    _logger.i('My node number: $_myNodeNum');
+    AppLogging.protocol('My node number: $_myNodeNum');
     _myNodeNumController.add(_myNodeNum!);
 
     // Apply any pending metadata that was received before myNodeNum was set
@@ -1809,7 +1949,7 @@ class ProtocolService {
   /// Handle node info
   void _handleNodeInfo(pb.NodeInfo nodeInfo) {
     if (ProtocolDebugFlags.logNodeInfo) {
-      _logger.i('Node info received: ${nodeInfo.num}');
+      AppLogging.protocol('Node info received: ${nodeInfo.num}');
     }
 
     // DEBUG: Log position status with debugPrint so it shows in console
@@ -1834,12 +1974,12 @@ class ProtocolService {
     // Log device metrics if present
     if (nodeInfo.hasDeviceMetrics()) {
       final metrics = nodeInfo.deviceMetrics;
-      _logger.i(
+      AppLogging.protocol(
         'NodeInfo deviceMetrics: battery=${metrics.batteryLevel}%, '
         'voltage=${metrics.voltage}V, uptime=${metrics.uptimeSeconds}s',
       );
     } else {
-      _logger.d('NodeInfo has no deviceMetrics');
+      AppLogging.protocol('NodeInfo has no deviceMetrics');
     }
 
     final existingNode = _nodes[nodeInfo.num];
@@ -1863,12 +2003,12 @@ class ProtocolService {
     bool hasPublicKey = false;
     if (nodeInfo.hasUser()) {
       final user = nodeInfo.user;
-      _logger.d(
+      AppLogging.protocol(
         'NodeInfo user: longName=${user.longName}, hwModel=${user.hwModel}, hasHwModel=${user.hasHwModel()}',
       );
       if (user.hasHwModel() && user.hwModel != pb.HardwareModel.UNSET) {
         hwModel = _formatHardwareModel(user.hwModel);
-        _logger.d('Formatted hardware model: $hwModel');
+        AppLogging.protocol('Formatted hardware model: $hwModel');
       }
       if (user.hasRole()) {
         role = user.role.name;
@@ -1879,7 +2019,7 @@ class ProtocolService {
       // Check if user has a public key set (for PKI encryption)
       hasPublicKey = user.hasPublicKey() && user.publicKey.isNotEmpty;
     } else {
-      _logger.d('NodeInfo has no user data');
+      AppLogging.protocol('NodeInfo has no user data');
     }
 
     MeshNode updatedNode;
@@ -1895,7 +2035,7 @@ class ProtocolService {
             nodeInfo.position.longitudeI == -1220090000);
 
     if (nodeInfo.hasPosition()) {
-      _logger.i(
+      AppLogging.protocol(
         '📍 NodeInfo ${nodeInfo.num} position check: latI=${nodeInfo.position.latitudeI}, '
         'lngI=${nodeInfo.position.longitudeI}, lat=${nodeInfo.position.latitudeI / 1e7}, '
         'lng=${nodeInfo.position.longitudeI / 1e7}, valid=$hasValidPosition',
@@ -2066,11 +2206,11 @@ class ProtocolService {
   Future<void> _requestConfiguration() async {
     try {
       if (!_transport.isConnected) {
-        _logger.w('Cannot request configuration: not connected');
+        AppLogging.protocol('Cannot request configuration: not connected');
         return;
       }
 
-      _logger.i('Requesting device configuration');
+      AppLogging.protocol('Requesting device configuration');
 
       // Wake device by sending START2 bytes (only for serial/USB)
       if (_transport.requiresFraming) {
@@ -2083,7 +2223,7 @@ class ProtocolService {
       // The firmware will send back all config + NodeDB with positions
       final configId = _random.nextInt(0x7FFFFFFF);
 
-      _logger.i('Requesting config with ID: $configId');
+      AppLogging.protocol('Requesting config with ID: $configId');
       final toRadio = pn.ToRadio()..wantConfigId = configId;
       final bytes = toRadio.writeToBuffer();
 
@@ -2093,9 +2233,9 @@ class ProtocolService {
           : bytes;
 
       await _transport.send(sendBytes);
-      _logger.i('Configuration request sent');
+      AppLogging.protocol('Configuration request sent');
     } catch (e) {
-      _logger.e('Error requesting configuration: $e');
+      AppLogging.protocol('Error requesting configuration: $e');
     }
   }
 
@@ -2122,7 +2262,7 @@ class ProtocolService {
     }
 
     try {
-      _logger.i('Sending message to $to: $text');
+      AppLogging.protocol('Sending message to $to: $text');
 
       final packetId = _generatePacketId();
 
@@ -2176,7 +2316,86 @@ class ProtocolService {
 
       return packetId;
     } catch (e) {
-      _logger.e('Error sending message: $e');
+      AppLogging.protocol('Error sending message: $e');
+      rethrow;
+    }
+  }
+
+  /// Broadcast a signal packet to all nodes in the mesh.
+  ///
+  /// Uses PRIVATE_APP portnum (256) with JSON payload.
+  /// Returns the packet ID for tracking.
+  ///
+  /// Throws [ArgumentError] if payload exceeds max mesh packet size.
+  /// Note: 180 chars ≠ 180 bytes. Emojis and special chars inflate UTF-8 size.
+  static const int _maxSignalPayloadBytes = 200;
+
+  Future<int> sendSignal({
+    required String signalId,
+    required String content,
+    required int ttlMinutes,
+    double? latitude,
+    double? longitude,
+  }) async {
+    if (_myNodeNum == null) {
+      throw StateError('Cannot send signal: device not ready (no node number)');
+    }
+    if (!_transport.isConnected) {
+      throw StateError('Cannot send signal: not connected to device');
+    }
+
+    try {
+      final signalPacket = MeshSignalPacket(
+        senderNodeId: _myNodeNum!,
+        signalId: signalId,
+        content: content,
+        ttlMinutes: ttlMinutes,
+        latitude: latitude,
+        longitude: longitude,
+        receivedAt: DateTime.now(),
+      );
+
+      final payload = signalPacket.toPayload();
+
+      // Guard: Prevent oversized payloads that cause fragmentation or drops
+      if (payload.length > _maxSignalPayloadBytes) {
+        AppLogging.signals(
+          'Signal payload too large: ${payload.length} bytes '
+          '(max $_maxSignalPayloadBytes). Content: ${content.length} chars',
+        );
+        throw ArgumentError(
+          'Signal payload exceeds max size: ${payload.length} bytes '
+          '(limit: $_maxSignalPayloadBytes bytes). '
+          'Try shorter content or remove location.',
+        );
+      }
+
+      final packetId = _generatePacketId();
+
+      final data = pb.Data()
+        ..portnum = pb.PortNum.PRIVATE_APP
+        ..payload = payload;
+
+      final packet = pb.MeshPacket()
+        ..from = _myNodeNum!
+        ..to =
+            0xFFFFFFFF // Broadcast
+        ..decoded = data
+        ..id = packetId;
+
+      final toRadio = pn.ToRadio()..packet = packet;
+      final bytes = toRadio.writeToBuffer();
+
+      await _transport.send(_prepareForSend(bytes));
+
+      AppLogging.signals(
+        'Broadcast signal: "${content.length > 30 ? '${content.substring(0, 30)}...' : content}" '
+        '(ttl=${ttlMinutes}m, packetId=$packetId)',
+      );
+
+      return packetId;
+    } catch (e) {
+      AppLogging.signals('Error broadcasting signal: $e');
       rethrow;
     }
   }
@@ -2206,7 +2425,7 @@ class ProtocolService {
     }
 
     try {
-      _logger.i('Sending message to $to: $text');
+      AppLogging.protocol('Sending message to $to: $text');
 
       final packetId = _generatePacketId();
 
@@ -2266,7 +2485,7 @@ class ProtocolService {
 
       return packetId;
     } catch (e) {
-      _logger.e('Error sending message: $e');
+      AppLogging.protocol('Error sending message: $e');
       rethrow;
     }
   }
@@ -2288,7 +2507,7 @@ class ProtocolService {
     int? altitude,
   }) async {
     try {
-      _logger.i('Sending position: $latitude, $longitude');
+      AppLogging.protocol('Sending position: $latitude, $longitude');
 
       final position = pb.Position()
         ..latitudeI = (latitude * 1e7).toInt()
@@ -2334,7 +2553,7 @@ class ProtocolService {
         }
       }
     } catch (e) {
-      _logger.e('Error sending position: $e');
+      AppLogging.protocol('Error sending position: $e');
       rethrow;
     }
   }
@@ -2355,7 +2574,7 @@ class ProtocolService {
       debugPrint(
         '🔑 Broadcasting our User info to trigger key exchange with ${nodeNum.toRadixString(16)}',
       );
-      _logger.i('Broadcasting User info to trigger key exchange');
+      AppLogging.protocol('Broadcasting User info to trigger key exchange');
 
       // Build our User info to broadcast
       final myNode = _nodes[_myNodeNum];
@@ -2387,10 +2606,10 @@ class ProtocolService {
       debugPrint(
         '🔑 ✅ Sent NODEINFO with wantResponse to ${nodeNum.toRadixString(16)}',
       );
-      _logger.i('Sent NODEINFO request to $nodeNum');
+      AppLogging.protocol('Sent NODEINFO request to $nodeNum');
     } catch (e) {
       debugPrint('🔑 ❌ Error requesting node info: $e');
-      _logger.e('Error requesting node info: $e');
+      AppLogging.protocol('Error requesting node info: $e');
       rethrow;
     }
   }
@@ -2424,14 +2643,14 @@ class ProtocolService {
       debugPrint('🔑 ✅ Broadcast User info to mesh');
     } catch (e) {
       debugPrint('🔑 ❌ Error broadcasting user info: $e');
-      _logger.e('Error broadcasting user info: $e');
+      AppLogging.protocol('Error broadcasting user info: $e');
     }
   }
 
   /// Request position from a specific node
   Future<void> requestPosition(int nodeNum) async {
     try {
-      _logger.i('Requesting position for node $nodeNum');
+      AppLogging.protocol('Requesting position for node $nodeNum');
 
       // Create an empty position to request the node's position
       final position = pb.Position();
@@ -2453,7 +2672,7 @@ class ProtocolService {
 
       await _transport.send(_prepareForSend(bytes));
     } catch (e) {
-      _logger.e('Error requesting position: $e');
+      AppLogging.protocol('Error requesting position: $e');
     }
   }
 
@@ -2462,7 +2681,9 @@ class ProtocolService {
     // Take a snapshot of node keys to avoid ConcurrentModificationError
     // if _nodes is modified while iterating (e.g., by incoming packets)
     final nodeNums = _nodes.keys.toList();
-    _logger.i('Requesting positions from all ${nodeNums.length} known nodes');
+    AppLogging.protocol(
+      'Requesting positions from all ${nodeNums.length} known nodes',
+    );
     for (final nodeNum in nodeNums) {
       await requestPosition(nodeNum);
       // Small delay between requests to avoid flooding
@@ -2473,7 +2694,7 @@ class ProtocolService {
   /// Send a traceroute request to a specific node
   /// Returns immediately - results come via mesh packet responses
   Future<void> sendTraceroute(int nodeNum) async {
-    _logger.i('Sending traceroute to node $nodeNum');
+    AppLogging.protocol('Sending traceroute to node $nodeNum');
 
     // Create an empty RouteDiscovery for the request
     final routeDiscovery = pb.RouteDiscovery();
@@ -2574,7 +2795,7 @@ class ProtocolService {
       AppLogging.channels('Verifying channel ${config.index}...');
       await getChannel(config.index);
     } catch (e) {
-      _logger.e('Error setting channel: $e');
+      AppLogging.protocol('Error setting channel: $e');
       rethrow;
     }
   }
@@ -2582,7 +2803,7 @@ class ProtocolService {
   /// Get channel
   Future<void> getChannel(int index) async {
     try {
-      _logger.i('Getting channel $index');
+      AppLogging.protocol('Getting channel $index');
 
       final adminMsg = pb.AdminMessage()..getChannelRequest = index + 1;
 
@@ -2602,7 +2823,7 @@ class ProtocolService {
 
       await _transport.send(_prepareForSend(bytes));
     } catch (e) {
-      _logger.e('Error getting channel: $e');
+      AppLogging.protocol('Error getting channel: $e');
     }
   }
 
@@ -2619,7 +2840,7 @@ class ProtocolService {
     }
 
     try {
-      _logger.i('Setting device role: ${role.name}');
+      AppLogging.protocol('Setting device role: ${role.name}');
 
       // Get current owner info and update role
       final user = pb.User()..role = role;
@@ -2648,10 +2869,10 @@ class ProtocolService {
         final updatedNode = existingNode.copyWith(role: role.name);
         _nodes[_myNodeNum!] = updatedNode;
         _nodeController.add(updatedNode);
-        _logger.i('Updated local node cache with new role');
+        AppLogging.protocol('Updated local node cache with new role');
       }
     } catch (e) {
-      _logger.e('Error setting device role: $e');
+      AppLogging.protocol('Error setting device role: $e');
       rethrow;
     }
   }
@@ -2681,7 +2902,7 @@ class ProtocolService {
           ? shortName.substring(0, 4)
           : shortName;
 
-      _logger.i(
+      AppLogging.protocol(
         'Setting user name: long="$trimmedLong", short="$trimmedShort"',
       );
 
@@ -2716,10 +2937,10 @@ class ProtocolService {
         );
         _nodes[_myNodeNum!] = updatedNode;
         _nodeController.add(updatedNode);
-        _logger.i('Updated local node cache with new name');
+        AppLogging.protocol('Updated local node cache with new name');
       }
     } catch (e) {
-      _logger.e('Error setting user name: $e');
+      AppLogging.protocol('Error setting user name: $e');
       rethrow;
     }
   }
@@ -2736,7 +2957,7 @@ class ProtocolService {
     }
 
     try {
-      _logger.i('Setting region: ${region.name}');
+      AppLogging.protocol('Setting region: ${region.name}');
 
       // Set Meshtastic defaults: usePreset=true, LONG_FAST preset, hopLimit=3
       final loraConfig = pb.Config_LoRaConfig()
@@ -2765,7 +2986,7 @@ class ProtocolService {
 
       await _transport.send(_prepareForSend(bytes));
     } catch (e) {
-      _logger.e('Error setting region: $e');
+      AppLogging.protocol('Error setting region: $e');
       rethrow;
     }
   }
@@ -2816,7 +3037,7 @@ class ProtocolService {
 
       await _transport.send(_prepareForSend(bytes));
     } catch (e) {
-      _logger.e('Error requesting channel $channelIndex: $e');
+      AppLogging.protocol('Error requesting channel $channelIndex: $e');
     }
   }
 
@@ -2824,7 +3045,7 @@ class ProtocolService {
   Future<void> getLoRaConfig({int? targetNodeNum}) async {
     try {
       final target = targetNodeNum ?? _myNodeNum ?? 0;
-      _logger.i(
+      AppLogging.protocol(
         'Requesting LoRa config${targetNodeNum != null ? ' from node $targetNodeNum' : ''}',
       );
 
@@ -2848,7 +3069,7 @@ class ProtocolService {
 
       await _transport.send(_prepareForSend(bytes));
     } catch (e) {
-      _logger.e('Error getting LoRa config: $e');
+      AppLogging.protocol('Error getting LoRa config: $e');
     }
   }
 
@@ -2856,7 +3077,7 @@ class ProtocolService {
   Future<void> getPositionConfig({int? targetNodeNum}) async {
     try {
       final target = targetNodeNum ?? _myNodeNum ?? 0;
-      _logger.i(
+      AppLogging.protocol(
         'Requesting Position config${targetNodeNum != null ? ' from node $targetNodeNum' : ''}',
       );
 
@@ -2879,7 +3100,7 @@ class ProtocolService {
 
       await _transport.send(_prepareForSend(bytes));
     } catch (e) {
-      _logger.e('Error getting Position config: $e');
+      AppLogging.protocol('Error getting Position config: $e');
     }
   }
 
@@ -2896,7 +3117,7 @@ class ProtocolService {
       throw StateError('Cannot reboot: not connected');
     }
 
-    _logger.i('Rebooting device in $delaySeconds seconds');
+    AppLogging.protocol('Rebooting device in $delaySeconds seconds');
 
     final adminMsg = pb.AdminMessage()..rebootSeconds = delaySeconds;
 
@@ -2925,7 +3146,7 @@ class ProtocolService {
       throw StateError('Cannot shutdown: not connected');
     }
 
-    _logger.i('Shutting down device in $delaySeconds seconds');
+    AppLogging.protocol('Shutting down device in $delaySeconds seconds');
 
     final adminMsg = pb.AdminMessage()..shutdownSeconds = delaySeconds;
 
@@ -2954,7 +3175,7 @@ class ProtocolService {
       throw StateError('Cannot factory reset config: not connected');
     }
 
-    _logger.i('Factory resetting configuration');
+    AppLogging.protocol('Factory resetting configuration');
 
     final adminMsg = pb.AdminMessage()..factoryResetConfig = 1;
 
@@ -2983,7 +3204,7 @@ class ProtocolService {
       throw StateError('Cannot factory reset device: not connected');
     }
 
-    _logger.i('Factory resetting entire device');
+    AppLogging.protocol('Factory resetting entire device');
 
     final adminMsg = pb.AdminMessage()..factoryResetDevice = 1;
 
@@ -3012,7 +3233,7 @@ class ProtocolService {
       throw StateError('Cannot reset node DB: not connected');
     }
 
-    _logger.i('Resetting node database');
+    AppLogging.protocol('Resetting node database');
 
     final adminMsg = pb.AdminMessage()..nodedbReset = true;
 
@@ -3041,7 +3262,7 @@ class ProtocolService {
       throw StateError('Cannot enter DFU mode: not connected');
     }
 
-    _logger.i('Entering DFU mode');
+    AppLogging.protocol('Entering DFU mode');
 
     final adminMsg = pb.AdminMessage()..enterDfuModeRequest = true;
 
@@ -3072,7 +3293,7 @@ class ProtocolService {
     }
 
     AppLogging.protocol('Requesting device metadata...');
-    _logger.i('Requesting device metadata');
+    AppLogging.protocol('Requesting device metadata');
 
     final adminMsg = pb.AdminMessage()..getDeviceMetadataRequest = true;
 
@@ -3104,7 +3325,7 @@ class ProtocolService {
       throw StateError('Cannot remove node: not connected');
     }
 
-    _logger.i('Removing node $nodeNum from device database');
+    AppLogging.protocol('Removing node $nodeNum from device database');
 
     final adminMsg = pb.AdminMessage()..removeByNodenum = nodeNum;
 
@@ -3124,7 +3345,7 @@ class ProtocolService {
     final toRadio = pn.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
 
-    _logger.i('Node $nodeNum removal command sent to device');
+    AppLogging.protocol('Node $nodeNum removal command sent to device');
   }
 
   /// Set a node as favorite
@@ -3136,7 +3357,7 @@ class ProtocolService {
       throw StateError('Cannot set favorite: not connected');
     }
 
-    _logger.i('Setting node $nodeNum as favorite');
+    AppLogging.protocol('Setting node $nodeNum as favorite');
 
     final adminMsg = pb.AdminMessage()..setFavoriteNode = nodeNum;
 
@@ -3166,7 +3387,7 @@ class ProtocolService {
       throw StateError('Cannot remove favorite: not connected');
     }
 
-    _logger.i('Removing node $nodeNum from favorites');
+    AppLogging.protocol('Removing node $nodeNum from favorites');
 
     final adminMsg = pb.AdminMessage()..removeFavoriteNode = nodeNum;
 
@@ -3200,7 +3421,9 @@ class ProtocolService {
       throw StateError('Cannot set fixed position: not connected');
     }
 
-    _logger.i('Setting fixed position: $latitude, $longitude, alt=$altitude');
+    AppLogging.protocol(
+      'Setting fixed position: $latitude, $longitude, alt=$altitude',
+    );
 
     final position = pb.Position()
       ..latitudeI = (latitude * 1e7).toInt()
@@ -3235,7 +3458,7 @@ class ProtocolService {
       throw StateError('Cannot remove fixed position: not connected');
     }
 
-    _logger.i('Removing fixed position');
+    AppLogging.protocol('Removing fixed position');
 
     final adminMsg = pb.AdminMessage()..removeFixedPosition = true;
 
@@ -3265,7 +3488,7 @@ class ProtocolService {
       throw StateError('Cannot set ignored: not connected');
     }
 
-    _logger.i('Setting node $nodeNum as ignored');
+    AppLogging.protocol('Setting node $nodeNum as ignored');
 
     final adminMsg = admin.AdminMessage()..setIgnoredNode = nodeNum;
 
@@ -3295,7 +3518,7 @@ class ProtocolService {
       throw StateError('Cannot remove ignored: not connected');
     }
 
-    _logger.i('Removing node $nodeNum from ignored list');
+    AppLogging.protocol('Removing node $nodeNum from ignored list');
 
     final adminMsg = admin.AdminMessage()..removeIgnoredNode = nodeNum;
 
@@ -3325,7 +3548,7 @@ class ProtocolService {
       throw StateError('Cannot set time: not connected');
     }
 
-    _logger.i('Setting device time to $unixTimestamp');
+    AppLogging.protocol('Setting device time to $unixTimestamp');
 
     final adminMsg = pb.AdminMessage()..setTimeOnly = unixTimestamp;
 
@@ -3371,7 +3594,7 @@ class ProtocolService {
       throw StateError('Cannot set HAM mode: not connected');
     }
 
-    _logger.i('Setting HAM mode: callSign=$callSign');
+    AppLogging.protocol('Setting HAM mode: callSign=$callSign');
 
     final hamParams = pb.HamParameters()
       ..callSign = callSign
@@ -3415,7 +3638,7 @@ class ProtocolService {
     final target = targetNodeNum ?? _myNodeNum!;
     final isRemote = target != _myNodeNum;
 
-    _logger.i(
+    AppLogging.protocol(
       'Requesting config: ${configType.name}${isRemote ? ' from remote node $target' : ''}',
     );
     if (isRemote) {
@@ -3455,7 +3678,9 @@ class ProtocolService {
     final target = targetNodeNum ?? _myNodeNum!;
     final isRemote = target != _myNodeNum;
 
-    _logger.i('Setting config${isRemote ? ' on remote node $target' : ''}');
+    AppLogging.protocol(
+      'Setting config${isRemote ? ' on remote node $target' : ''}',
+    );
     if (isRemote) {
       debugPrint(
         '🔧 Remote Admin: Setting config on ${target.toRadixString(16)}',
@@ -3500,7 +3725,7 @@ class ProtocolService {
     bool configOkToMqtt = false,
     int? targetNodeNum,
   }) async {
-    _logger.i('Setting LoRa config');
+    AppLogging.protocol('Setting LoRa config');
 
     final loraConfig = pb.Config_LoRaConfig()
       ..usePreset = usePreset
@@ -3537,7 +3762,7 @@ class ProtocolService {
     String tzdef = '',
     int? targetNodeNum,
   }) async {
-    _logger.i('Setting device config');
+    AppLogging.protocol('Setting device config');
 
     final deviceConfig = pb.Config_DeviceConfig()
       ..role = role
@@ -3568,7 +3793,7 @@ class ProtocolService {
     int positionFlags = 811,
     int? targetNodeNum,
   }) async {
-    _logger.i('Setting position config: gpsMode=$gpsMode');
+    AppLogging.protocol('Setting position config: gpsMode=$gpsMode');
 
     final posConfig = pb.Config_PositionConfig()
       ..positionBroadcastSecs = positionBroadcastSecs
@@ -3597,7 +3822,7 @@ class ProtocolService {
     double adcMultiplierOverride = 0.0,
     int? targetNodeNum,
   }) async {
-    _logger.i('Setting power config');
+    AppLogging.protocol('Setting power config');
 
     final powerConfig = pb.Config_PowerConfig()
       ..isPowerSaving = isPowerSaving
@@ -3629,7 +3854,7 @@ class ProtocolService {
     int gpsFormat = 0,
     int? targetNodeNum,
   }) async {
-    _logger.i('Setting display config');
+    AppLogging.protocol('Setting display config');
 
     final displayConfig = pb.Config_DisplayConfig()
       ..screenOnSecs = screenOnSecs
@@ -3655,7 +3880,7 @@ class ProtocolService {
     required int fixedPin,
     int? targetNodeNum,
   }) async {
-    _logger.i('Setting Bluetooth config');
+    AppLogging.protocol('Setting Bluetooth config');
 
     final btConfig = pb.Config_BluetoothConfig()
       ..enabled = enabled
@@ -3675,7 +3900,7 @@ class ProtocolService {
     required String ntpServer,
     int? targetNodeNum,
   }) async {
-    _logger.i('Setting network config');
+    AppLogging.protocol('Setting network config');
 
     final networkConfig = pb.Config_NetworkConfig()
       ..wifiEnabled = wifiEnabled
@@ -3698,7 +3923,7 @@ class ProtocolService {
     List<List<int>> adminKeys = const [],
     int? targetNodeNum,
   }) async {
-    _logger.i('Setting security config');
+    AppLogging.protocol('Setting security config');
 
     final secConfig = pb.Config_SecurityConfig()
       ..isManaged = isManaged
@@ -3740,7 +3965,7 @@ class ProtocolService {
     final target = targetNodeNum ?? _myNodeNum!;
     final isRemote = target != _myNodeNum;
 
-    _logger.i(
+    AppLogging.protocol(
       'Requesting module config: ${moduleType.name}${isRemote ? ' from remote node $target' : ''}',
     );
     if (isRemote) {
@@ -3782,7 +4007,7 @@ class ProtocolService {
     final target = targetNodeNum ?? _myNodeNum!;
     final isRemote = target != _myNodeNum;
 
-    _logger.i(
+    AppLogging.protocol(
       'Setting module config${isRemote ? ' on remote node $target' : ''}',
     );
     if (isRemote) {
@@ -3827,7 +4052,7 @@ class ProtocolService {
     int? targetNodeNum,
   }) async {
     final isRemote = targetNodeNum != null && targetNodeNum != _myNodeNum;
-    _logger.i(
+    AppLogging.protocol(
       'Setting MQTT config${isRemote ? ' on remote node $targetNodeNum' : ''}',
     );
 
@@ -3870,7 +4095,7 @@ class ProtocolService {
     inputbrokerEventPress,
     int? targetNodeNum,
   }) async {
-    _logger.i('Setting canned message config');
+    AppLogging.protocol('Setting canned message config');
 
     final cannedConfig = pb.ModuleConfig_CannedMessageConfig()
       ..enabled = enabled
@@ -3909,7 +4134,7 @@ class ProtocolService {
       );
       return config;
     } catch (e) {
-      _logger.e('Failed to get telemetry config: $e');
+      AppLogging.protocol('Failed to get telemetry config: $e');
       return null;
     }
   }
@@ -3929,7 +4154,7 @@ class ProtocolService {
     bool? powerScreenEnabled,
     int? targetNodeNum,
   }) async {
-    _logger.i('Setting telemetry config');
+    AppLogging.protocol('Setting telemetry config');
 
     final telemetryConfig = pb.ModuleConfig_TelemetryConfig();
     if (deviceUpdateInterval != null) {
@@ -3994,7 +4219,7 @@ class ProtocolService {
           );
       return config;
     } catch (e) {
-      _logger.e('Failed to get external notification config: $e');
+      AppLogging.protocol('Failed to get external notification config: $e');
       return null;
     }
   }
@@ -4018,7 +4243,7 @@ class ProtocolService {
     int? nagTimeout,
     int? targetNodeNum,
   }) async {
-    _logger.i('Setting external notification config');
+    AppLogging.protocol('Setting external notification config');
 
     final extNotifConfig = pb.ModuleConfig_ExternalNotificationConfig();
     if (enabled != null) extNotifConfig.enabled = enabled;
@@ -4061,7 +4286,7 @@ class ProtocolService {
     int? historyReturnWindow,
     int? targetNodeNum,
   }) async {
-    _logger.i('Setting store & forward config');
+    AppLogging.protocol('Setting store & forward config');
 
     final sfConfig = pb.ModuleConfig_StoreForwardConfig();
     if (enabled != null) sfConfig.enabled = enabled;
@@ -4096,7 +4321,7 @@ class ProtocolService {
       );
       return config;
     } catch (e) {
-      _logger.e('Failed to get store forward config: $e');
+      AppLogging.protocol('Failed to get store forward config: $e');
       return null;
     }
   }
@@ -4125,7 +4350,7 @@ class ProtocolService {
           );
       return config;
     } catch (e) {
-      _logger.e('Failed to get detection sensor config: $e');
+      AppLogging.protocol('Failed to get detection sensor config: $e');
       return null;
     }
   }
@@ -4149,7 +4374,7 @@ class ProtocolService {
       );
       return config;
     } catch (e) {
-      _logger.e('Failed to get range test config: $e');
+      AppLogging.protocol('Failed to get range test config: $e');
       return null;
     }
   }
@@ -4161,7 +4386,7 @@ class ProtocolService {
     bool? save,
     int? targetNodeNum,
   }) async {
-    _logger.i('Setting range test config');
+    AppLogging.protocol('Setting range test config');
 
     final rtConfig = pb.ModuleConfig_RangeTestConfig();
     if (enabled != null) rtConfig.enabled = enabled;
@@ -4196,7 +4421,7 @@ class ProtocolService {
           );
       return config;
     } catch (e) {
-      _logger.e('Failed to get ambient lighting config: $e');
+      AppLogging.protocol('Failed to get ambient lighting config: $e');
       return null;
     }
   }
@@ -4210,7 +4435,7 @@ class ProtocolService {
     int? current,
     int? targetNodeNum,
   }) async {
-    _logger.i('Setting ambient lighting config');
+    AppLogging.protocol('Setting ambient lighting config');
 
     final alConfig = pb.ModuleConfig_AmbientLightingConfig();
     alConfig.ledState = ledState;
@@ -4242,7 +4467,7 @@ class ProtocolService {
       );
       return config;
     } catch (e) {
-      _logger.e('Failed to get PAX counter config: $e');
+      AppLogging.protocol('Failed to get PAX counter config: $e');
       return null;
     }
   }
@@ -4255,7 +4480,7 @@ class ProtocolService {
     bool? bleEnabled,
     int? targetNodeNum,
   }) async {
-    _logger.i('Setting PAX counter config');
+    AppLogging.protocol('Setting PAX counter config');
 
     final paxConfig = pb.ModuleConfig_PaxcounterConfig();
     if (enabled != null) paxConfig.enabled = enabled;
@@ -4286,7 +4511,7 @@ class ProtocolService {
       );
       return config;
     } catch (e) {
-      _logger.e('Failed to get serial config: $e');
+      AppLogging.protocol('Failed to get serial config: $e');
       return null;
     }
   }
@@ -4303,7 +4528,7 @@ class ProtocolService {
     bool? overrideConsoleSerialPort,
     int? targetNodeNum,
   }) async {
-    _logger.i('Setting serial config');
+    AppLogging.protocol('Setting serial config');
 
     final serialConfig = pb.ModuleConfig_SerialConfig();
     if (enabled != null) serialConfig.enabled = enabled;
@@ -4342,7 +4567,7 @@ class ProtocolService {
       throw StateError('Cannot get canned messages: not connected');
     }
 
-    _logger.i('Requesting canned messages');
+    AppLogging.protocol('Requesting canned messages');
 
     final adminMsg = pb.AdminMessage()
       ..getCannedMessageModuleMessagesRequest = true;
@@ -4371,7 +4596,7 @@ class ProtocolService {
       throw StateError('Cannot set canned messages: not connected');
     }
 
-    _logger.i('Setting canned messages');
+    AppLogging.protocol('Setting canned messages');
 
     final adminMsg = pb.AdminMessage()
       ..setCannedMessageModuleMessages = messages;
@@ -4399,7 +4624,7 @@ class ProtocolService {
       throw StateError('Cannot get ringtone: not connected');
     }
 
-    _logger.i('Requesting ringtone');
+    AppLogging.protocol('Requesting ringtone');
 
     final adminMsg = pb.AdminMessage()..getRingtoneRequest = true;
 
@@ -4427,7 +4652,7 @@ class ProtocolService {
       throw StateError('Cannot set ringtone: not connected');
     }
 
-    _logger.i('Setting ringtone');
+    AppLogging.protocol('Setting ringtone');
 
     final adminMsg = pb.AdminMessage()..setRingtoneMessage = rtttl;
 
@@ -4454,7 +4679,7 @@ class ProtocolService {
       throw StateError('Cannot delete file: not connected');
     }
 
-    _logger.i('Deleting file: $filename');
+    AppLogging.protocol('Deleting file: $filename');
 
     final adminMsg = pb.AdminMessage()..deleteFileRequest = filename;
 
@@ -4538,7 +4763,7 @@ class ProtocolService {
     if (_bleModelNumber != null && _bleModelNumber!.isNotEmpty) {
       final inferred = _inferHardwareModelFromDeviceName(_bleModelNumber);
       if (inferred != null) {
-        _logger.i(
+        AppLogging.protocol(
           'Inferred hardware from BLE model number "$_bleModelNumber": $inferred',
         );
         return inferred;
@@ -4549,7 +4774,7 @@ class ProtocolService {
     if (_bleManufacturerName != null && _bleManufacturerName!.isNotEmpty) {
       final mfgLower = _bleManufacturerName!.toLowerCase();
       if (mfgLower.contains('sensecap') || mfgLower.contains('seeed')) {
-        _logger.i(
+        AppLogging.protocol(
           'Inferred hardware from manufacturer "$_bleManufacturerName": Tracker T1000-E',
         );
         return 'Tracker T1000-E';
@@ -4560,7 +4785,7 @@ class ProtocolService {
     if (_deviceName != null && _deviceName!.isNotEmpty) {
       final inferred = _inferHardwareModelFromDeviceName(_deviceName);
       if (inferred != null) {
-        _logger.i(
+        AppLogging.protocol(
           'Inferred hardware from device name "$_deviceName": $inferred',
         );
         return inferred;
@@ -4661,6 +4886,7 @@ class ProtocolService {
     await _nodeController.close();
     await _channelController.close();
     await _errorController.close();
+    await _signalController.close();
     await _deliveryController.close();
     await _regionController.close();
   }

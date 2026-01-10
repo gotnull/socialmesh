@@ -309,8 +309,12 @@ export const checkFollowStatus = onCall(async (request) => {
 
 /**
  * Triggered when a new post is created.
- * - Increments postCount on author's profile
- * - Fans out post to all followers' feeds
+ * - For social posts (postMode !== 'signal'):
+ *   - Increments postCount on author's profile
+ *   - Fans out post to all followers' feeds
+ * - For signals (postMode === 'signal'):
+ *   - Increments postCount but SKIPS fan-out
+ *   - Signals are ephemeral, local-first, no social graph
  */
 export const onPostCreated = onDocumentCreated(
   'posts/{postId}',
@@ -319,7 +323,18 @@ export const onPostCreated = onDocumentCreated(
     const data = event.data?.data();
     if (!data) return;
 
-    const { authorId, content, mediaUrls, location, nodeId, createdAt } = data;
+    const { authorId, content, mediaUrls, location, nodeId, createdAt, postMode } = data;
+
+    // Signals skip fan-out entirely - they're mesh-first, local-only
+    // They're stored in Firestore for cloud sync but not distributed to feeds
+    if (postMode === 'signal') {
+      console.log(`Signal ${postId} created - skipping fan-out (mesh-first)`);
+      // Still increment post count for signals
+      await db.collection('profiles').doc(authorId).update({
+        postCount: FieldValue.increment(1),
+      });
+      return;
+    }
 
     // Get author's profile for feed item snapshot
     const authorProfile = await getPublicProfile(authorId);
@@ -377,9 +392,10 @@ export const onPostCreated = onDocumentCreated(
 /**
  * Triggered when a post is deleted.
  * - Decrements postCount on author's profile
- * - Removes post from all followers' feeds
+ * - For social posts: Removes post from all followers' feeds
  * - Deletes all comments on the post
  * - Deletes all images from Storage
+ * - For signals: Skip feed removal (never fanned out)
  */
 export const onPostDeleted = onDocumentDeleted(
   'posts/{postId}',
@@ -388,9 +404,10 @@ export const onPostDeleted = onDocumentDeleted(
     const data = event.data?.data();
     if (!data) return;
 
-    const { authorId, mediaUrls } = data;
+    const { authorId, mediaUrls, postMode } = data;
+    const isSignal = postMode === 'signal';
 
-    // Delete images from Storage
+    // Delete images from Storage (for both signals and social posts)
     if (mediaUrls && Array.isArray(mediaUrls) && mediaUrls.length > 0) {
       const bucket = storage.bucket();
       for (const url of mediaUrls) {
@@ -425,7 +442,14 @@ export const onPostDeleted = onDocumentDeleted(
       postCount: FieldValue.increment(-1),
     });
 
-    // Get all followers to remove from their feeds
+    // Signals were never fanned out, so skip feed removal
+    if (isSignal) {
+      const imageCount = mediaUrls?.length || 0;
+      console.log(`Signal ${postId} deleted: ${imageCount} images removed`);
+      return;
+    }
+
+    // Get all followers to remove from their feeds (social posts only)
     const followersSnap = await db.collection('follows')
       .where('followeeId', '==', authorId)
       .get();
