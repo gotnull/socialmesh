@@ -101,6 +101,30 @@ class SignalResponse {
   }
 }
 
+/// Pending image update awaiting Firestore retry.
+class _PendingImageUpdate {
+  final String signalId;
+  final String url;
+  int attemptCount;
+  DateTime nextRetryTime;
+
+  _PendingImageUpdate({required this.signalId, required this.url})
+    : attemptCount = 0,
+      nextRetryTime = DateTime.now();
+
+  /// Calculate next retry with exponential backoff (5s, 10s, 20s, 40s, capped at 60s).
+  void scheduleRetry() {
+    attemptCount++;
+    final delaySeconds = (5 * (1 << (attemptCount - 1))).clamp(5, 60);
+    nextRetryTime = DateTime.now().add(Duration(seconds: delaySeconds));
+  }
+
+  bool get isReady => DateTime.now().isAfter(nextRetryTime);
+
+  /// Max 10 attempts before giving up.
+  bool get shouldGiveUp => attemptCount >= 10;
+}
+
 /// Service for managing mesh signals with durable SQLite storage.
 ///
 /// Signals are mesh-first ephemeral content that:
@@ -132,6 +156,13 @@ class SignalService {
   /// Active Firestore post document listeners keyed by signalId.
   /// Used to receive real-time updates when cloud doc appears/changes (e.g. image upload completes).
   final Map<String, StreamSubscription<DocumentSnapshot>> _postListeners = {};
+
+  /// Pending Firestore image updates that failed and need retry.
+  /// Key: signalId, Value: (url, attemptCount, nextRetryTime)
+  final Map<String, _PendingImageUpdate> _pendingImageUpdates = {};
+
+  /// Timer for retrying pending image updates.
+  Timer? _imageRetryTimer;
 
   /// Cached cloud responses keyed by signalId.
   final Map<String, List<SignalResponse>> _cloudResponses = {};
@@ -188,6 +219,13 @@ class SignalService {
 
     // Load proximity history from disk
     await _loadProximityHistory();
+
+    // Start retry timer for pending image updates (every 10 seconds)
+    _imageRetryTimer?.cancel();
+    _imageRetryTimer = Timer.periodic(
+      const Duration(seconds: 10),
+      (_) => _processPendingImageUpdates(),
+    );
 
     AppLogging.signals('SignalService initialized');
   }
@@ -1243,7 +1281,8 @@ class SignalService {
   /// 2. Signal is NOT expired
   /// 3. Image unlock rules are satisfied
   Future<String?> uploadSignalImage(String signalId, String localPath) async {
-    if (_currentUserId == null) {
+    final currentUid = _currentUserId;
+    if (currentUid == null) {
       AppLogging.signals('Cannot upload image: not authenticated');
       return null;
     }
@@ -1279,7 +1318,7 @@ class SignalService {
       AppLogging.signals('📷 UPLOAD START: signal $signalId, file=$localPath');
 
       // Step 1: Upload to Firebase Storage
-      final ref = _storage.ref('signals/$_currentUserId/$signalId.jpg');
+      final ref = _storage.ref('signals/$currentUid/$signalId.jpg');
       final uploadTask = ref.putFile(file);
 
       // Monitor upload progress
@@ -1297,66 +1336,186 @@ class SignalService {
         '📷 STORAGE UPLOAD SUCCESS: signal $signalId, URL=$url',
       );
 
-      // Step 2: Update local SQLite with cloud URL
-      final updated = signal.copyWith(
-        mediaUrls: [url],
-        imageState: ImageState.cloud,
-      );
-      await updateSignal(updated);
-      AppLogging.signals(
-        '📷 LOCAL DB UPDATED: signal $signalId, imageState=cloud',
-      );
+      // Step 2: Update Firestore FIRST (if not expired)
+      // Only update allowed fields: mediaUrls, imageUrl, imageState
+      if (!signal.isExpired) {
+        final firestoreSuccess = await _updateFirestoreImageFields(
+          signalId: signalId,
+          url: url,
+          authorId: signal.authorId,
+          currentUid: currentUid,
+        );
 
-      // Step 3: Update Firestore (if not expired) using set with merge
-      if (!updated.isExpired) {
-        try {
-          final firestoreUpdate = <String, dynamic>{
-            'mediaUrls': [url],
-            'imageUrl': url, // Canonical single field for compatibility
-            'imageState': ImageState.cloud.name,
-            // Remove local-only fields that shouldn't be in Firestore
-            'imageLocalPath': FieldValue.delete(),
-          };
-
-          // Use set with merge to update existing doc OR create minimal doc
-          await _firestore.collection('posts').doc(signalId).set({
-            // Required fields for new doc creation (merge will preserve existing)
-            'postMode': PostMode.signal.name,
-            'authorId': signal.authorId,
-            'content': signal.content,
-            'createdAt': FieldValue.serverTimestamp(),
-            if (signal.expiresAt != null)
-              'expiresAt': Timestamp.fromDate(signal.expiresAt!),
-            // Image fields
-            ...firestoreUpdate,
-          }, SetOptions(merge: true));
-
-          AppLogging.signals(
-            '📷 FIRESTORE WRITE SUCCESS: posts/$signalId '
-            'mediaUrls=[url], imageState=cloud',
+        if (firestoreSuccess) {
+          // Step 3: Only update local DB after Firestore succeeds
+          final updated = signal.copyWith(
+            mediaUrls: [url],
+            imageState: ImageState.cloud,
           );
-        } catch (firestoreError) {
+          await updateSignal(updated);
           AppLogging.signals(
-            '📷 FIRESTORE WRITE FAILED: posts/$signalId, error=$firestoreError',
+            '📷 LOCAL DB UPDATED: signal $signalId, imageState=cloud',
           );
-          // Don't return null - Storage upload succeeded, local DB updated
-          // Firestore can retry later
+          AppLogging.signals(
+            '📷 UPLOAD COMPLETE: signal $signalId uploaded successfully',
+          );
+          return url;
+        } else {
+          // Firestore failed - queue for retry but return URL since Storage succeeded
+          _queueImageRetry(signalId, url);
+          AppLogging.signals(
+            '📷 UPLOAD PARTIAL: signal $signalId storage OK, Firestore queued for retry',
+          );
+          return url;
         }
       } else {
         AppLogging.signals(
           '📷 FIRESTORE SKIP: signal $signalId expired, not writing to cloud',
         );
+        return url;
       }
-
-      AppLogging.signals(
-        '📷 UPLOAD COMPLETE: signal $signalId uploaded successfully',
-      );
-      return url;
     } catch (e, stackTrace) {
       AppLogging.signals(
         '📷 UPLOAD FAILED: signal $signalId, error=$e\n$stackTrace',
       );
       return null;
+    }
+  }
+
+  /// Update Firestore with image fields using update() to only touch allowed fields.
+  /// Returns true on success, false on failure.
+  Future<bool> _updateFirestoreImageFields({
+    required String signalId,
+    required String url,
+    required String authorId,
+    required String currentUid,
+  }) async {
+    // Diagnostic logging before write attempt
+    AppLogging.signals(
+      '📷 FIRESTORE PRE-WRITE DIAGNOSTIC:\n'
+      '  - signalId: $signalId\n'
+      '  - currentUid: $currentUid\n'
+      '  - signal.authorId: $authorId\n'
+      '  - uid == authorId: ${currentUid == authorId}\n'
+      '  - fields to write: [mediaUrls, imageUrl, imageState]',
+    );
+
+    if (currentUid != authorId) {
+      AppLogging.signals(
+        '📷 FIRESTORE WRITE BLOCKED: uid mismatch! '
+        'currentUid=$currentUid, authorId=$authorId',
+      );
+      return false;
+    }
+
+    try {
+      // Use update() with ONLY the fields allowed by Firestore rules
+      // Rules allow author to update: mediaUrls, imageState, imageUrl
+      await _firestore.collection('posts').doc(signalId).update({
+        'mediaUrls': [url],
+        'imageUrl': url,
+        'imageState': ImageState.cloud.name,
+      });
+
+      AppLogging.signals(
+        '📷 FIRESTORE WRITE SUCCESS: posts/$signalId '
+        'mediaUrls=[url], imageState=cloud',
+      );
+      return true;
+    } catch (e) {
+      AppLogging.signals(
+        '📷 FIRESTORE WRITE FAILED: posts/$signalId, error=$e',
+      );
+      return false;
+    }
+  }
+
+  /// Queue a failed Firestore image update for retry.
+  void _queueImageRetry(String signalId, String url) {
+    // Remove any existing retry for this signal
+    _pendingImageUpdates.remove(signalId);
+
+    final pending = _PendingImageUpdate(signalId: signalId, url: url);
+    pending.scheduleRetry();
+    _pendingImageUpdates[signalId] = pending;
+
+    AppLogging.signals(
+      '📷 RETRY QUEUED: signal $signalId, '
+      'attempt ${pending.attemptCount}, '
+      'next retry at ${pending.nextRetryTime.toIso8601String()}',
+    );
+  }
+
+  /// Process pending image updates (called by timer).
+  Future<void> _processPendingImageUpdates() async {
+    if (_pendingImageUpdates.isEmpty) return;
+    if (_currentUserId == null) return;
+
+    final currentUid = _currentUserId!;
+    final toRemove = <String>[];
+
+    for (final entry in _pendingImageUpdates.entries) {
+      final signalId = entry.key;
+      final pending = entry.value;
+
+      // Check if signal has expired
+      final signal = await getSignalById(signalId);
+      if (signal == null || signal.isExpired) {
+        AppLogging.signals(
+          '📷 RETRY CANCELLED: signal $signalId expired or deleted',
+        );
+        toRemove.add(signalId);
+        continue;
+      }
+
+      // Check if we've exceeded max attempts
+      if (pending.shouldGiveUp) {
+        AppLogging.signals(
+          '📷 RETRY ABANDONED: signal $signalId after ${pending.attemptCount} attempts',
+        );
+        toRemove.add(signalId);
+        continue;
+      }
+
+      // Check if it's time to retry
+      if (!pending.isReady) continue;
+
+      AppLogging.signals(
+        '📷 RETRY ATTEMPT ${pending.attemptCount + 1}: signal $signalId',
+      );
+
+      final success = await _updateFirestoreImageFields(
+        signalId: signalId,
+        url: pending.url,
+        authorId: signal.authorId,
+        currentUid: currentUid,
+      );
+
+      if (success) {
+        // Update local DB now that Firestore succeeded
+        final updated = signal.copyWith(
+          mediaUrls: [pending.url],
+          imageState: ImageState.cloud,
+        );
+        await updateSignal(updated);
+        AppLogging.signals(
+          '📷 RETRY SUCCESS: signal $signalId, local DB updated',
+        );
+        toRemove.add(signalId);
+      } else {
+        // Schedule next retry with backoff
+        pending.scheduleRetry();
+        AppLogging.signals(
+          '📷 RETRY FAILED: signal $signalId, '
+          'attempt ${pending.attemptCount}, '
+          'next retry at ${pending.nextRetryTime.toIso8601String()}',
+        );
+      }
+    }
+
+    // Remove completed/abandoned retries
+    for (final signalId in toRemove) {
+      _pendingImageUpdates.remove(signalId);
     }
   }
 
@@ -1857,6 +2016,9 @@ class SignalService {
 
   /// Close the database connection and clean up listeners.
   Future<void> close() async {
+    _imageRetryTimer?.cancel();
+    _imageRetryTimer = null;
+    _pendingImageUpdates.clear();
     _stopAllResponseListeners();
     _stopAllPostListeners();
     await _db?.close();

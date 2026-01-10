@@ -385,13 +385,13 @@ service cloud.firestore {
       allow delete: if isAdmin() || (isAuthenticated() &&
         resource.data.authorId == request.auth.uid);
       
-      // Allow authenticated users to update limited fields:
-      // - commentCount/likeCount for social interactions
-      // - mediaUrls/imageState for image upload after signal creation
+      // Update rules:
+      // 1. Anyone authenticated can update commentCount/likeCount (social interactions)
+      // 2. Author can update image fields (mediaUrls, imageState, imageUrl) for upload after creation
       allow update: if isAuthenticated() &&
         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['commentCount', 'likeCount']) ||
          (resource.data.authorId == request.auth.uid &&
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['mediaUrls', 'imageState'])));
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['mediaUrls', 'imageState', 'imageUrl'])));
     }
 
     // Signal Responses - ephemeral replies to mesh signals

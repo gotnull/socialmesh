@@ -31,11 +31,9 @@ class WidgetMarketplaceService {
     return AppUrls.cloudFunctionsUrl;
   }
 
-  WidgetMarketplaceService({
-    String? baseUrl,
-    http.Client? client,
-  }) : baseUrl = baseUrl ?? _defaultBaseUrl,
-       _client = client ?? http.Client();
+  WidgetMarketplaceService({String? baseUrl, http.Client? client})
+    : baseUrl = baseUrl ?? _defaultBaseUrl,
+      _client = client ?? http.Client();
 
   /// Execute a GET request with retry logic for transient failures
   Future<http.Response> _getWithRetry(

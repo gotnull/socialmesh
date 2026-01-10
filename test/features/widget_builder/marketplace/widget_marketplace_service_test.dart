@@ -2,12 +2,8 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:logger/logger.dart';
 import 'package:socialmesh/features/widget_builder/marketplace/widget_marketplace_service.dart';
 import 'package:socialmesh/features/widget_builder/models/widget_schema.dart';
-
-/// Silent logger for tests - suppresses all output
-Logger _silentLogger() => Logger(level: Level.off);
 
 void main() {
   group('WidgetMarketplaceService', () {
@@ -47,7 +43,6 @@ void main() {
         service = WidgetMarketplaceService(
           baseUrl: 'http://test.com/widgets',
           client: mockClient,
-          logger: _silentLogger(),
         );
 
         final response = await service.browse();
@@ -80,7 +75,6 @@ void main() {
         service = WidgetMarketplaceService(
           baseUrl: 'http://test.com/widgets',
           client: mockClient,
-          logger: _silentLogger(),
         );
 
         await service.browse(
@@ -100,7 +94,6 @@ void main() {
         service = WidgetMarketplaceService(
           baseUrl: 'http://test.com/widgets',
           client: mockClient,
-          logger: _silentLogger(),
         );
 
         expect(() => service.browse(), throwsA(isA<MarketplaceException>()));
@@ -136,7 +129,6 @@ void main() {
         service = WidgetMarketplaceService(
           baseUrl: 'http://test.com/widgets',
           client: mockClient,
-          logger: _silentLogger(),
         );
 
         final featured = await service.getFeatured();
@@ -154,7 +146,6 @@ void main() {
         service = WidgetMarketplaceService(
           baseUrl: 'http://test.com/widgets',
           client: mockClient,
-          logger: _silentLogger(),
         );
 
         expect(
@@ -191,7 +182,6 @@ void main() {
         service = WidgetMarketplaceService(
           baseUrl: 'http://test.com/widgets',
           client: mockClient,
-          logger: _silentLogger(),
         );
 
         final widget = await service.getWidget('widget-123');
@@ -208,7 +198,6 @@ void main() {
         service = WidgetMarketplaceService(
           baseUrl: 'http://test.com/widgets',
           client: mockClient,
-          logger: _silentLogger(),
         );
 
         expect(
@@ -238,7 +227,6 @@ void main() {
         service = WidgetMarketplaceService(
           baseUrl: 'http://test.com/widgets',
           client: mockClient,
-          logger: _silentLogger(),
         );
 
         final schema = await service.downloadWidget('widget-123');
@@ -255,7 +243,6 @@ void main() {
         service = WidgetMarketplaceService(
           baseUrl: 'http://test.com/widgets',
           client: mockClient,
-          logger: _silentLogger(),
         );
 
         // Should throw exception on any ID when network fails
@@ -273,7 +260,6 @@ void main() {
         service = WidgetMarketplaceService(
           baseUrl: 'http://test.com/widgets',
           client: mockClient,
-          logger: _silentLogger(),
         );
 
         expect(

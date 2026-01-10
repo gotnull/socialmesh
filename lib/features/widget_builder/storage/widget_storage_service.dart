@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:logger/logger.dart';
+import '../../../core/logging.dart';
 import '../models/widget_schema.dart';
 
 /// Service for persisting custom widgets locally
@@ -11,10 +11,9 @@ class WidgetStorageService {
   // Maps schema ID (UUID) -> marketplace ID (Firebase doc ID)
   static const _schemaToMarketplaceKey = 'schema_to_marketplace_map';
 
-  final Logger _logger;
   SharedPreferences? _prefs;
 
-  WidgetStorageService({Logger? logger}) : _logger = logger ?? Logger();
+  WidgetStorageService();
 
   /// Initialize the service
   Future<void> init() async {
@@ -61,11 +60,11 @@ class WidgetStorageService {
       debugPrint(
         '[WidgetStorage] Widget saved successfully, new count: ${widgets.length}',
       );
-      _logger.d('Saved widget: ${widget.name}');
+      AppLogging.widgetBuilder('Saved widget: ${widget.name}');
     } catch (e, stack) {
       debugPrint('[WidgetStorage] ERROR saving widget: $e');
       debugPrint('[WidgetStorage] Stack: $stack');
-      _logger.e('Error saving widget: $e');
+      AppLogging.widgetBuilder('⚠️ Error saving widget: $e');
       rethrow;
     }
   }
@@ -98,7 +97,7 @@ class WidgetStorageService {
     } catch (e, stack) {
       debugPrint('[WidgetStorage] ERROR loading widgets: $e');
       debugPrint('[WidgetStorage] Stack: $stack');
-      _logger.e('Error loading widgets: $e');
+      AppLogging.widgetBuilder('⚠️ Error loading widgets: $e');
       return [];
     }
   }
@@ -136,7 +135,9 @@ class WidgetStorageService {
         debugPrint(
           '[WidgetStorage] Removed from marketplace installed list: $idToRemove',
         );
-        _logger.d('Removed from marketplace installed list: $idToRemove');
+        AppLogging.widgetBuilder(
+          'Removed from marketplace installed list: $idToRemove',
+        );
       }
 
       // Also remove schema ID if it was stored directly (user-created widgets)
@@ -150,10 +151,10 @@ class WidgetStorageService {
         await _removeSchemaToMarketplaceMapping(id);
       }
 
-      _logger.d('Deleted widget: $id');
+      AppLogging.widgetBuilder('Deleted widget: $id');
       return marketplaceId; // Return for profile cleanup
     } catch (e) {
-      _logger.e('Error deleting widget: $e');
+      AppLogging.widgetBuilder('⚠️ Error deleting widget: $e');
       rethrow;
     }
   }
@@ -210,7 +211,7 @@ class WidgetStorageService {
       await saveWidget(importedWidget);
       return importedWidget;
     } catch (e) {
-      _logger.e('Error importing widget: $e');
+      AppLogging.widgetBuilder('⚠️ Error importing widget: $e');
       rethrow;
     }
   }
@@ -245,11 +246,11 @@ class WidgetStorageService {
         );
       }
 
-      _logger.d(
+      AppLogging.widgetBuilder(
         'Installed marketplace widget: ${widget.name} (marketplace ID: $idToTrack)',
       );
     } catch (e) {
-      _logger.e('Error installing marketplace widget: $e');
+      AppLogging.widgetBuilder('⚠️ Error installing marketplace widget: $e');
       rethrow;
     }
   }
@@ -315,7 +316,7 @@ class WidgetStorageService {
     await _preferences.remove(_storageKey);
     await _preferences.remove(_installedKey);
     await _preferences.remove(_schemaToMarketplaceKey);
-    _logger.i('Cleared all custom widgets');
+    AppLogging.widgetBuilder('Cleared all custom widgets');
   }
 }
 
