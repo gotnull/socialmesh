@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../core/logging.dart';
@@ -186,28 +185,28 @@ class ProfileCloudSyncService {
 
   /// Two-way sync: push local changes and pull remote changes
   Future<UserProfile?> fullSync(String uid) async {
-    debugPrint('');
-    debugPrint(
+    AppLogging.auth('');
+    AppLogging.auth(
       '╔══════════════════════════════════════════════════════════════',
     );
-    debugPrint('║ ☁️ ProfileCloudSyncService.fullSync() CALLED');
-    debugPrint('║ ☁️ uid: $uid');
-    debugPrint(
+    AppLogging.auth('║ ☁️ ProfileCloudSyncService.fullSync() CALLED');
+    AppLogging.auth('║ ☁️ uid: $uid');
+    AppLogging.auth(
       '╠══════════════════════════════════════════════════════════════',
     );
 
     try {
       // First, fetch any remote changes
-      debugPrint('║ 📥 Fetching cloud doc for uid: $uid');
+      AppLogging.auth('║ 📥 Fetching cloud doc for uid: $uid');
       final cloudDoc = await _userDoc(uid).get();
-      debugPrint('║ 📥 Cloud doc exists: ${cloudDoc.exists}');
+      AppLogging.auth('║ 📥 Cloud doc exists: ${cloudDoc.exists}');
 
-      debugPrint('║ 💾 Getting local profile...');
+      AppLogging.auth('║ 💾 Getting local profile...');
       final localProfile = await _localService.getOrCreateProfile();
-      debugPrint('║ 💾 Local profile:');
-      debugPrint('║    - displayName: ${localProfile.displayName}');
-      debugPrint('║    - id: ${localProfile.id}');
-      debugPrint('║    - isSynced: ${localProfile.isSynced}');
+      AppLogging.auth('║ 💾 Local profile:');
+      AppLogging.auth('║    - displayName: ${localProfile.displayName}');
+      AppLogging.auth('║    - id: ${localProfile.id}');
+      AppLogging.auth('║    - isSynced: ${localProfile.isSynced}');
 
       // Check if local profile belongs to a different user OR is not for this user at all
       // We should NOT merge local data if:
@@ -217,26 +216,28 @@ class ProfileCloudSyncService {
       final localIdMatchesUid = localProfile.id == uid;
       final localIsForDifferentUser = !localIdMatchesUid;
 
-      debugPrint('║ 🔍 Check: localIdMatchesUid = $localIdMatchesUid');
-      debugPrint(
+      AppLogging.auth('║ 🔍 Check: localIdMatchesUid = $localIdMatchesUid');
+      AppLogging.auth(
         '║ 🔍 Check: localIsForDifferentUser = $localIsForDifferentUser',
       );
-      debugPrint('║    - localProfile.isSynced: ${localProfile.isSynced}');
-      debugPrint('║    - localProfile.id: ${localProfile.id}');
-      debugPrint('║    - uid: $uid');
+      AppLogging.auth('║    - localProfile.isSynced: ${localProfile.isSynced}');
+      AppLogging.auth('║    - localProfile.id: ${localProfile.id}');
+      AppLogging.auth('║    - uid: $uid');
 
       if (localIsForDifferentUser) {
-        debugPrint('║ ⚠️ LOCAL IS FOR DIFFERENT USER - will prefer cloud data');
+        AppLogging.auth(
+          '║ ⚠️ LOCAL IS FOR DIFFERENT USER - will prefer cloud data',
+        );
       }
 
       UserProfile finalProfile;
 
       if (!cloudDoc.exists || cloudDoc.data() == null) {
         // No cloud profile exists
-        debugPrint('║ 📭 NO CLOUD PROFILE EXISTS');
+        AppLogging.auth('║ 📭 NO CLOUD PROFILE EXISTS');
         if (localIsForDifferentUser) {
           // Local belongs to different user - create fresh profile for this user
-          debugPrint(
+          AppLogging.auth(
             '║ 🆕 Creating fresh profile for new user (local was for different user)',
           );
           final freshProfile = UserProfile.guest().copyWith(
@@ -246,10 +247,12 @@ class ProfileCloudSyncService {
           await _userDoc(uid).set(_profileToFirestore(freshProfile));
           await _syncPublicProfile(uid, freshProfile);
           finalProfile = freshProfile;
-          debugPrint('║ ✅ Created fresh profile: ${freshProfile.displayName}');
+          AppLogging.auth(
+            '║ ✅ Created fresh profile: ${freshProfile.displayName}',
+          );
         } else {
           // Local profile ID matches this user - push to cloud
-          debugPrint(
+          AppLogging.auth(
             '║ 📤 Pushing local profile to cloud (local.id matches uid)',
           );
           final profileForCloud = localProfile.copyWith(
@@ -259,30 +262,32 @@ class ProfileCloudSyncService {
           await _userDoc(uid).set(_profileToFirestore(profileForCloud));
           await _syncPublicProfile(uid, profileForCloud);
           finalProfile = profileForCloud;
-          debugPrint(
+          AppLogging.auth(
             '║ ✅ Pushed local to cloud: ${profileForCloud.displayName}',
           );
         }
       } else {
         // Cloud profile exists
-        debugPrint('║ 📬 CLOUD PROFILE EXISTS');
+        AppLogging.auth('║ 📬 CLOUD PROFILE EXISTS');
         final cloudProfile = _profileFromFirestore(uid, cloudDoc.data()!);
-        debugPrint('║ ☁️ Cloud profile:');
-        debugPrint('║    - displayName: ${cloudProfile.displayName}');
-        debugPrint('║    - id: ${cloudProfile.id}');
-        debugPrint('║    - isSynced: ${cloudProfile.isSynced}');
+        AppLogging.auth('║ ☁️ Cloud profile:');
+        AppLogging.auth('║    - displayName: ${cloudProfile.displayName}');
+        AppLogging.auth('║    - id: ${cloudProfile.id}');
+        AppLogging.auth('║    - isSynced: ${cloudProfile.isSynced}');
 
         if (localIsForDifferentUser) {
           // Local belongs to different user - just use cloud profile
-          debugPrint('║ ➡️ Using CLOUD profile (local is for different user)');
+          AppLogging.auth(
+            '║ ➡️ Using CLOUD profile (local is for different user)',
+          );
           finalProfile = cloudProfile;
         } else {
           // Local is for this user - merge with cloud
-          debugPrint(
+          AppLogging.auth(
             '║ 🔀 MERGING local + cloud profiles (local.id matches uid)',
           );
           finalProfile = _mergeProfiles(localProfile, cloudProfile);
-          debugPrint('║ 🔀 Merged result: ${finalProfile.displayName}');
+          AppLogging.auth('║ 🔀 Merged result: ${finalProfile.displayName}');
 
           // Push merged version back to cloud
           await _userDoc(
@@ -293,26 +298,26 @@ class ProfileCloudSyncService {
       }
 
       // Save final profile locally
-      debugPrint(
+      AppLogging.auth(
         '║ 💾 Saving final profile locally: ${finalProfile.displayName}',
       );
       await _localService.saveProfile(finalProfile);
 
-      debugPrint('║ ✅ Full sync COMPLETE');
-      debugPrint(
+      AppLogging.auth('║ ✅ Full sync COMPLETE');
+      AppLogging.auth(
         '║ 📤 Returning: ${finalProfile.displayName} (id: ${finalProfile.id})',
       );
-      debugPrint(
+      AppLogging.auth(
         '╚══════════════════════════════════════════════════════════════',
       );
-      debugPrint('');
+      AppLogging.auth('');
       return finalProfile;
     } catch (e) {
-      debugPrint('║ ❌ ERROR during full sync: $e');
-      debugPrint(
+      AppLogging.auth('║ ❌ ERROR during full sync: $e');
+      AppLogging.auth(
         '╚══════════════════════════════════════════════════════════════',
       );
-      debugPrint('');
+      AppLogging.auth('');
       rethrow;
     }
   }

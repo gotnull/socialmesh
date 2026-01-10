@@ -324,24 +324,24 @@ Future<void> markStoryViewed(WidgetRef ref, String storyId) async {
 
 /// Delete a story.
 Future<void> deleteStory(WidgetRef ref, String storyId) async {
-  debugPrint('🗑️ [deleteStory provider] Starting delete for storyId=$storyId');
+  AppLogging.social('🗑️ [deleteStory provider] Starting delete for storyId=$storyId');
   try {
     final service = ref.read(storyServiceProvider);
-    debugPrint(
+    AppLogging.social(
       '🗑️ [deleteStory provider] Got story service, calling deleteStory...',
     );
     await service.deleteStory(storyId);
-    debugPrint('🗑️ [deleteStory provider] Service deleteStory completed');
+    AppLogging.social('🗑️ [deleteStory provider] Service deleteStory completed');
 
     // Refresh story groups
-    debugPrint('🗑️ [deleteStory provider] Refreshing story groups...');
+    AppLogging.social('🗑️ [deleteStory provider] Refreshing story groups...');
     ref.read(storyGroupsProvider.notifier).refresh();
-    debugPrint('🗑️ [deleteStory provider] Story groups refreshed');
+    AppLogging.social('🗑️ [deleteStory provider] Story groups refreshed');
 
     // Also invalidate user stories provider for the current user
     final currentUser = ref.read(currentUserProvider);
     if (currentUser != null) {
-      debugPrint(
+      AppLogging.social(
         '🗑️ [deleteStory provider] Invalidating userStoriesProvider for ${currentUser.uid}',
       );
       ref.invalidate(userStoriesProvider(currentUser.uid));
@@ -349,10 +349,10 @@ Future<void> deleteStory(WidgetRef ref, String storyId) async {
 
     // Invalidate myStoriesProvider as well
     ref.invalidate(myStoriesProvider);
-    debugPrint('🗑️ [deleteStory provider] All providers invalidated');
+    AppLogging.social('🗑️ [deleteStory provider] All providers invalidated');
   } catch (e, stack) {
-    debugPrint('🗑️ [deleteStory provider] ERROR: $e');
-    debugPrint('🗑️ [deleteStory provider] Stack: $stack');
+    AppLogging.social('🗑️ [deleteStory provider] ERROR: $e');
+    AppLogging.social('🗑️ [deleteStory provider] Stack: $stack');
     rethrow;
   }
 }

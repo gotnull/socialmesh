@@ -26,18 +26,18 @@ class NodeFavoritesNotifier extends AsyncNotifier<NodeFavoritesData> {
 
   @override
   Future<NodeFavoritesData> build() async {
-    debugPrint('[NodeFavorites] build() called - loading favorites');
+    AppLogging.nodes('[NodeFavorites] build() called - loading favorites');
     return _loadFavorites();
   }
 
   Future<NodeFavoritesData> _loadFavorites() async {
-    debugPrint('[NodeFavorites] _loadFavorites() entered');
+    AppLogging.nodes('[NodeFavorites] _loadFavorites() entered');
 
     final ids = await _service.getFavoriteIds();
-    debugPrint('[NodeFavorites] Got ${ids.length} favorite IDs: $ids');
+    AppLogging.nodes('[NodeFavorites] Got ${ids.length} favorite IDs: $ids');
 
     final favorites = await _service.getFavorites();
-    debugPrint(
+    AppLogging.nodes(
       '[NodeFavorites] Got ${favorites.length} favorites with metadata',
     );
 
@@ -45,7 +45,7 @@ class NodeFavoritesNotifier extends AsyncNotifier<NodeFavoritesData> {
       favoriteIds: ids.map((id) => id.toUpperCase()).toSet(),
       favorites: favorites,
     );
-    debugPrint('[NodeFavorites] Load complete: ${data.favoriteIds.length} IDs');
+    AppLogging.nodes('[NodeFavorites] Load complete: ${data.favoriteIds.length} IDs');
     return data;
   }
 

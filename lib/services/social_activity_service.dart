@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
+import 'package:socialmesh/core/logging.dart';
 
 import '../models/social.dart';
 import '../models/social_activity.dart';
@@ -67,11 +67,11 @@ class SocialActivityService {
           .collection('activities')
           .add(activity.toFirestore());
 
-      debugPrint(
+      AppLogging.social(
         '📬 [ActivityService] Created ${type.name} activity for user $targetUserId',
       );
     } catch (e) {
-      debugPrint('📬 [ActivityService] Error creating activity: $e');
+      AppLogging.social('📬 [ActivityService] Error creating activity: $e');
     }
   }
 
@@ -322,7 +322,7 @@ class SocialActivityService {
         isVerified: data['isVerified'] as bool? ?? false,
       );
     } catch (e) {
-      debugPrint('Error getting actor snapshot: $e');
+      AppLogging.social('Error getting actor snapshot: $e');
       return null;
     }
   }

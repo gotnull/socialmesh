@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:socialmesh/core/logging.dart';
 
 import '../models/sky_node.dart';
 import '../services/sky_tracker_service.dart';
@@ -94,7 +94,7 @@ final flightPositionProvider = FutureProvider.autoDispose
           lastFetch: DateTime.now(),
         );
       } catch (e) {
-        debugPrint('[SkyTracker] Error fetching position: $e');
+        AppLogging.app('[SkyTracker] Error fetching position: $e');
         return FlightPositionState(isLoading: false, error: e.toString());
       }
     });

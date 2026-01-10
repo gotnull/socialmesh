@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:purchases_flutter/purchases_flutter.dart' hide PurchaseResult;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:socialmesh/core/logging.dart';
 import '../config/revenuecat_config.dart';
 import '../models/subscription_models.dart';
 import '../services/subscription/subscription_service.dart';
@@ -36,11 +36,11 @@ class PurchaseStateNotifier extends Notifier<PurchaseState> {
 
   @override
   PurchaseState build() {
-    debugPrint('💳 [PurchaseStateNotifier] build() called');
+    AppLogging.subscriptions('💳 [PurchaseStateNotifier] build() called');
 
     // Cancel any existing subscription when provider rebuilds
     ref.onDispose(() {
-      debugPrint(
+      AppLogging.subscriptions(
         '💳 [PurchaseStateNotifier] onDispose - cancelling stream subscription',
       );
       _subscription?.cancel();
@@ -52,16 +52,16 @@ class PurchaseStateNotifier extends Notifier<PurchaseState> {
   }
 
   Future<void> _init() async {
-    debugPrint('💳 [PurchaseStateNotifier] _init() starting...');
+    AppLogging.subscriptions('💳 [PurchaseStateNotifier] _init() starting...');
     final service = await ref.read(subscriptionServiceProvider.future);
     final initialState = service.currentState;
-    debugPrint(
+    AppLogging.subscriptions(
       '💳 [PurchaseStateNotifier] Setting initial state: ${initialState.purchasedProductIds}',
     );
 
     // Check if still mounted before updating state (after async gap)
     if (!ref.mounted) {
-      debugPrint(
+      AppLogging.subscriptions(
         '💳 [PurchaseStateNotifier] Not mounted after await, skipping init',
       );
       return;
@@ -69,42 +69,44 @@ class PurchaseStateNotifier extends Notifier<PurchaseState> {
     state = initialState;
 
     // Listen for state changes from the service
-    debugPrint('💳 [PurchaseStateNotifier] Setting up stateStream listener...');
+    AppLogging.subscriptions(
+      '💳 [PurchaseStateNotifier] Setting up stateStream listener...',
+    );
     _subscription = service.stateStream.listen(
       (newState) {
         if (!ref.mounted) {
-          debugPrint(
+          AppLogging.subscriptions(
             '💳 [PurchaseStateNotifier] Not mounted, ignoring stream update',
           );
           return;
         }
-        debugPrint(
+        AppLogging.subscriptions(
           '💳 [PurchaseStateNotifier] Stream received new state: ${newState.purchasedProductIds}',
         );
         state = newState;
       },
       onError: (e) {
-        debugPrint('💳 [PurchaseStateNotifier] Stream error: $e');
+        AppLogging.subscriptions('💳 [PurchaseStateNotifier] Stream error: $e');
       },
     );
-    debugPrint('💳 [PurchaseStateNotifier] _init() complete');
+    AppLogging.subscriptions('💳 [PurchaseStateNotifier] _init() complete');
   }
 
   /// Refresh purchases from RevenueCat
   Future<void> refresh() async {
-    debugPrint('💳 [PurchaseStateNotifier] refresh() called');
+    AppLogging.subscriptions('💳 [PurchaseStateNotifier] refresh() called');
     final service = await ref.read(subscriptionServiceProvider.future);
     await service.refreshPurchases();
 
     // Check if still mounted before updating state (after async gap)
     if (!ref.mounted) {
-      debugPrint(
+      AppLogging.subscriptions(
         '💳 [PurchaseStateNotifier] Not mounted after refresh, skipping state update',
       );
       return;
     }
     final newState = service.currentState;
-    debugPrint(
+    AppLogging.subscriptions(
       '💳 [PurchaseStateNotifier] refresh() setting state: ${newState.purchasedProductIds}',
     );
     state = newState;
@@ -192,33 +194,37 @@ final subscriptionErrorProvider =
 /// Purchase a one-time product
 /// Returns PurchaseResult indicating success, cancellation, or error
 Future<PurchaseResult> purchaseProduct(WidgetRef ref, String productId) async {
-  debugPrint('💳 [PurchaseProduct] Starting purchase for: $productId');
+  AppLogging.subscriptions(
+    '💳 [PurchaseProduct] Starting purchase for: $productId',
+  );
   ref.read(subscriptionLoadingProvider.notifier).setLoading(true);
   ref.read(subscriptionErrorProvider.notifier).clear();
 
   try {
     final service = await ref.read(subscriptionServiceProvider.future);
-    debugPrint('💳 [PurchaseProduct] Calling service.purchaseProduct...');
+    AppLogging.subscriptions(
+      '💳 [PurchaseProduct] Calling service.purchaseProduct...',
+    );
     final result = await service.purchaseProduct(productId);
-    debugPrint('💳 [PurchaseProduct] Result: $result');
+    AppLogging.subscriptions('💳 [PurchaseProduct] Result: $result');
 
     if (result == PurchaseResult.success) {
-      debugPrint(
+      AppLogging.subscriptions(
         '💳 [PurchaseProduct] Success! Refreshing purchase state notifier...',
       );
       // Await the refresh to ensure state is updated before returning
       await ref.read(purchaseStateProvider.notifier).refresh();
-      debugPrint('💳 [PurchaseProduct] Refresh complete');
+      AppLogging.subscriptions('💳 [PurchaseProduct] Refresh complete');
 
       // Double-check the state
       final state = ref.read(purchaseStateProvider);
-      debugPrint(
+      AppLogging.subscriptions(
         '💳 [PurchaseProduct] Final state: ${state.purchasedProductIds}',
       );
     }
     return result;
   } catch (e) {
-    debugPrint('💳 [PurchaseProduct] Error: $e');
+    AppLogging.subscriptions('💳 [PurchaseProduct] Error: $e');
     ref.read(subscriptionErrorProvider.notifier).setError(e.toString());
     return PurchaseResult.error;
   } finally {
@@ -231,70 +237,78 @@ Future<PurchaseResult> purchaseProduct(WidgetRef ref, String productId) async {
 /// On Android, this queries Google Play for purchases tied to the current Google account.
 /// Firebase sign-in is optional but recommended for cross-device purchase syncing.
 Future<bool> restorePurchases(WidgetRef ref) async {
-  debugPrint(
+  AppLogging.subscriptions(
     '💳 [RestorePurchases] ═══════════════════════════════════════════════',
   );
-  debugPrint('💳 [RestorePurchases] Provider function called');
-  debugPrint('💳 [RestorePurchases] Setting loading state to true');
+  AppLogging.subscriptions('💳 [RestorePurchases] Provider function called');
+  AppLogging.subscriptions(
+    '💳 [RestorePurchases] Setting loading state to true',
+  );
 
   ref.read(subscriptionLoadingProvider.notifier).setLoading(true);
   ref.read(subscriptionErrorProvider.notifier).clear();
 
   try {
-    debugPrint('💳 [RestorePurchases] Getting subscription service...');
+    AppLogging.subscriptions(
+      '💳 [RestorePurchases] Getting subscription service...',
+    );
     final service = await ref.read(subscriptionServiceProvider.future);
-    debugPrint(
+    AppLogging.subscriptions(
       '💳 [RestorePurchases] Service obtained, isInitialized: ${service.isInitialized}',
     );
 
     // Capture state BEFORE restore to compare later
     final stateBefore = ref.read(purchaseStateProvider);
     final purchaseCountBefore = stateBefore.purchasedProductIds.length;
-    debugPrint(
+    AppLogging.subscriptions(
       '💳 [RestorePurchases] State BEFORE restore: ${stateBefore.purchasedProductIds} (count: $purchaseCountBefore)',
     );
 
     // IMPORTANT: Do restore FIRST, before logging in with Firebase UID
     // This ensures we restore purchases from the anonymous ID that Google Play uses
-    debugPrint(
+    AppLogging.subscriptions(
       '💳 [RestorePurchases] Calling service.restorePurchases() FIRST (before Firebase login)...',
     );
     await service.restorePurchases();
-    debugPrint('💳 [RestorePurchases] Initial restore completed');
+    AppLogging.subscriptions('💳 [RestorePurchases] Initial restore completed');
 
     // Now sync with Firebase Auth for cross-device consistency
     // This transfers any restored purchases to the Firebase-linked customer
     final firebaseUser = FirebaseAuth.instance.currentUser;
     if (firebaseUser != null) {
-      debugPrint(
+      AppLogging.subscriptions(
         '💳 [RestorePurchases] Firebase user signed in: ${firebaseUser.uid}',
       );
-      debugPrint(
+      AppLogging.subscriptions(
         '💳 [RestorePurchases] Syncing RevenueCat with Firebase UID...',
       );
       await service.logIn(firebaseUser.uid);
       // Do another refresh after login to ensure state is synced
-      debugPrint('💳 [RestorePurchases] Refreshing after Firebase login...');
+      AppLogging.subscriptions(
+        '💳 [RestorePurchases] Refreshing after Firebase login...',
+      );
       await service.refreshPurchases();
     } else {
-      debugPrint(
+      AppLogging.subscriptions(
         '💳 [RestorePurchases] No Firebase user signed in (restore still works via store account)',
       );
     }
 
-    debugPrint('💳 [RestorePurchases] service.restorePurchases() completed');
+    AppLogging.subscriptions(
+      '💳 [RestorePurchases] service.restorePurchases() completed',
+    );
 
     // Always refresh state after restore
-    debugPrint(
+    AppLogging.subscriptions(
       '💳 [RestorePurchases] Explicitly refreshing purchase state notifier...',
     );
     await ref.read(purchaseStateProvider.notifier).refresh();
-    debugPrint('💳 [RestorePurchases] Refresh complete');
+    AppLogging.subscriptions('💳 [RestorePurchases] Refresh complete');
 
     // Determine success by comparing state BEFORE and AFTER
     final stateAfter = ref.read(purchaseStateProvider);
     final purchaseCountAfter = stateAfter.purchasedProductIds.length;
-    debugPrint(
+    AppLogging.subscriptions(
       '💳 [RestorePurchases] State AFTER restore: ${stateAfter.purchasedProductIds} (count: $purchaseCountAfter)',
     );
 
@@ -303,22 +317,28 @@ Future<bool> restorePurchases(WidgetRef ref) async {
     final hasPurchases = purchaseCountAfter > 0;
     final restoredNew = purchaseCountAfter > purchaseCountBefore;
 
-    debugPrint('💳 [RestorePurchases] Result analysis:');
-    debugPrint('💳 [RestorePurchases]   hasPurchases: $hasPurchases');
-    debugPrint('💳 [RestorePurchases]   restoredNew: $restoredNew');
-    debugPrint(
+    AppLogging.subscriptions('💳 [RestorePurchases] Result analysis:');
+    AppLogging.subscriptions(
+      '💳 [RestorePurchases]   hasPurchases: $hasPurchases',
+    );
+    AppLogging.subscriptions(
+      '💳 [RestorePurchases]   restoredNew: $restoredNew',
+    );
+    AppLogging.subscriptions(
       '💳 [RestorePurchases] ═══════════════════════════════════════════════',
     );
 
     // Return true if user has purchases (either already had or just restored)
     return hasPurchases;
   } catch (e, stackTrace) {
-    debugPrint('💳 [RestorePurchases] ❌ ERROR: $e');
-    debugPrint('💳 [RestorePurchases] Stack trace: $stackTrace');
+    AppLogging.subscriptions('💳 [RestorePurchases] ❌ ERROR: $e');
+    AppLogging.subscriptions('💳 [RestorePurchases] Stack trace: $stackTrace');
     ref.read(subscriptionErrorProvider.notifier).setError(e.toString());
     return false;
   } finally {
-    debugPrint('💳 [RestorePurchases] Setting loading state to false');
+    AppLogging.subscriptions(
+      '💳 [RestorePurchases] Setting loading state to false',
+    );
     ref.read(subscriptionLoadingProvider.notifier).setLoading(false);
   }
 }
@@ -326,15 +346,19 @@ Future<bool> restorePurchases(WidgetRef ref) async {
 /// Sync RevenueCat with Firebase Auth
 /// Call this when the user signs in to Firebase to ensure purchases are properly tracked
 Future<bool> syncRevenueCatWithFirebase(WidgetRef ref) async {
-  debugPrint('💳 [SyncRevenueCat] Starting sync with Firebase Auth...');
+  AppLogging.subscriptions(
+    '💳 [SyncRevenueCat] Starting sync with Firebase Auth...',
+  );
 
   final firebaseUser = FirebaseAuth.instance.currentUser;
   if (firebaseUser == null) {
-    debugPrint('💳 [SyncRevenueCat] No Firebase user signed in');
+    AppLogging.subscriptions('💳 [SyncRevenueCat] No Firebase user signed in');
     return false;
   }
 
-  debugPrint('💳 [SyncRevenueCat] Firebase UID: ${firebaseUser.uid}');
+  AppLogging.subscriptions(
+    '💳 [SyncRevenueCat] Firebase UID: ${firebaseUser.uid}',
+  );
 
   try {
     final service = await ref.read(subscriptionServiceProvider.future);
@@ -344,12 +368,12 @@ Future<bool> syncRevenueCatWithFirebase(WidgetRef ref) async {
       // Refresh to get any purchases associated with this user
       await service.refreshPurchases();
       ref.read(purchaseStateProvider.notifier).refresh();
-      debugPrint('💳 [SyncRevenueCat] ✅ Sync complete');
+      AppLogging.subscriptions('💳 [SyncRevenueCat] ✅ Sync complete');
     }
 
     return success;
   } catch (e) {
-    debugPrint('💳 [SyncRevenueCat] ❌ Error: $e');
+    AppLogging.subscriptions('💳 [SyncRevenueCat] ❌ Error: $e');
     return false;
   }
 }
@@ -377,17 +401,21 @@ class StoreProductInfo {
 final storeProductsProvider = FutureProvider<Map<String, StoreProductInfo>>((
   ref,
 ) async {
-  debugPrint('💳 [StoreProducts] ═══════════════════════════════════════');
-  debugPrint('💳 [StoreProducts] Fetching store products via Offerings...');
+  AppLogging.subscriptions(
+    '💳 [StoreProducts] ═══════════════════════════════════════',
+  );
+  AppLogging.subscriptions(
+    '💳 [StoreProducts] Fetching store products via Offerings...',
+  );
 
   try {
     // Wait for subscription service to be initialized first
     await ref.watch(subscriptionServiceProvider.future);
-    debugPrint('💳 [StoreProducts] Subscription service ready');
+    AppLogging.subscriptions('💳 [StoreProducts] Subscription service ready');
 
     // Use getOfferings() - this is the proper way to get localized prices
     final offerings = await Purchases.getOfferings();
-    debugPrint(
+    AppLogging.subscriptions(
       '💳 [StoreProducts] Offerings fetched, current: ${offerings.current?.identifier}',
     );
 
@@ -395,12 +423,12 @@ final storeProductsProvider = FutureProvider<Map<String, StoreProductInfo>>((
 
     // Extract products from all offerings
     for (final offering in offerings.all.values) {
-      debugPrint(
+      AppLogging.subscriptions(
         '💳 [StoreProducts] Processing offering: ${offering.identifier}',
       );
       for (final package in offering.availablePackages) {
         final product = package.storeProduct;
-        debugPrint(
+        AppLogging.subscriptions(
           '💳 [StoreProducts]   Package: ${package.identifier} -> ${product.identifier}: ${product.priceString} (title: "${product.title}")',
         );
         productMap[product.identifier] = StoreProductInfo(
@@ -413,36 +441,38 @@ final storeProductsProvider = FutureProvider<Map<String, StoreProductInfo>>((
       }
     }
 
-    debugPrint(
+    AppLogging.subscriptions(
       '💳 [StoreProducts] Loaded ${productMap.length} products from offerings',
     );
     for (final entry in productMap.entries) {
-      debugPrint(
+      AppLogging.subscriptions(
         '💳 [StoreProducts]   ${entry.key}: ${entry.value.priceString} - "${entry.value.title}"',
       );
     }
 
     // If offerings didn't have our products, try direct getProducts as fallback
     if (productMap.isEmpty) {
-      debugPrint(
+      AppLogging.subscriptions(
         '💳 [StoreProducts] No products in offerings, trying direct getProducts...',
       );
       final productIds = [
         ...OneTimePurchases.allIndividualPurchases.map((p) => p.productId),
         RevenueCatConfig.completePackProductId,
       ];
-      debugPrint('💳 [StoreProducts] Fetching product IDs: $productIds');
+      AppLogging.subscriptions(
+        '💳 [StoreProducts] Fetching product IDs: $productIds',
+      );
 
       final products = await Purchases.getProducts(
         productIds,
         productCategory: ProductCategory.nonSubscription,
       );
-      debugPrint(
+      AppLogging.subscriptions(
         '💳 [StoreProducts] getProducts returned ${products.length} products',
       );
 
       for (final product in products) {
-        debugPrint(
+        AppLogging.subscriptions(
           '💳 [StoreProducts]   ${product.identifier}: "${product.title}" - ${product.priceString}',
         );
         productMap[product.identifier] = StoreProductInfo(
@@ -455,21 +485,25 @@ final storeProductsProvider = FutureProvider<Map<String, StoreProductInfo>>((
       }
     }
 
-    debugPrint('💳 [StoreProducts] ═══════════════════════════════════════');
-    debugPrint(
+    AppLogging.subscriptions(
+      '💳 [StoreProducts] ═══════════════════════════════════════',
+    );
+    AppLogging.subscriptions(
       '💳 [StoreProducts] FINAL: ${productMap.length} products loaded',
     );
     for (final entry in productMap.entries) {
-      debugPrint(
+      AppLogging.subscriptions(
         '💳 [StoreProducts]   ${entry.key}: ${entry.value.priceString}',
       );
     }
-    debugPrint('💳 [StoreProducts] ═══════════════════════════════════════');
+    AppLogging.subscriptions(
+      '💳 [StoreProducts] ═══════════════════════════════════════',
+    );
 
     return productMap;
   } catch (e, stackTrace) {
-    debugPrint('💳 [StoreProducts] ❌ ERROR: $e');
-    debugPrint('💳 [StoreProducts] Stack trace: $stackTrace');
+    AppLogging.subscriptions('💳 [StoreProducts] ❌ ERROR: $e');
+    AppLogging.subscriptions('💳 [StoreProducts] Stack trace: $stackTrace');
     return {};
   }
 });

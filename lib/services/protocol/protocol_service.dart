@@ -1053,10 +1053,10 @@ class ProtocolService {
       } else if (adminMsg.hasGetOwnerResponse()) {
         // Handle response to getOwnerRequest - contains remote node's User info
         final user = adminMsg.getOwnerResponse;
-        debugPrint(
+        AppLogging.protocol(
           '🔑 📥 Received getOwnerResponse from ${packet.from.toRadixString(16)}: ${user.longName} (${user.shortName})',
         );
-        debugPrint(
+        AppLogging.protocol(
           '🔑 📥 Public key present: ${user.publicKey.isNotEmpty} (${user.publicKey.length} bytes)',
         );
         AppLogging.protocol(
@@ -1086,7 +1086,7 @@ class ProtocolService {
           );
           _nodes[packet.from] = updatedNode;
           _nodeController.add(updatedNode);
-          debugPrint(
+          AppLogging.protocol(
             '🔑 ✅ Updated node ${packet.from.toRadixString(16)} with fresh user info',
           );
         } else {
@@ -1121,7 +1121,7 @@ class ProtocolService {
           );
           _nodes[packet.from] = newNode;
           _nodeController.add(newNode);
-          debugPrint(
+          AppLogging.protocol(
             '🔑 ✅ Created new node ${packet.from.toRadixString(16)} from owner response',
           );
         }
@@ -1846,10 +1846,10 @@ class ProtocolService {
   void _handleNodeInfoUpdate(pb.MeshPacket packet, pb.Data data) {
     try {
       final user = pb.User.fromBuffer(data.payload);
-      debugPrint(
+      AppLogging.protocol(
         '🔑 📥 Received node info from ${packet.from.toRadixString(16)}: ${user.longName} (${user.shortName})',
       );
-      debugPrint(
+      AppLogging.protocol(
         '🔑 📥 Public key present: ${user.publicKey.isNotEmpty} (${user.publicKey.length} bytes)',
       );
       AppLogging.protocol('Node info from ${packet.from}: ${user.longName}');
@@ -2571,7 +2571,7 @@ class ProtocolService {
   /// way to trigger key exchange.
   Future<void> requestNodeInfo(int nodeNum) async {
     try {
-      debugPrint(
+      AppLogging.protocol(
         '🔑 Broadcasting our User info to trigger key exchange with ${nodeNum.toRadixString(16)}',
       );
       AppLogging.protocol('Broadcasting User info to trigger key exchange');
@@ -2583,7 +2583,9 @@ class ProtocolService {
         ..longName = myNode?.longName ?? 'Unknown'
         ..shortName = myNode?.shortName ?? '????';
 
-      debugPrint('🔑 Broadcasting: ${user.longName} (${user.shortName})');
+      AppLogging.protocol(
+        '🔑 Broadcasting: ${user.longName} (${user.shortName})',
+      );
 
       final data = pb.Data()
         ..portnum = pb.PortNum.NODEINFO_APP
@@ -2603,12 +2605,12 @@ class ProtocolService {
       final bytes = toRadio.writeToBuffer();
 
       await _transport.send(_prepareForSend(bytes));
-      debugPrint(
+      AppLogging.protocol(
         '🔑 ✅ Sent NODEINFO with wantResponse to ${nodeNum.toRadixString(16)}',
       );
       AppLogging.protocol('Sent NODEINFO request to $nodeNum');
     } catch (e) {
-      debugPrint('🔑 ❌ Error requesting node info: $e');
+      AppLogging.protocol('🔑 ❌ Error requesting node info: $e');
       AppLogging.protocol('Error requesting node info: $e');
       rethrow;
     }
@@ -2617,7 +2619,7 @@ class ProtocolService {
   /// Broadcast our User info to all nodes (triggers mesh-wide key exchange)
   Future<void> broadcastUserInfo() async {
     try {
-      debugPrint('🔑 Broadcasting our User info to mesh');
+      AppLogging.protocol('🔑 Broadcasting our User info to mesh');
 
       final myNode = _nodes[_myNodeNum];
       final user = pb.User()
@@ -2640,9 +2642,9 @@ class ProtocolService {
       final bytes = toRadio.writeToBuffer();
 
       await _transport.send(_prepareForSend(bytes));
-      debugPrint('🔑 ✅ Broadcast User info to mesh');
+      AppLogging.protocol('🔑 ✅ Broadcast User info to mesh');
     } catch (e) {
-      debugPrint('🔑 ❌ Error broadcasting user info: $e');
+      AppLogging.protocol('🔑 ❌ Error broadcasting user info: $e');
       AppLogging.protocol('Error broadcasting user info: $e');
     }
   }
@@ -3642,7 +3644,7 @@ class ProtocolService {
       'Requesting config: ${configType.name}${isRemote ? ' from remote node $target' : ''}',
     );
     if (isRemote) {
-      debugPrint(
+      AppLogging.protocol(
         '🔧 Remote Admin: Requesting ${configType.name} from ${target.toRadixString(16)}',
       );
     }
@@ -3682,7 +3684,7 @@ class ProtocolService {
       'Setting config${isRemote ? ' on remote node $target' : ''}',
     );
     if (isRemote) {
-      debugPrint(
+      AppLogging.protocol(
         '🔧 Remote Admin: Setting config on ${target.toRadixString(16)}',
       );
     }
@@ -3969,7 +3971,7 @@ class ProtocolService {
       'Requesting module config: ${moduleType.name}${isRemote ? ' from remote node $target' : ''}',
     );
     if (isRemote) {
-      debugPrint(
+      AppLogging.protocol(
         '🔧 Remote Admin: Requesting ${moduleType.name} from ${target.toRadixString(16)}',
       );
     }
@@ -4011,7 +4013,7 @@ class ProtocolService {
       'Setting module config${isRemote ? ' on remote node $target' : ''}',
     );
     if (isRemote) {
-      debugPrint(
+      AppLogging.protocol(
         '🔧 Remote Admin: Setting module config on ${target.toRadixString(16)}',
       );
     }

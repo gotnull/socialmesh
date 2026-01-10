@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
+import 'package:socialmesh/core/logging.dart';
 
 /// Service for content moderation - user-facing moderation status and controls.
 ///
@@ -58,7 +58,7 @@ class ContentModerationService {
             .toList(),
       );
     } catch (e) {
-      debugPrint('Error getting moderation status: $e');
+      AppLogging.social('Error getting moderation status: $e');
       rethrow;
     }
   }
@@ -112,7 +112,7 @@ class ContentModerationService {
         'strikeId': strikeId,
       });
     } catch (e) {
-      debugPrint('Error acknowledging strike: $e');
+      AppLogging.social('Error acknowledging strike: $e');
       rethrow;
     }
   }
@@ -157,7 +157,7 @@ class ContentModerationService {
           details: data['details'] as String? ?? '',
         );
       } catch (e) {
-        debugPrint('Server text check error: $e');
+        AppLogging.social('Server text check error: $e');
         // Fall back to local result if server check fails
         return localResult;
       }
@@ -325,7 +325,7 @@ class ContentModerationService {
           )
           .toList();
     } catch (e) {
-      debugPrint('Error getting moderation queue: $e');
+      AppLogging.social('Error getting moderation queue: $e');
       rethrow;
     }
   }
@@ -343,7 +343,7 @@ class ContentModerationService {
         if (notes != null) 'notes': notes,
       });
     } catch (e) {
-      debugPrint('Error reviewing moderation item: $e');
+      AppLogging.social('Error reviewing moderation item: $e');
       rethrow;
     }
   }

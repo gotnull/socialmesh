@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/widget_schema.dart';
 import '../models/data_binding.dart';
 import '../renderer/widget_renderer.dart';
+import '../../../core/logging.dart';
 import '../../../core/theme.dart';
 import '../../../providers/app_providers.dart';
 import '../../../utils/snackbar.dart';
@@ -155,14 +156,14 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
   void _initFromSchema() {
     final schema = widget.initialSchema;
-    debugPrint(
+    AppLogging.widgetBuilder(
       'Wizard: _initFromSchema called, schema is ${schema == null ? "NULL" : "present"}',
     );
     if (schema == null) return;
 
-    debugPrint('Wizard: Schema id=${schema.id}, name=${schema.name}');
-    debugPrint('Wizard: Schema root type=${schema.root.type}');
-    debugPrint(
+    AppLogging.widgetBuilder('Wizard: Schema id=${schema.id}, name=${schema.name}');
+    AppLogging.widgetBuilder('Wizard: Schema root type=${schema.root.type}');
+    AppLogging.widgetBuilder(
       'Wizard: Schema root has ${schema.root.children.length} children',
     );
 
@@ -173,17 +174,17 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     _extractBindingsFromElement(schema.root);
     // Store original bindings to detect structural changes later
     _originalBindings = Set<String>.from(_selectedBindings);
-    debugPrint('Wizard: Extracted bindings: $_selectedBindings');
+    AppLogging.widgetBuilder('Wizard: Extracted bindings: $_selectedBindings');
 
     // Extract actions from schema
     _extractActionsFromElement(schema.root);
     // Store original actions to detect changes later
     _originalActions = Set<ActionType>.from(_selectedActions);
-    debugPrint('Wizard: Extracted actions: $_selectedActions');
+    AppLogging.widgetBuilder('Wizard: Extracted actions: $_selectedActions');
 
     // Try to detect template from tags first - MOST RELIABLE
     final tags = schema.tags;
-    debugPrint('Wizard: Schema tags: $tags');
+    AppLogging.widgetBuilder('Wizard: Schema tags: $tags');
 
     // Tags are the authoritative source for template type
     // They're saved by the wizard and should be trusted
@@ -208,14 +209,14 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
     if (templateFromTags != null) {
       _selectedTemplate = templateFromTags;
-      debugPrint(
+      AppLogging.widgetBuilder(
         'Wizard: Template detected from tags: ${_selectedTemplate?.id}',
       );
     } else {
       // No template tag - try to detect from structure (for UI purposes only)
       // Note: We DON'T rebuild edited widgets - we preserve the original structure
       _selectedTemplate = _detectTemplateFromStructure(schema.root);
-      debugPrint(
+      AppLogging.widgetBuilder(
         'Wizard: Template detected from structure: ${_selectedTemplate?.id}',
       );
     }
@@ -224,13 +225,13 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     _extractAppearanceFromElement(schema.root);
     // Store original merge state to detect changes later
     _originalMergeCharts = _mergeCharts;
-    debugPrint(
+    AppLogging.widgetBuilder(
       'Wizard: Accent color: $_accentColor, Chart type: $_chartType, Merge: $_mergeCharts',
     );
 
     // Detect layout style from root element structure
     _detectLayoutStyle(schema.root);
-    debugPrint('Wizard: Layout style: $_layoutStyle');
+    AppLogging.widgetBuilder('Wizard: Layout style: $_layoutStyle');
   }
 
   /// Detect template type from element structure
@@ -247,14 +248,14 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     void scanElement(ElementSchema element) {
       if (element.type == ElementType.chart) {
         hasChart = true;
-        debugPrint('Wizard: Found chart element');
+        AppLogging.widgetBuilder('Wizard: Found chart element');
       }
       if (element.type == ElementType.gauge) {
         // CRITICAL: Distinguish between gauge types
         // Radial, arc, battery, signal = gauge template
         // Linear = status template (progress bars)
         final gaugeType = element.gaugeType ?? GaugeType.linear;
-        debugPrint('Wizard: Found gauge with type: ${gaugeType.name}');
+        AppLogging.widgetBuilder('Wizard: Found gauge with type: ${gaugeType.name}');
         if (gaugeType == GaugeType.linear) {
           hasLinearGauge = true;
         } else {
@@ -263,11 +264,11 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       }
       if (element.type == ElementType.map) {
         hasMap = true;
-        debugPrint('Wizard: Found map element');
+        AppLogging.widgetBuilder('Wizard: Found map element');
       }
       if (element.action != null && element.action!.type != ActionType.none) {
         hasAction = true;
-        debugPrint('Wizard: Found action: ${element.action!.type}');
+        AppLogging.widgetBuilder('Wizard: Found action: ${element.action!.type}');
       }
       for (final child in element.children) {
         scanElement(child);
@@ -276,7 +277,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
     scanElement(root);
 
-    debugPrint(
+    AppLogging.widgetBuilder(
       'Wizard: Structure detection - chart=$hasChart, radialGauge=$hasRadialGauge, '
       'linearGauge=$hasLinearGauge, map=$hasMap, action=$hasAction, '
       'bindings=${_selectedBindings.length}',
@@ -285,31 +286,31 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     // Determine template based on detected elements
     // Order matters - more specific detections first
     if (hasChart) {
-      debugPrint('Wizard: Detected as GRAPH template (has chart)');
+      AppLogging.widgetBuilder('Wizard: Detected as GRAPH template (has chart)');
       return templates.firstWhere((t) => t.id == 'graph');
     } else if (hasRadialGauge) {
       // Only radial/arc/etc gauges indicate gauge template
-      debugPrint('Wizard: Detected as GAUGE template (has radial gauge)');
+      AppLogging.widgetBuilder('Wizard: Detected as GAUGE template (has radial gauge)');
       return templates.firstWhere((t) => t.id == 'gauge');
     } else if (hasLinearGauge) {
       // Linear gauges indicate status template (progress bars)
-      debugPrint('Wizard: Detected as STATUS template (has linear gauge)');
+      AppLogging.widgetBuilder('Wizard: Detected as STATUS template (has linear gauge)');
       return templates.firstWhere((t) => t.id == 'status');
     } else if (hasMap) {
-      debugPrint('Wizard: Detected as LOCATION template (has map)');
+      AppLogging.widgetBuilder('Wizard: Detected as LOCATION template (has map)');
       return templates.firstWhere((t) => t.id == 'location');
     } else if (hasAction && _selectedBindings.isEmpty) {
-      debugPrint(
+      AppLogging.widgetBuilder(
         'Wizard: Detected as ACTIONS template (has action, no bindings)',
       );
       return templates.firstWhere((t) => t.id == 'actions');
     } else if (_selectedBindings.isNotEmpty) {
       // Default to info for widgets with data bindings but no gauges
-      debugPrint('Wizard: Detected as INFO template (has bindings, no gauges)');
+      AppLogging.widgetBuilder('Wizard: Detected as INFO template (has bindings, no gauges)');
       return templates.firstWhere((t) => t.id == 'info');
     }
 
-    debugPrint('Wizard: No template detected');
+    AppLogging.widgetBuilder('Wizard: No template detected');
     return null;
   }
 
@@ -497,21 +498,21 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   }
 
   void _extractBindingsFromElement(ElementSchema element) {
-    debugPrint(
+    AppLogging.widgetBuilder(
       'Wizard: Scanning element type=${element.type}, binding=${element.binding?.path}, chartBindingPath=${element.chartBindingPath}, chartBindingPaths=${element.chartBindingPaths}',
     );
 
     // Regular binding
     if (element.binding != null) {
-      debugPrint('Wizard: Found regular binding: ${element.binding!.path}');
+      AppLogging.widgetBuilder('Wizard: Found regular binding: ${element.binding!.path}');
       _selectedBindings.add(element.binding!.path);
     }
 
     // Chart-specific bindings
     if (element.type == ElementType.chart) {
-      debugPrint('Wizard: Found chart element');
+      AppLogging.widgetBuilder('Wizard: Found chart element');
       if (element.chartBindingPath != null) {
-        debugPrint(
+        AppLogging.widgetBuilder(
           'Wizard: Found chartBindingPath: ${element.chartBindingPath}',
         );
         _selectedBindings.add(element.chartBindingPath!);
@@ -524,7 +525,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         }
       }
       if (element.chartBindingPaths != null) {
-        debugPrint(
+        AppLogging.widgetBuilder(
           'Wizard: Found chartBindingPaths: ${element.chartBindingPaths}',
         );
         for (int i = 0; i < element.chartBindingPaths!.length; i++) {
@@ -573,11 +574,11 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
   /// Handle close button with confirmation if needed
   Future<void> _handleClose() async {
-    debugPrint('[WidgetWizard] _handleClose called');
-    debugPrint('[WidgetWizard] hasUnsavedChanges: ${_hasUnsavedChanges()}');
+    AppLogging.widgetBuilder('[WidgetWizard] _handleClose called');
+    AppLogging.widgetBuilder('[WidgetWizard] hasUnsavedChanges: ${_hasUnsavedChanges()}');
 
     if (!_hasUnsavedChanges()) {
-      debugPrint('[WidgetWizard] No unsaved changes, closing immediately');
+      AppLogging.widgetBuilder('[WidgetWizard] No unsaved changes, closing immediately');
       Navigator.pop(context);
       return;
     }
@@ -612,10 +613,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       ),
     );
 
-    debugPrint('[WidgetWizard] Dialog result: $shouldClose');
+    AppLogging.widgetBuilder('[WidgetWizard] Dialog result: $shouldClose');
 
     if (shouldClose == true && mounted) {
-      debugPrint('[WidgetWizard] User confirmed close, popping');
+      AppLogging.widgetBuilder('[WidgetWizard] User confirmed close, popping');
       Navigator.pop(context);
     }
   }
@@ -889,12 +890,12 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     // CRITICAL: Always rebuild from current state for live preview
     // This ensures layout, colors, labels, gauge count all update reactively
     // NO CACHING - NO CONDITIONAL PATHS - ALWAYS REBUILD FROM CONFIG STATE
-    debugPrint('[PREVIEW] === Building Live Preview ===');
-    debugPrint('[PREVIEW] _mergeCharts=$_mergeCharts');
-    debugPrint('[PREVIEW] _showMinMax=$_showMinMax');
-    debugPrint('[PREVIEW] _mergeColors=$_mergeColors');
-    debugPrint('[PREVIEW] _seriesGradients=$_seriesGradients');
-    debugPrint('[PREVIEW] _selectedBindings=$_selectedBindings');
+    AppLogging.widgetBuilder('[PREVIEW] === Building Live Preview ===');
+    AppLogging.widgetBuilder('[PREVIEW] _mergeCharts=$_mergeCharts');
+    AppLogging.widgetBuilder('[PREVIEW] _showMinMax=$_showMinMax');
+    AppLogging.widgetBuilder('[PREVIEW] _mergeColors=$_mergeColors');
+    AppLogging.widgetBuilder('[PREVIEW] _seriesGradients=$_seriesGradients');
+    AppLogging.widgetBuilder('[PREVIEW] _selectedBindings=$_selectedBindings');
 
     final previewSchema = _buildPreviewSchema();
 
@@ -937,7 +938,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       // Series colors
       '_$mergeColorsKey',
     );
-    debugPrint('[PREVIEW] previewKey=$previewKey');
+    AppLogging.widgetBuilder('[PREVIEW] previewKey=$previewKey');
 
     final nodes = ref.watch(nodesProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
@@ -2360,14 +2361,14 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   }
 
   void _toggleMergeCharts() {
-    debugPrint(
+    AppLogging.widgetBuilder(
       '[MERGE] _toggleMergeCharts called, current _mergeCharts=$_mergeCharts',
     );
     _setMergeCharts(!_mergeCharts);
   }
 
   void _setMergeCharts(bool value) {
-    debugPrint(
+    AppLogging.widgetBuilder(
       '[MERGE] _setMergeCharts($value), current _mergeCharts=$_mergeCharts',
     );
     if (value && !_mergeCharts) {
@@ -2383,13 +2384,13 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       // Migrate thresholds and gradients from merged to per-series
       _migrateFromMerged();
     }
-    debugPrint('[MERGE] Setting _mergeCharts to $value');
+    AppLogging.widgetBuilder('[MERGE] Setting _mergeCharts to $value');
     setState(() => _mergeCharts = value);
-    debugPrint('[MERGE] After setState, _mergeCharts=$_mergeCharts');
+    AppLogging.widgetBuilder('[MERGE] After setState, _mergeCharts=$_mergeCharts');
   }
 
   void _migrateToMerged() {
-    debugPrint('[MERGE] _migrateToMerged called');
+    AppLogging.widgetBuilder('[MERGE] _migrateToMerged called');
     // Migrate thresholds: collect all thresholds into _merged key
     final allThresholds = <_ThresholdLine>[];
     for (final bindingPath in _selectedBindings) {
@@ -2415,11 +2416,11 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     if (firstEnabled != null) {
       _seriesGradients['_merged'] = firstEnabled;
     }
-    debugPrint('[MERGE] After migration: _seriesGradients=$_seriesGradients');
+    AppLogging.widgetBuilder('[MERGE] After migration: _seriesGradients=$_seriesGradients');
   }
 
   void _migrateFromMerged() {
-    debugPrint('[MERGE] _migrateFromMerged called');
+    AppLogging.widgetBuilder('[MERGE] _migrateFromMerged called');
     // Migrate thresholds: move _merged thresholds to first series
     final mergedThresholds = _seriesThresholds['_merged'] ?? [];
     _seriesThresholds.remove('_merged');
@@ -2435,7 +2436,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         _selectedBindings.isNotEmpty) {
       _seriesGradients[_selectedBindings.first] = mergedGradient;
     }
-    debugPrint('[MERGE] After migration: _seriesGradients=$_seriesGradients');
+    AppLogging.widgetBuilder('[MERGE] After migration: _seriesGradients=$_seriesGradients');
   }
 
   void _showMergeConfirmationDialog() {
@@ -2563,13 +2564,13 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                           currentColor.toARGB32() == color.toARGB32();
                       return GestureDetector(
                         onTap: () {
-                          debugPrint(
+                          AppLogging.widgetBuilder(
                             '[COLOR] Setting color for $bindingPath to ${color.toARGB32().toRadixString(16)}',
                           );
                           setState(() {
                             _mergeColors[bindingPath] = color;
                           });
-                          debugPrint(
+                          AppLogging.widgetBuilder(
                             '[COLOR] _mergeColors after update: $_mergeColors',
                           );
                         },
@@ -4111,31 +4112,31 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   }
 
   void _create() async {
-    debugPrint('[WidgetWizard] _create called');
+    AppLogging.widgetBuilder('[WidgetWizard] _create called');
 
     // Final validation check
     final validationError = _getValidationError();
     if (validationError != null) {
-      debugPrint('[WidgetWizard] Validation failed: $validationError');
+      AppLogging.widgetBuilder('[WidgetWizard] Validation failed: $validationError');
       showErrorSnackBar(context, validationError);
       return;
     }
 
-    debugPrint('[WidgetWizard] Building final schema...');
+    AppLogging.widgetBuilder('[WidgetWizard] Building final schema...');
 
     final schema = _buildFinalSchema();
-    debugPrint(
+    AppLogging.widgetBuilder(
       '[WidgetWizard] Schema built: id=${schema.id}, name=${schema.name}',
     );
-    debugPrint('[WidgetWizard] Existing ID was: $_existingId');
+    AppLogging.widgetBuilder('[WidgetWizard] Existing ID was: $_existingId');
 
     try {
-      debugPrint('[WidgetWizard] Calling onSave callback...');
+      AppLogging.widgetBuilder('[WidgetWizard] Calling onSave callback...');
       await widget.onSave(schema);
-      debugPrint('[WidgetWizard] onSave completed successfully');
+      AppLogging.widgetBuilder('[WidgetWizard] onSave completed successfully');
     } catch (e, stack) {
-      debugPrint('[WidgetWizard] ERROR in onSave: $e');
-      debugPrint('[WidgetWizard] Stack trace: $stack');
+      AppLogging.widgetBuilder('[WidgetWizard] ERROR in onSave: $e');
+      AppLogging.widgetBuilder('[WidgetWizard] Stack trace: $stack');
       if (mounted) {
         showErrorSnackBar(context, 'Failed to save widget: $e');
       }
@@ -4143,7 +4144,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     }
 
     if (mounted) {
-      debugPrint(
+      AppLogging.widgetBuilder(
         '[WidgetWizard] Popping with result, addToDashboard=$_addToDashboard',
       );
       showSuccessSnackBar(
@@ -4177,7 +4178,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   /// Apply wizard appearance settings to an existing element tree
   /// This preserves the structure but updates colors, chart settings, etc.
   ElementSchema _applyAppearanceToElement(ElementSchema element) {
-    debugPrint('[APPLY] _applyAppearanceToElement type=${element.type}');
+    AppLogging.widgetBuilder('[APPLY] _applyAppearanceToElement type=${element.type}');
     final colorHex =
         '#${_accentColor.toARGB32().toRadixString(16).padLeft(8, '0').substring(2)}';
 
@@ -4185,7 +4186,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     ElementSchema modified = element;
 
     if (element.type == ElementType.gauge) {
-      debugPrint('[APPLY] Gauge: setting color=$colorHex');
+      AppLogging.widgetBuilder('[APPLY] Gauge: setting color=$colorHex');
       // Update gauge color
       modified = element.copyWith(gaugeColor: colorHex);
     } else if (element.type == ElementType.chart) {
@@ -4210,18 +4211,18 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           gradientKey = '';
         }
       }
-      debugPrint('[APPLY] Chart: gradientKey=$gradientKey');
-      debugPrint('[APPLY] Chart: chartBindingPath=${element.chartBindingPath}');
-      debugPrint('[APPLY] Chart: binding.path=${element.binding?.path}');
-      debugPrint(
+      AppLogging.widgetBuilder('[APPLY] Chart: gradientKey=$gradientKey');
+      AppLogging.widgetBuilder('[APPLY] Chart: chartBindingPath=${element.chartBindingPath}');
+      AppLogging.widgetBuilder('[APPLY] Chart: binding.path=${element.binding?.path}');
+      AppLogging.widgetBuilder(
         '[APPLY] Chart: chartBindingPaths=${element.chartBindingPaths}',
       );
-      debugPrint('[APPLY] Chart: _showMinMax=$_showMinMax');
-      debugPrint('[APPLY] Chart: _mergeCharts=$_mergeCharts');
+      AppLogging.widgetBuilder('[APPLY] Chart: _showMinMax=$_showMinMax');
+      AppLogging.widgetBuilder('[APPLY] Chart: _mergeCharts=$_mergeCharts');
 
       // Get gradient settings for this chart
       final gradient = _seriesGradients[gradientKey] ?? _GradientConfig();
-      debugPrint('[APPLY] Chart: gradient.enabled=${gradient.enabled}');
+      AppLogging.widgetBuilder('[APPLY] Chart: gradient.enabled=${gradient.enabled}');
 
       // Get threshold settings for this chart
       final thresholds = _seriesThresholds[gradientKey] ?? [];
@@ -4232,12 +4233,12 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       final newChartType = selectedBindingsList.length > 1 && _mergeCharts
           ? ChartType.multiLine
           : _chartType;
-      debugPrint('[APPLY] Chart: Setting chartType=$newChartType');
-      debugPrint('[APPLY] Chart: Setting chartShowMinMax=$_showMinMax');
-      debugPrint(
+      AppLogging.widgetBuilder('[APPLY] Chart: Setting chartType=$newChartType');
+      AppLogging.widgetBuilder('[APPLY] Chart: Setting chartShowMinMax=$_showMinMax');
+      AppLogging.widgetBuilder(
         '[APPLY] Chart: Setting chartGradientFill=${gradient.enabled}',
       );
-      debugPrint(
+      AppLogging.widgetBuilder(
         '[APPLY] Chart: Setting chartBindingPaths=$selectedBindingsList',
       );
 
@@ -4253,7 +4254,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           legendColors.add(_colorToHex(_getDefaultColorForIndex(index)));
         }
       }
-      debugPrint('[APPLY] Chart: Setting chartLegendColors=$legendColors');
+      AppLogging.widgetBuilder('[APPLY] Chart: Setting chartLegendColors=$legendColors');
 
       // For non-merged single-binding charts, also set the style.textColor
       // because the renderer uses style.textColor for single-series charts
@@ -4267,7 +4268,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                 ? _getDefaultColorForIndex(bindingIndex)
                 : _accentColor);
         chartTextColor = _colorToHex(chartColor);
-        debugPrint(
+        AppLogging.widgetBuilder(
           '[APPLY] Chart: Non-merged chart for $bindingPath, setting textColor=$chartTextColor',
         );
       }
@@ -4298,7 +4299,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             ? element.style.copyWith(textColor: chartTextColor)
             : element.style,
       );
-      debugPrint(
+      AppLogging.widgetBuilder(
         '[APPLY] Chart: modified.chartShowMinMax=${modified.chartShowMinMax}',
       );
     } else if (element.type == ElementType.text &&

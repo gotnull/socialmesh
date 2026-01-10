@@ -4,8 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
+import 'package:socialmesh/core/logging.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/social.dart';
@@ -172,7 +172,7 @@ class StoryService {
         isVerified: data['isVerified'] as bool? ?? false,
       );
     } catch (e) {
-      debugPrint('Error getting author snapshot: $e');
+      AppLogging.social('Error getting author snapshot: $e');
       return null;
     }
   }
@@ -183,69 +183,79 @@ class StoryService {
 
   /// Delete a story and its media
   Future<void> deleteStory(String storyId) async {
-    debugPrint(
+    AppLogging.social(
       '🗑️ [StoryService.deleteStory] Starting delete for storyId=$storyId',
     );
 
     final currentUserId = _currentUserId;
     if (currentUserId == null) {
-      debugPrint('🗑️ [StoryService.deleteStory] ERROR: Not signed in');
+      AppLogging.social('🗑️ [StoryService.deleteStory] ERROR: Not signed in');
       throw StateError('Must be signed in to delete stories');
     }
-    debugPrint('🗑️ [StoryService.deleteStory] Current user: $currentUserId');
+    AppLogging.social(
+      '🗑️ [StoryService.deleteStory] Current user: $currentUserId',
+    );
 
     // Get the story to verify ownership
-    debugPrint('🗑️ [StoryService.deleteStory] Fetching story document...');
+    AppLogging.social(
+      '🗑️ [StoryService.deleteStory] Fetching story document...',
+    );
     final storyDoc = await _firestore.collection('stories').doc(storyId).get();
     if (!storyDoc.exists) {
-      debugPrint(
+      AppLogging.social(
         '🗑️ [StoryService.deleteStory] Story document does not exist, returning',
       );
       return;
     }
-    debugPrint(
+    AppLogging.social(
       '🗑️ [StoryService.deleteStory] Story document exists, data: ${storyDoc.data()}',
     );
 
     final story = Story.fromFirestore(storyDoc);
-    debugPrint(
+    AppLogging.social(
       '🗑️ [StoryService.deleteStory] Story authorId: ${story.authorId}, currentUserId: $currentUserId',
     );
     if (story.authorId != currentUserId) {
-      debugPrint(
+      AppLogging.social(
         '🗑️ [StoryService.deleteStory] ERROR: Cannot delete another user\'s story',
       );
       throw StateError('Cannot delete another user\'s story');
     }
 
     // Delete media from storage
-    debugPrint('🗑️ [StoryService.deleteStory] Deleting media from storage...');
+    AppLogging.social(
+      '🗑️ [StoryService.deleteStory] Deleting media from storage...',
+    );
     try {
       final storageRef = _storage.ref().child(
         'stories/$currentUserId/$storyId',
       );
-      debugPrint(
+      AppLogging.social(
         '🗑️ [StoryService.deleteStory] Storage path: stories/$currentUserId/$storyId',
       );
       final items = await storageRef.listAll();
-      debugPrint(
+      AppLogging.social(
         '🗑️ [StoryService.deleteStory] Found ${items.items.length} media items to delete',
       );
       for (final item in items.items) {
-        debugPrint('🗑️ [StoryService.deleteStory] Deleting: ${item.fullPath}');
+        AppLogging.social(
+          '🗑️ [StoryService.deleteStory] Deleting: ${item.fullPath}',
+        );
         await item.delete();
       }
-      debugPrint('🗑️ [StoryService.deleteStory] Media deleted successfully');
+      AppLogging.social(
+        '🗑️ [StoryService.deleteStory] Media deleted successfully',
+      );
     } catch (e, stack) {
-      debugPrint(
+      AppLogging.social(
         '🗑️ [StoryService.deleteStory] Error deleting story media: $e',
       );
-      debugPrint('🗑️ [StoryService.deleteStory] Stack: $stack');
+      AppLogging.social('🗑️ [StoryService.deleteStory] Stack: $stack');
     }
 
     // Delete viewers subcollection FIRST (before deleting story document)
     // This is required because the viewers permission rule checks the parent story's authorId
-    debugPrint(
+    AppLogging.social(
       '🗑️ [StoryService.deleteStory] Deleting viewers subcollection...',
     );
     try {
@@ -254,35 +264,41 @@ class StoryService {
           .doc(storyId)
           .collection('viewers')
           .get();
-      debugPrint(
+      AppLogging.social(
         '🗑️ [StoryService.deleteStory] Found ${viewsSnapshot.docs.length} viewer docs to delete',
       );
       for (final doc in viewsSnapshot.docs) {
         await doc.reference.delete();
       }
-      debugPrint('🗑️ [StoryService.deleteStory] Viewers deleted successfully');
+      AppLogging.social(
+        '🗑️ [StoryService.deleteStory] Viewers deleted successfully',
+      );
     } catch (e, stack) {
-      debugPrint('🗑️ [StoryService.deleteStory] Error deleting viewers: $e');
-      debugPrint('🗑️ [StoryService.deleteStory] Stack: $stack');
+      AppLogging.social(
+        '🗑️ [StoryService.deleteStory] Error deleting viewers: $e',
+      );
+      AppLogging.social('🗑️ [StoryService.deleteStory] Stack: $stack');
     }
 
     // Delete story document (after viewers are deleted)
-    debugPrint('🗑️ [StoryService.deleteStory] Deleting story document...');
+    AppLogging.social(
+      '🗑️ [StoryService.deleteStory] Deleting story document...',
+    );
     try {
       await _firestore.collection('stories').doc(storyId).delete();
-      debugPrint(
+      AppLogging.social(
         '🗑️ [StoryService.deleteStory] Story document deleted successfully',
       );
     } catch (e, stack) {
-      debugPrint(
+      AppLogging.social(
         '🗑️ [StoryService.deleteStory] ERROR deleting story document: $e',
       );
-      debugPrint('🗑️ [StoryService.deleteStory] Stack: $stack');
+      AppLogging.social('🗑️ [StoryService.deleteStory] Stack: $stack');
       rethrow;
     }
 
     // Check if user has any remaining stories and update flag
-    debugPrint(
+    AppLogging.social(
       '🗑️ [StoryService.deleteStory] Checking for remaining stories...',
     );
     final remainingStories = await _firestore
@@ -292,11 +308,11 @@ class StoryService {
         .limit(1)
         .get();
 
-    debugPrint(
+    AppLogging.social(
       '🗑️ [StoryService.deleteStory] Remaining stories: ${remainingStories.docs.length}',
     );
     if (remainingStories.docs.isEmpty) {
-      debugPrint(
+      AppLogging.social(
         '🗑️ [StoryService.deleteStory] No remaining stories, setting hasActiveStory=false',
       );
       await _firestore.collection('users').doc(currentUserId).set({
@@ -304,7 +320,9 @@ class StoryService {
       }, SetOptions(merge: true));
     }
 
-    debugPrint('🗑️ [StoryService.deleteStory] Delete completed successfully');
+    AppLogging.social(
+      '🗑️ [StoryService.deleteStory] Delete completed successfully',
+    );
   }
 
   // ===========================================================================
@@ -516,7 +534,7 @@ class StoryService {
         .map((d) => d.data()['followeeId'] as String)
         .toList();
 
-    debugPrint(
+    AppLogging.social(
       '📖 [StoryGroups] Following ${followedUserIds.length} users: $followedUserIds',
     );
 
@@ -527,7 +545,7 @@ class StoryService {
     final stories = <Story>[];
     for (var i = 0; i < userIds.length; i += 30) {
       final batch = userIds.skip(i).take(30).toList();
-      debugPrint('📖 [StoryGroups] Querying stories for batch: $batch');
+      AppLogging.social('📖 [StoryGroups] Querying stories for batch: $batch');
       final snapshot = await _firestore
           .collection('stories')
           .where('authorId', whereIn: batch)
@@ -535,13 +553,15 @@ class StoryService {
           .orderBy('expiresAt')
           .orderBy('createdAt', descending: true)
           .get();
-      debugPrint(
+      AppLogging.social(
         '📖 [StoryGroups] Found ${snapshot.docs.length} stories in batch',
       );
       stories.addAll(snapshot.docs.map(Story.fromFirestore));
     }
 
-    debugPrint('📖 [StoryGroups] Total stories found: ${stories.length}');
+    AppLogging.social(
+      '📖 [StoryGroups] Total stories found: ${stories.length}',
+    );
 
     // Group by user
     final groupedByUser = <String, List<Story>>{};

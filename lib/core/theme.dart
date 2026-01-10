@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:socialmesh/core/logging.dart';
 
 /// Available accent colors for the app
 class AccentColors {
@@ -184,7 +185,7 @@ class AccentColorNotifier extends AsyncNotifier<Color> {
       }
     } catch (e) {
       // If SharedPreferences fails, just use default color
-      debugPrint('Failed to load accent color from preferences: $e');
+      AppLogging.settings('Failed to load accent color from preferences: $e');
     }
     return AccentColors.magenta;
   }
@@ -198,7 +199,7 @@ class AccentColorNotifier extends AsyncNotifier<Color> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt('accent_color', color.toARGB32());
     } catch (e) {
-      debugPrint('Failed to save accent color to preferences: $e');
+      AppLogging.settings('Failed to save accent color to preferences: $e');
     }
   }
 }

@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/foundation.dart';
 
 import '../core/logging.dart';
 import '../models/social.dart';
@@ -73,7 +72,7 @@ class SocialService {
       await activityService.createFollowActivity(followedUserId: targetUserId);
     } catch (e) {
       // Don't fail the follow if activity creation fails
-      debugPrint('Failed to create follow activity: $e');
+      AppLogging.social('Failed to create follow activity: $e');
     }
 
     return 'followed';
@@ -110,7 +109,7 @@ class SocialService {
         targetUserId: targetUserId,
       );
     } catch (e) {
-      debugPrint('Failed to create follow request activity: $e');
+      AppLogging.social('Failed to create follow request activity: $e');
     }
   }
 
@@ -171,7 +170,7 @@ class SocialService {
       await activityService.createFollowActivity(followedUserId: requesterId);
     } catch (e) {
       // Don't fail the accept if activity creation fails
-      debugPrint('Failed to create follow activity on accept: $e');
+      AppLogging.social('Failed to create follow activity on accept: $e');
     }
   }
 
@@ -1017,7 +1016,7 @@ class SocialService {
           }
         }
       } catch (e) {
-        debugPrint('Failed to create comment activity: $e');
+        AppLogging.social('Failed to create comment activity: $e');
       }
     } else {
       // Reply - notify original comment author
@@ -1039,7 +1038,7 @@ class SocialService {
           }
         }
       } catch (e) {
-        debugPrint('Failed to create comment reply activity: $e');
+        AppLogging.social('Failed to create comment reply activity: $e');
       }
     }
 
@@ -1091,7 +1090,7 @@ class SocialService {
           }
         }
       } catch (e) {
-        debugPrint('Failed to process mention @$username: $e');
+        AppLogging.social('Failed to process mention @$username: $e');
       }
     }
   }
@@ -1227,7 +1226,7 @@ class SocialService {
       }
     } catch (e) {
       // Don't fail the like if activity creation fails
-      debugPrint('Failed to create post like activity: $e');
+      AppLogging.social('Failed to create post like activity: $e');
     }
   }
 
@@ -1292,7 +1291,7 @@ class SocialService {
         }
       }
     } catch (e) {
-      debugPrint('Failed to create comment like activity: $e');
+      AppLogging.social('Failed to create comment like activity: $e');
     }
   }
 
@@ -1679,35 +1678,35 @@ class SocialService {
 
   /// Unlink a mesh node from the current user's profile.
   Future<void> unlinkNodeFromProfile(int nodeId) async {
-    debugPrint(
+    AppLogging.social(
       '🔗 [SocialService.unlinkNodeFromProfile] Starting for nodeId: $nodeId',
     );
 
     final currentUserId = _currentUserId;
-    debugPrint(
+    AppLogging.social(
       '🔗 [SocialService.unlinkNodeFromProfile] currentUserId: $currentUserId',
     );
     if (currentUserId == null) {
-      debugPrint(
+      AppLogging.social(
         '🔗 [SocialService.unlinkNodeFromProfile] ERROR: Not signed in',
       );
       throw StateError('Must be signed in to unlink nodes');
     }
 
     final docRef = _firestore.collection('profiles').doc(currentUserId);
-    debugPrint(
+    AppLogging.social(
       '🔗 [SocialService.unlinkNodeFromProfile] Fetching profile doc...',
     );
     final doc = await docRef.get();
 
     if (!doc.exists) {
-      debugPrint(
+      AppLogging.social(
         '🔗 [SocialService.unlinkNodeFromProfile] Profile doc does not exist, returning early',
       );
       return;
     }
 
-    debugPrint(
+    AppLogging.social(
       '🔗 [SocialService.unlinkNodeFromProfile] Profile doc exists, parsing data...',
     );
     final currentLinkedNodes =
@@ -1716,14 +1715,14 @@ class SocialService {
             .toList() ??
         [];
     final currentPrimaryId = doc.data()?['primaryNodeId'] as int?;
-    debugPrint(
+    AppLogging.social(
       '🔗 [SocialService.unlinkNodeFromProfile] Current state: '
       'linkedNodes=$currentLinkedNodes, primaryId=$currentPrimaryId',
     );
 
     // Remove the node
     final removed = currentLinkedNodes.remove(nodeId);
-    debugPrint(
+    AppLogging.social(
       '🔗 [SocialService.unlinkNodeFromProfile] Removed nodeId $nodeId: $removed, '
       'remaining: $currentLinkedNodes',
     );
@@ -1740,25 +1739,25 @@ class SocialService {
       updates['primaryNodeId'] = currentLinkedNodes.isNotEmpty
           ? currentLinkedNodes.first
           : null;
-      debugPrint(
+      AppLogging.social(
         '🔗 [SocialService.unlinkNodeFromProfile] Primary node removed, '
         'new primary: ${updates['primaryNodeId']}',
       );
     }
 
-    debugPrint(
+    AppLogging.social(
       '🔗 [SocialService.unlinkNodeFromProfile] Updating Firestore with: $updates',
     );
     try {
       await docRef.update(updates);
-      debugPrint(
+      AppLogging.social(
         '🔗 [SocialService.unlinkNodeFromProfile] Firestore update SUCCESS',
       );
     } catch (e, stackTrace) {
-      debugPrint(
+      AppLogging.social(
         '🔗 [SocialService.unlinkNodeFromProfile] Firestore update FAILED: $e',
       );
-      debugPrint(
+      AppLogging.social(
         '🔗 [SocialService.unlinkNodeFromProfile] Stack trace: $stackTrace',
       );
       rethrow;
@@ -1903,7 +1902,7 @@ class SocialService {
       }
     }
 
-    debugPrint('SocialService.updateProfile: updating with $updates');
+    AppLogging.social('SocialService.updateProfile: updating with $updates');
     await _firestore.collection('profiles').doc(currentUserId).update(updates);
   }
 

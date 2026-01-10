@@ -115,25 +115,27 @@ class _AccountSubscriptionsScreenState
     AsyncValue<UserProfile?> profileAsync,
     Color accentColor,
   ) {
-    debugPrint('');
-    debugPrint(
+    AppLogging.subscriptions('');
+    AppLogging.subscriptions(
       '╔══════════════════════════════════════════════════════════════',
     );
-    debugPrint('║ 🏗️ _buildProfileCard() called');
-    debugPrint('║ 📦 profileAsync state:');
-    debugPrint('║    - isLoading: ${profileAsync.isLoading}');
-    debugPrint('║    - hasValue: ${profileAsync.hasValue}');
-    debugPrint('║    - hasError: ${profileAsync.hasError}');
+    AppLogging.subscriptions('║ 🏗️ _buildProfileCard() called');
+    AppLogging.subscriptions('║ 📦 profileAsync state:');
+    AppLogging.subscriptions('║    - isLoading: ${profileAsync.isLoading}');
+    AppLogging.subscriptions('║    - hasValue: ${profileAsync.hasValue}');
+    AppLogging.subscriptions('║    - hasError: ${profileAsync.hasError}');
     if (profileAsync.hasValue && !profileAsync.hasError) {
-      debugPrint('║    - value: ${profileAsync.value?.displayName ?? "NULL"}');
+      AppLogging.subscriptions(
+        '║    - value: ${profileAsync.value?.displayName ?? "NULL"}',
+      );
     }
-    debugPrint(
+    AppLogging.subscriptions(
       '╚══════════════════════════════════════════════════════════════',
     );
 
     return profileAsync.when(
       data: (profile) {
-        debugPrint(
+        AppLogging.subscriptions(
           '║ 📤 profileAsync.when -> data: ${profile?.displayName ?? "NULL"}',
         );
         return _ProfilePreviewCard(
@@ -145,11 +147,11 @@ class _AccountSubscriptionsScreenState
         );
       },
       loading: () {
-        debugPrint('║ ⏳ profileAsync.when -> loading');
+        AppLogging.subscriptions('║ ⏳ profileAsync.when -> loading');
         return const _LoadingCard();
       },
       error: (e, _) {
-        debugPrint('║ ❌ profileAsync.when -> error: $e');
+        AppLogging.subscriptions('║ ❌ profileAsync.when -> error: $e');
         return _ProfilePreviewCard(
           profile: null,
           onEditTap: () => Navigator.push(
@@ -771,34 +773,34 @@ class _AccountSubscriptionsScreenState
   Future<void> _signInWithGoogle(BuildContext _) async {
     if (_isSigningIn) return;
     setState(() => _isSigningIn = true);
-    debugPrint('');
-    debugPrint(
+    AppLogging.subscriptions('');
+    AppLogging.subscriptions(
       '╔══════════════════════════════════════════════════════════════',
     );
-    debugPrint('║ 🔐 SIGN IN WITH GOOGLE STARTED');
-    debugPrint(
+    AppLogging.subscriptions('║ 🔐 SIGN IN WITH GOOGLE STARTED');
+    AppLogging.subscriptions(
       '╚══════════════════════════════════════════════════════════════',
     );
 
     try {
       final authService = ref.read(authServiceProvider);
       await authService.signInWithGoogle();
-      debugPrint(
+      AppLogging.subscriptions(
         '╔══════════════════════════════════════════════════════════════',
       );
-      debugPrint('║ ✅ Google sign-in SUCCESS');
-      debugPrint('║ 🔄 Invalidating userProfileProvider...');
-      debugPrint(
+      AppLogging.subscriptions('║ ✅ Google sign-in SUCCESS');
+      AppLogging.subscriptions('║ 🔄 Invalidating userProfileProvider...');
+      AppLogging.subscriptions(
         '╚══════════════════════════════════════════════════════════════',
       );
       // Force profile to reload with new auth state
       ref.invalidate(userProfileProvider);
     } catch (e) {
-      debugPrint(
+      AppLogging.subscriptions(
         '╔══════════════════════════════════════════════════════════════',
       );
-      debugPrint('║ ❌ Google sign-in FAILED: $e');
-      debugPrint(
+      AppLogging.subscriptions('║ ❌ Google sign-in FAILED: $e');
+      AppLogging.subscriptions(
         '╚══════════════════════════════════════════════════════════════',
       );
       AppLogging.app('Google sign-in error: $e');
@@ -813,34 +815,34 @@ class _AccountSubscriptionsScreenState
   Future<void> _signInWithApple(BuildContext _) async {
     if (_isSigningIn) return;
     setState(() => _isSigningIn = true);
-    debugPrint('');
-    debugPrint(
+    AppLogging.subscriptions('');
+    AppLogging.subscriptions(
       '╔══════════════════════════════════════════════════════════════',
     );
-    debugPrint('║ 🔐 SIGN IN WITH APPLE STARTED');
-    debugPrint(
+    AppLogging.subscriptions('║ 🔐 SIGN IN WITH APPLE STARTED');
+    AppLogging.subscriptions(
       '╚══════════════════════════════════════════════════════════════',
     );
 
     try {
       final authService = ref.read(authServiceProvider);
       await authService.signInWithApple();
-      debugPrint(
+      AppLogging.subscriptions(
         '╔══════════════════════════════════════════════════════════════',
       );
-      debugPrint('║ ✅ Apple sign-in SUCCESS');
-      debugPrint('║ 🔄 Invalidating userProfileProvider...');
-      debugPrint(
+      AppLogging.subscriptions('║ ✅ Apple sign-in SUCCESS');
+      AppLogging.subscriptions('║ 🔄 Invalidating userProfileProvider...');
+      AppLogging.subscriptions(
         '╚══════════════════════════════════════════════════════════════',
       );
       // Force profile to reload with new auth state
       ref.invalidate(userProfileProvider);
     } catch (e) {
-      debugPrint(
+      AppLogging.subscriptions(
         '╔══════════════════════════════════════════════════════════════',
       );
-      debugPrint('║ ❌ Apple sign-in FAILED: $e');
-      debugPrint(
+      AppLogging.subscriptions('║ ❌ Apple sign-in FAILED: $e');
+      AppLogging.subscriptions(
         '╚══════════════════════════════════════════════════════════════',
       );
       AppLogging.app('Apple sign-in error: $e');
@@ -855,34 +857,34 @@ class _AccountSubscriptionsScreenState
   Future<void> _signInWithGitHub(BuildContext _) async {
     if (_isSigningIn) return;
     setState(() => _isSigningIn = true);
-    debugPrint('');
-    debugPrint(
+    AppLogging.subscriptions('');
+    AppLogging.subscriptions(
       '╔══════════════════════════════════════════════════════════════',
     );
-    debugPrint('║ 🔐 SIGN IN WITH GITHUB STARTED');
-    debugPrint(
+    AppLogging.subscriptions('║ 🔐 SIGN IN WITH GITHUB STARTED');
+    AppLogging.subscriptions(
       '╚══════════════════════════════════════════════════════════════',
     );
 
     try {
       final authService = ref.read(authServiceProvider);
       await authService.signInWithGitHub();
-      debugPrint(
+      AppLogging.subscriptions(
         '╔══════════════════════════════════════════════════════════════',
       );
-      debugPrint('║ ✅ GitHub sign-in SUCCESS');
-      debugPrint('║ 🔄 Invalidating userProfileProvider...');
-      debugPrint(
+      AppLogging.subscriptions('║ ✅ GitHub sign-in SUCCESS');
+      AppLogging.subscriptions('║ 🔄 Invalidating userProfileProvider...');
+      AppLogging.subscriptions(
         '╚══════════════════════════════════════════════════════════════',
       );
       // Force profile to reload with new auth state
       ref.invalidate(userProfileProvider);
     } catch (e) {
-      debugPrint(
+      AppLogging.subscriptions(
         '╔══════════════════════════════════════════════════════════════',
       );
-      debugPrint('║ ❌ GitHub sign-in FAILED: $e');
-      debugPrint(
+      AppLogging.subscriptions('║ ❌ GitHub sign-in FAILED: $e');
+      AppLogging.subscriptions(
         '╚══════════════════════════════════════════════════════════════',
       );
       AppLogging.app('GitHub sign-in error: $e');
@@ -915,22 +917,22 @@ class _AccountSubscriptionsScreenState
 
     if (confirmed == true && mounted) {
       try {
-        debugPrint('');
-        debugPrint(
+        AppLogging.subscriptions('');
+        AppLogging.subscriptions(
           '╔══════════════════════════════════════════════════════════════',
         );
-        debugPrint('║ 🚪 SIGN OUT INITIATED');
-        debugPrint(
+        AppLogging.subscriptions('║ 🚪 SIGN OUT INITIATED');
+        AppLogging.subscriptions(
           '╚══════════════════════════════════════════════════════════════',
         );
         final authService = ref.read(authServiceProvider);
         await authService.signOut();
-        debugPrint(
+        AppLogging.subscriptions(
           '╔══════════════════════════════════════════════════════════════',
         );
-        debugPrint('║ ✅ Auth signOut() completed');
-        debugPrint('║ 🔄 Invalidating userProfileProvider...');
-        debugPrint(
+        AppLogging.subscriptions('║ ✅ Auth signOut() completed');
+        AppLogging.subscriptions('║ 🔄 Invalidating userProfileProvider...');
+        AppLogging.subscriptions(
           '╚══════════════════════════════════════════════════════════════',
         );
         // Force the provider to rebuild with new auth state
@@ -939,11 +941,11 @@ class _AccountSubscriptionsScreenState
           showSuccessSnackBar(context, 'Signed out');
         }
       } catch (e) {
-        debugPrint(
+        AppLogging.subscriptions(
           '╔══════════════════════════════════════════════════════════════',
         );
-        debugPrint('║ ❌ Sign out ERROR: $e');
-        debugPrint(
+        AppLogging.subscriptions('║ ❌ Sign out ERROR: $e');
+        AppLogging.subscriptions(
           '╚══════════════════════════════════════════════════════════════',
         );
         if (mounted) {
@@ -1041,45 +1043,61 @@ class _AccountSubscriptionsScreenState
   }
 
   Future<void> _restorePurchases() async {
-    debugPrint('═══════════════════════════════════════════════════════════');
-    debugPrint('🔄 [RESTORE] Starting restore purchases flow...');
-    debugPrint('═══════════════════════════════════════════════════════════');
+    AppLogging.subscriptions(
+      '═══════════════════════════════════════════════════════════',
+    );
+    AppLogging.subscriptions('🔄 [RESTORE] Starting restore purchases flow...');
+    AppLogging.subscriptions(
+      '═══════════════════════════════════════════════════════════',
+    );
 
     try {
       // Use the same provider function as SubscriptionScreen
       // This handles: Firebase UID sync, RevenueCat restore, Riverpod state refresh
-      debugPrint('🔄 [RESTORE] Calling restorePurchases(ref) provider...');
+      AppLogging.subscriptions(
+        '🔄 [RESTORE] Calling restorePurchases(ref) provider...',
+      );
       final success = await restorePurchases(ref);
-      debugPrint('🔄 [RESTORE] Provider returned: $success');
+      AppLogging.subscriptions('🔄 [RESTORE] Provider returned: $success');
 
       // Also refresh cloud sync entitlement service for cloud sync status
-      debugPrint('🔄 [RESTORE] Refreshing CloudSyncEntitlementService...');
+      AppLogging.subscriptions(
+        '🔄 [RESTORE] Refreshing CloudSyncEntitlementService...',
+      );
       final cloudService = ref.read(cloudSyncEntitlementServiceProvider);
       await cloudService.refreshEntitlement();
-      debugPrint('✅ [RESTORE] CloudSyncEntitlementService refreshed');
+      AppLogging.subscriptions(
+        '✅ [RESTORE] CloudSyncEntitlementService refreshed',
+      );
 
       // Invalidate the stream provider to force UI rebuild with latest state
       // This ensures the UI picks up the refreshed entitlement immediately
       ref.invalidate(cloudSyncEntitlementProvider);
-      debugPrint('✅ [RESTORE] Invalidated cloudSyncEntitlementProvider');
+      AppLogging.subscriptions(
+        '✅ [RESTORE] Invalidated cloudSyncEntitlementProvider',
+      );
 
       // Log final state
       final purchaseState = ref.read(purchaseStateProvider);
-      debugPrint(
+      AppLogging.subscriptions(
         '📊 [RESTORE] Final purchasedProductIds: ${purchaseState.purchasedProductIds}',
       );
 
       final cloudEntitlement = cloudService.currentEntitlement;
-      debugPrint(
+      AppLogging.subscriptions(
         '📊 [RESTORE] Final cloud sync state: ${cloudEntitlement.state}',
       );
-      debugPrint(
+      AppLogging.subscriptions(
         '📊 [RESTORE] Final cloud sync hasFullAccess: ${cloudEntitlement.hasFullAccess}',
       );
 
-      debugPrint('═══════════════════════════════════════════════════════════');
-      debugPrint('✅ [RESTORE] Restore purchases flow completed!');
-      debugPrint('═══════════════════════════════════════════════════════════');
+      AppLogging.subscriptions(
+        '═══════════════════════════════════════════════════════════',
+      );
+      AppLogging.subscriptions('✅ [RESTORE] Restore purchases flow completed!');
+      AppLogging.subscriptions(
+        '═══════════════════════════════════════════════════════════',
+      );
 
       if (mounted) {
         if (success) {
@@ -1089,12 +1107,16 @@ class _AccountSubscriptionsScreenState
         }
       }
     } catch (e, stack) {
-      debugPrint('');
-      debugPrint('═══════════════════════════════════════════════════════════');
-      debugPrint('❌ [RESTORE] ERROR during restore purchases!');
-      debugPrint('❌ [RESTORE] Error: $e');
-      debugPrint('❌ [RESTORE] Stack: $stack');
-      debugPrint('═══════════════════════════════════════════════════════════');
+      AppLogging.subscriptions('');
+      AppLogging.subscriptions(
+        '═══════════════════════════════════════════════════════════',
+      );
+      AppLogging.subscriptions('❌ [RESTORE] ERROR during restore purchases!');
+      AppLogging.subscriptions('❌ [RESTORE] Error: $e');
+      AppLogging.subscriptions('❌ [RESTORE] Stack: $stack');
+      AppLogging.subscriptions(
+        '═══════════════════════════════════════════════════════════',
+      );
 
       if (mounted) {
         showErrorSnackBar(context, 'Could not restore purchases: $e');
@@ -1115,18 +1137,20 @@ class _ProfilePreviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('');
-    debugPrint(
+    AppLogging.subscriptions('');
+    AppLogging.subscriptions(
       '╔══════════════════════════════════════════════════════════════',
     );
-    debugPrint('║ 🎨 _ProfilePreviewCard.build()');
-    debugPrint('║ 📋 Profile received:');
-    debugPrint('║    - profile is null: ${profile == null}');
-    debugPrint('║    - displayName: ${profile?.displayName ?? "NULL"}');
-    debugPrint('║    - callsign: ${profile?.callsign ?? "NULL"}');
-    debugPrint('║    - id: ${profile?.id ?? "NULL"}');
-    debugPrint('║    - isSynced: ${profile?.isSynced ?? "NULL"}');
-    debugPrint(
+    AppLogging.subscriptions('║ 🎨 _ProfilePreviewCard.build()');
+    AppLogging.subscriptions('║ 📋 Profile received:');
+    AppLogging.subscriptions('║    - profile is null: ${profile == null}');
+    AppLogging.subscriptions(
+      '║    - displayName: ${profile?.displayName ?? "NULL"}',
+    );
+    AppLogging.subscriptions('║    - callsign: ${profile?.callsign ?? "NULL"}');
+    AppLogging.subscriptions('║    - id: ${profile?.id ?? "NULL"}');
+    AppLogging.subscriptions('║    - isSynced: ${profile?.isSynced ?? "NULL"}');
+    AppLogging.subscriptions(
       '╚══════════════════════════════════════════════════════════════',
     );
 

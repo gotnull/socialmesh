@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
+import 'package:socialmesh/core/logging.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/shop_models.dart';
@@ -38,7 +38,7 @@ class DeviceShopService {
       final doc = await _adminsCollection.doc(userId).get();
       return doc.exists;
     } catch (e) {
-      debugPrint('[DeviceShop] Error checking admin status: $e');
+      AppLogging.app('[DeviceShop] Error checking admin status: $e');
       return false;
     }
   }
@@ -93,7 +93,7 @@ class DeviceShopService {
 
     uploadTask.snapshotEvents.listen((event) {
       final progress = event.bytesTransferred / event.totalBytes;
-      debugPrint(
+      AppLogging.app(
         '[DeviceShop] Upload progress: ${(progress * 100).toStringAsFixed(1)}%',
       );
     });
@@ -126,7 +126,7 @@ class DeviceShopService {
       final ref = _storage.refFromURL(imageUrl);
       await ref.delete();
     } catch (e) {
-      debugPrint('[DeviceShop] Error deleting image: $e');
+      AppLogging.app('[DeviceShop] Error deleting image: $e');
     }
   }
 
@@ -275,7 +275,7 @@ class DeviceShopService {
       });
     } catch (e) {
       // Log but don't crash - view count is non-critical analytics
-      debugPrint('Failed to increment view count for $productId: $e');
+      AppLogging.app('Failed to increment view count for $productId: $e');
     }
   }
 
@@ -407,7 +407,7 @@ class DeviceShopService {
               return ProductReview.fromFirestore(doc);
             } catch (e) {
               // Handle old reviews without status field
-              debugPrint('Error parsing review ${doc.id}: $e');
+              AppLogging.app('Error parsing review ${doc.id}: $e');
               // Return a review with pending status as fallback
               final data = doc.data();
               return ProductReview(
@@ -834,7 +834,7 @@ class DeviceShopService {
         officialPartners: officialPartners,
       );
     } catch (e) {
-      debugPrint('[DeviceShop] Error getting statistics: $e');
+      AppLogging.app('[DeviceShop] Error getting statistics: $e');
       return const ShopStatistics();
     }
   }
@@ -878,7 +878,7 @@ class DeviceShopService {
         outOfStockProducts: outOfStock,
       );
     } catch (e) {
-      debugPrint('[DeviceShop] Error getting admin statistics: $e');
+      AppLogging.app('[DeviceShop] Error getting admin statistics: $e');
       return const AdminShopStatistics();
     }
   }

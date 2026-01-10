@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:socialmesh/core/logging.dart';
 
 import '../models/sky_node.dart';
 
@@ -225,7 +225,7 @@ class SkyTrackerService {
 
       return null;
     } catch (e) {
-      debugPrint('[SkyTracker] Error fetching flight position: $e');
+      AppLogging.app('[SkyTracker] Error fetching flight position: $e');
       return null;
     }
   }

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
+import 'package:socialmesh/core/logging.dart';
 
 import '../core/constants.dart';
 import '../models/world_mesh_node.dart';
@@ -42,13 +43,13 @@ class WorldMeshMapService {
   /// Example: 'http://localhost:3001' or 'https://your-server.com'
   static void setApiBaseUrl(String url) {
     _apiBaseUrl = url.endsWith('/') ? url.substring(0, url.length - 1) : url;
-    debugPrint('WorldMeshMapService: API URL set to $_apiBaseUrl');
+    AppLogging.maps('WorldMeshMapService: API URL set to $_apiBaseUrl');
   }
 
   /// Reset to default public API
   static void resetToDefault() {
     _apiBaseUrl = defaultApiUrl;
-    debugPrint('WorldMeshMapService: Reset to default API');
+    AppLogging.maps('WorldMeshMapService: Reset to default API');
   }
 
   /// Get current API base URL
@@ -84,11 +85,11 @@ class WorldMeshMapService {
           nodes[nodeNum] = WorldMeshNode.fromJson(nodeNum, nodeData);
         } catch (e) {
           // Skip invalid nodes
-          debugPrint('Failed to parse node ${entry.key}: $e');
+          AppLogging.maps('Failed to parse node ${entry.key}: $e');
         }
       }
 
-      debugPrint('Fetched ${nodes.length} nodes from $_apiBaseUrl');
+      AppLogging.maps('Fetched ${nodes.length} nodes from $_apiBaseUrl');
       return nodes;
     } on http.ClientException catch (e) {
       throw WorldMeshMapException('Network error: $e');
@@ -105,7 +106,7 @@ class WorldMeshMapService {
       final nodes = await fetchNodes();
       return nodes[nodeNum];
     } catch (e) {
-      debugPrint('Failed to fetch node $nodeNum: $e');
+      AppLogging.maps('Failed to fetch node $nodeNum: $e');
       return null;
     }
   }
@@ -123,7 +124,7 @@ class WorldMeshMapService {
 
       return jsonDecode(response.body) as Map<String, dynamic>;
     } catch (e) {
-      debugPrint('Failed to fetch stats: $e');
+      AppLogging.maps('Failed to fetch stats: $e');
       return null;
     }
   }

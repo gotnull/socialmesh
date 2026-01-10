@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../models/widget_schema.dart';
 import '../models/data_binding.dart';
+import '../../../core/logging.dart';
 import '../../../core/theme.dart';
 
 /// Renders a text element with optional data binding
@@ -541,7 +542,7 @@ class _ChartRendererState extends State<ChartRenderer> {
         widget.element.chartType == ChartType.multiLine &&
         widget.element.chartBindingPaths != null &&
         widget.element.chartBindingPaths!.isNotEmpty;
-    debugPrint(
+    AppLogging.widgetBuilder(
       '[RENDERER] _isMultiLine: chartType=${widget.element.chartType}, paths=${widget.element.chartBindingPaths}, result=$value',
     );
     return value;
@@ -550,20 +551,20 @@ class _ChartRendererState extends State<ChartRenderer> {
   @override
   void initState() {
     super.initState();
-    debugPrint('[RENDERER] initState: chartType=${widget.element.chartType}');
-    debugPrint(
+    AppLogging.widgetBuilder('[RENDERER] initState: chartType=${widget.element.chartType}');
+    AppLogging.widgetBuilder(
       '[RENDERER] initState: chartLegendColors=${widget.element.chartLegendColors}',
     );
-    debugPrint(
+    AppLogging.widgetBuilder(
       '[RENDERER] initState: chartShowMinMax=${widget.element.chartShowMinMax}',
     );
-    debugPrint(
+    AppLogging.widgetBuilder(
       '[RENDERER] initState: chartGradientFill=${widget.element.chartGradientFill}',
     );
 
     // Initialize multi-line histories
     if (_isMultiLine) {
-      debugPrint(
+      AppLogging.widgetBuilder(
         '[RENDERER] initState: initializing _multiHistory for multiLine',
       );
       for (final path in widget.element.chartBindingPaths!) {
@@ -572,14 +573,14 @@ class _ChartRendererState extends State<ChartRenderer> {
     }
 
     // For preview mode, generate sample data so the chart isn't empty
-    debugPrint('[RENDERER] initState: isPreview=${widget.isPreview}');
+    AppLogging.widgetBuilder('[RENDERER] initState: isPreview=${widget.isPreview}');
     if (widget.isPreview) {
       _initPreviewData();
-      debugPrint(
+      AppLogging.widgetBuilder(
         '[RENDERER] initState: after _initPreviewData, _multiHistory.keys=${_multiHistory.keys}',
       );
       for (final path in _multiHistory.keys) {
-        debugPrint(
+        AppLogging.widgetBuilder(
           '[RENDERER] initState: _multiHistory[$path].length=${_multiHistory[path]?.length}',
         );
       }
@@ -636,10 +637,10 @@ class _ChartRendererState extends State<ChartRenderer> {
     final maxPointsChanged = oldMaxPoints != newMaxPoints;
 
     if (pathsChanged || typeChanged || maxPointsChanged) {
-      debugPrint('[RENDERER] didUpdateWidget: config changed, reinitializing');
-      debugPrint('[RENDERER] oldPaths=$oldPaths, newPaths=$newPaths');
-      debugPrint('[RENDERER] oldType=$oldType, newType=$newType');
-      debugPrint(
+      AppLogging.widgetBuilder('[RENDERER] didUpdateWidget: config changed, reinitializing');
+      AppLogging.widgetBuilder('[RENDERER] oldPaths=$oldPaths, newPaths=$newPaths');
+      AppLogging.widgetBuilder('[RENDERER] oldType=$oldType, newType=$newType');
+      AppLogging.widgetBuilder(
         '[RENDERER] oldMaxPoints=$oldMaxPoints, newMaxPoints=$newMaxPoints',
       );
 
@@ -841,40 +842,40 @@ class _ChartRendererState extends State<ChartRenderer> {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('[RENDERER] === ChartRenderer.build() START ===');
-    debugPrint('[RENDERER] chartType=${widget.element.chartType}');
-    debugPrint(
+    AppLogging.widgetBuilder('[RENDERER] === ChartRenderer.build() START ===');
+    AppLogging.widgetBuilder('[RENDERER] chartType=${widget.element.chartType}');
+    AppLogging.widgetBuilder(
       '[RENDERER] chartBindingPaths=${widget.element.chartBindingPaths}',
     );
-    debugPrint(
+    AppLogging.widgetBuilder(
       '[RENDERER] chartLegendColors=${widget.element.chartLegendColors}',
     );
-    debugPrint('[RENDERER] isPreview=${widget.isPreview}');
-    debugPrint('[RENDERER] style.height=${widget.element.style.height}');
-    debugPrint('[RENDERER] style.width=${widget.element.style.width}');
+    AppLogging.widgetBuilder('[RENDERER] isPreview=${widget.isPreview}');
+    AppLogging.widgetBuilder('[RENDERER] style.height=${widget.element.style.height}');
+    AppLogging.widgetBuilder('[RENDERER] style.width=${widget.element.style.width}');
 
     // Handle multi-line chart separately
     if (_isMultiLine) {
-      debugPrint('[RENDERER] Taking multiLine path');
+      AppLogging.widgetBuilder('[RENDERER] Taking multiLine path');
       return _buildMultiLineChart();
     }
 
-    debugPrint('[RENDERER] Taking single-line path');
-    debugPrint('[RENDERER] _history.length=${_history.length}');
-    debugPrint('[RENDERER] widget.historyData=${widget.historyData}');
+    AppLogging.widgetBuilder('[RENDERER] Taking single-line path');
+    AppLogging.widgetBuilder('[RENDERER] _history.length=${_history.length}');
+    AppLogging.widgetBuilder('[RENDERER] widget.historyData=${widget.historyData}');
     // Use provided history, built-up history, or sample data for preview
     List<double> rawData;
     if (widget.historyData != null) {
       rawData = widget.historyData!;
-      debugPrint('[RENDERER] Using widget.historyData');
+      AppLogging.widgetBuilder('[RENDERER] Using widget.historyData');
     } else if (_history.isNotEmpty) {
       rawData = _history;
-      debugPrint('[RENDERER] Using _history');
+      AppLogging.widgetBuilder('[RENDERER] Using _history');
     } else {
       rawData = _generateSampleData();
-      debugPrint('[RENDERER] Using _generateSampleData');
+      AppLogging.widgetBuilder('[RENDERER] Using _generateSampleData');
     }
-    debugPrint('[RENDERER] rawData.length=${rawData.length}');
+    AppLogging.widgetBuilder('[RENDERER] rawData.length=${rawData.length}');
 
     // Apply normalization
     final data = _normalizeData(rawData);
@@ -920,26 +921,26 @@ class _ChartRendererState extends State<ChartRenderer> {
   }
 
   Widget _buildMultiLineChart() {
-    debugPrint('[RENDERER] _buildMultiLineChart() called');
+    AppLogging.widgetBuilder('[RENDERER] _buildMultiLineChart() called');
     final paths = widget.element.chartBindingPaths!;
     final colors = widget.element.chartLegendColors ?? [];
-    debugPrint('[RENDERER] paths=$paths, colors=$colors');
-    debugPrint('[RENDERER] _multiHistory.keys=${_multiHistory.keys}');
-    debugPrint('[RENDERER] _mergeMode=$_mergeMode');
+    AppLogging.widgetBuilder('[RENDERER] paths=$paths, colors=$colors');
+    AppLogging.widgetBuilder('[RENDERER] _multiHistory.keys=${_multiHistory.keys}');
+    AppLogging.widgetBuilder('[RENDERER] _mergeMode=$_mergeMode');
 
     // Collect raw data for each series
     final seriesData = <String, List<double>>{};
     for (int i = 0; i < paths.length; i++) {
       final path = paths[i];
       final history = _multiHistory[path] ?? [];
-      debugPrint('[RENDERER] path=$path, history.length=${history.length}');
+      AppLogging.widgetBuilder('[RENDERER] path=$path, history.length=${history.length}');
 
       List<double> data;
       if (history.isNotEmpty) {
         data = _normalizeData(history);
       } else {
         // Generate slightly different sample data for each line
-        debugPrint('[RENDERER] Generating sample data for $path');
+        AppLogging.widgetBuilder('[RENDERER] Generating sample data for $path');
         data = _normalizeData(
           List.generate(
             _maxPoints,
@@ -952,19 +953,19 @@ class _ChartRendererState extends State<ChartRenderer> {
         );
       }
       seriesData[path] = data;
-      debugPrint('[RENDERER] seriesData[$path].length=${data.length}');
+      AppLogging.widgetBuilder('[RENDERER] seriesData[$path].length=${data.length}');
     }
 
-    debugPrint('[RENDERER] seriesData complete, keys=${seriesData.keys}');
+    AppLogging.widgetBuilder('[RENDERER] seriesData complete, keys=${seriesData.keys}');
 
     // Handle stacked modes
     if (_mergeMode == ChartMergeMode.stackedArea ||
         _mergeMode == ChartMergeMode.stackedBar) {
-      debugPrint('[RENDERER] Using stacked mode: $_mergeMode');
+      AppLogging.widgetBuilder('[RENDERER] Using stacked mode: $_mergeMode');
       return _buildStackedChart(paths, seriesData, colors);
     }
 
-    debugPrint('[RENDERER] Using overlay mode');
+    AppLogging.widgetBuilder('[RENDERER] Using overlay mode');
     // Default overlay mode - build line data for each series
     final lineBarsData = <LineChartBarData>[];
     double globalMinY = double.infinity;
@@ -973,7 +974,7 @@ class _ChartRendererState extends State<ChartRenderer> {
     for (int i = 0; i < paths.length; i++) {
       final path = paths[i];
       final data = seriesData[path] ?? [];
-      debugPrint(
+      AppLogging.widgetBuilder(
         '[RENDERER] Building line for $path, data.length=${data.length}',
       );
 
@@ -981,7 +982,7 @@ class _ChartRendererState extends State<ChartRenderer> {
       Color lineColor;
       if (i < colors.length) {
         lineColor = StyleSchema.parseColor(colors[i]);
-        debugPrint(
+        AppLogging.widgetBuilder(
           '[RENDERER] Series $i ($path): using provided color ${colors[i]} -> $lineColor',
         );
       } else {
@@ -1003,13 +1004,13 @@ class _ChartRendererState extends State<ChartRenderer> {
           .map((e) => FlSpot(e.key.toDouble(), e.value))
           .toList();
 
-      debugPrint(
+      AppLogging.widgetBuilder(
         '[RENDERER] Line $i: spots.length=${spots.length}, '
         'first=${spots.isNotEmpty ? spots.first : "N/A"}, '
         'last=${spots.isNotEmpty ? spots.last : "N/A"}',
       );
-      debugPrint('[RENDERER] Line $i: minY=$minVal, maxY=$maxVal');
-      debugPrint(
+      AppLogging.widgetBuilder('[RENDERER] Line $i: minY=$minVal, maxY=$maxVal');
+      AppLogging.widgetBuilder(
         '[RENDERER] Line $i: gradientFill=$_gradientFill, color=$lineColor',
       );
 
@@ -1055,20 +1056,20 @@ class _ChartRendererState extends State<ChartRenderer> {
       );
     }
 
-    debugPrint('[RENDERER] lineBarsData.length=${lineBarsData.length}');
+    AppLogging.widgetBuilder('[RENDERER] lineBarsData.length=${lineBarsData.length}');
     if (lineBarsData.isEmpty) {
-      debugPrint('[RENDERER] WARNING: lineBarsData is EMPTY!');
+      AppLogging.widgetBuilder('[RENDERER] WARNING: lineBarsData is EMPTY!');
       return const SizedBox.shrink();
     }
 
     // Log each line's spot count for debugging
     for (int i = 0; i < lineBarsData.length; i++) {
-      debugPrint(
+      AppLogging.widgetBuilder(
         '[RENDERER] lineBarsData[$i].spots.length=${lineBarsData[i].spots.length}',
       );
     }
 
-    debugPrint(
+    AppLogging.widgetBuilder(
       '[RENDERER] Building LineChart with ${lineBarsData.length} lines',
     );
     // Add padding to min/max
@@ -1076,13 +1077,13 @@ class _ChartRendererState extends State<ChartRenderer> {
     if (globalMaxY == double.negativeInfinity) globalMaxY = 100;
     final range = globalMaxY - globalMinY;
     final padding = range * 0.1;
-    debugPrint(
+    AppLogging.widgetBuilder(
       '[RENDERER] Y range before padding: min=$globalMinY, max=$globalMaxY, range=$range',
     );
     globalMinY -= padding;
     globalMaxY += padding;
 
-    debugPrint('[RENDERER] Chart Y range: minY=$globalMinY, maxY=$globalMaxY');
+    AppLogging.widgetBuilder('[RENDERER] Chart Y range: minY=$globalMinY, maxY=$globalMaxY');
 
     final interval = (globalMaxY - globalMinY) / 4;
 
@@ -1111,7 +1112,7 @@ class _ChartRendererState extends State<ChartRenderer> {
     // Debug wrapper to see actual size constraints
     return LayoutBuilder(
       builder: (context, constraints) {
-        debugPrint(
+        AppLogging.widgetBuilder(
           '[RENDERER] LineChart constraints: w=${constraints.maxWidth}, h=${constraints.maxHeight}',
         );
         return chart;
@@ -1413,11 +1414,11 @@ class _ChartRendererState extends State<ChartRenderer> {
   }
 
   Widget _buildLineChart(List<double> data, Color color) {
-    debugPrint(
+    AppLogging.widgetBuilder(
       '[RENDERER] _buildLineChart: data.length=${data.length}, color=$color',
     );
     if (data.isEmpty) {
-      debugPrint(
+      AppLogging.widgetBuilder(
         '[RENDERER] _buildLineChart: data is empty, returning SizedBox.shrink',
       );
       return const SizedBox.shrink();

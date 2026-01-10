@@ -1,6 +1,6 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:socialmesh/core/logging.dart';
 import 'widget_marketplace_service.dart';
 
 /// Provider for the marketplace service instance
@@ -32,9 +32,9 @@ class WidgetFavoritesNotifier extends Notifier<Set<String>> {
       final prefs = await SharedPreferences.getInstance();
       final favorites = prefs.getStringList(_favoritesKey) ?? [];
       state = favorites.toSet();
-      debugPrint('[Favorites] Loaded ${state.length} favorites');
+      AppLogging.marketplace('[Favorites] Loaded ${state.length} favorites');
     } catch (e) {
-      debugPrint('[Favorites] Error loading favorites: $e');
+      AppLogging.marketplace('[Favorites] Error loading favorites: $e');
     }
   }
 
@@ -42,10 +42,10 @@ class WidgetFavoritesNotifier extends Notifier<Set<String>> {
     final newState = Set<String>.from(state);
     if (newState.contains(widgetId)) {
       newState.remove(widgetId);
-      debugPrint('[Favorites] Removed $widgetId');
+      AppLogging.marketplace('[Favorites] Removed $widgetId');
     } else {
       newState.add(widgetId);
-      debugPrint('[Favorites] Added $widgetId');
+      AppLogging.marketplace('[Favorites] Added $widgetId');
     }
     state = newState;
     await _saveFavorites();
@@ -71,9 +71,9 @@ class WidgetFavoritesNotifier extends Notifier<Set<String>> {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setStringList(_favoritesKey, state.toList());
-      debugPrint('[Favorites] Saved ${state.length} favorites');
+      AppLogging.marketplace('[Favorites] Saved ${state.length} favorites');
     } catch (e) {
-      debugPrint('[Favorites] Error saving favorites: $e');
+      AppLogging.marketplace('[Favorites] Error saving favorites: $e');
     }
   }
 }
@@ -145,20 +145,24 @@ class MarketplaceNotifier extends AsyncNotifier<MarketplaceState> {
 
   @override
   Future<MarketplaceState> build() async {
-    debugPrint('[Marketplace] build() called - auto-loading featured');
+    AppLogging.marketplace(
+      '[Marketplace] build() called - auto-loading featured',
+    );
     final featured = await _loadFeatured();
     return MarketplaceState(featured: featured);
   }
 
   Future<List<MarketplaceWidget>> _loadFeatured() async {
-    debugPrint('[Marketplace] _loadFeatured() entered');
+    AppLogging.marketplace('[Marketplace] _loadFeatured() entered');
     try {
       final featured = await _service.getFeatured();
-      debugPrint('[Marketplace] Got ${featured.length} featured widgets');
+      AppLogging.marketplace(
+        '[Marketplace] Got ${featured.length} featured widgets',
+      );
       return featured;
     } catch (e, st) {
-      debugPrint('[Marketplace] Error loading featured: $e');
-      debugPrint('[Marketplace] Stack trace: $st');
+      AppLogging.marketplace('[Marketplace] Error loading featured: $e');
+      AppLogging.marketplace('[Marketplace] Stack trace: $st');
       // Return empty list instead of crashing - featured is optional
       return [];
     }
@@ -169,11 +173,11 @@ class MarketplaceNotifier extends AsyncNotifier<MarketplaceState> {
     final currentState = state.value;
     if (currentState == null) return;
 
-    debugPrint(
+    AppLogging.marketplace(
       '[Marketplace] loadPopular called, current: ${currentState.popular.length}, loading: $_loadingPopular, loaded: ${currentState.popularLoaded}',
     );
     if (currentState.popularLoaded || _loadingPopular) {
-      debugPrint(
+      AppLogging.marketplace(
         '[Marketplace] Skipping loadPopular - already loaded or loading',
       );
       return;
@@ -181,9 +185,9 @@ class MarketplaceNotifier extends AsyncNotifier<MarketplaceState> {
 
     _loadingPopular = true;
     try {
-      debugPrint('[Marketplace] Loading popular widgets...');
+      AppLogging.marketplace('[Marketplace] Loading popular widgets...');
       final response = await _service.getPopular();
-      debugPrint(
+      AppLogging.marketplace(
         '[Marketplace] Got ${response.widgets.length} popular widgets',
       );
       // Re-fetch current state in case it changed during async operation
@@ -196,8 +200,8 @@ class MarketplaceNotifier extends AsyncNotifier<MarketplaceState> {
         ),
       );
     } catch (e, st) {
-      debugPrint('[Marketplace] Error loading popular: $e');
-      debugPrint('[Marketplace] Stack trace: $st');
+      AppLogging.marketplace('[Marketplace] Error loading popular: $e');
+      AppLogging.marketplace('[Marketplace] Stack trace: $st');
       final latestState = state.value ?? currentState;
       state = AsyncValue.data(
         latestState.copyWith(popularLoaded: true, popularError: e.toString()),
@@ -212,11 +216,11 @@ class MarketplaceNotifier extends AsyncNotifier<MarketplaceState> {
     final currentState = state.value;
     if (currentState == null) return;
 
-    debugPrint(
+    AppLogging.marketplace(
       '[Marketplace] loadNewest called, current: ${currentState.newest.length}, loading: $_loadingNewest, loaded: ${currentState.newestLoaded}',
     );
     if (currentState.newestLoaded || _loadingNewest) {
-      debugPrint(
+      AppLogging.marketplace(
         '[Marketplace] Skipping loadNewest - already loaded or loading',
       );
       return;
@@ -224,9 +228,11 @@ class MarketplaceNotifier extends AsyncNotifier<MarketplaceState> {
 
     _loadingNewest = true;
     try {
-      debugPrint('[Marketplace] Loading newest widgets...');
+      AppLogging.marketplace('[Marketplace] Loading newest widgets...');
       final response = await _service.getNewest();
-      debugPrint('[Marketplace] Got ${response.widgets.length} newest widgets');
+      AppLogging.marketplace(
+        '[Marketplace] Got ${response.widgets.length} newest widgets',
+      );
       // Re-fetch current state in case it changed during async operation
       final latestState = state.value ?? currentState;
       state = AsyncValue.data(
@@ -237,8 +243,8 @@ class MarketplaceNotifier extends AsyncNotifier<MarketplaceState> {
         ),
       );
     } catch (e, st) {
-      debugPrint('[Marketplace] Error loading newest: $e');
-      debugPrint('[Marketplace] Stack trace: $st');
+      AppLogging.marketplace('[Marketplace] Error loading newest: $e');
+      AppLogging.marketplace('[Marketplace] Stack trace: $st');
       final latestState = state.value ?? currentState;
       state = AsyncValue.data(
         latestState.copyWith(newestLoaded: true, newestError: e.toString()),
@@ -253,12 +259,12 @@ class MarketplaceNotifier extends AsyncNotifier<MarketplaceState> {
     final currentState = state.value;
     if (currentState == null) return;
 
-    debugPrint(
+    AppLogging.marketplace(
       '[Marketplace] loadCategory called for: $category, loading: ${_loadingCategories.contains(category)}',
     );
     if (currentState.categoryWidgets.containsKey(category) ||
         _loadingCategories.contains(category)) {
-      debugPrint(
+      AppLogging.marketplace(
         '[Marketplace] Skipping loadCategory - already have data or loading for $category',
       );
       return;
@@ -266,9 +272,9 @@ class MarketplaceNotifier extends AsyncNotifier<MarketplaceState> {
 
     _loadingCategories.add(category);
     try {
-      debugPrint('[Marketplace] Loading category: $category...');
+      AppLogging.marketplace('[Marketplace] Loading category: $category...');
       final response = await _service.getByCategory(category);
-      debugPrint(
+      AppLogging.marketplace(
         '[Marketplace] Got ${response.widgets.length} widgets for $category',
       );
       // Re-fetch current state in case it changed during async operation
@@ -279,8 +285,10 @@ class MarketplaceNotifier extends AsyncNotifier<MarketplaceState> {
       updated[category] = response.widgets;
       state = AsyncValue.data(latestState.copyWith(categoryWidgets: updated));
     } catch (e, st) {
-      debugPrint('[Marketplace] Error loading category $category: $e');
-      debugPrint('[Marketplace] Stack trace: $st');
+      AppLogging.marketplace(
+        '[Marketplace] Error loading category $category: $e',
+      );
+      AppLogging.marketplace('[Marketplace] Stack trace: $st');
     } finally {
       _loadingCategories.remove(category);
     }
@@ -288,7 +296,7 @@ class MarketplaceNotifier extends AsyncNotifier<MarketplaceState> {
 
   /// Refresh all data
   Future<void> refresh() async {
-    debugPrint('[Marketplace] Refresh requested');
+    AppLogging.marketplace('[Marketplace] Refresh requested');
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       final featured = await _loadFeatured();

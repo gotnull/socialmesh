@@ -43,7 +43,7 @@ class ActivityFeedNotifier extends Notifier<ActivityFeedState> {
     _authSubscription?.cancel();
     _authSubscription = FirebaseAuth.instance.authStateChanges().listen((_) {
       // Auth state changed - restart the activity stream
-      debugPrint('📬 [ActivityFeed] Auth state changed, restarting stream');
+      AppLogging.social('📬 [ActivityFeed] Auth state changed, restarting stream');
       _startWatching();
     });
   }
@@ -61,7 +61,7 @@ class ActivityFeedNotifier extends Notifier<ActivityFeedState> {
         );
       },
       onError: (e) {
-        debugPrint('📬 [ActivityFeed] Error: $e');
+        AppLogging.social('📬 [ActivityFeed] Error: $e');
         state = ActivityFeedState(error: e.toString());
       },
     );
@@ -96,7 +96,7 @@ class ActivityFeedNotifier extends Notifier<ActivityFeedState> {
           .toList();
       state = state.copyWith(activities: updatedActivities, unreadCount: 0);
     } catch (e) {
-      debugPrint('📬 [ActivityFeed] Error marking all as read: $e');
+      AppLogging.social('📬 [ActivityFeed] Error marking all as read: $e');
     }
   }
 
@@ -119,7 +119,7 @@ class ActivityFeedNotifier extends Notifier<ActivityFeedState> {
         unreadCount: unreadCount,
       );
     } catch (e) {
-      debugPrint('📬 [ActivityFeed] Error marking as read: $e');
+      AppLogging.social('📬 [ActivityFeed] Error marking as read: $e');
     }
   }
 
@@ -139,7 +139,7 @@ class ActivityFeedNotifier extends Notifier<ActivityFeedState> {
         unreadCount: unreadCount,
       );
     } catch (e) {
-      debugPrint('📬 [ActivityFeed] Error deleting activity: $e');
+      AppLogging.social('📬 [ActivityFeed] Error deleting activity: $e');
     }
   }
 
@@ -150,7 +150,7 @@ class ActivityFeedNotifier extends Notifier<ActivityFeedState> {
       await service.clearAllActivities();
       state = const ActivityFeedState();
     } catch (e) {
-      debugPrint('📬 [ActivityFeed] Error clearing activities: $e');
+      AppLogging.social('📬 [ActivityFeed] Error clearing activities: $e');
     }
   }
 }

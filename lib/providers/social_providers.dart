@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/logging.dart';
 import '../models/mesh_models.dart';
 import '../models/social.dart';
 import '../services/social_service.dart';
@@ -616,26 +616,26 @@ Future<void> linkNode(
 
 /// Unlink a node from current user's profile
 Future<void> unlinkNode(WidgetRef ref, int nodeId) async {
-  debugPrint('🔗 [unlinkNode] Starting unlink for nodeId: $nodeId');
+  AppLogging.social('🔗 [unlinkNode] Starting unlink for nodeId: $nodeId');
 
   final service = ref.read(socialServiceProvider);
-  debugPrint(
+  AppLogging.social(
     '🔗 [unlinkNode] Got socialService, calling unlinkNodeFromProfile...',
   );
 
   try {
     await service.unlinkNodeFromProfile(nodeId);
-    debugPrint('🔗 [unlinkNode] Firestore unlink completed');
+    AppLogging.social('🔗 [unlinkNode] Firestore unlink completed');
   } catch (e, stackTrace) {
-    debugPrint('🔗 [unlinkNode] Firestore unlink FAILED: $e');
-    debugPrint('🔗 [unlinkNode] Stack trace: $stackTrace');
+    AppLogging.social('🔗 [unlinkNode] Firestore unlink FAILED: $e');
+    AppLogging.social('🔗 [unlinkNode] Stack trace: $stackTrace');
     rethrow;
   }
 
   // Update local profile storage to persist linked nodes across app restarts
   final userProfileNotifier = ref.read(userProfileProvider.notifier);
   final currentProfile = ref.read(userProfileProvider).value;
-  debugPrint(
+  AppLogging.social(
     '🔗 [unlinkNode] Current profile: ${currentProfile != null ? "exists" : "null"}, '
     'linkedNodeIds: ${currentProfile?.linkedNodeIds}',
   );
@@ -646,7 +646,7 @@ Future<void> unlinkNode(WidgetRef ref, int nodeId) async {
     final newPrimaryId = currentProfile.primaryNodeId == nodeId
         ? (updatedLinkedNodes.isNotEmpty ? updatedLinkedNodes.first : null)
         : currentProfile.primaryNodeId;
-    debugPrint(
+    AppLogging.social(
       '🔗 [unlinkNode] Updating local profile: '
       'updatedLinkedNodes=$updatedLinkedNodes, newPrimaryId=$newPrimaryId',
     );
@@ -656,27 +656,27 @@ Future<void> unlinkNode(WidgetRef ref, int nodeId) async {
         primaryNodeId: newPrimaryId,
         clearPrimaryNodeId: newPrimaryId == null,
       );
-      debugPrint('🔗 [unlinkNode] Local profile update completed');
+      AppLogging.social('🔗 [unlinkNode] Local profile update completed');
     } catch (e, stackTrace) {
-      debugPrint('🔗 [unlinkNode] Local profile update FAILED: $e');
-      debugPrint('🔗 [unlinkNode] Stack trace: $stackTrace');
+      AppLogging.social('🔗 [unlinkNode] Local profile update FAILED: $e');
+      AppLogging.social('🔗 [unlinkNode] Stack trace: $stackTrace');
       // Don't rethrow - Firestore already updated
     }
   }
 
   // Invalidate providers to refresh state
-  debugPrint('🔗 [unlinkNode] Invalidating providers...');
+  AppLogging.social('🔗 [unlinkNode] Invalidating providers...');
   ref.invalidate(linkedNodeIdsProvider);
   ref.invalidate(isNodeLinkedProvider(nodeId));
   ref.invalidate(profileByNodeIdProvider(nodeId));
   // Also invalidate the user's public profile so UI updates
   final currentUser = ref.read(currentUserProvider);
-  debugPrint('🔗 [unlinkNode] Current user: ${currentUser?.uid}');
+  AppLogging.social('🔗 [unlinkNode] Current user: ${currentUser?.uid}');
   if (currentUser != null) {
     ref.invalidate(publicProfileProvider(currentUser.uid));
-    debugPrint('🔗 [unlinkNode] Invalidated publicProfileProvider');
+    AppLogging.social('🔗 [unlinkNode] Invalidated publicProfileProvider');
   }
-  debugPrint('🔗 [unlinkNode] Unlink complete');
+  AppLogging.social('🔗 [unlinkNode] Unlink complete');
 }
 
 /// Refresh cached metadata for all linked nodes using current mesh data.
@@ -708,7 +708,9 @@ Future<void> refreshLinkedNodeMetadata(Ref ref) async {
         updated = true;
       } catch (e) {
         // Silently fail - this is opportunistic refresh
-        debugPrint('Failed to update linked node metadata for $nodeId: $e');
+        AppLogging.social(
+          'Failed to update linked node metadata for $nodeId: $e',
+        );
       }
     }
   }
@@ -761,13 +763,13 @@ void onLinkedNodeUpdated(Ref ref, MeshNode node, MeshNode? previousNode) {
       .then((_) {
         // Invalidate profile to pick up new metadata
         ref.invalidate(publicProfileProvider(currentUser.uid));
-        debugPrint(
+        AppLogging.social(
           '✅ Updated linked node metadata for ${node.displayName} (${node.nodeNum})',
         );
       })
       .catchError((e) {
         // Silently fail - opportunistic update
-        debugPrint('Failed to update linked node metadata: $e');
+        AppLogging.social('Failed to update linked node metadata: $e');
       });
 }
 
@@ -1798,7 +1800,7 @@ class ModerationStatusNotifier extends AsyncNotifier<ModerationStatus?> {
 
       return enriched;
     } catch (e) {
-      debugPrint('Error fetching moderation status: $e');
+      AppLogging.social('Error fetching moderation status: $e');
       // Return last known severe status if we had one (prevents flicker)
       if (_lastKnownSevereStatus != null) {
         return _lastKnownSevereStatus;
@@ -1819,7 +1821,7 @@ class ModerationStatusNotifier extends AsyncNotifier<ModerationStatus?> {
       if (!_isSevereStatus(status)) {
         // Stream is trying to downgrade from severe - ignore it
         // This prevents the flicker where Firestore hasn't synced yet
-        debugPrint(
+        AppLogging.social(
           '[ModerationStatus] Ignoring stream downgrade from severe status',
         );
         return;
@@ -1915,7 +1917,7 @@ class ModerationStatusNotifier extends AsyncNotifier<ModerationStatus?> {
       try {
         await service.acknowledgeStrike(strike.id);
       } catch (e) {
-        debugPrint('Error acknowledging strike ${strike.id}: $e');
+        AppLogging.social('Error acknowledging strike ${strike.id}: $e');
       }
     }
 

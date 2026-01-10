@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:socialmesh/core/logging.dart';
 import 'models/widget_schema.dart';
 import 'storage/widget_storage_service.dart';
 import 'wizard/widget_wizard_screen.dart';
@@ -47,17 +48,19 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
       final widgets = await _storageService.getWidgets();
       final installedIds = await _storageService.getInstalledMarketplaceIds();
 
-      debugPrint(
+      AppLogging.widgetBuilder(
         '[WidgetBuilder] Loaded ${widgets.length} widgets from local storage',
       );
-      debugPrint(
+      AppLogging.widgetBuilder(
         '[WidgetBuilder] Local widget IDs: ${widgets.map((w) => w.id).toList()}',
       );
-      debugPrint('[WidgetBuilder] Installed marketplace IDs: $installedIds');
+      AppLogging.widgetBuilder(
+        '[WidgetBuilder] Installed marketplace IDs: $installedIds',
+      );
 
       // Check profile for installed widgets that might need restoration
       final profile = ref.read(userProfileProvider).value;
-      debugPrint(
+      AppLogging.widgetBuilder(
         '[WidgetBuilder] Profile installedWidgetIds: ${profile?.installedWidgetIds ?? []}',
       );
 
@@ -68,12 +71,12 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
             .where((id) => !installedMarketplaceIds.contains(id))
             .toList();
 
-        debugPrint(
+        AppLogging.widgetBuilder(
           '[WidgetBuilder] Missing IDs (in profile but not local): $missingIds',
         );
 
         if (missingIds.isNotEmpty) {
-          debugPrint(
+          AppLogging.widgetBuilder(
             '[WidgetBuilder] Found ${missingIds.length} widgets to restore from cloud',
           );
           // Restore missing widgets from marketplace
@@ -82,7 +85,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
           final updatedWidgets = await _storageService.getWidgets();
           final updatedInstalledIds = await _storageService
               .getInstalledMarketplaceIds();
-          debugPrint(
+          AppLogging.widgetBuilder(
             '[WidgetBuilder] After restore: ${updatedWidgets.length} widgets',
           );
           setState(() {
@@ -100,7 +103,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      debugPrint('[WidgetBuilder] Error loading widgets: $e');
+      AppLogging.widgetBuilder('[WidgetBuilder] Error loading widgets: $e');
       setState(() {
         _isLoading = false;
       });
@@ -114,7 +117,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
 
     for (final marketplaceId in widgetIds) {
       try {
-        debugPrint(
+        AppLogging.widgetBuilder(
           '[WidgetBuilder] Restoring widget with marketplace ID: $marketplaceId',
         );
         // Use previewWidget to NOT increment install count (user already owns this)
@@ -124,11 +127,11 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
           schema,
           marketplaceId: marketplaceId,
         );
-        debugPrint(
+        AppLogging.widgetBuilder(
           '[WidgetBuilder] Restored widget: ${schema.name} (marketplace ID: $marketplaceId)',
         );
       } catch (e) {
-        debugPrint(
+        AppLogging.widgetBuilder(
           '[WidgetBuilder] Failed to restore widget $marketplaceId: $e - removing from profile',
         );
         failedIds.add(marketplaceId);
@@ -141,11 +144,11 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
         await ref
             .read(userProfileProvider.notifier)
             .removeInstalledWidget(failedId);
-        debugPrint(
+        AppLogging.widgetBuilder(
           '[WidgetBuilder] Removed unrestorable widget $failedId from profile',
         );
       } catch (e) {
-        debugPrint(
+        AppLogging.widgetBuilder(
           '[WidgetBuilder] Failed to remove $failedId from profile: $e',
         );
       }
@@ -438,33 +441,37 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
   }
 
   void _createNewWidget() async {
-    debugPrint('[WidgetBuilder] _createNewWidget called');
+    AppLogging.widgetBuilder('[WidgetBuilder] _createNewWidget called');
 
     final result = await Navigator.push<WidgetWizardResult>(
       context,
       MaterialPageRoute(
         builder: (context) => WidgetWizardScreen(
           onSave: (schema) async {
-            debugPrint(
+            AppLogging.widgetBuilder(
               '[WidgetBuilder] onSave callback - saving new widget: ${schema.id}',
             );
             await _storageService.saveWidget(schema);
-            debugPrint('[WidgetBuilder] New widget saved successfully');
+            AppLogging.widgetBuilder(
+              '[WidgetBuilder] New widget saved successfully',
+            );
           },
         ),
       ),
     );
 
-    debugPrint('[WidgetBuilder] Wizard returned, result: $result');
+    AppLogging.widgetBuilder(
+      '[WidgetBuilder] Wizard returned, result: $result',
+    );
 
     // Always reload widgets after returning from wizard
     // The save happens inside the wizard, so we should reload regardless
     await _loadWidgets();
-    debugPrint('[WidgetBuilder] Widgets reloaded');
+    AppLogging.widgetBuilder('[WidgetBuilder] Widgets reloaded');
 
     // Add to dashboard if requested
     if (result != null && result.addToDashboard) {
-      debugPrint(
+      AppLogging.widgetBuilder(
         '[WidgetBuilder] Adding widget to dashboard: ${result.schema.id}',
       );
       final widgetsNotifier = ref.read(dashboardWidgetsProvider.notifier);
@@ -495,7 +502,9 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
   }
 
   void _editWidget(WidgetSchema schema) async {
-    debugPrint('[WidgetBuilder] _editWidget called for: ${schema.id}');
+    AppLogging.widgetBuilder(
+      '[WidgetBuilder] _editWidget called for: ${schema.id}',
+    );
 
     final result = await Navigator.push<WidgetWizardResult>(
       context,
@@ -503,25 +512,31 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
         builder: (context) => WidgetWizardScreen(
           initialSchema: schema,
           onSave: (updated) async {
-            debugPrint(
+            AppLogging.widgetBuilder(
               '[WidgetBuilder] onSave callback - saving widget: ${updated.id}',
             );
             await _storageService.saveWidget(updated);
-            debugPrint('[WidgetBuilder] Widget saved successfully');
+            AppLogging.widgetBuilder(
+              '[WidgetBuilder] Widget saved successfully',
+            );
           },
         ),
       ),
     );
 
-    debugPrint('[WidgetBuilder] Wizard returned, result: $result');
+    AppLogging.widgetBuilder(
+      '[WidgetBuilder] Wizard returned, result: $result',
+    );
 
     // Always reload widgets after returning from wizard
     await _loadWidgets();
-    debugPrint('[WidgetBuilder] Widgets reloaded');
+    AppLogging.widgetBuilder('[WidgetBuilder] Widgets reloaded');
   }
 
   void _useTemplate(WidgetSchema template) async {
-    debugPrint('[WidgetBuilder] _useTemplate called for: ${template.name}');
+    AppLogging.widgetBuilder(
+      '[WidgetBuilder] _useTemplate called for: ${template.name}',
+    );
 
     // Create a copy of the template
     final copy = WidgetSchema(
@@ -538,25 +553,29 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
         builder: (context) => WidgetWizardScreen(
           initialSchema: copy,
           onSave: (schema) async {
-            debugPrint(
+            AppLogging.widgetBuilder(
               '[WidgetBuilder] onSave callback - saving template copy: ${schema.id}',
             );
             await _storageService.saveWidget(schema);
-            debugPrint('[WidgetBuilder] Template copy saved successfully');
+            AppLogging.widgetBuilder(
+              '[WidgetBuilder] Template copy saved successfully',
+            );
           },
         ),
       ),
     );
 
-    debugPrint('[WidgetBuilder] Template wizard returned, result: $result');
+    AppLogging.widgetBuilder(
+      '[WidgetBuilder] Template wizard returned, result: $result',
+    );
 
     // Always reload widgets after returning from wizard
     await _loadWidgets();
-    debugPrint('[WidgetBuilder] Widgets reloaded');
+    AppLogging.widgetBuilder('[WidgetBuilder] Widgets reloaded');
   }
 
   void _handleAction(String action, WidgetSchema schema) async {
-    debugPrint(
+    AppLogging.widgetBuilder(
       '[WidgetBuilder] _handleAction: $action for widget: ${schema.id}',
     );
 
@@ -571,13 +590,17 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
         _editWidget(schema);
         break;
       case 'duplicate':
-        debugPrint('[WidgetBuilder] Duplicating widget: ${schema.id}');
+        AppLogging.widgetBuilder(
+          '[WidgetBuilder] Duplicating widget: ${schema.id}',
+        );
         await _storageService.duplicateWidget(schema.id);
         await _loadWidgets();
-        debugPrint('[WidgetBuilder] Widget duplicated');
+        AppLogging.widgetBuilder('[WidgetBuilder] Widget duplicated');
         break;
       case 'export':
-        debugPrint('[WidgetBuilder] Exporting widget: ${schema.id}');
+        AppLogging.widgetBuilder(
+          '[WidgetBuilder] Exporting widget: ${schema.id}',
+        );
         // Capture share position before async gap
         final sharePosition = getSafeSharePosition(context);
         final json = await _storageService.exportWidget(schema.id);
@@ -680,7 +703,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
               final marketplaceId = await _storageService.deleteWidget(
                 schema.id,
               );
-              debugPrint(
+              AppLogging.widgetBuilder(
                 '[WidgetBuilder] Deleted widget ${schema.id}, marketplaceId=$marketplaceId',
               );
               // Remove from user profile using marketplace ID (or schema ID as fallback)
@@ -688,7 +711,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
               await ref
                   .read(userProfileProvider.notifier)
                   .removeInstalledWidget(idToRemoveFromProfile);
-              debugPrint(
+              AppLogging.widgetBuilder(
                 '[WidgetBuilder] Removed $idToRemoveFromProfile from profile',
               );
               // Update state directly without reload (avoids restore logic)
