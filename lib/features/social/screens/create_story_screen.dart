@@ -847,21 +847,31 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
                 children: [
                   if (_isTextInputMode)
                     TextButton(
-                      onPressed: () {
-                        if (_textOverlay == null) {
-                          _textController.clear();
-                        }
-                        _finishTextInput();
-                      },
-                      child: const Text(
+                      onPressed: _isUploading
+                          ? null
+                          : () {
+                              if (_textOverlay == null) {
+                                _textController.clear();
+                              }
+                              _finishTextInput();
+                            },
+                      child: Text(
                         'Cancel',
-                        style: TextStyle(color: Colors.white, fontSize: 17),
+                        style: TextStyle(
+                          color: _isUploading ? Colors.white38 : Colors.white,
+                          fontSize: 17,
+                        ),
                       ),
                     )
                   else
                     IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Colors.white),
-                      onPressed: _isEditingText
+                      icon: Icon(
+                        Icons.arrow_back,
+                        color: _isUploading ? Colors.white38 : Colors.white,
+                      ),
+                      onPressed: _isUploading
+                          ? null
+                          : _isEditingText
                           ? _confirmText
                           : () {
                               setState(() {
@@ -917,11 +927,13 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
                     ),
                   ] else if (_isEditingText && !_isTextInputMode) ...[
                     TextButton(
-                      onPressed: _confirmText,
+                      onPressed: _isUploading ? null : _confirmText,
                       child: Text(
                         'Done',
                         style: TextStyle(
-                          color: context.accentColor,
+                          color: _isUploading
+                              ? context.accentColor.withValues(alpha: 0.4)
+                              : context.accentColor,
                           fontWeight: FontWeight.w600,
                           fontSize: 16,
                         ),
@@ -931,29 +943,35 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
                     IconButton(
                       icon: Icon(
                         Icons.text_fields,
-                        color: _textOverlay != null || _isEditingText
+                        color: _isUploading
+                            ? Colors.white38
+                            : _textOverlay != null || _isEditingText
                             ? context.accentColor
                             : Colors.white,
                       ),
-                      onPressed: _startTextEditing,
+                      onPressed: _isUploading ? null : _startTextEditing,
                     ),
                     IconButton(
                       icon: Icon(
                         Icons.location_on_outlined,
-                        color: _location != null
+                        color: _isUploading
+                            ? Colors.white38
+                            : _location != null
                             ? context.accentColor
                             : Colors.white,
                       ),
-                      onPressed: _toggleLocation,
+                      onPressed: _isUploading ? null : _toggleLocation,
                     ),
                     IconButton(
                       icon: Icon(
                         Icons.router_outlined,
-                        color: _nodeId != null
+                        color: _isUploading
+                            ? Colors.white38
+                            : _nodeId != null
                             ? context.accentColor
                             : Colors.white,
                       ),
-                      onPressed: _selectNode,
+                      onPressed: _isUploading ? null : _selectNode,
                     ),
                   ],
                 ],
@@ -1361,8 +1379,12 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
                         _location!.name ?? 'Location',
                         style: const TextStyle(fontSize: 12),
                       ),
-                      onDeleted: () => setState(() => _location = null),
-                      deleteIconColor: context.textSecondary,
+                      onDeleted: _isUploading
+                          ? null
+                          : () => setState(() => _location = null),
+                      deleteIconColor: _isUploading
+                          ? context.textTertiary
+                          : context.textSecondary,
                       backgroundColor: context.card,
                       side: BorderSide.none,
                       visualDensity: VisualDensity.compact,
@@ -1374,8 +1396,12 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
                         _nodeId!,
                         style: const TextStyle(fontSize: 12),
                       ),
-                      onDeleted: () => setState(() => _nodeId = null),
-                      deleteIconColor: context.textSecondary,
+                      onDeleted: _isUploading
+                          ? null
+                          : () => setState(() => _nodeId = null),
+                      deleteIconColor: _isUploading
+                          ? context.textTertiary
+                          : context.textSecondary,
                       backgroundColor: context.card,
                       side: BorderSide.none,
                       visualDensity: VisualDensity.compact,
@@ -1386,29 +1412,32 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
           Row(
             children: [
               BouncyTap(
-                onTap: _cycleVisibility,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(_visibilityIcon, color: Colors.white, size: 18),
-                      const SizedBox(width: 8),
-                      Text(
-                        _visibilityLabel,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500,
+                onTap: _isUploading ? null : _cycleVisibility,
+                child: Opacity(
+                  opacity: _isUploading ? 0.5 : 1.0,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(_visibilityIcon, color: Colors.white, size: 18),
+                        const SizedBox(width: 8),
+                        Text(
+                          _visibilityLabel,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),

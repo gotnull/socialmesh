@@ -148,8 +148,11 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         leading: IconButton(
-          icon: Icon(Icons.close, color: context.textPrimary),
-          onPressed: _handleClose,
+          icon: Icon(
+            Icons.close,
+            color: _isSubmitting ? context.textTertiary : context.textPrimary,
+          ),
+          onPressed: _isSubmitting ? null : _handleClose,
         ),
         title: Text(
           'Create Post',
@@ -324,7 +327,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                       _buildToolbarButton(
                         icon: Icons.image_outlined,
                         isActive: _imageUrls.isNotEmpty,
-                        onTap: _imageUrls.length >= _maxImages
+                        onTap: _isSubmitting || _imageUrls.length >= _maxImages
                             ? null
                             : () => _addImage(),
                         tooltip: _imageUrls.isEmpty
@@ -335,14 +338,14 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                       _buildToolbarButton(
                         icon: Icons.location_on_outlined,
                         isActive: _location != null,
-                        onTap: _addLocation,
+                        onTap: _isSubmitting ? null : _addLocation,
                         tooltip: 'Add location',
                       ),
                       const SizedBox(width: 4),
                       _buildToolbarButton(
                         icon: Icons.router_outlined,
                         isActive: _nodeId != null,
-                        onTap: _tagNode,
+                        onTap: _isSubmitting ? null : _tagNode,
                         tooltip: 'Tag node',
                       ),
                       const Spacer(),
@@ -393,33 +396,36 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     }
 
     return BouncyTap(
-      onTap: _showVisibilityPicker,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(
-          color: context.accentColor.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 14, color: context.accentColor),
-            const SizedBox(width: 4),
-            Text(
-              label,
-              style: TextStyle(
-                color: context.accentColor,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
+      onTap: _isSubmitting ? null : _showVisibilityPicker,
+      child: Opacity(
+        opacity: _isSubmitting ? 0.5 : 1.0,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: context.accentColor.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 14, color: context.accentColor),
+              const SizedBox(width: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  color: context.accentColor,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-            ),
-            const SizedBox(width: 2),
-            Icon(
-              Icons.keyboard_arrow_down,
-              size: 16,
-              color: context.accentColor,
-            ),
-          ],
+              const SizedBox(width: 2),
+              Icon(
+                Icons.keyboard_arrow_down,
+                size: 16,
+                color: context.accentColor,
+              ),
+            ],
+          ),
         ),
       ),
     );
