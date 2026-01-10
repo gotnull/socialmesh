@@ -47,6 +47,7 @@ import '../mesh_health/widgets/mesh_health_dashboard.dart';
 import '../social/screens/reported_content_screen.dart';
 import '../settings/admin_follow_requests_screen.dart';
 import '../signals/signals.dart';
+import '../profile/profile_screen.dart';
 
 /// Combined admin notification count provider
 /// Uses FutureProvider to properly handle the async stream states
@@ -619,10 +620,13 @@ class _MainShellState extends ConsumerState<MainShell> {
         onTap: () {
           ref.haptics.tabChange();
           Navigator.of(context).pop();
-          // Push Social profile screen with back button
+          // If not signed in, navigate to ProfileScreen to prompt sign-in
+          // Otherwise, navigate to Signals screen (user's social profile)
           Navigator.of(context).push(
             MaterialPageRoute<void>(
-              builder: (context) => _drawerMenuItems[0].screen,
+              builder: (context) => isSignedIn
+                  ? _drawerMenuItems[0].screen
+                  : const ProfileScreen(),
             ),
           );
         },
