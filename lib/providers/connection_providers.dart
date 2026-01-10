@@ -234,6 +234,8 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
               '🔌 DeviceConnectionNotifier: BLE connected, state=configuring',
             );
             state = state.copyWith(state: DevicePairingState.configuring);
+            // BLE auto-reconnected - need to start protocol
+            _initializeProtocolAfterAutoReconnect();
           }
           break;
         case DeviceConnectionState.disconnected:
@@ -273,6 +275,62 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
           break;
       }
     });
+  }
+
+  /// Initialize protocol after BLE auto-reconnected (without going through _connectToDevice)
+  Future<void> _initializeProtocolAfterAutoReconnect() async {
+    AppLogging.connection(
+      '🔌 _initializeProtocolAfterAutoReconnect: BLE auto-reconnected, starting protocol...',
+    );
+
+    try {
+      final transport = ref.read(transportProvider);
+      final protocol = ref.read(protocolServiceProvider);
+
+      // Get device info from transport or use stored info
+      final deviceName = state.device?.name ?? 'Unknown';
+      protocol.setDeviceName(deviceName);
+      protocol.setBleModelNumber(transport.bleModelNumber);
+      protocol.setBleManufacturerName(transport.bleManufacturerName);
+
+      AppLogging.connection(
+        '🔌 _initializeProtocolAfterAutoReconnect: Starting protocol for $deviceName...',
+      );
+      await protocol.start();
+
+      // Verify we got configuration
+      if (protocol.myNodeNum == null) {
+        AppLogging.connection(
+          '🔌 _initializeProtocolAfterAutoReconnect: Protocol started but no myNodeNum',
+        );
+        return;
+      }
+
+      AppLogging.connection(
+        '🔌 _initializeProtocolAfterAutoReconnect: Protocol ready! myNodeNum: ${protocol.myNodeNum}',
+      );
+
+      // Update state to connected
+      state = state.copyWith(
+        state: DevicePairingState.connected,
+        lastConnectedAt: DateTime.now(),
+        myNodeNum: protocol.myNodeNum,
+        reason: DisconnectReason.none,
+        reconnectAttempts: 0,
+      );
+
+      // Update legacy providers
+      if (state.device != null) {
+        ref.read(connectedDeviceProvider.notifier).setState(state.device);
+      }
+      ref
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.success);
+    } catch (e) {
+      AppLogging.connection(
+        '🔌 _initializeProtocolAfterAutoReconnect: Error: $e',
+      );
+    }
   }
 
   /// Start background connection attempt to known device
