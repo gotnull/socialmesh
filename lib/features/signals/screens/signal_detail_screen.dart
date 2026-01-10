@@ -455,20 +455,38 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
       backgroundColor: context.background,
       extendBodyBehindAppBar: true,
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(kToolbarHeight),
+        preferredSize: Size.fromHeight(
+          kToolbarHeight + MediaQuery.of(context).padding.top,
+        ),
         child: ClipRRect(
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: Container(
-              color: context.card.withValues(alpha: 0.7),
-              child: AppBar(
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                title: Text(
-                  'Signal',
-                  style: TextStyle(
-                    color: context.textPrimary,
-                    fontWeight: FontWeight.w600,
+              decoration: BoxDecoration(
+                color: context.card.withValues(alpha: 0.7),
+              ),
+              child: SafeArea(
+                bottom: false,
+                child: SizedBox(
+                  height: kToolbarHeight,
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(
+                          Icons.arrow_back,
+                          color: context.textPrimary,
+                        ),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                      Text(
+                        'Signal',
+                        style: TextStyle(
+                          color: context.textPrimary,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 20,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
