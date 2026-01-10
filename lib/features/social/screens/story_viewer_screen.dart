@@ -377,97 +377,96 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
                 ? _currentStory
                 : group.stories.first;
 
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Stack(
-                fit: StackFit.expand,
+            return SafeArea(
+              child: Column(
                 children: [
-                  // Story content with border radius - fills the area like preview
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: _StoryContent(story: story),
-                  ),
-
-                  // Gradient overlay for readability
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: _GradientOverlay(),
-                  ),
-
-                  // Progress bars
-                  Positioned(
-                    top: MediaQuery.of(context).padding.top + 8,
-                    left: 8,
-                    right: 8,
-                    child: _ProgressBars(
-                      storyCount: group.stories.length,
-                      currentIndex: groupIndex == _currentGroupIndex
-                          ? _currentStoryIndex
-                          : 0,
-                      progress: groupIndex == _currentGroupIndex
-                          ? _progressController
-                          : null,
-                    ),
-                  ),
-
-                  // Header (user info, close button)
-                  Positioned(
-                    top: MediaQuery.of(context).padding.top + 16,
-                    left: 8,
-                    right: 8,
-                    child: _StoryHeader(
-                      story: story,
-                      onClose: () => Navigator.pop(context),
-                      onOptions: _showOptions,
-                      onProfileTap: () {
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                ProfileSocialScreen(userId: story.authorId),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-
-                  // Footer (view count for own stories, like button for others)
-                  if (groupIndex == _currentGroupIndex)
-                    Positioned(
-                      bottom: MediaQuery.of(context).padding.bottom + 16,
-                      left: 16,
-                      right: 16,
-                      child: _isOwnStory
-                          ? _OwnerStoryFooter(
-                              story: story,
-                              onViewersTap: _showViewers,
-                            )
-                          : _ViewerStoryFooter(
-                              story: story,
-                              onLiked: () {
-                                // Brief haptic feedback
-                                HapticFeedback.lightImpact();
-                              },
-                            ),
-                    ),
-
-                  // Pause indicator
-                  if (_isPaused)
-                    Center(
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.black54,
-                          borderRadius: BorderRadius.circular(12),
+                  // Header area with progress bars and user info
+                  Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Column(
+                      children: [
+                        // Progress bars
+                        _ProgressBars(
+                          storyCount: group.stories.length,
+                          currentIndex: groupIndex == _currentGroupIndex
+                              ? _currentStoryIndex
+                              : 0,
+                          progress: groupIndex == _currentGroupIndex
+                              ? _progressController
+                              : null,
                         ),
-                        child: const Icon(
-                          Icons.pause,
-                          color: Colors.white,
-                          size: 48,
+                        const SizedBox(height: 8),
+                        // User info header
+                        _StoryHeader(
+                          story: story,
+                          onClose: () => Navigator.pop(context),
+                          onOptions: _showOptions,
+                          onProfileTap: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    ProfileSocialScreen(userId: story.authorId),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Story content - matches preview exactly
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            _StoryContent(story: story),
+                            // Gradient overlay for readability at edges
+                            _GradientOverlay(),
+                            // Pause indicator
+                            if (_isPaused)
+                              Center(
+                                child: Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black54,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Icon(
+                                    Icons.pause,
+                                    color: Colors.white,
+                                    size: 48,
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                     ),
+                  ),
+
+                  // Bottom bar - fixed height like preview
+                  SizedBox(
+                    height: 100,
+                    child: groupIndex == _currentGroupIndex
+                        ? _isOwnStory
+                              ? _OwnerStoryFooter(
+                                  story: story,
+                                  onViewersTap: _showViewers,
+                                )
+                              : _ViewerStoryFooter(
+                                  story: story,
+                                  onLiked: () {
+                                    HapticFeedback.lightImpact();
+                                  },
+                                )
+                        : const SizedBox.shrink(),
+                  ),
                 ],
               ),
             );
