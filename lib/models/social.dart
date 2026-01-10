@@ -420,9 +420,9 @@ class Post {
       'origin': origin.name,
       if (expiresAt != null) 'expiresAt': Timestamp.fromDate(expiresAt!),
       if (meshNodeId != null) 'meshNodeId': meshNodeId,
-      if (hopCount != null) 'hopCount': hopCount,
-      'imageState': imageState.name,
+      // NOTE: hopCount is LOCAL-ONLY - used for proximity sorting, not synced
       // NOTE: imageLocalPath is LOCAL-ONLY - never store device paths in Firestore
+      'imageState': imageState.name,
     };
   }
 

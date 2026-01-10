@@ -789,17 +789,12 @@ class ProtocolService {
       }
 
       // Calculate hop count from mesh packet metadata
-      // Meshtastic uses hopLimit that decrements per relay
-      // hopCount = max_hops - remaining_hops
-      // Typical max is 3, so: hopCount = 3 - hopLimit
-      int? hopCount;
-      if (packet.hasHopLimit()) {
-        const maxHops = 3; // Meshtastic default
-        hopCount = maxHops - packet.hopLimit;
-        // Clamp to reasonable range [0, maxHops]
-        if (hopCount < 0) hopCount = 0;
-        if (hopCount > maxHops) hopCount = maxHops;
-      }
+      // hopStart field is not available in current generated protobuf
+      // Set to null until protobuf is updated to include hopStart
+      final int? hopCount = null;
+      AppLogging.signals(
+        '📡 Signals: hopCount unavailable (hopStart not in generated proto) -> storing null',
+      );
 
       final signalPacket = MeshSignalPacket.fromPayload(
         packet.from,

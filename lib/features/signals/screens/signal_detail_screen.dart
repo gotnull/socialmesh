@@ -3,9 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/logging.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/content_moderation_warning.dart';
+import '../../../utils/snackbar.dart';
 import '../../../models/social.dart';
 import '../../../providers/profile_providers.dart';
 import '../../../providers/signal_providers.dart';
+import '../../../providers/social_providers.dart';
 import '../../../services/signal_service.dart';
 import '../widgets/signal_card.dart';
 
@@ -30,9 +33,71 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
   }
 
   Future<void> _submitReply() async {
-    if (_replyController.text.trim().isEmpty) return;
+    final content = _replyController.text.trim();
+    if (content.isEmpty) return;
 
     setState(() => _isSubmittingReply = true);
+
+    // Content moderation check
+    try {
+      final moderationService = ref.read(contentModerationServiceProvider);
+      final checkResult = await moderationService.checkText(
+        content,
+        useServerCheck: true,
+      );
+
+      if (!checkResult.passed || checkResult.action == 'reject') {
+        // Content blocked - show error and allow editing
+        if (mounted) {
+          final action = await ContentModerationWarning.show(
+            context,
+            result: ContentModerationCheckResult(
+              passed: false,
+              action: 'reject',
+              categories: checkResult.categories.map((c) => c.name).toList(),
+              details: checkResult.details,
+            ),
+          );
+          if (action == ContentModerationAction.edit) {
+            // User wants to edit - keep focus on reply field
+            setState(() => _isSubmittingReply = false);
+            return;
+          }
+          if (action == ContentModerationAction.cancel) {
+            setState(() => _isSubmittingReply = false);
+            return;
+          }
+        }
+        return;
+      } else if (checkResult.action == 'review' ||
+          checkResult.action == 'flag') {
+        // Content flagged - show warning but allow to proceed
+        if (mounted) {
+          final action = await ContentModerationWarning.show(
+            context,
+            result: ContentModerationCheckResult(
+              passed: true,
+              action: checkResult.action,
+              categories: checkResult.categories.map((c) => c.name).toList(),
+              details: checkResult.details,
+            ),
+          );
+          if (action == ContentModerationAction.cancel) {
+            setState(() => _isSubmittingReply = false);
+            return;
+          }
+          if (action == ContentModerationAction.edit) {
+            // User wants to edit - keep focus on reply field
+            setState(() => _isSubmittingReply = false);
+            return;
+          }
+          // If action is proceed, continue with submission
+        }
+      }
+    } catch (e) {
+      AppLogging.signals('Content moderation check failed: $e');
+      // Continue with submission if moderation service fails
+    }
 
     try {
       final service = ref.read(signalServiceProvider);
@@ -42,7 +107,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
       );
       final response = await service.createResponse(
         signalId: widget.signal.id,
-        content: _replyController.text.trim(),
+        content: content,
         authorName: profile?.displayName,
       );
 
@@ -50,15 +115,22 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
         AppLogging.signals(
           '📝 SignalDetailScreen: Response created: ${response.id}',
         );
+        _replyController.clear();
+        // Refresh replies
+        if (mounted) setState(() {});
       } else {
         AppLogging.signals(
           '📝 SignalDetailScreen: Response creation returned null',
         );
+        if (mounted) {
+          showErrorSnackBar(context, 'Failed to send response');
+        }
       }
-
-      _replyController.clear();
-      // Refresh replies
-      setState(() {});
+    } catch (e) {
+      AppLogging.signals('Error creating response: $e');
+      if (mounted) {
+        showErrorSnackBar(context, 'Failed to send response');
+      }
     } finally {
       if (mounted) {
         setState(() => _isSubmittingReply = false);

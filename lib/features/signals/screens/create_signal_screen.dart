@@ -10,11 +10,13 @@ import 'package:geocoding/geocoding.dart';
 import '../../../core/logging.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
+import '../../../core/widgets/content_moderation_warning.dart';
 import '../../../models/social.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/connection_providers.dart';
 import '../../../providers/signal_providers.dart';
+import '../../../providers/social_providers.dart';
 import '../../../services/signal_service.dart';
 import '../../../utils/snackbar.dart';
 import '../widgets/ttl_selector.dart';
@@ -145,6 +147,67 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
     _dismissKeyboard();
     setState(() => _isSubmitting = true);
     HapticFeedback.mediumImpact();
+
+    final content = _contentController.text.trim();
+
+    // Pre-submission content moderation check
+    if (content.isNotEmpty) {
+      final moderationService = ref.read(contentModerationServiceProvider);
+      final checkResult = await moderationService.checkText(
+        content,
+        useServerCheck: true,
+      );
+
+      if (!checkResult.passed || checkResult.action == 'reject') {
+        // Content blocked - show warning and don't proceed
+        if (mounted) {
+          final action = await ContentModerationWarning.show(
+            context,
+            result: ContentModerationCheckResult(
+              passed: false,
+              action: 'reject',
+              categories: checkResult.categories.map((c) => c.name).toList(),
+              details: checkResult.details,
+            ),
+          );
+          setState(() => _isSubmitting = false);
+          if (action == ContentModerationAction.edit) {
+            // User wants to edit - focus on content field
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _contentFocusNode.requestFocus();
+            });
+          }
+        }
+        return;
+      } else if (checkResult.action == 'review' ||
+          checkResult.action == 'flag') {
+        // Content flagged - show warning but allow to proceed
+        if (mounted) {
+          final action = await ContentModerationWarning.show(
+            context,
+            result: ContentModerationCheckResult(
+              passed: true,
+              action: checkResult.action,
+              categories: checkResult.categories.map((c) => c.name).toList(),
+              details: checkResult.details,
+            ),
+          );
+          if (action == ContentModerationAction.cancel) {
+            setState(() => _isSubmitting = false);
+            return;
+          }
+          if (action == ContentModerationAction.edit) {
+            // User wants to edit - focus on content field
+            setState(() => _isSubmitting = false);
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _contentFocusNode.requestFocus();
+            });
+            return;
+          }
+          // If action is proceed, continue with submission
+        }
+      }
+    }
 
     try {
       final signal = await ref

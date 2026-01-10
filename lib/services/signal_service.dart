@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:http/http.dart' as http;
@@ -231,7 +232,7 @@ class SignalService {
 
     _db = await openDatabase(
       dbPath,
-      version: 3,
+      version: 4,
       onCreate: (db, version) async {
         AppLogging.signals('Creating signals database v$version');
         await _createTables(db);
@@ -246,6 +247,13 @@ class SignalService {
         }
         if (oldVersion < 3) {
           await _createResponsesTable(db);
+        }
+        if (oldVersion < 4) {
+          // Add hopCount column for local proximity tracking
+          await db.execute(
+            'ALTER TABLE $_tableName ADD COLUMN hopCount INTEGER',
+          );
+          AppLogging.signals('Added hopCount column to signals table');
         }
       },
     );
@@ -283,6 +291,7 @@ class SignalService {
         postMode TEXT NOT NULL,
         origin TEXT NOT NULL,
         meshNodeId INTEGER,
+        hopCount INTEGER,
         imageState TEXT NOT NULL,
         imageLocalPath TEXT,
         syncedToCloud INTEGER DEFAULT 0
@@ -1375,7 +1384,45 @@ class SignalService {
         '📷 STORAGE UPLOAD SUCCESS: signal $signalId, URL=$url',
       );
 
-      // Step 2: Update Firestore FIRST (if not expired)
+      // Step 2: Validate image with Cloud Function
+      try {
+        final functions = FirebaseFunctions.instance;
+        final result = await functions.httpsCallable('validateImages').call({
+          'imageUrls': [url],
+        });
+        AppLogging.signals('📷 validateImages response: ${result.data}');
+
+        final validationResult = result.data as Map<String, dynamic>;
+        if (validationResult['passed'] == false) {
+          AppLogging.signals(
+            '📷 VALIDATION FAILED: ${validationResult['message']}',
+          );
+          // Delete the uploaded image
+          try {
+            await ref.delete();
+            AppLogging.signals('📷 Deleted invalid image from storage');
+          } catch (deleteError) {
+            AppLogging.signals(
+              '📷 Failed to delete invalid image: $deleteError',
+            );
+          }
+          return null;
+        }
+        AppLogging.signals('📷 Image passed validation');
+      } catch (e) {
+        AppLogging.signals('📷 validateImages error: $e');
+        // Check if image was auto-removed by Cloud Function
+        try {
+          await ref.getMetadata();
+          // Image still exists - validation service error, allow upload
+          AppLogging.signals('📷 Validation service error, allowing upload');
+        } catch (metadataError) {
+          AppLogging.signals('📷 Image was auto-removed by validation');
+          return null;
+        }
+      }
+
+      // Step 3: Update Firestore FIRST (if not expired)
       // Only update allowed fields: mediaUrls, imageUrl, imageState
       if (!signal.isExpired) {
         final firestoreSuccess = await _updateFirestoreImageFields(
@@ -1386,7 +1433,7 @@ class SignalService {
         );
 
         if (firestoreSuccess) {
-          // Step 3: Only update local DB after Firestore succeeds
+          // Step 4: Only update local DB after Firestore succeeds
           final updated = signal.copyWith(
             mediaUrls: [url],
             imageState: ImageState.cloud,
@@ -2134,6 +2181,7 @@ class SignalService {
       'postMode': post.postMode.name,
       'origin': post.origin.name,
       'meshNodeId': post.meshNodeId,
+      'hopCount': post.hopCount,
       'imageState': post.imageState.name,
       'imageLocalPath': post.imageLocalPath,
     };
@@ -2190,6 +2238,7 @@ class SignalService {
         orElse: () => SignalOrigin.mesh,
       ),
       meshNodeId: map['meshNodeId'] as int?,
+      hopCount: map['hopCount'] as int?,
       imageState: ImageState.values.firstWhere(
         (e) => e.name == (map['imageState'] as String?),
         orElse: () => ImageState.none,
