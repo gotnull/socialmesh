@@ -78,4 +78,6 @@ flutter {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+    // Firebase Messaging for custom FCM service
+    implementation("com.google.firebase:firebase-messaging:23.4.0")
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -10,6 +12,7 @@ import '../../../providers/auth_providers.dart';
 import '../../../providers/profile_providers.dart';
 import '../../../providers/signal_providers.dart';
 import '../../../providers/social_providers.dart';
+import '../../../services/notifications/push_notification_service.dart';
 import '../../../services/signal_service.dart';
 import '../widgets/signal_card.dart';
 
@@ -27,15 +30,63 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
   final TextEditingController _replyController = TextEditingController();
   bool _isSubmittingReply = false;
   Post? _currentSignal; // Track updated signal with current commentCount
+  List<SignalResponse>? _responses;
+  bool _isLoadingResponses = true;
+  StreamSubscription<ContentRefreshEvent>? _refreshSubscription;
 
   @override
   void initState() {
     super.initState();
     _currentSignal = widget.signal;
+    _loadResponses();
+    _setupRefreshListener();
+  }
+
+  void _setupRefreshListener() {
+    _refreshSubscription = PushNotificationService().onContentRefresh.listen(
+      _onContentRefresh,
+    );
+  }
+
+  void _onContentRefresh(ContentRefreshEvent event) {
+    // Only refresh if this is a signal response for the signal we're viewing
+    if (event.contentType == 'signal_response' &&
+        event.targetId == widget.signal.id) {
+      AppLogging.signals(
+        '🔔 Received refresh event for signal ${widget.signal.id}',
+      );
+      _loadResponses();
+    }
+  }
+
+  Future<void> _loadResponses() async {
+    if (!mounted) return;
+    setState(() => _isLoadingResponses = true);
+
+    try {
+      final responses = await ref
+          .read(signalServiceProvider)
+          .getResponses(widget.signal.id);
+      if (mounted) {
+        setState(() {
+          _responses = responses;
+          _isLoadingResponses = false;
+        });
+      }
+    } catch (e) {
+      AppLogging.signals('Error loading responses: $e');
+      if (mounted) {
+        setState(() {
+          _responses = [];
+          _isLoadingResponses = false;
+        });
+      }
+    }
   }
 
   @override
   void dispose() {
+    _refreshSubscription?.cancel();
     _replyController.dispose();
     super.dispose();
   }
@@ -136,14 +187,13 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
         _replyController.clear();
 
         // Reload signal from DB to get updated commentCount
-        final service = ref.read(signalServiceProvider);
         final updatedSignal = await service.getSignalById(widget.signal.id);
         if (updatedSignal != null) {
           _currentSignal = updatedSignal;
         }
 
-        // Refresh UI
-        if (mounted) setState(() {});
+        // Reload responses to show the new one
+        await _loadResponses();
       } else {
         AppLogging.signals(
           '📝 SignalDetailScreen: Response creation returned null',
@@ -162,6 +212,46 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
         setState(() => _isSubmittingReply = false);
       }
     }
+  }
+
+  Widget _buildResponsesList(BuildContext context) {
+    if (_isLoadingResponses) {
+      return Center(
+        child: CircularProgressIndicator(
+          color: context.accentColor,
+          strokeWidth: 2,
+        ),
+      );
+    }
+
+    final replies = _responses ?? [];
+
+    if (replies.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: context.card,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: context.border.withValues(alpha: 0.5)),
+        ),
+        child: Column(
+          children: [
+            Icon(Icons.forum_outlined, size: 32, color: context.textTertiary),
+            const SizedBox(height: 8),
+            Text(
+              'No responses yet',
+              style: TextStyle(color: context.textSecondary, fontSize: 14),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      children: replies.map((response) {
+        return _ResponseTile(response: response);
+      }).toList(),
+    );
   }
 
   @override
@@ -208,59 +298,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
                 const SizedBox(height: 16),
 
                 // Replies list
-                FutureBuilder<List<SignalResponse>>(
-                  future: ref
-                      .read(signalServiceProvider)
-                      .getResponses(widget.signal.id),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Center(
-                        child: CircularProgressIndicator(
-                          color: context.accentColor,
-                          strokeWidth: 2,
-                        ),
-                      );
-                    }
-
-                    final replies = snapshot.data ?? [];
-
-                    if (replies.isEmpty) {
-                      return Container(
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          color: context.card,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: context.border.withValues(alpha: 0.5),
-                          ),
-                        ),
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.forum_outlined,
-                              size: 32,
-                              color: context.textTertiary,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'No responses yet',
-                              style: TextStyle(
-                                color: context.textSecondary,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-
-                    return Column(
-                      children: replies.map((response) {
-                        return _ResponseTile(response: response);
-                      }).toList(),
-                    );
-                  },
-                ),
+                _buildResponsesList(context),
               ],
             ),
           ),

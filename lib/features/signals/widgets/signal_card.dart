@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
+import '../../../core/widgets/fullscreen_gallery.dart';
 import '../../../models/social.dart';
 import '../../../providers/app_providers.dart';
 
@@ -278,6 +279,31 @@ class _SignalImage extends StatelessWidget {
 
   final Post signal;
 
+  void _showFullscreenImage(BuildContext context) {
+    final hasCloudImage = signal.mediaUrls.isNotEmpty;
+    final hasLocalImage = signal.imageLocalPath != null;
+
+    if (hasCloudImage) {
+      // Use standard fullscreen gallery for network images
+      FullscreenGallery.show(
+        context,
+        images: signal.mediaUrls,
+        initialIndex: 0,
+      );
+    } else if (hasLocalImage) {
+      // Show fullscreen local image
+      _showLocalImageFullscreen(context, signal.imageLocalPath!);
+    }
+  }
+
+  void _showLocalImageFullscreen(BuildContext context, String localPath) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => _LocalImageFullscreen(imagePath: localPath),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final hasCloudImage = signal.mediaUrls.isNotEmpty;
@@ -287,93 +313,137 @@ class _SignalImage extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      child: Stack(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: hasCloudImage
-                ? Image.network(
-                    signal.mediaUrls.first,
-                    width: double.infinity,
-                    height: 200,
-                    fit: BoxFit.cover,
-                    loadingBuilder: (ctx, child, progress) {
-                      if (progress == null) return child;
-                      return Container(
+      child: GestureDetector(
+        onTap: () => _showFullscreenImage(context),
+        child: Stack(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: hasCloudImage
+                  ? Image.network(
+                      signal.mediaUrls.first,
+                      width: double.infinity,
+                      height: 200,
+                      fit: BoxFit.cover,
+                      loadingBuilder: (ctx, child, progress) {
+                        if (progress == null) return child;
+                        return Container(
+                          width: double.infinity,
+                          height: 200,
+                          color: context.card,
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: context.accentColor,
+                            ),
+                          ),
+                        );
+                      },
+                      errorBuilder: (ctx, error, stack) => Container(
                         width: double.infinity,
                         height: 200,
                         color: context.card,
-                        child: Center(
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: context.accentColor,
-                          ),
+                        child: Icon(
+                          Icons.broken_image,
+                          color: context.textTertiary,
                         ),
-                      );
-                    },
-                    errorBuilder: (ctx, error, stack) => Container(
+                      ),
+                    )
+                  : Image.file(
+                      File(signal.imageLocalPath!),
                       width: double.infinity,
                       height: 200,
-                      color: context.card,
-                      child: Icon(
-                        Icons.broken_image,
-                        color: context.textTertiary,
+                      fit: BoxFit.cover,
+                      errorBuilder: (ctx, error, stack) => Container(
+                        width: double.infinity,
+                        height: 200,
+                        color: context.card,
+                        child: Icon(
+                          Icons.broken_image,
+                          color: context.textTertiary,
+                        ),
                       ),
                     ),
-                  )
-                : Image.file(
-                    File(signal.imageLocalPath!),
-                    width: double.infinity,
-                    height: 200,
-                    fit: BoxFit.cover,
-                    errorBuilder: (ctx, error, stack) => Container(
-                      width: double.infinity,
-                      height: 200,
-                      color: context.card,
-                      child: Icon(
-                        Icons.broken_image,
-                        color: context.textTertiary,
-                      ),
-                    ),
-                  ),
-          ),
+            ),
 
-          // Image state indicator
-          Positioned(
-            bottom: 8,
-            left: 8,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.6),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    signal.imageState == ImageState.cloud
-                        ? Icons.cloud_done
-                        : Icons.phone_android,
-                    color: Colors.white,
-                    size: 12,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    signal.imageState == ImageState.cloud
-                        ? 'Image synced'
-                        : 'Image attached locally',
-                    style: const TextStyle(
+            // Image state indicator
+            Positioned(
+              bottom: 8,
+              left: 8,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.6),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      signal.imageState == ImageState.cloud
+                          ? Icons.cloud_done
+                          : Icons.phone_android,
                       color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w500,
+                      size: 12,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 4),
+                    Text(
+                      signal.imageState == ImageState.cloud
+                          ? 'Image synced'
+                          : 'Image attached locally',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Fullscreen viewer for local image files
+class _LocalImageFullscreen extends StatelessWidget {
+  const _LocalImageFullscreen({required this.imagePath});
+
+  final String imagePath;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.close, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
+      extendBodyBehindAppBar: true,
+      body: GestureDetector(
+        onTap: () => Navigator.of(context).pop(),
+        child: InteractiveViewer(
+          minScale: 0.5,
+          maxScale: 4.0,
+          child: Center(
+            child: Image.file(
+              File(imagePath),
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) => const Icon(
+                Icons.broken_image,
+                color: Colors.white54,
+                size: 64,
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }

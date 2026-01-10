@@ -156,6 +156,9 @@ class PushNotificationService {
       '🔔 Foreground message: ${message.notification?.title}',
     );
 
+    // Emit content refresh event for screens currently visible
+    _emitContentRefreshEvent(message);
+
     final notification = message.notification;
     if (notification == null) return;
 
@@ -181,6 +184,44 @@ class PushNotificationService {
       ),
       payload: message.data['type'],
     );
+  }
+
+  /// Emit content refresh events based on notification type
+  void _emitContentRefreshEvent(RemoteMessage message) {
+    final type = message.data['type'] as String?;
+    final targetId = message.data['targetId'] as String?;
+
+    if (type == null) return;
+
+    switch (type) {
+      case 'signal_comment':
+        // When someone comments on a signal
+        _contentRefreshController.add(
+          ContentRefreshEvent(
+            contentType: 'signal_response',
+            targetId: targetId,
+          ),
+        );
+        AppLogging.notifications(
+          '🔔 Emitted signal_response refresh for signal: $targetId',
+        );
+        break;
+      case 'new_comment':
+        // When someone comments on a post
+        _contentRefreshController.add(
+          ContentRefreshEvent(contentType: 'post_comment', targetId: targetId),
+        );
+        AppLogging.notifications(
+          '🔔 Emitted post_comment refresh for post: $targetId',
+        );
+        break;
+      case 'new_like':
+        // When someone likes a post
+        _contentRefreshController.add(
+          ContentRefreshEvent(contentType: 'post_like', targetId: targetId),
+        );
+        break;
+    }
   }
 
   /// Handle notification tap when app is opened from background
@@ -211,6 +252,13 @@ class PushNotificationService {
 
   Stream<NotificationNavigation> get onNotificationNavigation =>
       _notificationNavigationController.stream;
+
+  /// Stream of content refresh events for screens to listen to
+  final _contentRefreshController =
+      StreamController<ContentRefreshEvent>.broadcast();
+
+  Stream<ContentRefreshEvent> get onContentRefresh =>
+      _contentRefreshController.stream;
 
   /// Update FCM token when user signs in
   Future<void> onUserSignIn() async {
@@ -316,6 +364,7 @@ class PushNotificationService {
     _foregroundSubscription?.cancel();
     _openedAppSubscription?.cancel();
     _notificationNavigationController.close();
+    _contentRefreshController.close();
   }
 }
 
@@ -325,4 +374,16 @@ class NotificationNavigation {
   final String? targetId;
 
   const NotificationNavigation({required this.type, this.targetId});
+}
+
+/// Event for content refresh triggered by push notification
+/// Used to notify screens that their content may have changed
+class ContentRefreshEvent {
+  /// Type of content: 'signal_response', 'post_comment', 'post_like', etc.
+  final String contentType;
+
+  /// ID of the content that was updated (e.g., signal ID, post ID)
+  final String? targetId;
+
+  const ContentRefreshEvent({required this.contentType, this.targetId});
 }
