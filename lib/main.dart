@@ -31,8 +31,10 @@ import 'providers/telemetry_providers.dart';
 import 'providers/subscription_providers.dart';
 import 'providers/cloud_sync_entitlement_providers.dart';
 import 'providers/analytics_providers.dart';
+import 'providers/signal_providers.dart';
 import 'features/automations/automation_providers.dart';
 import 'models/mesh_models.dart';
+import 'models/social.dart';
 import 'services/app_intents/app_intents_service.dart';
 import 'services/deep_link_service.dart';
 import 'services/profile/profile_cloud_sync_service.dart';
@@ -59,6 +61,7 @@ import 'features/globe/globe_screen.dart';
 import 'features/reachability/mesh_reachability_screen.dart';
 import 'features/social/screens/post_detail_screen.dart';
 import 'features/social/screens/profile_social_screen.dart';
+import 'features/signals/screens/signal_detail_screen.dart';
 import 'services/user_presence_service.dart';
 // import 'features/intro/intro_screen.dart';
 import 'models/route.dart' as route_model;
@@ -482,12 +485,21 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
         case 'new_comment':
         case 'new_reply':
         case 'mention':
-        case 'new_signal':
-          // Navigate to the post/signal
+          // Navigate to the post
           if (nav.targetId != null) {
             navigator.pushNamed(
               '/post-detail',
               arguments: {'postId': nav.targetId},
+            );
+          }
+          break;
+
+        case 'new_signal':
+          // Navigate to the signal detail screen
+          if (nav.targetId != null) {
+            navigator.pushNamed(
+              '/signal-detail',
+              arguments: {'signalId': nav.targetId},
             );
           }
           break;
@@ -966,6 +978,15 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
             );
           }
         }
+        if (settings.name == '/signal-detail') {
+          final args = settings.arguments as Map<String, dynamic>?;
+          final signalId = args?['signalId'] as String?;
+          if (signalId != null) {
+            return MaterialPageRoute(
+              builder: (context) => _SignalDetailLoader(signalId: signalId),
+            );
+          }
+        }
         return null;
       },
     );
@@ -993,6 +1014,76 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
               'Connect device to access this screen',
         );
       },
+    );
+  }
+}
+
+/// Loader widget that fetches signal data and navigates to SignalDetailScreen
+class _SignalDetailLoader extends ConsumerWidget {
+  final String signalId;
+
+  const _SignalDetailLoader({required this.signalId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Loading Signal')),
+      body: FutureBuilder<Post?>(
+        future: ref.read(signalServiceProvider).getSignalById(signalId),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                  const SizedBox(height: 16),
+                  Text('Error loading signal: ${snapshot.error}'),
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Go Back'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          final signal = snapshot.data;
+          if (signal == null) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.signal_wifi_off, size: 48),
+                  const SizedBox(height: 16),
+                  const Text('Signal not found'),
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Go Back'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          // Navigate to signal detail screen with the loaded signal
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (context) => SignalDetailScreen(signal: signal),
+              ),
+            );
+          });
+
+          return const Center(child: CircularProgressIndicator());
+        },
+      ),
     );
   }
 }

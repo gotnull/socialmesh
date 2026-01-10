@@ -1,11 +1,11 @@
 import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../core/logging.dart';
 import '../../../core/theme.dart';
@@ -235,15 +235,63 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
   }
 
   Future<void> _pickImage() async {
+    // Show choice: Camera or Gallery
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: context.card,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: context.border,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            ListTile(
+              leading: Icon(Icons.camera_alt, color: context.accentColor),
+              title: Text(
+                'Take Photo',
+                style: TextStyle(color: context.textPrimary),
+              ),
+              onTap: () => Navigator.pop(ctx, 'camera'),
+            ),
+            ListTile(
+              leading: Icon(Icons.photo_library, color: context.accentColor),
+              title: Text(
+                'Choose from Gallery',
+                style: TextStyle(color: context.textPrimary),
+              ),
+              onTap: () => Navigator.pop(ctx, 'gallery'),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+
+    if (choice == null) return;
+
     try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.image,
-        allowMultiple: false,
+      final ImagePicker picker = ImagePicker();
+      final XFile? pickedFile = await picker.pickImage(
+        source: choice == 'camera' ? ImageSource.camera : ImageSource.gallery,
+        maxWidth: 1920,
+        maxHeight: 1920,
+        imageQuality: 85,
       );
 
-      if (result != null && result.files.isNotEmpty) {
+      if (pickedFile != null) {
         setState(() {
-          _imageLocalPath = result.files.first.path;
+          _imageLocalPath = pickedFile.path;
         });
       }
     } catch (e) {
@@ -310,6 +358,39 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
     setState(() {
       _location = null;
     });
+  }
+
+  void _showImagePreview() {
+    if (_imageLocalPath == null) return;
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => Scaffold(
+          backgroundColor: Colors.black,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.close, color: Colors.white),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            title: const Text('Preview', style: TextStyle(color: Colors.white)),
+            centerTitle: true,
+          ),
+          extendBodyBehindAppBar: true,
+          body: GestureDetector(
+            onTap: () => Navigator.of(context).pop(),
+            child: Center(
+              child: InteractiveViewer(
+                minScale: 0.5,
+                maxScale: 4.0,
+                child: Image.file(File(_imageLocalPath!), fit: BoxFit.contain),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -486,71 +567,81 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
               // Image preview
               if (_imageLocalPath != null) ...[
                 const SizedBox(height: 8),
-                Stack(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.file(
-                        File(_imageLocalPath!),
-                        width: double.infinity,
-                        height: 200,
-                        fit: BoxFit.cover,
+                GestureDetector(
+                  onTap: () => _showImagePreview(),
+                  child: Stack(
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: context.border.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.file(
+                            File(_imageLocalPath!),
+                            width: double.infinity,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
                       ),
-                    ),
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: BouncyTap(
-                        onTap: _isSubmitting ? null : _removeImage,
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: BouncyTap(
+                          onTap: _isSubmitting ? null : _removeImage,
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.6),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.close,
+                              color: Colors.white,
+                              size: 18,
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Local indicator
+                      Positioned(
+                        bottom: 8,
+                        left: 8,
                         child: Container(
-                          padding: const EdgeInsets.all(6),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.black.withValues(alpha: 0.6),
-                            shape: BoxShape.circle,
+                            borderRadius: BorderRadius.circular(4),
                           ),
-                          child: const Icon(
-                            Icons.close,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                        ),
-                      ),
-                    ),
-                    // Local indicator
-                    Positioned(
-                      bottom: 8,
-                      left: 8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.6),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.phone_android,
-                              color: Colors.white,
-                              size: 14,
-                            ),
-                            SizedBox(width: 4),
-                            Text(
-                              'Attached locally',
-                              style: TextStyle(
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.phone_android,
                                 color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w500,
+                                size: 14,
                               ),
-                            ),
-                          ],
+                              SizedBox(width: 4),
+                              Text(
+                                'Attached locally',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
 
