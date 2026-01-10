@@ -458,7 +458,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
         preferredSize: const Size.fromHeight(kToolbarHeight),
         child: ClipRRect(
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: Container(
               color: context.card.withValues(alpha: 0.7),
               child: AppBar(
@@ -1018,7 +1018,7 @@ class _StickySignalHeaderState extends State<_StickySignalHeader>
           opacity: _fadeAnimation,
           child: ClipRRect(
             child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
               child: GestureDetector(
                 onTap: widget.onTap,
                 child: Container(
