@@ -1431,24 +1431,40 @@ class _BannerAvatarSection extends StatelessWidget {
   Widget build(BuildContext context) {
     // Use a SizedBox to give the Stack a fixed height (banner + avatar overflow)
     return SizedBox(
-      height: 190, // 140 banner + 50 avatar overflow
+      height: 230, // 140 banner + 50 avatar overflow
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // Banner
+          // Banner with gradient overlay for blending into background
           Positioned(
             top: 0,
             left: 0,
             right: 0,
-            height: 140,
-            child: Container(
-              decoration: BoxDecoration(color: context.card),
-              child: _buildBannerContent(context),
+            height: 180,
+            child: ShaderMask(
+              shaderCallback: (Rect bounds) {
+                return LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  stops: const [0.0, 0.2, 0.6, 1.0],
+                  colors: [
+                    Colors.white.withValues(alpha: 0.4),
+                    Colors.white,
+                    Colors.white,
+                    Colors.white.withValues(alpha: 0.0),
+                  ],
+                ).createShader(bounds);
+              },
+              blendMode: BlendMode.dstIn,
+              child: Container(
+                decoration: BoxDecoration(color: context.card),
+                child: _buildBannerContent(context),
+              ),
             ),
           ),
           // Avatar positioned at bottom of banner, overlapping
           Positioned(
-            top: 90, // 140 - 50 (half of avatar)
+            top: 130, // 140 - 50 (half of avatar)
             left: 0,
             right: 0,
             child: Center(

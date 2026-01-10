@@ -399,7 +399,7 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                     ),
                   ),
                 ),
-                // Gradient overlay for readability
+                // Gradient overlay for readability - fades into background at bottom
                 Positioned.fill(
                   bottom: avatarOverlap,
                   child: DecoratedBox(
@@ -411,9 +411,10 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                           Colors.black.withValues(alpha: 0.5),
                           Colors.black.withValues(alpha: 0.2),
                           Colors.transparent,
-                          Colors.black.withValues(alpha: 0.5),
+                          context.background.withValues(alpha: 0.7),
+                          context.background,
                         ],
-                        stops: const [0.0, 0.15, 0.5, 1.0],
+                        stops: const [0.0, 0.15, 0.4, 0.85, 1.0],
                       ),
                     ),
                   ),
