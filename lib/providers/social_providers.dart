@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/logging.dart';
@@ -35,11 +36,29 @@ final contentModerationServiceProvider = Provider<ContentModerationService>((
   return ContentModerationService();
 });
 
+/// Provider to check if current user is an admin
+final isAdminProvider = FutureProvider<bool>((ref) async {
+  final user = ref.watch(currentUserProvider);
+  if (user == null) return false;
+
+  try {
+    final doc = await FirebaseFirestore.instance
+        .collection('admins')
+        .doc(user.uid)
+        .get();
+    return doc.exists;
+  } catch (e) {
+    AppLogging.auth('Failed to check admin status: $e');
+    return false;
+  }
+});
+
 /// Provider for pending reported content count (for badge)
 final pendingReportCountProvider = StreamProvider<int>((ref) {
   // Only query reports if user is admin
-  final profile = ref.watch(userProfileProvider).value;
-  if (profile?.isAdmin != true) {
+  final isAdminAsync = ref.watch(isAdminProvider);
+  final isAdmin = isAdminAsync.value ?? false;
+  if (!isAdmin) {
     return Stream.value(0);
   }
 
@@ -50,8 +69,9 @@ final pendingReportCountProvider = StreamProvider<int>((ref) {
 /// Provider for pending moderation queue count (for badge)
 final pendingModerationCountProvider = StreamProvider<int>((ref) {
   // Only query moderation queue if user is admin
-  final profile = ref.watch(userProfileProvider).value;
-  if (profile?.isAdmin != true) {
+  final isAdminAsync = ref.watch(isAdminProvider);
+  final isAdmin = isAdminAsync.value ?? false;
+  if (!isAdmin) {
     return Stream.value(0);
   }
 
