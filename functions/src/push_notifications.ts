@@ -105,9 +105,11 @@ async function sendPushNotification(
       },
     },
     android: {
+      priority: 'high',
       notification: {
         sound: 'default',
         channelId: 'social_notifications',
+        priority: 'high',
       },
     },
   };
