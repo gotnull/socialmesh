@@ -197,6 +197,12 @@ class SignalService {
   /// Cached cloud responses keyed by signalId.
   final Map<String, List<SignalResponse>> _cloudResponses = {};
 
+  /// Stream controller for response updates. Emits signalId when responses change.
+  final _responseUpdateController = StreamController<String>.broadcast();
+
+  /// Stream of response updates. Emits the signalId when its responses are updated.
+  Stream<String> get onResponseUpdate => _responseUpdateController.stream;
+
   /// Track node last-seen times for proximity-based image unlock.
   /// Key: nodeId, Value: DateTime of last proximity ping.
   final Map<int, List<DateTime>> _nodeProximityHistory = {};
@@ -1629,6 +1635,12 @@ class SignalService {
   // RESPONSE CLOUD SYNC (Real-time sync for shared signals)
   // ===========================================================================
 
+  /// Ensure the comments listener is active for a signal.
+  /// Call this when viewing a signal detail screen to receive real-time updates.
+  void ensureCommentsListener(String signalId) {
+    _startCommentsListener(signalId);
+  }
+
   /// Start listening for cloud comments on a signal.
   /// Called when signal is created or received via mesh.
   /// Uses canonical path: posts/{signalId}/comments
@@ -1678,6 +1690,9 @@ class SignalService {
             // Update cloud responses cache (replaces, not appends)
             _cloudResponses[signalId] = comments;
 
+            // Notify listeners that responses have updated
+            _responseUpdateController.add(signalId);
+
             // Persist cloud comments to local DB for offline access
             if (_db != null) {
               for (final comment in comments) {
@@ -1710,7 +1725,7 @@ class SignalService {
               );
             }
 
-            // UI will refresh via periodic timer in signal_providers.dart
+            // Note: UI now refreshes via _responseUpdateController stream
           },
           onError: (e, stackTrace) {
             AppLogging.signals(

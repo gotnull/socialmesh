@@ -155,6 +155,7 @@ class PushNotificationService {
     AppLogging.notifications(
       '🔔 Foreground message: ${message.notification?.title}',
     );
+    AppLogging.notifications('🔔 Foreground message data: ${message.data}');
 
     // Emit content refresh event for screens currently visible
     _emitContentRefreshEvent(message);
@@ -190,6 +191,10 @@ class PushNotificationService {
   void _emitContentRefreshEvent(RemoteMessage message) {
     final type = message.data['type'] as String?;
     final targetId = message.data['targetId'] as String?;
+
+    AppLogging.notifications(
+      '🔔 _emitContentRefreshEvent: type=$type, targetId=$targetId',
+    );
 
     if (type == null) return;
 

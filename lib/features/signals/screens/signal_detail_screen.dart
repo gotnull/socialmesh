@@ -33,22 +33,50 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
   List<SignalResponse>? _responses;
   bool _isLoadingResponses = true;
   StreamSubscription<ContentRefreshEvent>? _refreshSubscription;
+  StreamSubscription<String>? _responseUpdateSubscription;
 
   @override
   void initState() {
     super.initState();
     _currentSignal = widget.signal;
     _loadResponses();
-    _setupRefreshListener();
+    _setupRefreshListeners();
+
+    // Ensure the Firestore comments listener is active for this signal
+    ref.read(signalServiceProvider).ensureCommentsListener(widget.signal.id);
   }
 
-  void _setupRefreshListener() {
+  void _setupRefreshListeners() {
+    AppLogging.signals(
+      '🔔 Setting up refresh listeners for signal ${widget.signal.id}',
+    );
+
+    // Listen for push notification refresh events
     _refreshSubscription = PushNotificationService().onContentRefresh.listen(
       _onContentRefresh,
+      onError: (e) => AppLogging.signals('🔔 Refresh listener error: $e'),
     );
+
+    // Listen for Firestore response updates (more reliable than push)
+    _responseUpdateSubscription = ref
+        .read(signalServiceProvider)
+        .onResponseUpdate
+        .listen(_onResponseUpdate);
+  }
+
+  void _onResponseUpdate(String signalId) {
+    if (signalId == widget.signal.id) {
+      AppLogging.signals(
+        '🔔 Firestore response update for signal ${widget.signal.id}',
+      );
+      _loadResponses();
+    }
   }
 
   void _onContentRefresh(ContentRefreshEvent event) {
+    AppLogging.signals(
+      '🔔 Content refresh event: type=${event.contentType}, targetId=${event.targetId}',
+    );
     // Only refresh if this is a signal response for the signal we're viewing
     if (event.contentType == 'signal_response' &&
         event.targetId == widget.signal.id) {
@@ -56,6 +84,10 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
         '🔔 Received refresh event for signal ${widget.signal.id}',
       );
       _loadResponses();
+    } else {
+      AppLogging.signals(
+        '🔔 Ignoring event - expected signal_response for ${widget.signal.id}',
+      );
     }
   }
 
@@ -87,6 +119,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
   @override
   void dispose() {
     _refreshSubscription?.cancel();
+    _responseUpdateSubscription?.cancel();
     _replyController.dispose();
     super.dispose();
   }
