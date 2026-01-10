@@ -110,7 +110,7 @@ class SignalResponse {
     final createdAt = data['createdAt'] != null
         ? (data['createdAt'] as Timestamp).toDate()
         : DateTime.now();
-    
+
     // For comments, expiresAt is optional (inherit from signal)
     // Use a reasonable default if not present
     final expiresAt = data['expiresAt'] != null
@@ -1594,9 +1594,7 @@ class SignalService {
       return;
     }
     if (_commentsListeners.containsKey(signalId)) {
-      AppLogging.signals(
-        '📡 Comments listener: already active for $signalId',
-      );
+      AppLogging.signals('📡 Comments listener: already active for $signalId');
       return;
     }
 
@@ -1614,8 +1612,10 @@ class SignalService {
         .listen(
           (snapshot) async {
             final comments = snapshot.docs
-                .map((doc) =>
-                    SignalResponse.fromFirestoreComment(doc.id, doc.data()))
+                .map(
+                  (doc) =>
+                      SignalResponse.fromFirestoreComment(doc.id, doc.data()),
+                )
                 .toList();
 
             // Get latest timestamp for logging
@@ -1633,8 +1633,7 @@ class SignalService {
 
             // Update local DB comment count
             final signal = await getSignalById(signalId);
-            if (signal != null &&
-                signal.commentCount != comments.length) {
+            if (signal != null && signal.commentCount != comments.length) {
               await _db!.update(
                 _tableName,
                 {'commentCount': comments.length},
@@ -1716,7 +1715,9 @@ class SignalService {
   void _stopAllCommentsListeners() {
     for (final entry in _commentsListeners.entries) {
       entry.value.cancel();
-      AppLogging.signals('📡 Stopped comments listener for signal ${entry.key}');
+      AppLogging.signals(
+        '📡 Stopped comments listener for signal ${entry.key}',
+      );
     }
     _commentsListeners.clear();
   }
@@ -1999,20 +2000,19 @@ class SignalService {
           .collection('comments')
           .doc(response.id)
           .set({
-        'signalId': response.signalId,
-        'content': response.content,
-        'authorId': response.authorId,
-        'authorName': response.authorName,
-        'createdAt': FieldValue.serverTimestamp(),
-        'origin': 'cloud',
-      });
+            'signalId': response.signalId,
+            'content': response.content,
+            'authorId': response.authorId,
+            'authorName': response.authorName,
+            'createdAt': FieldValue.serverTimestamp(),
+            'origin': 'cloud',
+          });
 
       // Update parent post's commentCount using transaction
       await _firestore.runTransaction((transaction) async {
-        final postRef =
-            _firestore.collection('posts').doc(response.signalId);
+        final postRef = _firestore.collection('posts').doc(response.signalId);
         final snapshot = await transaction.get(postRef);
-        
+
         if (snapshot.exists) {
           final currentCount = snapshot.data()?['commentCount'] as int? ?? 0;
           transaction.update(postRef, {'commentCount': currentCount + 1});
