@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/logging.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
+import '../../../core/widgets/auto_scroll_text.dart';
 import '../../../models/social.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/connection_providers.dart';
@@ -78,14 +79,17 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
       appBar: AppBar(
         backgroundColor: context.background,
         title: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.sensors, color: context.accentColor, size: 24),
             const SizedBox(width: 8),
-            Text(
-              'Presence',
-              style: TextStyle(
-                color: context.textPrimary,
-                fontWeight: FontWeight.w600,
+            Flexible(
+              child: AutoScrollText(
+                'Presence',
+                style: TextStyle(
+                  color: context.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ],
