@@ -453,22 +453,37 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
 
     return Scaffold(
       backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.background,
-        title: Text(
-          'Signal',
-          style: TextStyle(
-            color: context.textPrimary,
-            fontWeight: FontWeight.w600,
+      extendBodyBehindAppBar: true,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: ClipRRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+            child: AppBar(
+              backgroundColor: context.card.withValues(alpha: 0.7),
+              elevation: 0,
+              title: Text(
+                'Signal',
+                style: TextStyle(
+                  color: context.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
           ),
         ),
       ),
       body: Stack(
         children: [
-          // Main content - with bottom padding for reply input
+          // Main content - with top padding for AppBar and bottom for reply input
           ListView(
             controller: _scrollController,
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+            padding: EdgeInsets.fromLTRB(
+              16,
+              MediaQuery.of(context).padding.top + kToolbarHeight + 16,
+              16,
+              100,
+            ),
             children: [
               SignalCard(signal: signal, showActions: false),
               const SizedBox(height: 24),
