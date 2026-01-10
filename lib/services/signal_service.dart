@@ -60,6 +60,7 @@ class SignalResponse {
   final String content;
   final String authorId;
   final String? authorName;
+  final String? parentId; // For threaded replies - ID of parent response
   final DateTime createdAt;
   final DateTime expiresAt;
   final bool isLocal; // true if created on this device
@@ -70,6 +71,7 @@ class SignalResponse {
     required this.content,
     required this.authorId,
     this.authorName,
+    this.parentId,
     required this.createdAt,
     required this.expiresAt,
     this.isLocal = true,
@@ -83,6 +85,7 @@ class SignalResponse {
       'content': content,
       'authorId': authorId,
       'authorName': authorName,
+      if (parentId != null) 'parentId': parentId,
       'createdAt': Timestamp.fromDate(createdAt),
       'expiresAt': Timestamp.fromDate(expiresAt),
     };
@@ -95,6 +98,7 @@ class SignalResponse {
       content: data['content'] as String,
       authorId: data['authorId'] as String,
       authorName: data['authorName'] as String?,
+      parentId: data['parentId'] as String?,
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       expiresAt: (data['expiresAt'] as Timestamp).toDate(),
       isLocal: false,
@@ -124,6 +128,7 @@ class SignalResponse {
       content: data['content'] as String? ?? '',
       authorId: data['authorId'] as String? ?? 'unknown',
       authorName: data['authorName'] as String?,
+      parentId: data['parentId'] as String?,
       createdAt: createdAt,
       expiresAt: expiresAt,
       isLocal: false,
@@ -234,7 +239,7 @@ class SignalService {
 
     _db = await openDatabase(
       dbPath,
-      version: 4,
+      version: 5,
       onCreate: (db, version) async {
         AppLogging.signals('Creating signals database v$version');
         await _createTables(db);
@@ -249,6 +254,12 @@ class SignalService {
         }
         if (oldVersion < 3) {
           await _createResponsesTable(db);
+        }
+        if (oldVersion < 5) {
+          // Add parentId column for threaded replies
+          await db.execute(
+            'ALTER TABLE $_responsesTable ADD COLUMN parentId TEXT',
+          );
         }
         // No migration for hopCount - dev can reset DB if needed
       },
@@ -344,6 +355,7 @@ class SignalService {
         content TEXT NOT NULL,
         authorId TEXT NOT NULL,
         authorName TEXT,
+        parentId TEXT,
         createdAt INTEGER NOT NULL,
         expiresAt INTEGER NOT NULL,
         FOREIGN KEY (signalId) REFERENCES $_tableName(id) ON DELETE CASCADE
@@ -1943,10 +1955,12 @@ class SignalService {
 
   /// Create a response to a signal.
   /// Stores locally in SQLite, syncs to Firestore for authenticated users.
+  /// Use [parentId] to create a reply to another response (threaded).
   Future<SignalResponse?> createResponse({
     required String signalId,
     required String content,
     String? authorName,
+    String? parentId,
   }) async {
     await init();
 
@@ -1970,6 +1984,7 @@ class SignalService {
       content: content,
       authorId: _currentUserId ?? 'anonymous',
       authorName: authorName,
+      parentId: parentId,
       createdAt: now,
       expiresAt: signal.expiresAt ?? now.add(const Duration(hours: 1)),
     );
@@ -1980,6 +1995,7 @@ class SignalService {
       'content': response.content,
       'authorId': response.authorId,
       'authorName': response.authorName,
+      'parentId': response.parentId,
       'createdAt': response.createdAt.millisecondsSinceEpoch,
       'expiresAt': response.expiresAt.millisecondsSinceEpoch,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
@@ -2026,6 +2042,7 @@ class SignalService {
             'content': response.content,
             'authorId': response.authorId,
             'authorName': response.authorName,
+            if (response.parentId != null) 'parentId': response.parentId,
             'createdAt': FieldValue.serverTimestamp(),
             'origin': 'cloud',
           });
@@ -2084,6 +2101,7 @@ class SignalService {
             content: row['content'] as String,
             authorId: row['authorId'] as String,
             authorName: row['authorName'] as String?,
+            parentId: row['parentId'] as String?,
             createdAt: DateTime.fromMillisecondsSinceEpoch(
               row['createdAt'] as int,
             ),

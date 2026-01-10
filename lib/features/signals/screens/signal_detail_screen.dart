@@ -28,12 +28,17 @@ class SignalDetailScreen extends ConsumerStatefulWidget {
 
 class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
   final TextEditingController _replyController = TextEditingController();
+  final FocusNode _replyFocusNode = FocusNode();
   bool _isSubmittingReply = false;
   Post? _currentSignal; // Track updated signal with current commentCount
   List<SignalResponse>? _responses;
   bool _isLoadingResponses = true;
   StreamSubscription<ContentRefreshEvent>? _refreshSubscription;
   StreamSubscription<String>? _responseUpdateSubscription;
+
+  // Reply-to state
+  String? _replyingToId;
+  String? _replyingToAuthor;
 
   @override
   void initState() {
@@ -121,7 +126,23 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
     _refreshSubscription?.cancel();
     _responseUpdateSubscription?.cancel();
     _replyController.dispose();
+    _replyFocusNode.dispose();
     super.dispose();
+  }
+
+  void _handleReplyTo(SignalResponse response) {
+    setState(() {
+      _replyingToId = response.id;
+      _replyingToAuthor = response.authorName ?? 'Someone';
+    });
+    _replyFocusNode.requestFocus();
+  }
+
+  void _cancelReply() {
+    setState(() {
+      _replyingToId = null;
+      _replyingToAuthor = null;
+    });
   }
 
   Future<void> _submitReply() async {
@@ -205,12 +226,14 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
       final service = ref.read(signalServiceProvider);
       final profile = ref.read(userProfileProvider).value;
       AppLogging.signals(
-        '📝 SignalDetailScreen: Submitting response to signal ${widget.signal.id}',
+        '📝 SignalDetailScreen: Submitting response to signal ${widget.signal.id}'
+        '${_replyingToId != null ? ' (reply to $_replyingToId)' : ''}',
       );
       final response = await service.createResponse(
         signalId: widget.signal.id,
         content: content,
         authorName: profile?.displayName,
+        parentId: _replyingToId,
       );
 
       if (response != null) {
@@ -218,6 +241,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
           '📝 SignalDetailScreen: Response created: ${response.id}',
         );
         _replyController.clear();
+        _cancelReply();
 
         // Reload signal from DB to get updated commentCount
         final updatedSignal = await service.getSignalById(widget.signal.id);
@@ -257,9 +281,9 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
       );
     }
 
-    final replies = _responses ?? [];
+    final allResponses = _responses ?? [];
 
-    if (replies.isEmpty) {
+    if (allResponses.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
@@ -280,9 +304,42 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
       );
     }
 
+    // Organize responses into tree structure
+    final rootResponses = allResponses
+        .where((r) => r.parentId == null)
+        .toList();
+    final repliesMap = <String, List<SignalResponse>>{};
+
+    for (final r in allResponses) {
+      if (r.parentId != null) {
+        repliesMap.putIfAbsent(r.parentId!, () => []).add(r);
+      }
+    }
+
+    // Flatten tree into display list with depth info
+    final displayList = <_ResponseDisplayItem>[];
+    void addWithReplies(SignalResponse response, int depth) {
+      displayList.add(_ResponseDisplayItem(response: response, depth: depth));
+      final replies = repliesMap[response.id] ?? [];
+      // Sort replies by createdAt
+      replies.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+      for (final reply in replies) {
+        addWithReplies(reply, depth + 1);
+      }
+    }
+
+    for (final root in rootResponses) {
+      addWithReplies(root, 0);
+    }
+
     return Column(
-      children: replies.map((response) {
-        return _ResponseTile(response: response);
+      children: displayList.map((item) {
+        return _ResponseTile(
+          key: ValueKey(item.response.id),
+          response: item.response,
+          depth: item.depth,
+          onReplyTap: () => _handleReplyTo(item.response),
+        );
       }).toList(),
     );
   }
@@ -338,66 +395,119 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
 
           // Reply input
           Container(
-            padding: EdgeInsets.only(
-              left: 16,
-              right: 16,
-              top: 12,
-              bottom: MediaQuery.of(context).padding.bottom + 12,
-            ),
             decoration: BoxDecoration(
               color: context.card,
               border: Border(
                 top: BorderSide(color: context.border.withValues(alpha: 0.5)),
               ),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _replyController,
-                    enabled: !_isSubmittingReply,
-                    style: TextStyle(color: context.textPrimary),
-                    decoration: InputDecoration(
-                      hintText: 'Respond to this signal...',
-                      hintStyle: TextStyle(color: context.textTertiary),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24),
-                        borderSide: BorderSide.none,
-                      ),
-                      filled: true,
-                      fillColor: context.background,
-                      contentPadding: const EdgeInsets.symmetric(
+            child: SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Reply indicator
+                  if (_replyingToAuthor != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
                         horizontal: 16,
-                        vertical: 10,
+                        vertical: 8,
                       ),
-                    ),
-                    onChanged: (_) => setState(() {}),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  onPressed:
-                      _replyController.text.trim().isNotEmpty &&
-                          !_isSubmittingReply
-                      ? _submitReply
-                      : null,
-                  icon: _isSubmittingReply
-                      ? SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
+                      color: context.accentColor.withValues(alpha: 0.1),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.reply,
+                            size: 16,
                             color: context.accentColor,
                           ),
-                        )
-                      : Icon(
-                          Icons.send,
-                          color: _replyController.text.trim().isNotEmpty
-                              ? context.accentColor
-                              : context.textTertiary,
+                          const SizedBox(width: 8),
+                          Text(
+                            'Replying to $_replyingToAuthor',
+                            style: TextStyle(
+                              color: context.textSecondary,
+                              fontSize: 13,
+                            ),
+                          ),
+                          const Spacer(),
+                          GestureDetector(
+                            onTap: _cancelReply,
+                            child: Icon(
+                              Icons.close,
+                              size: 18,
+                              color: context.textTertiary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  // Input field
+                  Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _replyController,
+                            focusNode: _replyFocusNode,
+                            enabled: !_isSubmittingReply,
+                            style: TextStyle(color: context.textPrimary),
+                            decoration: InputDecoration(
+                              hintText: _replyingToAuthor != null
+                                  ? 'Write a reply...'
+                                  : 'Respond to this signal...',
+                              hintStyle: TextStyle(color: context.textTertiary),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(24),
+                                borderSide: BorderSide.none,
+                              ),
+                              filled: true,
+                              fillColor: context.background,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                            ),
+                            maxLines: 1,
+                            textInputAction: TextInputAction.send,
+                            onSubmitted: (_) => _submitReply(),
+                            textCapitalization: TextCapitalization.sentences,
+                            onChanged: (_) => setState(() {}),
+                          ),
                         ),
-                ),
-              ],
+                        const SizedBox(width: 8),
+                        _isSubmittingReply
+                            ? SizedBox(
+                                width: 48,
+                                height: 48,
+                                child: Center(
+                                  child: SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: context.accentColor,
+                                    ),
+                                  ),
+                                ),
+                              )
+                            : IconButton(
+                                onPressed:
+                                    _replyController.text.trim().isNotEmpty
+                                    ? _submitReply
+                                    : null,
+                                icon: Icon(
+                                  Icons.send,
+                                  color: _replyController.text.trim().isNotEmpty
+                                      ? context.accentColor
+                                      : context.textTertiary,
+                                ),
+                              ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -406,20 +516,43 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
   }
 }
 
+/// Helper class for threaded response display.
+class _ResponseDisplayItem {
+  final SignalResponse response;
+  final int depth;
+
+  const _ResponseDisplayItem({required this.response, required this.depth});
+}
+
 class _ResponseTile extends StatelessWidget {
-  const _ResponseTile({required this.response});
+  const _ResponseTile({
+    super.key,
+    required this.response,
+    required this.depth,
+    this.onReplyTap,
+  });
 
   final SignalResponse response;
+  final int depth;
+  final VoidCallback? onReplyTap;
 
   @override
   Widget build(BuildContext context) {
+    final isReply = depth > 0;
+    // Indent replies but cap at 2 levels for readability
+    final leftPadding = isReply ? 40.0 * depth.clamp(1, 2) : 0.0;
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.only(left: leftPadding, bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: context.border.withValues(alpha: 0.5)),
+        border: Border.all(
+          color: isReply
+              ? context.accentColor.withValues(alpha: 0.3)
+              : context.border.withValues(alpha: 0.5),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -427,13 +560,17 @@ class _ResponseTile extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 32,
-                height: 32,
+                width: isReply ? 28 : 32,
+                height: isReply ? 28 : 32,
                 decoration: BoxDecoration(
                   color: context.accentColor.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.person, size: 18, color: context.accentColor),
+                child: Icon(
+                  Icons.person,
+                  size: isReply ? 16 : 18,
+                  color: context.accentColor,
+                ),
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -444,7 +581,7 @@ class _ResponseTile extends StatelessWidget {
                       response.authorName ?? 'Anonymous',
                       style: TextStyle(
                         color: context.textPrimary,
-                        fontSize: 13,
+                        fontSize: isReply ? 12 : 13,
                         fontWeight: FontWeight.w600,
                       ),
                       maxLines: 1,
@@ -465,7 +602,30 @@ class _ResponseTile extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             response.content,
-            style: TextStyle(color: context.textPrimary, fontSize: 14),
+            style: TextStyle(
+              color: context.textPrimary,
+              fontSize: isReply ? 13 : 14,
+            ),
+          ),
+          // Reply button
+          const SizedBox(height: 8),
+          GestureDetector(
+            onTap: onReplyTap,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.reply, size: 14, color: context.textTertiary),
+                const SizedBox(width: 4),
+                Text(
+                  'Reply',
+                  style: TextStyle(
+                    color: context.textTertiary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
