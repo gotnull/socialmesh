@@ -83,12 +83,16 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
 
   /// Combined check for whether signal can be submitted
   bool get _canSubmit =>
-      _hasValidContent && _isDeviceConnected && _isAuthenticated;
+      _hasValidContent &&
+      _isDeviceConnected &&
+      _isAuthenticated &&
+      !_isValidatingImage;
 
   /// Get the reason why submission is blocked (for UI feedback)
   String? get _submitBlockedReason {
     if (!_isAuthenticated) return 'Sign in required';
     if (!_isDeviceConnected) return 'Device not connected';
+    if (_isValidatingImage) return 'Processing image...';
     return null;
   }
 

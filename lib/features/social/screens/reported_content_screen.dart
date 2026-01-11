@@ -39,18 +39,63 @@ class _ReportedContentScreenState extends ConsumerState<ReportedContentScreen>
 
   @override
   Widget build(BuildContext context) {
+    final socialService = ref.watch(socialServiceProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Reported Content'),
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
-          tabs: const [
-            Tab(text: 'Auto'),
-            Tab(text: 'All'),
-            Tab(text: 'Posts'),
-            Tab(text: 'Comments'),
-            Tab(text: 'Signals'),
+          tabs: [
+            // Auto tab with moderation queue count
+            StreamBuilder<List<Map<String, dynamic>>>(
+              stream: socialService.watchModerationQueue(),
+              builder: (context, snapshot) {
+                final count = snapshot.data?.length ?? 0;
+                return _TabWithBadge(label: 'Auto', count: count);
+              },
+            ),
+            // All reports tab
+            StreamBuilder<List<Map<String, dynamic>>>(
+              stream: socialService.watchPendingReports(),
+              builder: (context, snapshot) {
+                final count = snapshot.data?.length ?? 0;
+                return _TabWithBadge(label: 'All', count: count);
+              },
+            ),
+            // Posts tab
+            StreamBuilder<List<Map<String, dynamic>>>(
+              stream: socialService.watchPendingReports(),
+              builder: (context, snapshot) {
+                final count =
+                    snapshot.data?.where((r) => r['type'] == 'post').length ??
+                    0;
+                return _TabWithBadge(label: 'Posts', count: count);
+              },
+            ),
+            // Comments tab
+            StreamBuilder<List<Map<String, dynamic>>>(
+              stream: socialService.watchPendingReports(),
+              builder: (context, snapshot) {
+                final count =
+                    snapshot.data
+                        ?.where((r) => r['type'] == 'comment')
+                        .length ??
+                    0;
+                return _TabWithBadge(label: 'Comments', count: count);
+              },
+            ),
+            // Signals tab
+            StreamBuilder<List<Map<String, dynamic>>>(
+              stream: socialService.watchPendingReports(),
+              builder: (context, snapshot) {
+                final count =
+                    snapshot.data?.where((r) => r['type'] == 'signal').length ??
+                    0;
+                return _TabWithBadge(label: 'Signals', count: count);
+              },
+            ),
           ],
         ),
       ),
@@ -62,6 +107,44 @@ class _ReportedContentScreenState extends ConsumerState<ReportedContentScreen>
           _ReportsList(filter: 'post'),
           _ReportsList(filter: 'comment'),
           _ReportsList(filter: 'signal'),
+        ],
+      ),
+    );
+  }
+}
+
+/// Tab label with optional badge count
+class _TabWithBadge extends StatelessWidget {
+  const _TabWithBadge({required this.label, required this.count});
+
+  final String label;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tab(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label),
+          if (count > 0) ...[
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.red,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                count > 99 ? '99+' : count.toString(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

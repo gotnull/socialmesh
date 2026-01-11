@@ -647,36 +647,44 @@ class _MainShellState extends ConsumerState<MainShell> {
                     width: 1.5,
                   ),
                 ),
-                child: ClipOval(
-                  child: avatarUrl != null
-                      ? (avatarUrl.startsWith('http')
-                            ? Image.network(
-                                avatarUrl,
-                                fit: BoxFit.cover,
-                                loadingBuilder:
-                                    (context, child, loadingProgress) {
-                                      if (loadingProgress == null) return child;
-                                      return Center(
-                                        child: SizedBox(
-                                          width: 20,
-                                          height: 20,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: accentColor,
+                child: Padding(
+                  padding: const EdgeInsets.all(1.5),
+                  child: ClipOval(
+                    child: avatarUrl != null
+                        ? (avatarUrl.startsWith('http')
+                              ? Image.network(
+                                  avatarUrl,
+                                  width: 37,
+                                  height: 37,
+                                  fit: BoxFit.cover,
+                                  loadingBuilder:
+                                      (context, child, loadingProgress) {
+                                        if (loadingProgress == null)
+                                          return child;
+                                        return Center(
+                                          child: SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: accentColor,
+                                            ),
                                           ),
-                                        ),
-                                      );
-                                    },
-                                errorBuilder: (ctx, err, stack) =>
-                                    _buildInitials(initials, accentColor),
-                              )
-                            : Image.file(
-                                File(avatarUrl),
-                                fit: BoxFit.cover,
-                                errorBuilder: (ctx, err, stack) =>
-                                    _buildInitials(initials, accentColor),
-                              ))
-                      : _buildInitials(initials, accentColor),
+                                        );
+                                      },
+                                  errorBuilder: (ctx, err, stack) =>
+                                      _buildInitials(initials, accentColor),
+                                )
+                              : Image.file(
+                                  File(avatarUrl),
+                                  width: 37,
+                                  height: 37,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (ctx, err, stack) =>
+                                      _buildInitials(initials, accentColor),
+                                ))
+                        : _buildInitials(initials, accentColor),
+                  ),
                 ),
               ),
               const SizedBox(width: 12),

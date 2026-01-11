@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/logging.dart';
+import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/ico_help_system.dart';
 import '../../../providers/help_providers.dart';
 import '../../../core/theme.dart';
@@ -470,55 +471,51 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
   }
 
   Future<void> _reportSignal(Post signal) async {
-    final reasonController = TextEditingController();
-    final reason = await showDialog<String>(
+    final reason = await AppBottomSheet.showActions<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: context.card,
-        title: Text(
-          'Report Signal',
-          style: TextStyle(color: context.textPrimary),
+      header: Text(
+        'Why are you reporting this signal?',
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: context.textPrimary,
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Why are you reporting this signal?',
-              style: TextStyle(color: context.textSecondary),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: reasonController,
-              decoration: InputDecoration(
-                hintText: 'Describe the issue...',
-                hintStyle: TextStyle(color: context.textTertiary),
-                border: const OutlineInputBorder(),
-              ),
-              style: TextStyle(color: context.textPrimary),
-              maxLines: 3,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: context.textSecondary),
-            ),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, reasonController.text.trim()),
-            child: const Text('Report'),
-          ),
-        ],
       ),
+      actions: [
+        BottomSheetAction(
+          icon: Icons.warning_outlined,
+          label: 'Spam or misleading',
+          value: 'spam',
+        ),
+        BottomSheetAction(
+          icon: Icons.person_off_outlined,
+          label: 'Harassment or bullying',
+          value: 'harassment',
+        ),
+        BottomSheetAction(
+          icon: Icons.dangerous_outlined,
+          label: 'Violence or dangerous content',
+          value: 'violence',
+        ),
+        BottomSheetAction(
+          icon: Icons.no_adult_content,
+          label: 'Nudity or sexual content',
+          value: 'nudity',
+        ),
+        BottomSheetAction(
+          icon: Icons.copyright,
+          label: 'Copyright violation',
+          value: 'copyright',
+        ),
+        BottomSheetAction(
+          icon: Icons.more_horiz,
+          label: 'Other',
+          value: 'other',
+        ),
+      ],
     );
 
-    reasonController.dispose();
-
-    if (reason != null && reason.isNotEmpty && mounted) {
+    if (reason != null && mounted) {
       try {
         final socialService = ref.read(socialServiceProvider);
         await socialService.reportSignal(

@@ -307,22 +307,28 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen> {
                     color: context.background,
                     border: Border.all(color: context.accentColor, width: 2),
                   ),
-                  child: ClipOval(
-                    child: seller.logoUrl != null
-                        ? Image.network(
-                            seller.logoUrl!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => Icon(
+                  child: Padding(
+                    padding: const EdgeInsets.all(2),
+                    child: ClipOval(
+                      child: seller.logoUrl != null
+                          ? Image.network(
+                              seller.logoUrl!,
+                              width: 76,
+                              height: 76,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Icon(
+                                    Icons.store,
+                                    color: context.accentColor,
+                                    size: 40,
+                                  ),
+                            )
+                          : Icon(
                               Icons.store,
                               color: context.accentColor,
                               size: 40,
                             ),
-                          )
-                        : Icon(
-                            Icons.store,
-                            color: context.accentColor,
-                            size: 40,
-                          ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),

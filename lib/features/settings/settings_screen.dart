@@ -3404,47 +3404,54 @@ class _ProfileTile extends ConsumerWidget {
                           width: 2,
                         ),
                       ),
-                      child: ClipOval(
-                        child: profile.avatarUrl != null
-                            ? (profile.avatarUrl!.startsWith('http')
-                                  ? Image.network(
-                                      profile.avatarUrl!,
-                                      fit: BoxFit.cover,
-                                      loadingBuilder:
-                                          (context, child, loadingProgress) {
-                                            if (loadingProgress == null) {
-                                              return child;
-                                            }
-                                            return Center(
-                                              child: SizedBox(
-                                                width: 20,
-                                                height: 20,
-                                                child:
-                                                    CircularProgressIndicator(
-                                                      strokeWidth: 2,
-                                                      color: accentColor,
-                                                    ),
-                                              ),
-                                            );
-                                          },
-                                      errorBuilder:
-                                          (context, error, stackTrace) =>
-                                              _buildInitials(
-                                                profile.initials,
-                                                accentColor,
-                                              ),
-                                    )
-                                  : Image.file(
-                                      io.File(profile.avatarUrl!),
-                                      fit: BoxFit.cover,
-                                      errorBuilder:
-                                          (context, error, stackTrace) =>
-                                              _buildInitials(
-                                                profile.initials,
-                                                accentColor,
-                                              ),
-                                    ))
-                            : _buildInitials(profile.initials, accentColor),
+                      child: Padding(
+                        padding: const EdgeInsets.all(2),
+                        child: ClipOval(
+                          child: profile.avatarUrl != null
+                              ? (profile.avatarUrl!.startsWith('http')
+                                    ? Image.network(
+                                        profile.avatarUrl!,
+                                        width: 44,
+                                        height: 44,
+                                        fit: BoxFit.cover,
+                                        loadingBuilder:
+                                            (context, child, loadingProgress) {
+                                              if (loadingProgress == null) {
+                                                return child;
+                                              }
+                                              return Center(
+                                                child: SizedBox(
+                                                  width: 20,
+                                                  height: 20,
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                        strokeWidth: 2,
+                                                        color: accentColor,
+                                                      ),
+                                                ),
+                                              );
+                                            },
+                                        errorBuilder:
+                                            (context, error, stackTrace) =>
+                                                _buildInitials(
+                                                  profile.initials,
+                                                  accentColor,
+                                                ),
+                                      )
+                                    : Image.file(
+                                        io.File(profile.avatarUrl!),
+                                        width: 44,
+                                        height: 44,
+                                        fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (context, error, stackTrace) =>
+                                                _buildInitials(
+                                                  profile.initials,
+                                                  accentColor,
+                                                ),
+                                      ))
+                              : _buildInitials(profile.initials, accentColor),
+                        ),
                       ),
                     ),
                     SizedBox(width: 12),

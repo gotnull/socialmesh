@@ -163,6 +163,8 @@ class _SignalHeader extends ConsumerWidget {
                 ? ClipOval(
                     child: Image.network(
                       avatarUrl,
+                      width: 40,
+                      height: 40,
                       fit: BoxFit.cover,
                       loadingBuilder: (ctx, child, progress) {
                         if (progress == null) return child;
