@@ -111,14 +111,27 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
           actions: [
             // Go Active button in AppBar
             Padding(
-              padding: const EdgeInsets.only(right: 12),
+              padding: const EdgeInsets.only(right: 4),
               child: _buildGoActiveButton(canGoActive, isSignedIn, isConnected),
             ),
-            IconButton(
-              icon: const Icon(Icons.help_outline),
-              onPressed: () =>
-                  ref.read(helpProvider.notifier).startTour('signals_overview'),
-              tooltip: 'Help',
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert),
+              onSelected: (value) {
+                if (value == 'help') {
+                  ref.read(helpProvider.notifier).startTour('signals_overview');
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'help',
+                  child: ListTile(
+                    leading: Icon(Icons.help_outline),
+                    title: Text('Help'),
+                    contentPadding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -143,35 +156,27 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
       blockedReason = 'Device not connected';
     }
 
+    final accentColor = context.accentColor;
+    final gradient = LinearGradient(
+      colors: [accentColor, Color.lerp(accentColor, Colors.white, 0.2)!],
+    );
+
     return Tooltip(
       message: blockedReason ?? 'Broadcast your presence',
       child: BouncyTap(
         onTap: _openCreateSignal,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          width: 36,
+          height: 36,
           decoration: BoxDecoration(
-            gradient: canGoActive ? AppTheme.brandGradientHorizontal : null,
+            gradient: canGoActive ? gradient : null,
             color: canGoActive ? null : context.border.withValues(alpha: 0.5),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(18),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.sensors,
-                size: 18,
-                color: canGoActive ? Colors.white : context.textTertiary,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'Go Active',
-                style: TextStyle(
-                  color: canGoActive ? Colors.white : context.textTertiary,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
-              ),
-            ],
+          child: Icon(
+            Icons.sensors,
+            size: 20,
+            color: canGoActive ? Colors.white : context.textTertiary,
           ),
         ),
       ),
@@ -250,42 +255,51 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
               message: blockedReason ?? '',
               child: BouncyTap(
                 onTap: _openCreateSignal,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    gradient: canGoActive
-                        ? AppTheme.brandGradientHorizontal
-                        : null,
-                    color: canGoActive
-                        ? null
-                        : context.border.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.sensors,
+                child: Builder(
+                  builder: (context) {
+                    final accentColor = context.accentColor;
+                    final gradient = LinearGradient(
+                      colors: [
+                        accentColor,
+                        Color.lerp(accentColor, Colors.white, 0.2)!,
+                      ],
+                    );
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: canGoActive ? gradient : null,
                         color: canGoActive
-                            ? Colors.white
-                            : context.textTertiary,
-                        size: 20,
+                            ? null
+                            : context.border.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(24),
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Go active',
-                        style: TextStyle(
-                          color: canGoActive
-                              ? Colors.white
-                              : context.textTertiary,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.sensors,
+                            color: canGoActive
+                                ? Colors.white
+                                : context.textTertiary,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Go Active',
+                            style: TextStyle(
+                              color: canGoActive
+                                  ? Colors.white
+                                  : context.textTertiary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    );
+                  },
                 ),
               ),
             ),
