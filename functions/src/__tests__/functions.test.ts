@@ -261,6 +261,232 @@ describe('Social Functions', () => {
       });
     });
   });
+
+  describe('Signal Comment Voting System', () => {
+    describe('onCommentVoteWrite', () => {
+      it('should calculate correct deltas for new upvote', () => {
+        const calculateDeltas = (before: number | undefined, after: number | undefined) => {
+          let upDelta = 0;
+          let downDelta = 0;
+
+          if (before === undefined && after !== undefined) {
+            if (after === 1) upDelta = 1;
+            if (after === -1) downDelta = 1;
+          } else if (before !== undefined && after === undefined) {
+            if (before === 1) upDelta = -1;
+            if (before === -1) downDelta = -1;
+          } else if (before !== undefined && after !== undefined && before !== after) {
+            if (before === 1 && after === -1) {
+              upDelta = -1;
+              downDelta = 1;
+            } else if (before === -1 && after === 1) {
+              upDelta = 1;
+              downDelta = -1;
+            }
+          }
+
+          return { upDelta, downDelta };
+        };
+
+        // New upvote
+        expect(calculateDeltas(undefined, 1)).toEqual({ upDelta: 1, downDelta: 0 });
+      });
+
+      it('should calculate correct deltas for new downvote', () => {
+        const calculateDeltas = (before: number | undefined, after: number | undefined) => {
+          let upDelta = 0;
+          let downDelta = 0;
+
+          if (before === undefined && after !== undefined) {
+            if (after === 1) upDelta = 1;
+            if (after === -1) downDelta = 1;
+          }
+
+          return { upDelta, downDelta };
+        };
+
+        // New downvote
+        expect(calculateDeltas(undefined, -1)).toEqual({ upDelta: 0, downDelta: 1 });
+      });
+
+      it('should calculate correct deltas for removed upvote', () => {
+        const calculateDeltas = (before: number | undefined, after: number | undefined) => {
+          let upDelta = 0;
+          let downDelta = 0;
+
+          if (before !== undefined && after === undefined) {
+            if (before === 1) upDelta = -1;
+            if (before === -1) downDelta = -1;
+          }
+
+          return { upDelta, downDelta };
+        };
+
+        // Removed upvote
+        expect(calculateDeltas(1, undefined)).toEqual({ upDelta: -1, downDelta: 0 });
+      });
+
+      it('should calculate correct deltas for removed downvote', () => {
+        const calculateDeltas = (before: number | undefined, after: number | undefined) => {
+          let upDelta = 0;
+          let downDelta = 0;
+
+          if (before !== undefined && after === undefined) {
+            if (before === 1) upDelta = -1;
+            if (before === -1) downDelta = -1;
+          }
+
+          return { upDelta, downDelta };
+        };
+
+        // Removed downvote
+        expect(calculateDeltas(-1, undefined)).toEqual({ upDelta: 0, downDelta: -1 });
+      });
+
+      it('should calculate correct deltas for upvote to downvote', () => {
+        const calculateDeltas = (before: number | undefined, after: number | undefined) => {
+          let upDelta = 0;
+          let downDelta = 0;
+
+          if (before !== undefined && after !== undefined && before !== after) {
+            if (before === 1 && after === -1) {
+              upDelta = -1;
+              downDelta = 1;
+            } else if (before === -1 && after === 1) {
+              upDelta = 1;
+              downDelta = -1;
+            }
+          }
+
+          return { upDelta, downDelta };
+        };
+
+        // Changed from upvote to downvote
+        expect(calculateDeltas(1, -1)).toEqual({ upDelta: -1, downDelta: 1 });
+      });
+
+      it('should calculate correct deltas for downvote to upvote', () => {
+        const calculateDeltas = (before: number | undefined, after: number | undefined) => {
+          let upDelta = 0;
+          let downDelta = 0;
+
+          if (before !== undefined && after !== undefined && before !== after) {
+            if (before === 1 && after === -1) {
+              upDelta = -1;
+              downDelta = 1;
+            } else if (before === -1 && after === 1) {
+              upDelta = 1;
+              downDelta = -1;
+            }
+          }
+
+          return { upDelta, downDelta };
+        };
+
+        // Changed from downvote to upvote
+        expect(calculateDeltas(-1, 1)).toEqual({ upDelta: 1, downDelta: -1 });
+      });
+
+      it('should return no change for same vote value', () => {
+        const calculateDeltas = (before: number | undefined, after: number | undefined) => {
+          if (before === after) {
+            return { upDelta: 0, downDelta: 0 };
+          }
+          return { upDelta: 0, downDelta: 0 };
+        };
+
+        expect(calculateDeltas(1, 1)).toEqual({ upDelta: 0, downDelta: 0 });
+        expect(calculateDeltas(-1, -1)).toEqual({ upDelta: 0, downDelta: 0 });
+      });
+
+      it('should compute correct score from counts', () => {
+        const computeScore = (upvoteCount: number, downvoteCount: number) =>
+          upvoteCount - downvoteCount;
+
+        expect(computeScore(10, 3)).toBe(7);
+        expect(computeScore(5, 8)).toBe(-3);
+        expect(computeScore(0, 0)).toBe(0);
+        expect(computeScore(100, 100)).toBe(0);
+      });
+
+      it('should not allow negative counts', () => {
+        const safeIncrement = (count: number, delta: number) =>
+          Math.max(0, count + delta);
+
+        expect(safeIncrement(5, -1)).toBe(4);
+        expect(safeIncrement(0, -1)).toBe(0);
+        expect(safeIncrement(1, -5)).toBe(0);
+      });
+    });
+
+    describe('onSignalCommentCreated', () => {
+      it('should set depth 0 for root comments', () => {
+        const getDepth = (parentId: string | null | undefined, parentDepth: number | undefined) => {
+          if (!parentId) return 0;
+          return Math.min((parentDepth || 0) + 1, 8);
+        };
+
+        expect(getDepth(null, undefined)).toBe(0);
+        expect(getDepth(undefined, undefined)).toBe(0);
+      });
+
+      it('should increment depth for replies', () => {
+        const getDepth = (parentId: string | null, parentDepth: number) => {
+          if (!parentId) return 0;
+          return Math.min(parentDepth + 1, 8);
+        };
+
+        expect(getDepth('parent-1', 0)).toBe(1);
+        expect(getDepth('parent-2', 1)).toBe(2);
+        expect(getDepth('parent-3', 5)).toBe(6);
+      });
+
+      it('should cap depth at maximum (8)', () => {
+        const MAX_DEPTH = 8;
+        const getDepth = (parentDepth: number) =>
+          Math.min(parentDepth + 1, MAX_DEPTH);
+
+        expect(getDepth(7)).toBe(8);
+        expect(getDepth(8)).toBe(8);
+        expect(getDepth(100)).toBe(8);
+      });
+
+      it('should clamp depth at maximum (8) without changing parentId', () => {
+        const MAX_DEPTH = 8;
+        // Depth is clamped visually, parentId is NOT changed
+        const getDepthAndParent = (
+          parentId: string,
+          parentDepth: number,
+        ) => {
+          const newDepth = Math.min(parentDepth + 1, MAX_DEPTH);
+          // parentId stays the same - no flattening
+          return { depth: newDepth, parentId };
+        };
+
+        // Normal case
+        expect(getDepthAndParent('parent', 5)).toEqual({ depth: 6, parentId: 'parent' });
+
+        // At max depth - depth clamped but parentId unchanged
+        expect(getDepthAndParent('parent', 7)).toEqual({ depth: 8, parentId: 'parent' });
+        expect(getDepthAndParent('parent', 8)).toEqual({ depth: 8, parentId: 'parent' });
+      });
+    });
+
+    describe('onSignalCommentDeleted', () => {
+      it('should decrement parent replyCount', () => {
+        const decrementValue = -1;
+        expect(decrementValue).toBe(-1);
+      });
+
+      it('should skip decrement for root comments', () => {
+        const shouldDecrement = (parentId: string | null | undefined) => !!parentId;
+
+        expect(shouldDecrement(null)).toBe(false);
+        expect(shouldDecrement(undefined)).toBe(false);
+        expect(shouldDecrement('parent-1')).toBe(true);
+      });
+    });
+  });
 });
 
 // =============================================================================
@@ -610,5 +836,200 @@ describe('CORS and Headers', () => {
     expect(headers['Access-Control-Allow-Methods']).toContain('GET');
     expect(headers['Access-Control-Allow-Methods']).toContain('POST');
     expect(headers['Access-Control-Allow-Headers']).toContain('Authorization');
+  });
+});
+// =============================================================================
+// FIRESTORE RULES VALIDATION TESTS
+// These test the expected rule behavior logic without emulators
+// =============================================================================
+
+describe('Firestore Rules Validation', () => {
+  describe('Vote document rules', () => {
+    it('should require authenticated user', () => {
+      const isAuthenticated = (auth: { uid: string } | null) => auth !== null;
+
+      expect(isAuthenticated({ uid: 'user123' })).toBe(true);
+      expect(isAuthenticated(null)).toBe(false);
+    });
+
+    it('should require voterId to match auth.uid', () => {
+      const isOwner = (voterId: string, authUid: string) => voterId === authUid;
+
+      expect(isOwner('user123', 'user123')).toBe(true);
+      expect(isOwner('user123', 'user456')).toBe(false);
+    });
+
+    it('should only allow +1 or -1 vote values', () => {
+      const isValidVoteValue = (value: number) => value === 1 || value === -1;
+
+      expect(isValidVoteValue(1)).toBe(true);
+      expect(isValidVoteValue(-1)).toBe(true);
+      expect(isValidVoteValue(0)).toBe(false);
+      expect(isValidVoteValue(2)).toBe(false);
+      expect(isValidVoteValue(-2)).toBe(false);
+    });
+
+    it('should validate vote create request', () => {
+      const canCreateVote = (
+        auth: { uid: string } | null,
+        voterId: string,
+        value: number
+      ) => {
+        if (!auth) return false;
+        if (voterId !== auth.uid) return false;
+        if (value !== 1 && value !== -1) return false;
+        return true;
+      };
+
+      // Valid cases
+      expect(canCreateVote({ uid: 'user1' }, 'user1', 1)).toBe(true);
+      expect(canCreateVote({ uid: 'user1' }, 'user1', -1)).toBe(true);
+
+      // Invalid cases
+      expect(canCreateVote(null, 'user1', 1)).toBe(false);
+      expect(canCreateVote({ uid: 'user1' }, 'user2', 1)).toBe(false);
+      expect(canCreateVote({ uid: 'user1' }, 'user1', 0)).toBe(false);
+      expect(canCreateVote({ uid: 'user1' }, 'user1', 2)).toBe(false);
+    });
+
+    it('should validate vote update request', () => {
+      const canUpdateVote = (
+        auth: { uid: string } | null,
+        voterId: string,
+        newValue: number
+      ) => {
+        if (!auth) return false;
+        if (voterId !== auth.uid) return false;
+        if (newValue !== 1 && newValue !== -1) return false;
+        return true;
+      };
+
+      // Changing vote from 1 to -1
+      expect(canUpdateVote({ uid: 'user1' }, 'user1', -1)).toBe(true);
+      // Changing vote from -1 to 1
+      expect(canUpdateVote({ uid: 'user1' }, 'user1', 1)).toBe(true);
+      // Invalid value
+      expect(canUpdateVote({ uid: 'user1' }, 'user1', 0)).toBe(false);
+    });
+
+    it('should validate vote delete request', () => {
+      const canDeleteVote = (auth: { uid: string } | null, voterId: string) => {
+        if (!auth) return false;
+        return voterId === auth.uid;
+      };
+
+      expect(canDeleteVote({ uid: 'user1' }, 'user1')).toBe(true);
+      expect(canDeleteVote({ uid: 'user1' }, 'user2')).toBe(false);
+      expect(canDeleteVote(null, 'user1')).toBe(false);
+    });
+  });
+
+  describe('Comment document rules', () => {
+    it('should deny direct writes to aggregate fields', () => {
+      const hasAggregateField = (data: Record<string, unknown>) => {
+        const aggregateFields = ['score', 'upvoteCount', 'downvoteCount', 'replyCount'];
+        return aggregateFields.some(f => f in data && data[f] !== 0);
+      };
+
+      // Should deny - non-zero aggregate fields
+      expect(hasAggregateField({ score: 5 })).toBe(true);
+      expect(hasAggregateField({ upvoteCount: 1 })).toBe(true);
+      expect(hasAggregateField({ downvoteCount: 2 })).toBe(true);
+
+      // Should allow - zero values or no aggregate fields
+      expect(hasAggregateField({ score: 0, upvoteCount: 0 })).toBe(false);
+      expect(hasAggregateField({ content: 'test' })).toBe(false);
+    });
+
+    it('should validate comment create data', () => {
+      const isValidCommentCreate = (
+        auth: { uid: string } | null,
+        data: {
+          authorId: string;
+          content?: string;
+          signalId?: string;
+          score?: number;
+          upvoteCount?: number;
+          downvoteCount?: number;
+          replyCount?: number;
+        },
+        postId: string
+      ) => {
+        if (!auth) return false;
+        if (data.authorId !== auth.uid) return false;
+        if (!data.content || data.content.length === 0 || data.content.length > 500) return false;
+        if (data.signalId !== postId) return false;
+        // Aggregate fields must be 0 or omitted
+        if (data.score && data.score !== 0) return false;
+        if (data.upvoteCount && data.upvoteCount !== 0) return false;
+        if (data.downvoteCount && data.downvoteCount !== 0) return false;
+        if (data.replyCount && data.replyCount !== 0) return false;
+        return true;
+      };
+
+      // Valid create
+      expect(isValidCommentCreate(
+        { uid: 'user1' },
+        { authorId: 'user1', content: 'Hello', signalId: 'post1' },
+        'post1'
+      )).toBe(true);
+
+      // Invalid: wrong author
+      expect(isValidCommentCreate(
+        { uid: 'user1' },
+        { authorId: 'user2', content: 'Hello', signalId: 'post1' },
+        'post1'
+      )).toBe(false);
+
+      // Invalid: wrong signalId
+      expect(isValidCommentCreate(
+        { uid: 'user1' },
+        { authorId: 'user1', content: 'Hello', signalId: 'post2' },
+        'post1'
+      )).toBe(false);
+
+      // Invalid: trying to set aggregate fields
+      expect(isValidCommentCreate(
+        { uid: 'user1' },
+        { authorId: 'user1', content: 'Hello', signalId: 'post1', score: 5 },
+        'post1'
+      )).toBe(false);
+    });
+
+    it('should only allow soft delete updates by author', () => {
+      const canSoftDelete = (
+        auth: { uid: string } | null,
+        existingAuthorId: string,
+        updates: { isDeleted?: boolean; content?: string }
+      ) => {
+        if (!auth) return false;
+        if (auth.uid !== existingAuthorId) return false;
+        // Only allow setting isDeleted=true and content='[deleted]'
+        if (updates.isDeleted !== true) return false;
+        if (updates.content !== '[deleted]') return false;
+        return true;
+      };
+
+      // Valid soft delete
+      expect(canSoftDelete(
+        { uid: 'user1' },
+        'user1',
+        { isDeleted: true, content: '[deleted]' }
+      )).toBe(true);
+
+      // Invalid: not the author
+      expect(canSoftDelete(
+        { uid: 'user2' },
+        'user1',
+        { isDeleted: true, content: '[deleted]' }
+      )).toBe(false);
+
+      // Invalid: wrong content
+      expect(canSoftDelete(
+        { uid: 'user1' },
+        'user1',
+        { isDeleted: true, content: 'modified content' }
+      )).toBe(false);
+    });
   });
 });

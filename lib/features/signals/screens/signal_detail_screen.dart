@@ -33,14 +33,17 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
   final ScrollController _scrollController = ScrollController();
   bool _isSubmittingReply = false;
   Post? _currentSignal; // Track updated signal with current commentCount
-  List<SignalResponse>? _responses;
-  bool _isLoadingResponses = true;
+  List<SignalResponse>? _comments;
+  bool _isLoadingComments = true;
   StreamSubscription<ContentRefreshEvent>? _refreshSubscription;
-  StreamSubscription<String>? _responseUpdateSubscription;
+  StreamSubscription<String>? _commentUpdateSubscription;
 
   // Reply-to state
   String? _replyingToId;
   String? _replyingToAuthor;
+
+  // Vote tracking - maps responseId to vote value (1=up, -1=down)
+  Map<String, int> _myVotes = {};
 
   // Sticky header state
   bool _showStickyHeader = false;
@@ -50,7 +53,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
   void initState() {
     super.initState();
     _currentSignal = widget.signal;
-    _loadResponses();
+    _loadComments();
     _setupRefreshListeners();
     _scrollController.addListener(_onScroll);
 
@@ -76,19 +79,19 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
       onError: (e) => AppLogging.signals('🔔 Refresh listener error: $e'),
     );
 
-    // Listen for Firestore response updates (more reliable than push)
-    _responseUpdateSubscription = ref
+    // Listen for Firestore comment updates (more reliable than push)
+    _commentUpdateSubscription = ref
         .read(signalServiceProvider)
-        .onResponseUpdate
-        .listen(_onResponseUpdate);
+        .onCommentUpdate
+        .listen(_onCommentUpdate);
   }
 
-  void _onResponseUpdate(String signalId) {
+  void _onCommentUpdate(String signalId) {
     if (signalId == widget.signal.id) {
       AppLogging.signals(
-        '🔔 Firestore response update for signal ${widget.signal.id}',
+        '🔔 Firestore comment update for signal ${widget.signal.id}',
       );
-      _loadResponses();
+      _loadComments();
     }
   }
 
@@ -102,7 +105,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
       AppLogging.signals(
         '🔔 Received refresh event for signal ${widget.signal.id}',
       );
-      _loadResponses();
+      _loadComments();
     } else {
       AppLogging.signals(
         '🔔 Ignoring event - expected signal_response for ${widget.signal.id}',
@@ -110,26 +113,31 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
     }
   }
 
-  Future<void> _loadResponses() async {
+  Future<void> _loadComments() async {
     if (!mounted) return;
-    setState(() => _isLoadingResponses = true);
+    setState(() => _isLoadingComments = true);
 
     try {
-      final responses = await ref
-          .read(signalServiceProvider)
-          .getResponses(widget.signal.id);
+      final signalService = ref.read(signalServiceProvider);
+      final responses = await signalService.getComments(widget.signal.id);
+
+      // Get user's votes from the service cache (populated by Firestore listener)
+      final votes = signalService.getMyVotesForSignal(widget.signal.id);
+
       if (mounted) {
         setState(() {
-          _responses = responses;
-          _isLoadingResponses = false;
+          _comments = responses;
+          _myVotes = votes;
+          _isLoadingComments = false;
         });
       }
     } catch (e) {
-      AppLogging.signals('Error loading responses: $e');
+      AppLogging.signals('Error loading comments: $e');
       if (mounted) {
         setState(() {
-          _responses = [];
-          _isLoadingResponses = false;
+          _comments = [];
+          _myVotes = {};
+          _isLoadingComments = false;
         });
       }
     }
@@ -138,7 +146,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
   @override
   void dispose() {
     _refreshSubscription?.cancel();
-    _responseUpdateSubscription?.cancel();
+    _commentUpdateSubscription?.cancel();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     _replyController.dispose();
@@ -159,6 +167,86 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
       _replyingToId = null;
       _replyingToAuthor = null;
     });
+  }
+
+  Future<void> _handleVote(SignalResponse response, int value) async {
+    // Auth gating check
+    final isAuthenticated = ref.read(isSignedInProvider);
+    if (!isAuthenticated) {
+      AppLogging.signals('🔒 Vote blocked: user not authenticated');
+      if (mounted) {
+        showErrorSnackBar(context, 'Sign in required to vote');
+      }
+      return;
+    }
+
+    final currentVote = _myVotes[response.id];
+
+    if (currentVote == value) {
+      // Toggle off - remove vote
+      await _removeVote(response);
+    } else {
+      // Set new vote
+      await _setVote(response, value);
+    }
+  }
+
+  Future<void> _setVote(SignalResponse response, int value) async {
+    // Optimistic update
+    final previousVote = _myVotes[response.id];
+    setState(() {
+      _myVotes[response.id] = value;
+    });
+
+    try {
+      await ref
+          .read(signalServiceProvider)
+          .setVote(
+            signalId: widget.signal.id,
+            commentId: response.id,
+            value: value,
+          );
+      // Vote counts will be updated via Firestore listener and _loadComments
+    } catch (e) {
+      // Revert on error
+      AppLogging.signals('Vote error: $e');
+      if (mounted) {
+        setState(() {
+          if (previousVote != null) {
+            _myVotes[response.id] = previousVote;
+          } else {
+            _myVotes.remove(response.id);
+          }
+        });
+        showErrorSnackBar(context, 'Failed to submit vote');
+      }
+    }
+  }
+
+  Future<void> _removeVote(SignalResponse response) async {
+    // Optimistic update
+    final previousVote = _myVotes[response.id];
+    setState(() {
+      _myVotes.remove(response.id);
+    });
+
+    try {
+      await ref
+          .read(signalServiceProvider)
+          .clearVote(signalId: widget.signal.id, commentId: response.id);
+      // Vote counts will be updated via Firestore listener and _loadComments
+    } catch (e) {
+      // Revert on error
+      AppLogging.signals('Clear vote error: $e');
+      if (mounted) {
+        if (previousVote != null) {
+          setState(() {
+            _myVotes[response.id] = previousVote;
+          });
+        }
+        showErrorSnackBar(context, 'Failed to remove vote');
+      }
+    }
   }
 
   Future<void> _submitReply() async {
@@ -266,7 +354,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
         }
 
         // Reload responses to show the new one
-        await _loadResponses();
+        await _loadComments();
       } else {
         AppLogging.signals(
           '📝 SignalDetailScreen: Response creation returned null',
@@ -287,8 +375,8 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
     }
   }
 
-  Widget _buildResponsesList(BuildContext context) {
-    if (_isLoadingResponses) {
+  Widget _buildCommentsList(BuildContext context) {
+    if (_isLoadingComments) {
       return Container(
         padding: const EdgeInsets.all(32),
         child: Column(
@@ -303,7 +391,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Loading responses...',
+              'Loading comments...',
               style: TextStyle(color: context.textTertiary, fontSize: 13),
             ),
           ],
@@ -311,7 +399,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
       );
     }
 
-    final allResponses = _responses ?? [];
+    final allResponses = _comments ?? [];
 
     if (allResponses.isEmpty) {
       return Container(
@@ -345,7 +433,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'No responses yet',
+              'No comments yet',
               style: TextStyle(
                 color: context.textPrimary,
                 fontSize: 16,
@@ -434,6 +522,9 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
           isLastChild: item.isLastChild,
           ancestorHasMoreSiblings: item.ancestorHasMoreSiblings,
           onReplyTap: () => _handleReplyTo(item.response),
+          onUpvote: () => _handleVote(item.response, 1),
+          onDownvote: () => _handleVote(item.response, -1),
+          myVote: _myVotes[item.response.id],
         );
       }).toList(),
     );
@@ -550,9 +641,9 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          if (_responses != null && _responses!.isNotEmpty)
+                          if (_comments != null && _comments!.isNotEmpty)
                             Text(
-                              '${_responses!.length} ${_responses!.length == 1 ? 'response' : 'responses'}',
+                              '${_comments!.length} ${_comments!.length == 1 ? 'comment' : 'comments'}',
                               style: TextStyle(
                                 color: context.textTertiary,
                                 fontSize: 12,
@@ -561,7 +652,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
                         ],
                       ),
                     ),
-                    if (_isLoadingResponses)
+                    if (_isLoadingComments)
                       SizedBox(
                         width: 16,
                         height: 16,
@@ -576,7 +667,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
               const SizedBox(height: 20),
 
               // Responses list
-              _buildResponsesList(context),
+              _buildCommentsList(context),
             ],
           ),
 
@@ -755,6 +846,9 @@ class _ResponseTile extends StatelessWidget {
     this.isLastChild = true,
     this.ancestorHasMoreSiblings = const [],
     this.onReplyTap,
+    this.onUpvote,
+    this.onDownvote,
+    this.myVote,
   });
 
   final SignalResponse response;
@@ -765,6 +859,9 @@ class _ResponseTile extends StatelessWidget {
   final bool isLastChild;
   final List<bool> ancestorHasMoreSiblings;
   final VoidCallback? onReplyTap;
+  final VoidCallback? onUpvote;
+  final VoidCallback? onDownvote;
+  final int? myVote; // 1=upvoted, -1=downvoted, null=no vote
 
   static const double _avatarSize = 24.0;
   static const double _indentWidth = 16.0;
@@ -865,13 +962,18 @@ class _ResponseTile extends StatelessWidget {
 
                   const SizedBox(height: 4),
 
-                  // Content text
+                  // Content text (use displayContent for soft-deleted support)
                   Text(
-                    response.content,
+                    response.displayContent,
                     style: TextStyle(
-                      color: context.textPrimary,
+                      color: response.isDeleted
+                          ? context.textTertiary
+                          : context.textPrimary,
                       fontSize: 14,
                       height: 1.4,
+                      fontStyle: response.isDeleted
+                          ? FontStyle.italic
+                          : FontStyle.normal,
                     ),
                   ),
 
@@ -880,16 +982,35 @@ class _ResponseTile extends StatelessWidget {
                   // Actions row
                   Row(
                     children: [
-                      _ActionButton(
+                      _VoteButton(
                         icon: Icons.arrow_upward_rounded,
-                        onTap: () {}, // Vote up
-                        context: context,
+                        isActive: myVote == 1,
+                        onTap: onUpvote,
+                        activeColor: Colors.orange,
                       ),
-                      const SizedBox(width: 4),
-                      _ActionButton(
+                      if (response.score != 0)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 2),
+                          child: Text(
+                            response.score > 0
+                                ? '+${response.score}'
+                                : '${response.score}',
+                            style: TextStyle(
+                              color: response.score > 0
+                                  ? Colors.orange
+                                  : response.score < 0
+                                  ? Colors.blue
+                                  : context.textTertiary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      _VoteButton(
                         icon: Icons.arrow_downward_rounded,
-                        onTap: () {}, // Vote down
-                        context: context,
+                        isActive: myVote == -1,
+                        onTap: onDownvote,
+                        activeColor: Colors.blue,
                       ),
                       const SizedBox(width: 12),
                       GestureDetector(
@@ -903,7 +1024,9 @@ class _ResponseTile extends StatelessWidget {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              'Reply',
+                              response.replyCount > 0
+                                  ? 'Reply (${response.replyCount})'
+                                  : 'Reply',
                               style: TextStyle(
                                 color: context.textTertiary,
                                 fontSize: 12,
@@ -937,25 +1060,31 @@ class _ResponseTile extends StatelessWidget {
   }
 }
 
-/// Small action button for vote actions.
-class _ActionButton extends StatelessWidget {
-  const _ActionButton({
+/// Vote button with active state highlighting.
+class _VoteButton extends StatelessWidget {
+  const _VoteButton({
     required this.icon,
-    required this.onTap,
-    required this.context,
+    required this.isActive,
+    this.onTap,
+    this.activeColor,
   });
 
   final IconData icon;
-  final VoidCallback onTap;
-  final BuildContext context;
+  final bool isActive;
+  final VoidCallback? onTap;
+  final Color? activeColor;
 
   @override
-  Widget build(BuildContext _) {
+  Widget build(BuildContext context) {
+    final color = isActive
+        ? (activeColor ?? context.accentColor)
+        : context.textTertiary;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(4),
-        child: Icon(icon, size: 16, color: context.textTertiary),
+        child: Icon(icon, size: 16, color: color),
       ),
     );
   }

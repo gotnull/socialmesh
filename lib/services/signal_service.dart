@@ -51,8 +51,8 @@ class ImageUnlockRules {
   static const int maxHopsForProximity = 2;
 }
 
-/// A response to a signal.
-/// Responses are stored locally in SQLite and synced to Firestore.
+/// A comment on a signal.
+/// Comments are stored locally in SQLite and synced to Firestore.
 /// Only visible to users who have the signal locally (received via mesh).
 class SignalResponse {
   final String id;
@@ -61,9 +61,22 @@ class SignalResponse {
   final String authorId;
   final String? authorName;
   final String? parentId; // For threaded replies - ID of parent response
+  final int depth; // Thread depth (0 = top-level, computed from parentId chain)
   final DateTime createdAt;
   final DateTime expiresAt;
   final bool isLocal; // true if created on this device
+
+  // Voting fields (maintained by Cloud Functions, read-only on client)
+  final int score; // upvoteCount - downvoteCount
+  final int upvoteCount;
+  final int downvoteCount;
+  final int replyCount; // Direct child replies count
+
+  // User's current vote on this response (client-side state, not stored in response doc)
+  final int myVote; // +1, -1, or 0 (no vote)
+
+  // Soft delete support
+  final bool isDeleted;
 
   const SignalResponse({
     required this.id,
@@ -72,12 +85,61 @@ class SignalResponse {
     required this.authorId,
     this.authorName,
     this.parentId,
+    this.depth = 0,
     required this.createdAt,
     required this.expiresAt,
     this.isLocal = true,
+    this.score = 0,
+    this.upvoteCount = 0,
+    this.downvoteCount = 0,
+    this.replyCount = 0,
+    this.myVote = 0,
+    this.isDeleted = false,
   });
 
   bool get isExpired => DateTime.now().isAfter(expiresAt);
+
+  /// Display content - shows "[deleted]" for soft-deleted comments
+  String get displayContent => isDeleted ? '[deleted]' : content;
+
+  /// Copy with new values
+  SignalResponse copyWith({
+    String? id,
+    String? signalId,
+    String? content,
+    String? authorId,
+    String? authorName,
+    String? parentId,
+    int? depth,
+    DateTime? createdAt,
+    DateTime? expiresAt,
+    bool? isLocal,
+    int? score,
+    int? upvoteCount,
+    int? downvoteCount,
+    int? replyCount,
+    int? myVote,
+    bool? isDeleted,
+  }) {
+    return SignalResponse(
+      id: id ?? this.id,
+      signalId: signalId ?? this.signalId,
+      content: content ?? this.content,
+      authorId: authorId ?? this.authorId,
+      authorName: authorName ?? this.authorName,
+      parentId: parentId ?? this.parentId,
+      depth: depth ?? this.depth,
+      createdAt: createdAt ?? this.createdAt,
+      expiresAt: expiresAt ?? this.expiresAt,
+      isLocal: isLocal ?? this.isLocal,
+      score: score ?? this.score,
+      upvoteCount: upvoteCount ?? this.upvoteCount,
+      downvoteCount: downvoteCount ?? this.downvoteCount,
+      replyCount: replyCount ?? this.replyCount,
+      myVote: myVote ?? this.myVote,
+      isDeleted: isDeleted ?? this.isDeleted,
+    );
+  }
 
   Map<String, dynamic> toFirestore() {
     return {
@@ -86,8 +148,12 @@ class SignalResponse {
       'authorId': authorId,
       'authorName': authorName,
       if (parentId != null) 'parentId': parentId,
+      'depth': depth,
       'createdAt': Timestamp.fromDate(createdAt),
       'expiresAt': Timestamp.fromDate(expiresAt),
+      'isDeleted': isDeleted,
+      // Note: score, upvoteCount, downvoteCount, replyCount are maintained by Cloud Functions
+      // Client should NOT write these fields - they're set to defaults on create
     };
   }
 
@@ -99,9 +165,15 @@ class SignalResponse {
       authorId: data['authorId'] as String,
       authorName: data['authorName'] as String?,
       parentId: data['parentId'] as String?,
+      depth: data['depth'] as int? ?? 0,
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       expiresAt: (data['expiresAt'] as Timestamp).toDate(),
       isLocal: false,
+      score: data['score'] as int? ?? 0,
+      upvoteCount: data['upvoteCount'] as int? ?? 0,
+      downvoteCount: data['downvoteCount'] as int? ?? 0,
+      replyCount: data['replyCount'] as int? ?? 0,
+      isDeleted: data['isDeleted'] as bool? ?? false,
     );
   }
 
@@ -129,10 +201,64 @@ class SignalResponse {
       authorId: data['authorId'] as String? ?? 'unknown',
       authorName: data['authorName'] as String?,
       parentId: data['parentId'] as String?,
+      depth: data['depth'] as int? ?? 0,
       createdAt: createdAt,
       expiresAt: expiresAt,
       isLocal: false,
+      score: data['score'] as int? ?? 0,
+      upvoteCount: data['upvoteCount'] as int? ?? 0,
+      downvoteCount: data['downvoteCount'] as int? ?? 0,
+      replyCount: data['replyCount'] as int? ?? 0,
+      isDeleted: data['isDeleted'] as bool? ?? false,
     );
+  }
+}
+
+/// Represents a user's vote on a response.
+/// Stored at posts/{postId}/comments/{commentId}/votes/{uid}
+class ResponseVote {
+  final String responseId;
+  final String signalId;
+  final String voterId;
+  final int value; // +1 or -1 only
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  const ResponseVote({
+    required this.responseId,
+    required this.signalId,
+    required this.voterId,
+    required this.value,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory ResponseVote.fromFirestore(
+    String voterId,
+    Map<String, dynamic> data,
+  ) {
+    return ResponseVote(
+      responseId: data['responseId'] as String? ?? '',
+      signalId: data['signalId'] as String? ?? '',
+      voterId: voterId,
+      value: data['value'] as int? ?? 0,
+      createdAt: data['createdAt'] != null
+          ? (data['createdAt'] as Timestamp).toDate()
+          : DateTime.now(),
+      updatedAt: data['updatedAt'] != null
+          ? (data['updatedAt'] as Timestamp).toDate()
+          : DateTime.now(),
+    );
+  }
+
+  Map<String, dynamic> toFirestore() {
+    return {
+      'responseId': responseId,
+      'signalId': signalId,
+      'value': value,
+      'createdAt': Timestamp.fromDate(createdAt),
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
   }
 }
 
@@ -173,7 +299,7 @@ class SignalService {
   static const _tableName = 'signals';
   static const _seenPacketsTable = 'seen_packets';
   static const _proximityTable = 'node_proximity';
-  static const _responsesTable = 'responses';
+  static const _commentsTable = 'comments';
   static const _maxLocalSignals = 200;
   static const _seenPacketTTLMinutes = 30;
 
@@ -192,6 +318,13 @@ class SignalService {
   /// Used to receive real-time updates when cloud doc appears/changes (e.g. image upload completes).
   final Map<String, StreamSubscription<DocumentSnapshot>> _postListeners = {};
 
+  /// Active Firestore vote listeners keyed by signalId.
+  /// Used to receive real-time myVote updates from posts/{signalId}/comments/*/votes/{uid}.
+  final Map<String, StreamSubscription<QuerySnapshot>> _voteListeners = {};
+
+  /// In-memory cache of user's votes keyed by signalId -> commentId -> value.
+  final Map<String, Map<String, int>> _myVotesCache = {};
+
   /// Pending Firestore image updates that failed and need retry.
   /// Key: signalId, Value: (url, attemptCount, nextRetryTime)
   final Map<String, _PendingImageUpdate> _pendingImageUpdates = {};
@@ -199,14 +332,14 @@ class SignalService {
   /// Timer for retrying pending image updates.
   Timer? _imageRetryTimer;
 
-  /// Cached cloud responses keyed by signalId.
-  final Map<String, List<SignalResponse>> _cloudResponses = {};
+  /// Cached cloud comments keyed by signalId.
+  final Map<String, List<SignalResponse>> _cloudComments = {};
 
-  /// Stream controller for response updates. Emits signalId when responses change.
-  final _responseUpdateController = StreamController<String>.broadcast();
+  /// Stream controller for comment updates. Emits signalId when comments change.
+  final _commentUpdateController = StreamController<String>.broadcast();
 
-  /// Stream of response updates. Emits the signalId when its responses are updated.
-  Stream<String> get onResponseUpdate => _responseUpdateController.stream;
+  /// Stream of comment updates. Emits the signalId when its comments are updated.
+  Stream<String> get onCommentUpdate => _commentUpdateController.stream;
 
   /// Track node last-seen times for proximity-based image unlock.
   /// Key: nodeId, Value: DateTime of last proximity ping.
@@ -239,29 +372,10 @@ class SignalService {
 
     _db = await openDatabase(
       dbPath,
-      version: 5,
+      version: 6,
       onCreate: (db, version) async {
         AppLogging.signals('Creating signals database v$version');
         await _createTables(db);
-      },
-      onUpgrade: (db, oldVersion, newVersion) async {
-        AppLogging.signals(
-          'Upgrading signals database v$oldVersion -> v$newVersion',
-        );
-        if (oldVersion < 2) {
-          await _createSeenPacketsTable(db);
-          await _createProximityTable(db);
-        }
-        if (oldVersion < 3) {
-          await _createResponsesTable(db);
-        }
-        if (oldVersion < 5) {
-          // Add parentId column for threaded replies
-          await db.execute(
-            'ALTER TABLE $_responsesTable ADD COLUMN parentId TEXT',
-          );
-        }
-        // No migration for hopCount - dev can reset DB if needed
       },
     );
 
@@ -317,7 +431,7 @@ class SignalService {
 
     await _createSeenPacketsTable(db);
     await _createProximityTable(db);
-    await _createResponsesTable(db);
+    await _createCommentsTable(db);
   }
 
   Future<void> _createSeenPacketsTable(Database db) async {
@@ -346,29 +460,39 @@ class SignalService {
     ''');
   }
 
-  Future<void> _createResponsesTable(Database db) async {
-    // Local responses to signals (ephemeral, no Firebase sync)
+  Future<void> _createCommentsTable(Database db) async {
+    // Local comments cache for signals
     await db.execute('''
-      CREATE TABLE IF NOT EXISTS $_responsesTable (
+      CREATE TABLE IF NOT EXISTS $_commentsTable (
         id TEXT PRIMARY KEY,
         signalId TEXT NOT NULL,
         content TEXT NOT NULL,
         authorId TEXT NOT NULL,
         authorName TEXT,
         parentId TEXT,
+        depth INTEGER DEFAULT 0,
         createdAt INTEGER NOT NULL,
         expiresAt INTEGER NOT NULL,
+        score INTEGER DEFAULT 0,
+        upvoteCount INTEGER DEFAULT 0,
+        downvoteCount INTEGER DEFAULT 0,
+        replyCount INTEGER DEFAULT 0,
+        isDeleted INTEGER DEFAULT 0,
         FOREIGN KEY (signalId) REFERENCES $_tableName(id) ON DELETE CASCADE
       )
     ''');
 
     await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_responses_signalId '
-      'ON $_responsesTable(signalId)',
+      'CREATE INDEX IF NOT EXISTS idx_comments_signalId '
+      'ON $_commentsTable(signalId)',
     );
     await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_responses_expiresAt '
-      'ON $_responsesTable(expiresAt)',
+      'CREATE INDEX IF NOT EXISTS idx_comments_expiresAt '
+      'ON $_commentsTable(expiresAt)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_comments_parentId '
+      'ON $_commentsTable(parentId)',
     );
   }
 
@@ -745,7 +869,7 @@ class SignalService {
       _autoUploadImage(signal.id, persistentImagePath);
     }
 
-    // Start listening for cloud responses and comments on this signal
+    // Start listening for cloud comments on this signal
     _startCommentsListener(signal.id);
 
     return signal;
@@ -886,7 +1010,7 @@ class SignalService {
       _downloadAndCacheImage(signal.id, cloudImageUrl);
     }
 
-    // Start listening for cloud responses (only for non-legacy authenticated users)
+    // Start listening for cloud comments (only for non-legacy authenticated users)
     if (!isLegacySignal && _currentUserId != null) {
       _startCommentsListener(signal.id);
       // Also listen for post doc updates (e.g. image upload completing)
@@ -1173,9 +1297,9 @@ class SignalService {
     // Delete cached cloud image if exists
     await _deleteCachedCloudImages([signalId]);
 
-    // Delete responses for this signal
+    // Delete comments for this signal
     await _db!.delete(
-      _responsesTable,
+      _commentsTable,
       where: 'signalId = ?',
       whereArgs: [signalId],
     );
@@ -1185,17 +1309,23 @@ class SignalService {
     // Also delete from Firebase if authenticated
     if (_currentUserId != null) {
       try {
+        // Delete the post document (this doesn't delete subcollections)
         await _firestore.collection('posts').doc(signalId).delete();
-        // Also delete cloud responses subcollection
-        final responsesSnapshot = await _firestore
-            .collection('responses')
+
+        // Delete all comments in the subcollection
+        final commentsSnapshot = await _firestore
+            .collection('posts')
             .doc(signalId)
-            .collection('items')
+            .collection('comments')
             .get();
-        for (final doc in responsesSnapshot.docs) {
+        for (final doc in commentsSnapshot.docs) {
+          // Delete votes subcollection for each comment
+          final votesSnapshot = await doc.reference.collection('votes').get();
+          for (final voteDoc in votesSnapshot.docs) {
+            await voteDoc.reference.delete();
+          }
           await doc.reference.delete();
         }
-        await _firestore.collection('responses').doc(signalId).delete();
       } catch (e) {
         AppLogging.signals('Failed to delete signal from Firebase: $e');
       }
@@ -1222,8 +1352,8 @@ class SignalService {
     );
 
     if (expiredRows.isEmpty) {
-      // Still cleanup expired responses even if no expired signals
-      await _cleanupExpiredResponses();
+      // Still cleanup expired comments even if no expired signals
+      await _cleanupExpiredComments();
       return 0;
     }
 
@@ -1246,11 +1376,11 @@ class SignalService {
       expiredIds.add(id);
     }
 
-    // Delete responses for expired signals
+    // Delete comments for expired signals
     if (expiredIds.isNotEmpty) {
       final placeholders = List.filled(expiredIds.length, '?').join(',');
       await _db!.rawDelete(
-        'DELETE FROM $_responsesTable WHERE signalId IN ($placeholders)',
+        'DELETE FROM $_commentsTable WHERE signalId IN ($placeholders)',
         expiredIds,
       );
     }
@@ -1269,27 +1399,27 @@ class SignalService {
       'Cleanup complete: removed $deletedCount expired signals',
     );
 
-    // Also cleanup old seen packets, proximity data, and responses
+    // Also cleanup old seen packets, proximity data, and comments
     await _cleanupSeenPackets();
     await _cleanupOldProximityData();
-    await _cleanupExpiredResponses();
+    await _cleanupExpiredComments();
 
     return deletedCount;
   }
 
-  /// Clean up expired responses (those whose expiresAt has passed).
-  Future<void> _cleanupExpiredResponses() async {
+  /// Clean up expired comments (those whose expiresAt has passed).
+  Future<void> _cleanupExpiredComments() async {
     await init();
 
     final now = DateTime.now().millisecondsSinceEpoch;
     final deleted = await _db!.delete(
-      _responsesTable,
+      _commentsTable,
       where: 'expiresAt < ?',
       whereArgs: [now],
     );
 
     if (deleted > 0) {
-      AppLogging.signals('Cleaned up $deleted expired responses');
+      AppLogging.signals('Cleaned up $deleted expired comments');
     }
   }
 
@@ -1651,6 +1781,7 @@ class SignalService {
   /// Call this when viewing a signal detail screen to receive real-time updates.
   void ensureCommentsListener(String signalId) {
     _startCommentsListener(signalId);
+    startVoteListener(signalId);
   }
 
   /// Start listening for cloud comments on a signal.
@@ -1699,24 +1830,30 @@ class SignalService {
               'docs=${snapshot.docs.length}, latestCreatedAt=$latestCreatedAt',
             );
 
-            // Update cloud responses cache (replaces, not appends)
-            _cloudResponses[signalId] = comments;
+            // Update cloud comments cache (replaces, not appends)
+            _cloudComments[signalId] = comments;
 
-            // Notify listeners that responses have updated
-            _responseUpdateController.add(signalId);
+            // Notify listeners that comments have updated
+            _commentUpdateController.add(signalId);
 
             // Persist cloud comments to local DB for offline access
             if (_db != null) {
               for (final comment in comments) {
-                await _db!.insert(_responsesTable, {
+                await _db!.insert(_commentsTable, {
                   'id': comment.id,
                   'signalId': comment.signalId,
                   'content': comment.content,
                   'authorId': comment.authorId,
                   'authorName': comment.authorName,
                   'parentId': comment.parentId,
+                  'depth': comment.depth,
                   'createdAt': comment.createdAt.millisecondsSinceEpoch,
                   'expiresAt': comment.expiresAt.millisecondsSinceEpoch,
+                  'score': comment.score,
+                  'upvoteCount': comment.upvoteCount,
+                  'downvoteCount': comment.downvoteCount,
+                  'replyCount': comment.replyCount,
+                  'isDeleted': comment.isDeleted ? 1 : 0,
                 }, conflictAlgorithm: ConflictAlgorithm.replace);
               }
               AppLogging.signals(
@@ -1738,7 +1875,7 @@ class SignalService {
               );
             }
 
-            // Note: UI now refreshes via _responseUpdateController stream
+            // Note: UI now refreshes via _commentUpdateController stream
           },
           onError: (e, stackTrace) {
             AppLogging.signals(
@@ -1765,6 +1902,8 @@ class SignalService {
       subscription.cancel();
       AppLogging.signals('📡 Stopped comments listener for signal $signalId');
     }
+    // Also stop vote listener for this signal
+    stopVoteListener(signalId);
   }
 
   /// Stop all comments listeners (for cleanup on dispose).
@@ -1951,12 +2090,12 @@ class SignalService {
   }
 
   // ===========================================================================
-  // RESPONSES (Local + cloud sync)
+  // COMMENTS (Local + cloud sync)
   // ===========================================================================
 
-  /// Create a response to a signal.
+  /// Create a comment on a signal.
   /// Stores locally in SQLite, syncs to Firestore for authenticated users.
-  /// Use [parentId] to create a reply to another response (threaded).
+  /// Use [parentId] to create a reply to another comment (threaded).
   Future<SignalResponse?> createResponse({
     required String signalId,
     required String content,
@@ -1994,15 +2133,21 @@ class SignalService {
       expiresAt: signal.expiresAt ?? now.add(const Duration(hours: 1)),
     );
 
-    await _db!.insert(_responsesTable, {
+    await _db!.insert(_commentsTable, {
       'id': response.id,
       'signalId': response.signalId,
       'content': response.content,
       'authorId': response.authorId,
       'authorName': response.authorName,
       'parentId': response.parentId,
+      'depth': response.depth,
       'createdAt': response.createdAt.millisecondsSinceEpoch,
       'expiresAt': response.expiresAt.millisecondsSinceEpoch,
+      'score': response.score,
+      'upvoteCount': response.upvoteCount,
+      'downvoteCount': response.downvoteCount,
+      'replyCount': response.replyCount,
+      'isDeleted': response.isDeleted ? 1 : 0,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
 
     // Update comment count on parent signal
@@ -2083,51 +2228,58 @@ class SignalService {
     }
   }
 
-  /// Get responses for a signal.
-  /// Merges local (SQLite) and cloud (Firestore) responses, deduplicates.
-  Future<List<SignalResponse>> getResponses(String signalId) async {
+  /// Get comments for a signal.
+  /// Merges local (SQLite) and cloud (Firestore) comments, deduplicates.
+  Future<List<SignalResponse>> getComments(String signalId) async {
     await init();
 
     final now = DateTime.now().millisecondsSinceEpoch;
 
-    // Get local responses from SQLite
+    // Get local comments from SQLite
     final rows = await _db!.query(
-      _responsesTable,
+      _commentsTable,
       where: 'signalId = ? AND expiresAt > ?',
       whereArgs: [signalId, now],
       orderBy: 'createdAt ASC',
     );
 
-    final localResponses = rows
-        .map(
-          (row) => SignalResponse(
-            id: row['id'] as String,
-            signalId: row['signalId'] as String,
-            content: row['content'] as String,
-            authorId: row['authorId'] as String,
-            authorName: row['authorName'] as String?,
-            parentId: row['parentId'] as String?,
-            createdAt: DateTime.fromMillisecondsSinceEpoch(
-              row['createdAt'] as int,
-            ),
-            expiresAt: DateTime.fromMillisecondsSinceEpoch(
-              row['expiresAt'] as int,
-            ),
-            isLocal: true,
-          ),
-        )
+    // Get my votes from cache
+    final myVotes = getMyVotesForSignal(signalId);
+
+    final localComments = rows.map((row) {
+      final id = row['id'] as String;
+      return SignalResponse(
+        id: id,
+        signalId: row['signalId'] as String,
+        content: row['content'] as String,
+        authorId: row['authorId'] as String,
+        authorName: row['authorName'] as String?,
+        parentId: row['parentId'] as String?,
+        depth: (row['depth'] as int?) ?? 0,
+        createdAt: DateTime.fromMillisecondsSinceEpoch(row['createdAt'] as int),
+        expiresAt: DateTime.fromMillisecondsSinceEpoch(row['expiresAt'] as int),
+        score: (row['score'] as int?) ?? 0,
+        upvoteCount: (row['upvoteCount'] as int?) ?? 0,
+        downvoteCount: (row['downvoteCount'] as int?) ?? 0,
+        replyCount: (row['replyCount'] as int?) ?? 0,
+        isDeleted: (row['isDeleted'] as int?) == 1,
+        myVote: myVotes[id] ?? 0,
+        isLocal: true,
+      );
+    }).toList();
+
+    // Get cloud comments from cache (apply myVote)
+    final cloudComments = (_cloudComments[signalId] ?? [])
+        .map((r) => r.copyWith(myVote: myVotes[r.id] ?? 0))
         .toList();
 
-    // Get cloud responses from cache
-    final cloudResponses = _cloudResponses[signalId] ?? [];
-
     // Merge and deduplicate (local takes precedence)
-    final localIds = localResponses.map((r) => r.id).toSet();
-    final uniqueCloudResponses = cloudResponses
+    final localIds = localComments.map((r) => r.id).toSet();
+    final uniqueCloudComments = cloudComments
         .where((r) => !localIds.contains(r.id) && !r.isExpired)
         .toList();
 
-    final merged = [...localResponses, ...uniqueCloudResponses];
+    final merged = [...localComments, ...uniqueCloudComments];
     merged.sort((a, b) => a.createdAt.compareTo(b.createdAt));
 
     // Debug: log parentIds
@@ -2142,20 +2294,194 @@ class SignalService {
     return merged;
   }
 
-  /// Get response count for a signal.
-  Future<int> getResponseCount(String signalId) async {
+  /// Get comment count for a signal.
+  Future<int> getCommentCount(String signalId) async {
     await init();
 
     final now = DateTime.now().millisecondsSinceEpoch;
     final result = Sqflite.firstIntValue(
       await _db!.rawQuery(
-        'SELECT COUNT(*) FROM $_responsesTable '
+        'SELECT COUNT(*) FROM $_commentsTable '
         'WHERE signalId = ? AND expiresAt > ?',
         [signalId, now],
       ),
     );
 
     return result ?? 0;
+  }
+
+  // ===========================================================================
+  // VOTING (Firestore-first - no local DB caching)
+  // ===========================================================================
+
+  /// Set a vote on a comment. Value should be 1 (upvote) or -1 (downvote).
+  /// Writes directly to Firestore - Cloud Functions handle aggregation.
+  Future<void> setVote({
+    required String signalId,
+    required String commentId,
+    required int value,
+  }) async {
+    if (value != 1 && value != -1) {
+      AppLogging.signals('Invalid vote value: $value (must be 1 or -1)');
+      return;
+    }
+
+    final voterId = _currentUserId;
+    if (voterId == null) {
+      AppLogging.signals('Cannot vote: user not authenticated');
+      return;
+    }
+
+    // Optimistic UI update
+    _myVotesCache.putIfAbsent(signalId, () => {});
+    _myVotesCache[signalId]![commentId] = value;
+    _commentUpdateController.add(signalId);
+
+    try {
+      await _firestore
+          .collection('posts')
+          .doc(signalId)
+          .collection('comments')
+          .doc(commentId)
+          .collection('votes')
+          .doc(voterId)
+          .set({
+            'value': value,
+            'voterId': voterId,
+            'postId': signalId,
+            'commentId': commentId,
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+
+      AppLogging.signals(
+        '📊 Vote set: posts/$signalId/comments/$commentId/votes/$voterId = $value',
+      );
+    } catch (e) {
+      // Revert optimistic update on error
+      _myVotesCache[signalId]?.remove(commentId);
+      _commentUpdateController.add(signalId);
+      AppLogging.signals('📊 Failed to set vote: $e');
+      rethrow;
+    }
+  }
+
+  /// Remove a vote from a comment.
+  /// Deletes the vote doc from Firestore - Cloud Functions handle aggregation.
+  Future<void> clearVote({
+    required String signalId,
+    required String commentId,
+  }) async {
+    final voterId = _currentUserId;
+    if (voterId == null) {
+      AppLogging.signals('Cannot clear vote: user not authenticated');
+      return;
+    }
+
+    // Optimistic UI update
+    final previousValue = _myVotesCache[signalId]?[commentId];
+    _myVotesCache[signalId]?.remove(commentId);
+    _commentUpdateController.add(signalId);
+
+    try {
+      await _firestore
+          .collection('posts')
+          .doc(signalId)
+          .collection('comments')
+          .doc(commentId)
+          .collection('votes')
+          .doc(voterId)
+          .delete();
+
+      AppLogging.signals(
+        '📊 Vote cleared: posts/$signalId/comments/$commentId/votes/$voterId',
+      );
+    } catch (e) {
+      // Revert optimistic update on error
+      if (previousValue != null) {
+        _myVotesCache.putIfAbsent(signalId, () => {});
+        _myVotesCache[signalId]![commentId] = previousValue;
+        _commentUpdateController.add(signalId);
+      }
+      AppLogging.signals('📊 Failed to clear vote: $e');
+      rethrow;
+    }
+  }
+
+  /// Get the user's vote for a comment from in-memory cache.
+  /// Returns 1, -1, or 0 (no vote).
+  int getMyVote(String signalId, String commentId) {
+    return _myVotesCache[signalId]?[commentId] ?? 0;
+  }
+
+  /// Get all of the user's votes for a signal from in-memory cache.
+  Map<String, int> getMyVotesForSignal(String signalId) {
+    return Map.unmodifiable(_myVotesCache[signalId] ?? {});
+  }
+
+  /// Start listening for the current user's votes on a signal.
+  /// Updates in-memory cache and notifies listeners when votes change.
+  void startVoteListener(String signalId) {
+    final voterId = _currentUserId;
+    if (voterId == null) return;
+
+    if (_voteListeners.containsKey(signalId)) {
+      AppLogging.signals('📊 Vote listener already active for $signalId');
+      return;
+    }
+
+    AppLogging.signals(
+      '📊 Starting vote listener for posts/$signalId/comments/*/votes/$voterId',
+    );
+
+    // Query all vote docs for this user in this post's comments
+    // Using collectionGroup requires postId and voterId fields in vote docs
+    final subscription = _firestore
+        .collectionGroup('votes')
+        .where('postId', isEqualTo: signalId)
+        .where('voterId', isEqualTo: voterId)
+        .snapshots()
+        .listen(
+          (snapshot) {
+            final newVotes = <String, int>{};
+            for (final doc in snapshot.docs) {
+              final data = doc.data();
+              final commentId = data['commentId'] as String?;
+              final value = data['value'] as int?;
+              if (commentId != null && value != null) {
+                newVotes[commentId] = value;
+              }
+            }
+
+            _myVotesCache[signalId] = newVotes;
+            _commentUpdateController.add(signalId);
+
+            AppLogging.signals(
+              '📊 Vote listener update for $signalId: ${newVotes.length} votes',
+            );
+          },
+          onError: (e) {
+            AppLogging.signals('📊 Vote listener error for $signalId: $e');
+          },
+        );
+
+    _voteListeners[signalId] = subscription;
+  }
+
+  /// Stop listening for votes on a signal.
+  void stopVoteListener(String signalId) {
+    _voteListeners[signalId]?.cancel();
+    _voteListeners.remove(signalId);
+    _myVotesCache.remove(signalId);
+    AppLogging.signals('📊 Stopped vote listener for $signalId');
+  }
+
+  /// Stop all vote listeners.
+  void _stopAllVoteListeners() {
+    for (final subscription in _voteListeners.values) {
+      subscription.cancel();
+    }
+    _voteListeners.clear();
+    _myVotesCache.clear();
   }
 
   // ===========================================================================
@@ -2259,6 +2585,7 @@ class SignalService {
     _pendingImageUpdates.clear();
     _stopAllCommentsListeners();
     _stopAllPostListeners();
+    _stopAllVoteListeners();
     await _db?.close();
     _db = null;
     AppLogging.signals('SignalService database closed');

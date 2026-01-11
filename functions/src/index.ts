@@ -1768,7 +1768,7 @@ export const shopAdminUpdateSeller = onRequest({ cors: true }, async (req, res) 
 /**
  * Admin: Get shop statistics
  */
-export const shopAdminStats = onRequest({ cors: true }, async (req, res) => {
+export const shopAdminStats = onRequest({ cors: true, timeoutSeconds: 60, memory: '256MiB' }, async (req, res) => {
   if (req.method === 'OPTIONS') {
     res.set(corsHeaders()).status(204).send('');
     return;
@@ -2201,6 +2201,10 @@ export {
   onLikeCreated,
   onLikeDeleted,
   checkLikeStatus,
+  // Signal comment voting
+  onCommentVoteWrite,
+  onSignalCommentCreated,
+  onSignalCommentDeleted,
   // Admin
   recalculateAllCounts,
 } from './social';

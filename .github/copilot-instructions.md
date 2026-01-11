@@ -213,6 +213,9 @@ railway up       # Deploy to Railway (persistent volume at /app/data)
 - `GET /api/node/:nodeNum` - Single node details
 - `GET /api/stats` - Node counts, decode stats, rate limit info
 
+## Database Migrations
+**Not needed** - the app hasn't gone live yet. Always blow away the database on each install. Don't implement SQLite migrations; just update the table schema in `_createTables()` methods.
+
 ## Restrictions
 - Never run the Flutter app
 - Never commit or push to git

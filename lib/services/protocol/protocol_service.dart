@@ -25,7 +25,7 @@ import 'packet_framer.dart';
 /// The id field enables deterministic matching:
 /// - Firestore document: posts/{id}
 /// - Storage path: signals/{userId}/{id}.jpg
-/// - Responses: responses/{id}/items/{responseId}
+/// - Comments: posts/{id}/comments/{commentId}
 ///
 /// Legacy signals (without id) are treated as local-only.
 class MeshSignalPacket {

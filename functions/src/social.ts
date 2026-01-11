@@ -10,7 +10,7 @@
 
 import * as admin from 'firebase-admin';
 import { onRequest, onCall, HttpsError } from 'firebase-functions/v2/https';
-import { onDocumentCreated, onDocumentDeleted } from 'firebase-functions/v2/firestore';
+import { onDocumentCreated, onDocumentDeleted, onDocumentWritten } from 'firebase-functions/v2/firestore';
 
 const db = admin.firestore();
 const storage = admin.storage();
@@ -1052,3 +1052,168 @@ export const recalculateAllCounts = onCall(async (_request) => {
     throw new HttpsError('internal', `Failed to recalculate: ${err}`);
   }
 });
+
+// =============================================================================
+// SIGNAL COMMENT VOTING
+// =============================================================================
+
+const MAX_COMMENT_DEPTH = 8;
+
+/**
+ * Triggered when a vote is created, updated, or deleted on a signal comment.
+ * Updates vote aggregates (upvoteCount, downvoteCount, score) on the comment.
+ */
+export const onCommentVoteWrite = onDocumentWritten(
+  'posts/{postId}/comments/{commentId}/votes/{voterId}',
+  async (event) => {
+    const { postId, commentId, voterId } = event.params;
+
+    const beforeData = event.data?.before.data();
+    const afterData = event.data?.after.data();
+
+    // Determine vote change
+    const beforeValue = beforeData?.value as number | undefined;
+    const afterValue = afterData?.value as number | undefined;
+
+    // Calculate deltas
+    let upDelta = 0;
+    let downDelta = 0;
+
+    if (beforeValue === undefined && afterValue !== undefined) {
+      // New vote
+      if (afterValue === 1) upDelta = 1;
+      if (afterValue === -1) downDelta = 1;
+    } else if (beforeValue !== undefined && afterValue === undefined) {
+      // Deleted vote
+      if (beforeValue === 1) upDelta = -1;
+      if (beforeValue === -1) downDelta = -1;
+    } else if (beforeValue !== undefined && afterValue !== undefined && beforeValue !== afterValue) {
+      // Changed vote
+      if (beforeValue === 1 && afterValue === -1) {
+        upDelta = -1;
+        downDelta = 1;
+      } else if (beforeValue === -1 && afterValue === 1) {
+        upDelta = 1;
+        downDelta = -1;
+      }
+    } else {
+      // No effective change
+      return;
+    }
+
+    // Update comment aggregates
+    const commentRef = db.collection('posts').doc(postId)
+      .collection('comments').doc(commentId);
+
+    await db.runTransaction(async (transaction) => {
+      const commentDoc = await transaction.get(commentRef);
+      if (!commentDoc.exists) {
+        console.log(`Comment ${commentId} not found, skipping vote update`);
+        return;
+      }
+
+      const data = commentDoc.data()!;
+      const newUpvoteCount = Math.max(0, (data.upvoteCount || 0) + upDelta);
+      const newDownvoteCount = Math.max(0, (data.downvoteCount || 0) + downDelta);
+      const newScore = newUpvoteCount - newDownvoteCount;
+
+      transaction.update(commentRef, {
+        upvoteCount: newUpvoteCount,
+        downvoteCount: newDownvoteCount,
+        score: newScore,
+      });
+    });
+
+    console.log(`Vote updated for comment ${commentId}: voter=${voterId}, `
+      + `upDelta=${upDelta}, downDelta=${downDelta}`);
+  }
+);
+
+/**
+ * Triggered when a signal comment is created.
+ * Sets depth and increments parent's replyCount if this is a reply.
+ */
+export const onSignalCommentCreated = onDocumentCreated(
+  'posts/{postId}/comments/{commentId}',
+  async (event) => {
+    const { postId, commentId } = event.params;
+    const data = event.data?.data();
+    if (!data) return;
+
+    const { parentId } = data;
+
+    const commentRef = db.collection('posts').doc(postId)
+      .collection('comments').doc(commentId);
+
+    if (!parentId) {
+      // Top-level comment, ensure depth is 0
+      await commentRef.update({ depth: 0 });
+      console.log(`Signal comment ${commentId} created at depth 0`);
+      return;
+    }
+
+    // This is a reply - get parent to determine depth
+    const parentRef = db.collection('posts').doc(postId)
+      .collection('comments').doc(parentId);
+
+    await db.runTransaction(async (transaction) => {
+      const parentDoc = await transaction.get(parentRef);
+      if (!parentDoc.exists) {
+        console.log(`Parent comment ${parentId} not found for reply ${commentId}`);
+        // Still set depth 0 as fallback
+        transaction.update(commentRef, { depth: 0 });
+        return;
+      }
+
+      const parentData = parentDoc.data()!;
+      const parentDepth = parentData.depth || 0;
+      // Clamp depth at MAX_COMMENT_DEPTH - do NOT change parentId
+      // UI should handle visual clamping for deeply nested threads
+      const newDepth = Math.min(parentDepth + 1, MAX_COMMENT_DEPTH);
+
+      // Update depth only - preserve original parentId for correct threading
+      transaction.update(commentRef, { depth: newDepth });
+
+      // Increment parent's replyCount
+      transaction.update(parentRef, {
+        replyCount: FieldValue.increment(1),
+      });
+    });
+
+    console.log(`Signal comment ${commentId} created as reply to ${parentId}`);
+  }
+);
+
+/**
+ * Triggered when a signal comment is deleted.
+ * Decrements parent's replyCount if this was a reply.
+ */
+export const onSignalCommentDeleted = onDocumentDeleted(
+  'posts/{postId}/comments/{commentId}',
+  async (event) => {
+    const { postId, commentId } = event.params;
+    const data = event.data?.data();
+    if (!data) return;
+
+    const { parentId } = data;
+
+    if (!parentId) {
+      console.log(`Top-level signal comment ${commentId} deleted`);
+      return;
+    }
+
+    // Decrement parent's replyCount
+    const parentRef = db.collection('posts').doc(postId)
+      .collection('comments').doc(parentId);
+
+    try {
+      await parentRef.update({
+        replyCount: FieldValue.increment(-1),
+      });
+      console.log(`Decremented replyCount for parent ${parentId} after deleting ${commentId}`);
+    } catch (err) {
+      // Parent may have been deleted already
+      console.log(`Could not decrement replyCount for parent ${parentId}: ${err}`);
+    }
+  }
+);
