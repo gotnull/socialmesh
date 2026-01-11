@@ -305,67 +305,95 @@ class AnimatedDottedInputBorder extends InputBorder {
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
-    // Calculate the gap position for the floating label
-    // The gap is on the top edge, offset from the left
-    double? labelGapStart;
-    double? labelGapEnd;
-    if (gapStart != null && gapExtent > 0) {
-      // Add some padding around the label
-      final padding = 4.0;
-      labelGapStart = gapStart - padding;
-      labelGapEnd = gapStart + gapExtent + padding;
+    final r = borderRadius;
+    final left = rect.left;
+    final top = rect.top;
+    final right = rect.right;
+    final bottom = rect.bottom;
+
+    // Calculate gap on top edge if label is floating
+    final hasGap = gapStart != null && gapExtent > 0;
+    final gapPadding = 4.0;
+    final gapLeftX = hasGap ? left + gapStart - gapPadding : 0.0;
+    final gapRightX = hasGap ? left + gapStart + gapExtent + gapPadding : 0.0;
+
+    // Build continuous path for everything EXCEPT the gap area
+    final path = Path();
+
+    // Start at top-left corner (after radius), draw top edge with gap
+    if (hasGap) {
+      // Top edge part 1: from after top-left arc to gap start
+      if (gapLeftX > left + r) {
+        path.moveTo(left + r, top);
+        path.lineTo(gapLeftX, top);
+      }
+      // Top edge part 2: from gap end to before top-right arc
+      if (gapRightX < right - r) {
+        path.moveTo(gapRightX, top);
+        path.lineTo(right - r, top);
+      }
+    } else {
+      // Full top edge
+      path.moveTo(left + r, top);
+      path.lineTo(right - r, top);
     }
 
-    final rrect = RRect.fromRectAndRadius(rect, Radius.circular(borderRadius));
+    // Top-right arc
+    path.addArc(
+      Rect.fromLTWH(right - 2 * r, top, 2 * r, 2 * r),
+      -1.5708, // -π/2 (top)
+      1.5708, // π/2 (to right)
+    );
 
-    final path = Path()..addRRect(rrect);
-    final pathMetrics = path.computeMetrics().toList();
+    // Right edge
+    path.moveTo(right, top + r);
+    path.lineTo(right, bottom - r);
 
-    if (pathMetrics.isEmpty) return;
+    // Bottom-right arc
+    path.addArc(
+      Rect.fromLTWH(right - 2 * r, bottom - 2 * r, 2 * r, 2 * r),
+      0, // right
+      1.5708, // π/2 (to bottom)
+    );
 
-    final metric = pathMetrics.first;
-    final totalLength = metric.length;
-    if (totalLength <= 0) return;
+    // Bottom edge
+    path.moveTo(right - r, bottom);
+    path.lineTo(left + r, bottom);
 
-    // Calculate where the top edge starts/ends in the path
-    // RRect path goes: top-right corner arc, right side, bottom-right arc, bottom, bottom-left arc, left, top-left arc, top
-    // The top edge starts after the top-left corner arc
-    final topLeftArcLength = borderRadius * 1.57; // ~pi/2 * r
-    final topEdgeStart =
-        totalLength - (rect.width - 2 * borderRadius) - topLeftArcLength;
-    final topEdgeEnd = totalLength - topLeftArcLength;
+    // Bottom-left arc
+    path.addArc(
+      Rect.fromLTWH(left, bottom - 2 * r, 2 * r, 2 * r),
+      1.5708, // π/2 (bottom)
+      1.5708, // π/2 (to left)
+    );
 
-    // Animate dashes moving clockwise
+    // Left edge
+    path.moveTo(left, bottom - r);
+    path.lineTo(left, top + r);
+
+    // Top-left arc
+    path.addArc(
+      Rect.fromLTWH(left, top, 2 * r, 2 * r),
+      3.1416, // π (left)
+      1.5708, // π/2 (to top)
+    );
+
+    // Draw animated dashes along the path
     final animOffset = animation.value * (dashLength + gapLength) * 3;
 
-    double distance = animOffset;
-    while (distance < totalLength + animOffset) {
-      final start = distance % totalLength;
-      var end = (start + dashLength);
-      if (end > totalLength) end = totalLength;
+    for (final metric in path.computeMetrics()) {
+      final len = metric.length;
+      if (len <= 0) continue;
 
-      // Check if this dash is in the label gap area (on top edge)
-      bool inLabelGap = false;
-      if (labelGapStart != null && labelGapEnd != null) {
-        // Check if dash intersects with label gap on top edge
-        final dashStartOnTop = start >= topEdgeStart && start <= topEdgeEnd;
-        final dashEndOnTop = end >= topEdgeStart && end <= topEdgeEnd;
-        if (dashStartOnTop || dashEndOnTop) {
-          // Convert path position to x position on top edge
-          final dashX = rect.left + borderRadius + (start - topEdgeStart);
-          final dashEndX = rect.left + borderRadius + (end - topEdgeStart);
-          if (dashX < labelGapEnd && dashEndX > labelGapStart) {
-            inLabelGap = true;
-          }
-        }
+      double dist = animOffset % (dashLength + gapLength);
+      while (dist < len) {
+        final start = dist;
+        var end = start + dashLength;
+        if (end > len) end = len;
+
+        canvas.drawPath(metric.extractPath(start, end), paint);
+        dist += dashLength + gapLength;
       }
-
-      if (!inLabelGap) {
-        final dashPath = metric.extractPath(start, end);
-        canvas.drawPath(dashPath, paint);
-      }
-
-      distance += dashLength + gapLength;
     }
   }
 
@@ -538,12 +566,16 @@ class IcoSpeechBubbleWithArrow extends ConsumerStatefulWidget {
 
 class _IcoSpeechBubbleWithArrowState
     extends ConsumerState<IcoSpeechBubbleWithArrow>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   String _displayedText = '';
   Timer? _typingTimer;
   int _currentCharIndex = 0;
   late AnimationController _entryController;
+  late AnimationController _glowController;
+  late AnimationController _scanlineController;
   late Animation<double> _entry;
+  late Animation<double> _glow;
+  late Animation<double> _scanline;
 
   @override
   void initState() {
@@ -552,7 +584,21 @@ class _IcoSpeechBubbleWithArrowState
       duration: const Duration(milliseconds: 400),
       vsync: this,
     );
+    _glowController = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    )..repeat(reverse: true);
+    _scanlineController = AnimationController(
+      duration: const Duration(milliseconds: 3000),
+      vsync: this,
+    )..repeat();
+
     _entry = CurvedAnimation(parent: _entryController, curve: Curves.easeOut);
+    _glow = Tween<double>(begin: 0.3, end: 0.7).animate(
+      CurvedAnimation(parent: _glowController, curve: Curves.easeInOut),
+    );
+    _scanline = Tween<double>(begin: 0, end: 1).animate(_scanlineController);
+
     _entryController.forward();
     _startTyping();
   }
@@ -592,6 +638,8 @@ class _IcoSpeechBubbleWithArrowState
   void dispose() {
     _typingTimer?.cancel();
     _entryController.dispose();
+    _glowController.dispose();
+    _scanlineController.dispose();
     super.dispose();
   }
 
@@ -600,7 +648,11 @@ class _IcoSpeechBubbleWithArrowState
     final helpState = ref.watch(helpProvider);
 
     return AnimatedBuilder(
-      animation: _entry,
+      animation: Listenable.merge([
+        _entry,
+        _glowController,
+        _scanlineController,
+      ]),
       builder: (context, child) {
         return Transform.scale(
           scale: 0.9 + (_entry.value * 0.1),
@@ -611,16 +663,13 @@ class _IcoSpeechBubbleWithArrowState
                 maxWidth: MediaQuery.of(context).size.width * 0.92,
               ),
               decoration: BoxDecoration(
-                color: context.card.withValues(alpha: 0.95),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: AppTheme.primaryMagenta.withValues(alpha: 0.8),
-                  width: 1.5,
-                ),
                 boxShadow: [
-                  // Outer glow like onboarding
+                  // Animated outer glow like onboarding
                   BoxShadow(
-                    color: AppTheme.primaryMagenta.withValues(alpha: 0.3),
+                    color: AppTheme.primaryMagenta.withValues(
+                      alpha: _glow.value * 0.4,
+                    ),
                     blurRadius: 20,
                     spreadRadius: 2,
                   ),
@@ -631,220 +680,257 @@ class _IcoSpeechBubbleWithArrowState
                   ),
                 ],
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header - Character name
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(
-                          color: AppTheme.primaryMagenta.withValues(alpha: 0.3),
-                          width: 1,
-                        ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: context.card.withValues(alpha: 0.95),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: AppTheme.primaryMagenta.withValues(
+                        alpha: _glow.value,
                       ),
+                      width: 1.5,
                     ),
-                    child: Row(
-                      children: [
-                        // Ico avatar - properly sized with background
-                        SizedBox(
-                          width: 48,
-                          height: 48,
-                          child: Stack(
-                            alignment: Alignment.center,
-                            clipBehavior: Clip.none,
-                            children: [
-                              // Background circle
-                              Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: AppTheme.primaryMagenta.withValues(
-                                    alpha: 0.15,
-                                  ),
-                                  border: Border.all(
-                                    color: AppTheme.primaryMagenta.withValues(
-                                      alpha: 0.3,
-                                    ),
-                                    width: 1,
-                                  ),
-                                ),
-                              ),
-                              // Ico floating on top - larger to show mood properly
-                              Positioned(
-                                top: -8,
-                                child: SizedBox(
-                                  width: 64,
-                                  height: 64,
-                                  child: MeshNodeBrain(
-                                    mood: widget.icoMood,
-                                    size: 64,
-                                    showThoughtParticles: false,
-                                    glowIntensity: 0.5,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'ICO',
-                          style: TextStyle(
-                            color: AppTheme.primaryMagenta,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1.5,
-                            fontFamily: AppTheme.fontFamily,
-                            decoration: TextDecoration.none,
-                          ),
-                        ),
-                        const Spacer(),
-                        // Progress (if multi-step)
-                        if (widget.totalSteps > 1)
-                          Text(
-                            '${widget.currentStep}/${widget.totalSteps}',
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.4),
-                              fontSize: 11,
-                              fontFamily: AppTheme.fontFamily,
-                              decoration: TextDecoration.none,
+                  ),
+                  child: Stack(
+                    children: [
+                      // Scanline effect
+                      Positioned.fill(
+                        child: CustomPaint(
+                          painter: _ScanlinePainter(
+                            progress: _scanline.value,
+                            color: AppTheme.primaryMagenta.withValues(
+                              alpha: 0.08,
                             ),
                           ),
-                        const SizedBox(width: 8),
-                        // Haptic toggle
-                        GestureDetector(
-                          onTap: () {
-                            HapticFeedback.lightImpact();
-                            ref
-                                .read(helpProvider.notifier)
-                                .setHapticFeedback(!helpState.hapticFeedback);
-                          },
-                          child: Icon(
-                            helpState.hapticFeedback
-                                ? Icons.vibration
-                                : Icons.mobile_off,
-                            size: 16,
-                            color: Colors.white.withValues(alpha: 0.4),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Message content
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: RichText(
-                      text: TextSpan(
-                        children: _RichTextParser.parse(
-                          _displayedText,
-                          highlightColor: AccentColors.orange,
                         ),
                       ),
-                    ),
-                  ),
-
-                  // Action buttons
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      border: Border(
-                        top: BorderSide(
-                          color: AppTheme.primaryMagenta.withValues(alpha: 0.3),
-                          width: 1,
-                        ),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        // Back button
-                        if (widget.showBack && widget.onBack != null)
-                          GestureDetector(
-                            onTap: widget.onBack,
+                      // Content
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Header - Character name
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: AppTheme.primaryMagenta.withValues(
+                                    alpha: 0.3,
+                                  ),
+                                  width: 1,
+                                ),
+                              ),
+                            ),
                             child: Row(
-                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(
-                                  Icons.arrow_back_ios,
-                                  size: 14,
-                                  color: AccentColors.cyan.withValues(
-                                    alpha: 0.7,
+                                // Ico avatar - properly sized with background
+                                SizedBox(
+                                  width: 48,
+                                  height: 48,
+                                  child: Stack(
+                                    alignment: Alignment.center,
+                                    clipBehavior: Clip.none,
+                                    children: [
+                                      // Background circle
+                                      Container(
+                                        width: 40,
+                                        height: 40,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: AppTheme.primaryMagenta
+                                              .withValues(alpha: 0.15),
+                                          border: Border.all(
+                                            color: AppTheme.primaryMagenta
+                                                .withValues(alpha: 0.3),
+                                            width: 1,
+                                          ),
+                                        ),
+                                      ),
+                                      // Ico floating on top
+                                      Positioned(
+                                        top: -8,
+                                        child: SizedBox(
+                                          width: 64,
+                                          height: 64,
+                                          child: MeshNodeBrain(
+                                            mood: widget.icoMood,
+                                            size: 64,
+                                            showThoughtParticles: false,
+                                            glowIntensity: 0.5,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                const SizedBox(width: 4),
+                                const SizedBox(width: 8),
                                 Text(
-                                  'Back',
+                                  'ICO',
                                   style: TextStyle(
-                                    color: AccentColors.cyan.withValues(
-                                      alpha: 0.7,
-                                    ),
+                                    color: AppTheme.primaryMagenta,
                                     fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 1.5,
                                     fontFamily: AppTheme.fontFamily,
                                     decoration: TextDecoration.none,
+                                  ),
+                                ),
+                                const Spacer(),
+                                // Progress (if multi-step)
+                                if (widget.totalSteps > 1)
+                                  Text(
+                                    '${widget.currentStep}/${widget.totalSteps}',
+                                    style: TextStyle(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.4,
+                                      ),
+                                      fontSize: 11,
+                                      fontFamily: AppTheme.fontFamily,
+                                      decoration: TextDecoration.none,
+                                    ),
+                                  ),
+                                const SizedBox(width: 8),
+                                // Haptic toggle
+                                GestureDetector(
+                                  onTap: () {
+                                    HapticFeedback.lightImpact();
+                                    ref
+                                        .read(helpProvider.notifier)
+                                        .setHapticFeedback(
+                                          !helpState.hapticFeedback,
+                                        );
+                                  },
+                                  child: Icon(
+                                    helpState.hapticFeedback
+                                        ? Icons.vibration
+                                        : Icons.mobile_off,
+                                    size: 16,
+                                    color: Colors.white.withValues(alpha: 0.4),
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                        const Spacer(),
-                        // Skip button
-                        if (widget.showSkip && widget.onSkip != null)
-                          GestureDetector(
-                            onTap: widget.onSkip,
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                              ),
-                              child: Text(
-                                'Skip',
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.4),
-                                  fontSize: 13,
-                                  fontFamily: AppTheme.fontFamily,
-                                  decoration: TextDecoration.none,
+                          // Message content
+                          Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: RichText(
+                              text: TextSpan(
+                                children: _RichTextParser.parse(
+                                  _displayedText,
+                                  highlightColor: AccentColors.orange,
                                 ),
                               ),
                             ),
                           ),
-                        // Next/Done button
-                        if (widget.onNext != null)
-                          GestureDetector(
-                            onTap: widget.onNext,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppTheme.primaryMagenta,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                widget.nextLabel ?? 'Next',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  fontFamily: AppTheme.fontFamily,
-                                  decoration: TextDecoration.none,
+                          // Action buttons
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              border: Border(
+                                top: BorderSide(
+                                  color: AppTheme.primaryMagenta.withValues(
+                                    alpha: 0.3,
+                                  ),
+                                  width: 1,
                                 ),
                               ),
                             ),
+                            child: Row(
+                              children: [
+                                // Back button
+                                if (widget.showBack && widget.onBack != null)
+                                  GestureDetector(
+                                    onTap: widget.onBack,
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.arrow_back_ios,
+                                          size: 14,
+                                          color: AccentColors.cyan.withValues(
+                                            alpha: 0.7,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          'Back',
+                                          style: TextStyle(
+                                            color: AccentColors.cyan.withValues(
+                                              alpha: 0.7,
+                                            ),
+                                            fontSize: 13,
+                                            fontFamily: AppTheme.fontFamily,
+                                            decoration: TextDecoration.none,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                const Spacer(),
+                                // Skip button
+                                if (widget.showSkip && widget.onSkip != null)
+                                  GestureDetector(
+                                    onTap: widget.onSkip,
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                      ),
+                                      child: Text(
+                                        'Skip',
+                                        style: TextStyle(
+                                          color: Colors.white.withValues(
+                                            alpha: 0.4,
+                                          ),
+                                          fontSize: 13,
+                                          fontFamily: AppTheme.fontFamily,
+                                          decoration: TextDecoration.none,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                // Next/Done button
+                                if (widget.onNext != null)
+                                  GestureDetector(
+                                    onTap: widget.onNext,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 20,
+                                        vertical: 8,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.primaryMagenta,
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        widget.nextLabel ?? 'Next',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                          fontFamily: AppTheme.fontFamily,
+                                          decoration: TextDecoration.none,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
                           ),
-                      ],
-                    ),
+                        ],
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),
@@ -852,6 +938,32 @@ class _IcoSpeechBubbleWithArrowState
       },
     );
   }
+}
+
+/// Custom painter for scanline effect
+class _ScanlinePainter extends CustomPainter {
+  final double progress;
+  final Color color;
+
+  _ScanlinePainter({required this.progress, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final y = progress * size.height;
+    final paint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Colors.transparent, color, color, Colors.transparent],
+        stops: const [0.0, 0.45, 0.55, 1.0],
+      ).createShader(Rect.fromLTWH(0, y - 20, size.width, 40));
+
+    canvas.drawRect(Rect.fromLTWH(0, y - 20, size.width, 40), paint);
+  }
+
+  @override
+  bool shouldRepaint(_ScanlinePainter oldDelegate) =>
+      progress != oldDelegate.progress;
 }
 
 // ============================================================================
@@ -936,16 +1048,48 @@ class _IcoCoachMarkState extends State<IcoCoachMark> {
     final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
     _keyboardVisible = keyboardHeight > 100;
 
+    final screenSize = MediaQuery.of(context).size;
+    final targetInflated = _targetRect!.inflate(8);
+
+    // Only dim the area AROUND the target, not the whole screen
+    // This prevents dimming buttons below like Continue
     return Stack(
       children: [
-        // Semi-transparent backdrop with cutout for target
-        // Use IgnorePointer so taps go through to buttons like Continue below
-        IgnorePointer(
-          child: ClipPath(
-            clipper: _SpotlightClipper(_targetRect!.inflate(8)),
-            child: Container(color: Colors.black.withValues(alpha: 0.6)),
+        // Top strip (above target)
+        if (targetInflated.top > 0)
+          Positioned(
+            left: 0,
+            right: 0,
+            top: 0,
+            height: targetInflated.top,
+            child: IgnorePointer(
+              child: Container(color: Colors.black.withValues(alpha: 0.6)),
+            ),
           ),
-        ),
+
+        // Left strip (beside target)
+        if (targetInflated.left > 0)
+          Positioned(
+            left: 0,
+            width: targetInflated.left,
+            top: targetInflated.top,
+            height: targetInflated.height,
+            child: IgnorePointer(
+              child: Container(color: Colors.black.withValues(alpha: 0.6)),
+            ),
+          ),
+
+        // Right strip (beside target)
+        if (targetInflated.right < screenSize.width)
+          Positioned(
+            left: targetInflated.right,
+            right: 0,
+            top: targetInflated.top,
+            height: targetInflated.height,
+            child: IgnorePointer(
+              child: Container(color: Colors.black.withValues(alpha: 0.6)),
+            ),
+          ),
 
         // Speech bubble - hide if keyboard is up
         if (!_keyboardVisible) _buildSpeechBubblePosition(context),
@@ -984,26 +1128,6 @@ class _IcoCoachMarkState extends State<IcoCoachMark> {
         nextLabel: widget.currentStep == widget.totalSteps ? 'Done' : 'Next',
       ),
     );
-  }
-}
-
-/// Clips a path with a rectangular cutout (spotlight effect)
-class _SpotlightClipper extends CustomClipper<Path> {
-  final Rect spotlight;
-
-  _SpotlightClipper(this.spotlight);
-
-  @override
-  Path getClip(Size size) {
-    final outer = Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
-    final inner = Path()
-      ..addRRect(RRect.fromRectAndRadius(spotlight, const Radius.circular(12)));
-    return Path.combine(PathOperation.difference, outer, inner);
-  }
-
-  @override
-  bool shouldReclip(covariant _SpotlightClipper oldClipper) {
-    return oldClipper.spotlight != spotlight;
   }
 }
 
