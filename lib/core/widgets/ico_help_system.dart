@@ -893,6 +893,19 @@ class _IcoSpeechBubbleWithArrowState
                                                 size: 64,
                                                 showThoughtParticles: false,
                                                 glowIntensity: 0.5,
+                                                colors: [
+                                                  context.accentColor,
+                                                  Color.lerp(
+                                                    context.accentColor,
+                                                    AppTheme.primaryMagenta,
+                                                    0.5,
+                                                  )!,
+                                                  Color.lerp(
+                                                    context.accentColor,
+                                                    AppTheme.graphBlue,
+                                                    0.5,
+                                                  )!,
+                                                ],
                                               ),
                                             ),
                                           ),
