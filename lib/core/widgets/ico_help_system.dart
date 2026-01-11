@@ -1,12 +1,11 @@
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../help/help_content.dart';
 import '../theme.dart';
-import '../../features/onboarding/widgets/advisor_speech_bubble.dart';
 import '../../features/onboarding/widgets/mesh_node_brain.dart';
 import '../../providers/help_providers.dart';
 
@@ -152,10 +151,201 @@ class _IcoHelpButtonState extends ConsumerState<IcoHelpButton>
 }
 
 // ============================================================================
-// ICO SPEECH BUBBLE - Enhanced version with arrow and positioning
+// RICH TEXT PARSER - Parses **text** for colored highlights
 // ============================================================================
 
-class IcoSpeechBubbleWithArrow extends ConsumerWidget {
+/// Parses text with **highlighted** sections and returns styled TextSpans
+/// Uses theme accent colors for highlights
+class _RichTextParser {
+  static List<TextSpan> parse(String text, {Color? highlightColor}) {
+    final spans = <TextSpan>[];
+    final regex = RegExp(r'\*\*(.+?)\*\*');
+    int lastEnd = 0;
+
+    for (final match in regex.allMatches(text)) {
+      // Add text before the match
+      if (match.start > lastEnd) {
+        spans.add(
+          TextSpan(
+            text: text.substring(lastEnd, match.start),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 15,
+              height: 1.5,
+              fontFamily: AppTheme.fontFamily,
+            ),
+          ),
+        );
+      }
+
+      // Add highlighted text
+      spans.add(
+        TextSpan(
+          text: match.group(1),
+          style: TextStyle(
+            color: highlightColor ?? AccentColors.orange,
+            fontSize: 15,
+            height: 1.5,
+            fontWeight: FontWeight.w600,
+            fontFamily: AppTheme.fontFamily,
+          ),
+        ),
+      );
+
+      lastEnd = match.end;
+    }
+
+    // Add remaining text
+    if (lastEnd < text.length) {
+      spans.add(
+        TextSpan(
+          text: text.substring(lastEnd),
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 15,
+            height: 1.5,
+            fontFamily: AppTheme.fontFamily,
+          ),
+        ),
+      );
+    }
+
+    return spans;
+  }
+}
+
+// ============================================================================
+// ANIMATED DOTTED BORDER - For highlighting target widgets
+// ============================================================================
+
+class AnimatedDottedBorder extends StatefulWidget {
+  final Widget child;
+  final Color color;
+  final double strokeWidth;
+  final double dashLength;
+  final double gapLength;
+  final double borderRadius;
+
+  const AnimatedDottedBorder({
+    super.key,
+    required this.child,
+    this.color = AppTheme.primaryMagenta,
+    this.strokeWidth = 2,
+    this.dashLength = 8,
+    this.gapLength = 4,
+    this.borderRadius = 12,
+  });
+
+  @override
+  State<AnimatedDottedBorder> createState() => _AnimatedDottedBorderState();
+}
+
+class _AnimatedDottedBorderState extends State<AnimatedDottedBorder>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return CustomPaint(
+          painter: _DottedBorderPainter(
+            progress: _controller.value,
+            color: widget.color,
+            strokeWidth: widget.strokeWidth,
+            dashLength: widget.dashLength,
+            gapLength: widget.gapLength,
+            borderRadius: widget.borderRadius,
+          ),
+          child: widget.child,
+        );
+      },
+    );
+  }
+}
+
+class _DottedBorderPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+  final double strokeWidth;
+  final double dashLength;
+  final double gapLength;
+  final double borderRadius;
+
+  _DottedBorderPainter({
+    required this.progress,
+    required this.color,
+    required this.strokeWidth,
+    required this.dashLength,
+    required this.gapLength,
+    required this.borderRadius,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+
+    final rect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      Radius.circular(borderRadius),
+    );
+
+    final path = Path()..addRRect(rect);
+    final pathMetrics = path.computeMetrics();
+
+    for (final metric in pathMetrics) {
+      final totalLength = metric.length;
+      final dashCount = (totalLength / (dashLength + gapLength)).ceil();
+      final offset = progress * (dashLength + gapLength);
+
+      for (int i = 0; i < dashCount; i++) {
+        final start = (i * (dashLength + gapLength) + offset) % totalLength;
+        final end = (start + dashLength) % totalLength;
+
+        if (end > start) {
+          final dashPath = metric.extractPath(start, end);
+          canvas.drawPath(dashPath, paint);
+        } else {
+          // Handle wrap-around
+          final dashPath1 = metric.extractPath(start, totalLength);
+          final dashPath2 = metric.extractPath(0, end);
+          canvas.drawPath(dashPath1, paint);
+          canvas.drawPath(dashPath2, paint);
+        }
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DottedBorderPainter oldDelegate) {
+    return oldDelegate.progress != progress;
+  }
+}
+
+// ============================================================================
+// ICO SPEECH BUBBLE - Clean game-style dialogue box
+// ============================================================================
+
+class IcoSpeechBubbleWithArrow extends ConsumerStatefulWidget {
   final String text;
   final MeshBrainMood icoMood;
   final ArrowDirection? arrowDirection;
@@ -184,225 +374,283 @@ class IcoSpeechBubbleWithArrow extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<IcoSpeechBubbleWithArrow> createState() =>
+      _IcoSpeechBubbleWithArrowState();
+}
+
+class _IcoSpeechBubbleWithArrowState
+    extends ConsumerState<IcoSpeechBubbleWithArrow>
+    with SingleTickerProviderStateMixin {
+  String _displayedText = '';
+  Timer? _typingTimer;
+  int _currentCharIndex = 0;
+  late AnimationController _entryController;
+  late Animation<double> _entry;
+
+  @override
+  void initState() {
+    super.initState();
+    _entryController = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+    _entry = CurvedAnimation(parent: _entryController, curve: Curves.easeOut);
+    _entryController.forward();
+    _startTyping();
+  }
+
+  @override
+  void didUpdateWidget(IcoSpeechBubbleWithArrow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.text != widget.text) {
+      _startTyping();
+    }
+  }
+
+  void _startTyping() {
+    _currentCharIndex = 0;
+    _displayedText = '';
+    _typingTimer?.cancel();
+
+    _typingTimer = Timer.periodic(const Duration(milliseconds: 20), (timer) {
+      if (_currentCharIndex < widget.text.length) {
+        setState(() {
+          _displayedText = widget.text.substring(0, _currentCharIndex + 1);
+          _currentCharIndex++;
+        });
+
+        // Haptic feedback
+        final helpState = ref.read(helpProvider);
+        if (helpState.hapticFeedback) {
+          HapticFeedback.selectionClick();
+        }
+      } else {
+        timer.cancel();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _typingTimer?.cancel();
+    _entryController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final helpState = ref.watch(helpProvider);
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.9,
-          ),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                AppTheme.darkSurface.withValues(alpha: 0.85),
-                AppTheme.darkBackground.withValues(alpha: 0.9),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.1),
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.3),
-                blurRadius: 30,
-                offset: const Offset(0, 10),
+    return AnimatedBuilder(
+      animation: _entry,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: 0.9 + (_entry.value * 0.1),
+          child: Opacity(
+            opacity: _entry.value,
+            child: Container(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.92,
               ),
-              BoxShadow(
-                color: AppTheme.primaryMagenta.withValues(alpha: 0.15),
-                blurRadius: 40,
-                spreadRadius: -5,
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Game-style header with Ico avatar
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.1),
-                      width: 1,
-                    ),
-                  ),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1A1A2E),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.3),
+                  width: 2,
                 ),
-                child: Row(
-                  children: [
-                    // Ico avatar
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          colors: [
-                            AppTheme.primaryMagenta.withValues(alpha: 0.3),
-                            AccentColors.cyan.withValues(alpha: 0.2),
-                          ],
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.5),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header - Character name
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(
+                          color: Colors.white.withValues(alpha: 0.15),
+                          width: 1,
                         ),
                       ),
-                      child: MeshNodeBrain(mood: icoMood, size: 40),
                     ),
-                    const SizedBox(width: 12),
-                    // Name label
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Ico',
-                            style: TextStyle(
-                              color: AppTheme.primaryMagenta,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.5,
+                    child: Row(
+                      children: [
+                        // Small Ico avatar
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppTheme.primaryMagenta.withValues(
+                              alpha: 0.2,
                             ),
                           ),
+                          child: MeshNodeBrain(mood: widget.icoMood, size: 28),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          'ICO',
+                          style: TextStyle(
+                            color: AppTheme.primaryMagenta,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.5,
+                            fontFamily: AppTheme.fontFamily,
+                          ),
+                        ),
+                        const Spacer(),
+                        // Progress (if multi-step)
+                        if (widget.totalSteps > 1)
                           Text(
-                            'Your Mesh Guide',
+                            '${widget.currentStep}/${widget.totalSteps}',
                             style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.5),
+                              color: Colors.white.withValues(alpha: 0.4),
                               fontSize: 11,
+                              fontFamily: AppTheme.fontFamily,
                             ),
                           ),
-                        ],
+                        const SizedBox(width: 8),
+                        // Haptic toggle
+                        GestureDetector(
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            ref
+                                .read(helpProvider.notifier)
+                                .setHapticFeedback(!helpState.hapticFeedback);
+                          },
+                          child: Icon(
+                            helpState.hapticFeedback
+                                ? Icons.vibration
+                                : Icons.mobile_off,
+                            size: 16,
+                            color: Colors.white.withValues(alpha: 0.4),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Message content
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: RichText(
+                      text: TextSpan(
+                        children: _RichTextParser.parse(
+                          _displayedText,
+                          highlightColor: AccentColors.orange,
+                        ),
                       ),
                     ),
-                  ],
-                ),
-              ),
+                  ),
 
-              // Message content
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Progress indicator
-                    if (totalSteps > 1) ...[
-                      Row(
-                        children: [
-                          Text(
-                            'Step $currentStep of $totalSteps',
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.6),
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(10),
-                              child: LinearProgressIndicator(
-                                value: currentStep / totalSteps,
-                                minHeight: 4,
-                                backgroundColor: Colors.white.withValues(
-                                  alpha: 0.1,
-                                ),
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  AppTheme.primaryMagenta,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-
-                    // Message text
-                    AdvisorSpeechBubble(
-                      text: text,
-                      typewriterEffect: true,
-                      typingSpeed: 20,
-                      accentColor: AppTheme.primaryMagenta,
-                      hapticFeedback: helpState.hapticFeedback,
-                      onHapticToggle: (enabled) {
-                        ref
-                            .read(helpProvider.notifier)
-                            .setHapticFeedback(enabled);
-                      },
+                  // Action buttons
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
                     ),
-
-                    const SizedBox(height: 16),
-
-                    // Action buttons
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    decoration: BoxDecoration(
+                      border: Border(
+                        top: BorderSide(
+                          color: Colors.white.withValues(alpha: 0.1),
+                          width: 1,
+                        ),
+                      ),
+                    ),
+                    child: Row(
                       children: [
                         // Back button
-                        if (showBack && onBack != null)
-                          TextButton.icon(
-                            onPressed: onBack,
-                            icon: const Icon(Icons.arrow_back, size: 18),
-                            label: const Text('Back'),
-                            style: TextButton.styleFrom(
-                              foregroundColor: AccentColors.cyan.withValues(
-                                alpha: 0.7,
-                              ),
+                        if (widget.showBack && widget.onBack != null)
+                          GestureDetector(
+                            onTap: widget.onBack,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.arrow_back_ios,
+                                  size: 14,
+                                  color: AccentColors.cyan.withValues(
+                                    alpha: 0.7,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Back',
+                                  style: TextStyle(
+                                    color: AccentColors.cyan.withValues(
+                                      alpha: 0.7,
+                                    ),
+                                    fontSize: 13,
+                                    fontFamily: AppTheme.fontFamily,
+                                  ),
+                                ),
+                              ],
                             ),
-                          )
-                        else
-                          const SizedBox.shrink(),
-
-                        // Skip button
-                        if (showSkip && onSkip != null)
-                          TextButton(
-                            onPressed: onSkip,
-                            style: TextButton.styleFrom(
-                              foregroundColor: Colors.white.withValues(
-                                alpha: 0.5,
-                              ),
-                            ),
-                            child: const Text('Skip'),
                           ),
-
-                        // Next/Done button
-                        if (onNext != null)
-                          ElevatedButton(
-                            onPressed: onNext,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppTheme.primaryMagenta,
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              shadowColor: Colors.transparent,
+                        const Spacer(),
+                        // Skip button
+                        if (widget.showSkip && widget.onSkip != null)
+                          GestureDetector(
+                            onTap: widget.onSkip,
+                            child: Padding(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 28,
-                                vertical: 14,
+                                horizontal: 12,
                               ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                              child: Text(
+                                'Skip',
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.4),
+                                  fontSize: 13,
+                                  fontFamily: AppTheme.fontFamily,
+                                ),
                               ),
                             ),
-                            child: Text(
-                              nextLabel ?? 'Next',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 15,
+                          ),
+                        // Next/Done button
+                        if (widget.onNext != null)
+                          GestureDetector(
+                            onTap: widget.onNext,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryMagenta,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                widget.nextLabel ?? 'Next',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  fontFamily: AppTheme.fontFamily,
+                                ),
                               ),
                             ),
                           ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -437,17 +685,18 @@ class IcoCoachMark extends StatefulWidget {
 
 class _IcoCoachMarkState extends State<IcoCoachMark>
     with SingleTickerProviderStateMixin {
-  late AnimationController _pulseController;
+  late AnimationController _borderAnimController;
   Rect? _targetRect;
   Timer? _autoAdvanceTimer;
+  bool _keyboardVisible = false;
 
   @override
   void initState() {
     super.initState();
-    _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
+    _borderAnimController = AnimationController(
+      duration: const Duration(seconds: 2),
       vsync: this,
-    )..repeat(reverse: true);
+    )..repeat();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _calculateTargetRect();
@@ -481,7 +730,7 @@ class _IcoCoachMarkState extends State<IcoCoachMark>
 
   @override
   void dispose() {
-    _pulseController.dispose();
+    _borderAnimController.dispose();
     _autoAdvanceTimer?.cancel();
     super.dispose();
   }
@@ -492,53 +741,49 @@ class _IcoCoachMarkState extends State<IcoCoachMark>
       return const SizedBox.shrink();
     }
 
+    // Check keyboard visibility
+    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+    _keyboardVisible = keyboardHeight > 100;
+
     return Stack(
       children: [
-        // Backdrop with spotlight hole
-        AnimatedBuilder(
-          animation: _pulseController,
-          builder: (context, child) {
-            final pulseRadius = 8.0 + (_pulseController.value * 4);
-            return ClipPath(
-              clipper: _SpotlightClipper(_targetRect!.inflate(pulseRadius)),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-                child: Container(color: Colors.black.withValues(alpha: 0.7)),
-              ),
-            );
-          },
+        // Semi-transparent backdrop (no blur - cleaner look)
+        GestureDetector(
+          onTap: () {}, // Absorb taps
+          child: Container(color: Colors.black.withValues(alpha: 0.6)),
         ),
 
-        // Subtle glow around target
+        // Cutout for the target widget (let it be interactive)
         Positioned(
-          left: _targetRect!.left - 12,
-          top: _targetRect!.top - 12,
+          left: _targetRect!.left - 4,
+          top: _targetRect!.top - 4,
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            child: Container(
+              width: _targetRect!.width + 8,
+              height: _targetRect!.height + 8,
+              color: Colors.transparent,
+            ),
+          ),
+        ),
+
+        // Animated dotted border around target
+        Positioned(
+          left: _targetRect!.left - 6,
+          top: _targetRect!.top - 6,
           child: IgnorePointer(
             child: AnimatedBuilder(
-              animation: _pulseController,
+              animation: _borderAnimController,
               builder: (context, child) {
-                final pulseRadius = 12.0 + (_pulseController.value * 6);
-                return Container(
-                  width: _targetRect!.width + (pulseRadius * 2),
-                  height: _targetRect!.height + (pulseRadius * 2),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppTheme.primaryMagenta.withValues(
-                          alpha: 0.4 + (_pulseController.value * 0.3),
-                        ),
-                        blurRadius: 30,
-                        spreadRadius: 8,
-                      ),
-                      BoxShadow(
-                        color: AccentColors.cyan.withValues(
-                          alpha: 0.2 + (_pulseController.value * 0.2),
-                        ),
-                        blurRadius: 40,
-                        spreadRadius: 4,
-                      ),
-                    ],
+                return CustomPaint(
+                  size: Size(_targetRect!.width + 12, _targetRect!.height + 12),
+                  painter: _AnimatedDottedBorderPainter(
+                    progress: _borderAnimController.value,
+                    color: AppTheme.primaryMagenta,
+                    strokeWidth: 2,
+                    dashLength: 8,
+                    gapLength: 6,
+                    borderRadius: 8,
                   ),
                 );
               },
@@ -546,15 +791,15 @@ class _IcoCoachMarkState extends State<IcoCoachMark>
           ),
         ),
 
-        // Speech bubble positioned based on available space
-        _buildSpeechBubblePosition(context),
+        // Speech bubble - hide if keyboard is up
+        if (!_keyboardVisible) _buildSpeechBubblePosition(context),
       ],
     );
   }
 
   Widget _buildSpeechBubblePosition(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
-    final bubbleHeight = 350.0; // Approximate bubble height
+    final bubbleHeight = 250.0; // Approximate bubble height
 
     // Determine best position for bubble
     final spaceAbove = _targetRect!.top;
@@ -566,9 +811,9 @@ class _IcoCoachMarkState extends State<IcoCoachMark>
     return Positioned(
       left: 16,
       right: 16,
-      top: shouldPositionAbove ? null : _targetRect!.bottom + 24,
+      top: shouldPositionAbove ? null : _targetRect!.bottom + 20,
       bottom: shouldPositionAbove
-          ? screenSize.height - _targetRect!.top + 24
+          ? screenSize.height - _targetRect!.top + 20
           : null,
       child: IcoSpeechBubbleWithArrow(
         text: widget.step.bubbleText,
@@ -587,24 +832,60 @@ class _IcoCoachMarkState extends State<IcoCoachMark>
   }
 }
 
-class _SpotlightClipper extends CustomClipper<Path> {
-  final Rect spotlight;
+class _AnimatedDottedBorderPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+  final double strokeWidth;
+  final double dashLength;
+  final double gapLength;
+  final double borderRadius;
 
-  _SpotlightClipper(this.spotlight);
+  _AnimatedDottedBorderPainter({
+    required this.progress,
+    required this.color,
+    required this.strokeWidth,
+    required this.dashLength,
+    required this.gapLength,
+    required this.borderRadius,
+  });
 
   @override
-  Path getClip(Size size) {
-    final path = Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
 
-    final spotlightPath = Path()
-      ..addRRect(RRect.fromRectAndRadius(spotlight, const Radius.circular(12)));
+    final rect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      Radius.circular(borderRadius),
+    );
 
-    return Path.combine(PathOperation.difference, path, spotlightPath);
+    final path = Path()..addRRect(rect);
+    final pathMetrics = path.computeMetrics().first;
+    final totalLength = pathMetrics.length;
+
+    // Animate the dashes moving clockwise
+    final offset = progress * (dashLength + gapLength) * 2;
+
+    double distance = offset;
+    while (distance < totalLength) {
+      final start = distance % totalLength;
+      final end = (start + dashLength).clamp(0.0, totalLength);
+
+      if (end > start) {
+        final dashPath = pathMetrics.extractPath(start, end);
+        canvas.drawPath(dashPath, paint);
+      }
+
+      distance += dashLength + gapLength;
+    }
   }
 
   @override
-  bool shouldReclip(covariant _SpotlightClipper oldClipper) {
-    return oldClipper.spotlight != spotlight;
+  bool shouldRepaint(covariant _AnimatedDottedBorderPainter oldDelegate) {
+    return oldDelegate.progress != progress;
   }
 }
 

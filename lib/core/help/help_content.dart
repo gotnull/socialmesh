@@ -89,32 +89,32 @@ class HelpContent {
       HelpStep(
         id: 'channel_intro',
         bubbleText:
-            "Hey! Let's create a channel together. Think of it like creating a private radio frequency - only people with the key can tune in!",
+            "Hey! Let's create a **channel** together. Think of it like creating a **private radio frequency** - only people with the key can tune in!",
         icoMood: MeshBrainMood.excited,
         canGoBack: false,
       ),
       HelpStep(
         id: 'channel_name',
         bubbleText:
-            "First, give your channel a name! This helps you identify it. Your friends will see this name when they join.",
+            "First, give your channel a **name**! This helps you identify it. Your friends will see this name when they join.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'privacy_level',
         bubbleText:
-            "Now the important part: privacy level!\n\n📱 OPEN: Anyone can see and join\n🔓 SHARED: Need a QR code to join\n🔒 PRIVATE: Maximum encryption, invite-only",
+            "Now the important part: **privacy level**!\n\n📱 **OPEN**: Anyone can see and join\n🔓 **SHARED**: Need a QR code to join\n🔒 **PRIVATE**: Maximum encryption, invite-only",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'encryption_key',
         bubbleText:
-            "I'll generate a super random encryption key for you! This scrambles your messages so only channel members can read them. Pretty cool, right?",
+            "I'll generate a super random **encryption key** for you! This scrambles your messages so only channel members can read them. Pretty cool, right?",
         icoMood: MeshBrainMood.playful,
       ),
       HelpStep(
         id: 'channel_complete',
         bubbleText:
-            "Perfect! Your channel is ready. Share the QR code with friends to let them join. They'll need to scan it with their Meshtastic device!",
+            "Perfect! Your channel is ready. Share the **QR code** with friends to let them join. They'll need to scan it with their Meshtastic device!",
         icoMood: MeshBrainMood.celebrating,
         canSkip: false,
       ),
@@ -136,26 +136,26 @@ class HelpContent {
       HelpStep(
         id: 'encryption_intro',
         bubbleText:
-            "Let me explain encryption levels. It's like choosing how secret your messages are!",
+            "Let me explain **encryption levels**. It's like choosing how secret your messages are!",
         icoMood: MeshBrainMood.curious,
         canGoBack: false,
       ),
       HelpStep(
         id: 'default_key',
         bubbleText:
-            "DEFAULT KEY means everyone in the mesh can read your messages. It's public! Use this for general announcements or testing.",
+            "**DEFAULT KEY** means everyone in the mesh can read your messages. It's public! Use this for general announcements or testing.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'psk_encryption',
         bubbleText:
-            "PSK (Pre-Shared Key) means you generate a random secret key. Only people with this exact key can decode your messages. Much more private!",
+            "**PSK** (Pre-Shared Key) means you generate a random secret key. Only people with this exact key can decode your messages. Much more private!",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
         id: 'psk_sharing',
         bubbleText:
-            "Share your PSK via QR code! When someone scans it, they get the key and channel settings. Easy peasy!",
+            "Share your PSK via **QR code**! When someone scans it, they get the key and channel settings. Easy peasy!",
         icoMood: MeshBrainMood.playful,
       ),
     ],
@@ -176,26 +176,26 @@ class HelpContent {
       HelpStep(
         id: 'routing_intro',
         bubbleText:
-            "Want to see how I work? When you send a message, I bounce it from node to node like a game of hot potato!",
+            "Want to see how I work? When you send a message, I **bounce it from node to node** like a game of hot potato!",
         icoMood: MeshBrainMood.excited,
         canGoBack: false,
       ),
       HelpStep(
         id: 'routing_hops',
         bubbleText:
-            "Each 'hop' is when a node receives your message and forwards it. Most messages need 1-3 hops to reach their destination!",
+            "Each **hop** is when a node receives your message and forwards it. Most messages need **1-3 hops** to reach their destination!",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'routing_router_role',
         bubbleText:
-            "ROUTER nodes are the mesh superheroes - they relay messages for everyone! CLIENT nodes only send/receive their own messages.",
+            "**ROUTER** nodes are the mesh superheroes - they relay messages for everyone! **CLIENT** nodes only send/receive their own messages.",
         icoMood: MeshBrainMood.proud,
       ),
       HelpStep(
         id: 'routing_store_forward',
         bubbleText:
-            "Store & Forward is awesome! If the recipient is offline, I'll hold onto the message and deliver it when they come back online!",
+            "**Store & Forward** is awesome! If the recipient is offline, I'll hold onto the message and deliver it when they come back online!",
         icoMood: MeshBrainMood.playful,
       ),
     ],
@@ -216,32 +216,32 @@ class HelpContent {
       HelpStep(
         id: 'roles_intro',
         bubbleText:
-            "Node roles determine how your device helps the mesh. Let me break it down for you!",
+            "**Node roles** determine how your device helps the mesh. Let me break it down for you!",
         icoMood: MeshBrainMood.curious,
         canGoBack: false,
       ),
       HelpStep(
         id: 'role_client',
         bubbleText:
-            "CLIENT: Your device sends and receives messages but doesn't relay for others. Great for battery life! 🔋",
+            "**CLIENT**: Your device sends and receives messages but doesn't relay for others. Great for **battery life**! 🔋",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'role_router',
         bubbleText:
-            "ROUTER: You're a mesh superhero! You relay messages for everyone. Uses more battery but makes the mesh stronger! 💪",
+            "**ROUTER**: You're a mesh superhero! You relay messages for everyone. Uses more battery but makes the mesh stronger! 💪",
         icoMood: MeshBrainMood.proud,
       ),
       HelpStep(
         id: 'role_router_client',
         bubbleText:
-            "ROUTER_CLIENT: Best of both worlds - you relay messages AND have normal client features. Most people use this!",
+            "**ROUTER_CLIENT**: Best of both worlds - you relay messages AND have normal client features. Most people use this!",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
         id: 'role_repeater',
         bubbleText:
-            "REPEATER: Only forwards messages, no phone connection needed. Perfect for mountaintops or fixed installations!",
+            "**REPEATER**: Only forwards messages, no phone connection needed. Perfect for **mountaintops** or fixed installations!",
         icoMood: MeshBrainMood.energized,
       ),
     ],
@@ -262,26 +262,26 @@ class HelpContent {
       HelpStep(
         id: 'region_intro',
         bubbleText:
-            "This is important! Your region determines which radio frequencies you can legally use.",
+            "This is important! Your **region** determines which radio frequencies you can legally use.",
         icoMood: MeshBrainMood.alert,
         canGoBack: false,
       ),
       HelpStep(
         id: 'region_legal',
         bubbleText:
-            "Each country has different rules. Using the wrong frequency can be illegal! 🚨 Always match your physical location.",
+            "Each country has different rules. Using the **wrong frequency** can be illegal! 🚨 Always match your physical location.",
         icoMood: MeshBrainMood.nervous,
       ),
       HelpStep(
         id: 'region_bands',
         bubbleText:
-            "Most regions use 915MHz (Americas) or 868MHz (Europe). Some use 433MHz. Your device's hardware must support the frequency!",
+            "Most regions use **915MHz** (Americas) or **868MHz** (Europe). Some use **433MHz**. Your device's hardware must support the frequency!",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'region_warning',
         bubbleText:
-            "Wrong region = can't communicate with others! Make sure everyone in your mesh uses the same region setting.",
+            "Wrong region = **can't communicate** with others! Make sure everyone in your mesh uses the same region setting.",
         icoMood: MeshBrainMood.nervous,
       ),
     ],
@@ -302,32 +302,32 @@ class HelpContent {
       HelpStep(
         id: 'connection_intro',
         bubbleText:
-            "Let's connect your Meshtastic device! There are two ways: Bluetooth or USB.",
+            "Let's connect your Meshtastic device! There are two ways: **Bluetooth** or **USB**.",
         icoMood: MeshBrainMood.excited,
         canGoBack: false,
       ),
       HelpStep(
         id: 'connection_ble',
         bubbleText:
-            "📱 BLUETOOTH (BLE): Wireless! Your device shows up as 'Meshtastic_XXXX'. Just tap to connect. Works while device is in your pocket!",
+            "📱 **BLUETOOTH** (BLE): Wireless! Your device shows up as **Meshtastic_XXXX**. Just tap to connect. Works while device is in your pocket!",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'connection_usb',
         bubbleText:
-            "🔌 USB: Plug in with a cable. More reliable, charges your device, slightly faster. Great for configuration!",
+            "🔌 **USB**: Plug in with a cable. More reliable, charges your device, slightly faster. Great for configuration!",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
         id: 'connection_pairing',
         bubbleText:
-            "First time? Your device needs to be in pairing mode. Check for a Bluetooth icon on the screen or press the button!",
+            "First time? Your device needs to be in **pairing mode**. Check for a Bluetooth icon on the screen or press the button!",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'connection_troubleshoot',
         bubbleText:
-            "Can't find your device? Check:\n✓ Bluetooth is on\n✓ Device has power\n✓ Device isn't connected elsewhere\n✓ You're close enough (<10m)",
+            "Can't find your device? Check:\n✓ **Bluetooth is on**\n✓ Device has power\n✓ Device isn't connected elsewhere\n✓ You're close enough (<10m)",
         icoMood: MeshBrainMood.thinking,
       ),
     ],
@@ -348,26 +348,26 @@ class HelpContent {
       HelpStep(
         id: 'gps_intro',
         bubbleText:
-            "GPS lets others see where you are on the map! Let me explain how it works.",
+            "**GPS** lets others see where you are on the map! Let me explain how it works.",
         icoMood: MeshBrainMood.curious,
         canGoBack: false,
       ),
       HelpStep(
         id: 'gps_broadcast',
         bubbleText:
-            "Your device broadcasts position updates every few minutes. Other nodes see you appear on their map!",
+            "Your device broadcasts **position updates** every few minutes. Other nodes see you appear on their map!",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'gps_privacy',
         bubbleText:
-            "Privacy matters! You can disable GPS or set update intervals. Turn it off when you want to stay hidden! 👻",
+            "Privacy matters! You can **disable GPS** or set update intervals. Turn it off when you want to stay hidden! 👻",
         icoMood: MeshBrainMood.inviting,
       ),
       HelpStep(
         id: 'gps_battery',
         bubbleText:
-            "GPS uses battery! 🔋 Longer update intervals = better battery life. Balance privacy and utility!",
+            "GPS uses **battery**! 🔋 Longer update intervals = better battery life. Balance privacy and utility!",
         icoMood: MeshBrainMood.thinking,
       ),
     ],
@@ -395,19 +395,19 @@ class HelpContent {
       HelpStep(
         id: 'metrics_rssi',
         bubbleText:
-            "RSSI (Received Signal Strength): How loud the signal is. Higher is better! -50 dBm = excellent, -120 dBm = barely hanging on.",
+            "**RSSI** (Received Signal Strength): How loud the signal is. Higher is better! **-50 dBm** = excellent, **-120 dBm** = barely hanging on.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'metrics_snr',
         bubbleText:
-            "SNR (Signal-to-Noise Ratio): How clear the signal is. Positive = good, negative = noisy! +10 dB = great, -10 dB = struggling.",
+            "**SNR** (Signal-to-Noise Ratio): How clear the signal is. Positive = good, negative = noisy! **+10 dB** = great, **-10 dB** = struggling.",
         icoMood: MeshBrainMood.thinking,
       ),
       HelpStep(
         id: 'metrics_practical',
         bubbleText:
-            "In practice: Green = excellent, yellow = okay, red = poor. Move closer or find higher ground to improve!",
+            "In practice: **Green** = excellent, **yellow** = okay, **red** = poor. Move closer or find higher ground to improve!",
         icoMood: MeshBrainMood.approving,
       ),
     ],
