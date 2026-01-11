@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/logging.dart';
+import '../../../core/widgets/ico_help_system.dart';
+import '../../../providers/help_providers.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../models/social.dart';
@@ -86,36 +88,46 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
     final isConnected = ref.watch(isDeviceConnectedProvider);
     final canGoActive = isSignedIn && isConnected;
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
+    return HelpTourController(
+      topicId: 'signals_overview',
+      stepKeys: const {},
+      child: Scaffold(
         backgroundColor: context.background,
-        title: Row(
-          children: [
-            Icon(Icons.sensors, color: context.accentColor, size: 24),
-            const SizedBox(width: 8),
-            Text(
-              'Presence',
-              style: TextStyle(
-                color: context.textPrimary,
-                fontWeight: FontWeight.w600,
+        appBar: AppBar(
+          backgroundColor: context.background,
+          title: Row(
+            children: [
+              Icon(Icons.sensors, color: context.accentColor, size: 24),
+              const SizedBox(width: 8),
+              Text(
+                'Presence',
+                style: TextStyle(
+                  color: context.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
+            ],
+          ),
+          actions: [
+            // Go Active button in AppBar
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: _buildGoActiveButton(canGoActive, isSignedIn, isConnected),
+            ),
+            IconButton(
+              icon: const Icon(Icons.help_outline),
+              onPressed: () =>
+                  ref.read(helpProvider.notifier).startTour('signals_overview'),
+              tooltip: 'Help',
             ),
           ],
         ),
-        actions: [
-          // Go Active button in AppBar
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: _buildGoActiveButton(canGoActive, isSignedIn, isConnected),
-          ),
-        ],
+        body: feedState.isLoading && feedState.signals.isEmpty
+            ? _buildLoading()
+            : feedState.signals.isEmpty
+            ? _buildEmptyState()
+            : _buildSignalList(feedState),
       ),
-      body: feedState.isLoading && feedState.signals.isEmpty
-          ? _buildLoading()
-          : feedState.signals.isEmpty
-          ? _buildEmptyState()
-          : _buildSignalList(feedState),
     );
   }
 

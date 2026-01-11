@@ -8,6 +8,8 @@ import 'package:vector_math/vector_math_64.dart' as vector;
 
 import '../../core/theme.dart';
 import '../../core/widgets/edge_fade.dart';
+import '../../core/widgets/ico_help_system.dart';
+import '../../providers/help_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 import '../presence/presence_screen.dart';
@@ -275,217 +277,235 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
     ref.watch(currentSnrProvider);
     ref.watch(currentChannelUtilProvider);
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
+    return HelpTourController(
+      topicId: 'mesh_3d_overview',
+      stepKeys: const {},
+      child: Scaffold(
         backgroundColor: context.background,
-        title: Text(
-          _currentMode.label,
-          style: TextStyle(color: context.textPrimary),
-        ),
-        actions: [
-          // View selector - most important action
-          IconButton(
-            icon: const Icon(Icons.view_carousel),
-            tooltip: 'Change View',
-            onPressed: () => _showViewSelector(context),
+        appBar: AppBar(
+          backgroundColor: context.background,
+          title: Text(
+            _currentMode.label,
+            style: TextStyle(color: context.textPrimary),
           ),
-          // Overflow menu for additional actions
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert),
-            onSelected: (value) {
-              switch (value) {
-                case 'connections':
-                  setState(() => _showConnections = !_showConnections);
-                case 'filter':
-                  _showConnectionFilterSheet(context);
-                case 'labels':
-                  setState(() => _showLabels = !_showLabels);
-                case 'rotate':
-                  _toggleAutoRotate();
-                case 'radar':
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const ARRadarScreen()),
-                  );
-              }
-            },
-            itemBuilder: (context) => [
-              if (_currentMode == Mesh3DViewMode.topology)
+          actions: [
+            // View selector - most important action
+            IconButton(
+              icon: const Icon(Icons.view_carousel),
+              tooltip: 'Change View',
+              onPressed: () => _showViewSelector(context),
+            ),
+            // Overflow menu for additional actions
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert),
+              onSelected: (value) {
+                switch (value) {
+                  case 'connections':
+                    setState(() => _showConnections = !_showConnections);
+                  case 'filter':
+                    _showConnectionFilterSheet(context);
+                  case 'labels':
+                    setState(() => _showLabels = !_showLabels);
+                  case 'rotate':
+                    _toggleAutoRotate();
+                  case 'radar':
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const ARRadarScreen()),
+                    );
+                  case 'help':
+                    ref
+                        .read(helpProvider.notifier)
+                        .startTour('mesh_3d_overview');
+                }
+              },
+              itemBuilder: (context) => [
+                if (_currentMode == Mesh3DViewMode.topology)
+                  PopupMenuItem(
+                    value: 'connections',
+                    child: ListTile(
+                      leading: Icon(
+                        _showConnections ? Icons.share : Icons.share_outlined,
+                      ),
+                      title: Text(
+                        _showConnections
+                            ? 'Hide Connections'
+                            : 'Show Connections',
+                      ),
+                      contentPadding: EdgeInsets.zero,
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ),
+                if (_currentMode == Mesh3DViewMode.topology && _showConnections)
+                  const PopupMenuItem(
+                    value: 'filter',
+                    child: ListTile(
+                      leading: Icon(Icons.tune),
+                      title: Text('Filter Connections'),
+                      contentPadding: EdgeInsets.zero,
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ),
                 PopupMenuItem(
-                  value: 'connections',
+                  value: 'labels',
                   child: ListTile(
-                    leading: Icon(
-                      _showConnections ? Icons.share : Icons.share_outlined,
-                    ),
-                    title: Text(
-                      _showConnections
-                          ? 'Hide Connections'
-                          : 'Show Connections',
-                    ),
+                    leading: Icon(_showLabels ? Icons.label : Icons.label_off),
+                    title: Text(_showLabels ? 'Hide Labels' : 'Show Labels'),
                     contentPadding: EdgeInsets.zero,
                     visualDensity: VisualDensity.compact,
                   ),
                 ),
-              if (_currentMode == Mesh3DViewMode.topology && _showConnections)
+                PopupMenuItem(
+                  value: 'rotate',
+                  child: ListTile(
+                    leading: const Icon(Icons.rotate_right),
+                    title: Text(_autoRotate ? 'Stop Rotation' : 'Auto Rotate'),
+                    contentPadding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
                 const PopupMenuItem(
-                  value: 'filter',
+                  value: 'radar',
                   child: ListTile(
-                    leading: Icon(Icons.tune),
-                    title: Text('Filter Connections'),
+                    leading: Icon(Icons.radar),
+                    title: Text('AR Node Radar'),
                     contentPadding: EdgeInsets.zero,
                     visualDensity: VisualDensity.compact,
                   ),
                 ),
-              PopupMenuItem(
-                value: 'labels',
-                child: ListTile(
-                  leading: Icon(_showLabels ? Icons.label : Icons.label_off),
-                  title: Text(_showLabels ? 'Hide Labels' : 'Show Labels'),
-                  contentPadding: EdgeInsets.zero,
-                  visualDensity: VisualDensity.compact,
+                const PopupMenuDivider(),
+                const PopupMenuItem(
+                  value: 'help',
+                  child: ListTile(
+                    leading: Icon(Icons.help_outline),
+                    title: Text('Help'),
+                    contentPadding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                  ),
                 ),
-              ),
-              PopupMenuItem(
-                value: 'rotate',
-                child: ListTile(
-                  leading: const Icon(Icons.rotate_right),
-                  title: Text(_autoRotate ? 'Stop Rotation' : 'Auto Rotate'),
-                  contentPadding: EdgeInsets.zero,
-                  visualDensity: VisualDensity.compact,
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'radar',
-                child: ListTile(
-                  leading: Icon(Icons.radar),
-                  title: Text('AR Node Radar'),
-                  contentPadding: EdgeInsets.zero,
-                  visualDensity: VisualDensity.compact,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // View mode chips
-          _buildViewModeChips(theme),
+              ],
+            ),
+          ],
+        ),
+        body: Column(
+          children: [
+            // View mode chips
+            _buildViewModeChips(theme),
 
-          // 3D View
-          Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return Stack(
-                  children: [
-                    // 3D Visualization with tap detection
-                    GestureDetector(
-                      onTapUp: (details) => _handleTap(
-                        details.localPosition,
-                        constraints.biggest,
-                        nodes,
-                      ),
-                      child: DiTreDiDraggable(
-                        controller: _controller,
-                        child: DiTreDi(
-                          figures: _buildFigures(nodes, myNodeNum),
+            // 3D View
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return Stack(
+                    children: [
+                      // 3D Visualization with tap detection
+                      GestureDetector(
+                        onTapUp: (details) => _handleTap(
+                          details.localPosition,
+                          constraints.biggest,
+                          nodes,
+                        ),
+                        child: DiTreDiDraggable(
                           controller: _controller,
-                          config: const DiTreDiConfig(
-                            supportZIndex: true,
-                            defaultPointWidth: 8,
-                            defaultLineWidth: 2,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    // Legend
-                    Positioned(
-                      left: 16,
-                      bottom: 16,
-                      child: _buildLegend(theme),
-                    ),
-
-                    // Node info card (when a node is selected)
-                    if (_selectedNodeNum != null)
-                      Positioned(
-                        right: 16,
-                        top: 16,
-                        child: _buildNodeInfoCard(
-                          theme,
-                          nodes[_selectedNodeNum],
-                        ),
-                      ),
-
-                    // Tap-to-dismiss overlay (when node list is open)
-                    if (_showNodeList)
-                      Positioned.fill(
-                        child: GestureDetector(
-                          onTap: () => setState(() => _showNodeList = false),
-                          child: Container(color: Colors.transparent),
-                        ),
-                      ),
-
-                    // Node list panel (sliding from left)
-                    AnimatedPositioned(
-                      duration: const Duration(milliseconds: 250),
-                      curve: Curves.easeInOut,
-                      left: _showNodeList ? 0 : -300,
-                      top: 0,
-                      bottom: 0,
-                      width: 280,
-                      child: _buildNodeListPanel(theme, nodes, myNodeNum),
-                    ),
-
-                    // Node list toggle button (bottom right, compact)
-                    if (!_showNodeList)
-                      Positioned(
-                        right: 16,
-                        bottom: 16,
-                        child: Material(
-                          color: theme.colorScheme.surface.withValues(
-                            alpha: 0.9,
-                          ),
-                          borderRadius: BorderRadius.circular(28),
-                          elevation: 4,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(28),
-                            onTap: () => setState(() => _showNodeList = true),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 12,
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.list,
-                                    size: 18,
-                                    color: theme.colorScheme.primary,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    '${nodes.length}',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: context.textPrimary,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                          child: DiTreDi(
+                            figures: _buildFigures(nodes, myNodeNum),
+                            controller: _controller,
+                            config: const DiTreDiConfig(
+                              supportZIndex: true,
+                              defaultPointWidth: 8,
+                              defaultLineWidth: 2,
                             ),
                           ),
                         ),
                       ),
-                  ],
-                );
-              },
+
+                      // Legend
+                      Positioned(
+                        left: 16,
+                        bottom: 16,
+                        child: _buildLegend(theme),
+                      ),
+
+                      // Node info card (when a node is selected)
+                      if (_selectedNodeNum != null)
+                        Positioned(
+                          right: 16,
+                          top: 16,
+                          child: _buildNodeInfoCard(
+                            theme,
+                            nodes[_selectedNodeNum],
+                          ),
+                        ),
+
+                      // Tap-to-dismiss overlay (when node list is open)
+                      if (_showNodeList)
+                        Positioned.fill(
+                          child: GestureDetector(
+                            onTap: () => setState(() => _showNodeList = false),
+                            child: Container(color: Colors.transparent),
+                          ),
+                        ),
+
+                      // Node list panel (sliding from left)
+                      AnimatedPositioned(
+                        duration: const Duration(milliseconds: 250),
+                        curve: Curves.easeInOut,
+                        left: _showNodeList ? 0 : -300,
+                        top: 0,
+                        bottom: 0,
+                        width: 280,
+                        child: _buildNodeListPanel(theme, nodes, myNodeNum),
+                      ),
+
+                      // Node list toggle button (bottom right, compact)
+                      if (!_showNodeList)
+                        Positioned(
+                          right: 16,
+                          bottom: 16,
+                          child: Material(
+                            color: theme.colorScheme.surface.withValues(
+                              alpha: 0.9,
+                            ),
+                            borderRadius: BorderRadius.circular(28),
+                            elevation: 4,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(28),
+                              onTap: () => setState(() => _showNodeList = true),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.list,
+                                      size: 18,
+                                      color: theme.colorScheme.primary,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      '${nodes.length}',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: context.textPrimary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

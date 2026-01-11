@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/ico_help_system.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/help_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/config.pb.dart' as config_pb;
@@ -145,206 +147,217 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
+    return HelpTourController(
+      topicId: 'radio_config_overview',
+      stepKeys: const {},
+      child: Scaffold(
         backgroundColor: context.background,
-        title: Text(
-          'Radio',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: context.textPrimary,
+        appBar: AppBar(
+          backgroundColor: context.background,
+          title: Text(
+            'Radio',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
+            ),
           ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.help_outline),
+              onPressed: () => ref
+                  .read(helpProvider.notifier)
+                  .startTour('radio_config_overview'),
+              tooltip: 'Help',
+            ),
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: TextButton(
+                onPressed: _isLoading ? null : _saveConfig,
+                child: _isLoading
+                    ? LoadingIndicator(size: 20)
+                    : Text(
+                        'Save',
+                        style: TextStyle(
+                          color: context.accentColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+              ),
+            ),
+          ],
         ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: TextButton(
-              onPressed: _isLoading ? null : _saveConfig,
-              child: _isLoading
-                  ? LoadingIndicator(size: 20)
-                  : Text(
-                      'Save',
-                      style: TextStyle(
-                        color: context.accentColor,
-                        fontWeight: FontWeight.w600,
-                      ),
+        body: _isLoading
+            ? const ScreenLoadingIndicator()
+            : ListView(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                children: [
+                  const _SectionHeader(title: 'REGION'),
+                  _buildRegionSelector(),
+                  SizedBox(height: 16),
+                  const _SectionHeader(title: 'MODEM PRESET'),
+                  _buildModemPresetSelector(),
+                  SizedBox(height: 16),
+                  const _SectionHeader(title: 'TRANSMISSION'),
+                  _SettingsTile(
+                    icon: Icons.cell_tower,
+                    iconColor: _txEnabled ? context.accentColor : null,
+                    title: 'Transmission Enabled',
+                    subtitle: 'Allow device to transmit',
+                    trailing: ThemedSwitch(
+                      value: _txEnabled,
+                      onChanged: (value) {
+                        HapticFeedback.selectionClick();
+                        setState(() => _txEnabled = value);
+                      },
                     ),
-            ),
-          ),
-        ],
+                  ),
+                  Container(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 2,
+                    ),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: context.card,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Hop Limit',
+                              style: TextStyle(
+                                color: context.textPrimary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: context.accentColor.withValues(
+                                  alpha: 0.15,
+                                ),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                '$_hopLimit',
+                                style: TextStyle(
+                                  color: context.accentColor,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Number of times messages can be relayed',
+                          style: TextStyle(
+                            color: context.textSecondary,
+                            fontSize: 13,
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        SliderTheme(
+                          data: SliderThemeData(
+                            inactiveTrackColor: context.border,
+                            thumbColor: context.accentColor,
+                            overlayColor: context.accentColor.withValues(
+                              alpha: 0.2,
+                            ),
+                            trackHeight: 4,
+                          ),
+                          child: Slider(
+                            value: _hopLimit.toDouble(),
+                            min: 0,
+                            max: 7,
+                            divisions: 7,
+                            onChanged: (value) {
+                              setState(() => _hopLimit = value.toInt());
+                            },
+                          ),
+                        ),
+                        Divider(height: 24, color: context.border),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'TX Power Override',
+                              style: TextStyle(
+                                color: context.textPrimary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: context.accentColor.withValues(
+                                  alpha: 0.15,
+                                ),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                _txPower == 0 ? 'Default' : '${_txPower}dBm',
+                                style: TextStyle(
+                                  color: context.accentColor,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Override transmit power (0 = use default)',
+                          style: TextStyle(
+                            color: context.textSecondary,
+                            fontSize: 13,
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        SliderTheme(
+                          data: SliderThemeData(
+                            inactiveTrackColor: context.border,
+                            thumbColor: context.accentColor,
+                            overlayColor: context.accentColor.withValues(
+                              alpha: 0.2,
+                            ),
+                            trackHeight: 4,
+                          ),
+                          child: Slider(
+                            value: _txPower.toDouble(),
+                            min: 0,
+                            max: 30,
+                            divisions: 30,
+                            onChanged: (value) {
+                              setState(() => _txPower = value.toInt());
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const _SectionHeader(title: 'ADVANCED'),
+                  _buildAdvancedSettings(),
+                  const SizedBox(height: 16),
+                  _buildInfoCard(),
+                  const SizedBox(height: 32),
+                ],
+              ),
       ),
-      body: _isLoading
-          ? const ScreenLoadingIndicator()
-          : ListView(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              children: [
-                const _SectionHeader(title: 'REGION'),
-                _buildRegionSelector(),
-                SizedBox(height: 16),
-                const _SectionHeader(title: 'MODEM PRESET'),
-                _buildModemPresetSelector(),
-                SizedBox(height: 16),
-                const _SectionHeader(title: 'TRANSMISSION'),
-                _SettingsTile(
-                  icon: Icons.cell_tower,
-                  iconColor: _txEnabled ? context.accentColor : null,
-                  title: 'Transmission Enabled',
-                  subtitle: 'Allow device to transmit',
-                  trailing: ThemedSwitch(
-                    value: _txEnabled,
-                    onChanged: (value) {
-                      HapticFeedback.selectionClick();
-                      setState(() => _txEnabled = value);
-                    },
-                  ),
-                ),
-                Container(
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 2,
-                  ),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: context.card,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Hop Limit',
-                            style: TextStyle(
-                              color: context.textPrimary,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: context.accentColor.withValues(
-                                alpha: 0.15,
-                              ),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              '$_hopLimit',
-                              style: TextStyle(
-                                color: context.accentColor,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Number of times messages can be relayed',
-                        style: TextStyle(
-                          color: context.textSecondary,
-                          fontSize: 13,
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      SliderTheme(
-                        data: SliderThemeData(
-                          inactiveTrackColor: context.border,
-                          thumbColor: context.accentColor,
-                          overlayColor: context.accentColor.withValues(
-                            alpha: 0.2,
-                          ),
-                          trackHeight: 4,
-                        ),
-                        child: Slider(
-                          value: _hopLimit.toDouble(),
-                          min: 0,
-                          max: 7,
-                          divisions: 7,
-                          onChanged: (value) {
-                            setState(() => _hopLimit = value.toInt());
-                          },
-                        ),
-                      ),
-                      Divider(height: 24, color: context.border),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'TX Power Override',
-                            style: TextStyle(
-                              color: context.textPrimary,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: context.accentColor.withValues(
-                                alpha: 0.15,
-                              ),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              _txPower == 0 ? 'Default' : '${_txPower}dBm',
-                              style: TextStyle(
-                                color: context.accentColor,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Override transmit power (0 = use default)',
-                        style: TextStyle(
-                          color: context.textSecondary,
-                          fontSize: 13,
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      SliderTheme(
-                        data: SliderThemeData(
-                          inactiveTrackColor: context.border,
-                          thumbColor: context.accentColor,
-                          overlayColor: context.accentColor.withValues(
-                            alpha: 0.2,
-                          ),
-                          trackHeight: 4,
-                        ),
-                        child: Slider(
-                          value: _txPower.toDouble(),
-                          min: 0,
-                          max: 30,
-                          divisions: 30,
-                          onChanged: (value) {
-                            setState(() => _txPower = value.toInt());
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const _SectionHeader(title: 'ADVANCED'),
-                _buildAdvancedSettings(),
-                const SizedBox(height: 16),
-                _buildInfoCard(),
-                const SizedBox(height: 32),
-              ],
-            ),
     );
   }
 

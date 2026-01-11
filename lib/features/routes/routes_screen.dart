@@ -9,6 +9,8 @@ import 'package:share_plus/share_plus.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../../core/widgets/ico_help_system.dart';
+import '../../providers/help_providers.dart';
 import '../../models/route.dart' as route_model;
 import '../../providers/app_providers.dart';
 import '../../providers/telemetry_providers.dart';
@@ -29,68 +31,78 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen> {
     final routes = ref.watch(routesProvider);
     final activeRoute = ref.watch(activeRouteProvider);
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
+    return HelpTourController(
+      topicId: 'routes_overview',
+      stepKeys: const {},
+      child: Scaffold(
         backgroundColor: context.background,
-        centerTitle: true,
-        title: Text(
-          'Routes',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: context.textPrimary,
+        appBar: AppBar(
+          backgroundColor: context.background,
+          centerTitle: true,
+          title: Text(
+            'Routes',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
+            ),
           ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.file_upload_outlined),
+              tooltip: 'Import GPX',
+              onPressed: _importRoute,
+            ),
+            IconButton(
+              icon: const Icon(Icons.help_outline),
+              tooltip: 'Help',
+              onPressed: () =>
+                  ref.read(helpProvider.notifier).startTour('routes_overview'),
+            ),
+          ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.file_upload_outlined),
-            tooltip: 'Import GPX',
-            onPressed: _importRoute,
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Active recording banner
-          if (activeRoute != null) _ActiveRouteBanner(route: activeRoute),
+        body: Column(
+          children: [
+            // Active recording banner
+            if (activeRoute != null) _ActiveRouteBanner(route: activeRoute),
 
-          // Routes list
-          Expanded(
-            child: routes.isEmpty
-                ? _buildEmptyState()
-                : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: routes.length,
-                    itemBuilder: (context, index) {
-                      final route = routes[index];
-                      final animationsEnabled = ref.watch(
-                        animationsEnabledProvider,
-                      );
-                      return Perspective3DSlide(
-                        index: index,
-                        direction: SlideDirection.left,
-                        enabled: animationsEnabled,
-                        child: _RouteCard(
-                          route: route,
-                          onTap: () => _viewRoute(route),
-                          onDelete: () => _deleteRoute(route),
-                          onExport: () => _exportRoute(route),
-                        ),
-                      );
-                    },
-                  ),
-          ),
-        ],
+            // Routes list
+            Expanded(
+              child: routes.isEmpty
+                  ? _buildEmptyState()
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: routes.length,
+                      itemBuilder: (context, index) {
+                        final route = routes[index];
+                        final animationsEnabled = ref.watch(
+                          animationsEnabledProvider,
+                        );
+                        return Perspective3DSlide(
+                          index: index,
+                          direction: SlideDirection.left,
+                          enabled: animationsEnabled,
+                          child: _RouteCard(
+                            route: route,
+                            onTap: () => _viewRoute(route),
+                            onDelete: () => _deleteRoute(route),
+                            onExport: () => _exportRoute(route),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+        floatingActionButton: activeRoute == null
+            ? FloatingActionButton.extended(
+                onPressed: _startRecording,
+                backgroundColor: AccentColors.green,
+                icon: const Icon(Icons.play_arrow),
+                label: const Text('Start Route'),
+              )
+            : null,
       ),
-      floatingActionButton: activeRoute == null
-          ? FloatingActionButton.extended(
-              onPressed: _startRecording,
-              backgroundColor: AccentColors.green,
-              icon: const Icon(Icons.play_arrow),
-              label: const Text('Start Route'),
-            )
-          : null,
     );
   }
 

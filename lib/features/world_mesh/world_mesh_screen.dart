@@ -11,7 +11,9 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/map_config.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/map_controls.dart';
+import '../../providers/help_providers.dart';
 import '../../models/world_mesh_node.dart';
 import '../../providers/node_favorites_provider.dart';
 import '../../providers/world_mesh_map_provider.dart';
@@ -129,166 +131,180 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
 
     return GestureDetector(
       onTap: _dismissKeyboard,
-      child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: context.background,
-          title: Text(
-            'World Map',
-            style: TextStyle(color: context.textPrimary),
-          ),
-          actions: [
-            // Search toggle (only show when search is NOT active)
-            if (!_showSearch)
+      child: HelpTourController(
+        topicId: 'world_mesh_overview',
+        stepKeys: const {},
+        child: Scaffold(
+          appBar: AppBar(
+            backgroundColor: context.background,
+            title: Text(
+              'World Map',
+              style: TextStyle(color: context.textPrimary),
+            ),
+            actions: [
+              // Search toggle (only show when search is NOT active)
+              if (!_showSearch)
+                IconButton(
+                  icon: const Icon(Icons.search),
+                  onPressed: () {
+                    setState(() {
+                      _showSearch = true;
+                      _showSearchResults = false;
+                    });
+                    // Auto-focus when opening search
+                    Future.delayed(const Duration(milliseconds: 100), () {
+                      _searchFocusNode.requestFocus();
+                    });
+                  },
+                ),
+              // Filter button with badge
+              _buildFilterButton(accentColor),
+              // Favorites
               IconButton(
-                icon: const Icon(Icons.search),
-                onPressed: () {
-                  setState(() {
-                    _showSearch = true;
-                    _showSearchResults = false;
-                  });
-                  // Auto-focus when opening search
-                  Future.delayed(const Duration(milliseconds: 100), () {
-                    _searchFocusNode.requestFocus();
-                  });
-                },
+                icon: ref.watch(favoritesCountProvider) > 0
+                    ? Badge.count(
+                        count: ref.watch(favoritesCountProvider),
+                        child: const Icon(Icons.star),
+                      )
+                    : const Icon(Icons.star_border),
+                tooltip: 'Favorites',
+                onPressed: () => _openFavorites(context),
               ),
-            // Filter button with badge
-            _buildFilterButton(accentColor),
-            // Favorites
-            IconButton(
-              icon: ref.watch(favoritesCountProvider) > 0
-                  ? Badge.count(
-                      count: ref.watch(favoritesCountProvider),
-                      child: const Icon(Icons.star),
-                    )
-                  : const Icon(Icons.star_border),
-              tooltip: 'Favorites',
-              onPressed: () => _openFavorites(context),
-            ),
-            // Overflow menu for map style and refresh
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert),
-              onSelected: (value) {
-                switch (value) {
-                  case 'dark':
-                    setState(() => _mapStyle = MapTileStyle.dark);
-                  case 'satellite':
-                    setState(() => _mapStyle = MapTileStyle.satellite);
-                  case 'light':
-                    setState(() => _mapStyle = MapTileStyle.light);
-                  case 'terrain':
-                    setState(() => _mapStyle = MapTileStyle.terrain);
-                  case 'refresh':
-                    HapticFeedback.lightImpact();
-                    ref.read(worldMeshMapProvider.notifier).forceRefresh();
-                }
-              },
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: 'dark',
-                  child: ListTile(
-                    leading: const Icon(Icons.layers),
-                    title: const Text('Dark Map'),
-                    trailing: _mapStyle == MapTileStyle.dark
-                        ? Icon(Icons.check, size: 18, color: accentColor)
-                        : null,
-                    contentPadding: EdgeInsets.zero,
-                    visualDensity: VisualDensity.compact,
+              // Overflow menu for map style and refresh
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert),
+                onSelected: (value) {
+                  switch (value) {
+                    case 'dark':
+                      setState(() => _mapStyle = MapTileStyle.dark);
+                    case 'satellite':
+                      setState(() => _mapStyle = MapTileStyle.satellite);
+                    case 'light':
+                      setState(() => _mapStyle = MapTileStyle.light);
+                    case 'terrain':
+                      setState(() => _mapStyle = MapTileStyle.terrain);
+                    case 'refresh':
+                      HapticFeedback.lightImpact();
+                      ref.read(worldMeshMapProvider.notifier).forceRefresh();
+                    case 'help':
+                      ref
+                          .read(helpProvider.notifier)
+                          .startTour('world_mesh_overview');
+                  }
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: 'dark',
+                    child: ListTile(
+                      leading: const Icon(Icons.layers),
+                      title: const Text('Dark Map'),
+                      trailing: _mapStyle == MapTileStyle.dark
+                          ? Icon(Icons.check, size: 18, color: accentColor)
+                          : null,
+                      contentPadding: EdgeInsets.zero,
+                      visualDensity: VisualDensity.compact,
+                    ),
                   ),
-                ),
-                PopupMenuItem(
-                  value: 'satellite',
-                  child: ListTile(
-                    leading: const Icon(Icons.layers),
-                    title: const Text('Satellite'),
-                    trailing: _mapStyle == MapTileStyle.satellite
-                        ? Icon(Icons.check, size: 18, color: accentColor)
-                        : null,
-                    contentPadding: EdgeInsets.zero,
-                    visualDensity: VisualDensity.compact,
+                  PopupMenuItem(
+                    value: 'satellite',
+                    child: ListTile(
+                      leading: const Icon(Icons.layers),
+                      title: const Text('Satellite'),
+                      trailing: _mapStyle == MapTileStyle.satellite
+                          ? Icon(Icons.check, size: 18, color: accentColor)
+                          : null,
+                      contentPadding: EdgeInsets.zero,
+                      visualDensity: VisualDensity.compact,
+                    ),
                   ),
-                ),
-                PopupMenuItem(
-                  value: 'light',
-                  child: ListTile(
-                    leading: const Icon(Icons.layers),
-                    title: const Text('Light Map'),
-                    trailing: _mapStyle == MapTileStyle.light
-                        ? Icon(Icons.check, size: 18, color: accentColor)
-                        : null,
-                    contentPadding: EdgeInsets.zero,
-                    visualDensity: VisualDensity.compact,
+                  PopupMenuItem(
+                    value: 'light',
+                    child: ListTile(
+                      leading: const Icon(Icons.layers),
+                      title: const Text('Light Map'),
+                      trailing: _mapStyle == MapTileStyle.light
+                          ? Icon(Icons.check, size: 18, color: accentColor)
+                          : null,
+                      contentPadding: EdgeInsets.zero,
+                      visualDensity: VisualDensity.compact,
+                    ),
                   ),
-                ),
-                PopupMenuItem(
-                  value: 'terrain',
-                  child: ListTile(
-                    leading: const Icon(Icons.layers),
-                    title: const Text('Terrain'),
-                    trailing: _mapStyle == MapTileStyle.terrain
-                        ? Icon(Icons.check, size: 18, color: accentColor)
-                        : null,
-                    contentPadding: EdgeInsets.zero,
-                    visualDensity: VisualDensity.compact,
+                  PopupMenuItem(
+                    value: 'terrain',
+                    child: ListTile(
+                      leading: const Icon(Icons.layers),
+                      title: const Text('Terrain'),
+                      trailing: _mapStyle == MapTileStyle.terrain
+                          ? Icon(Icons.check, size: 18, color: accentColor)
+                          : null,
+                      contentPadding: EdgeInsets.zero,
+                      visualDensity: VisualDensity.compact,
+                    ),
                   ),
-                ),
-                const PopupMenuDivider(),
-                const PopupMenuItem(
-                  value: 'refresh',
-                  child: ListTile(
-                    leading: Icon(Icons.refresh),
-                    title: Text('Refresh'),
-                    contentPadding: EdgeInsets.zero,
-                    visualDensity: VisualDensity.compact,
+                  const PopupMenuDivider(),
+                  const PopupMenuItem(
+                    value: 'refresh',
+                    child: ListTile(
+                      leading: Icon(Icons.refresh),
+                      title: Text('Refresh'),
+                      contentPadding: EdgeInsets.zero,
+                      visualDensity: VisualDensity.compact,
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        body: meshMapState.when(
-          loading: () => Center(
-            child: LoadingIndicator(size: 100),
+                  const PopupMenuDivider(),
+                  const PopupMenuItem(
+                    value: 'help',
+                    child: ListTile(
+                      leading: Icon(Icons.help_outline),
+                      title: Text('Help'),
+                      contentPadding: EdgeInsets.zero,
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-          error: (error, _) => _buildErrorState(theme, error.toString()),
-          data: (state) {
-            if (state.isLoading && state.nodes.isEmpty) {
-              return Center(
-                child: LoadingIndicator(size: 100),
-              );
-            }
-            if (state.error != null && state.nodes.isEmpty) {
-              return _buildErrorState(theme, state.error!);
-            }
-            return Column(
-              children: [
-                // Search bar (same design as Direct Messages)
-                if (_showSearch) _buildSearchBar(),
-                // Divider when searching
-                if (_showSearch)
-                  Container(
-                    height: 1,
-                    color: context.border.withValues(alpha: 0.3),
-                  ),
-                // Map content (wrapping in Expanded with Stack for dropdown)
-                Expanded(
-                  child: Stack(
-                    children: [
-                      _buildMap(context, theme, state),
-                      // Search results dropdown overlay
-                      if (_showSearch && _showSearchResults)
-                        _buildSearchResultsOverlay(
-                          theme,
-                          ref.watch(
-                            worldMeshFilteredNodesProvider(_searchQuery),
+          body: meshMapState.when(
+            loading: () => Center(child: LoadingIndicator(size: 100)),
+            error: (error, _) => _buildErrorState(theme, error.toString()),
+            data: (state) {
+              if (state.isLoading && state.nodes.isEmpty) {
+                return Center(child: LoadingIndicator(size: 100));
+              }
+              if (state.error != null && state.nodes.isEmpty) {
+                return _buildErrorState(theme, state.error!);
+              }
+              return Column(
+                children: [
+                  // Search bar (same design as Direct Messages)
+                  if (_showSearch) _buildSearchBar(),
+                  // Divider when searching
+                  if (_showSearch)
+                    Container(
+                      height: 1,
+                      color: context.border.withValues(alpha: 0.3),
+                    ),
+                  // Map content (wrapping in Expanded with Stack for dropdown)
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        _buildMap(context, theme, state),
+                        // Search results dropdown overlay
+                        if (_showSearch && _showSearchResults)
+                          _buildSearchResultsOverlay(
+                            theme,
+                            ref.watch(
+                              worldMeshFilteredNodesProvider(_searchQuery),
+                            ),
                           ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            );
-          },
+                ],
+              );
+            },
+          ),
         ),
       ),
     );

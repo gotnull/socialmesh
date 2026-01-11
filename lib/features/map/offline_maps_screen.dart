@@ -9,7 +9,9 @@ import 'package:latlong2/latlong.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 import '../../core/theme.dart';
+import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/mesh_map_widget.dart';
+import '../../providers/help_providers.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/loading_indicator.dart';
 
@@ -492,205 +494,222 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.surface,
-        title: Text(_isSelecting ? 'Select Region' : 'Offline Maps'),
-        actions: [
-          if (_isSelecting)
-            IconButton(
-              onPressed: _cancelSelection,
-              icon: Icon(Icons.close),
-              tooltip: 'Cancel',
-            )
-          else
-            IconButton(
-              onPressed: _startSelection,
-              icon: const Icon(Icons.add_location_alt),
-              tooltip: 'Download New Region',
-            ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Map for selection using shared MeshMapWidget
-          if (_isSelecting || _regions.isEmpty)
-            Expanded(
-              flex: _isSelecting ? 2 : 1,
-              child: Stack(
-                children: [
-                  MeshMapWidget(
-                    mapController: _mapController,
-                    initialCenter: const LatLng(-33.8688, 151.2093),
-                    initialZoom: 10,
-                    onTap: _onMapTap,
-                    additionalLayers: [
-                      // Selection rectangle
-                      if (_selectionStart != null && _selectionEnd != null)
-                        PolygonLayer(
-                          polygons: [
-                            Polygon(
-                              points: [
-                                _selectionStart!,
-                                LatLng(
-                                  _selectionStart!.latitude,
-                                  _selectionEnd!.longitude,
+    return HelpTourController(
+      topicId: 'offline_maps_overview',
+      stepKeys: const {},
+      child: Scaffold(
+        backgroundColor: context.background,
+        appBar: AppBar(
+          backgroundColor: context.surface,
+          title: Text(_isSelecting ? 'Select Region' : 'Offline Maps'),
+          actions: [
+            if (_isSelecting)
+              IconButton(
+                onPressed: _cancelSelection,
+                icon: Icon(Icons.close),
+                tooltip: 'Cancel',
+              )
+            else ...[
+              IconButton(
+                onPressed: _startSelection,
+                icon: const Icon(Icons.add_location_alt),
+                tooltip: 'Download New Region',
+              ),
+              IconButton(
+                onPressed: () => ref
+                    .read(helpProvider.notifier)
+                    .startTour('offline_maps_overview'),
+                icon: const Icon(Icons.help_outline),
+                tooltip: 'Help',
+              ),
+            ],
+          ],
+        ),
+        body: Column(
+          children: [
+            // Map for selection using shared MeshMapWidget
+            if (_isSelecting || _regions.isEmpty)
+              Expanded(
+                flex: _isSelecting ? 2 : 1,
+                child: Stack(
+                  children: [
+                    MeshMapWidget(
+                      mapController: _mapController,
+                      initialCenter: const LatLng(-33.8688, 151.2093),
+                      initialZoom: 10,
+                      onTap: _onMapTap,
+                      additionalLayers: [
+                        // Selection rectangle
+                        if (_selectionStart != null && _selectionEnd != null)
+                          PolygonLayer(
+                            polygons: [
+                              Polygon(
+                                points: [
+                                  _selectionStart!,
+                                  LatLng(
+                                    _selectionStart!.latitude,
+                                    _selectionEnd!.longitude,
+                                  ),
+                                  _selectionEnd!,
+                                  LatLng(
+                                    _selectionEnd!.latitude,
+                                    _selectionStart!.longitude,
+                                  ),
+                                ],
+                                color: context.accentColor.withValues(
+                                  alpha: 0.2,
                                 ),
-                                _selectionEnd!,
-                                LatLng(
-                                  _selectionEnd!.latitude,
-                                  _selectionStart!.longitude,
-                                ),
-                              ],
-                              color: context.accentColor.withValues(alpha: 0.2),
-                              borderColor: context.accentColor,
-                              borderStrokeWidth: 2,
-                            ),
-                          ],
-                        ),
-                      // Selection start marker
-                      if (_selectionStart != null)
-                        MarkerLayer(
-                          markers: [
-                            Marker(
-                              point: _selectionStart!,
-                              width: 20,
-                              height: 20,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: context.accentColor,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                    ],
-                  ),
-                  // Selection instructions
-                  if (_isSelecting)
-                    Positioned(
-                      bottom: 16,
-                      left: 16,
-                      right: 16,
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: context.surface.withValues(alpha: 0.95),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              _selectionStart == null
-                                  ? 'Tap to set first corner'
-                                  : _selectionEnd == null
-                                  ? 'Tap to set second corner'
-                                  : '${_estimateTileCount()} tiles selected',
-                              style: TextStyle(
-                                color: context.textPrimary,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            if (_selectionEnd != null) ...[
-                              SizedBox(height: 8),
-                              ElevatedButton(
-                                onPressed: _showDownloadDialog,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: context.accentColor,
-                                  foregroundColor: Colors.black,
-                                  minimumSize: const Size(double.infinity, 44),
-                                ),
-                                child: Text('Download Region'),
+                                borderColor: context.accentColor,
+                                borderStrokeWidth: 2,
                               ),
                             ],
-                          ],
-                        ),
-                      ),
+                          ),
+                        // Selection start marker
+                        if (_selectionStart != null)
+                          MarkerLayer(
+                            markers: [
+                              Marker(
+                                point: _selectionStart!,
+                                width: 20,
+                                height: 20,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: context.accentColor,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                      ],
                     ),
-                ],
-              ),
-            ),
-
-          // Download progress
-          if (_isDownloading)
-            Container(
-              padding: const EdgeInsets.all(16),
-              color: context.surface,
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      LoadingIndicator(size: 20),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'Downloading "$_currentDownloadRegion"...',
-                          style: TextStyle(color: context.textPrimary),
+                    // Selection instructions
+                    if (_isSelecting)
+                      Positioned(
+                        bottom: 16,
+                        left: 16,
+                        right: 16,
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: context.surface.withValues(alpha: 0.95),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                _selectionStart == null
+                                    ? 'Tap to set first corner'
+                                    : _selectionEnd == null
+                                    ? 'Tap to set second corner'
+                                    : '${_estimateTileCount()} tiles selected',
+                                style: TextStyle(
+                                  color: context.textPrimary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              if (_selectionEnd != null) ...[
+                                SizedBox(height: 8),
+                                ElevatedButton(
+                                  onPressed: _showDownloadDialog,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: context.accentColor,
+                                    foregroundColor: Colors.black,
+                                    minimumSize: const Size(
+                                      double.infinity,
+                                      44,
+                                    ),
+                                  ),
+                                  child: Text('Download Region'),
+                                ),
+                              ],
+                            ],
+                          ),
                         ),
                       ),
-                      Text(
-                        '$_downloadedTiles / $_totalTiles',
-                        style: TextStyle(color: context.textTertiary),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 8),
-                  LinearProgressIndicator(
-                    value: _downloadProgress,
-                    backgroundColor: context.background,
-                    valueColor: AlwaysStoppedAnimation(context.accentColor),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
 
-          // Saved regions list
-          if (!_isSelecting && _regions.isNotEmpty)
-            Expanded(
-              child: ListView.builder(
+            // Download progress
+            if (_isDownloading)
+              Container(
                 padding: const EdgeInsets.all(16),
-                itemCount: _regions.length,
-                itemBuilder: (context, index) {
-                  final region = _regions[index];
-                  return _buildRegionCard(region);
-                },
-              ),
-            ),
-
-          // Empty state
-          if (!_isSelecting && _regions.isEmpty && !_isLoading)
-            Expanded(
-              child: Center(
+                color: context.surface,
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.map_outlined,
-                      size: 64,
-                      color: context.textTertiary.withValues(alpha: 0.5),
+                    Row(
+                      children: [
+                        LoadingIndicator(size: 20),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Downloading "$_currentDownloadRegion"...',
+                            style: TextStyle(color: context.textPrimary),
+                          ),
+                        ),
+                        Text(
+                          '$_downloadedTiles / $_totalTiles',
+                          style: TextStyle(color: context.textTertiary),
+                        ),
+                      ],
                     ),
-                    SizedBox(height: 16),
-                    Text(
-                      'No Offline Regions',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: context.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Tap the + button to download map regions',
-                      style: TextStyle(color: context.textSecondary),
+                    SizedBox(height: 8),
+                    LinearProgressIndicator(
+                      value: _downloadProgress,
+                      backgroundColor: context.background,
+                      valueColor: AlwaysStoppedAnimation(context.accentColor),
                     ),
                   ],
                 ),
               ),
-            ),
-        ],
+
+            // Saved regions list
+            if (!_isSelecting && _regions.isNotEmpty)
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: _regions.length,
+                  itemBuilder: (context, index) {
+                    final region = _regions[index];
+                    return _buildRegionCard(region);
+                  },
+                ),
+              ),
+
+            // Empty state
+            if (!_isSelecting && _regions.isEmpty && !_isLoading)
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.map_outlined,
+                        size: 64,
+                        color: context.textTertiary.withValues(alpha: 0.5),
+                      ),
+                      SizedBox(height: 16),
+                      Text(
+                        'No Offline Regions',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: context.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Tap the + button to download map regions',
+                        style: TextStyle(color: context.textSecondary),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

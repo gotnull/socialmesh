@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:socialmesh/core/logging.dart';
+import '../../core/widgets/ico_help_system.dart';
+import '../../providers/help_providers.dart';
 import 'models/widget_schema.dart';
 import 'storage/widget_storage_service.dart';
 import 'wizard/widget_wizard_screen.dart';
@@ -157,43 +159,73 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
+    return HelpTourController(
+      topicId: 'widget_builder_overview',
+      stepKeys: const {},
+      child: Scaffold(
         backgroundColor: context.background,
-        title: Text(
-          'My Widgets',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: context.textPrimary,
+        appBar: AppBar(
+          backgroundColor: context.background,
+          title: Text(
+            'My Widgets',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
+            ),
           ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add_box),
-            onPressed: _createNewWidget,
-            tooltip: 'Create Widget',
-          ),
-          IconButton(
-            icon: const Icon(Icons.dashboard),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const WidgetDashboardScreen(),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.add_box),
+              onPressed: _createNewWidget,
+              tooltip: 'Create Widget',
+            ),
+            IconButton(
+              icon: const Icon(Icons.dashboard),
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const WidgetDashboardScreen(),
+                  ),
+                );
+              },
+              tooltip: 'Dashboard',
+            ),
+            PopupMenuButton<String>(
+              icon: Icon(Icons.more_vert, color: context.textPrimary),
+              onSelected: (value) {
+                switch (value) {
+                  case 'marketplace':
+                    _openMarketplace();
+                  case 'help':
+                    ref
+                        .read(helpProvider.notifier)
+                        .startTour('widget_builder_overview');
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'marketplace',
+                  child: ListTile(
+                    leading: Icon(Icons.store, color: context.accentColor),
+                    title: const Text('Marketplace'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
                 ),
-              );
-            },
-            tooltip: 'Dashboard',
-          ),
-          IconButton(
-            icon: Icon(Icons.store, color: context.accentColor),
-            onPressed: _openMarketplace,
-            tooltip: 'Marketplace',
-          ),
-        ],
+                const PopupMenuItem(
+                  value: 'help',
+                  child: ListTile(
+                    leading: Icon(Icons.help_outline),
+                    title: Text('Help'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        body: _isLoading ? const ScreenLoadingIndicator() : _buildWidgetList(),
       ),
-      body: _isLoading ? const ScreenLoadingIndicator() : _buildWidgetList(),
     );
   }
 

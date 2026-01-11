@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/ico_help_system.dart';
+import '../../providers/help_providers.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../navigation/main_shell.dart';
 import '../widget_builder/storage/widget_storage_service.dart';
@@ -50,53 +52,83 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
     // This screen only needs to handle the connected state
     final widgetConfigs = ref.watch(dashboardWidgetsProvider);
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
+    return HelpTourController(
+      topicId: 'dashboard_overview',
+      stepKeys: const {},
+      child: Scaffold(
         backgroundColor: context.background,
-        leading: const HamburgerMenuButton(),
-        centerTitle: true,
-        title: Text(
-          _editMode ? 'Edit Dashboard' : 'Dashboard',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: context.textPrimary,
-          ),
-        ),
-        actions: [
-          // Add widget button - always visible
-          IconButton(
-            icon: Icon(Icons.add, color: context.accentColor),
-            onPressed: () => _showAddWidgetSheet(context),
-            tooltip: 'Add Widget',
-          ),
-          if (!_editMode) ...[
-            // Device button
-            const DeviceStatusButton(),
-            // Settings
-            IconButton(
-              icon: Icon(Icons.settings_outlined, color: context.textPrimary),
-              onPressed: () => Navigator.of(context).pushNamed('/settings'),
-              tooltip: 'Settings',
+        appBar: AppBar(
+          backgroundColor: context.background,
+          leading: const HamburgerMenuButton(),
+          centerTitle: true,
+          title: Text(
+            _editMode ? 'Edit Dashboard' : 'Dashboard',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
             ),
-          ] else ...[
-            // Done button
-            TextButton(
-              onPressed: () => setState(() => _editMode = false),
-              child: Text(
-                'Done',
-                style: TextStyle(
-                  color: context.accentColor,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16,
+          ),
+          actions: [
+            // Add widget button - always visible
+            IconButton(
+              icon: Icon(Icons.add, color: context.accentColor),
+              onPressed: () => _showAddWidgetSheet(context),
+              tooltip: 'Add Widget',
+            ),
+            if (!_editMode) ...[
+              // Device button
+              const DeviceStatusButton(),
+              // Settings
+              PopupMenuButton<String>(
+                icon: Icon(Icons.more_vert, color: context.textPrimary),
+                onSelected: (value) {
+                  switch (value) {
+                    case 'help':
+                      ref
+                          .read(helpProvider.notifier)
+                          .startTour('dashboard_overview');
+                    case 'settings':
+                      Navigator.of(context).pushNamed('/settings');
+                  }
+                },
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'help',
+                    child: ListTile(
+                      leading: Icon(Icons.help_outline),
+                      title: Text('Help'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'settings',
+                    child: ListTile(
+                      leading: Icon(Icons.settings_outlined),
+                      title: Text('Settings'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                ],
+              ),
+            ] else ...[
+              // Done button
+              TextButton(
+                onPressed: () => setState(() => _editMode = false),
+                child: Text(
+                  'Done',
+                  style: TextStyle(
+                    color: context.accentColor,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
                 ),
               ),
-            ),
+            ],
           ],
-        ],
+        ),
+        body: _buildDashboard(context, widgetConfigs),
       ),
-      body: _buildDashboard(context, widgetConfigs),
     );
   }
 

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/widgets/ico_help_system.dart';
+import '../../../providers/help_providers.dart';
 import '../marketplace/widget_marketplace_service.dart';
 import '../models/widget_schema.dart';
 import '../renderer/widget_renderer.dart';
@@ -76,101 +78,117 @@ class _WidgetMarketplaceScreenState
 
     return GestureDetector(
       onTap: _dismissKeyboard,
-      child: Scaffold(
-        backgroundColor: context.background,
-        appBar: AppBar(
+      child: HelpTourController(
+        topicId: 'marketplace_overview',
+        stepKeys: const {},
+        child: Scaffold(
           backgroundColor: context.background,
-          title: Text(
-            'Widget Marketplace',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: context.textPrimary,
+          appBar: AppBar(
+            backgroundColor: context.background,
+            title: Text(
+              'Widget Marketplace',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: context.textPrimary,
+              ),
+            ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.help_outline),
+                onPressed: () => ref
+                    .read(helpProvider.notifier)
+                    .startTour('marketplace_overview'),
+                tooltip: 'Help',
+              ),
+            ],
+            bottom: TabBar(
+              controller: _tabController,
+              indicatorColor: context.accentColor,
+              labelColor: context.accentColor,
+              unselectedLabelColor: context.textSecondary,
+              isScrollable: true,
+              tabAlignment: TabAlignment.start,
+              tabs: [
+                const Tab(text: 'Featured'),
+                const Tab(text: 'Popular'),
+                const Tab(text: 'New'),
+                Tab(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.favorite, size: 16),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Favorites${favoritesCount > 0 ? ' ($favoritesCount)' : ''}',
+                      ),
+                    ],
+                  ),
+                ),
+                const Tab(text: 'Categories'),
+              ],
             ),
           ),
-          bottom: TabBar(
-            controller: _tabController,
-            indicatorColor: context.accentColor,
-            labelColor: context.accentColor,
-            unselectedLabelColor: context.textSecondary,
-            isScrollable: true,
-            tabAlignment: TabAlignment.start,
-            tabs: [
-              const Tab(text: 'Featured'),
-              const Tab(text: 'Popular'),
-              const Tab(text: 'New'),
-              Tab(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.favorite, size: 16),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Favorites${favoritesCount > 0 ? ' ($favoritesCount)' : ''}',
+          body: Column(
+            children: [
+              // Search bar
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: (value) => _search(value),
+                  style: TextStyle(color: context.textPrimary),
+                  decoration: InputDecoration(
+                    hintText: 'Search widgets...',
+                    hintStyle: TextStyle(color: context.textTertiary),
+                    prefixIcon: Icon(Icons.search, color: context.textTertiary),
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: Icon(
+                              Icons.clear,
+                              color: context.textTertiary,
+                            ),
+                            onPressed: () {
+                              _searchController.clear();
+                              ref
+                                  .read(marketplaceSearchProvider.notifier)
+                                  .clear();
+                            },
+                          )
+                        : null,
+                    filled: true,
+                    fillColor: context.card,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
                     ),
-                  ],
-                ),
-              ),
-              const Tab(text: 'Categories'),
-            ],
-          ),
-        ),
-        body: Column(
-          children: [
-            // Search bar
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: TextField(
-                controller: _searchController,
-                onChanged: (value) => _search(value),
-                style: TextStyle(color: context.textPrimary),
-                decoration: InputDecoration(
-                  hintText: 'Search widgets...',
-                  hintStyle: TextStyle(color: context.textTertiary),
-                  prefixIcon: Icon(Icons.search, color: context.textTertiary),
-                  suffixIcon: _searchController.text.isNotEmpty
-                      ? IconButton(
-                          icon: Icon(Icons.clear, color: context.textTertiary),
-                          onPressed: () {
-                            _searchController.clear();
-                            ref
-                                .read(marketplaceSearchProvider.notifier)
-                                .clear();
-                          },
-                        )
-                      : null,
-                  filled: true,
-                  fillColor: context.card,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
                   ),
                 ),
               ),
-            ),
-            // Content
-            Expanded(
-              child: searchState.query.isNotEmpty
-                  ? _buildSearchResults(searchState)
-                  : marketplaceAsync.when(
-                      loading: () => const ScreenLoadingIndicator(),
-                      error: (error, stack) => _buildErrorState(
-                        'Unable to load marketplace',
-                        onRetry: () => ref.invalidate(marketplaceProvider),
+              // Content
+              Expanded(
+                child: searchState.query.isNotEmpty
+                    ? _buildSearchResults(searchState)
+                    : marketplaceAsync.when(
+                        loading: () => const ScreenLoadingIndicator(),
+                        error: (error, stack) => _buildErrorState(
+                          'Unable to load marketplace',
+                          onRetry: () => ref.invalidate(marketplaceProvider),
+                        ),
+                        data: (state) => TabBarView(
+                          controller: _tabController,
+                          children: [
+                            _buildFeaturedTab(state),
+                            _buildPopularTab(state),
+                            _buildNewTab(state),
+                            _buildFavoritesTab(state),
+                            _buildCategoriesTab(),
+                          ],
+                        ),
                       ),
-                      data: (state) => TabBarView(
-                        controller: _tabController,
-                        children: [
-                          _buildFeaturedTab(state),
-                          _buildPopularTab(state),
-                          _buildNewTab(state),
-                          _buildFavoritesTab(state),
-                          _buildCategoriesTab(),
-                        ],
-                      ),
-                    ),
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );

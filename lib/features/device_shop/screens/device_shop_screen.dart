@@ -6,7 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
 import '../../../core/widgets/edge_fade.dart';
+import '../../../core/widgets/ico_help_system.dart';
 import '../../../providers/auth_providers.dart';
+import '../../../providers/help_providers.dart';
 import '../models/shop_models.dart';
 import '../providers/device_shop_providers.dart';
 import 'product_detail_screen.dart';
@@ -92,111 +94,122 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: context.background,
-      body: GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(),
-        child: CustomScrollView(
-          controller: _scrollController,
-          slivers: [
-            // App Bar
-            SliverAppBar(
-              backgroundColor: context.card,
-              floating: true,
-              pinned: true,
-              expandedHeight: 120,
-              flexibleSpace: FlexibleSpaceBar(
-                background: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        context.accentColor.withValues(alpha: 0.3),
-                        context.card,
-                      ],
+    return HelpTourController(
+      topicId: 'device_shop_overview',
+      stepKeys: const {},
+      child: Scaffold(
+        backgroundColor: context.background,
+        body: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: CustomScrollView(
+            controller: _scrollController,
+            slivers: [
+              // App Bar
+              SliverAppBar(
+                backgroundColor: context.card,
+                floating: true,
+                pinned: true,
+                expandedHeight: 120,
+                flexibleSpace: FlexibleSpaceBar(
+                  background: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          context.accentColor.withValues(alpha: 0.3),
+                          context.card,
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                title: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.store, color: context.accentColor, size: 24),
-                    const SizedBox(width: 8),
-                    AutoScrollText(
-                      'Device Shop',
-                      style: TextStyle(
-                        color: context.textPrimary,
-                        fontWeight: FontWeight.bold,
+                  title: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.store, color: context.accentColor, size: 24),
+                      const SizedBox(width: 8),
+                      AutoScrollText(
+                        'Device Shop',
+                        style: TextStyle(
+                          color: context.textPrimary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 1,
+                        velocity: 30.0,
+                        fadeWidth: 20.0,
                       ),
-                      maxLines: 1,
-                      velocity: 30.0,
-                      fadeWidth: 20.0,
-                    ),
-                  ],
+                    ],
+                  ),
+                  centerTitle: true,
                 ),
-                centerTitle: true,
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.favorite_outline),
+                    onPressed: () => _openFavorites(context),
+                    tooltip: 'Favorites',
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.help_outline),
+                    onPressed: () => ref
+                        .read(helpProvider.notifier)
+                        .startTour('device_shop_overview'),
+                    tooltip: 'Help',
+                  ),
+                ],
               ),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.favorite_outline),
-                  onPressed: () => _openFavorites(context),
-                  tooltip: 'Favorites',
+
+              // Search bar - pinned below app bar
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _SearchBarDelegate(
+                  searchController: _searchController,
+                  searchQuery: _searchQuery,
+                  focusNode: _searchFocusNode,
+                  onChanged: _onSearchChanged,
+                  onClear: () {
+                    _searchController.clear();
+                    setState(() => _searchQuery = '');
+                  },
+                  hintText: 'Search devices, modules, antennas...',
+                  backgroundColor: context.background,
+                  cardColor: context.card,
+                  textPrimary: context.textPrimary,
+                  textTertiary: context.textTertiary,
                 ),
+              ),
+
+              // Show search suggestions, search results, or regular content
+              if (_isSearchFocused && _searchQuery.isEmpty)
+                _buildSearchSuggestions()
+              else if (_searchQuery.isNotEmpty)
+                _buildSearchResults()
+              else ...[
+                // Categories
+                SliverToBoxAdapter(
+                  child: _CategoriesSection(onCategoryTap: _openCategory),
+                ),
+
+                // Featured Products
+                const SliverToBoxAdapter(child: _FeaturedSection()),
+
+                // Official Partners
+                const SliverToBoxAdapter(child: _PartnersSection()),
+
+                // New Arrivals
+                const SliverToBoxAdapter(child: _NewArrivalsSection()),
+
+                // Best Sellers
+                const SliverToBoxAdapter(child: _BestSellersSection()),
+
+                // On Sale
+                const SliverToBoxAdapter(child: _OnSaleSection()),
               ],
-            ),
 
-            // Search bar - pinned below app bar
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: _SearchBarDelegate(
-                searchController: _searchController,
-                searchQuery: _searchQuery,
-                focusNode: _searchFocusNode,
-                onChanged: _onSearchChanged,
-                onClear: () {
-                  _searchController.clear();
-                  setState(() => _searchQuery = '');
-                },
-                hintText: 'Search devices, modules, antennas...',
-                backgroundColor: context.background,
-                cardColor: context.card,
-                textPrimary: context.textPrimary,
-                textTertiary: context.textTertiary,
-              ),
-            ),
-
-            // Show search suggestions, search results, or regular content
-            if (_isSearchFocused && _searchQuery.isEmpty)
-              _buildSearchSuggestions()
-            else if (_searchQuery.isNotEmpty)
-              _buildSearchResults()
-            else ...[
-              // Categories
-              SliverToBoxAdapter(
-                child: _CategoriesSection(onCategoryTap: _openCategory),
-              ),
-
-              // Featured Products
-              const SliverToBoxAdapter(child: _FeaturedSection()),
-
-              // Official Partners
-              const SliverToBoxAdapter(child: _PartnersSection()),
-
-              // New Arrivals
-              const SliverToBoxAdapter(child: _NewArrivalsSection()),
-
-              // Best Sellers
-              const SliverToBoxAdapter(child: _BestSellersSection()),
-
-              // On Sale
-              const SliverToBoxAdapter(child: _OnSaleSection()),
+              // Bottom padding
+              const SliverPadding(padding: EdgeInsets.only(bottom: 100)),
             ],
-
-            // Bottom padding
-            const SliverPadding(padding: EdgeInsets.only(bottom: 100)),
-          ],
+          ),
         ),
       ),
     );

@@ -5,6 +5,8 @@ import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/edge_fade.dart';
+import '../../core/widgets/ico_help_system.dart';
+import '../../providers/help_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 
@@ -315,30 +317,41 @@ class _TimelineScreenState extends ConsumerState<TimelineScreen> {
     final allEvents = ref.watch(timelineEventsProvider);
     final events = allEvents.where((e) => _filter.matches(e.type)).toList();
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        centerTitle: true,
-        title: const Text('Timeline'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.filter_list),
-            onPressed: _showFilterDialog,
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Filter chips
-          _buildFilterChips(theme),
-          // Timeline list
-          Expanded(
-            child: events.isEmpty
-                ? _buildEmptyState(theme)
-                : _buildTimeline(theme, events),
-          ),
-        ],
+    return HelpTourController(
+      topicId: 'timeline_overview',
+      stepKeys: const {},
+      child: Scaffold(
+        backgroundColor: context.background,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          centerTitle: true,
+          title: const Text('Timeline'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.filter_list),
+              onPressed: _showFilterDialog,
+            ),
+            IconButton(
+              icon: const Icon(Icons.help_outline),
+              onPressed: () => ref
+                  .read(helpProvider.notifier)
+                  .startTour('timeline_overview'),
+              tooltip: 'Help',
+            ),
+          ],
+        ),
+        body: Column(
+          children: [
+            // Filter chips
+            _buildFilterChips(theme),
+            // Timeline list
+            Expanded(
+              child: events.isEmpty
+                  ? _buildEmptyState(theme)
+                  : _buildTimeline(theme, events),
+            ),
+          ],
+        ),
       ),
     );
   }

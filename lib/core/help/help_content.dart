@@ -598,6 +598,542 @@ class HelpContent {
   );
 
   // ============================================================================
+  // WIDGET DASHBOARD HELP
+  // ============================================================================
+
+  static final HelpTopic dashboardOverview = HelpTopic(
+    id: 'dashboard_overview',
+    title: 'Your Dashboard',
+    description: 'Your customizable mesh command center',
+    icon: Icons.dashboard,
+    category: catSettings,
+    priority: 1,
+    steps: [
+      HelpStep(
+        id: 'dashboard_intro',
+        bubbleText:
+            "Welcome to your **Dashboard**! This is your personalized command center. Everything you need, at a glance!",
+        icoMood: MeshBrainMood.excited,
+        canGoBack: false,
+      ),
+      HelpStep(
+        id: 'dashboard_widgets',
+        bubbleText:
+            "Each card is a **widget**. They show live data from your mesh - battery levels, messages, weather, and more!",
+        icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
+        id: 'dashboard_reorder',
+        bubbleText:
+            "**Long-press and drag** to rearrange widgets. Put your favorites at the top! Tap **Edit** to add or remove them.",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'dashboard_tap',
+        bubbleText:
+            "**Tap any widget** to see more details or take action. Try tapping a node widget to see all their info!",
+        icoMood: MeshBrainMood.approving,
+      ),
+    ],
+  );
+
+  // ============================================================================
+  // WIDGET BUILDER HELP
+  // ============================================================================
+
+  static final HelpTopic widgetBuilderOverview = HelpTopic(
+    id: 'widget_builder_overview',
+    title: 'Widget Builder',
+    description: 'Create your own custom widgets',
+    icon: Icons.widgets,
+    category: catSettings,
+    priority: 10,
+    steps: [
+      HelpStep(
+        id: 'builder_intro',
+        bubbleText:
+            "Welcome to the **Widget Builder**! Here you can create your own custom widgets from scratch!",
+        icoMood: MeshBrainMood.excited,
+        canGoBack: false,
+      ),
+      HelpStep(
+        id: 'builder_templates',
+        bubbleText:
+            "Start with a **template** or build from blank. Templates give you gauges, charts, and status cards ready to customize!",
+        icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
+        id: 'builder_bindings',
+        bubbleText:
+            "The magic is in **data bindings**! Connect any element to live mesh data - battery, GPS, temperature, signal strength!",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'builder_preview',
+        bubbleText:
+            "Use **Preview** to see how your widget looks with real data before saving. Tweak until it's perfect!",
+        icoMood: MeshBrainMood.approving,
+      ),
+    ],
+  );
+
+  // ============================================================================
+  // WIDGET MARKETPLACE HELP
+  // ============================================================================
+
+  static final HelpTopic marketplaceOverview = HelpTopic(
+    id: 'marketplace_overview',
+    title: 'Widget Marketplace',
+    description: 'Discover widgets made by the community',
+    icon: Icons.store,
+    category: catSettings,
+    priority: 11,
+    steps: [
+      HelpStep(
+        id: 'marketplace_intro',
+        bubbleText:
+            "Welcome to the **Marketplace**! Browse widgets created by other mesh enthusiasts around the world!",
+        icoMood: MeshBrainMood.excited,
+        canGoBack: false,
+      ),
+      HelpStep(
+        id: 'marketplace_browse',
+        bubbleText:
+            "Browse by **category** - find status displays, charts, gauges, or creative designs. Tap any widget to preview it!",
+        icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
+        id: 'marketplace_install',
+        bubbleText:
+            "Found one you like? **Tap install** and it's added to your collection. Use it on your dashboard right away!",
+        icoMood: MeshBrainMood.approving,
+      ),
+      HelpStep(
+        id: 'marketplace_share',
+        bubbleText:
+            "Made something cool? **Share your widgets** to the marketplace and help the community!",
+        icoMood: MeshBrainMood.playful,
+      ),
+    ],
+  );
+
+  // ============================================================================
+  // SIGNALS / PRESENCE FEED HELP
+  // ============================================================================
+
+  static final HelpTopic signalsOverview = HelpTopic(
+    id: 'signals_overview',
+    title: 'Signals',
+    description: 'Ephemeral mesh-first social feed',
+    icon: Icons.cell_tower,
+    category: catMessaging,
+    priority: 6,
+    steps: [
+      HelpStep(
+        id: 'signals_intro',
+        bubbleText:
+            "Welcome to **Signals**! Share moments with your mesh network. Posts are **ephemeral** - they disappear after 24 hours!",
+        icoMood: MeshBrainMood.excited,
+        canGoBack: false,
+      ),
+      HelpStep(
+        id: 'signals_create',
+        bubbleText:
+            "Tap the **+** to broadcast a signal! Add text, a photo, or your location. Everyone on your mesh will see it!",
+        icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
+        id: 'signals_react',
+        bubbleText:
+            "**React** to signals with emoji! It's a quick way to acknowledge without sending a full message.",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'signals_privacy',
+        bubbleText:
+            "Signals stay on the **mesh only**. No cloud servers, no permanent storage. True off-grid social!",
+        icoMood: MeshBrainMood.approving,
+      ),
+    ],
+  );
+
+  // ============================================================================
+  // WORLD MESH HELP
+  // ============================================================================
+
+  static final HelpTopic worldMeshOverview = HelpTopic(
+    id: 'world_mesh_overview',
+    title: 'World Mesh',
+    description: 'Global mesh network visualization',
+    icon: Icons.public,
+    category: catNetwork,
+    priority: 7,
+    steps: [
+      HelpStep(
+        id: 'world_intro',
+        bubbleText:
+            "Welcome to **World Mesh**! See the entire global Meshtastic network. Every dot is a node sharing its location!",
+        icoMood: MeshBrainMood.excited,
+        canGoBack: false,
+      ),
+      HelpStep(
+        id: 'world_scope',
+        bubbleText:
+            "Zoom out to see the **worldwide mesh**, or zoom in to explore local clusters. It's amazing how many nodes exist!",
+        icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
+        id: 'world_data',
+        bubbleText:
+            "Data comes from **MQTT** - nodes that opted to share their position publicly. Your local nodes appear too!",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'world_filters',
+        bubbleText:
+            "Use **filters** to show specific regions or time ranges. Find active meshes near places you're visiting!",
+        icoMood: MeshBrainMood.approving,
+      ),
+    ],
+  );
+
+  // ============================================================================
+  // ROUTES HELP
+  // ============================================================================
+
+  static final HelpTopic routesOverview = HelpTopic(
+    id: 'routes_overview',
+    title: 'Routes',
+    description: 'Record and share GPS routes',
+    icon: Icons.route,
+    category: catDevice,
+    priority: 9,
+    steps: [
+      HelpStep(
+        id: 'routes_intro',
+        bubbleText:
+            "**Routes** lets you record your journeys! Perfect for hikes, bike rides, or any adventure off the grid.",
+        icoMood: MeshBrainMood.excited,
+        canGoBack: false,
+      ),
+      HelpStep(
+        id: 'routes_record',
+        bubbleText:
+            "Tap **Record** to start tracking. I'll save your GPS points as you move. Works even without cell signal!",
+        icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
+        id: 'routes_gpx',
+        bubbleText:
+            "**Import GPX files** to follow existing trails. Export your routes to share with others or use in other apps!",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'routes_share',
+        bubbleText:
+            "Share routes with your mesh buddies! Great for coordinating meet-up points or showing others your favorite trails.",
+        icoMood: MeshBrainMood.approving,
+      ),
+    ],
+  );
+
+  // ============================================================================
+  // SETTINGS HELP
+  // ============================================================================
+
+  static final HelpTopic settingsOverview = HelpTopic(
+    id: 'settings_overview',
+    title: 'Settings',
+    description: 'Configure your app and device',
+    icon: Icons.settings,
+    category: catSettings,
+    priority: 15,
+    steps: [
+      HelpStep(
+        id: 'settings_intro',
+        bubbleText:
+            "Welcome to **Settings**! Here you can customize everything about your app and connected device.",
+        icoMood: MeshBrainMood.speaking,
+        canGoBack: false,
+      ),
+      HelpStep(
+        id: 'settings_device',
+        bubbleText:
+            "**Device settings** let you configure your Meshtastic radio - name, region, power levels, and modules!",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'settings_app',
+        bubbleText:
+            "**App settings** control themes, notifications, privacy options, and how the app behaves.",
+        icoMood: MeshBrainMood.approving,
+      ),
+      HelpStep(
+        id: 'settings_cloud',
+        bubbleText:
+            "Enable **Cloud Sync** to backup your settings and access them on other devices. Your data, encrypted!",
+        icoMood: MeshBrainMood.playful,
+      ),
+    ],
+  );
+
+  // ============================================================================
+  // PROFILE HELP
+  // ============================================================================
+
+  static final HelpTopic profileOverview = HelpTopic(
+    id: 'profile_overview',
+    title: 'Your Profile',
+    description: 'Manage your mesh identity',
+    icon: Icons.person,
+    category: catSettings,
+    priority: 12,
+    steps: [
+      HelpStep(
+        id: 'profile_intro',
+        bubbleText:
+            "This is **your profile**! It's how other mesh users see you when you send messages or share signals.",
+        icoMood: MeshBrainMood.speaking,
+        canGoBack: false,
+      ),
+      HelpStep(
+        id: 'profile_customize',
+        bubbleText:
+            "Add a **display name** and **avatar** so friends can recognize you. Your node ID stays the same underneath!",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'profile_share',
+        bubbleText:
+            "Share your **profile QR code** to let others add you as a contact. One scan and they've got your details!",
+        icoMood: MeshBrainMood.approving,
+      ),
+      HelpStep(
+        id: 'profile_cloud',
+        bubbleText:
+            "Sign in to **sync your profile** across devices. Your settings, contacts, and widgets follow you everywhere!",
+        icoMood: MeshBrainMood.playful,
+      ),
+    ],
+  );
+
+  // ============================================================================
+  // MESH 3D HELP
+  // ============================================================================
+
+  static final HelpTopic mesh3dOverview = HelpTopic(
+    id: 'mesh_3d_overview',
+    title: 'Mesh 3D',
+    description: '3D network topology visualization',
+    icon: Icons.view_in_ar,
+    category: catNetwork,
+    priority: 13,
+    steps: [
+      HelpStep(
+        id: 'mesh3d_intro',
+        bubbleText:
+            "Welcome to **Mesh 3D**! See your entire network in three dimensions. Drag to rotate, pinch to zoom!",
+        icoMood: MeshBrainMood.excited,
+        canGoBack: false,
+      ),
+      HelpStep(
+        id: 'mesh3d_nodes',
+        bubbleText:
+            "Each sphere is a **node**. Lines show connections based on signal strength. Closer = stronger signal!",
+        icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
+        id: 'mesh3d_colors',
+        bubbleText:
+            "Colors show **node health**. Green = online and strong, yellow = okay, red = weak or offline.",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'mesh3d_tap',
+        bubbleText:
+            "**Tap any node** to select it and see details. Great for understanding your network topology!",
+        icoMood: MeshBrainMood.approving,
+      ),
+    ],
+  );
+
+  // ============================================================================
+  // GLOBE HELP
+  // ============================================================================
+
+  static final HelpTopic globeOverview = HelpTopic(
+    id: 'globe_overview',
+    title: 'Globe View',
+    description: '3D globe with your mesh',
+    icon: Icons.language,
+    category: catNetwork,
+    priority: 14,
+    steps: [
+      HelpStep(
+        id: 'globe_intro',
+        bubbleText:
+            "Spin the **Globe** to see your mesh from space! Every glowing point is a node with GPS coordinates.",
+        icoMood: MeshBrainMood.excited,
+        canGoBack: false,
+      ),
+      HelpStep(
+        id: 'globe_interact',
+        bubbleText:
+            "**Drag to spin**, pinch to zoom. Tap a node to fly to its location and see details!",
+        icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
+        id: 'globe_arcs',
+        bubbleText:
+            "Watch the **connection arcs** - they show message paths traveling across your mesh in real-time!",
+        icoMood: MeshBrainMood.curious,
+      ),
+    ],
+  );
+
+  // ============================================================================
+  // TIMELINE HELP
+  // ============================================================================
+
+  static final HelpTopic timelineOverview = HelpTopic(
+    id: 'timeline_overview',
+    title: 'Timeline',
+    description: 'Your mesh activity history',
+    icon: Icons.timeline,
+    category: catMessaging,
+    priority: 16,
+    steps: [
+      HelpStep(
+        id: 'timeline_intro',
+        bubbleText:
+            "The **Timeline** shows everything happening on your mesh. Messages, node changes, telemetry - all in order!",
+        icoMood: MeshBrainMood.speaking,
+        canGoBack: false,
+      ),
+      HelpStep(
+        id: 'timeline_filter',
+        bubbleText:
+            "Use **filters** to focus on specific event types. Just messages? Only node joins? You control the view!",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'timeline_tap',
+        bubbleText:
+            "**Tap any event** to see full details. Great for debugging or understanding what's happening on your network!",
+        icoMood: MeshBrainMood.approving,
+      ),
+    ],
+  );
+
+  // ============================================================================
+  // DEVICE SHOP HELP
+  // ============================================================================
+
+  static final HelpTopic deviceShopOverview = HelpTopic(
+    id: 'device_shop_overview',
+    title: 'Device Shop',
+    description: 'Browse Meshtastic hardware',
+    icon: Icons.shopping_bag,
+    category: catDevice,
+    priority: 17,
+    steps: [
+      HelpStep(
+        id: 'shop_intro',
+        bubbleText:
+            "Welcome to the **Device Shop**! Browse Meshtastic-compatible radios and accessories.",
+        icoMood: MeshBrainMood.speaking,
+        canGoBack: false,
+      ),
+      HelpStep(
+        id: 'shop_compare',
+        bubbleText:
+            "**Compare devices** by range, battery, and features. I've rated each one to help you choose!",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'shop_links',
+        bubbleText:
+            "Tap **Buy** to visit trusted vendors. Prices and availability shown are from real stores!",
+        icoMood: MeshBrainMood.approving,
+      ),
+    ],
+  );
+
+  // ============================================================================
+  // OFFLINE MAPS HELP
+  // ============================================================================
+
+  static final HelpTopic offlineMapsOverview = HelpTopic(
+    id: 'offline_maps_overview',
+    title: 'Offline Maps',
+    description: 'Download maps for offline use',
+    icon: Icons.download,
+    category: catDevice,
+    priority: 18,
+    steps: [
+      HelpStep(
+        id: 'offline_intro',
+        bubbleText:
+            "**Offline Maps** let you use the map without internet! Essential for adventures off the grid.",
+        icoMood: MeshBrainMood.speaking,
+        canGoBack: false,
+      ),
+      HelpStep(
+        id: 'offline_download',
+        bubbleText:
+            "**Select a region** and zoom level, then tap download. I'll save all the map tiles to your device!",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'offline_manage',
+        bubbleText:
+            "Manage your downloads here - see storage used and **delete** old regions you don't need anymore.",
+        icoMood: MeshBrainMood.approving,
+      ),
+    ],
+  );
+
+  // ============================================================================
+  // RADIO CONFIG HELP
+  // ============================================================================
+
+  static final HelpTopic radioConfigOverview = HelpTopic(
+    id: 'radio_config_overview',
+    title: 'Radio Settings',
+    description: 'Configure your LoRa radio',
+    icon: Icons.radio,
+    category: catDevice,
+    priority: 20,
+    steps: [
+      HelpStep(
+        id: 'radio_intro',
+        bubbleText:
+            "**Radio settings** control how your device transmits. Region, power, and modem preset are key!",
+        icoMood: MeshBrainMood.speaking,
+        canGoBack: false,
+      ),
+      HelpStep(
+        id: 'radio_region',
+        bubbleText:
+            "Your **region** determines legal frequencies. Set this wrong and you could interfere with other services!",
+        icoMood: MeshBrainMood.alert,
+      ),
+      HelpStep(
+        id: 'radio_modem',
+        bubbleText:
+            "**Modem preset** balances range vs speed. Long-range = slower but further. Short-fast = quick but closer.",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'radio_power',
+        bubbleText:
+            "Higher **TX power** means more range but uses more battery. Find the sweet spot for your needs!",
+        icoMood: MeshBrainMood.approving,
+      ),
+    ],
+  );
+
+  // ============================================================================
   // ALL TOPICS
   // ============================================================================
 
@@ -614,6 +1150,20 @@ class HelpContent {
     automationsOverview,
     gpsSettings,
     signalMetrics,
+    dashboardOverview,
+    widgetBuilderOverview,
+    marketplaceOverview,
+    signalsOverview,
+    worldMeshOverview,
+    routesOverview,
+    settingsOverview,
+    profileOverview,
+    mesh3dOverview,
+    globeOverview,
+    timelineOverview,
+    deviceShopOverview,
+    offlineMapsOverview,
+    radioConfigOverview,
   ];
 
   /// Get a topic by ID
