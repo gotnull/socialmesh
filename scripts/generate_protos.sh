@@ -149,11 +149,33 @@ generate_dart() {
         exit 1
     fi
     
+    # Fetch nanopb.proto if needed (required by some meshtastic protos)
+    if [ ! -f "$PROTO_DIR/nanopb.proto" ]; then
+        print_status "Fetching nanopb.proto..."
+        curl -sL "https://raw.githubusercontent.com/nanopb/nanopb/master/generator/proto/nanopb.proto" -o "$PROTO_DIR/nanopb.proto"
+    fi
+    
+    # Build list of proto files, excluding device-only protos that have nanopb dependencies
+    # These are for firmware/device use only, not needed for client apps
+    local proto_files=""
+    for f in "$PROTO_DIR/meshtastic/"*.proto; do
+        filename=$(basename "$f")
+        # Skip device-only protos that use nanopb C++ features not compatible with Dart
+        case "$filename" in
+            deviceonly.proto|localonly.proto|interdevice.proto)
+                print_status "Skipping $filename (device-only, not needed for client)"
+                ;;
+            *)
+                proto_files="$proto_files $f"
+                ;;
+        esac
+    done
+    
     # Generate Dart files
     protoc \
       --dart_out="$PROJECT_ROOT/lib/generated" \
       --proto_path="$PROTO_DIR" \
-      "$PROTO_DIR/meshtastic/"*.proto
+      $proto_files
     
     local current_version=$(get_current_version)
     print_success "Protobuf generation complete! (version: $current_version)"
