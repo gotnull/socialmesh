@@ -305,6 +305,17 @@ class AnimatedDottedInputBorder extends InputBorder {
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
+    // Calculate the gap position for the floating label
+    // The gap is on the top edge, offset from the left
+    double? labelGapStart;
+    double? labelGapEnd;
+    if (gapStart != null && gapExtent > 0) {
+      // Add some padding around the label
+      final padding = 4.0;
+      labelGapStart = gapStart - padding;
+      labelGapEnd = gapStart + gapExtent + padding;
+    }
+
     final rrect = RRect.fromRectAndRadius(rect, Radius.circular(borderRadius));
 
     final path = Path()..addRRect(rrect);
@@ -316,17 +327,43 @@ class AnimatedDottedInputBorder extends InputBorder {
     final totalLength = metric.length;
     if (totalLength <= 0) return;
 
-    // Animate dashes moving clockwise
-    final offset = animation.value * (dashLength + gapLength) * 3;
+    // Calculate where the top edge starts/ends in the path
+    // RRect path goes: top-right corner arc, right side, bottom-right arc, bottom, bottom-left arc, left, top-left arc, top
+    // The top edge starts after the top-left corner arc
+    final topLeftArcLength = borderRadius * 1.57; // ~pi/2 * r
+    final topEdgeStart =
+        totalLength - (rect.width - 2 * borderRadius) - topLeftArcLength;
+    final topEdgeEnd = totalLength - topLeftArcLength;
 
-    double distance = offset;
-    while (distance < totalLength + offset) {
+    // Animate dashes moving clockwise
+    final animOffset = animation.value * (dashLength + gapLength) * 3;
+
+    double distance = animOffset;
+    while (distance < totalLength + animOffset) {
       final start = distance % totalLength;
       var end = (start + dashLength);
       if (end > totalLength) end = totalLength;
 
-      final dashPath = metric.extractPath(start, end);
-      canvas.drawPath(dashPath, paint);
+      // Check if this dash is in the label gap area (on top edge)
+      bool inLabelGap = false;
+      if (labelGapStart != null && labelGapEnd != null) {
+        // Check if dash intersects with label gap on top edge
+        final dashStartOnTop = start >= topEdgeStart && start <= topEdgeEnd;
+        final dashEndOnTop = end >= topEdgeStart && end <= topEdgeEnd;
+        if (dashStartOnTop || dashEndOnTop) {
+          // Convert path position to x position on top edge
+          final dashX = rect.left + borderRadius + (start - topEdgeStart);
+          final dashEndX = rect.left + borderRadius + (end - topEdgeStart);
+          if (dashX < labelGapEnd && dashEndX > labelGapStart) {
+            inLabelGap = true;
+          }
+        }
+      }
+
+      if (!inLabelGap) {
+        final dashPath = metric.extractPath(start, end);
+        canvas.drawPath(dashPath, paint);
+      }
 
       distance += dashLength + gapLength;
     }
@@ -902,10 +939,10 @@ class _IcoCoachMarkState extends State<IcoCoachMark> {
     return Stack(
       children: [
         // Semi-transparent backdrop with cutout for target
-        ClipPath(
-          clipper: _SpotlightClipper(_targetRect!.inflate(8)),
-          child: GestureDetector(
-            onTap: () {}, // Absorb taps on backdrop
+        // Use IgnorePointer so taps go through to buttons like Continue below
+        IgnorePointer(
+          child: ClipPath(
+            clipper: _SpotlightClipper(_targetRect!.inflate(8)),
             child: Container(color: Colors.black.withValues(alpha: 0.6)),
           ),
         ),
