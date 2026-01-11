@@ -106,11 +106,6 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
     final allNodes = nodes.values.toList();
     final onlineCount = allNodes.where((n) => n.isOnline).length;
     final favoritesCount = allNodes.where((n) => n.isFavorite).length;
-    final linkedCount = allNodes
-        .where(
-          (n) => linkedNodeIds.contains(n.nodeNum) && n.nodeNum != myNodeNum,
-        )
-        .length;
     final withPositionCount = allNodes
         .where((n) => n.latitude != null && n.longitude != null)
         .length;
@@ -219,17 +214,6 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
                             color: AccentColors.green,
                             onTap: () => setState(
                               () => _activeFilter = NodeFilter.online,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          _FilterChip(
-                            label: 'Linked',
-                            count: linkedCount,
-                            isSelected: _activeFilter == NodeFilter.linked,
-                            color: AccentColors.red,
-                            icon: Icons.link,
-                            onTap: () => setState(
-                              () => _activeFilter = NodeFilter.linked,
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -636,13 +620,6 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
         return nodes.where((n) => !n.isOnline).toList();
       case NodeFilter.favorites:
         return nodes.where((n) => n.isFavorite).toList();
-      case NodeFilter.linked:
-        return nodes
-            .where(
-              (n) =>
-                  linkedNodeIds.contains(n.nodeNum) && n.nodeNum != myNodeNum,
-            )
-            .toList();
       case NodeFilter.withPosition:
         return nodes
             .where((n) => n.latitude != null && n.longitude != null)
@@ -799,7 +776,6 @@ enum NodeFilter {
   online,
   offline,
   favorites,
-  linked,
   withPosition,
   recentlyDiscovered,
 }
