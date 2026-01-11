@@ -750,6 +750,16 @@ class _IcoSpeechBubbleWithArrowState
     });
   }
 
+  void _completeTyping() {
+    _typingTimer?.cancel();
+    setState(() {
+      _displayedText = widget.text;
+      _currentCharIndex = widget.text.length;
+    });
+  }
+
+  bool get _isTypingComplete => _currentCharIndex >= widget.text.length;
+
   @override
   void dispose() {
     _typingTimer?.cancel();
@@ -774,280 +784,286 @@ class _IcoSpeechBubbleWithArrowState
           scale: 0.9 + (_entry.value * 0.1),
           child: Opacity(
             opacity: _entry.value,
-            child: Container(
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.92,
-              ),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  // Animated outer glow like onboarding
-                  BoxShadow(
-                    color: AppTheme.primaryMagenta.withValues(
-                      alpha: _glow.value * 0.4,
-                    ),
-                    blurRadius: 20,
-                    spreadRadius: 2,
-                  ),
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.5),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: context.card.withValues(alpha: 0.95),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
+            child: GestureDetector(
+              onTap: _isTypingComplete ? null : _completeTyping,
+              child: Container(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.92,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    // Animated outer glow like onboarding
+                    BoxShadow(
                       color: AppTheme.primaryMagenta.withValues(
-                        alpha: _glow.value,
+                        alpha: _glow.value * 0.4,
                       ),
-                      width: 1.5,
+                      blurRadius: 20,
+                      spreadRadius: 2,
                     ),
-                  ),
-                  child: Stack(
-                    children: [
-                      // Scanline effect
-                      Positioned.fill(
-                        child: CustomPaint(
-                          painter: _ScanlinePainter(
-                            progress: _scanline.value,
-                            color: AppTheme.primaryMagenta.withValues(
-                              alpha: 0.08,
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.5),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: context.card.withValues(alpha: 0.95),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: AppTheme.primaryMagenta.withValues(
+                          alpha: _glow.value,
+                        ),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Stack(
+                      children: [
+                        // Scanline effect
+                        Positioned.fill(
+                          child: CustomPaint(
+                            painter: _ScanlinePainter(
+                              progress: _scanline.value,
+                              color: AppTheme.primaryMagenta.withValues(
+                                alpha: 0.08,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      // Content
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Header - Character name
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 10,
-                            ),
-                            decoration: BoxDecoration(
-                              border: Border(
-                                bottom: BorderSide(
-                                  color: AppTheme.primaryMagenta.withValues(
-                                    alpha: 0.3,
+                        // Content
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Header - Character name
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                border: Border(
+                                  bottom: BorderSide(
+                                    color: AppTheme.primaryMagenta.withValues(
+                                      alpha: 0.3,
+                                    ),
+                                    width: 1,
                                   ),
-                                  width: 1,
                                 ),
                               ),
-                            ),
-                            child: Row(
-                              children: [
-                                // Ico avatar - properly sized with background
-                                SizedBox(
-                                  width: 48,
-                                  height: 48,
-                                  child: Stack(
-                                    alignment: Alignment.center,
-                                    clipBehavior: Clip.none,
-                                    children: [
-                                      // Background circle
-                                      Container(
-                                        width: 40,
-                                        height: 40,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: AppTheme.primaryMagenta
-                                              .withValues(alpha: 0.15),
-                                          border: Border.all(
+                              child: Row(
+                                children: [
+                                  // Ico avatar - properly sized with background
+                                  SizedBox(
+                                    width: 48,
+                                    height: 48,
+                                    child: Stack(
+                                      alignment: Alignment.center,
+                                      clipBehavior: Clip.none,
+                                      children: [
+                                        // Background circle
+                                        Container(
+                                          width: 40,
+                                          height: 40,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
                                             color: AppTheme.primaryMagenta
-                                                .withValues(alpha: 0.3),
-                                            width: 1,
-                                          ),
-                                        ),
-                                      ),
-                                      // Ico floating on top
-                                      Positioned(
-                                        top: -8,
-                                        child: SizedBox(
-                                          width: 64,
-                                          height: 64,
-                                          child: Material(
-                                            type: MaterialType.transparency,
-                                            child: MeshNodeBrain(
-                                              mood: widget.icoMood,
-                                              size: 64,
-                                              showThoughtParticles: false,
-                                              glowIntensity: 0.5,
+                                                .withValues(alpha: 0.15),
+                                            border: Border.all(
+                                              color: AppTheme.primaryMagenta
+                                                  .withValues(alpha: 0.3),
+                                              width: 1,
                                             ),
                                           ),
                                         ),
-                                      ),
-                                    ],
+                                        // Ico floating on top
+                                        Positioned(
+                                          top: -8,
+                                          child: SizedBox(
+                                            width: 64,
+                                            height: 64,
+                                            child: Material(
+                                              type: MaterialType.transparency,
+                                              child: MeshNodeBrain(
+                                                mood: widget.icoMood,
+                                                size: 64,
+                                                showThoughtParticles: false,
+                                                glowIntensity: 0.5,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'ICO',
-                                  style: TextStyle(
-                                    color: AppTheme.primaryMagenta,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 1.5,
-                                    fontFamily: AppTheme.fontFamily,
-                                    decoration: TextDecoration.none,
-                                  ),
-                                ),
-                                const Spacer(),
-                                // Progress (if multi-step)
-                                if (widget.totalSteps > 1)
+                                  const SizedBox(width: 8),
                                   Text(
-                                    '${widget.currentStep}/${widget.totalSteps}',
+                                    'ICO',
                                     style: TextStyle(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.4,
-                                      ),
-                                      fontSize: 11,
+                                      color: AppTheme.primaryMagenta,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 1.5,
                                       fontFamily: AppTheme.fontFamily,
                                       decoration: TextDecoration.none,
                                     ),
                                   ),
-                                const SizedBox(width: 8),
-                                // Haptic toggle
-                                GestureDetector(
-                                  onTap: () {
-                                    HapticFeedback.lightImpact();
-                                    ref
-                                        .read(helpProvider.notifier)
-                                        .setHapticFeedback(
-                                          !helpState.hapticFeedback,
-                                        );
-                                  },
-                                  child: Icon(
-                                    helpState.hapticFeedback
-                                        ? Icons.vibration
-                                        : Icons.mobile_off,
-                                    size: 16,
-                                    color: Colors.white.withValues(alpha: 0.4),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          // Message content
-                          Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: RichText(
-                              text: TextSpan(
-                                children: _RichTextParser.parse(
-                                  _displayedText,
-                                  highlightColor: AccentColors.orange,
-                                ),
-                              ),
-                            ),
-                          ),
-                          // Action buttons
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                            decoration: BoxDecoration(
-                              border: Border(
-                                top: BorderSide(
-                                  color: AppTheme.primaryMagenta.withValues(
-                                    alpha: 0.3,
-                                  ),
-                                  width: 1,
-                                ),
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                // Back button
-                                if (widget.showBack && widget.onBack != null)
-                                  GestureDetector(
-                                    onTap: widget.onBack,
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          Icons.arrow_back_ios,
-                                          size: 14,
-                                          color: AccentColors.cyan.withValues(
-                                            alpha: 0.7,
-                                          ),
+                                  const Spacer(),
+                                  // Progress (if multi-step)
+                                  if (widget.totalSteps > 1)
+                                    Text(
+                                      '${widget.currentStep}/${widget.totalSteps}',
+                                      style: TextStyle(
+                                        color: Colors.white.withValues(
+                                          alpha: 0.4,
                                         ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          'Back',
-                                          style: TextStyle(
+                                        fontSize: 11,
+                                        fontFamily: AppTheme.fontFamily,
+                                        decoration: TextDecoration.none,
+                                      ),
+                                    ),
+                                  const SizedBox(width: 8),
+                                  // Haptic toggle
+                                  GestureDetector(
+                                    onTap: () {
+                                      HapticFeedback.lightImpact();
+                                      ref
+                                          .read(helpProvider.notifier)
+                                          .setHapticFeedback(
+                                            !helpState.hapticFeedback,
+                                          );
+                                    },
+                                    child: Icon(
+                                      helpState.hapticFeedback
+                                          ? Icons.vibration
+                                          : Icons.mobile_off,
+                                      size: 16,
+                                      color: Colors.white.withValues(
+                                        alpha: 0.4,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // Message content
+                            Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: RichText(
+                                text: TextSpan(
+                                  children: _RichTextParser.parse(
+                                    _displayedText,
+                                    highlightColor: AccentColors.orange,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            // Action buttons
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                border: Border(
+                                  top: BorderSide(
+                                    color: AppTheme.primaryMagenta.withValues(
+                                      alpha: 0.3,
+                                    ),
+                                    width: 1,
+                                  ),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  // Back button
+                                  if (widget.showBack && widget.onBack != null)
+                                    GestureDetector(
+                                      onTap: widget.onBack,
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.arrow_back_ios,
+                                            size: 14,
                                             color: AccentColors.cyan.withValues(
                                               alpha: 0.7,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            'Back',
+                                            style: TextStyle(
+                                              color: AccentColors.cyan
+                                                  .withValues(alpha: 0.7),
+                                              fontSize: 13,
+                                              fontFamily: AppTheme.fontFamily,
+                                              decoration: TextDecoration.none,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  const Spacer(),
+                                  // Skip button
+                                  if (widget.showSkip && widget.onSkip != null)
+                                    GestureDetector(
+                                      onTap: widget.onSkip,
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                        ),
+                                        child: Text(
+                                          'Skip',
+                                          style: TextStyle(
+                                            color: Colors.white.withValues(
+                                              alpha: 0.4,
                                             ),
                                             fontSize: 13,
                                             fontFamily: AppTheme.fontFamily,
                                             decoration: TextDecoration.none,
                                           ),
                                         ),
-                                      ],
-                                    ),
-                                  ),
-                                const Spacer(),
-                                // Skip button
-                                if (widget.showSkip && widget.onSkip != null)
-                                  GestureDetector(
-                                    onTap: widget.onSkip,
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
                                       ),
-                                      child: Text(
-                                        'Skip',
-                                        style: TextStyle(
-                                          color: Colors.white.withValues(
-                                            alpha: 0.4,
+                                    ),
+                                  // Next/Done button
+                                  if (widget.onNext != null)
+                                    GestureDetector(
+                                      onTap: widget.onNext,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 20,
+                                          vertical: 8,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: AppTheme.primaryMagenta,
+                                          borderRadius: BorderRadius.circular(
+                                            4,
                                           ),
-                                          fontSize: 13,
-                                          fontFamily: AppTheme.fontFamily,
-                                          decoration: TextDecoration.none,
+                                        ),
+                                        child: Text(
+                                          widget.nextLabel ?? 'Next',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                            fontFamily: AppTheme.fontFamily,
+                                            decoration: TextDecoration.none,
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                // Next/Done button
-                                if (widget.onNext != null)
-                                  GestureDetector(
-                                    onTap: widget.onNext,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 20,
-                                        vertical: 8,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: AppTheme.primaryMagenta,
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: Text(
-                                        widget.nextLabel ?? 'Next',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w600,
-                                          fontFamily: AppTheme.fontFamily,
-                                          decoration: TextDecoration.none,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
