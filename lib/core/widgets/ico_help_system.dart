@@ -290,10 +290,12 @@ class _IcoHelpAppBarButtonState extends ConsumerState<IcoHelpAppBarButton>
 
 /// Parses text with **highlighted** sections and returns styled TextSpans
 /// Uses theme accent colors for highlights
+/// Handles incomplete markdown during typing animation gracefully
 class _RichTextParser {
   static List<TextSpan> parse(String text, {Color? highlightColor}) {
     final spans = <TextSpan>[];
-    final regex = RegExp(r'\*\*(.+?)\*\*');
+    // Match complete **text** patterns OR incomplete **text at end of string
+    final regex = RegExp(r'\*\*(.+?)\*\*|\*\*(.+)$');
     int lastEnd = 0;
 
     for (final match in regex.allMatches(text)) {
@@ -313,10 +315,11 @@ class _RichTextParser {
         );
       }
 
-      // Add highlighted text
+      // Add highlighted text (group 1 for complete, group 2 for incomplete)
+      final highlightedText = match.group(1) ?? match.group(2);
       spans.add(
         TextSpan(
-          text: match.group(1),
+          text: highlightedText,
           style: TextStyle(
             color: highlightColor ?? AccentColors.orange,
             fontSize: 15,
@@ -1094,6 +1097,7 @@ class IcoCoachMark extends StatefulWidget {
   final VoidCallback onSkip;
   final int currentStep;
   final int totalSteps;
+  final double appBarHeight;
 
   const IcoCoachMark({
     super.key,
@@ -1104,6 +1108,7 @@ class IcoCoachMark extends StatefulWidget {
     required this.onSkip,
     this.currentStep = 1,
     this.totalSteps = 1,
+    this.appBarHeight = 0,
   });
 
   @override
@@ -1167,41 +1172,74 @@ class _IcoCoachMarkState extends State<IcoCoachMark> {
     final screenSize = MediaQuery.of(context).size;
     final targetInflated = _targetRect!.inflate(8);
 
+    // Adjust target rect to be relative to this widget's coordinate space
+    // (since this widget is positioned below the app bar)
+    final adjustedTarget = Rect.fromLTRB(
+      targetInflated.left,
+      targetInflated.top - widget.appBarHeight,
+      targetInflated.right,
+      targetInflated.bottom - widget.appBarHeight,
+    );
+
+    // Available height is screen height minus app bar
+    final availableHeight = screenSize.height - widget.appBarHeight;
+
     // Only dim the area AROUND the target, not the whole screen
-    // This prevents dimming buttons below like Continue
     return Stack(
+      fit: StackFit.expand,
       children: [
+        // Tap anywhere outside target to dismiss
+        Positioned.fill(
+          child: GestureDetector(
+            onTap: widget.onSkip,
+            behavior: HitTestBehavior.translucent,
+            child: const SizedBox.expand(),
+          ),
+        ),
+
         // Top strip (above target)
-        if (targetInflated.top > 0)
+        if (adjustedTarget.top > 0)
           Positioned(
             left: 0,
             right: 0,
             top: 0,
-            height: targetInflated.top,
+            height: adjustedTarget.top,
             child: IgnorePointer(
               child: Container(color: Colors.black.withValues(alpha: 0.6)),
             ),
           ),
 
         // Left strip (beside target)
-        if (targetInflated.left > 0)
+        if (adjustedTarget.left > 0)
           Positioned(
             left: 0,
-            width: targetInflated.left,
-            top: targetInflated.top,
-            height: targetInflated.height,
+            width: adjustedTarget.left,
+            top: adjustedTarget.top,
+            height: adjustedTarget.height,
             child: IgnorePointer(
               child: Container(color: Colors.black.withValues(alpha: 0.6)),
             ),
           ),
 
         // Right strip (beside target)
-        if (targetInflated.right < screenSize.width)
+        if (adjustedTarget.right < screenSize.width)
           Positioned(
-            left: targetInflated.right,
+            left: adjustedTarget.right,
             right: 0,
-            top: targetInflated.top,
-            height: targetInflated.height,
+            top: adjustedTarget.top,
+            height: adjustedTarget.height,
+            child: IgnorePointer(
+              child: Container(color: Colors.black.withValues(alpha: 0.6)),
+            ),
+          ),
+
+        // Bottom strip (below target)
+        if (adjustedTarget.bottom < availableHeight)
+          Positioned(
+            left: 0,
+            right: 0,
+            top: adjustedTarget.bottom,
+            bottom: 0,
             child: IgnorePointer(
               child: Container(color: Colors.black.withValues(alpha: 0.6)),
             ),
@@ -1217,8 +1255,13 @@ class _IcoCoachMarkState extends State<IcoCoachMark> {
     final screenSize = MediaQuery.of(context).size;
     final bubbleHeight = 250.0;
 
-    final spaceAbove = _targetRect!.top;
-    final spaceBelow = screenSize.height - _targetRect!.bottom;
+    // Adjust target rect for this widget's coordinate space (below app bar)
+    final adjustedTargetTop = _targetRect!.top - widget.appBarHeight;
+    final adjustedTargetBottom = _targetRect!.bottom - widget.appBarHeight;
+    final availableHeight = screenSize.height - widget.appBarHeight;
+
+    final spaceAbove = adjustedTargetTop;
+    final spaceBelow = availableHeight - adjustedTargetBottom;
 
     final shouldPositionAbove =
         spaceBelow < bubbleHeight && spaceAbove > spaceBelow;
@@ -1226,9 +1269,9 @@ class _IcoCoachMarkState extends State<IcoCoachMark> {
     return Positioned(
       left: 16,
       right: 16,
-      top: shouldPositionAbove ? null : _targetRect!.bottom + 20,
+      top: shouldPositionAbove ? null : adjustedTargetBottom + 20,
       bottom: shouldPositionAbove
-          ? screenSize.height - _targetRect!.top + 20
+          ? availableHeight - adjustedTargetTop + 20
           : null,
       child: IcoSpeechBubbleWithArrow(
         text: widget.step.bubbleText,
@@ -1285,46 +1328,65 @@ class _HelpTourControllerState extends ConsumerState<HelpTourController> {
     final currentStep = topic.steps[helpState.currentStepIndex];
     final targetKey = widget.stepKeys?[currentStep.id];
 
+    // Calculate app bar height to exclude from overlay
+    final safeAreaTop = MediaQuery.of(context).padding.top;
+    final appBarHeight = safeAreaTop + kToolbarHeight;
+
     return Stack(
       children: [
         widget.child,
         if (targetKey != null && targetKey.currentContext != null)
-          IcoCoachMark(
-            targetKey: targetKey,
-            step: currentStep,
-            currentStep: helpState.currentStepIndex + 1,
-            totalSteps: topic.steps.length,
-            onNext: () => ref.read(helpProvider.notifier).nextStep(),
-            onBack: helpState.currentStepIndex > 0
-                ? () => ref.read(helpProvider.notifier).previousStep()
-                : null,
-            onSkip: () => ref.read(helpProvider.notifier).cancelTour(),
+          // Position coach mark BELOW app bar so it doesn't block help button
+          Positioned(
+            left: 0,
+            right: 0,
+            top: appBarHeight,
+            bottom: 0,
+            child: IcoCoachMark(
+              targetKey: targetKey,
+              step: currentStep,
+              currentStep: helpState.currentStepIndex + 1,
+              totalSteps: topic.steps.length,
+              onNext: () => ref.read(helpProvider.notifier).nextStep(),
+              onBack: helpState.currentStepIndex > 0
+                  ? () => ref.read(helpProvider.notifier).previousStep()
+                  : null,
+              onSkip: () => ref.read(helpProvider.notifier).cancelTour(),
+              appBarHeight: appBarHeight,
+            ),
           )
         else
-          // No target - show floating bubble
-          Positioned.fill(
-            child: Container(
-              color: Colors.black.withValues(alpha: 0.7),
-              child: Center(
-                child: IcoSpeechBubbleWithArrow(
-                  text: currentStep.bubbleText,
-                  icoMood: currentStep.icoMood,
-                  currentStep: helpState.currentStepIndex + 1,
-                  totalSteps: topic.steps.length,
-                  onNext: () => ref.read(helpProvider.notifier).nextStep(),
-                  onBack:
-                      currentStep.canGoBack && helpState.currentStepIndex > 0
-                      ? () => ref.read(helpProvider.notifier).previousStep()
-                      : null,
-                  onSkip: currentStep.canSkip
-                      ? () => ref.read(helpProvider.notifier).cancelTour()
-                      : null,
-                  showBack: currentStep.canGoBack,
-                  showSkip: currentStep.canSkip,
-                  nextLabel:
-                      helpState.currentStepIndex == topic.steps.length - 1
-                      ? 'Done'
-                      : 'Next',
+          // No target - show floating bubble with dim overlay below app bar
+          Positioned(
+            left: 0,
+            right: 0,
+            top: appBarHeight,
+            bottom: 0,
+            child: GestureDetector(
+              onTap: () => ref.read(helpProvider.notifier).cancelTour(),
+              child: Container(
+                color: Colors.black.withValues(alpha: 0.7),
+                child: Center(
+                  child: IcoSpeechBubbleWithArrow(
+                    text: currentStep.bubbleText,
+                    icoMood: currentStep.icoMood,
+                    currentStep: helpState.currentStepIndex + 1,
+                    totalSteps: topic.steps.length,
+                    onNext: () => ref.read(helpProvider.notifier).nextStep(),
+                    onBack:
+                        currentStep.canGoBack && helpState.currentStepIndex > 0
+                        ? () => ref.read(helpProvider.notifier).previousStep()
+                        : null,
+                    onSkip: currentStep.canSkip
+                        ? () => ref.read(helpProvider.notifier).cancelTour()
+                        : null,
+                    showBack: currentStep.canGoBack,
+                    showSkip: currentStep.canSkip,
+                    nextLabel:
+                        helpState.currentStepIndex == topic.steps.length - 1
+                        ? 'Done'
+                        : 'Next',
+                  ),
                 ),
               ),
             ),
