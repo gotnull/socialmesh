@@ -859,9 +859,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           section: 'ABOUT',
           onTap: () => Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (_) => const HelpCenterScreen(),
-            ),
+            MaterialPageRoute(builder: (_) => const HelpCenterScreen()),
           ),
         ),
         _SearchableSettingItem(
