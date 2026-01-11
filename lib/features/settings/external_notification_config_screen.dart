@@ -5,7 +5,7 @@ import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
-import '../../generated/meshtastic/mesh.pb.dart' as pb;
+import '../../generated/meshtastic/module_config.pb.dart' as module_pb;
 import '../../core/widgets/loading_indicator.dart';
 
 /// Screen for configuring External Notification module (buzzers, LEDs, vibration)
@@ -110,7 +110,7 @@ class _ExternalNotificationConfigScreenState
       final protocol = ref.read(protocolServiceProvider);
 
       // Create the external notification config
-      final extNotifConfig = pb.ModuleConfig_ExternalNotificationConfig()
+      final extNotifConfig = module_pb.ModuleConfig_ExternalNotificationConfig()
         ..enabled = _enabled
         ..alertBell = _alertBell
         ..alertMessage = _alertMessage
@@ -127,7 +127,7 @@ class _ExternalNotificationConfigScreenState
         ..outputBuzzer = _outputBuzzer
         ..outputVibra = _outputVibra;
 
-      final moduleConfig = pb.ModuleConfig()
+      final moduleConfig = module_pb.ModuleConfig()
         ..externalNotification = extNotifConfig;
 
       await protocol.setModuleConfig(moduleConfig);

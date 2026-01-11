@@ -7,7 +7,9 @@ import '../../core/theme.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../providers/app_providers.dart';
-import '../../generated/meshtastic/mesh.pb.dart' as pb;
+import '../../generated/meshtastic/config.pb.dart' as config_pb;
+import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
+import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
 import '../../core/widgets/loading_indicator.dart';
 
 /// Screen for configuring device role and basic device settings
@@ -20,8 +22,8 @@ class DeviceConfigScreen extends ConsumerStatefulWidget {
 
 class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
   bool _isLoading = false;
-  pb.Config_DeviceConfig_Role_? _selectedRole;
-  pb.Config_DeviceConfig_RebroadcastMode? _rebroadcastMode;
+  config_pbenum.Config_DeviceConfig_Role? _selectedRole;
+  config_pbenum.Config_DeviceConfig_RebroadcastMode? _rebroadcastMode;
   bool _serialEnabled = true;
   bool _ledHeartbeatDisabled = false;
   int _nodeInfoBroadcastSecs = 900;
@@ -32,7 +34,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
   bool _tripleClickEnabled =
       true; // Note: protobuf is "disableTripleClick" (inverted)
   String _tzdef = '';
-  StreamSubscription<pb.Config_DeviceConfig>? _configSubscription;
+  StreamSubscription<config_pb.Config_DeviceConfig>? _configSubscription;
 
   @override
   void initState() {
@@ -46,7 +48,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
     super.dispose();
   }
 
-  void _applyConfig(pb.Config_DeviceConfig config) {
+  void _applyConfig(config_pb.Config_DeviceConfig config) {
     setState(() {
       _selectedRole = config.role;
       _rebroadcastMode = config.rebroadcastMode;
@@ -88,7 +90,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
 
         // Request fresh config from device (or remote node)
         await protocol.getConfig(
-          pb.AdminMessage_ConfigType.DEVICE_CONFIG,
+          admin_pbenum.AdminMessage_ConfigType.DEVICE_CONFIG,
           targetNodeNum: targetNodeNum,
         );
       }
@@ -104,9 +106,10 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
       final targetNodeNum = ref.read(remoteAdminTargetProvider);
 
       await protocol.setDeviceConfig(
-        role: _selectedRole ?? pb.Config_DeviceConfig_Role_.CLIENT,
+        role: _selectedRole ?? config_pbenum.Config_DeviceConfig_Role.CLIENT,
         rebroadcastMode:
-            _rebroadcastMode ?? pb.Config_DeviceConfig_RebroadcastMode.ALL,
+            _rebroadcastMode ??
+            config_pbenum.Config_DeviceConfig_RebroadcastMode.ALL,
         serialEnabled: _serialEnabled,
         nodeInfoBroadcastSecs: _nodeInfoBroadcastSecs,
         ledHeartbeatDisabled: _ledHeartbeatDisabled,
@@ -562,67 +565,67 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
   Widget _buildRoleSelector() {
     final roles = [
       (
-        pb.Config_DeviceConfig_Role_.CLIENT,
+        config_pbenum.Config_DeviceConfig_Role.CLIENT,
         'Client',
         'Standard messaging device',
         Icons.phone_android,
       ),
       (
-        pb.Config_DeviceConfig_Role_.CLIENT_MUTE,
+        config_pbenum.Config_DeviceConfig_Role.CLIENT_MUTE,
         'Client Mute',
         'Does not forward packets',
         Icons.volume_off,
       ),
       (
-        pb.Config_DeviceConfig_Role_.CLIENT_HIDDEN,
+        config_pbenum.Config_DeviceConfig_Role.CLIENT_HIDDEN,
         'Client Hidden',
         'Only speaks when spoken to',
         Icons.visibility_off,
       ),
       (
-        pb.Config_DeviceConfig_Role_.ROUTER,
+        config_pbenum.Config_DeviceConfig_Role.ROUTER,
         'Router',
         'Infrastructure node for extending coverage',
         Icons.router,
       ),
       (
-        pb.Config_DeviceConfig_Role_.ROUTER_CLIENT,
+        config_pbenum.Config_DeviceConfig_Role.ROUTER_CLIENT,
         'Router Client',
         'Router that also handles direct messages',
         Icons.device_hub,
       ),
       (
-        pb.Config_DeviceConfig_Role_.REPEATER,
+        config_pbenum.Config_DeviceConfig_Role.REPEATER,
         'Repeater',
         'Simple packet repeater (no encryption)',
         Icons.repeat,
       ),
       (
-        pb.Config_DeviceConfig_Role_.TRACKER,
+        config_pbenum.Config_DeviceConfig_Role.TRACKER,
         'Tracker',
         'GPS tracker with optimized position broadcasts',
         Icons.location_on,
       ),
       (
-        pb.Config_DeviceConfig_Role_.SENSOR,
+        config_pbenum.Config_DeviceConfig_Role.SENSOR,
         'Sensor',
         'Telemetry sensor node',
         Icons.sensors,
       ),
       (
-        pb.Config_DeviceConfig_Role_.TAK,
+        config_pbenum.Config_DeviceConfig_Role.TAK,
         'TAK',
         'Optimized for ATAK communication',
         Icons.military_tech,
       ),
       (
-        pb.Config_DeviceConfig_Role_.TAK_TRACKER,
+        config_pbenum.Config_DeviceConfig_Role.TAK_TRACKER,
         'TAK Tracker',
         'TAK with automatic position broadcasts',
         Icons.gps_fixed,
       ),
       (
-        pb.Config_DeviceConfig_Role_.LOST_AND_FOUND,
+        config_pbenum.Config_DeviceConfig_Role.LOST_AND_FOUND,
         'Lost & Found',
         'Broadcasts location for device recovery',
         Icons.search,
@@ -713,27 +716,27 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
   Widget _buildRebroadcastSelector() {
     final modes = [
       (
-        pb.Config_DeviceConfig_RebroadcastMode.ALL,
+        config_pbenum.Config_DeviceConfig_RebroadcastMode.ALL,
         'All',
         'Rebroadcast all observed messages',
       ),
       (
-        pb.Config_DeviceConfig_RebroadcastMode.ALL_SKIP_DECODING,
+        config_pbenum.Config_DeviceConfig_RebroadcastMode.ALL_SKIP_DECODING,
         'All (Skip Decoding)',
         'Rebroadcast without decoding',
       ),
       (
-        pb.Config_DeviceConfig_RebroadcastMode.LOCAL_ONLY,
+        config_pbenum.Config_DeviceConfig_RebroadcastMode.LOCAL_ONLY,
         'Local Only',
         'Only rebroadcast local channel messages',
       ),
       (
-        pb.Config_DeviceConfig_RebroadcastMode.KNOWN_ONLY,
+        config_pbenum.Config_DeviceConfig_RebroadcastMode.KNOWN_ONLY,
         'Known Only',
         'Only rebroadcast from known nodes',
       ),
       (
-        pb.Config_DeviceConfig_RebroadcastMode.NONE,
+        config_pbenum.Config_DeviceConfig_RebroadcastMode.NONE,
         'None',
         'Do not rebroadcast any messages',
       ),

@@ -15,6 +15,37 @@ import 'dart:core' as $core;
 import 'package:protobuf/protobuf.dart' as $pb;
 
 ///
+///  Firmware update mode for OTA updates
+class OTAMode extends $pb.ProtobufEnum {
+  ///
+  ///  Do not reboot into OTA mode
+  static const OTAMode NO_REBOOT_OTA =
+      OTAMode._(0, _omitEnumNames ? '' : 'NO_REBOOT_OTA');
+
+  ///
+  ///  Reboot into OTA mode for BLE firmware update
+  static const OTAMode OTA_BLE = OTAMode._(1, _omitEnumNames ? '' : 'OTA_BLE');
+
+  ///
+  ///  Reboot into OTA mode for WiFi firmware update
+  static const OTAMode OTA_WIFI =
+      OTAMode._(2, _omitEnumNames ? '' : 'OTA_WIFI');
+
+  static const $core.List<OTAMode> values = <OTAMode>[
+    NO_REBOOT_OTA,
+    OTA_BLE,
+    OTA_WIFI,
+  ];
+
+  static final $core.List<OTAMode?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 2);
+  static OTAMode? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const OTAMode._(super.value, super.name);
+}
+
+///
 ///  TODO: REPLACE
 class AdminMessage_ConfigType extends $pb.ProtobufEnum {
   ///

@@ -7,7 +7,8 @@ import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
-import '../../generated/meshtastic/mesh.pb.dart' as pb;
+import '../../generated/meshtastic/config.pb.dart' as config_pb;
+import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
 import '../../core/widgets/loading_indicator.dart';
 
 class PowerConfigScreen extends ConsumerStatefulWidget {
@@ -30,7 +31,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
   double _adcMultiplier = 0.0;
   bool _saving = false;
   bool _loading = false;
-  StreamSubscription<pb.Config_PowerConfig>? _configSubscription;
+  StreamSubscription<config_pb.Config_PowerConfig>? _configSubscription;
 
   @override
   void initState() {
@@ -44,7 +45,7 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
     super.dispose();
   }
 
-  void _applyConfig(pb.Config_PowerConfig config) {
+  void _applyConfig(config_pb.Config_PowerConfig config) {
     setState(() {
       _isPowerSaving = config.isPowerSaving;
       _waitBluetoothSecs = config.waitBluetoothSecs > 0
@@ -82,7 +83,9 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
         });
 
         // Request fresh config from device
-        await protocol.getConfig(pb.AdminMessage_ConfigType.POWER_CONFIG);
+        await protocol.getConfig(
+          admin_pbenum.AdminMessage_ConfigType.POWER_CONFIG,
+        );
       }
     } finally {
       if (mounted) setState(() => _loading = false);

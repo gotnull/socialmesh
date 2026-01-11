@@ -7,7 +7,9 @@ import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
-import '../../generated/meshtastic/mesh.pb.dart' as pb;
+import '../../generated/meshtastic/config.pb.dart' as config_pb;
+import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
+import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
 
 /// Screen for configuring display settings
 class DisplayConfigScreen extends ConsumerStatefulWidget {
@@ -23,15 +25,15 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
   int _screenOnSecs = 60;
   int _autoCarouselSecs = 0;
   bool _flipScreen = false;
-  pb.Config_DisplayConfig_DisplayUnits? _units;
-  pb.Config_DisplayConfig_DisplayMode? _displayMode;
+  config_pbenum.Config_DisplayConfig_DisplayUnits? _units;
+  config_pbenum.Config_DisplayConfig_DisplayMode? _displayMode;
   bool _headingBold = false;
   bool _wakeOnTapOrMotion = false;
   // New fields from iOS
   bool _use12hClock = false;
-  pb.Config_DisplayConfig_OledType? _oledType;
-  pb.Config_DisplayConfig_CompassOrientation? _compassOrientation;
-  StreamSubscription<pb.Config_DisplayConfig>? _configSubscription;
+  config_pbenum.Config_DisplayConfig_OledType? _oledType;
+  config_pbenum.Config_DisplayConfig_CompassOrientation? _compassOrientation;
+  StreamSubscription<config_pb.Config_DisplayConfig>? _configSubscription;
 
   @override
   void initState() {
@@ -45,7 +47,7 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
     super.dispose();
   }
 
-  void _applyConfig(pb.Config_DisplayConfig config) {
+  void _applyConfig(config_pb.Config_DisplayConfig config) {
     setState(() {
       _screenOnSecs = config.screenOnSecs > 0 ? config.screenOnSecs : 60;
       _autoCarouselSecs = config.autoScreenCarouselSecs;
@@ -80,7 +82,9 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
         });
 
         // Request fresh config from device
-        await protocol.getConfig(pb.AdminMessage_ConfigType.DISPLAY_CONFIG);
+        await protocol.getConfig(
+          admin_pbenum.AdminMessage_ConfigType.DISPLAY_CONFIG,
+        );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -95,16 +99,18 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
         screenOnSecs: _screenOnSecs,
         autoScreenCarouselSecs: _autoCarouselSecs,
         flipScreen: _flipScreen,
-        units: _units ?? pb.Config_DisplayConfig_DisplayUnits.METRIC,
+        units: _units ?? config_pbenum.Config_DisplayConfig_DisplayUnits.METRIC,
         displayMode:
-            _displayMode ?? pb.Config_DisplayConfig_DisplayMode.DEFAULT,
+            _displayMode ??
+            config_pbenum.Config_DisplayConfig_DisplayMode.DEFAULT,
         headingBold: _headingBold,
         wakeOnTapOrMotion: _wakeOnTapOrMotion,
         use12hClock: _use12hClock,
-        oledType: _oledType ?? pb.Config_DisplayConfig_OledType.OLED_AUTO,
+        oledType:
+            _oledType ?? config_pbenum.Config_DisplayConfig_OledType.OLED_AUTO,
         compassOrientation:
             _compassOrientation ??
-            pb.Config_DisplayConfig_CompassOrientation.DEGREES_0,
+            config_pbenum.Config_DisplayConfig_CompassOrientation.DEGREES_0,
       );
 
       if (mounted) {
@@ -276,24 +282,38 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
 
   Widget _buildTimeAndCompassSettings() {
     final compassOrientations = [
-      (pb.Config_DisplayConfig_CompassOrientation.DEGREES_0, '0°'),
-      (pb.Config_DisplayConfig_CompassOrientation.DEGREES_90, '90°'),
-      (pb.Config_DisplayConfig_CompassOrientation.DEGREES_180, '180°'),
-      (pb.Config_DisplayConfig_CompassOrientation.DEGREES_270, '270°'),
+      (config_pbenum.Config_DisplayConfig_CompassOrientation.DEGREES_0, '0°'),
+      (config_pbenum.Config_DisplayConfig_CompassOrientation.DEGREES_90, '90°'),
       (
-        pb.Config_DisplayConfig_CompassOrientation.DEGREES_0_INVERTED,
+        config_pbenum.Config_DisplayConfig_CompassOrientation.DEGREES_180,
+        '180°',
+      ),
+      (
+        config_pbenum.Config_DisplayConfig_CompassOrientation.DEGREES_270,
+        '270°',
+      ),
+      (
+        config_pbenum
+            .Config_DisplayConfig_CompassOrientation
+            .DEGREES_0_INVERTED,
         '0° Inverted',
       ),
       (
-        pb.Config_DisplayConfig_CompassOrientation.DEGREES_90_INVERTED,
+        config_pbenum
+            .Config_DisplayConfig_CompassOrientation
+            .DEGREES_90_INVERTED,
         '90° Inverted',
       ),
       (
-        pb.Config_DisplayConfig_CompassOrientation.DEGREES_180_INVERTED,
+        config_pbenum
+            .Config_DisplayConfig_CompassOrientation
+            .DEGREES_180_INVERTED,
         '180° Inverted',
       ),
       (
-        pb.Config_DisplayConfig_CompassOrientation.DEGREES_270_INVERTED,
+        config_pbenum
+            .Config_DisplayConfig_CompassOrientation
+            .DEGREES_270_INVERTED,
         '270° Inverted',
       ),
     ];
@@ -343,22 +363,30 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: context.border),
             ),
-            child: DropdownButton<pb.Config_DisplayConfig_CompassOrientation>(
-              value:
-                  _compassOrientation ??
-                  pb.Config_DisplayConfig_CompassOrientation.DEGREES_0,
-              isExpanded: true,
-              underline: SizedBox(),
-              dropdownColor: context.card,
-              style: TextStyle(color: context.textPrimary, fontSize: 14),
-              items: compassOrientations.map((item) {
-                return DropdownMenuItem(value: item.$1, child: Text(item.$2));
-              }).toList(),
-              onChanged: (value) {
-                HapticFeedback.selectionClick();
-                setState(() => _compassOrientation = value);
-              },
-            ),
+            child:
+                DropdownButton<
+                  config_pbenum.Config_DisplayConfig_CompassOrientation
+                >(
+                  value:
+                      _compassOrientation ??
+                      config_pbenum
+                          .Config_DisplayConfig_CompassOrientation
+                          .DEGREES_0,
+                  isExpanded: true,
+                  underline: SizedBox(),
+                  dropdownColor: context.card,
+                  style: TextStyle(color: context.textPrimary, fontSize: 14),
+                  items: compassOrientations.map((item) {
+                    return DropdownMenuItem(
+                      value: item.$1,
+                      child: Text(item.$2),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    HapticFeedback.selectionClick();
+                    setState(() => _compassOrientation = value);
+                  },
+                ),
           ),
         ],
       ),
@@ -368,27 +396,27 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
   Widget _buildOledTypeSelector() {
     final oledTypes = [
       (
-        pb.Config_DisplayConfig_OledType.OLED_AUTO,
+        config_pbenum.Config_DisplayConfig_OledType.OLED_AUTO,
         'Auto',
         'Automatically detect OLED type',
       ),
       (
-        pb.Config_DisplayConfig_OledType.OLED_SSD1306,
+        config_pbenum.Config_DisplayConfig_OledType.OLED_SSD1306,
         'SSD1306',
         'Common 128x64 OLED',
       ),
       (
-        pb.Config_DisplayConfig_OledType.OLED_SH1106,
+        config_pbenum.Config_DisplayConfig_OledType.OLED_SH1106,
         'SH1106',
         '132x64 OLED controller',
       ),
       (
-        pb.Config_DisplayConfig_OledType.OLED_SH1107,
+        config_pbenum.Config_DisplayConfig_OledType.OLED_SH1107,
         'SH1107',
         '64x128 vertical OLED',
       ),
       (
-        pb.Config_DisplayConfig_OledType.OLED_SH1107_128_128,
+        config_pbenum.Config_DisplayConfig_OledType.OLED_SH1107_128_128,
         'SH1107 128x128',
         '128x128 square OLED',
       ),
@@ -419,7 +447,8 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
           const SizedBox(height: 16),
           ...oledTypes.map((item) {
             final isSelected =
-                (_oledType ?? pb.Config_DisplayConfig_OledType.OLED_AUTO) ==
+                (_oledType ??
+                    config_pbenum.Config_DisplayConfig_OledType.OLED_AUTO) ==
                 item.$1;
             return Padding(
               padding: const EdgeInsets.only(bottom: 8),
@@ -508,9 +537,12 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
             icon: Icons.straighten,
             title: 'Metric',
             subtitle: 'Kilometers, Celsius',
-            isSelected: _units == pb.Config_DisplayConfig_DisplayUnits.METRIC,
+            isSelected:
+                _units ==
+                config_pbenum.Config_DisplayConfig_DisplayUnits.METRIC,
             onTap: () => setState(
-              () => _units = pb.Config_DisplayConfig_DisplayUnits.METRIC,
+              () => _units =
+                  config_pbenum.Config_DisplayConfig_DisplayUnits.METRIC,
             ),
           ),
           const SizedBox(height: 8),
@@ -518,9 +550,12 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
             icon: Icons.square_foot,
             title: 'Imperial',
             subtitle: 'Miles, Fahrenheit',
-            isSelected: _units == pb.Config_DisplayConfig_DisplayUnits.IMPERIAL,
+            isSelected:
+                _units ==
+                config_pbenum.Config_DisplayConfig_DisplayUnits.IMPERIAL,
             onTap: () => setState(
-              () => _units = pb.Config_DisplayConfig_DisplayUnits.IMPERIAL,
+              () => _units =
+                  config_pbenum.Config_DisplayConfig_DisplayUnits.IMPERIAL,
             ),
           ),
           const SizedBox(height: 16),
@@ -613,25 +648,25 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
   Widget _buildDisplayModeSelector() {
     final modes = [
       (
-        pb.Config_DisplayConfig_DisplayMode.DEFAULT,
+        config_pbenum.Config_DisplayConfig_DisplayMode.DEFAULT,
         'Default',
         'Standard display layout',
         Icons.smartphone,
       ),
       (
-        pb.Config_DisplayConfig_DisplayMode.TWOCOLOR,
+        config_pbenum.Config_DisplayConfig_DisplayMode.TWOCOLOR,
         'Two Color',
         'Optimized for two-color displays',
         Icons.contrast,
       ),
       (
-        pb.Config_DisplayConfig_DisplayMode.INVERTED,
+        config_pbenum.Config_DisplayConfig_DisplayMode.INVERTED,
         'Inverted',
         'Dark background, light text',
         Icons.invert_colors,
       ),
       (
-        pb.Config_DisplayConfig_DisplayMode.COLOR,
+        config_pbenum.Config_DisplayConfig_DisplayMode.COLOR,
         'Color',
         'Full color display mode',
         Icons.palette,

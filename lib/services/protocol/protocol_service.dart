@@ -9,7 +9,12 @@ import '../../models/device_error.dart';
 import '../../generated/meshtastic/admin.pb.dart' as admin;
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 import '../../generated/meshtastic/mesh.pbenum.dart' as pbenum;
-import '../../generated/meshtastic/portnums.pb.dart' as pn;
+import '../../generated/meshtastic/config.pb.dart' as config_pb;
+import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
+import '../../generated/meshtastic/module_config.pb.dart' as module_pb;
+import '../../generated/meshtastic/channel.pb.dart' as channel_pb;
+import '../../generated/meshtastic/channel.pbenum.dart' as channel_pbenum;
+import '../../generated/meshtastic/portnums.pbenum.dart' as pn;
 import '../../generated/meshtastic/telemetry.pb.dart' as telemetry;
 import 'packet_framer.dart';
 
@@ -139,32 +144,40 @@ class ProtocolService {
   final StreamController<double> _snrController;
   final StreamController<double> _channelUtilController;
   final StreamController<MessageDeliveryUpdate> _deliveryController;
-  final StreamController<pbenum.RegionCode> _regionController;
-  final StreamController<pb.Config_PositionConfig> _positionConfigController;
-  final StreamController<pb.Config_DeviceConfig> _deviceConfigController;
-  final StreamController<pb.Config_DisplayConfig> _displayConfigController;
-  final StreamController<pb.Config_PowerConfig> _powerConfigController;
-  final StreamController<pb.Config_NetworkConfig> _networkConfigController;
-  final StreamController<pb.Config_BluetoothConfig> _bluetoothConfigController;
-  final StreamController<pb.Config_SecurityConfig> _securityConfigController;
-  final StreamController<pb.Config_LoRaConfig> _loraConfigController;
-  final StreamController<pb.ModuleConfig_MQTTConfig> _mqttConfigController;
-  final StreamController<pb.ModuleConfig_TelemetryConfig>
+  final StreamController<config_pbenum.Config_LoRaConfig_RegionCode>
+  _regionController;
+  final StreamController<config_pb.Config_PositionConfig>
+  _positionConfigController;
+  final StreamController<config_pb.Config_DeviceConfig> _deviceConfigController;
+  final StreamController<config_pb.Config_DisplayConfig>
+  _displayConfigController;
+  final StreamController<config_pb.Config_PowerConfig> _powerConfigController;
+  final StreamController<config_pb.Config_NetworkConfig>
+  _networkConfigController;
+  final StreamController<config_pb.Config_BluetoothConfig>
+  _bluetoothConfigController;
+  final StreamController<config_pb.Config_SecurityConfig>
+  _securityConfigController;
+  final StreamController<config_pb.Config_LoRaConfig> _loraConfigController;
+  final StreamController<module_pb.ModuleConfig_MQTTConfig>
+  _mqttConfigController;
+  final StreamController<module_pb.ModuleConfig_TelemetryConfig>
   _telemetryConfigController;
-  final StreamController<pb.ModuleConfig_PaxcounterConfig>
+  final StreamController<module_pb.ModuleConfig_PaxcounterConfig>
   _paxCounterConfigController;
-  final StreamController<pb.ModuleConfig_AmbientLightingConfig>
+  final StreamController<module_pb.ModuleConfig_AmbientLightingConfig>
   _ambientLightingConfigController;
-  final StreamController<pb.ModuleConfig_SerialConfig> _serialConfigController;
-  final StreamController<pb.ModuleConfig_StoreForwardConfig>
+  final StreamController<module_pb.ModuleConfig_SerialConfig>
+  _serialConfigController;
+  final StreamController<module_pb.ModuleConfig_StoreForwardConfig>
   _storeForwardConfigController;
-  final StreamController<pb.ModuleConfig_DetectionSensorConfig>
+  final StreamController<module_pb.ModuleConfig_DetectionSensorConfig>
   _detectionSensorConfigController;
-  final StreamController<pb.ModuleConfig_RangeTestConfig>
+  final StreamController<module_pb.ModuleConfig_RangeTestConfig>
   _rangeTestConfigController;
-  final StreamController<pb.ModuleConfig_ExternalNotificationConfig>
+  final StreamController<module_pb.ModuleConfig_ExternalNotificationConfig>
   _externalNotificationConfigController;
-  final StreamController<pb.ModuleConfig_CannedMessageConfig>
+  final StreamController<module_pb.ModuleConfig_CannedMessageConfig>
   _cannedMessageConfigController;
 
   StreamSubscription<List<int>>? _dataSubscription;
@@ -176,26 +189,26 @@ class ProtocolService {
   int _lastRssi = -90;
   double _lastSnr = 0.0;
   double _lastChannelUtil = 0.0;
-  pbenum.RegionCode? _currentRegion;
-  pb.Config_PositionConfig? _currentPositionConfig;
-  pb.Config_DeviceConfig? _currentDeviceConfig;
-  pb.Config_DisplayConfig? _currentDisplayConfig;
-  pb.Config_PowerConfig? _currentPowerConfig;
-  pb.Config_NetworkConfig? _currentNetworkConfig;
-  pb.Config_BluetoothConfig? _currentBluetoothConfig;
-  pb.Config_SecurityConfig? _currentSecurityConfig;
-  pb.Config_LoRaConfig? _currentLoraConfig;
-  pb.ModuleConfig_MQTTConfig? _currentMqttConfig;
-  pb.ModuleConfig_TelemetryConfig? _currentTelemetryConfig;
-  pb.ModuleConfig_PaxcounterConfig? _currentPaxCounterConfig;
-  pb.ModuleConfig_AmbientLightingConfig? _currentAmbientLightingConfig;
-  pb.ModuleConfig_SerialConfig? _currentSerialConfig;
-  pb.ModuleConfig_StoreForwardConfig? _currentStoreForwardConfig;
-  pb.ModuleConfig_DetectionSensorConfig? _currentDetectionSensorConfig;
-  pb.ModuleConfig_RangeTestConfig? _currentRangeTestConfig;
-  pb.ModuleConfig_ExternalNotificationConfig?
+  config_pbenum.Config_LoRaConfig_RegionCode? _currentRegion;
+  config_pb.Config_PositionConfig? _currentPositionConfig;
+  config_pb.Config_DeviceConfig? _currentDeviceConfig;
+  config_pb.Config_DisplayConfig? _currentDisplayConfig;
+  config_pb.Config_PowerConfig? _currentPowerConfig;
+  config_pb.Config_NetworkConfig? _currentNetworkConfig;
+  config_pb.Config_BluetoothConfig? _currentBluetoothConfig;
+  config_pb.Config_SecurityConfig? _currentSecurityConfig;
+  config_pb.Config_LoRaConfig? _currentLoraConfig;
+  module_pb.ModuleConfig_MQTTConfig? _currentMqttConfig;
+  module_pb.ModuleConfig_TelemetryConfig? _currentTelemetryConfig;
+  module_pb.ModuleConfig_PaxcounterConfig? _currentPaxCounterConfig;
+  module_pb.ModuleConfig_AmbientLightingConfig? _currentAmbientLightingConfig;
+  module_pb.ModuleConfig_SerialConfig? _currentSerialConfig;
+  module_pb.ModuleConfig_StoreForwardConfig? _currentStoreForwardConfig;
+  module_pb.ModuleConfig_DetectionSensorConfig? _currentDetectionSensorConfig;
+  module_pb.ModuleConfig_RangeTestConfig? _currentRangeTestConfig;
+  module_pb.ModuleConfig_ExternalNotificationConfig?
   _currentExternalNotificationConfig;
-  pb.ModuleConfig_CannedMessageConfig? _currentCannedMessageConfig;
+  module_pb.ModuleConfig_CannedMessageConfig? _currentCannedMessageConfig;
   final Map<int, MeshNode> _nodes = {};
   final List<ChannelConfig> _channels = [];
   final Random _random = Random();
@@ -219,45 +232,56 @@ class ProtocolService {
       _snrController = StreamController<double>.broadcast(),
       _channelUtilController = StreamController<double>.broadcast(),
       _deliveryController = StreamController<MessageDeliveryUpdate>.broadcast(),
-      _regionController = StreamController<pbenum.RegionCode>.broadcast(),
+      _regionController =
+          StreamController<
+            config_pbenum.Config_LoRaConfig_RegionCode
+          >.broadcast(),
       _positionConfigController =
-          StreamController<pb.Config_PositionConfig>.broadcast(),
+          StreamController<config_pb.Config_PositionConfig>.broadcast(),
       _deviceConfigController =
-          StreamController<pb.Config_DeviceConfig>.broadcast(),
+          StreamController<config_pb.Config_DeviceConfig>.broadcast(),
       _displayConfigController =
-          StreamController<pb.Config_DisplayConfig>.broadcast(),
+          StreamController<config_pb.Config_DisplayConfig>.broadcast(),
       _powerConfigController =
-          StreamController<pb.Config_PowerConfig>.broadcast(),
+          StreamController<config_pb.Config_PowerConfig>.broadcast(),
       _networkConfigController =
-          StreamController<pb.Config_NetworkConfig>.broadcast(),
+          StreamController<config_pb.Config_NetworkConfig>.broadcast(),
       _bluetoothConfigController =
-          StreamController<pb.Config_BluetoothConfig>.broadcast(),
+          StreamController<config_pb.Config_BluetoothConfig>.broadcast(),
       _securityConfigController =
-          StreamController<pb.Config_SecurityConfig>.broadcast(),
+          StreamController<config_pb.Config_SecurityConfig>.broadcast(),
       _loraConfigController =
-          StreamController<pb.Config_LoRaConfig>.broadcast(),
+          StreamController<config_pb.Config_LoRaConfig>.broadcast(),
       _mqttConfigController =
-          StreamController<pb.ModuleConfig_MQTTConfig>.broadcast(),
+          StreamController<module_pb.ModuleConfig_MQTTConfig>.broadcast(),
       _telemetryConfigController =
-          StreamController<pb.ModuleConfig_TelemetryConfig>.broadcast(),
+          StreamController<module_pb.ModuleConfig_TelemetryConfig>.broadcast(),
       _paxCounterConfigController =
-          StreamController<pb.ModuleConfig_PaxcounterConfig>.broadcast(),
+          StreamController<module_pb.ModuleConfig_PaxcounterConfig>.broadcast(),
       _ambientLightingConfigController =
-          StreamController<pb.ModuleConfig_AmbientLightingConfig>.broadcast(),
+          StreamController<
+            module_pb.ModuleConfig_AmbientLightingConfig
+          >.broadcast(),
       _serialConfigController =
-          StreamController<pb.ModuleConfig_SerialConfig>.broadcast(),
+          StreamController<module_pb.ModuleConfig_SerialConfig>.broadcast(),
       _storeForwardConfigController =
-          StreamController<pb.ModuleConfig_StoreForwardConfig>.broadcast(),
+          StreamController<
+            module_pb.ModuleConfig_StoreForwardConfig
+          >.broadcast(),
       _detectionSensorConfigController =
-          StreamController<pb.ModuleConfig_DetectionSensorConfig>.broadcast(),
+          StreamController<
+            module_pb.ModuleConfig_DetectionSensorConfig
+          >.broadcast(),
       _rangeTestConfigController =
-          StreamController<pb.ModuleConfig_RangeTestConfig>.broadcast(),
+          StreamController<module_pb.ModuleConfig_RangeTestConfig>.broadcast(),
       _externalNotificationConfigController =
           StreamController<
-            pb.ModuleConfig_ExternalNotificationConfig
+            module_pb.ModuleConfig_ExternalNotificationConfig
           >.broadcast(),
       _cannedMessageConfigController =
-          StreamController<pb.ModuleConfig_CannedMessageConfig>.broadcast();
+          StreamController<
+            module_pb.ModuleConfig_CannedMessageConfig
+          >.broadcast();
 
   /// Set the BLE device name for hardware model inference
   void setDeviceName(String? name) {
@@ -297,128 +321,137 @@ class ProtocolService {
   Stream<MeshSignalPacket> get signalStream => _signalController.stream;
 
   /// Stream of region updates
-  Stream<pbenum.RegionCode> get regionStream => _regionController.stream;
+  Stream<config_pbenum.Config_LoRaConfig_RegionCode> get regionStream =>
+      _regionController.stream;
 
   /// Current region
-  pbenum.RegionCode? get currentRegion => _currentRegion;
+  config_pbenum.Config_LoRaConfig_RegionCode? get currentRegion =>
+      _currentRegion;
 
   /// Stream of position config updates
-  Stream<pb.Config_PositionConfig> get positionConfigStream =>
+  Stream<config_pb.Config_PositionConfig> get positionConfigStream =>
       _positionConfigController.stream;
 
   /// Current position config
-  pb.Config_PositionConfig? get currentPositionConfig => _currentPositionConfig;
+  config_pb.Config_PositionConfig? get currentPositionConfig =>
+      _currentPositionConfig;
 
   /// Stream of device config updates
-  Stream<pb.Config_DeviceConfig> get deviceConfigStream =>
+  Stream<config_pb.Config_DeviceConfig> get deviceConfigStream =>
       _deviceConfigController.stream;
 
   /// Current device config
-  pb.Config_DeviceConfig? get currentDeviceConfig => _currentDeviceConfig;
+  config_pb.Config_DeviceConfig? get currentDeviceConfig =>
+      _currentDeviceConfig;
 
   /// Stream of display config updates
-  Stream<pb.Config_DisplayConfig> get displayConfigStream =>
+  Stream<config_pb.Config_DisplayConfig> get displayConfigStream =>
       _displayConfigController.stream;
 
   /// Current display config
-  pb.Config_DisplayConfig? get currentDisplayConfig => _currentDisplayConfig;
+  config_pb.Config_DisplayConfig? get currentDisplayConfig =>
+      _currentDisplayConfig;
 
   /// Stream of power config updates
-  Stream<pb.Config_PowerConfig> get powerConfigStream =>
+  Stream<config_pb.Config_PowerConfig> get powerConfigStream =>
       _powerConfigController.stream;
 
   /// Current power config
-  pb.Config_PowerConfig? get currentPowerConfig => _currentPowerConfig;
+  config_pb.Config_PowerConfig? get currentPowerConfig => _currentPowerConfig;
 
   /// Stream of network config updates
-  Stream<pb.Config_NetworkConfig> get networkConfigStream =>
+  Stream<config_pb.Config_NetworkConfig> get networkConfigStream =>
       _networkConfigController.stream;
 
   /// Current network config
-  pb.Config_NetworkConfig? get currentNetworkConfig => _currentNetworkConfig;
+  config_pb.Config_NetworkConfig? get currentNetworkConfig =>
+      _currentNetworkConfig;
 
   /// Stream of bluetooth config updates
-  Stream<pb.Config_BluetoothConfig> get bluetoothConfigStream =>
+  Stream<config_pb.Config_BluetoothConfig> get bluetoothConfigStream =>
       _bluetoothConfigController.stream;
 
   /// Current bluetooth config
-  pb.Config_BluetoothConfig? get currentBluetoothConfig =>
+  config_pb.Config_BluetoothConfig? get currentBluetoothConfig =>
       _currentBluetoothConfig;
 
   /// Stream of security config updates
-  Stream<pb.Config_SecurityConfig> get securityConfigStream =>
+  Stream<config_pb.Config_SecurityConfig> get securityConfigStream =>
       _securityConfigController.stream;
 
   /// Current security config
-  pb.Config_SecurityConfig? get currentSecurityConfig => _currentSecurityConfig;
+  config_pb.Config_SecurityConfig? get currentSecurityConfig =>
+      _currentSecurityConfig;
 
   /// Stream of LoRa config updates
-  Stream<pb.Config_LoRaConfig> get loraConfigStream =>
+  Stream<config_pb.Config_LoRaConfig> get loraConfigStream =>
       _loraConfigController.stream;
 
   /// Current LoRa config
-  pb.Config_LoRaConfig? get currentLoraConfig => _currentLoraConfig;
+  config_pb.Config_LoRaConfig? get currentLoraConfig => _currentLoraConfig;
 
   /// Stream of MQTT config updates
-  Stream<pb.ModuleConfig_MQTTConfig> get mqttConfigStream =>
+  Stream<module_pb.ModuleConfig_MQTTConfig> get mqttConfigStream =>
       _mqttConfigController.stream;
 
   /// Current MQTT config
-  pb.ModuleConfig_MQTTConfig? get currentMqttConfig => _currentMqttConfig;
+  module_pb.ModuleConfig_MQTTConfig? get currentMqttConfig =>
+      _currentMqttConfig;
 
   /// Stream of telemetry config updates
-  Stream<pb.ModuleConfig_TelemetryConfig> get telemetryConfigStream =>
+  Stream<module_pb.ModuleConfig_TelemetryConfig> get telemetryConfigStream =>
       _telemetryConfigController.stream;
 
   /// Current telemetry config
-  pb.ModuleConfig_TelemetryConfig? get currentTelemetryConfig =>
+  module_pb.ModuleConfig_TelemetryConfig? get currentTelemetryConfig =>
       _currentTelemetryConfig;
 
   /// Stream of PAX counter config updates
-  Stream<pb.ModuleConfig_PaxcounterConfig> get paxCounterConfigStream =>
+  Stream<module_pb.ModuleConfig_PaxcounterConfig> get paxCounterConfigStream =>
       _paxCounterConfigController.stream;
 
   /// Current PAX counter config
-  pb.ModuleConfig_PaxcounterConfig? get currentPaxCounterConfig =>
+  module_pb.ModuleConfig_PaxcounterConfig? get currentPaxCounterConfig =>
       _currentPaxCounterConfig;
 
   /// Stream of ambient lighting config updates
-  Stream<pb.ModuleConfig_AmbientLightingConfig>
+  Stream<module_pb.ModuleConfig_AmbientLightingConfig>
   get ambientLightingConfigStream => _ambientLightingConfigController.stream;
 
   /// Current ambient lighting config
-  pb.ModuleConfig_AmbientLightingConfig? get currentAmbientLightingConfig =>
-      _currentAmbientLightingConfig;
+  module_pb.ModuleConfig_AmbientLightingConfig?
+  get currentAmbientLightingConfig => _currentAmbientLightingConfig;
 
   /// Stream of serial config updates
-  Stream<pb.ModuleConfig_SerialConfig> get serialConfigStream =>
+  Stream<module_pb.ModuleConfig_SerialConfig> get serialConfigStream =>
       _serialConfigController.stream;
 
   /// Current serial config
-  pb.ModuleConfig_SerialConfig? get currentSerialConfig => _currentSerialConfig;
+  module_pb.ModuleConfig_SerialConfig? get currentSerialConfig =>
+      _currentSerialConfig;
 
   /// Stream of store forward config updates
-  Stream<pb.ModuleConfig_StoreForwardConfig> get storeForwardConfigStream =>
-      _storeForwardConfigController.stream;
+  Stream<module_pb.ModuleConfig_StoreForwardConfig>
+  get storeForwardConfigStream => _storeForwardConfigController.stream;
 
   /// Current store forward config
-  pb.ModuleConfig_StoreForwardConfig? get currentStoreForwardConfig =>
+  module_pb.ModuleConfig_StoreForwardConfig? get currentStoreForwardConfig =>
       _currentStoreForwardConfig;
 
   /// Stream of detection sensor config updates
-  Stream<pb.ModuleConfig_DetectionSensorConfig>
+  Stream<module_pb.ModuleConfig_DetectionSensorConfig>
   get detectionSensorConfigStream => _detectionSensorConfigController.stream;
 
   /// Current detection sensor config
-  pb.ModuleConfig_DetectionSensorConfig? get currentDetectionSensorConfig =>
-      _currentDetectionSensorConfig;
+  module_pb.ModuleConfig_DetectionSensorConfig?
+  get currentDetectionSensorConfig => _currentDetectionSensorConfig;
 
   /// Stream of canned message config updates
-  Stream<pb.ModuleConfig_CannedMessageConfig> get cannedMessageConfigStream =>
-      _cannedMessageConfigController.stream;
+  Stream<module_pb.ModuleConfig_CannedMessageConfig>
+  get cannedMessageConfigStream => _cannedMessageConfigController.stream;
 
   /// Current canned message config
-  pb.ModuleConfig_CannedMessageConfig? get currentCannedMessageConfig =>
+  module_pb.ModuleConfig_CannedMessageConfig? get currentCannedMessageConfig =>
       _currentCannedMessageConfig;
 
   /// Stream of RSSI updates
@@ -626,7 +659,7 @@ class ProtocolService {
     try {
       AppLogging.protocol('Processing packet: ${packet.length} bytes');
 
-      final fromRadio = pn.FromRadio.fromBuffer(packet);
+      final fromRadio = pb.FromRadio.fromBuffer(packet);
 
       // Debug: log which payload variant we got
       final variant = fromRadio.whichPayloadVariant();
@@ -750,25 +783,25 @@ class ProtocolService {
       final data = packet.decoded;
 
       switch (data.portnum) {
-        case pb.PortNum.TEXT_MESSAGE_APP:
+        case pn.PortNum.TEXT_MESSAGE_APP:
           _handleTextMessage(packet, data);
           break;
-        case pb.PortNum.POSITION_APP:
+        case pn.PortNum.POSITION_APP:
           _handlePositionUpdate(packet, data);
           break;
-        case pb.PortNum.NODEINFO_APP:
+        case pn.PortNum.NODEINFO_APP:
           _handleNodeInfoUpdate(packet, data);
           break;
-        case pb.PortNum.ROUTING_APP:
+        case pn.PortNum.ROUTING_APP:
           _handleRoutingMessage(packet, data);
           break;
-        case pb.PortNum.TELEMETRY_APP:
+        case pn.PortNum.TELEMETRY_APP:
           _handleTelemetry(packet, data);
           break;
-        case pb.PortNum.ADMIN_APP:
+        case pn.PortNum.ADMIN_APP:
           _handleAdminMessage(packet, data);
           break;
-        case pb.PortNum.PRIVATE_APP:
+        case pn.PortNum.PRIVATE_APP:
           _handleSignalMessage(packet, data);
           break;
         default:
@@ -817,7 +850,7 @@ class ProtocolService {
   /// Handle admin message responses
   void _handleAdminMessage(pb.MeshPacket packet, pb.Data data) {
     try {
-      final adminMsg = pb.AdminMessage.fromBuffer(data.payload);
+      final adminMsg = admin.AdminMessage.fromBuffer(data.payload);
       AppLogging.protocol(
         'Admin message variant: ${adminMsg.whichPayloadVariant()}',
       );
@@ -1149,7 +1182,7 @@ class ProtocolService {
 
   /// Handle Config from FromRadio (sent during initial config boot sequence)
   /// This includes LoRa config with the region!
-  void _handleFromRadioConfig(pb.Config config) {
+  void _handleFromRadioConfig(config_pb.Config config) {
     // Handle LoRa config - this is where we get the region during initial boot
     if (config.hasLora()) {
       final loraConfig = config.lora;
@@ -1683,6 +1716,12 @@ class ProtocolService {
           }
           return;
 
+        case telemetry.Telemetry_Variant.hostMetrics:
+          if (ProtocolDebugFlags.logTelemetry) {
+            AppLogging.protocol('HostMetrics from ${packet.from}');
+          }
+          return;
+
         case telemetry.Telemetry_Variant.notSet:
           if (ProtocolDebugFlags.logTelemetry) {
             AppLogging.protocol(
@@ -2131,7 +2170,7 @@ class ProtocolService {
   }
 
   /// Handle channel configuration
-  void _handleChannel(pb.Channel channel) {
+  void _handleChannel(channel_pb.Channel channel) {
     AppLogging.debug(
       '📡 Channel ${channel.index} RAW received: '
       'hasSettings=${channel.hasSettings()}, role=${channel.role.name}',
@@ -2168,13 +2207,13 @@ class ProtocolService {
     // Map protobuf role to string
     String roleStr;
     switch (channel.role) {
-      case pb.Channel_Role.PRIMARY:
+      case channel_pbenum.Channel_Role.PRIMARY:
         roleStr = 'PRIMARY';
         break;
-      case pb.Channel_Role.SECONDARY:
+      case channel_pbenum.Channel_Role.SECONDARY:
         roleStr = 'SECONDARY';
         break;
-      case pb.Channel_Role.DISABLED:
+      case channel_pbenum.Channel_Role.DISABLED:
       default:
         roleStr = 'DISABLED';
         break;
@@ -2213,7 +2252,8 @@ class ProtocolService {
     _channels[channel.index] = channelConfig;
 
     // Emit channel 0 (Primary), emit others only if they're not disabled
-    if (channel.index == 0 || channel.role != pb.Channel_Role.DISABLED) {
+    if (channel.index == 0 ||
+        channel.role != channel_pbenum.Channel_Role.DISABLED) {
       _channelController.add(channelConfig);
     }
   }
@@ -2240,7 +2280,7 @@ class ProtocolService {
       final configId = _random.nextInt(0x7FFFFFFF);
 
       AppLogging.protocol('Requesting config with ID: $configId');
-      final toRadio = pn.ToRadio()..wantConfigId = configId;
+      final toRadio = pb.ToRadio()..wantConfigId = configId;
       final bytes = toRadio.writeToBuffer();
 
       // BLE uses raw protobufs, Serial/USB requires framing
@@ -2283,7 +2323,7 @@ class ProtocolService {
       final packetId = _generatePacketId();
 
       final data = pb.Data()
-        ..portnum = pb.PortNum.TEXT_MESSAGE_APP
+        ..portnum = pn.PortNum.TEXT_MESSAGE_APP
         ..payload = utf8.encode(text)
         ..wantResponse = wantAck
         ..emoji = isEmoji ? 1 : 0;
@@ -2300,7 +2340,7 @@ class ProtocolService {
         ..id = packetId
         ..wantAck = wantAck;
 
-      final toRadio = pn.ToRadio()..packet = packet;
+      final toRadio = pb.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
 
       await _transport.send(_prepareForSend(bytes));
@@ -2389,7 +2429,7 @@ class ProtocolService {
       final packetId = _generatePacketId();
 
       final data = pb.Data()
-        ..portnum = pb.PortNum.PRIVATE_APP
+        ..portnum = pn.PortNum.PRIVATE_APP
         ..payload = payload;
 
       final packet = pb.MeshPacket()
@@ -2399,7 +2439,7 @@ class ProtocolService {
         ..decoded = data
         ..id = packetId;
 
-      final toRadio = pn.ToRadio()..packet = packet;
+      final toRadio = pb.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
 
       await _transport.send(_prepareForSend(bytes));
@@ -2452,7 +2492,7 @@ class ProtocolService {
       }
 
       final data = pb.Data()
-        ..portnum = pb.PortNum.TEXT_MESSAGE_APP
+        ..portnum = pn.PortNum.TEXT_MESSAGE_APP
         ..payload = utf8.encode(text)
         ..wantResponse = wantAck
         ..emoji = isEmoji ? 1 : 0;
@@ -2469,7 +2509,7 @@ class ProtocolService {
         ..id = packetId
         ..wantAck = wantAck;
 
-      final toRadio = pn.ToRadio()..packet = packet;
+      final toRadio = pb.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
 
       await _transport.send(_prepareForSend(bytes));
@@ -2535,7 +2575,7 @@ class ProtocolService {
       }
 
       final data = pb.Data()
-        ..portnum = pb.PortNum.POSITION_APP
+        ..portnum = pn.PortNum.POSITION_APP
         ..payload = position.writeToBuffer();
 
       final packet = pb.MeshPacket()
@@ -2545,7 +2585,7 @@ class ProtocolService {
         ..decoded = data
         ..id = _generatePacketId();
 
-      final toRadio = pn.ToRadio()..packet = packet;
+      final toRadio = pb.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
 
       await _transport.send(_prepareForSend(bytes));
@@ -2604,7 +2644,7 @@ class ProtocolService {
       );
 
       final data = pb.Data()
-        ..portnum = pb.PortNum.NODEINFO_APP
+        ..portnum = pn.PortNum.NODEINFO_APP
         ..payload = user.writeToBuffer()
         ..wantResponse = true; // Request a response with their info
 
@@ -2617,7 +2657,7 @@ class ProtocolService {
         ..id = _generatePacketId()
         ..wantAck = true;
 
-      final toRadio = pn.ToRadio()..packet = packet;
+      final toRadio = pb.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
 
       await _transport.send(_prepareForSend(bytes));
@@ -2644,7 +2684,7 @@ class ProtocolService {
         ..shortName = myNode?.shortName ?? '????';
 
       final data = pb.Data()
-        ..portnum = pb.PortNum.NODEINFO_APP
+        ..portnum = pn.PortNum.NODEINFO_APP
         ..payload = user.writeToBuffer();
 
       final packet = pb.MeshPacket()
@@ -2654,7 +2694,7 @@ class ProtocolService {
         ..decoded = data
         ..id = _generatePacketId();
 
-      final toRadio = pn.ToRadio()..packet = packet;
+      final toRadio = pb.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
 
       await _transport.send(_prepareForSend(bytes));
@@ -2674,7 +2714,7 @@ class ProtocolService {
       final position = pb.Position();
 
       final data = pb.Data()
-        ..portnum = pb.PortNum.POSITION_APP
+        ..portnum = pn.PortNum.POSITION_APP
         ..payload = position.writeToBuffer()
         ..wantResponse = true;
 
@@ -2685,7 +2725,7 @@ class ProtocolService {
         ..id = _generatePacketId()
         ..wantAck = true;
 
-      final toRadio = pn.ToRadio()..packet = packet;
+      final toRadio = pb.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
 
       await _transport.send(_prepareForSend(bytes));
@@ -2718,7 +2758,7 @@ class ProtocolService {
     final routeDiscovery = pb.RouteDiscovery();
 
     final data = pb.Data()
-      ..portnum = pb.PortNum.TRACEROUTE_APP
+      ..portnum = pn.PortNum.TRACEROUTE_APP
       ..payload = routeDiscovery.writeToBuffer()
       ..wantResponse = true;
 
@@ -2729,7 +2769,7 @@ class ProtocolService {
       ..id = _generatePacketId()
       ..wantAck = true;
 
-    final toRadio = pn.ToRadio()..packet = packet;
+    final toRadio = pb.ToRadio()..packet = packet;
     final bytes = toRadio.writeToBuffer();
 
     await _transport.send(_prepareForSend(bytes));
@@ -2750,7 +2790,7 @@ class ProtocolService {
         '📡 Setting channel ${config.index}: "${config.name}" (role: ${config.role})',
       );
 
-      final channelSettings = pb.ChannelSettings()
+      final channelSettings = channel_pb.ChannelSettings()
         ..name = config.name
         ..psk = config.psk
         ..uplinkEnabled = config.uplink
@@ -2758,25 +2798,25 @@ class ProtocolService {
 
       // Always set position precision via moduleSettings (even when 0 to disable)
       // This matches iOS behavior - the device needs moduleSettings to be explicitly set
-      channelSettings.moduleSettings = pb.ModuleSettings()
+      channelSettings.moduleSettings = channel_pb.ModuleSettings()
         ..positionPrecision = config.positionPrecision;
 
       // Determine channel role from config
-      pb.Channel_Role role;
+      channel_pbenum.Channel_Role role;
       switch (config.role.toUpperCase()) {
         case 'PRIMARY':
-          role = pb.Channel_Role.PRIMARY;
+          role = channel_pbenum.Channel_Role.PRIMARY;
           break;
         case 'SECONDARY':
-          role = pb.Channel_Role.SECONDARY;
+          role = channel_pbenum.Channel_Role.SECONDARY;
           break;
         case 'DISABLED':
         default:
-          role = pb.Channel_Role.DISABLED;
+          role = channel_pbenum.Channel_Role.DISABLED;
           break;
       }
 
-      final channel = pb.Channel()
+      final channel = channel_pb.Channel()
         ..index = config.index
         ..settings = channelSettings
         ..role = role;
@@ -2786,10 +2826,10 @@ class ProtocolService {
         'name="${channel.settings.name}", psk=${channel.settings.psk.length} bytes',
       );
 
-      final adminMsg = pb.AdminMessage()..setChannel = channel;
+      final adminMsg = admin.AdminMessage()..setChannel = channel;
 
       final data = pb.Data()
-        ..portnum = pb.PortNum.ADMIN_APP
+        ..portnum = pn.PortNum.ADMIN_APP
         ..payload = adminMsg.writeToBuffer()
         ..wantResponse = true;
 
@@ -2798,11 +2838,10 @@ class ProtocolService {
         ..to = _myNodeNum!
         ..decoded = data
         ..id = _generatePacketId()
-        ..priority =
-            70 // RELIABLE priority (70) for admin messages
+        ..priority = pbenum.MeshPacket_Priority.RELIABLE
         ..wantAck = true;
 
-      final toRadio = pn.ToRadio()..packet = packet;
+      final toRadio = pb.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
 
       await _transport.send(_prepareForSend(bytes));
@@ -2823,10 +2862,10 @@ class ProtocolService {
     try {
       AppLogging.protocol('Getting channel $index');
 
-      final adminMsg = pb.AdminMessage()..getChannelRequest = index + 1;
+      final adminMsg = admin.AdminMessage()..getChannelRequest = index + 1;
 
       final data = pb.Data()
-        ..portnum = pb.PortNum.ADMIN_APP
+        ..portnum = pn.PortNum.ADMIN_APP
         ..payload = adminMsg.writeToBuffer()
         ..wantResponse = true;
 
@@ -2836,7 +2875,7 @@ class ProtocolService {
         ..decoded = data
         ..id = _generatePacketId();
 
-      final toRadio = pn.ToRadio()..packet = packet;
+      final toRadio = pb.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
 
       await _transport.send(_prepareForSend(bytes));
@@ -2846,7 +2885,7 @@ class ProtocolService {
   }
 
   /// Set device role
-  Future<void> setDeviceRole(pb.Config_DeviceConfig_Role role) async {
+  Future<void> setDeviceRole(config_pb.Config_DeviceConfig_Role role) async {
     // Validate we're ready to send
     if (_myNodeNum == null) {
       throw StateError(
@@ -2863,10 +2902,10 @@ class ProtocolService {
       // Get current owner info and update role
       final user = pb.User()..role = role;
 
-      final adminMsg = pb.AdminMessage()..setOwner = user;
+      final adminMsg = admin.AdminMessage()..setOwner = user;
 
       final data = pb.Data()
-        ..portnum = pb.PortNum.ADMIN_APP
+        ..portnum = pn.PortNum.ADMIN_APP
         ..payload = adminMsg.writeToBuffer()
         ..wantResponse = true;
 
@@ -2876,7 +2915,7 @@ class ProtocolService {
         ..decoded = data
         ..id = _generatePacketId();
 
-      final toRadio = pn.ToRadio()..packet = packet;
+      final toRadio = pb.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
 
       await _transport.send(_prepareForSend(bytes));
@@ -2928,10 +2967,10 @@ class ProtocolService {
         ..longName = trimmedLong
         ..shortName = trimmedShort;
 
-      final adminMsg = pb.AdminMessage()..setOwner = user;
+      final adminMsg = admin.AdminMessage()..setOwner = user;
 
       final data = pb.Data()
-        ..portnum = pb.PortNum.ADMIN_APP
+        ..portnum = pn.PortNum.ADMIN_APP
         ..payload = adminMsg.writeToBuffer()
         ..wantResponse = true;
 
@@ -2941,7 +2980,7 @@ class ProtocolService {
         ..decoded = data
         ..id = _generatePacketId();
 
-      final toRadio = pn.ToRadio()..packet = packet;
+      final toRadio = pb.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
 
       await _transport.send(_prepareForSend(bytes));
@@ -2965,7 +3004,9 @@ class ProtocolService {
 
   /// Set the region/frequency for the device
   /// Also sets usePreset=true and hopLimit=3 to match Meshtastic defaults
-  Future<void> setRegion(pbenum.RegionCode region) async {
+  Future<void> setRegion(
+    config_pbenum.Config_LoRaConfig_RegionCode region,
+  ) async {
     // Validate we're ready to send
     if (_myNodeNum == null) {
       throw StateError('Cannot set region: device not ready (no node number)');
@@ -2978,18 +3019,18 @@ class ProtocolService {
       AppLogging.protocol('Setting region: ${region.name}');
 
       // Set Meshtastic defaults: usePreset=true, LONG_FAST preset, hopLimit=3
-      final loraConfig = pb.Config_LoRaConfig()
+      final loraConfig = config_pb.Config_LoRaConfig()
         ..usePreset = true
         ..region = region
-        ..modemPreset = pb.ModemPreset.LONG_FAST
+        ..modemPreset = config_pbenum.Config_LoRaConfig_ModemPreset.LONG_FAST
         ..hopLimit = 3;
 
-      final config = pb.Config()..lora = loraConfig;
+      final config = config_pb.Config()..lora = loraConfig;
 
-      final adminMsg = pb.AdminMessage()..setConfig = config;
+      final adminMsg = admin.AdminMessage()..setConfig = config;
 
       final data = pb.Data()
-        ..portnum = pb.PortNum.ADMIN_APP
+        ..portnum = pn.PortNum.ADMIN_APP
         ..payload = adminMsg.writeToBuffer()
         ..wantResponse = true;
 
@@ -2999,7 +3040,7 @@ class ProtocolService {
         ..decoded = data
         ..id = _generatePacketId();
 
-      final toRadio = pn.ToRadio()..packet = packet;
+      final toRadio = pb.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
 
       await _transport.send(_prepareForSend(bytes));
@@ -3037,10 +3078,11 @@ class ProtocolService {
       AppLogging.debug('📡 Requesting channel $channelIndex details');
 
       // Protocol uses 1-based indexing: send channelIndex + 1
-      final adminMsg = pb.AdminMessage()..getChannelRequest = channelIndex + 1;
+      final adminMsg = admin.AdminMessage()
+        ..getChannelRequest = channelIndex + 1;
 
       final data = pb.Data()
-        ..portnum = pb.PortNum.ADMIN_APP
+        ..portnum = pn.PortNum.ADMIN_APP
         ..payload = adminMsg.writeToBuffer()
         ..wantResponse = true;
 
@@ -3050,7 +3092,7 @@ class ProtocolService {
         ..decoded = data
         ..id = _generatePacketId();
 
-      final toRadio = pn.ToRadio()..packet = packet;
+      final toRadio = pb.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
 
       await _transport.send(_prepareForSend(bytes));
@@ -3068,11 +3110,11 @@ class ProtocolService {
       );
 
       // Use ConfigType enum for LoRa config
-      final adminMsg = pb.AdminMessage()
-        ..getConfigRequest = pb.AdminMessage_ConfigType.LORA_CONFIG;
+      final adminMsg = admin.AdminMessage()
+        ..getConfigRequest = admin.AdminMessage_ConfigType.LORA_CONFIG;
 
       final data = pb.Data()
-        ..portnum = pb.PortNum.ADMIN_APP
+        ..portnum = pn.PortNum.ADMIN_APP
         ..payload = adminMsg.writeToBuffer()
         ..wantResponse = true;
 
@@ -3082,7 +3124,7 @@ class ProtocolService {
         ..decoded = data
         ..id = _generatePacketId();
 
-      final toRadio = pn.ToRadio()..packet = packet;
+      final toRadio = pb.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
 
       await _transport.send(_prepareForSend(bytes));
@@ -3099,11 +3141,11 @@ class ProtocolService {
         'Requesting Position config${targetNodeNum != null ? ' from node $targetNodeNum' : ''}',
       );
 
-      final adminMsg = pb.AdminMessage()
-        ..getConfigRequest = pb.AdminMessage_ConfigType.POSITION_CONFIG;
+      final adminMsg = admin.AdminMessage()
+        ..getConfigRequest = admin.AdminMessage_ConfigType.POSITION_CONFIG;
 
       final data = pb.Data()
-        ..portnum = pb.PortNum.ADMIN_APP
+        ..portnum = pn.PortNum.ADMIN_APP
         ..payload = adminMsg.writeToBuffer()
         ..wantResponse = true;
 
@@ -3113,7 +3155,7 @@ class ProtocolService {
         ..decoded = data
         ..id = _generatePacketId();
 
-      final toRadio = pn.ToRadio()..packet = packet;
+      final toRadio = pb.ToRadio()..packet = packet;
       final bytes = toRadio.writeToBuffer();
 
       await _transport.send(_prepareForSend(bytes));
@@ -3137,10 +3179,10 @@ class ProtocolService {
 
     AppLogging.protocol('Rebooting device in $delaySeconds seconds');
 
-    final adminMsg = pb.AdminMessage()..rebootSeconds = delaySeconds;
+    final adminMsg = admin.AdminMessage()..rebootSeconds = delaySeconds;
 
     final data = pb.Data()
-      ..portnum = pb.PortNum.ADMIN_APP
+      ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
     final packet = pb.MeshPacket()
@@ -3148,10 +3190,10 @@ class ProtocolService {
       ..to = _myNodeNum!
       ..decoded = data
       ..id = _generatePacketId()
-      ..priority = 70
+      ..priority = pbenum.MeshPacket_Priority.RELIABLE
       ..wantAck = true;
 
-    final toRadio = pn.ToRadio()..packet = packet;
+    final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
@@ -3166,10 +3208,10 @@ class ProtocolService {
 
     AppLogging.protocol('Shutting down device in $delaySeconds seconds');
 
-    final adminMsg = pb.AdminMessage()..shutdownSeconds = delaySeconds;
+    final adminMsg = admin.AdminMessage()..shutdownSeconds = delaySeconds;
 
     final data = pb.Data()
-      ..portnum = pb.PortNum.ADMIN_APP
+      ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
     final packet = pb.MeshPacket()
@@ -3177,10 +3219,10 @@ class ProtocolService {
       ..to = _myNodeNum!
       ..decoded = data
       ..id = _generatePacketId()
-      ..priority = 70
+      ..priority = pbenum.MeshPacket_Priority.RELIABLE
       ..wantAck = true;
 
-    final toRadio = pn.ToRadio()..packet = packet;
+    final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
@@ -3195,10 +3237,10 @@ class ProtocolService {
 
     AppLogging.protocol('Factory resetting configuration');
 
-    final adminMsg = pb.AdminMessage()..factoryResetConfig = 1;
+    final adminMsg = admin.AdminMessage()..factoryResetConfig = 1;
 
     final data = pb.Data()
-      ..portnum = pb.PortNum.ADMIN_APP
+      ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
     final packet = pb.MeshPacket()
@@ -3206,10 +3248,10 @@ class ProtocolService {
       ..to = _myNodeNum!
       ..decoded = data
       ..id = _generatePacketId()
-      ..priority = 70
+      ..priority = pbenum.MeshPacket_Priority.RELIABLE
       ..wantAck = true;
 
-    final toRadio = pn.ToRadio()..packet = packet;
+    final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
@@ -3224,10 +3266,10 @@ class ProtocolService {
 
     AppLogging.protocol('Factory resetting entire device');
 
-    final adminMsg = pb.AdminMessage()..factoryResetDevice = 1;
+    final adminMsg = admin.AdminMessage()..factoryResetDevice = 1;
 
     final data = pb.Data()
-      ..portnum = pb.PortNum.ADMIN_APP
+      ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
     final packet = pb.MeshPacket()
@@ -3235,10 +3277,10 @@ class ProtocolService {
       ..to = _myNodeNum!
       ..decoded = data
       ..id = _generatePacketId()
-      ..priority = 70
+      ..priority = pbenum.MeshPacket_Priority.RELIABLE
       ..wantAck = true;
 
-    final toRadio = pn.ToRadio()..packet = packet;
+    final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
@@ -3254,10 +3296,10 @@ class ProtocolService {
 
     AppLogging.protocol('Resetting node database');
 
-    final adminMsg = pb.AdminMessage()..nodedbReset = true;
+    final adminMsg = admin.AdminMessage()..nodedbReset = true;
 
     final data = pb.Data()
-      ..portnum = pb.PortNum.ADMIN_APP
+      ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
     final packet = pb.MeshPacket()
@@ -3265,10 +3307,10 @@ class ProtocolService {
       ..to = _myNodeNum!
       ..decoded = data
       ..id = _generatePacketId()
-      ..priority = 70
+      ..priority = pbenum.MeshPacket_Priority.RELIABLE
       ..wantAck = true;
 
-    final toRadio = pn.ToRadio()..packet = packet;
+    final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
 
     // Wait for device to process the reset command
@@ -3301,10 +3343,10 @@ class ProtocolService {
 
     AppLogging.protocol('Entering DFU mode');
 
-    final adminMsg = pb.AdminMessage()..enterDfuModeRequest = true;
+    final adminMsg = admin.AdminMessage()..enterDfuModeRequest = true;
 
     final data = pb.Data()
-      ..portnum = pb.PortNum.ADMIN_APP
+      ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
     final packet = pb.MeshPacket()
@@ -3313,10 +3355,10 @@ class ProtocolService {
       ..decoded = data
       ..id = _generatePacketId()
       ..channel = 0
-      ..priority = 70
+      ..priority = pbenum.MeshPacket_Priority.RELIABLE
       ..wantAck = true;
 
-    final toRadio = pn.ToRadio()..packet = packet;
+    final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
@@ -3332,10 +3374,10 @@ class ProtocolService {
     AppLogging.protocol('Requesting device metadata...');
     AppLogging.protocol('Requesting device metadata');
 
-    final adminMsg = pb.AdminMessage()..getDeviceMetadataRequest = true;
+    final adminMsg = admin.AdminMessage()..getDeviceMetadataRequest = true;
 
     final data = pb.Data()
-      ..portnum = pb.PortNum.ADMIN_APP
+      ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer()
       ..wantResponse = true;
 
@@ -3345,7 +3387,7 @@ class ProtocolService {
       ..decoded = data
       ..id = _generatePacketId();
 
-    final toRadio = pn.ToRadio()..packet = packet;
+    final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
@@ -3364,10 +3406,10 @@ class ProtocolService {
 
     AppLogging.protocol('Removing node $nodeNum from device database');
 
-    final adminMsg = pb.AdminMessage()..removeByNodenum = nodeNum;
+    final adminMsg = admin.AdminMessage()..removeByNodenum = nodeNum;
 
     final data = pb.Data()
-      ..portnum = pb.PortNum.ADMIN_APP
+      ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
     final packet = pb.MeshPacket()
@@ -3375,11 +3417,10 @@ class ProtocolService {
       ..to = _myNodeNum!
       ..decoded = data
       ..id = _generatePacketId()
-      ..priority =
-          70 // RELIABLE priority
+      ..priority = pbenum.MeshPacket_Priority.RELIABLE
       ..wantAck = true;
 
-    final toRadio = pn.ToRadio()..packet = packet;
+    final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
 
     AppLogging.protocol('Node $nodeNum removal command sent to device');
@@ -3396,10 +3437,10 @@ class ProtocolService {
 
     AppLogging.protocol('Setting node $nodeNum as favorite');
 
-    final adminMsg = pb.AdminMessage()..setFavoriteNode = nodeNum;
+    final adminMsg = admin.AdminMessage()..setFavoriteNode = nodeNum;
 
     final data = pb.Data()
-      ..portnum = pb.PortNum.ADMIN_APP
+      ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
     final packet = pb.MeshPacket()
@@ -3407,11 +3448,10 @@ class ProtocolService {
       ..to = _myNodeNum!
       ..decoded = data
       ..id = _generatePacketId()
-      ..priority =
-          70 // RELIABLE priority
+      ..priority = pbenum.MeshPacket_Priority.RELIABLE
       ..wantAck = true;
 
-    final toRadio = pn.ToRadio()..packet = packet;
+    final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
@@ -3426,10 +3466,10 @@ class ProtocolService {
 
     AppLogging.protocol('Removing node $nodeNum from favorites');
 
-    final adminMsg = pb.AdminMessage()..removeFavoriteNode = nodeNum;
+    final adminMsg = admin.AdminMessage()..removeFavoriteNode = nodeNum;
 
     final data = pb.Data()
-      ..portnum = pb.PortNum.ADMIN_APP
+      ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
     final packet = pb.MeshPacket()
@@ -3437,11 +3477,10 @@ class ProtocolService {
       ..to = _myNodeNum!
       ..decoded = data
       ..id = _generatePacketId()
-      ..priority =
-          70 // RELIABLE priority
+      ..priority = pbenum.MeshPacket_Priority.RELIABLE
       ..wantAck = true;
 
-    final toRadio = pn.ToRadio()..packet = packet;
+    final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
@@ -3467,10 +3506,10 @@ class ProtocolService {
       ..longitudeI = (longitude * 1e7).toInt()
       ..altitude = altitude;
 
-    final adminMsg = pb.AdminMessage()..setFixedPosition = position;
+    final adminMsg = admin.AdminMessage()..setFixedPosition = position;
 
     final data = pb.Data()
-      ..portnum = pb.PortNum.ADMIN_APP
+      ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
     final packet = pb.MeshPacket()
@@ -3478,11 +3517,10 @@ class ProtocolService {
       ..to = _myNodeNum!
       ..decoded = data
       ..id = _generatePacketId()
-      ..priority =
-          70 // RELIABLE priority
+      ..priority = pbenum.MeshPacket_Priority.RELIABLE
       ..wantAck = true;
 
-    final toRadio = pn.ToRadio()..packet = packet;
+    final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
@@ -3497,10 +3535,10 @@ class ProtocolService {
 
     AppLogging.protocol('Removing fixed position');
 
-    final adminMsg = pb.AdminMessage()..removeFixedPosition = true;
+    final adminMsg = admin.AdminMessage()..removeFixedPosition = true;
 
     final data = pb.Data()
-      ..portnum = pb.PortNum.ADMIN_APP
+      ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
     final packet = pb.MeshPacket()
@@ -3508,11 +3546,10 @@ class ProtocolService {
       ..to = _myNodeNum!
       ..decoded = data
       ..id = _generatePacketId()
-      ..priority =
-          70 // RELIABLE priority
+      ..priority = pbenum.MeshPacket_Priority.RELIABLE
       ..wantAck = true;
 
-    final toRadio = pn.ToRadio()..packet = packet;
+    final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
@@ -3530,7 +3567,7 @@ class ProtocolService {
     final adminMsg = admin.AdminMessage()..setIgnoredNode = nodeNum;
 
     final data = pb.Data()
-      ..portnum = pb.PortNum.ADMIN_APP
+      ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
     final packet = pb.MeshPacket()
@@ -3538,11 +3575,10 @@ class ProtocolService {
       ..to = _myNodeNum!
       ..decoded = data
       ..id = _generatePacketId()
-      ..priority =
-          70 // RELIABLE priority
+      ..priority = pbenum.MeshPacket_Priority.RELIABLE
       ..wantAck = true;
 
-    final toRadio = pn.ToRadio()..packet = packet;
+    final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
@@ -3560,7 +3596,7 @@ class ProtocolService {
     final adminMsg = admin.AdminMessage()..removeIgnoredNode = nodeNum;
 
     final data = pb.Data()
-      ..portnum = pb.PortNum.ADMIN_APP
+      ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
     final packet = pb.MeshPacket()
@@ -3568,11 +3604,10 @@ class ProtocolService {
       ..to = _myNodeNum!
       ..decoded = data
       ..id = _generatePacketId()
-      ..priority =
-          70 // RELIABLE priority
+      ..priority = pbenum.MeshPacket_Priority.RELIABLE
       ..wantAck = true;
 
-    final toRadio = pn.ToRadio()..packet = packet;
+    final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
@@ -3587,10 +3622,10 @@ class ProtocolService {
 
     AppLogging.protocol('Setting device time to $unixTimestamp');
 
-    final adminMsg = pb.AdminMessage()..setTimeOnly = unixTimestamp;
+    final adminMsg = admin.AdminMessage()..setTimeOnly = unixTimestamp;
 
     final data = pb.Data()
-      ..portnum = pb.PortNum.ADMIN_APP
+      ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
     final packet = pb.MeshPacket()
@@ -3600,11 +3635,10 @@ class ProtocolService {
       ..id = _generatePacketId()
       ..channel =
           0 // Primary channel
-      ..priority =
-          70 // RELIABLE priority
+      ..priority = pbenum.MeshPacket_Priority.RELIABLE
       ..wantAck = true;
 
-    final toRadio = pn.ToRadio()..packet = packet;
+    final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
@@ -3633,15 +3667,15 @@ class ProtocolService {
 
     AppLogging.protocol('Setting HAM mode: callSign=$callSign');
 
-    final hamParams = pb.HamParameters()
+    final hamParams = admin.HamParameters()
       ..callSign = callSign
       ..txPower = txPower
       ..frequency = frequency;
 
-    final adminMsg = pb.AdminMessage()..setHamMode = hamParams;
+    final adminMsg = admin.AdminMessage()..setHamMode = hamParams;
 
     final data = pb.Data()
-      ..portnum = pb.PortNum.ADMIN_APP
+      ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
     final packet = pb.MeshPacket()
@@ -3650,7 +3684,7 @@ class ProtocolService {
       ..decoded = data
       ..id = _generatePacketId();
 
-    final toRadio = pn.ToRadio()..packet = packet;
+    final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
@@ -3662,7 +3696,7 @@ class ProtocolService {
   /// If [targetNodeNum] is provided, requests config from that remote node
   /// (requires remote admin authorization on the target node)
   Future<void> getConfig(
-    pb.AdminMessage_ConfigType configType, {
+    admin.AdminMessage_ConfigType configType, {
     int? targetNodeNum,
   }) async {
     if (_myNodeNum == null) {
@@ -3684,10 +3718,10 @@ class ProtocolService {
       );
     }
 
-    final adminMsg = pb.AdminMessage()..getConfigRequest = configType;
+    final adminMsg = admin.AdminMessage()..getConfigRequest = configType;
 
     final data = pb.Data()
-      ..portnum = pb.PortNum.ADMIN_APP
+      ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer()
       ..wantResponse = true;
 
@@ -3697,14 +3731,14 @@ class ProtocolService {
       ..decoded = data
       ..id = _generatePacketId();
 
-    final toRadio = pn.ToRadio()..packet = packet;
+    final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
   /// Set device configuration
   /// If [targetNodeNum] is provided, sends config to that remote node
   /// (requires remote admin authorization on the target node)
-  Future<void> setConfig(pb.Config config, {int? targetNodeNum}) async {
+  Future<void> setConfig(config_pb.Config config, {int? targetNodeNum}) async {
     if (_myNodeNum == null) {
       throw StateError('Cannot set config: device not ready');
     }
@@ -3724,10 +3758,10 @@ class ProtocolService {
       );
     }
 
-    final adminMsg = pb.AdminMessage()..setConfig = config;
+    final adminMsg = admin.AdminMessage()..setConfig = config;
 
     final data = pb.Data()
-      ..portnum = pb.PortNum.ADMIN_APP
+      ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer()
       ..wantResponse = true;
 
@@ -3736,17 +3770,17 @@ class ProtocolService {
       ..to = target
       ..decoded = data
       ..id = _generatePacketId()
-      ..priority = 70
+      ..priority = pbenum.MeshPacket_Priority.RELIABLE
       ..wantAck = true;
 
-    final toRadio = pn.ToRadio()..packet = packet;
+    final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
   /// Set LoRa configuration (region, modem preset, TX power, etc.)
   Future<void> setLoRaConfig({
-    required pbenum.RegionCode region,
-    required pb.ModemPreset modemPreset,
+    required config_pbenum.Config_LoRaConfig_RegionCode region,
+    required config_pbenum.Config_LoRaConfig_ModemPreset modemPreset,
     required int hopLimit,
     required bool txEnabled,
     required int txPower,
@@ -3764,7 +3798,7 @@ class ProtocolService {
   }) async {
     AppLogging.protocol('Setting LoRa config');
 
-    final loraConfig = pb.Config_LoRaConfig()
+    final loraConfig = config_pb.Config_LoRaConfig()
       ..usePreset = usePreset
       ..region = region
       ..modemPreset = modemPreset
@@ -3781,14 +3815,14 @@ class ProtocolService {
       ..ignoreMqtt = ignoreMqtt
       ..configOkToMqtt = configOkToMqtt;
 
-    final config = pb.Config()..lora = loraConfig;
+    final config = config_pb.Config()..lora = loraConfig;
     await setConfig(config, targetNodeNum: targetNodeNum);
   }
 
   /// Set device configuration (role, serial, etc.)
   Future<void> setDeviceConfig({
-    required pb.Config_DeviceConfig_Role_ role,
-    required pb.Config_DeviceConfig_RebroadcastMode rebroadcastMode,
+    required config_pbenum.Config_DeviceConfig_Role role,
+    required config_pbenum.Config_DeviceConfig_RebroadcastMode rebroadcastMode,
     required bool serialEnabled,
     required int nodeInfoBroadcastSecs,
     required bool ledHeartbeatDisabled,
@@ -3801,7 +3835,7 @@ class ProtocolService {
   }) async {
     AppLogging.protocol('Setting device config');
 
-    final deviceConfig = pb.Config_DeviceConfig()
+    final deviceConfig = config_pb.Config_DeviceConfig()
       ..role = role
       ..rebroadcastMode = rebroadcastMode
       ..serialEnabled = serialEnabled
@@ -3813,7 +3847,7 @@ class ProtocolService {
       ..disableTripleClick = disableTripleClick
       ..tzdef = tzdef;
 
-    final config = pb.Config()..device = deviceConfig;
+    final config = config_pb.Config()..device = deviceConfig;
     await setConfig(config, targetNodeNum: targetNodeNum);
   }
 
@@ -3822,7 +3856,7 @@ class ProtocolService {
     required int positionBroadcastSecs,
     required bool positionBroadcastSmartEnabled,
     required bool fixedPosition,
-    required pb.Config_PositionConfig_GpsMode gpsMode,
+    required config_pb.Config_PositionConfig_GpsMode gpsMode,
     required int gpsUpdateInterval,
     int gpsAttemptTime = 30,
     int broadcastSmartMinimumDistance = 100,
@@ -3832,19 +3866,19 @@ class ProtocolService {
   }) async {
     AppLogging.protocol('Setting position config: gpsMode=$gpsMode');
 
-    final posConfig = pb.Config_PositionConfig()
+    final posConfig = config_pb.Config_PositionConfig()
       ..positionBroadcastSecs = positionBroadcastSecs
       ..positionBroadcastSmartEnabled = positionBroadcastSmartEnabled
       ..fixedPosition = fixedPosition
       ..gpsMode = gpsMode
-      ..gpsEnabled = gpsMode == pb.Config_PositionConfig_GpsMode.ENABLED
+      ..gpsEnabled = gpsMode == config_pb.Config_PositionConfig_GpsMode.ENABLED
       ..gpsUpdateInterval = gpsUpdateInterval
       ..gpsAttemptTime = gpsAttemptTime
       ..broadcastSmartMinimumDistance = broadcastSmartMinimumDistance
       ..broadcastSmartMinimumIntervalSecs = broadcastSmartMinimumIntervalSecs
       ..positionFlags = positionFlags;
 
-    final config = pb.Config()..position = posConfig;
+    final config = config_pb.Config()..position = posConfig;
     await setConfig(config, targetNodeNum: targetNodeNum);
   }
 
@@ -3861,7 +3895,7 @@ class ProtocolService {
   }) async {
     AppLogging.protocol('Setting power config');
 
-    final powerConfig = pb.Config_PowerConfig()
+    final powerConfig = config_pb.Config_PowerConfig()
       ..isPowerSaving = isPowerSaving
       ..onBatteryShutdownAfterSecs = onBatteryShutdownAfterSecs
       ..adcMultiplierOverride = adcMultiplierOverride
@@ -3870,7 +3904,7 @@ class ProtocolService {
       ..lsSecs = lsSecs
       ..minWakeSecs = minWakeSecs;
 
-    final config = pb.Config()..power = powerConfig;
+    final config = config_pb.Config()..power = powerConfig;
     await setConfig(config, targetNodeNum: targetNodeNum);
   }
 
@@ -3879,23 +3913,21 @@ class ProtocolService {
     required int screenOnSecs,
     required int autoScreenCarouselSecs,
     required bool flipScreen,
-    required pb.Config_DisplayConfig_DisplayUnits units,
-    required pb.Config_DisplayConfig_DisplayMode displayMode,
+    required config_pb.Config_DisplayConfig_DisplayUnits units,
+    required config_pb.Config_DisplayConfig_DisplayMode displayMode,
     required bool headingBold,
     required bool wakeOnTapOrMotion,
     bool use12hClock = false,
-    pb.Config_DisplayConfig_OledType oledType =
-        pb.Config_DisplayConfig_OledType.OLED_AUTO,
-    pb.Config_DisplayConfig_CompassOrientation compassOrientation =
-        pb.Config_DisplayConfig_CompassOrientation.DEGREES_0,
-    int gpsFormat = 0,
+    config_pb.Config_DisplayConfig_OledType oledType =
+        config_pb.Config_DisplayConfig_OledType.OLED_AUTO,
+    config_pb.Config_DisplayConfig_CompassOrientation compassOrientation =
+        config_pb.Config_DisplayConfig_CompassOrientation.DEGREES_0,
     int? targetNodeNum,
   }) async {
     AppLogging.protocol('Setting display config');
 
-    final displayConfig = pb.Config_DisplayConfig()
+    final displayConfig = config_pb.Config_DisplayConfig()
       ..screenOnSecs = screenOnSecs
-      ..gpsFormat = gpsFormat
       ..autoScreenCarouselSecs = autoScreenCarouselSecs
       ..flipScreen = flipScreen
       ..units = units
@@ -3906,25 +3938,25 @@ class ProtocolService {
       ..oled = oledType
       ..compassOrientation = compassOrientation;
 
-    final config = pb.Config()..display = displayConfig;
+    final config = config_pb.Config()..display = displayConfig;
     await setConfig(config, targetNodeNum: targetNodeNum);
   }
 
   /// Set Bluetooth configuration
   Future<void> setBluetoothConfig({
     required bool enabled,
-    required pb.Config_BluetoothConfig_PairingMode mode,
+    required config_pb.Config_BluetoothConfig_PairingMode mode,
     required int fixedPin,
     int? targetNodeNum,
   }) async {
     AppLogging.protocol('Setting Bluetooth config');
 
-    final btConfig = pb.Config_BluetoothConfig()
+    final btConfig = config_pb.Config_BluetoothConfig()
       ..enabled = enabled
       ..mode = mode
       ..fixedPin = fixedPin;
 
-    final config = pb.Config()..bluetooth = btConfig;
+    final config = config_pb.Config()..bluetooth = btConfig;
     await setConfig(config, targetNodeNum: targetNodeNum);
   }
 
@@ -3939,14 +3971,14 @@ class ProtocolService {
   }) async {
     AppLogging.protocol('Setting network config');
 
-    final networkConfig = pb.Config_NetworkConfig()
+    final networkConfig = config_pb.Config_NetworkConfig()
       ..wifiEnabled = wifiEnabled
       ..wifiSsid = wifiSsid
       ..wifiPsk = wifiPsk
       ..ethEnabled = ethEnabled
       ..ntpServer = ntpServer;
 
-    final config = pb.Config()..network = networkConfig;
+    final config = config_pb.Config()..network = networkConfig;
     await setConfig(config, targetNodeNum: targetNodeNum);
   }
 
@@ -3962,7 +3994,7 @@ class ProtocolService {
   }) async {
     AppLogging.protocol('Setting security config');
 
-    final secConfig = pb.Config_SecurityConfig()
+    final secConfig = config_pb.Config_SecurityConfig()
       ..isManaged = isManaged
       ..serialEnabled = serialEnabled
       ..debugLogApiEnabled = debugLogEnabled
@@ -3978,7 +4010,7 @@ class ProtocolService {
       secConfig.adminKey.addAll(adminKeys);
     }
 
-    final config = pb.Config()..security = secConfig;
+    final config = config_pb.Config()..security = secConfig;
     await setConfig(config, targetNodeNum: targetNodeNum);
   }
 
@@ -3989,7 +4021,7 @@ class ProtocolService {
   /// Get module configuration by type
   /// If [targetNodeNum] is provided, requests config from that remote node
   Future<void> getModuleConfig(
-    pb.AdminMessage_ModuleConfigType moduleType, {
+    admin.AdminMessage_ModuleConfigType moduleType, {
     int? targetNodeNum,
   }) async {
     if (_myNodeNum == null) {
@@ -4011,10 +4043,10 @@ class ProtocolService {
       );
     }
 
-    final adminMsg = pb.AdminMessage()..getModuleConfigRequest = moduleType;
+    final adminMsg = admin.AdminMessage()..getModuleConfigRequest = moduleType;
 
     final data = pb.Data()
-      ..portnum = pb.PortNum.ADMIN_APP
+      ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer()
       ..wantResponse = true;
 
@@ -4024,14 +4056,14 @@ class ProtocolService {
       ..decoded = data
       ..id = _generatePacketId();
 
-    final toRadio = pn.ToRadio()..packet = packet;
+    final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
   /// Set module configuration
   /// If [targetNodeNum] is provided, sends config to that remote node
   Future<void> setModuleConfig(
-    pb.ModuleConfig moduleConfig, {
+    module_pb.ModuleConfig moduleConfig, {
     int? targetNodeNum,
   }) async {
     if (_myNodeNum == null) {
@@ -4053,10 +4085,10 @@ class ProtocolService {
       );
     }
 
-    final adminMsg = pb.AdminMessage()..setModuleConfig = moduleConfig;
+    final adminMsg = admin.AdminMessage()..setModuleConfig = moduleConfig;
 
     final data = pb.Data()
-      ..portnum = pb.PortNum.ADMIN_APP
+      ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer()
       ..wantResponse = true;
 
@@ -4065,10 +4097,10 @@ class ProtocolService {
       ..to = target
       ..decoded = data
       ..id = _generatePacketId()
-      ..priority = 70
+      ..priority = pbenum.MeshPacket_Priority.RELIABLE
       ..wantAck = true;
 
-    final toRadio = pn.ToRadio()..packet = packet;
+    final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
@@ -4093,11 +4125,11 @@ class ProtocolService {
       'Setting MQTT config${isRemote ? ' on remote node $targetNodeNum' : ''}',
     );
 
-    final mapReportSettings = pb.ModuleConfig_MapReportSettings()
+    final mapReportSettings = module_pb.ModuleConfig_MapReportSettings()
       ..publishIntervalSecs = mapPublishIntervalSecs
       ..positionPrecision = mapPositionPrecision;
 
-    final mqttConfig = pb.ModuleConfig_MQTTConfig()
+    final mqttConfig = module_pb.ModuleConfig_MQTTConfig()
       ..enabled = enabled
       ..address = address
       ..username = username
@@ -4110,7 +4142,7 @@ class ProtocolService {
       ..mapReportingEnabled = mapReportingEnabled
       ..mapReportSettings = mapReportSettings;
 
-    final moduleConfig = pb.ModuleConfig()..mqtt = mqttConfig;
+    final moduleConfig = module_pb.ModuleConfig()..mqtt = mqttConfig;
     await setModuleConfig(moduleConfig, targetNodeNum: targetNodeNum);
   }
 
@@ -4124,17 +4156,17 @@ class ProtocolService {
     required int inputbrokerPinA,
     required int inputbrokerPinB,
     required int inputbrokerPinPress,
-    required pb.ModuleConfig_CannedMessageConfig_InputEventChar
+    required module_pb.ModuleConfig_CannedMessageConfig_InputEventChar
     inputbrokerEventCw,
-    required pb.ModuleConfig_CannedMessageConfig_InputEventChar
+    required module_pb.ModuleConfig_CannedMessageConfig_InputEventChar
     inputbrokerEventCcw,
-    required pb.ModuleConfig_CannedMessageConfig_InputEventChar
+    required module_pb.ModuleConfig_CannedMessageConfig_InputEventChar
     inputbrokerEventPress,
     int? targetNodeNum,
   }) async {
     AppLogging.protocol('Setting canned message config');
 
-    final cannedConfig = pb.ModuleConfig_CannedMessageConfig()
+    final cannedConfig = module_pb.ModuleConfig_CannedMessageConfig()
       ..enabled = enabled
       ..sendBell = sendBell
       ..rotary1Enabled = rotary1Enabled
@@ -4147,20 +4179,21 @@ class ProtocolService {
       ..inputbrokerEventCcw = inputbrokerEventCcw
       ..inputbrokerEventPress = inputbrokerEventPress;
 
-    final moduleConfig = pb.ModuleConfig()..cannedMessage = cannedConfig;
+    final moduleConfig = module_pb.ModuleConfig()..cannedMessage = cannedConfig;
     await setModuleConfig(moduleConfig, targetNodeNum: targetNodeNum);
   }
 
   /// Get Telemetry module configuration
   /// Returns the current telemetry config, requesting from device if needed
-  Future<pb.ModuleConfig_TelemetryConfig?> getTelemetryModuleConfig() async {
+  Future<module_pb.ModuleConfig_TelemetryConfig?>
+  getTelemetryModuleConfig() async {
     // If we already have the config, return it
     if (_currentTelemetryConfig != null) {
       return _currentTelemetryConfig;
     }
 
     // Request config from device
-    await getModuleConfig(pb.AdminMessage_ModuleConfigType.TELEMETRY_CONFIG);
+    await getModuleConfig(admin.AdminMessage_ModuleConfigType.TELEMETRY_CONFIG);
 
     // Wait for response with timeout
     try {
@@ -4193,7 +4226,7 @@ class ProtocolService {
   }) async {
     AppLogging.protocol('Setting telemetry config');
 
-    final telemetryConfig = pb.ModuleConfig_TelemetryConfig();
+    final telemetryConfig = module_pb.ModuleConfig_TelemetryConfig();
     if (deviceUpdateInterval != null) {
       telemetryConfig.deviceUpdateInterval = deviceUpdateInterval;
     }
@@ -4230,12 +4263,12 @@ class ProtocolService {
       telemetryConfig.powerScreenEnabled = powerScreenEnabled;
     }
 
-    final moduleConfig = pb.ModuleConfig()..telemetry = telemetryConfig;
+    final moduleConfig = module_pb.ModuleConfig()..telemetry = telemetryConfig;
     await setModuleConfig(moduleConfig, targetNodeNum: targetNodeNum);
   }
 
   /// Get External Notification module configuration
-  Future<pb.ModuleConfig_ExternalNotificationConfig?>
+  Future<module_pb.ModuleConfig_ExternalNotificationConfig?>
   getExternalNotificationModuleConfig() async {
     // If we already have the config, return it
     if (_currentExternalNotificationConfig != null) {
@@ -4243,7 +4276,7 @@ class ProtocolService {
     }
 
     // Request config from device
-    await getModuleConfig(pb.AdminMessage_ModuleConfigType.EXTNOTIF_CONFIG);
+    await getModuleConfig(admin.AdminMessage_ModuleConfigType.EXTNOTIF_CONFIG);
 
     // Wait for response with timeout
     try {
@@ -4282,7 +4315,7 @@ class ProtocolService {
   }) async {
     AppLogging.protocol('Setting external notification config');
 
-    final extNotifConfig = pb.ModuleConfig_ExternalNotificationConfig();
+    final extNotifConfig = module_pb.ModuleConfig_ExternalNotificationConfig();
     if (enabled != null) extNotifConfig.enabled = enabled;
     if (output != null) extNotifConfig.output = output;
     if (outputMs != null) extNotifConfig.outputMs = outputMs;
@@ -4309,7 +4342,7 @@ class ProtocolService {
     }
     if (nagTimeout != null) extNotifConfig.nagTimeout = nagTimeout;
 
-    final moduleConfig = pb.ModuleConfig()
+    final moduleConfig = module_pb.ModuleConfig()
       ..externalNotification = extNotifConfig;
     await setModuleConfig(moduleConfig, targetNodeNum: targetNodeNum);
   }
@@ -4325,7 +4358,7 @@ class ProtocolService {
   }) async {
     AppLogging.protocol('Setting store & forward config');
 
-    final sfConfig = pb.ModuleConfig_StoreForwardConfig();
+    final sfConfig = module_pb.ModuleConfig_StoreForwardConfig();
     if (enabled != null) sfConfig.enabled = enabled;
     if (heartbeat != null) sfConfig.heartbeat = heartbeat;
     if (records != null) sfConfig.records = records;
@@ -4334,12 +4367,12 @@ class ProtocolService {
       sfConfig.historyReturnWindow = historyReturnWindow;
     }
 
-    final moduleConfig = pb.ModuleConfig()..storeForward = sfConfig;
+    final moduleConfig = module_pb.ModuleConfig()..storeForward = sfConfig;
     await setModuleConfig(moduleConfig, targetNodeNum: targetNodeNum);
   }
 
   /// Get Store & Forward module configuration
-  Future<pb.ModuleConfig_StoreForwardConfig?>
+  Future<module_pb.ModuleConfig_StoreForwardConfig?>
   getStoreForwardModuleConfig() async {
     // If we already have the config, return it
     if (_currentStoreForwardConfig != null) {
@@ -4347,7 +4380,9 @@ class ProtocolService {
     }
 
     // Request config from device
-    await getModuleConfig(pb.AdminMessage_ModuleConfigType.STOREFORWARD_CONFIG);
+    await getModuleConfig(
+      admin.AdminMessage_ModuleConfigType.STOREFORWARD_CONFIG,
+    );
 
     // Wait for response with timeout
     try {
@@ -4364,7 +4399,7 @@ class ProtocolService {
   }
 
   /// Get Detection Sensor module configuration
-  Future<pb.ModuleConfig_DetectionSensorConfig?>
+  Future<module_pb.ModuleConfig_DetectionSensorConfig?>
   getDetectionSensorModuleConfig() async {
     // If we already have the config, return it
     if (_currentDetectionSensorConfig != null) {
@@ -4373,7 +4408,7 @@ class ProtocolService {
 
     // Request config from device
     await getModuleConfig(
-      pb.AdminMessage_ModuleConfigType.DETECTIONSENSOR_CONFIG,
+      admin.AdminMessage_ModuleConfigType.DETECTIONSENSOR_CONFIG,
     );
 
     // Wait for response with timeout
@@ -4393,14 +4428,15 @@ class ProtocolService {
   }
 
   /// Get Range Test module configuration
-  Future<pb.ModuleConfig_RangeTestConfig?> getRangeTestModuleConfig() async {
+  Future<module_pb.ModuleConfig_RangeTestConfig?>
+  getRangeTestModuleConfig() async {
     // If we already have the config, return it
     if (_currentRangeTestConfig != null) {
       return _currentRangeTestConfig;
     }
 
     // Request config from device
-    await getModuleConfig(pb.AdminMessage_ModuleConfigType.RANGETEST_CONFIG);
+    await getModuleConfig(admin.AdminMessage_ModuleConfigType.RANGETEST_CONFIG);
 
     // Wait for response with timeout
     try {
@@ -4425,17 +4461,17 @@ class ProtocolService {
   }) async {
     AppLogging.protocol('Setting range test config');
 
-    final rtConfig = pb.ModuleConfig_RangeTestConfig();
+    final rtConfig = module_pb.ModuleConfig_RangeTestConfig();
     if (enabled != null) rtConfig.enabled = enabled;
     if (sender != null) rtConfig.sender = sender;
     if (save != null) rtConfig.save = save;
 
-    final moduleConfig = pb.ModuleConfig()..rangeTest = rtConfig;
+    final moduleConfig = module_pb.ModuleConfig()..rangeTest = rtConfig;
     await setModuleConfig(moduleConfig, targetNodeNum: targetNodeNum);
   }
 
   /// Get Ambient Lighting module configuration
-  Future<pb.ModuleConfig_AmbientLightingConfig?>
+  Future<module_pb.ModuleConfig_AmbientLightingConfig?>
   getAmbientLightingModuleConfig() async {
     // If we already have the config, return it
     if (_currentAmbientLightingConfig != null) {
@@ -4444,7 +4480,7 @@ class ProtocolService {
 
     // Request config from device
     await getModuleConfig(
-      pb.AdminMessage_ModuleConfigType.AMBIENTLIGHTING_CONFIG,
+      admin.AdminMessage_ModuleConfigType.AMBIENTLIGHTING_CONFIG,
     );
 
     // Wait for response with timeout
@@ -4474,26 +4510,29 @@ class ProtocolService {
   }) async {
     AppLogging.protocol('Setting ambient lighting config');
 
-    final alConfig = pb.ModuleConfig_AmbientLightingConfig();
+    final alConfig = module_pb.ModuleConfig_AmbientLightingConfig();
     alConfig.ledState = ledState;
     alConfig.red = red;
     alConfig.green = green;
     alConfig.blue = blue;
     if (current != null) alConfig.current = current;
 
-    final moduleConfig = pb.ModuleConfig()..ambientLighting = alConfig;
+    final moduleConfig = module_pb.ModuleConfig()..ambientLighting = alConfig;
     await setModuleConfig(moduleConfig, targetNodeNum: targetNodeNum);
   }
 
   /// Get PAX Counter module configuration
-  Future<pb.ModuleConfig_PaxcounterConfig?> getPaxCounterModuleConfig() async {
+  Future<module_pb.ModuleConfig_PaxcounterConfig?>
+  getPaxCounterModuleConfig() async {
     // If we already have the config, return it
     if (_currentPaxCounterConfig != null) {
       return _currentPaxCounterConfig;
     }
 
     // Request config from device
-    await getModuleConfig(pb.AdminMessage_ModuleConfigType.PAXCOUNTER_CONFIG);
+    await getModuleConfig(
+      admin.AdminMessage_ModuleConfigType.PAXCOUNTER_CONFIG,
+    );
 
     // Wait for response with timeout
     try {
@@ -4519,25 +4558,25 @@ class ProtocolService {
   }) async {
     AppLogging.protocol('Setting PAX counter config');
 
-    final paxConfig = pb.ModuleConfig_PaxcounterConfig();
+    final paxConfig = module_pb.ModuleConfig_PaxcounterConfig();
     if (enabled != null) paxConfig.enabled = enabled;
     if (updateInterval != null) {
       paxConfig.paxcounterUpdateInterval = updateInterval;
     }
 
-    final moduleConfig = pb.ModuleConfig()..paxcounter = paxConfig;
+    final moduleConfig = module_pb.ModuleConfig()..paxcounter = paxConfig;
     await setModuleConfig(moduleConfig, targetNodeNum: targetNodeNum);
   }
 
   /// Get Serial module configuration
-  Future<pb.ModuleConfig_SerialConfig?> getSerialModuleConfig() async {
+  Future<module_pb.ModuleConfig_SerialConfig?> getSerialModuleConfig() async {
     // If we already have the config, return it
     if (_currentSerialConfig != null) {
       return _currentSerialConfig;
     }
 
     // Request config from device
-    await getModuleConfig(pb.AdminMessage_ModuleConfigType.SERIAL_CONFIG);
+    await getModuleConfig(admin.AdminMessage_ModuleConfigType.SERIAL_CONFIG);
 
     // Wait for response with timeout
     try {
@@ -4567,27 +4606,27 @@ class ProtocolService {
   }) async {
     AppLogging.protocol('Setting serial config');
 
-    final serialConfig = pb.ModuleConfig_SerialConfig();
+    final serialConfig = module_pb.ModuleConfig_SerialConfig();
     if (enabled != null) serialConfig.enabled = enabled;
     if (echo != null) serialConfig.echo = echo;
     if (rxd != null) serialConfig.rxd = rxd;
     if (txd != null) serialConfig.txd = txd;
     if (baud != null) {
       serialConfig.baud =
-          pb.ModuleConfig_SerialConfig_Serial_Baud.valueOf(baud) ??
-          pb.ModuleConfig_SerialConfig_Serial_Baud.BAUD_DEFAULT;
+          module_pb.ModuleConfig_SerialConfig_Serial_Baud.valueOf(baud) ??
+          module_pb.ModuleConfig_SerialConfig_Serial_Baud.BAUD_DEFAULT;
     }
     if (timeout != null) serialConfig.timeout = timeout;
     if (mode != null) {
       serialConfig.mode =
-          pb.ModuleConfig_SerialConfig_Serial_Mode.valueOf(mode) ??
-          pb.ModuleConfig_SerialConfig_Serial_Mode.DEFAULT;
+          module_pb.ModuleConfig_SerialConfig_Serial_Mode.valueOf(mode) ??
+          module_pb.ModuleConfig_SerialConfig_Serial_Mode.DEFAULT;
     }
     if (overrideConsoleSerialPort != null) {
       serialConfig.overrideConsoleSerialPort = overrideConsoleSerialPort;
     }
 
-    final moduleConfig = pb.ModuleConfig()..serial = serialConfig;
+    final moduleConfig = module_pb.ModuleConfig()..serial = serialConfig;
     await setModuleConfig(moduleConfig, targetNodeNum: targetNodeNum);
   }
 
@@ -4606,11 +4645,11 @@ class ProtocolService {
 
     AppLogging.protocol('Requesting canned messages');
 
-    final adminMsg = pb.AdminMessage()
+    final adminMsg = admin.AdminMessage()
       ..getCannedMessageModuleMessagesRequest = true;
 
     final data = pb.Data()
-      ..portnum = pb.PortNum.ADMIN_APP
+      ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer()
       ..wantResponse = true;
 
@@ -4620,7 +4659,7 @@ class ProtocolService {
       ..decoded = data
       ..id = _generatePacketId();
 
-    final toRadio = pn.ToRadio()..packet = packet;
+    final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
@@ -4635,11 +4674,11 @@ class ProtocolService {
 
     AppLogging.protocol('Setting canned messages');
 
-    final adminMsg = pb.AdminMessage()
+    final adminMsg = admin.AdminMessage()
       ..setCannedMessageModuleMessages = messages;
 
     final data = pb.Data()
-      ..portnum = pb.PortNum.ADMIN_APP
+      ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
     final packet = pb.MeshPacket()
@@ -4648,7 +4687,7 @@ class ProtocolService {
       ..decoded = data
       ..id = _generatePacketId();
 
-    final toRadio = pn.ToRadio()..packet = packet;
+    final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
@@ -4663,10 +4702,10 @@ class ProtocolService {
 
     AppLogging.protocol('Requesting ringtone');
 
-    final adminMsg = pb.AdminMessage()..getRingtoneRequest = true;
+    final adminMsg = admin.AdminMessage()..getRingtoneRequest = true;
 
     final data = pb.Data()
-      ..portnum = pb.PortNum.ADMIN_APP
+      ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer()
       ..wantResponse = true;
 
@@ -4676,7 +4715,7 @@ class ProtocolService {
       ..decoded = data
       ..id = _generatePacketId();
 
-    final toRadio = pn.ToRadio()..packet = packet;
+    final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
@@ -4691,10 +4730,10 @@ class ProtocolService {
 
     AppLogging.protocol('Setting ringtone');
 
-    final adminMsg = pb.AdminMessage()..setRingtoneMessage = rtttl;
+    final adminMsg = admin.AdminMessage()..setRingtoneMessage = rtttl;
 
     final data = pb.Data()
-      ..portnum = pb.PortNum.ADMIN_APP
+      ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
     final packet = pb.MeshPacket()
@@ -4703,7 +4742,7 @@ class ProtocolService {
       ..decoded = data
       ..id = _generatePacketId();
 
-    final toRadio = pn.ToRadio()..packet = packet;
+    final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 
@@ -4718,10 +4757,10 @@ class ProtocolService {
 
     AppLogging.protocol('Deleting file: $filename');
 
-    final adminMsg = pb.AdminMessage()..deleteFileRequest = filename;
+    final adminMsg = admin.AdminMessage()..deleteFileRequest = filename;
 
     final data = pb.Data()
-      ..portnum = pb.PortNum.ADMIN_APP
+      ..portnum = pn.PortNum.ADMIN_APP
       ..payload = adminMsg.writeToBuffer();
 
     final packet = pb.MeshPacket()
@@ -4730,7 +4769,7 @@ class ProtocolService {
       ..decoded = data
       ..id = _generatePacketId();
 
-    final toRadio = pn.ToRadio()..packet = packet;
+    final toRadio = pb.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
   }
 

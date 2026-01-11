@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
-import '../../generated/meshtastic/mesh.pbenum.dart';
+import '../../generated/meshtastic/config.pbenum.dart';
 import '../../utils/snackbar.dart';
+
+/// Typedef for shorter reference to the enum
+typedef RegionCode = Config_LoRaConfig_RegionCode;
 
 /// Region data with display info
 class RegionInfo {
@@ -160,7 +163,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
     if (_initialized) return;
     final protocol = ref.read(protocolServiceProvider);
     final region = protocol.currentRegion;
-    if (region != null && region != RegionCode.UNSET_REGION) {
+    if (region != null && region != RegionCode.UNSET) {
       setState(() {
         _currentRegion = region;
         // Pre-select current region when editing (not initial setup)

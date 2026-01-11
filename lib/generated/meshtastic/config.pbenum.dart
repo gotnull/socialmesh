@@ -822,6 +822,8 @@ class Config_LoRaConfig_ModemPreset extends $pb.ProtobufEnum {
 
   ///
   ///  Long Range - Slow
+  ///  Deprecated in 2.7: Unpopular slow preset.
+  @$core.Deprecated('This enum value is deprecated')
   static const Config_LoRaConfig_ModemPreset LONG_SLOW =
       Config_LoRaConfig_ModemPreset._(1, _omitEnumNames ? '' : 'LONG_SLOW');
 
@@ -865,6 +867,12 @@ class Config_LoRaConfig_ModemPreset extends $pb.ProtobufEnum {
   static const Config_LoRaConfig_ModemPreset SHORT_TURBO =
       Config_LoRaConfig_ModemPreset._(8, _omitEnumNames ? '' : 'SHORT_TURBO');
 
+  ///
+  ///  Long Range - Turbo
+  ///  This preset performs similarly to LongFast, but with 500Khz bandwidth.
+  static const Config_LoRaConfig_ModemPreset LONG_TURBO =
+      Config_LoRaConfig_ModemPreset._(9, _omitEnumNames ? '' : 'LONG_TURBO');
+
   static const $core.List<Config_LoRaConfig_ModemPreset> values =
       <Config_LoRaConfig_ModemPreset>[
     LONG_FAST,
@@ -876,10 +884,11 @@ class Config_LoRaConfig_ModemPreset extends $pb.ProtobufEnum {
     SHORT_FAST,
     LONG_MODERATE,
     SHORT_TURBO,
+    LONG_TURBO,
   ];
 
   static final $core.List<Config_LoRaConfig_ModemPreset?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 8);
+      $pb.ProtobufEnum.$_initByValueList(values, 9);
   static Config_LoRaConfig_ModemPreset? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 

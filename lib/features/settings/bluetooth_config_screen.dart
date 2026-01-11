@@ -7,8 +7,9 @@ import '../../core/theme.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../providers/app_providers.dart';
-import '../../generated/meshtastic/mesh.pbenum.dart' as pb;
-import '../../generated/meshtastic/mesh.pb.dart' as pb_config;
+import '../../generated/meshtastic/config.pb.dart' as config_pb;
+import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
+import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
 import '../../core/widgets/loading_indicator.dart';
 
 class BluetoothConfigScreen extends ConsumerStatefulWidget {
@@ -21,12 +22,12 @@ class BluetoothConfigScreen extends ConsumerStatefulWidget {
 
 class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
   bool _enabled = true;
-  pb.Config_BluetoothConfig_PairingMode _mode =
-      pb.Config_BluetoothConfig_PairingMode.FIXED_PIN;
+  config_pbenum.Config_BluetoothConfig_PairingMode _mode =
+      config_pbenum.Config_BluetoothConfig_PairingMode.FIXED_PIN;
   int _fixedPin = 123456;
   bool _saving = false;
   bool _loading = false;
-  StreamSubscription<pb_config.Config_BluetoothConfig>? _configSubscription;
+  StreamSubscription<config_pb.Config_BluetoothConfig>? _configSubscription;
   final _pinController = TextEditingController();
 
   @override
@@ -43,7 +44,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
     super.dispose();
   }
 
-  void _applyConfig(pb_config.Config_BluetoothConfig config) {
+  void _applyConfig(config_pb.Config_BluetoothConfig config) {
     setState(() {
       _enabled = config.enabled;
       _mode = config.mode;
@@ -72,7 +73,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
 
         // Request fresh config from device
         await protocol.getConfig(
-          pb_config.AdminMessage_ConfigType.BLUETOOTH_CONFIG,
+          admin_pbenum.AdminMessage_ConfigType.BLUETOOTH_CONFIG,
         );
       }
     } finally {
@@ -82,7 +83,7 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
 
   Future<void> _saveConfig() async {
     // Validate PIN if fixed PIN mode is selected
-    if (_mode == pb.Config_BluetoothConfig_PairingMode.FIXED_PIN) {
+    if (_mode == config_pbenum.Config_BluetoothConfig_PairingMode.FIXED_PIN) {
       final pinText = _pinController.text;
       if (pinText.isEmpty || pinText.length < 6) {
         showErrorSnackBar(context, 'Please enter a valid 6-digit PIN');
@@ -116,26 +117,28 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
     }
   }
 
-  String _getModeLabel(pb.Config_BluetoothConfig_PairingMode mode) {
+  String _getModeLabel(config_pbenum.Config_BluetoothConfig_PairingMode mode) {
     switch (mode) {
-      case pb.Config_BluetoothConfig_PairingMode.RANDOM_PIN:
+      case config_pbenum.Config_BluetoothConfig_PairingMode.RANDOM_PIN:
         return 'Random PIN';
-      case pb.Config_BluetoothConfig_PairingMode.FIXED_PIN:
+      case config_pbenum.Config_BluetoothConfig_PairingMode.FIXED_PIN:
         return 'Fixed PIN';
-      case pb.Config_BluetoothConfig_PairingMode.NO_PIN:
+      case config_pbenum.Config_BluetoothConfig_PairingMode.NO_PIN:
         return 'No PIN';
       default:
         return 'Unknown';
     }
   }
 
-  String _getModeDescription(pb.Config_BluetoothConfig_PairingMode mode) {
+  String _getModeDescription(
+    config_pbenum.Config_BluetoothConfig_PairingMode mode,
+  ) {
     switch (mode) {
-      case pb.Config_BluetoothConfig_PairingMode.RANDOM_PIN:
+      case config_pbenum.Config_BluetoothConfig_PairingMode.RANDOM_PIN:
         return 'Generate random PIN on each boot';
-      case pb.Config_BluetoothConfig_PairingMode.FIXED_PIN:
+      case config_pbenum.Config_BluetoothConfig_PairingMode.FIXED_PIN:
         return 'Use a fixed PIN code';
-      case pb.Config_BluetoothConfig_PairingMode.NO_PIN:
+      case config_pbenum.Config_BluetoothConfig_PairingMode.NO_PIN:
         return 'No PIN required (insecure)';
       default:
         return '';
@@ -145,9 +148,9 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
   @override
   Widget build(BuildContext context) {
     final modes = [
-      pb.Config_BluetoothConfig_PairingMode.RANDOM_PIN,
-      pb.Config_BluetoothConfig_PairingMode.FIXED_PIN,
-      pb.Config_BluetoothConfig_PairingMode.NO_PIN,
+      config_pbenum.Config_BluetoothConfig_PairingMode.RANDOM_PIN,
+      config_pbenum.Config_BluetoothConfig_PairingMode.FIXED_PIN,
+      config_pbenum.Config_BluetoothConfig_PairingMode.NO_PIN,
     ];
 
     return GestureDetector(
@@ -304,7 +307,9 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
 
                   // Fixed PIN (only show when mode is Fixed PIN)
                   if (_mode ==
-                      pb.Config_BluetoothConfig_PairingMode.FIXED_PIN) ...[
+                      config_pbenum
+                          .Config_BluetoothConfig_PairingMode
+                          .FIXED_PIN) ...[
                     Text(
                       'FIXED PIN',
                       style: TextStyle(

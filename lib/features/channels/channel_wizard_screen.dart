@@ -14,8 +14,8 @@ import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 import '../../utils/encoding.dart';
 import '../../utils/snackbar.dart';
-import '../../generated/meshtastic/mesh.pb.dart' as pb;
-import '../../generated/meshtastic/mesh.pbenum.dart' as pbenum;
+import '../../generated/meshtastic/channel.pb.dart' as channel_pb;
+import '../../generated/meshtastic/channel.pbenum.dart' as channel_pbenum;
 import '../../core/widgets/loading_indicator.dart';
 
 /// Key size options with security explanations
@@ -239,7 +239,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
   }
 
   String _generateChannelUrl() {
-    final channelSettings = pb.ChannelSettings()
+    final channelSettings = channel_pb.ChannelSettings()
       ..name = _nameController.text.trim();
 
     final key = _generatedKey;
@@ -247,10 +247,10 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
       channelSettings.psk = key;
     }
 
-    final channel = pb.Channel()
+    final channel = channel_pb.Channel()
       ..index = widget.channelIndex
       ..settings = channelSettings
-      ..role = pbenum.Channel_Role.SECONDARY;
+      ..role = channel_pbenum.Channel_Role.SECONDARY;
 
     final bytes = channel.writeToBuffer();
     final encoded = base64

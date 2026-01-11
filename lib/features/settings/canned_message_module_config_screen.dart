@@ -7,7 +7,8 @@ import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
-import '../../generated/meshtastic/mesh.pb.dart' as pb;
+import '../../generated/meshtastic/admin.pb.dart' as admin;
+import '../../generated/meshtastic/module_config.pb.dart' as module_pb;
 
 /// Screen for configuring device-side canned message module settings
 /// This is different from CannedResponsesScreen which manages local quick responses
@@ -29,11 +30,15 @@ class _CannedMessageModuleConfigScreenState
   int _inputbrokerPinA = 0;
   int _inputbrokerPinB = 0;
   int _inputbrokerPinPress = 0;
-  pb.ModuleConfig_CannedMessageConfig_InputEventChar? _inputbrokerEventCw;
-  pb.ModuleConfig_CannedMessageConfig_InputEventChar? _inputbrokerEventCcw;
-  pb.ModuleConfig_CannedMessageConfig_InputEventChar? _inputbrokerEventPress;
+  module_pb.ModuleConfig_CannedMessageConfig_InputEventChar?
+  _inputbrokerEventCw;
+  module_pb.ModuleConfig_CannedMessageConfig_InputEventChar?
+  _inputbrokerEventCcw;
+  module_pb.ModuleConfig_CannedMessageConfig_InputEventChar?
+  _inputbrokerEventPress;
   int _configPreset = 0; // 0=Manual, 1=RAK Rotary Encoder, 2=CardKB
-  StreamSubscription<pb.ModuleConfig_CannedMessageConfig>? _configSubscription;
+  StreamSubscription<module_pb.ModuleConfig_CannedMessageConfig>?
+  _configSubscription;
 
   @override
   void initState() {
@@ -47,7 +52,7 @@ class _CannedMessageModuleConfigScreenState
     super.dispose();
   }
 
-  void _applyConfig(pb.ModuleConfig_CannedMessageConfig config) {
+  void _applyConfig(module_pb.ModuleConfig_CannedMessageConfig config) {
     setState(() {
       _enabled = config.enabled;
       _sendBell = config.sendBell;
@@ -84,7 +89,7 @@ class _CannedMessageModuleConfigScreenState
 
         // Request fresh config from device
         await protocol.getModuleConfig(
-          pb.AdminMessage_ModuleConfigType.CANNEDMSG_CONFIG,
+          admin.AdminMessage_ModuleConfigType.CANNEDMSG_CONFIG,
         );
       }
     } finally {
@@ -116,13 +121,13 @@ class _CannedMessageModuleConfigScreenState
         inputbrokerPinPress: _inputbrokerPinPress,
         inputbrokerEventCw:
             _inputbrokerEventCw ??
-            pb.ModuleConfig_CannedMessageConfig_InputEventChar.NONE,
+            module_pb.ModuleConfig_CannedMessageConfig_InputEventChar.NONE,
         inputbrokerEventCcw:
             _inputbrokerEventCcw ??
-            pb.ModuleConfig_CannedMessageConfig_InputEventChar.NONE,
+            module_pb.ModuleConfig_CannedMessageConfig_InputEventChar.NONE,
         inputbrokerEventPress:
             _inputbrokerEventPress ??
-            pb.ModuleConfig_CannedMessageConfig_InputEventChar.NONE,
+            module_pb.ModuleConfig_CannedMessageConfig_InputEventChar.NONE,
       );
 
       if (mounted) {
@@ -149,11 +154,11 @@ class _CannedMessageModuleConfigScreenState
         _inputbrokerPinB = 10;
         _inputbrokerPinPress = 9;
         _inputbrokerEventCw =
-            pb.ModuleConfig_CannedMessageConfig_InputEventChar.DOWN;
+            module_pb.ModuleConfig_CannedMessageConfig_InputEventChar.DOWN;
         _inputbrokerEventCcw =
-            pb.ModuleConfig_CannedMessageConfig_InputEventChar.UP;
+            module_pb.ModuleConfig_CannedMessageConfig_InputEventChar.UP;
         _inputbrokerEventPress =
-            pb.ModuleConfig_CannedMessageConfig_InputEventChar.SELECT;
+            module_pb.ModuleConfig_CannedMessageConfig_InputEventChar.SELECT;
       } else if (preset == 2) {
         // CardKB / RAK Keypad
         _updown1Enabled = false;
@@ -162,11 +167,11 @@ class _CannedMessageModuleConfigScreenState
         _inputbrokerPinB = 0;
         _inputbrokerPinPress = 0;
         _inputbrokerEventCw =
-            pb.ModuleConfig_CannedMessageConfig_InputEventChar.NONE;
+            module_pb.ModuleConfig_CannedMessageConfig_InputEventChar.NONE;
         _inputbrokerEventCcw =
-            pb.ModuleConfig_CannedMessageConfig_InputEventChar.NONE;
+            module_pb.ModuleConfig_CannedMessageConfig_InputEventChar.NONE;
         _inputbrokerEventPress =
-            pb.ModuleConfig_CannedMessageConfig_InputEventChar.NONE;
+            module_pb.ModuleConfig_CannedMessageConfig_InputEventChar.NONE;
       }
     });
   }
@@ -491,14 +496,23 @@ class _CannedMessageModuleConfigScreenState
 
   Widget _buildKeyMappingSection() {
     final eventChars = [
-      (pb.ModuleConfig_CannedMessageConfig_InputEventChar.NONE, 'None'),
-      (pb.ModuleConfig_CannedMessageConfig_InputEventChar.UP, 'Up'),
-      (pb.ModuleConfig_CannedMessageConfig_InputEventChar.DOWN, 'Down'),
-      (pb.ModuleConfig_CannedMessageConfig_InputEventChar.LEFT, 'Left'),
-      (pb.ModuleConfig_CannedMessageConfig_InputEventChar.RIGHT, 'Right'),
-      (pb.ModuleConfig_CannedMessageConfig_InputEventChar.SELECT, 'Select'),
-      (pb.ModuleConfig_CannedMessageConfig_InputEventChar.BACK, 'Back'),
-      (pb.ModuleConfig_CannedMessageConfig_InputEventChar.CANCEL, 'Cancel'),
+      (module_pb.ModuleConfig_CannedMessageConfig_InputEventChar.NONE, 'None'),
+      (module_pb.ModuleConfig_CannedMessageConfig_InputEventChar.UP, 'Up'),
+      (module_pb.ModuleConfig_CannedMessageConfig_InputEventChar.DOWN, 'Down'),
+      (module_pb.ModuleConfig_CannedMessageConfig_InputEventChar.LEFT, 'Left'),
+      (
+        module_pb.ModuleConfig_CannedMessageConfig_InputEventChar.RIGHT,
+        'Right',
+      ),
+      (
+        module_pb.ModuleConfig_CannedMessageConfig_InputEventChar.SELECT,
+        'Select',
+      ),
+      (module_pb.ModuleConfig_CannedMessageConfig_InputEventChar.BACK, 'Back'),
+      (
+        module_pb.ModuleConfig_CannedMessageConfig_InputEventChar.CANCEL,
+        'Cancel',
+      ),
     ];
 
     return Container(
@@ -523,7 +537,7 @@ class _CannedMessageModuleConfigScreenState
           _buildEventPicker(
             'Clockwise Event',
             _inputbrokerEventCw ??
-                pb.ModuleConfig_CannedMessageConfig_InputEventChar.NONE,
+                module_pb.ModuleConfig_CannedMessageConfig_InputEventChar.NONE,
             eventChars,
             (value) {
               setState(() => _inputbrokerEventCw = value);
@@ -533,7 +547,7 @@ class _CannedMessageModuleConfigScreenState
           _buildEventPicker(
             'Counter-Clockwise Event',
             _inputbrokerEventCcw ??
-                pb.ModuleConfig_CannedMessageConfig_InputEventChar.NONE,
+                module_pb.ModuleConfig_CannedMessageConfig_InputEventChar.NONE,
             eventChars,
             (value) {
               setState(() => _inputbrokerEventCcw = value);
@@ -543,7 +557,7 @@ class _CannedMessageModuleConfigScreenState
           _buildEventPicker(
             'Press Event',
             _inputbrokerEventPress ??
-                pb.ModuleConfig_CannedMessageConfig_InputEventChar.NONE,
+                module_pb.ModuleConfig_CannedMessageConfig_InputEventChar.NONE,
             eventChars,
             (value) {
               setState(() => _inputbrokerEventPress = value);
@@ -556,9 +570,11 @@ class _CannedMessageModuleConfigScreenState
 
   Widget _buildEventPicker(
     String label,
-    pb.ModuleConfig_CannedMessageConfig_InputEventChar value,
-    List<(pb.ModuleConfig_CannedMessageConfig_InputEventChar, String)> options,
-    Function(pb.ModuleConfig_CannedMessageConfig_InputEventChar) onChanged,
+    module_pb.ModuleConfig_CannedMessageConfig_InputEventChar value,
+    List<(module_pb.ModuleConfig_CannedMessageConfig_InputEventChar, String)>
+    options,
+    Function(module_pb.ModuleConfig_CannedMessageConfig_InputEventChar)
+    onChanged,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -581,7 +597,7 @@ class _CannedMessageModuleConfigScreenState
           ),
           child:
               DropdownButton<
-                pb.ModuleConfig_CannedMessageConfig_InputEventChar
+                module_pb.ModuleConfig_CannedMessageConfig_InputEventChar
               >(
                 value: value,
                 isExpanded: true,

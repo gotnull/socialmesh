@@ -7,7 +7,9 @@ import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
-import '../../generated/meshtastic/mesh.pb.dart' as pb;
+import '../../generated/meshtastic/config.pb.dart' as config_pb;
+import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
+import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
 import '../../core/widgets/loading_indicator.dart';
 
 /// Screen for configuring GPS and position settings
@@ -21,7 +23,7 @@ class PositionConfigScreen extends ConsumerStatefulWidget {
 
 class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
   bool _isLoading = false;
-  pb.Config_PositionConfig_GpsMode? _gpsMode;
+  config_pbenum.Config_PositionConfig_GpsMode? _gpsMode;
   bool _smartBroadcastEnabled = true;
   bool _fixedPosition = false;
   int _positionBroadcastSecs = 900;
@@ -42,7 +44,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
   bool _includeHeading = false;
   bool _includeSpeed = false;
 
-  StreamSubscription<pb.Config_PositionConfig>? _configSubscription;
+  StreamSubscription<config_pb.Config_PositionConfig>? _configSubscription;
 
   // Fixed position values
   final _latController = TextEditingController();
@@ -86,7 +88,9 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
         });
 
         // Request fresh config from device
-        await protocol.getConfig(pb.AdminMessage_ConfigType.POSITION_CONFIG);
+        await protocol.getConfig(
+          admin_pbenum.AdminMessage_ConfigType.POSITION_CONFIG,
+        );
 
         // Wait a bit for response
         await Future.delayed(const Duration(milliseconds: 500));
@@ -96,7 +100,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
     }
   }
 
-  void _applyConfig(pb.Config_PositionConfig config) {
+  void _applyConfig(config_pb.Config_PositionConfig config) {
     setState(() {
       _gpsMode = config.gpsMode;
       _smartBroadcastEnabled = config.positionBroadcastSmartEnabled;
@@ -171,7 +175,8 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
         positionBroadcastSecs: _positionBroadcastSecs,
         positionBroadcastSmartEnabled: _smartBroadcastEnabled,
         fixedPosition: _fixedPosition,
-        gpsMode: _gpsMode ?? pb.Config_PositionConfig_GpsMode.ENABLED,
+        gpsMode:
+            _gpsMode ?? config_pbenum.Config_PositionConfig_GpsMode.ENABLED,
         gpsUpdateInterval: _gpsUpdateInterval,
         gpsAttemptTime: _gpsAttemptTime,
         broadcastSmartMinimumDistance: _smartMinimumDistance,
@@ -925,19 +930,19 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
   Widget _buildGpsModeSelector() {
     final modes = [
       (
-        pb.Config_PositionConfig_GpsMode.ENABLED,
+        config_pbenum.Config_PositionConfig_GpsMode.ENABLED,
         'Enabled',
         'GPS is active and reports position',
         Icons.gps_fixed,
       ),
       (
-        pb.Config_PositionConfig_GpsMode.DISABLED,
+        config_pbenum.Config_PositionConfig_GpsMode.DISABLED,
         'Disabled',
         'GPS hardware is present but turned off',
         Icons.gps_off,
       ),
       (
-        pb.Config_PositionConfig_GpsMode.NOT_PRESENT,
+        config_pbenum.Config_PositionConfig_GpsMode.NOT_PRESENT,
         'Not Present',
         'No GPS hardware on this device',
         Icons.gps_not_fixed,

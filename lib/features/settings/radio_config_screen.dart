@@ -7,8 +7,9 @@ import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
-import '../../generated/meshtastic/mesh.pb.dart' as pb;
-import '../../generated/meshtastic/mesh.pbenum.dart' as pbenum;
+import '../../generated/meshtastic/config.pb.dart' as config_pb;
+import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
+import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
 import '../../core/widgets/loading_indicator.dart';
 
 /// Screen for configuring LoRa radio settings
@@ -21,8 +22,8 @@ class RadioConfigScreen extends ConsumerStatefulWidget {
 
 class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
   bool _isLoading = false;
-  pbenum.RegionCode? _selectedRegion;
-  pb.ModemPreset? _selectedModemPreset;
+  config_pbenum.Config_LoRaConfig_RegionCode? _selectedRegion;
+  config_pbenum.Config_LoRaConfig_ModemPreset? _selectedModemPreset;
   int _hopLimit = 3;
   bool _txEnabled = true;
   int _txPower = 0;
@@ -36,7 +37,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
   double _overrideFrequency = 0.0;
   bool _ignoreMqtt = false;
   bool _okToMqtt = false;
-  StreamSubscription<pb.Config_LoRaConfig>? _configSubscription;
+  StreamSubscription<config_pb.Config_LoRaConfig>? _configSubscription;
 
   @override
   void initState() {
@@ -50,7 +51,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
     super.dispose();
   }
 
-  void _applyConfig(pb.Config_LoRaConfig config) {
+  void _applyConfig(config_pb.Config_LoRaConfig config) {
     setState(() {
       _selectedRegion = config.region;
       _selectedModemPreset = config.modemPreset;
@@ -89,7 +90,9 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
         });
 
         // Request fresh config from device
-        await protocol.getConfig(pb.AdminMessage_ConfigType.LORA_CONFIG);
+        await protocol.getConfig(
+          admin_pbenum.AdminMessage_ConfigType.LORA_CONFIG,
+        );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -101,8 +104,11 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
     try {
       final protocol = ref.read(protocolServiceProvider);
       await protocol.setLoRaConfig(
-        region: _selectedRegion ?? pbenum.RegionCode.UNSET_REGION,
-        modemPreset: _selectedModemPreset ?? pb.ModemPreset.LONG_FAST,
+        region:
+            _selectedRegion ?? config_pbenum.Config_LoRaConfig_RegionCode.UNSET,
+        modemPreset:
+            _selectedModemPreset ??
+            config_pbenum.Config_LoRaConfig_ModemPreset.LONG_FAST,
         hopLimit: _hopLimit,
         txEnabled: _txEnabled,
         txPower: _txPower,
@@ -119,7 +125,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
 
       // Mark region as configured if a valid region was set
       if (_selectedRegion != null &&
-          _selectedRegion != pbenum.RegionCode.UNSET_REGION) {
+          _selectedRegion != config_pbenum.Config_LoRaConfig_RegionCode.UNSET) {
         final settings = await ref.read(settingsServiceProvider.future);
         await settings.setRegionConfigured(true);
       }
@@ -776,25 +782,53 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
 
   Widget _buildRegionSelector() {
     final regions = [
-      (pbenum.RegionCode.UNSET_REGION, 'Unset', 'Not configured'),
-      (pbenum.RegionCode.US, 'US', '915MHz'),
-      (pbenum.RegionCode.EU_433, 'EU 433', '433MHz'),
-      (pbenum.RegionCode.EU_868, 'EU 868', '868MHz'),
-      (pbenum.RegionCode.CN, 'China', '470MHz'),
-      (pbenum.RegionCode.JP, 'Japan', '920MHz'),
-      (pbenum.RegionCode.ANZ, 'ANZ', '915MHz'),
-      (pbenum.RegionCode.KR, 'Korea', '920MHz'),
-      (pbenum.RegionCode.TW, 'Taiwan', '920MHz'),
-      (pbenum.RegionCode.RU, 'Russia', '868MHz'),
-      (pbenum.RegionCode.IN, 'India', '865MHz'),
-      (pbenum.RegionCode.NZ_865, 'NZ 865', '865MHz'),
-      (pbenum.RegionCode.TH, 'Thailand', '920MHz'),
-      (pbenum.RegionCode.UA_433, 'Ukraine 433', '433MHz'),
-      (pbenum.RegionCode.UA_868, 'Ukraine 868', '868MHz'),
-      (pbenum.RegionCode.MY_433, 'Malaysia 433', '433MHz'),
-      (pbenum.RegionCode.MY_919, 'Malaysia 919', '919MHz'),
-      (pbenum.RegionCode.SG_923, 'Singapore', '923MHz'),
-      (pbenum.RegionCode.LORA_24, 'LoRa 2.4GHz', '2.4GHz'),
+      (
+        config_pbenum.Config_LoRaConfig_RegionCode.UNSET,
+        'Unset',
+        'Not configured',
+      ),
+      (config_pbenum.Config_LoRaConfig_RegionCode.US, 'US', '915MHz'),
+      (config_pbenum.Config_LoRaConfig_RegionCode.EU_433, 'EU 433', '433MHz'),
+      (config_pbenum.Config_LoRaConfig_RegionCode.EU_868, 'EU 868', '868MHz'),
+      (config_pbenum.Config_LoRaConfig_RegionCode.CN, 'China', '470MHz'),
+      (config_pbenum.Config_LoRaConfig_RegionCode.JP, 'Japan', '920MHz'),
+      (config_pbenum.Config_LoRaConfig_RegionCode.ANZ, 'ANZ', '915MHz'),
+      (config_pbenum.Config_LoRaConfig_RegionCode.KR, 'Korea', '920MHz'),
+      (config_pbenum.Config_LoRaConfig_RegionCode.TW, 'Taiwan', '920MHz'),
+      (config_pbenum.Config_LoRaConfig_RegionCode.RU, 'Russia', '868MHz'),
+      (config_pbenum.Config_LoRaConfig_RegionCode.IN, 'India', '865MHz'),
+      (config_pbenum.Config_LoRaConfig_RegionCode.NZ_865, 'NZ 865', '865MHz'),
+      (config_pbenum.Config_LoRaConfig_RegionCode.TH, 'Thailand', '920MHz'),
+      (
+        config_pbenum.Config_LoRaConfig_RegionCode.UA_433,
+        'Ukraine 433',
+        '433MHz',
+      ),
+      (
+        config_pbenum.Config_LoRaConfig_RegionCode.UA_868,
+        'Ukraine 868',
+        '868MHz',
+      ),
+      (
+        config_pbenum.Config_LoRaConfig_RegionCode.MY_433,
+        'Malaysia 433',
+        '433MHz',
+      ),
+      (
+        config_pbenum.Config_LoRaConfig_RegionCode.MY_919,
+        'Malaysia 919',
+        '919MHz',
+      ),
+      (
+        config_pbenum.Config_LoRaConfig_RegionCode.SG_923,
+        'Singapore',
+        '923MHz',
+      ),
+      (
+        config_pbenum.Config_LoRaConfig_RegionCode.LORA_24,
+        'LoRa 2.4GHz',
+        '2.4GHz',
+      ),
     ];
 
     return Container(
@@ -819,7 +853,7 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
               border: Border.all(color: context.border),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            child: DropdownButton<pbenum.RegionCode>(
+            child: DropdownButton<config_pbenum.Config_LoRaConfig_RegionCode>(
               isExpanded: true,
               underline: const SizedBox.shrink(),
               dropdownColor: context.card,
@@ -833,7 +867,9 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                   child: Text('${r.$2} (${r.$3})'),
                 );
               }).toList(),
-              value: _selectedRegion ?? pbenum.RegionCode.UNSET_REGION,
+              value:
+                  _selectedRegion ??
+                  config_pbenum.Config_LoRaConfig_RegionCode.UNSET,
               onChanged: (value) {
                 if (value != null) {
                   setState(() => _selectedRegion = value);
@@ -848,18 +884,46 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
 
   Widget _buildModemPresetSelector() {
     final presets = [
-      (pb.ModemPreset.LONG_FAST, 'Long Fast', 'Best range with good speed'),
-      (pb.ModemPreset.LONG_SLOW, 'Long Slow', 'Maximum range, slower'),
       (
-        pb.ModemPreset.VERY_LONG_SLOW,
+        config_pbenum.Config_LoRaConfig_ModemPreset.LONG_FAST,
+        'Long Fast',
+        'Best range with good speed',
+      ),
+      (
+        config_pbenum.Config_LoRaConfig_ModemPreset.LONG_SLOW,
+        'Long Slow',
+        'Maximum range, slower',
+      ),
+      (
+        config_pbenum.Config_LoRaConfig_ModemPreset.VERY_LONG_SLOW,
         'Very Long Slow',
         'Extreme range, very slow',
       ),
-      (pb.ModemPreset.LONG_MODERATE, 'Long Moderate', 'Good balance'),
-      (pb.ModemPreset.MEDIUM_FAST, 'Medium Fast', 'Medium range, fast'),
-      (pb.ModemPreset.MEDIUM_SLOW, 'Medium Slow', 'Medium range, reliable'),
-      (pb.ModemPreset.SHORT_FAST, 'Short Fast', 'Short range, fastest'),
-      (pb.ModemPreset.SHORT_SLOW, 'Short Slow', 'Short range, reliable'),
+      (
+        config_pbenum.Config_LoRaConfig_ModemPreset.LONG_MODERATE,
+        'Long Moderate',
+        'Good balance',
+      ),
+      (
+        config_pbenum.Config_LoRaConfig_ModemPreset.MEDIUM_FAST,
+        'Medium Fast',
+        'Medium range, fast',
+      ),
+      (
+        config_pbenum.Config_LoRaConfig_ModemPreset.MEDIUM_SLOW,
+        'Medium Slow',
+        'Medium range, reliable',
+      ),
+      (
+        config_pbenum.Config_LoRaConfig_ModemPreset.SHORT_FAST,
+        'Short Fast',
+        'Short range, fastest',
+      ),
+      (
+        config_pbenum.Config_LoRaConfig_ModemPreset.SHORT_SLOW,
+        'Short Slow',
+        'Short range, reliable',
+      ),
     ];
 
     return Container(

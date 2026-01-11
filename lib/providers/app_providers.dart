@@ -17,7 +17,7 @@ import '../services/ifttt/ifttt_service.dart';
 import '../features/automations/automation_providers.dart';
 import '../features/automations/automation_engine.dart';
 import '../models/mesh_models.dart';
-import '../generated/meshtastic/mesh.pbenum.dart' as pbenum;
+import '../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import 'social_providers.dart';
 import 'telemetry_providers.dart';
 import 'connection_providers.dart';
@@ -2082,25 +2082,27 @@ final nodeDiscoveryNotifierProvider =
     );
 
 /// Current device region - stream that emits region updates
-final deviceRegionProvider = StreamProvider<pbenum.RegionCode>((ref) async* {
-  final protocol = ref.watch(protocolServiceProvider);
+final deviceRegionProvider =
+    StreamProvider<config_pbenum.Config_LoRaConfig_RegionCode>((ref) async* {
+      final protocol = ref.watch(protocolServiceProvider);
 
-  // Emit current region if available
-  if (protocol.currentRegion != null) {
-    yield protocol.currentRegion!;
-  }
+      // Emit current region if available
+      if (protocol.currentRegion != null) {
+        yield protocol.currentRegion!;
+      }
 
-  // Emit future updates
-  await for (final region in protocol.regionStream) {
-    yield region;
-  }
-});
+      // Emit future updates
+      await for (final region in protocol.regionStream) {
+        yield region;
+      }
+    });
 
 /// Needs region setup - true if region is UNSET
 final needsRegionSetupProvider = Provider<bool>((ref) {
   final regionAsync = ref.watch(deviceRegionProvider);
   return regionAsync.whenOrNull(
-        data: (region) => region == pbenum.RegionCode.UNSET_REGION,
+        data: (region) =>
+            region == config_pbenum.Config_LoRaConfig_RegionCode.UNSET,
       ) ??
       false;
 });

@@ -10,7 +10,8 @@ import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
-import '../../generated/meshtastic/mesh.pb.dart' as pb;
+import '../../generated/meshtastic/config.pb.dart' as config_pb;
+import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
 import 'package:cryptography/cryptography.dart';
 import '../../core/widgets/loading_indicator.dart';
 
@@ -38,7 +39,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
   String _adminKey3 = '';
   bool _privateKeyVisible = false;
 
-  StreamSubscription<pb.Config_SecurityConfig>? _configSubscription;
+  StreamSubscription<config_pb.Config_SecurityConfig>? _configSubscription;
 
   @override
   void initState() {
@@ -52,7 +53,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
     super.dispose();
   }
 
-  void _applyConfig(pb.Config_SecurityConfig config) {
+  void _applyConfig(config_pb.Config_SecurityConfig config) {
     setState(() {
       _isManaged = config.isManaged;
       _serialEnabled = config.serialEnabled;
@@ -99,7 +100,9 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
         });
 
         // Request fresh config from device
-        await protocol.getConfig(pb.AdminMessage_ConfigType.SECURITY_CONFIG);
+        await protocol.getConfig(
+          admin_pbenum.AdminMessage_ConfigType.SECURITY_CONFIG,
+        );
       }
     } finally {
       if (mounted) setState(() => _loading = false);

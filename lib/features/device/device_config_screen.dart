@@ -5,12 +5,12 @@ import '../../core/theme.dart';
 import '../../core/widgets/info_table.dart';
 import '../../providers/app_providers.dart';
 import '../../utils/snackbar.dart';
-import '../../generated/meshtastic/mesh.pbenum.dart' as pb;
+import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import '../../utils/validation.dart';
 
 /// Device role options with descriptions
 class DeviceRoleOption {
-  final pb.Config_DeviceConfig_Role role;
+  final config_pbenum.Config_DeviceConfig_Role role;
   final String displayName;
   final String description;
 
@@ -19,57 +19,57 @@ class DeviceRoleOption {
 
 final deviceRoles = [
   DeviceRoleOption(
-    pb.Config_DeviceConfig_Role.CLIENT,
+    config_pbenum.Config_DeviceConfig_Role.CLIENT,
     'Client',
     'Default role. Mesh packets are routed through this node. Can send and receive messages.',
   ),
   DeviceRoleOption(
-    pb.Config_DeviceConfig_Role.CLIENT_MUTE,
+    config_pbenum.Config_DeviceConfig_Role.CLIENT_MUTE,
     'Client Mute',
     'Same as client but will not transmit any messages from itself. Useful for monitoring.',
   ),
   DeviceRoleOption(
-    pb.Config_DeviceConfig_Role.ROUTER,
+    config_pbenum.Config_DeviceConfig_Role.ROUTER,
     'Router',
     'Routes mesh packets between nodes. Screen and Bluetooth disabled to conserve power.',
   ),
   DeviceRoleOption(
-    pb.Config_DeviceConfig_Role.ROUTER_CLIENT,
+    config_pbenum.Config_DeviceConfig_Role.ROUTER_CLIENT,
     'Router & Client',
     'Combination of Router and Client. Routes packets while allowing full device usage.',
   ),
   DeviceRoleOption(
-    pb.Config_DeviceConfig_Role.REPEATER,
+    config_pbenum.Config_DeviceConfig_Role.REPEATER,
     'Repeater',
     'Focuses purely on retransmitting packets. Lowest power mode for extending network range.',
   ),
   DeviceRoleOption(
-    pb.Config_DeviceConfig_Role.TRACKER,
+    config_pbenum.Config_DeviceConfig_Role.TRACKER,
     'Tracker',
     'Optimized for GPS tracking. Sends position updates at defined intervals.',
   ),
   DeviceRoleOption(
-    pb.Config_DeviceConfig_Role.SENSOR,
+    config_pbenum.Config_DeviceConfig_Role.SENSOR,
     'Sensor',
     'Designed for remote sensing. Reports telemetry data at defined intervals.',
   ),
   DeviceRoleOption(
-    pb.Config_DeviceConfig_Role.TAK,
+    config_pbenum.Config_DeviceConfig_Role.TAK,
     'TAK',
     'Team Awareness Kit integration. Bridges Meshtastic and TAK systems.',
   ),
   DeviceRoleOption(
-    pb.Config_DeviceConfig_Role.CLIENT_HIDDEN,
+    config_pbenum.Config_DeviceConfig_Role.CLIENT_HIDDEN,
     'Client Hidden',
     'Acts as client but hides from the node list. Still routes traffic.',
   ),
   DeviceRoleOption(
-    pb.Config_DeviceConfig_Role.LOST_AND_FOUND,
+    config_pbenum.Config_DeviceConfig_Role.LOST_AND_FOUND,
     'Lost and Found',
     'Optimized for finding lost devices. Sends periodic beacons.',
   ),
   DeviceRoleOption(
-    pb.Config_DeviceConfig_Role.TAK_TRACKER,
+    config_pbenum.Config_DeviceConfig_Role.TAK_TRACKER,
     'TAK Tracker',
     'Combination of TAK and Tracker modes.',
   ),
@@ -83,7 +83,7 @@ class DeviceConfigScreen extends ConsumerStatefulWidget {
 }
 
 class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
-  pb.Config_DeviceConfig_Role? _selectedRole;
+  config_pbenum.Config_DeviceConfig_Role? _selectedRole;
   bool _isSaving = false;
   bool _hasChanges = false;
 
@@ -124,18 +124,19 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
       if (myNode.role != null) {
         final roleString = myNode.role!.toUpperCase().replaceAll(' ', '_');
         try {
-          _selectedRole = pb.Config_DeviceConfig_Role.values.firstWhere(
-            (r) => r.name == roleString,
-            orElse: () => pb.Config_DeviceConfig_Role.CLIENT,
-          );
+          _selectedRole = config_pbenum.Config_DeviceConfig_Role.values
+              .firstWhere(
+                (r) => r.name == roleString,
+                orElse: () => config_pbenum.Config_DeviceConfig_Role.CLIENT,
+              );
         } catch (e) {
-          _selectedRole = pb.Config_DeviceConfig_Role.CLIENT;
+          _selectedRole = config_pbenum.Config_DeviceConfig_Role.CLIENT;
         }
       } else {
-        _selectedRole = pb.Config_DeviceConfig_Role.CLIENT;
+        _selectedRole = config_pbenum.Config_DeviceConfig_Role.CLIENT;
       }
     } else {
-      _selectedRole = pb.Config_DeviceConfig_Role.CLIENT;
+      _selectedRole = config_pbenum.Config_DeviceConfig_Role.CLIENT;
     }
   }
 

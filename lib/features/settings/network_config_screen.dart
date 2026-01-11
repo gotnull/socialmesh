@@ -7,7 +7,8 @@ import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
-import '../../generated/meshtastic/mesh.pb.dart' as pb;
+import '../../generated/meshtastic/config.pb.dart' as config_pb;
+import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
 import '../../core/widgets/loading_indicator.dart';
 
 class NetworkConfigScreen extends ConsumerStatefulWidget {
@@ -24,7 +25,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
   bool _saving = false;
   bool _loading = false;
   bool _obscurePassword = true;
-  StreamSubscription<pb.Config_NetworkConfig>? _configSubscription;
+  StreamSubscription<config_pb.Config_NetworkConfig>? _configSubscription;
 
   final _ssidController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -46,7 +47,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
     super.dispose();
   }
 
-  void _applyConfig(pb.Config_NetworkConfig config) {
+  void _applyConfig(config_pb.Config_NetworkConfig config) {
     setState(() {
       _wifiEnabled = config.wifiEnabled;
       _ethEnabled = config.ethEnabled;
@@ -77,7 +78,9 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
         });
 
         // Request fresh config from device
-        await protocol.getConfig(pb.AdminMessage_ConfigType.NETWORK_CONFIG);
+        await protocol.getConfig(
+          admin_pbenum.AdminMessage_ConfigType.NETWORK_CONFIG,
+        );
       }
     } finally {
       if (mounted) setState(() => _loading = false);

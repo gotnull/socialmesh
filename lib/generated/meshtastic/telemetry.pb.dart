@@ -12,9 +12,12 @@
 
 import 'dart:core' as $core;
 
+import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
+
+export 'telemetry.pbenum.dart';
 
 ///
 ///  Key native device metrics such as battery level
@@ -297,7 +300,7 @@ class EnvironmentMetrics extends $pb.GeneratedMessage {
   void clearGasResistance() => $_clearField(4);
 
   ///
-  ///  Voltage measured
+  ///  Voltage measured (To be depreciated in favor of PowerMetrics in Meshtastic 3.x)
   @$pb.TagNumber(5)
   $core.double get voltage => $_getN(4);
   @$pb.TagNumber(5)
@@ -308,7 +311,7 @@ class EnvironmentMetrics extends $pb.GeneratedMessage {
   void clearVoltage() => $_clearField(5);
 
   ///
-  ///  Current measured
+  ///  Current measured (To be depreciated in favor of PowerMetrics in Meshtastic 3.x)
   @$pb.TagNumber(6)
   $core.double get current => $_getN(5);
   @$pb.TagNumber(6)
@@ -320,6 +323,7 @@ class EnvironmentMetrics extends $pb.GeneratedMessage {
 
   ///
   ///  relative scale IAQ value as measured by Bosch BME680 . value 0-500.
+  ///  Belongs to Air Quality but is not particle but VOC measurement. Other VOC values can also be put in here.
   @$pb.TagNumber(7)
   $core.int get iaq => $_getIZ(6);
   @$pb.TagNumber(7)
@@ -385,7 +389,8 @@ class EnvironmentMetrics extends $pb.GeneratedMessage {
   void clearUvLux() => $_clearField(12);
 
   ///
-  ///  Wind direction in degrees (0 = North, 90 = East, etc.)
+  ///  Wind direction in degrees
+  ///  0 degrees = North, 90 = East, etc...
   @$pb.TagNumber(13)
   $core.int get windDirection => $_getIZ(12);
   @$pb.TagNumber(13)
@@ -505,6 +510,16 @@ class PowerMetrics extends $pb.GeneratedMessage {
     $core.double? ch2Current,
     $core.double? ch3Voltage,
     $core.double? ch3Current,
+    $core.double? ch4Voltage,
+    $core.double? ch4Current,
+    $core.double? ch5Voltage,
+    $core.double? ch5Current,
+    $core.double? ch6Voltage,
+    $core.double? ch6Current,
+    $core.double? ch7Voltage,
+    $core.double? ch7Current,
+    $core.double? ch8Voltage,
+    $core.double? ch8Current,
   }) {
     final result = create();
     if (ch1Voltage != null) result.ch1Voltage = ch1Voltage;
@@ -513,6 +528,16 @@ class PowerMetrics extends $pb.GeneratedMessage {
     if (ch2Current != null) result.ch2Current = ch2Current;
     if (ch3Voltage != null) result.ch3Voltage = ch3Voltage;
     if (ch3Current != null) result.ch3Current = ch3Current;
+    if (ch4Voltage != null) result.ch4Voltage = ch4Voltage;
+    if (ch4Current != null) result.ch4Current = ch4Current;
+    if (ch5Voltage != null) result.ch5Voltage = ch5Voltage;
+    if (ch5Current != null) result.ch5Current = ch5Current;
+    if (ch6Voltage != null) result.ch6Voltage = ch6Voltage;
+    if (ch6Current != null) result.ch6Current = ch6Current;
+    if (ch7Voltage != null) result.ch7Voltage = ch7Voltage;
+    if (ch7Current != null) result.ch7Current = ch7Current;
+    if (ch8Voltage != null) result.ch8Voltage = ch8Voltage;
+    if (ch8Current != null) result.ch8Current = ch8Current;
     return result;
   }
 
@@ -535,6 +560,16 @@ class PowerMetrics extends $pb.GeneratedMessage {
     ..aD(4, _omitFieldNames ? '' : 'ch2Current', fieldType: $pb.PbFieldType.OF)
     ..aD(5, _omitFieldNames ? '' : 'ch3Voltage', fieldType: $pb.PbFieldType.OF)
     ..aD(6, _omitFieldNames ? '' : 'ch3Current', fieldType: $pb.PbFieldType.OF)
+    ..aD(7, _omitFieldNames ? '' : 'ch4Voltage', fieldType: $pb.PbFieldType.OF)
+    ..aD(8, _omitFieldNames ? '' : 'ch4Current', fieldType: $pb.PbFieldType.OF)
+    ..aD(9, _omitFieldNames ? '' : 'ch5Voltage', fieldType: $pb.PbFieldType.OF)
+    ..aD(10, _omitFieldNames ? '' : 'ch5Current', fieldType: $pb.PbFieldType.OF)
+    ..aD(11, _omitFieldNames ? '' : 'ch6Voltage', fieldType: $pb.PbFieldType.OF)
+    ..aD(12, _omitFieldNames ? '' : 'ch6Current', fieldType: $pb.PbFieldType.OF)
+    ..aD(13, _omitFieldNames ? '' : 'ch7Voltage', fieldType: $pb.PbFieldType.OF)
+    ..aD(14, _omitFieldNames ? '' : 'ch7Current', fieldType: $pb.PbFieldType.OF)
+    ..aD(15, _omitFieldNames ? '' : 'ch8Voltage', fieldType: $pb.PbFieldType.OF)
+    ..aD(16, _omitFieldNames ? '' : 'ch8Current', fieldType: $pb.PbFieldType.OF)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -621,6 +656,116 @@ class PowerMetrics extends $pb.GeneratedMessage {
   $core.bool hasCh3Current() => $_has(5);
   @$pb.TagNumber(6)
   void clearCh3Current() => $_clearField(6);
+
+  ///
+  ///  Voltage (Ch4)
+  @$pb.TagNumber(7)
+  $core.double get ch4Voltage => $_getN(6);
+  @$pb.TagNumber(7)
+  set ch4Voltage($core.double value) => $_setFloat(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasCh4Voltage() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearCh4Voltage() => $_clearField(7);
+
+  ///
+  ///  Current (Ch4)
+  @$pb.TagNumber(8)
+  $core.double get ch4Current => $_getN(7);
+  @$pb.TagNumber(8)
+  set ch4Current($core.double value) => $_setFloat(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasCh4Current() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearCh4Current() => $_clearField(8);
+
+  ///
+  ///  Voltage (Ch5)
+  @$pb.TagNumber(9)
+  $core.double get ch5Voltage => $_getN(8);
+  @$pb.TagNumber(9)
+  set ch5Voltage($core.double value) => $_setFloat(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasCh5Voltage() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearCh5Voltage() => $_clearField(9);
+
+  ///
+  ///  Current (Ch5)
+  @$pb.TagNumber(10)
+  $core.double get ch5Current => $_getN(9);
+  @$pb.TagNumber(10)
+  set ch5Current($core.double value) => $_setFloat(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasCh5Current() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearCh5Current() => $_clearField(10);
+
+  ///
+  ///  Voltage (Ch6)
+  @$pb.TagNumber(11)
+  $core.double get ch6Voltage => $_getN(10);
+  @$pb.TagNumber(11)
+  set ch6Voltage($core.double value) => $_setFloat(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasCh6Voltage() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearCh6Voltage() => $_clearField(11);
+
+  ///
+  ///  Current (Ch6)
+  @$pb.TagNumber(12)
+  $core.double get ch6Current => $_getN(11);
+  @$pb.TagNumber(12)
+  set ch6Current($core.double value) => $_setFloat(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasCh6Current() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearCh6Current() => $_clearField(12);
+
+  ///
+  ///  Voltage (Ch7)
+  @$pb.TagNumber(13)
+  $core.double get ch7Voltage => $_getN(12);
+  @$pb.TagNumber(13)
+  set ch7Voltage($core.double value) => $_setFloat(12, value);
+  @$pb.TagNumber(13)
+  $core.bool hasCh7Voltage() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearCh7Voltage() => $_clearField(13);
+
+  ///
+  ///  Current (Ch7)
+  @$pb.TagNumber(14)
+  $core.double get ch7Current => $_getN(13);
+  @$pb.TagNumber(14)
+  set ch7Current($core.double value) => $_setFloat(13, value);
+  @$pb.TagNumber(14)
+  $core.bool hasCh7Current() => $_has(13);
+  @$pb.TagNumber(14)
+  void clearCh7Current() => $_clearField(14);
+
+  ///
+  ///  Voltage (Ch8)
+  @$pb.TagNumber(15)
+  $core.double get ch8Voltage => $_getN(14);
+  @$pb.TagNumber(15)
+  set ch8Voltage($core.double value) => $_setFloat(14, value);
+  @$pb.TagNumber(15)
+  $core.bool hasCh8Voltage() => $_has(14);
+  @$pb.TagNumber(15)
+  void clearCh8Voltage() => $_clearField(15);
+
+  ///
+  ///  Current (Ch8)
+  @$pb.TagNumber(16)
+  $core.double get ch8Current => $_getN(15);
+  @$pb.TagNumber(16)
+  set ch8Current($core.double value) => $_setFloat(15, value);
+  @$pb.TagNumber(16)
+  $core.bool hasCh8Current() => $_has(15);
+  @$pb.TagNumber(16)
+  void clearCh8Current() => $_clearField(16);
 }
 
 ///
@@ -640,6 +785,18 @@ class AirQualityMetrics extends $pb.GeneratedMessage {
     $core.int? particles50um,
     $core.int? particles100um,
     $core.int? co2,
+    $core.double? co2Temperature,
+    $core.double? co2Humidity,
+    $core.double? formFormaldehyde,
+    $core.double? formHumidity,
+    $core.double? formTemperature,
+    $core.int? pm40Standard,
+    $core.int? particles40um,
+    $core.double? pmTemperature,
+    $core.double? pmHumidity,
+    $core.double? pmVocIdx,
+    $core.double? pmNoxIdx,
+    $core.double? particlesTps,
   }) {
     final result = create();
     if (pm10Standard != null) result.pm10Standard = pm10Standard;
@@ -656,6 +813,18 @@ class AirQualityMetrics extends $pb.GeneratedMessage {
     if (particles50um != null) result.particles50um = particles50um;
     if (particles100um != null) result.particles100um = particles100um;
     if (co2 != null) result.co2 = co2;
+    if (co2Temperature != null) result.co2Temperature = co2Temperature;
+    if (co2Humidity != null) result.co2Humidity = co2Humidity;
+    if (formFormaldehyde != null) result.formFormaldehyde = formFormaldehyde;
+    if (formHumidity != null) result.formHumidity = formHumidity;
+    if (formTemperature != null) result.formTemperature = formTemperature;
+    if (pm40Standard != null) result.pm40Standard = pm40Standard;
+    if (particles40um != null) result.particles40um = particles40um;
+    if (pmTemperature != null) result.pmTemperature = pmTemperature;
+    if (pmHumidity != null) result.pmHumidity = pmHumidity;
+    if (pmVocIdx != null) result.pmVocIdx = pmVocIdx;
+    if (pmNoxIdx != null) result.pmNoxIdx = pmNoxIdx;
+    if (particlesTps != null) result.particlesTps = particlesTps;
     return result;
   }
 
@@ -697,6 +866,27 @@ class AirQualityMetrics extends $pb.GeneratedMessage {
     ..aI(12, _omitFieldNames ? '' : 'particles100um',
         protoName: 'particles_100um', fieldType: $pb.PbFieldType.OU3)
     ..aI(13, _omitFieldNames ? '' : 'co2', fieldType: $pb.PbFieldType.OU3)
+    ..aD(14, _omitFieldNames ? '' : 'co2Temperature',
+        fieldType: $pb.PbFieldType.OF)
+    ..aD(15, _omitFieldNames ? '' : 'co2Humidity',
+        fieldType: $pb.PbFieldType.OF)
+    ..aD(16, _omitFieldNames ? '' : 'formFormaldehyde',
+        fieldType: $pb.PbFieldType.OF)
+    ..aD(17, _omitFieldNames ? '' : 'formHumidity',
+        fieldType: $pb.PbFieldType.OF)
+    ..aD(18, _omitFieldNames ? '' : 'formTemperature',
+        fieldType: $pb.PbFieldType.OF)
+    ..aI(19, _omitFieldNames ? '' : 'pm40Standard',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(20, _omitFieldNames ? '' : 'particles40um',
+        protoName: 'particles_40um', fieldType: $pb.PbFieldType.OU3)
+    ..aD(21, _omitFieldNames ? '' : 'pmTemperature',
+        fieldType: $pb.PbFieldType.OF)
+    ..aD(22, _omitFieldNames ? '' : 'pmHumidity', fieldType: $pb.PbFieldType.OF)
+    ..aD(23, _omitFieldNames ? '' : 'pmVocIdx', fieldType: $pb.PbFieldType.OF)
+    ..aD(24, _omitFieldNames ? '' : 'pmNoxIdx', fieldType: $pb.PbFieldType.OF)
+    ..aD(25, _omitFieldNames ? '' : 'particlesTps',
+        fieldType: $pb.PbFieldType.OF)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -860,6 +1050,138 @@ class AirQualityMetrics extends $pb.GeneratedMessage {
   $core.bool hasCo2() => $_has(12);
   @$pb.TagNumber(13)
   void clearCo2() => $_clearField(13);
+
+  ///
+  ///  CO2 sensor temperature in degC
+  @$pb.TagNumber(14)
+  $core.double get co2Temperature => $_getN(13);
+  @$pb.TagNumber(14)
+  set co2Temperature($core.double value) => $_setFloat(13, value);
+  @$pb.TagNumber(14)
+  $core.bool hasCo2Temperature() => $_has(13);
+  @$pb.TagNumber(14)
+  void clearCo2Temperature() => $_clearField(14);
+
+  ///
+  ///  CO2 sensor relative humidity in %
+  @$pb.TagNumber(15)
+  $core.double get co2Humidity => $_getN(14);
+  @$pb.TagNumber(15)
+  set co2Humidity($core.double value) => $_setFloat(14, value);
+  @$pb.TagNumber(15)
+  $core.bool hasCo2Humidity() => $_has(14);
+  @$pb.TagNumber(15)
+  void clearCo2Humidity() => $_clearField(15);
+
+  ///
+  ///  Formaldehyde sensor formaldehyde concentration in ppb
+  @$pb.TagNumber(16)
+  $core.double get formFormaldehyde => $_getN(15);
+  @$pb.TagNumber(16)
+  set formFormaldehyde($core.double value) => $_setFloat(15, value);
+  @$pb.TagNumber(16)
+  $core.bool hasFormFormaldehyde() => $_has(15);
+  @$pb.TagNumber(16)
+  void clearFormFormaldehyde() => $_clearField(16);
+
+  ///
+  ///  Formaldehyde sensor relative humidity in %RH
+  @$pb.TagNumber(17)
+  $core.double get formHumidity => $_getN(16);
+  @$pb.TagNumber(17)
+  set formHumidity($core.double value) => $_setFloat(16, value);
+  @$pb.TagNumber(17)
+  $core.bool hasFormHumidity() => $_has(16);
+  @$pb.TagNumber(17)
+  void clearFormHumidity() => $_clearField(17);
+
+  ///
+  ///  Formaldehyde sensor temperature in degrees Celsius
+  @$pb.TagNumber(18)
+  $core.double get formTemperature => $_getN(17);
+  @$pb.TagNumber(18)
+  set formTemperature($core.double value) => $_setFloat(17, value);
+  @$pb.TagNumber(18)
+  $core.bool hasFormTemperature() => $_has(17);
+  @$pb.TagNumber(18)
+  void clearFormTemperature() => $_clearField(18);
+
+  ///
+  ///  Concentration Units Standard PM4.0 in ug/m3
+  @$pb.TagNumber(19)
+  $core.int get pm40Standard => $_getIZ(18);
+  @$pb.TagNumber(19)
+  set pm40Standard($core.int value) => $_setUnsignedInt32(18, value);
+  @$pb.TagNumber(19)
+  $core.bool hasPm40Standard() => $_has(18);
+  @$pb.TagNumber(19)
+  void clearPm40Standard() => $_clearField(19);
+
+  ///
+  ///  4.0um Particle Count in #/0.1l
+  @$pb.TagNumber(20)
+  $core.int get particles40um => $_getIZ(19);
+  @$pb.TagNumber(20)
+  set particles40um($core.int value) => $_setUnsignedInt32(19, value);
+  @$pb.TagNumber(20)
+  $core.bool hasParticles40um() => $_has(19);
+  @$pb.TagNumber(20)
+  void clearParticles40um() => $_clearField(20);
+
+  ///
+  ///  PM Sensor Temperature
+  @$pb.TagNumber(21)
+  $core.double get pmTemperature => $_getN(20);
+  @$pb.TagNumber(21)
+  set pmTemperature($core.double value) => $_setFloat(20, value);
+  @$pb.TagNumber(21)
+  $core.bool hasPmTemperature() => $_has(20);
+  @$pb.TagNumber(21)
+  void clearPmTemperature() => $_clearField(21);
+
+  ///
+  ///  PM Sensor humidity
+  @$pb.TagNumber(22)
+  $core.double get pmHumidity => $_getN(21);
+  @$pb.TagNumber(22)
+  set pmHumidity($core.double value) => $_setFloat(21, value);
+  @$pb.TagNumber(22)
+  $core.bool hasPmHumidity() => $_has(21);
+  @$pb.TagNumber(22)
+  void clearPmHumidity() => $_clearField(22);
+
+  ///
+  ///  PM Sensor VOC Index
+  @$pb.TagNumber(23)
+  $core.double get pmVocIdx => $_getN(22);
+  @$pb.TagNumber(23)
+  set pmVocIdx($core.double value) => $_setFloat(22, value);
+  @$pb.TagNumber(23)
+  $core.bool hasPmVocIdx() => $_has(22);
+  @$pb.TagNumber(23)
+  void clearPmVocIdx() => $_clearField(23);
+
+  ///
+  ///  PM Sensor NOx Index
+  @$pb.TagNumber(24)
+  $core.double get pmNoxIdx => $_getN(23);
+  @$pb.TagNumber(24)
+  set pmNoxIdx($core.double value) => $_setFloat(23, value);
+  @$pb.TagNumber(24)
+  $core.bool hasPmNoxIdx() => $_has(23);
+  @$pb.TagNumber(24)
+  void clearPmNoxIdx() => $_clearField(24);
+
+  ///
+  ///  Typical Particle Size in um
+  @$pb.TagNumber(25)
+  $core.double get particlesTps => $_getN(24);
+  @$pb.TagNumber(25)
+  set particlesTps($core.double value) => $_setFloat(24, value);
+  @$pb.TagNumber(25)
+  $core.bool hasParticlesTps() => $_has(24);
+  @$pb.TagNumber(25)
+  void clearParticlesTps() => $_clearField(25);
 }
 
 ///
@@ -874,6 +1196,12 @@ class LocalStats extends $pb.GeneratedMessage {
     $core.int? numPacketsRxBad,
     $core.int? numOnlineNodes,
     $core.int? numTotalNodes,
+    $core.int? numRxDupe,
+    $core.int? numTxRelay,
+    $core.int? numTxRelayCanceled,
+    $core.int? heapTotalBytes,
+    $core.int? heapFreeBytes,
+    $core.int? numTxDropped,
   }) {
     final result = create();
     if (uptimeSeconds != null) result.uptimeSeconds = uptimeSeconds;
@@ -885,6 +1213,13 @@ class LocalStats extends $pb.GeneratedMessage {
     if (numPacketsRxBad != null) result.numPacketsRxBad = numPacketsRxBad;
     if (numOnlineNodes != null) result.numOnlineNodes = numOnlineNodes;
     if (numTotalNodes != null) result.numTotalNodes = numTotalNodes;
+    if (numRxDupe != null) result.numRxDupe = numRxDupe;
+    if (numTxRelay != null) result.numTxRelay = numTxRelay;
+    if (numTxRelayCanceled != null)
+      result.numTxRelayCanceled = numTxRelayCanceled;
+    if (heapTotalBytes != null) result.heapTotalBytes = heapTotalBytes;
+    if (heapFreeBytes != null) result.heapFreeBytes = heapFreeBytes;
+    if (numTxDropped != null) result.numTxDropped = numTxDropped;
     return result;
   }
 
@@ -915,6 +1250,17 @@ class LocalStats extends $pb.GeneratedMessage {
     ..aI(7, _omitFieldNames ? '' : 'numOnlineNodes',
         fieldType: $pb.PbFieldType.OU3)
     ..aI(8, _omitFieldNames ? '' : 'numTotalNodes',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(9, _omitFieldNames ? '' : 'numRxDupe', fieldType: $pb.PbFieldType.OU3)
+    ..aI(10, _omitFieldNames ? '' : 'numTxRelay',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(11, _omitFieldNames ? '' : 'numTxRelayCanceled',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(12, _omitFieldNames ? '' : 'heapTotalBytes',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(13, _omitFieldNames ? '' : 'heapFreeBytes',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(14, _omitFieldNames ? '' : 'numTxDropped',
         fieldType: $pb.PbFieldType.OU3)
     ..hasRequiredFields = false;
 
@@ -948,7 +1294,7 @@ class LocalStats extends $pb.GeneratedMessage {
   void clearUptimeSeconds() => $_clearField(1);
 
   ///
-  ///  Utilization for the current channel
+  ///  Utilization for the current channel, including well formed TX, RX and malformed RX (aka noise).
   @$pb.TagNumber(2)
   $core.double get channelUtilization => $_getN(1);
   @$pb.TagNumber(2)
@@ -1023,6 +1369,74 @@ class LocalStats extends $pb.GeneratedMessage {
   $core.bool hasNumTotalNodes() => $_has(7);
   @$pb.TagNumber(8)
   void clearNumTotalNodes() => $_clearField(8);
+
+  ///
+  ///  Number of received packets that were duplicates (due to multiple nodes relaying).
+  ///  If this number is high, there are nodes in the mesh relaying packets when it's unnecessary, for example due to the ROUTER/REPEATER role.
+  @$pb.TagNumber(9)
+  $core.int get numRxDupe => $_getIZ(8);
+  @$pb.TagNumber(9)
+  set numRxDupe($core.int value) => $_setUnsignedInt32(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasNumRxDupe() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearNumRxDupe() => $_clearField(9);
+
+  ///
+  ///  Number of packets we transmitted that were a relay for others (not originating from ourselves).
+  @$pb.TagNumber(10)
+  $core.int get numTxRelay => $_getIZ(9);
+  @$pb.TagNumber(10)
+  set numTxRelay($core.int value) => $_setUnsignedInt32(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasNumTxRelay() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearNumTxRelay() => $_clearField(10);
+
+  ///
+  ///  Number of times we canceled a packet to be relayed, because someone else did it before us.
+  ///  This will always be zero for ROUTERs/REPEATERs. If this number is high, some other node(s) is/are relaying faster than you.
+  @$pb.TagNumber(11)
+  $core.int get numTxRelayCanceled => $_getIZ(10);
+  @$pb.TagNumber(11)
+  set numTxRelayCanceled($core.int value) => $_setUnsignedInt32(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasNumTxRelayCanceled() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearNumTxRelayCanceled() => $_clearField(11);
+
+  ///
+  ///  Number of bytes used in the heap
+  @$pb.TagNumber(12)
+  $core.int get heapTotalBytes => $_getIZ(11);
+  @$pb.TagNumber(12)
+  set heapTotalBytes($core.int value) => $_setUnsignedInt32(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasHeapTotalBytes() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearHeapTotalBytes() => $_clearField(12);
+
+  ///
+  ///  Number of bytes free in the heap
+  @$pb.TagNumber(13)
+  $core.int get heapFreeBytes => $_getIZ(12);
+  @$pb.TagNumber(13)
+  set heapFreeBytes($core.int value) => $_setUnsignedInt32(12, value);
+  @$pb.TagNumber(13)
+  $core.bool hasHeapFreeBytes() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearHeapFreeBytes() => $_clearField(13);
+
+  ///
+  ///  Number of packets that were dropped because the transmit queue was full.
+  @$pb.TagNumber(14)
+  $core.int get numTxDropped => $_getIZ(13);
+  @$pb.TagNumber(14)
+  set numTxDropped($core.int value) => $_setUnsignedInt32(13, value);
+  @$pb.TagNumber(14)
+  $core.bool hasNumTxDropped() => $_has(13);
+  @$pb.TagNumber(14)
+  void clearNumTxDropped() => $_clearField(14);
 }
 
 ///
@@ -1112,6 +1526,186 @@ class HealthMetrics extends $pb.GeneratedMessage {
   void clearTemperature() => $_clearField(3);
 }
 
+///
+///  Linux host metrics
+class HostMetrics extends $pb.GeneratedMessage {
+  factory HostMetrics({
+    $core.int? uptimeSeconds,
+    $fixnum.Int64? freememBytes,
+    $fixnum.Int64? diskfree1Bytes,
+    $fixnum.Int64? diskfree2Bytes,
+    $fixnum.Int64? diskfree3Bytes,
+    $core.int? load1,
+    $core.int? load5,
+    $core.int? load15,
+    $core.String? userString,
+  }) {
+    final result = create();
+    if (uptimeSeconds != null) result.uptimeSeconds = uptimeSeconds;
+    if (freememBytes != null) result.freememBytes = freememBytes;
+    if (diskfree1Bytes != null) result.diskfree1Bytes = diskfree1Bytes;
+    if (diskfree2Bytes != null) result.diskfree2Bytes = diskfree2Bytes;
+    if (diskfree3Bytes != null) result.diskfree3Bytes = diskfree3Bytes;
+    if (load1 != null) result.load1 = load1;
+    if (load5 != null) result.load5 = load5;
+    if (load15 != null) result.load15 = load15;
+    if (userString != null) result.userString = userString;
+    return result;
+  }
+
+  HostMetrics._();
+
+  factory HostMetrics.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory HostMetrics.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'HostMetrics',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aI(1, _omitFieldNames ? '' : 'uptimeSeconds',
+        fieldType: $pb.PbFieldType.OU3)
+    ..a<$fixnum.Int64>(
+        2, _omitFieldNames ? '' : 'freememBytes', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        3, _omitFieldNames ? '' : 'diskfree1Bytes', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        4, _omitFieldNames ? '' : 'diskfree2Bytes', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        5, _omitFieldNames ? '' : 'diskfree3Bytes', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aI(6, _omitFieldNames ? '' : 'load1', fieldType: $pb.PbFieldType.OU3)
+    ..aI(7, _omitFieldNames ? '' : 'load5', fieldType: $pb.PbFieldType.OU3)
+    ..aI(8, _omitFieldNames ? '' : 'load15', fieldType: $pb.PbFieldType.OU3)
+    ..aOS(9, _omitFieldNames ? '' : 'userString')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  HostMetrics clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  HostMetrics copyWith(void Function(HostMetrics) updates) =>
+      super.copyWith((message) => updates(message as HostMetrics))
+          as HostMetrics;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static HostMetrics create() => HostMetrics._();
+  @$core.override
+  HostMetrics createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static HostMetrics getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<HostMetrics>(create);
+  static HostMetrics? _defaultInstance;
+
+  ///
+  ///  Host system uptime
+  @$pb.TagNumber(1)
+  $core.int get uptimeSeconds => $_getIZ(0);
+  @$pb.TagNumber(1)
+  set uptimeSeconds($core.int value) => $_setUnsignedInt32(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUptimeSeconds() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUptimeSeconds() => $_clearField(1);
+
+  ///
+  ///  Host system free memory
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get freememBytes => $_getI64(1);
+  @$pb.TagNumber(2)
+  set freememBytes($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasFreememBytes() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearFreememBytes() => $_clearField(2);
+
+  ///
+  ///  Host system disk space free for /
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get diskfree1Bytes => $_getI64(2);
+  @$pb.TagNumber(3)
+  set diskfree1Bytes($fixnum.Int64 value) => $_setInt64(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasDiskfree1Bytes() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearDiskfree1Bytes() => $_clearField(3);
+
+  ///
+  ///  Secondary system disk space free
+  @$pb.TagNumber(4)
+  $fixnum.Int64 get diskfree2Bytes => $_getI64(3);
+  @$pb.TagNumber(4)
+  set diskfree2Bytes($fixnum.Int64 value) => $_setInt64(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasDiskfree2Bytes() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearDiskfree2Bytes() => $_clearField(4);
+
+  ///
+  ///  Tertiary disk space free
+  @$pb.TagNumber(5)
+  $fixnum.Int64 get diskfree3Bytes => $_getI64(4);
+  @$pb.TagNumber(5)
+  set diskfree3Bytes($fixnum.Int64 value) => $_setInt64(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasDiskfree3Bytes() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearDiskfree3Bytes() => $_clearField(5);
+
+  ///
+  ///  Host system one minute load in 1/100ths
+  @$pb.TagNumber(6)
+  $core.int get load1 => $_getIZ(5);
+  @$pb.TagNumber(6)
+  set load1($core.int value) => $_setUnsignedInt32(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasLoad1() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearLoad1() => $_clearField(6);
+
+  ///
+  ///  Host system five minute load  in 1/100ths
+  @$pb.TagNumber(7)
+  $core.int get load5 => $_getIZ(6);
+  @$pb.TagNumber(7)
+  set load5($core.int value) => $_setUnsignedInt32(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasLoad5() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearLoad5() => $_clearField(7);
+
+  ///
+  ///  Host system fifteen minute load  in 1/100ths
+  @$pb.TagNumber(8)
+  $core.int get load15 => $_getIZ(7);
+  @$pb.TagNumber(8)
+  set load15($core.int value) => $_setUnsignedInt32(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasLoad15() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearLoad15() => $_clearField(8);
+
+  ///
+  ///  Optional User-provided string for arbitrary host system information
+  ///  that doesn't make sense as a dedicated entry.
+  @$pb.TagNumber(9)
+  $core.String get userString => $_getSZ(8);
+  @$pb.TagNumber(9)
+  set userString($core.String value) => $_setString(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasUserString() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearUserString() => $_clearField(9);
+}
+
 enum Telemetry_Variant {
   deviceMetrics,
   environmentMetrics,
@@ -1119,6 +1713,7 @@ enum Telemetry_Variant {
   powerMetrics,
   localStats,
   healthMetrics,
+  hostMetrics,
   notSet
 }
 
@@ -1133,6 +1728,7 @@ class Telemetry extends $pb.GeneratedMessage {
     PowerMetrics? powerMetrics,
     LocalStats? localStats,
     HealthMetrics? healthMetrics,
+    HostMetrics? hostMetrics,
   }) {
     final result = create();
     if (time != null) result.time = time;
@@ -1143,6 +1739,7 @@ class Telemetry extends $pb.GeneratedMessage {
     if (powerMetrics != null) result.powerMetrics = powerMetrics;
     if (localStats != null) result.localStats = localStats;
     if (healthMetrics != null) result.healthMetrics = healthMetrics;
+    if (hostMetrics != null) result.hostMetrics = hostMetrics;
     return result;
   }
 
@@ -1163,13 +1760,14 @@ class Telemetry extends $pb.GeneratedMessage {
     5: Telemetry_Variant.powerMetrics,
     6: Telemetry_Variant.localStats,
     7: Telemetry_Variant.healthMetrics,
+    8: Telemetry_Variant.hostMetrics,
     0: Telemetry_Variant.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'Telemetry',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
       createEmptyInstance: create)
-    ..oo(0, [2, 3, 4, 5, 6, 7])
+    ..oo(0, [2, 3, 4, 5, 6, 7, 8])
     ..aI(1, _omitFieldNames ? '' : 'time', fieldType: $pb.PbFieldType.OF3)
     ..aOM<DeviceMetrics>(2, _omitFieldNames ? '' : 'deviceMetrics',
         subBuilder: DeviceMetrics.create)
@@ -1183,6 +1781,8 @@ class Telemetry extends $pb.GeneratedMessage {
         subBuilder: LocalStats.create)
     ..aOM<HealthMetrics>(7, _omitFieldNames ? '' : 'healthMetrics',
         subBuilder: HealthMetrics.create)
+    ..aOM<HostMetrics>(8, _omitFieldNames ? '' : 'hostMetrics',
+        subBuilder: HostMetrics.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1209,6 +1809,7 @@ class Telemetry extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   @$pb.TagNumber(6)
   @$pb.TagNumber(7)
+  @$pb.TagNumber(8)
   Telemetry_Variant whichVariant() => _Telemetry_VariantByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(2)
   @$pb.TagNumber(3)
@@ -1216,6 +1817,7 @@ class Telemetry extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   @$pb.TagNumber(6)
   @$pb.TagNumber(7)
+  @$pb.TagNumber(8)
   void clearVariant() => $_clearField($_whichOneof(0));
 
   ///
@@ -1306,6 +1908,92 @@ class Telemetry extends $pb.GeneratedMessage {
   void clearHealthMetrics() => $_clearField(7);
   @$pb.TagNumber(7)
   HealthMetrics ensureHealthMetrics() => $_ensure(6);
+
+  ///
+  ///  Linux host metrics
+  @$pb.TagNumber(8)
+  HostMetrics get hostMetrics => $_getN(7);
+  @$pb.TagNumber(8)
+  set hostMetrics(HostMetrics value) => $_setField(8, value);
+  @$pb.TagNumber(8)
+  $core.bool hasHostMetrics() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearHostMetrics() => $_clearField(8);
+  @$pb.TagNumber(8)
+  HostMetrics ensureHostMetrics() => $_ensure(7);
+}
+
+///
+///  NAU7802 Telemetry configuration, for saving to flash
+class Nau7802Config extends $pb.GeneratedMessage {
+  factory Nau7802Config({
+    $core.int? zeroOffset,
+    $core.double? calibrationFactor,
+  }) {
+    final result = create();
+    if (zeroOffset != null) result.zeroOffset = zeroOffset;
+    if (calibrationFactor != null) result.calibrationFactor = calibrationFactor;
+    return result;
+  }
+
+  Nau7802Config._();
+
+  factory Nau7802Config.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Nau7802Config.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Nau7802Config',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aI(1, _omitFieldNames ? '' : 'zeroOffset', protoName: 'zeroOffset')
+    ..aD(2, _omitFieldNames ? '' : 'calibrationFactor',
+        protoName: 'calibrationFactor', fieldType: $pb.PbFieldType.OF)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Nau7802Config clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Nau7802Config copyWith(void Function(Nau7802Config) updates) =>
+      super.copyWith((message) => updates(message as Nau7802Config))
+          as Nau7802Config;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Nau7802Config create() => Nau7802Config._();
+  @$core.override
+  Nau7802Config createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Nau7802Config getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<Nau7802Config>(create);
+  static Nau7802Config? _defaultInstance;
+
+  ///
+  ///  The offset setting for the NAU7802
+  @$pb.TagNumber(1)
+  $core.int get zeroOffset => $_getIZ(0);
+  @$pb.TagNumber(1)
+  set zeroOffset($core.int value) => $_setSignedInt32(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasZeroOffset() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearZeroOffset() => $_clearField(1);
+
+  ///
+  ///  The calibration factor for the NAU7802
+  @$pb.TagNumber(2)
+  $core.double get calibrationFactor => $_getN(1);
+  @$pb.TagNumber(2)
+  set calibrationFactor($core.double value) => $_setFloat(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasCalibrationFactor() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearCalibrationFactor() => $_clearField(2);
 }
 
 const $core.bool _omitFieldNames =

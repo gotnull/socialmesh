@@ -11,7 +11,8 @@ import '../../utils/snackbar.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/edge_fade.dart';
-import '../../generated/meshtastic/mesh.pb.dart' as pb;
+import '../../generated/meshtastic/channel.pb.dart' as channel_pb;
+import '../../generated/meshtastic/channel.pbenum.dart' as channel_pbenum;
 import '../messaging/messaging_screen.dart';
 import '../navigation/main_shell.dart';
 import 'channel_form_screen.dart';
@@ -520,16 +521,16 @@ class _ChannelTile extends ConsumerWidget {
 
   void _showQrCode(BuildContext context) {
     // Build a proper protobuf Channel message for the QR code
-    final channelSettings = pb.ChannelSettings()
+    final channelSettings = channel_pb.ChannelSettings()
       ..name = channel.name
       ..psk = channel.psk;
 
-    final pbChannel = pb.Channel()
+    final pbChannel = channel_pb.Channel()
       ..index = channel.index
       ..settings = channelSettings
       ..role = channel.index == 0
-          ? pb.Channel_Role.PRIMARY
-          : pb.Channel_Role.SECONDARY;
+          ? channel_pbenum.Channel_Role.PRIMARY
+          : channel_pbenum.Channel_Role.SECONDARY;
 
     // Encode as base64 and URL-encode for the URL fragment
     final base64Data = base64Encode(pbChannel.writeToBuffer());

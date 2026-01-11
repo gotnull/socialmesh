@@ -7,7 +7,8 @@ import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
-import '../../generated/meshtastic/mesh.pb.dart' as pb;
+import '../../generated/meshtastic/module_config.pb.dart' as module_pb;
+import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
 import '../../core/widgets/loading_indicator.dart';
 
 /// Screen for configuring MQTT module settings
@@ -34,7 +35,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
   // Map Report Settings
   int _mapPublishIntervalSecs = 3600;
   double _mapPositionPrecision = 14;
-  StreamSubscription<pb.ModuleConfig_MQTTConfig>? _configSubscription;
+  StreamSubscription<module_pb.ModuleConfig_MQTTConfig>? _configSubscription;
 
   @override
   void initState() {
@@ -52,7 +53,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
     super.dispose();
   }
 
-  void _applyConfig(pb.ModuleConfig_MQTTConfig config) {
+  void _applyConfig(module_pb.ModuleConfig_MQTTConfig config) {
     setState(() {
       _enabled = config.enabled;
       _addressController.text = config.address;
@@ -98,7 +99,7 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
 
         // Request fresh config from device
         await protocol.getModuleConfig(
-          pb.AdminMessage_ModuleConfigType.MQTT_CONFIG,
+          admin_pbenum.AdminMessage_ModuleConfigType.MQTT_CONFIG,
         );
       }
     } finally {

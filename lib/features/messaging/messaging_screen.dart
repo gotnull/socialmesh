@@ -16,7 +16,8 @@ import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/auto_scroll_text.dart';
 import '../../core/widgets/node_avatar.dart';
-import '../../generated/meshtastic/mesh.pb.dart' as pb;
+import '../../generated/meshtastic/channel.pb.dart' as channel_pb;
+import '../../generated/meshtastic/channel.pbenum.dart' as channel_pbenum;
 import '../../services/messaging/offline_queue_service.dart';
 import '../../services/haptic_service.dart';
 import '../channels/channel_form_screen.dart';
@@ -1218,14 +1219,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   void _showQrCode(BuildContext context, ChannelConfig channel) {
     // Create proper protobuf Channel object for QR code
-    final pbChannel = pb.Channel()
+    final pbChannel = channel_pb.Channel()
       ..index = channel.index
-      ..settings = (pb.ChannelSettings()
+      ..settings = (channel_pb.ChannelSettings()
         ..name = channel.name
         ..psk = channel.psk)
       ..role = channel.index == 0
-          ? pb.Channel_Role.PRIMARY
-          : pb.Channel_Role.SECONDARY;
+          ? channel_pbenum.Channel_Role.PRIMARY
+          : channel_pbenum.Channel_Role.SECONDARY;
 
     final base64Data = base64Encode(pbChannel.writeToBuffer());
     final channelUrl = 'socialmesh://channel/$base64Data';

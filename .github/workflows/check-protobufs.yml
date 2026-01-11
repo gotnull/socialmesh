@@ -43,10 +43,10 @@ jobs:
           
           if [ "$CURRENT" = "$LATEST" ]; then
             echo "needs_update=false" >> $GITHUB_OUTPUT
-            echo "✅ Protobufs are up to date ($CURRENT)"
+            echo "Protobufs are up to date ($CURRENT)"
           else
             echo "needs_update=true" >> $GITHUB_OUTPUT
-            echo "⚠️ Protobuf update available: $CURRENT → $LATEST"
+            echo "Protobuf update available: $CURRENT → $LATEST"
           fi
       
       - name: Check for existing issue
@@ -121,7 +121,7 @@ jobs:
           sed -i "s/LATEST_PLACEHOLDER/$LATEST_VERSION/g" /tmp/issue_body.md
           
           gh issue create \
-            --title "🔄 Update Meshtastic Protobufs to $LATEST_VERSION" \
+            --title "Update Meshtastic Protobufs to $LATEST_VERSION" \
             --label "protobuf-update,enhancement" \
             --body-file /tmp/issue_body.md
       
@@ -135,7 +135,7 @@ jobs:
           echo "| Latest | \`${{ steps.latest.outputs.version }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           if [ "${{ steps.compare.outputs.needs_update }}" = "true" ]; then
-            echo "⚠️ **Update available!**" >> $GITHUB_STEP_SUMMARY
+            echo "**Update available!**" >> $GITHUB_STEP_SUMMARY
           else
-            echo "✅ **Up to date**" >> $GITHUB_STEP_SUMMARY
+            echo "**Up to date**" >> $GITHUB_STEP_SUMMARY
           fi

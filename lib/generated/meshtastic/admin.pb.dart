@@ -176,6 +176,7 @@ enum AdminMessage_PayloadVariant {
   commitEditSettings,
   addContact,
   keyVerification,
+  rebootOtaMode,
   factoryResetDevice,
   rebootOtaSeconds,
   exitSimulator,
@@ -239,8 +240,9 @@ class AdminMessage extends $pb.GeneratedMessage {
     $core.bool? commitEditSettings,
     SharedContact? addContact,
     KeyVerificationAdmin? keyVerification,
+    OTAMode? rebootOtaMode,
     $core.int? factoryResetDevice,
-    $core.int? rebootOtaSeconds,
+    @$core.Deprecated('This field is deprecated.') $core.int? rebootOtaSeconds,
     $core.bool? exitSimulator,
     $core.int? rebootSeconds,
     $core.int? shutdownSeconds,
@@ -325,6 +327,7 @@ class AdminMessage extends $pb.GeneratedMessage {
       result.commitEditSettings = commitEditSettings;
     if (addContact != null) result.addContact = addContact;
     if (keyVerification != null) result.keyVerification = keyVerification;
+    if (rebootOtaMode != null) result.rebootOtaMode = rebootOtaMode;
     if (factoryResetDevice != null)
       result.factoryResetDevice = factoryResetDevice;
     if (rebootOtaSeconds != null) result.rebootOtaSeconds = rebootOtaSeconds;
@@ -396,6 +399,7 @@ class AdminMessage extends $pb.GeneratedMessage {
     65: AdminMessage_PayloadVariant.commitEditSettings,
     66: AdminMessage_PayloadVariant.addContact,
     67: AdminMessage_PayloadVariant.keyVerification,
+    68: AdminMessage_PayloadVariant.rebootOtaMode,
     94: AdminMessage_PayloadVariant.factoryResetDevice,
     95: AdminMessage_PayloadVariant.rebootOtaSeconds,
     96: AdminMessage_PayloadVariant.exitSimulator,
@@ -457,6 +461,7 @@ class AdminMessage extends $pb.GeneratedMessage {
       65,
       66,
       67,
+      68,
       94,
       95,
       96,
@@ -549,6 +554,8 @@ class AdminMessage extends $pb.GeneratedMessage {
         subBuilder: SharedContact.create)
     ..aOM<KeyVerificationAdmin>(67, _omitFieldNames ? '' : 'keyVerification',
         subBuilder: KeyVerificationAdmin.create)
+    ..aE<OTAMode>(68, _omitFieldNames ? '' : 'rebootOtaMode',
+        enumValues: OTAMode.values)
     ..aI(94, _omitFieldNames ? '' : 'factoryResetDevice')
     ..aI(95, _omitFieldNames ? '' : 'rebootOtaSeconds')
     ..aOB(96, _omitFieldNames ? '' : 'exitSimulator')
@@ -626,6 +633,7 @@ class AdminMessage extends $pb.GeneratedMessage {
   @$pb.TagNumber(65)
   @$pb.TagNumber(66)
   @$pb.TagNumber(67)
+  @$pb.TagNumber(68)
   @$pb.TagNumber(94)
   @$pb.TagNumber(95)
   @$pb.TagNumber(96)
@@ -682,6 +690,7 @@ class AdminMessage extends $pb.GeneratedMessage {
   @$pb.TagNumber(65)
   @$pb.TagNumber(66)
   @$pb.TagNumber(67)
+  @$pb.TagNumber(68)
   @$pb.TagNumber(94)
   @$pb.TagNumber(95)
   @$pb.TagNumber(96)
@@ -1269,25 +1278,41 @@ class AdminMessage extends $pb.GeneratedMessage {
   KeyVerificationAdmin ensureKeyVerification() => $_ensure(46);
 
   ///
+  ///  Tell the node to reboot into OTA mode for firmware update via BLE or WiFi (ESP32 only for now)
+  @$pb.TagNumber(68)
+  OTAMode get rebootOtaMode => $_getN(47);
+  @$pb.TagNumber(68)
+  set rebootOtaMode(OTAMode value) => $_setField(68, value);
+  @$pb.TagNumber(68)
+  $core.bool hasRebootOtaMode() => $_has(47);
+  @$pb.TagNumber(68)
+  void clearRebootOtaMode() => $_clearField(68);
+
+  ///
   ///  Tell the node to factory reset config everything; all device state and configuration will be returned to factory defaults and BLE bonds will be cleared.
   @$pb.TagNumber(94)
-  $core.int get factoryResetDevice => $_getIZ(47);
+  $core.int get factoryResetDevice => $_getIZ(48);
   @$pb.TagNumber(94)
-  set factoryResetDevice($core.int value) => $_setSignedInt32(47, value);
+  set factoryResetDevice($core.int value) => $_setSignedInt32(48, value);
   @$pb.TagNumber(94)
-  $core.bool hasFactoryResetDevice() => $_has(47);
+  $core.bool hasFactoryResetDevice() => $_has(48);
   @$pb.TagNumber(94)
   void clearFactoryResetDevice() => $_clearField(94);
 
   ///
   ///  Tell the node to reboot into the OTA Firmware in this many seconds (or <0 to cancel reboot)
   ///  Only Implemented for ESP32 Devices. This needs to be issued to send a new main firmware via bluetooth.
+  ///  Deprecated in favor of reboot_ota_mode in 2.7.17
+  @$core.Deprecated('This field is deprecated.')
   @$pb.TagNumber(95)
-  $core.int get rebootOtaSeconds => $_getIZ(48);
+  $core.int get rebootOtaSeconds => $_getIZ(49);
+  @$core.Deprecated('This field is deprecated.')
   @$pb.TagNumber(95)
-  set rebootOtaSeconds($core.int value) => $_setSignedInt32(48, value);
+  set rebootOtaSeconds($core.int value) => $_setSignedInt32(49, value);
+  @$core.Deprecated('This field is deprecated.')
   @$pb.TagNumber(95)
-  $core.bool hasRebootOtaSeconds() => $_has(48);
+  $core.bool hasRebootOtaSeconds() => $_has(49);
+  @$core.Deprecated('This field is deprecated.')
   @$pb.TagNumber(95)
   void clearRebootOtaSeconds() => $_clearField(95);
 
@@ -1295,44 +1320,44 @@ class AdminMessage extends $pb.GeneratedMessage {
   ///  This message is only supported for the simulator Portduino build.
   ///  If received the simulator will exit successfully.
   @$pb.TagNumber(96)
-  $core.bool get exitSimulator => $_getBF(49);
+  $core.bool get exitSimulator => $_getBF(50);
   @$pb.TagNumber(96)
-  set exitSimulator($core.bool value) => $_setBool(49, value);
+  set exitSimulator($core.bool value) => $_setBool(50, value);
   @$pb.TagNumber(96)
-  $core.bool hasExitSimulator() => $_has(49);
+  $core.bool hasExitSimulator() => $_has(50);
   @$pb.TagNumber(96)
   void clearExitSimulator() => $_clearField(96);
 
   ///
   ///  Tell the node to reboot in this many seconds (or <0 to cancel reboot)
   @$pb.TagNumber(97)
-  $core.int get rebootSeconds => $_getIZ(50);
+  $core.int get rebootSeconds => $_getIZ(51);
   @$pb.TagNumber(97)
-  set rebootSeconds($core.int value) => $_setSignedInt32(50, value);
+  set rebootSeconds($core.int value) => $_setSignedInt32(51, value);
   @$pb.TagNumber(97)
-  $core.bool hasRebootSeconds() => $_has(50);
+  $core.bool hasRebootSeconds() => $_has(51);
   @$pb.TagNumber(97)
   void clearRebootSeconds() => $_clearField(97);
 
   ///
   ///  Tell the node to shutdown in this many seconds (or <0 to cancel shutdown)
   @$pb.TagNumber(98)
-  $core.int get shutdownSeconds => $_getIZ(51);
+  $core.int get shutdownSeconds => $_getIZ(52);
   @$pb.TagNumber(98)
-  set shutdownSeconds($core.int value) => $_setSignedInt32(51, value);
+  set shutdownSeconds($core.int value) => $_setSignedInt32(52, value);
   @$pb.TagNumber(98)
-  $core.bool hasShutdownSeconds() => $_has(51);
+  $core.bool hasShutdownSeconds() => $_has(52);
   @$pb.TagNumber(98)
   void clearShutdownSeconds() => $_clearField(98);
 
   ///
   ///  Tell the node to factory reset config; all device state and configuration will be returned to factory defaults; BLE bonds will be preserved.
   @$pb.TagNumber(99)
-  $core.int get factoryResetConfig => $_getIZ(52);
+  $core.int get factoryResetConfig => $_getIZ(53);
   @$pb.TagNumber(99)
-  set factoryResetConfig($core.int value) => $_setSignedInt32(52, value);
+  set factoryResetConfig($core.int value) => $_setSignedInt32(53, value);
   @$pb.TagNumber(99)
-  $core.bool hasFactoryResetConfig() => $_has(52);
+  $core.bool hasFactoryResetConfig() => $_has(53);
   @$pb.TagNumber(99)
   void clearFactoryResetConfig() => $_clearField(99);
 
@@ -1340,11 +1365,11 @@ class AdminMessage extends $pb.GeneratedMessage {
   ///  Tell the node to reset the nodedb.
   ///  When true, favorites are preserved through reset.
   @$pb.TagNumber(100)
-  $core.bool get nodedbReset => $_getBF(53);
+  $core.bool get nodedbReset => $_getBF(54);
   @$pb.TagNumber(100)
-  set nodedbReset($core.bool value) => $_setBool(53, value);
+  set nodedbReset($core.bool value) => $_setBool(54, value);
   @$pb.TagNumber(100)
-  $core.bool hasNodedbReset() => $_has(53);
+  $core.bool hasNodedbReset() => $_has(54);
   @$pb.TagNumber(100)
   void clearNodedbReset() => $_clearField(100);
 
@@ -1353,11 +1378,11 @@ class AdminMessage extends $pb.GeneratedMessage {
   ///  The client MUST include the same key with any set_x commands. Key expires after 300 seconds.
   ///  Prevents replay attacks for admin messages.
   @$pb.TagNumber(101)
-  $core.List<$core.int> get sessionPasskey => $_getN(54);
+  $core.List<$core.int> get sessionPasskey => $_getN(55);
   @$pb.TagNumber(101)
-  set sessionPasskey($core.List<$core.int> value) => $_setBytes(54, value);
+  set sessionPasskey($core.List<$core.int> value) => $_setBytes(55, value);
   @$pb.TagNumber(101)
-  $core.bool hasSessionPasskey() => $_has(54);
+  $core.bool hasSessionPasskey() => $_has(55);
   @$pb.TagNumber(101)
   void clearSessionPasskey() => $_clearField(101);
 }

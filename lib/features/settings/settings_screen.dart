@@ -28,7 +28,7 @@ import '../../core/widgets/legal_document_sheet.dart';
 import '../../core/widgets/remote_admin_selector_sheet.dart';
 import '../../core/widgets/secret_gesture_detector.dart';
 import '../../utils/snackbar.dart';
-import '../../generated/meshtastic/mesh.pbenum.dart' as pbenum;
+import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import '../device/region_selection_screen.dart';
 import 'device_management_screen.dart';
 import 'device_config_screen.dart';
@@ -1784,7 +1784,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         final regionAsync = ref.watch(deviceRegionProvider);
                         final regionSubtitle = regionAsync.when(
                           data: (region) {
-                            if (region == pbenum.RegionCode.UNSET_REGION) {
+                            if (region ==
+                                config_pbenum
+                                    .Config_LoRaConfig_RegionCode
+                                    .UNSET) {
                               return 'Not configured';
                             }
                             // Find the region info for display
@@ -2178,7 +2181,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               icon:
                                   regionAsync.whenOrNull(
                                         data: (r) =>
-                                            r == pbenum.RegionCode.UNSET_REGION,
+                                            r ==
+                                            config_pbenum
+                                                .Config_LoRaConfig_RegionCode
+                                                .UNSET,
                                       ) ==
                                       true
                                   ? Icons.warning_amber_rounded
@@ -2186,7 +2192,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               iconColor:
                                   regionAsync.whenOrNull(
                                         data: (r) =>
-                                            r == pbenum.RegionCode.UNSET_REGION,
+                                            r ==
+                                            config_pbenum
+                                                .Config_LoRaConfig_RegionCode
+                                                .UNSET,
                                       ) ==
                                       true
                                   ? Colors.orange
@@ -2196,7 +2205,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               subtitleColor:
                                   regionAsync.whenOrNull(
                                         data: (r) =>
-                                            r == pbenum.RegionCode.UNSET_REGION,
+                                            r ==
+                                            config_pbenum
+                                                .Config_LoRaConfig_RegionCode
+                                                .UNSET,
                                       ) ==
                                       true
                                   ? Colors.orange

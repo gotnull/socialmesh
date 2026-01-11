@@ -13,7 +13,7 @@ import '../../core/widgets/connecting_content.dart';
 import '../../utils/snackbar.dart';
 import '../../providers/app_providers.dart';
 import '../../services/storage/storage_service.dart';
-import '../../generated/meshtastic/mesh.pbenum.dart' as pbenum;
+import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import 'widgets/connecting_animation.dart';
 import '../../core/widgets/loading_indicator.dart';
 
@@ -392,12 +392,14 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
       // Always check region from device - firmware updates can reset it
       {
-        pbenum.RegionCode? region = protocol.currentRegion;
+        config_pbenum.Config_LoRaConfig_RegionCode? region =
+            protocol.currentRegion;
         AppLogging.debug('🔍 Initial region: ${region?.name ?? "null"}');
 
         // If region not available yet, wait for loraConfigStream with proper timeout
         // This handles the timing issue where config arrives after our initial check
-        if (region == null || region == pbenum.RegionCode.UNSET_REGION) {
+        if (region == null ||
+            region == config_pbenum.Config_LoRaConfig_RegionCode.UNSET) {
           AppLogging.debug('🔍 Waiting for LoRa config stream...');
           try {
             // Subscribe to stream FIRST, then request config
@@ -428,7 +430,8 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
         // Need region setup if region is UNSET (not configured on device)
         // This can happen on fresh install OR after firmware update/reset
-        if (region == null || region == pbenum.RegionCode.UNSET_REGION) {
+        if (region == null ||
+            region == config_pbenum.Config_LoRaConfig_RegionCode.UNSET) {
           needsRegionSetup = true;
           AppLogging.debug('⚠️ Region is UNSET - need to configure!');
         } else {
@@ -608,9 +611,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
           if (_scanning)
             const SizedBox(
               width: 48,
-              child: Center(
-                child: LoadingIndicator(size: 20),
-              ),
+              child: Center(child: LoadingIndicator(size: 20)),
             ),
         ],
       ),

@@ -6,8 +6,8 @@ import '../../core/widgets/animations.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../providers/app_providers.dart';
-import '../../generated/meshtastic/mesh.pb.dart' as pb;
-import '../../generated/meshtastic/mesh.pbenum.dart' as pbenum;
+import '../../generated/meshtastic/module_config.pb.dart' as module_pb;
+import '../../generated/meshtastic/module_config.pbenum.dart' as module_pbenum;
 import '../../core/widgets/loading_indicator.dart';
 
 /// Screen for configuring Detection Sensor module
@@ -28,8 +28,8 @@ class _DetectionSensorConfigScreenState
   int _stateBroadcastSecs = 300;
   bool _sendBell = false;
   bool _usePullup = false;
-  pbenum.ModuleConfig_DetectionSensorConfig_TriggerType _triggerType =
-      pbenum.ModuleConfig_DetectionSensorConfig_TriggerType.LOGIC_HIGH;
+  module_pbenum.ModuleConfig_DetectionSensorConfig_TriggerType _triggerType =
+      module_pbenum.ModuleConfig_DetectionSensorConfig_TriggerType.LOGIC_HIGH;
 
   bool _isSaving = false;
   bool _isLoading = true;
@@ -106,7 +106,7 @@ class _DetectionSensorConfigScreenState
       final protocol = ref.read(protocolServiceProvider);
 
       // Create the detection sensor config
-      final dsConfig = pb.ModuleConfig_DetectionSensorConfig()
+      final dsConfig = module_pb.ModuleConfig_DetectionSensorConfig()
         ..enabled = _enabled
         ..name = _name
         ..monitorPin = _monitorPin
@@ -116,7 +116,7 @@ class _DetectionSensorConfigScreenState
         ..usePullup = _usePullup
         ..detectionTriggerType = _triggerType;
 
-      final moduleConfig = pb.ModuleConfig()..detectionSensor = dsConfig;
+      final moduleConfig = module_pb.ModuleConfig()..detectionSensor = dsConfig;
       await protocol.setModuleConfig(moduleConfig);
 
       if (mounted) {
@@ -487,22 +487,30 @@ class _DetectionSensorConfigScreenState
   }
 
   String _getTriggerTypeDescription(
-    pbenum.ModuleConfig_DetectionSensorConfig_TriggerType type,
+    module_pbenum.ModuleConfig_DetectionSensorConfig_TriggerType type,
   ) {
     switch (type) {
-      case pbenum.ModuleConfig_DetectionSensorConfig_TriggerType.LOGIC_LOW:
+      case module_pbenum
+          .ModuleConfig_DetectionSensorConfig_TriggerType
+          .LOGIC_LOW:
         return 'Logic Low (active when pin is LOW)';
-      case pbenum.ModuleConfig_DetectionSensorConfig_TriggerType.LOGIC_HIGH:
+      case module_pbenum
+          .ModuleConfig_DetectionSensorConfig_TriggerType
+          .LOGIC_HIGH:
         return 'Logic High (active when pin is HIGH)';
-      case pbenum.ModuleConfig_DetectionSensorConfig_TriggerType.FALLING_EDGE:
+      case module_pbenum
+          .ModuleConfig_DetectionSensorConfig_TriggerType
+          .FALLING_EDGE:
         return 'Falling Edge (trigger on HIGH→LOW)';
-      case pbenum.ModuleConfig_DetectionSensorConfig_TriggerType.RISING_EDGE:
+      case module_pbenum
+          .ModuleConfig_DetectionSensorConfig_TriggerType
+          .RISING_EDGE:
         return 'Rising Edge (trigger on LOW→HIGH)';
-      case pbenum
+      case module_pbenum
           .ModuleConfig_DetectionSensorConfig_TriggerType
           .EITHER_EDGE_ACTIVE_LOW:
         return 'Either Edge (active LOW)';
-      case pbenum
+      case module_pbenum
           .ModuleConfig_DetectionSensorConfig_TriggerType
           .EITHER_EDGE_ACTIVE_HIGH:
         return 'Either Edge (active HIGH)';
@@ -543,27 +551,28 @@ class _DetectionSensorConfigScreenState
               ),
             ),
             Divider(height: 1, color: context.border),
-            ...pbenum.ModuleConfig_DetectionSensorConfig_TriggerType.values.map(
-              (type) {
-                return ListTile(
-                  title: Text(
-                    _getTriggerTypeDescription(type),
-                    style: TextStyle(
-                      color: _triggerType == type
-                          ? context.accentColor
-                          : context.textPrimary,
+            ...module_pbenum
+                .ModuleConfig_DetectionSensorConfig_TriggerType
+                .values
+                .map((type) {
+                  return ListTile(
+                    title: Text(
+                      _getTriggerTypeDescription(type),
+                      style: TextStyle(
+                        color: _triggerType == type
+                            ? context.accentColor
+                            : context.textPrimary,
+                      ),
                     ),
-                  ),
-                  trailing: _triggerType == type
-                      ? Icon(Icons.check, color: context.accentColor)
-                      : null,
-                  onTap: () {
-                    setState(() => _triggerType = type);
-                    Navigator.pop(context);
-                  },
-                );
-              },
-            ),
+                    trailing: _triggerType == type
+                        ? Icon(Icons.check, color: context.accentColor)
+                        : null,
+                    onTap: () {
+                      setState(() => _triggerType = type);
+                      Navigator.pop(context);
+                    },
+                  );
+                }),
           ],
         ),
       ),

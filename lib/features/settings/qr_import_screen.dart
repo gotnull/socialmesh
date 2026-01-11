@@ -6,7 +6,7 @@ import '../../core/logging.dart';
 import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../core/transport.dart';
-import '../../generated/meshtastic/mesh.pb.dart' as pb;
+import '../../generated/meshtastic/channel.pb.dart' as channel_pb;
 import '../../core/theme.dart';
 import '../../utils/snackbar.dart';
 import '../channels/channel_form_screen.dart';
@@ -95,7 +95,7 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
 
       // Try parsing as Channel first
       try {
-        final pbChannel = pb.Channel.fromBuffer(bytes);
+        final pbChannel = channel_pb.Channel.fromBuffer(bytes);
         AppLogging.qr(
           'Parsed as Channel: index=${pbChannel.index}, hasSettings=${pbChannel.hasSettings()}',
         );
@@ -116,7 +116,7 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
       // Try parsing as ChannelSettings if Channel parsing failed or had no PSK
       if (psk == null || psk.isEmpty) {
         try {
-          final pbSettings = pb.ChannelSettings.fromBuffer(bytes);
+          final pbSettings = channel_pb.ChannelSettings.fromBuffer(bytes);
           AppLogging.qr(
             'Parsed as ChannelSettings: name="${pbSettings.name}", psk length=${pbSettings.psk.length}',
           );
