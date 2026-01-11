@@ -957,7 +957,7 @@ class _IcoSpeechBubbleWithArrowState
                                 text: TextSpan(
                                   children: _RichTextParser.parse(
                                     _displayedText,
-                                    highlightColor: AccentColors.orange,
+                                    highlightColor: context.accentColor,
                                   ),
                                 ),
                               ),
