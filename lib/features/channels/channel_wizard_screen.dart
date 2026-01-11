@@ -398,7 +398,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
             key: _nameFieldKey,
             topicId: 'channel_creation',
             stepId: 'channel_name',
-            child: TextField(
+            builder: (context, isHighlighted, animation) => TextField(
               controller: _nameController,
               style: TextStyle(color: context.textPrimary),
               maxLength: 12,
@@ -414,14 +414,34 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
                 ),
                 filled: true,
                 fillColor: context.surface,
+                // Use animated dotted border when highlighted, normal border otherwise
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: context.accentColor, width: 2),
-                ),
+                enabledBorder: isHighlighted
+                    ? AnimatedDottedInputBorder(
+                        animation: animation,
+                        color: AppTheme.primaryMagenta,
+                        borderRadius: 12,
+                      )
+                    : OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                focusedBorder: isHighlighted
+                    ? AnimatedDottedInputBorder(
+                        animation: animation,
+                        color: AppTheme.primaryMagenta,
+                        borderRadius: 12,
+                      )
+                    : OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: context.accentColor,
+                          width: 2,
+                        ),
+                      ),
                 counterStyle: TextStyle(color: context.textSecondary),
               ),
               onChanged: (_) => setState(() {}),

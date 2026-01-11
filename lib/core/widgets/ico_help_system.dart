@@ -218,13 +218,173 @@ class _RichTextParser {
 }
 
 // ============================================================================
-// ANIMATED DOTTED BORDER - Wraps a widget with animated dotted border
+// ANIMATED DOTTED INPUT BORDER - Custom InputBorder for TextFields
 // ============================================================================
 
-/// A widget that wraps its child with an animated clockwise-moving dotted border.
-/// Use this to wrap TextFields or other input widgets that need highlighting.
+/// A custom InputBorder that draws an animated clockwise-moving dotted border.
+/// Use this directly as the TextField's border property.
+///
+/// Example:
+/// ```dart
+/// TextField(
+///   decoration: InputDecoration(
+///     border: AnimatedDottedInputBorder(
+///       animation: _controller,
+///       color: AppTheme.primaryMagenta,
+///     ),
+///   ),
+/// )
+/// ```
+class AnimatedDottedInputBorder extends InputBorder {
+  final Animation<double> animation;
+  final Color color;
+  final double strokeWidth;
+  final double dashLength;
+  final double gapLength;
+  final double borderRadius;
+
+  const AnimatedDottedInputBorder({
+    required this.animation,
+    this.color = AppTheme.primaryMagenta,
+    this.strokeWidth = 2,
+    this.dashLength = 6,
+    this.gapLength = 4,
+    this.borderRadius = 12,
+    super.borderSide = BorderSide.none,
+  });
+
+  @override
+  AnimatedDottedInputBorder copyWith({BorderSide? borderSide}) {
+    return AnimatedDottedInputBorder(
+      animation: animation,
+      color: color,
+      strokeWidth: strokeWidth,
+      dashLength: dashLength,
+      gapLength: gapLength,
+      borderRadius: borderRadius,
+      borderSide: borderSide ?? this.borderSide,
+    );
+  }
+
+  @override
+  bool get isOutline => true;
+
+  @override
+  EdgeInsetsGeometry get dimensions => EdgeInsets.all(strokeWidth);
+
+  @override
+  Path getInnerPath(Rect rect, {TextDirection? textDirection}) {
+    return Path()..addRRect(
+      RRect.fromRectAndRadius(
+        rect.deflate(strokeWidth),
+        Radius.circular(borderRadius - strokeWidth),
+      ),
+    );
+  }
+
+  @override
+  Path getOuterPath(Rect rect, {TextDirection? textDirection}) {
+    return Path()
+      ..addRRect(RRect.fromRectAndRadius(rect, Radius.circular(borderRadius)));
+  }
+
+  @override
+  void paint(
+    Canvas canvas,
+    Rect rect, {
+    double? gapStart,
+    double gapExtent = 0.0,
+    double gapPercentage = 0.0,
+    TextDirection? textDirection,
+  }) {
+    if (rect.width <= 0 || rect.height <= 0) return;
+
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    final rrect = RRect.fromRectAndRadius(rect, Radius.circular(borderRadius));
+
+    final path = Path()..addRRect(rrect);
+    final pathMetrics = path.computeMetrics().toList();
+
+    if (pathMetrics.isEmpty) return;
+
+    final metric = pathMetrics.first;
+    final totalLength = metric.length;
+    if (totalLength <= 0) return;
+
+    // Animate dashes moving clockwise
+    final offset = animation.value * (dashLength + gapLength) * 3;
+
+    double distance = offset;
+    while (distance < totalLength + offset) {
+      final start = distance % totalLength;
+      var end = (start + dashLength);
+      if (end > totalLength) end = totalLength;
+
+      final dashPath = metric.extractPath(start, end);
+      canvas.drawPath(dashPath, paint);
+
+      distance += dashLength + gapLength;
+    }
+  }
+
+  @override
+  ShapeBorder scale(double t) => this;
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other.runtimeType != runtimeType) return false;
+    return other is AnimatedDottedInputBorder &&
+        other.color == color &&
+        other.strokeWidth == strokeWidth &&
+        other.dashLength == dashLength &&
+        other.gapLength == gapLength &&
+        other.borderRadius == borderRadius;
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(color, strokeWidth, dashLength, gapLength, borderRadius);
+}
+
+// ============================================================================
+// ICO HIGHLIGHTED FIELD - Provides animation controller for TextField borders
+// ============================================================================
+
+/// A widget that provides an animation controller for highlighting TextFields.
+/// Use the builder to access the animation and apply AnimatedDottedInputBorder.
+///
+/// Example:
+/// ```dart
+/// IcoHighlightedField(
+///   topicId: 'channel_creation',
+///   stepId: 'channel_name',
+///   builder: (context, isHighlighted, animation) => TextField(
+///     decoration: InputDecoration(
+///       border: isHighlighted
+///         ? AnimatedDottedInputBorder(animation: animation)
+///         : OutlineInputBorder(...),
+///     ),
+///   ),
+/// )
+/// ```
 class IcoHighlightedField extends ConsumerStatefulWidget {
-  final Widget child;
+  /// Builder that receives highlight state and animation controller.
+  final Widget Function(
+    BuildContext context,
+    bool isHighlighted,
+    Animation<double> animation,
+  )?
+  builder;
+
+  /// Simple child widget (won't have animated border - use builder for TextFields)
+  final Widget? child;
+
   final String stepId;
   final String topicId;
   final Color color;
@@ -232,11 +392,11 @@ class IcoHighlightedField extends ConsumerStatefulWidget {
   final double dashLength;
   final double gapLength;
   final double borderRadius;
-  final EdgeInsets padding;
 
   const IcoHighlightedField({
     super.key,
-    required this.child,
+    this.builder,
+    this.child,
     required this.stepId,
     required this.topicId,
     this.color = AppTheme.primaryMagenta,
@@ -244,8 +404,10 @@ class IcoHighlightedField extends ConsumerStatefulWidget {
     this.dashLength = 6,
     this.gapLength = 4,
     this.borderRadius = 12,
-    this.padding = const EdgeInsets.all(4),
-  });
+  }) : assert(
+         builder != null || child != null,
+         'Either builder or child must be provided',
+       );
 
   @override
   ConsumerState<IcoHighlightedField> createState() =>
@@ -284,90 +446,19 @@ class _IcoHighlightedFieldState extends ConsumerState<IcoHighlightedField>
     final helpState = ref.watch(helpProvider);
     final isHighlighted = _isHighlighted(helpState);
 
-    if (!isHighlighted) {
-      return widget.child;
+    // Use builder with animation, or just return child
+    if (widget.builder != null) {
+      // Builder gets the animation so it can use AnimatedDottedInputBorder
+      return AnimatedBuilder(
+        animation: _controller,
+        builder: (context, _) {
+          return widget.builder!(context, isHighlighted, _controller);
+        },
+      );
     }
 
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return CustomPaint(
-          painter: _AnimatedDottedBorderPainter(
-            progress: _controller.value,
-            color: widget.color,
-            strokeWidth: widget.strokeWidth,
-            dashLength: widget.dashLength,
-            gapLength: widget.gapLength,
-            borderRadius: widget.borderRadius,
-          ),
-          child: Padding(padding: widget.padding, child: widget.child),
-        );
-      },
-    );
-  }
-}
-
-class _AnimatedDottedBorderPainter extends CustomPainter {
-  final double progress;
-  final Color color;
-  final double strokeWidth;
-  final double dashLength;
-  final double gapLength;
-  final double borderRadius;
-
-  _AnimatedDottedBorderPainter({
-    required this.progress,
-    required this.color,
-    required this.strokeWidth,
-    required this.dashLength,
-    required this.gapLength,
-    required this.borderRadius,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // Guard against zero-size widgets
-    if (size.width <= 0 || size.height <= 0) return;
-
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = strokeWidth
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    final rect = RRect.fromRectAndRadius(
-      Rect.fromLTWH(0, 0, size.width, size.height),
-      Radius.circular(borderRadius),
-    );
-
-    final path = Path()..addRRect(rect);
-    final pathMetrics = path.computeMetrics().toList();
-
-    if (pathMetrics.isEmpty) return;
-
-    final metric = pathMetrics.first;
-    final totalLength = metric.length;
-    if (totalLength <= 0) return;
-
-    // Animate dashes moving clockwise
-    final offset = progress * (dashLength + gapLength) * 3;
-
-    double distance = offset;
-    while (distance < totalLength + offset) {
-      final start = distance % totalLength;
-      var end = (start + dashLength);
-      if (end > totalLength) end = totalLength;
-
-      final dashPath = metric.extractPath(start, end);
-      canvas.drawPath(dashPath, paint);
-
-      distance += dashLength + gapLength;
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _AnimatedDottedBorderPainter oldDelegate) {
-    return oldDelegate.progress != progress || oldDelegate.color != color;
+    // Simple child - no animated border capability
+    return widget.child!;
   }
 }
 
@@ -930,7 +1021,7 @@ class _HelpTourControllerState extends ConsumerState<HelpTourController> {
             onBack: helpState.currentStepIndex > 0
                 ? () => ref.read(helpProvider.notifier).previousStep()
                 : null,
-            onSkip: () => _showSkipDialog(context),
+            onSkip: () => ref.read(helpProvider.notifier).cancelTour(),
           )
         else
           // No target - show floating bubble
@@ -949,7 +1040,7 @@ class _HelpTourControllerState extends ConsumerState<HelpTourController> {
                       ? () => ref.read(helpProvider.notifier).previousStep()
                       : null,
                   onSkip: currentStep.canSkip
-                      ? () => _showSkipDialog(context)
+                      ? () => ref.read(helpProvider.notifier).cancelTour()
                       : null,
                   showBack: currentStep.canGoBack,
                   showSkip: currentStep.canSkip,
@@ -962,49 +1053,6 @@ class _HelpTourControllerState extends ConsumerState<HelpTourController> {
             ),
           ),
       ],
-    );
-  }
-
-  void _showSkipDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.darkSurface,
-        title: const Text('Skip Help?'),
-        content: const Text(
-          'Would you like to skip this help tour?\n\nYou can always replay it later from the Help Center.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Continue Tour'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ref
-                  .read(helpProvider.notifier)
-                  .dismissTopic(widget.topicId, dontShowAgain: false);
-            },
-            child: Text(
-              'Skip for Now',
-              style: TextStyle(color: AppTheme.primaryMagenta),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ref
-                  .read(helpProvider.notifier)
-                  .dismissTopic(widget.topicId, dontShowAgain: true);
-            },
-            child: Text(
-              "Don't Show Again",
-              style: TextStyle(color: Colors.red.shade400),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
