@@ -1,0 +1,130 @@
+name: Check Protobuf Updates
+
+on:
+  schedule:
+    # Run every Monday at 9am UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  check-protobuf-updates:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Get current protobuf version
+        id: current
+        run: |
+          if [ -f "protos/VERSION" ]; then
+            VERSION=$(cat protos/VERSION | tr -d '\n')
+          else
+            VERSION="unknown"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Current protobuf version: $VERSION"
+      
+      - name: Get latest Meshtastic protobuf version
+        id: latest
+        run: |
+          LATEST=$(curl -s https://api.github.com/repos/meshtastic/protobufs/releases/latest | jq -r .tag_name)
+          echo "version=$LATEST" >> $GITHUB_OUTPUT
+          echo "Latest protobuf version: $LATEST"
+      
+      - name: Compare versions
+        id: compare
+        run: |
+          CURRENT="${{ steps.current.outputs.version }}"
+          LATEST="${{ steps.latest.outputs.version }}"
+          
+          if [ "$CURRENT" = "$LATEST" ]; then
+            echo "needs_update=false" >> $GITHUB_OUTPUT
+            echo "✅ Protobufs are up to date ($CURRENT)"
+          else
+            echo "needs_update=true" >> $GITHUB_OUTPUT
+            echo "⚠️ Protobuf update available: $CURRENT → $LATEST"
+          fi
+      
+      - name: Check for existing issue
+        id: existing
+        if: steps.compare.outputs.needs_update == 'true'
+        run: |
+          LATEST="${{ steps.latest.outputs.version }}"
+          EXISTING=$(gh issue list --label "protobuf-update" --state open --json number,title --jq ".[] | select(.title | contains(\"$LATEST\")) | .number")
+          
+          if [ -n "$EXISTING" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Issue #$EXISTING already exists for version $LATEST"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Create issue for update
+        if: steps.compare.outputs.needs_update == 'true' && steps.existing.outputs.exists == 'false'
+        run: |
+          CURRENT="${{ steps.current.outputs.version }}"
+          LATEST="${{ steps.latest.outputs.version }}"
+          
+          gh issue create \
+            --title "🔄 Update Meshtastic Protobufs to $LATEST" \
+            --label "protobuf-update,enhancement" \
+            --body "## Protobuf Update Available
+
+A new version of Meshtastic protobufs has been released.
+
+| | Version |
+|---|---|
+| **Current** | \`$CURRENT\` |
+| **Latest** | \`$LATEST\` |
+
+### Update Instructions
+
+Run the following command to update:
+
+\`\`\`bash
+./scripts/generate_protos.sh update
+\`\`\`
+
+Or to update to a specific version:
+
+\`\`\`bash
+./scripts/generate_protos.sh update $LATEST
+\`\`\`
+
+### Release Notes
+
+View the release notes at:
+https://github.com/meshtastic/protobufs/releases/tag/$LATEST
+
+### Checklist
+
+- [ ] Update protobufs using the script above
+- [ ] Review generated Dart code changes
+- [ ] Test with a physical Meshtastic device
+- [ ] Update any app code affected by protobuf changes
+- [ ] Commit and push changes
+
+---
+*This issue was automatically created by the protobuf update checker.*"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Summary
+        run: |
+          echo "## Protobuf Version Check" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| | Version |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| Current | \`${{ steps.current.outputs.version }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Latest | \`${{ steps.latest.outputs.version }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.compare.outputs.needs_update }}" = "true" ]; then
+            echo "⚠️ **Update available!**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ **Up to date**" >> $GITHUB_STEP_SUMMARY
+          fi
