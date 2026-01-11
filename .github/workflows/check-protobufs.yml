@@ -66,53 +66,60 @@ jobs:
       
       - name: Create issue for update
         if: steps.compare.outputs.needs_update == 'true' && steps.existing.outputs.exists == 'false'
-        run: |
-          CURRENT="${{ steps.current.outputs.version }}"
-          LATEST="${{ steps.latest.outputs.version }}"
-          
-          gh issue create \
-            --title "🔄 Update Meshtastic Protobufs to $LATEST" \
-            --label "protobuf-update,enhancement" \
-            --body "## Protobuf Update Available
-
-A new version of Meshtastic protobufs has been released.
-
-| | Version |
-|---|---|
-| **Current** | \`$CURRENT\` |
-| **Latest** | \`$LATEST\` |
-
-### Update Instructions
-
-Run the following command to update:
-
-\`\`\`bash
-./scripts/generate_protos.sh update
-\`\`\`
-
-Or to update to a specific version:
-
-\`\`\`bash
-./scripts/generate_protos.sh update $LATEST
-\`\`\`
-
-### Release Notes
-
-View the release notes at:
-https://github.com/meshtastic/protobufs/releases/tag/$LATEST
-
-### Checklist
-
-- [ ] Update protobufs using the script above
-- [ ] Review generated Dart code changes
-- [ ] Test with a physical Meshtastic device
-- [ ] Update any app code affected by protobuf changes
-- [ ] Commit and push changes
-
----
-*This issue was automatically created by the protobuf update checker.*"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CURRENT_VERSION: ${{ steps.current.outputs.version }}
+          LATEST_VERSION: ${{ steps.latest.outputs.version }}
+        run: |
+          cat << 'EOF' > /tmp/issue_body.md
+          ## Protobuf Update Available
+
+          A new version of Meshtastic protobufs has been released.
+
+          | | Version |
+          |---|---|
+          | **Current** | `CURRENT_PLACEHOLDER` |
+          | **Latest** | `LATEST_PLACEHOLDER` |
+
+          ### Update Instructions
+
+          Run the following command to update:
+
+          ```bash
+          ./scripts/generate_protos.sh update
+          ```
+
+          Or to update to a specific version:
+
+          ```bash
+          ./scripts/generate_protos.sh update LATEST_PLACEHOLDER
+          ```
+
+          ### Release Notes
+
+          View the release notes at:
+          https://github.com/meshtastic/protobufs/releases/tag/LATEST_PLACEHOLDER
+
+          ### Checklist
+
+          - [ ] Update protobufs using the script above
+          - [ ] Review generated Dart code changes
+          - [ ] Test with a physical Meshtastic device
+          - [ ] Update any app code affected by protobuf changes
+          - [ ] Commit and push changes
+
+          ---
+          *This issue was automatically created by the protobuf update checker.*
+          EOF
+          
+          # Replace placeholders with actual values
+          sed -i "s/CURRENT_PLACEHOLDER/$CURRENT_VERSION/g" /tmp/issue_body.md
+          sed -i "s/LATEST_PLACEHOLDER/$LATEST_VERSION/g" /tmp/issue_body.md
+          
+          gh issue create \
+            --title "🔄 Update Meshtastic Protobufs to $LATEST_VERSION" \
+            --label "protobuf-update,enhancement" \
+            --body-file /tmp/issue_body.md
       
       - name: Summary
         run: |
