@@ -10,6 +10,7 @@ import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/channel_key_field.dart';
+import '../../core/widgets/ico_help_system.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 import '../../utils/encoding.dart';
@@ -119,9 +120,11 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
 
   // Step 1: Name
   final _nameController = TextEditingController();
+  final _nameFieldKey = GlobalKey();
 
   // Step 2: Privacy level
   PrivacyLevel _privacyLevel = PrivacyLevel.private;
+  final _privacyFieldKey = GlobalKey();
 
   // Step 3: Advanced options (optional)
   bool _uplinkEnabled = false;
@@ -130,6 +133,7 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
 
   // Key management
   List<int> _generatedKey = [];
+  final _keyFieldKey = GlobalKey();
 
   // Saving state
   bool _isSaving = false;
@@ -264,38 +268,52 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        title: const Text('Create Channel'),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.pop(context),
+    return HelpTourController(
+      topicId: 'channel_creation',
+      stepKeys: {
+        'channel_name': _nameFieldKey,
+        'privacy_level': _privacyFieldKey,
+        'encryption_key': _keyFieldKey,
+      },
+      child: Scaffold(
+        backgroundColor: context.background,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          title: const Text('Create Channel'),
+          leading: IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => Navigator.pop(context),
+          ),
         ),
-      ),
-      body: GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(),
-        behavior: HitTestBehavior.opaque,
-        child: Column(
+        body: Stack(
           children: [
-            // Progress indicator
-            _buildProgressIndicator(),
-            // Page content
-            Expanded(
-              child: PageView(
-                controller: _pageController,
-                physics: const NeverScrollableScrollPhysics(),
+            GestureDetector(
+              onTap: () => FocusScope.of(context).unfocus(),
+              behavior: HitTestBehavior.opaque,
+              child: Column(
                 children: [
-                  _buildNameStep(theme),
-                  _buildPrivacyStep(theme),
-                  _buildOptionsStep(theme),
-                  _buildCompleteStep(theme),
+                  // Progress indicator
+                  _buildProgressIndicator(),
+                  // Page content
+                  Expanded(
+                    child: PageView(
+                      controller: _pageController,
+                      physics: const NeverScrollableScrollPhysics(),
+                      children: [
+                        _buildNameStep(theme),
+                        _buildPrivacyStep(theme),
+                        _buildOptionsStep(theme),
+                        _buildCompleteStep(theme),
+                      ],
+                    ),
+                  ),
+                  // Navigation buttons
+                  if (!_saveComplete) _buildNavigationButtons(),
                 ],
               ),
             ),
-            // Navigation buttons
-            if (!_saveComplete) _buildNavigationButtons(),
+            // Help button
+            IcoHelpButton(topicId: 'channel_creation', autoTrigger: true),
           ],
         ),
       ),
@@ -376,31 +394,36 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
             ),
           ),
           SizedBox(height: 32),
-          TextField(
-            controller: _nameController,
-            style: TextStyle(color: context.textPrimary),
-            maxLength: 12,
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
-            ],
-            decoration: InputDecoration(
-              labelText: 'Channel Name',
-              labelStyle: TextStyle(color: context.textSecondary),
-              hintText: 'e.g., Family, Friends, Hiking',
-              hintStyle: TextStyle(color: context.textSecondary.withAlpha(128)),
-              filled: true,
-              fillColor: context.surface,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
+          Container(
+            key: _nameFieldKey,
+            child: TextField(
+              controller: _nameController,
+              style: TextStyle(color: context.textPrimary),
+              maxLength: 12,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
+              ],
+              decoration: InputDecoration(
+                labelText: 'Channel Name',
+                labelStyle: TextStyle(color: context.textSecondary),
+                hintText: 'e.g., Family, Friends, Hiking',
+                hintStyle: TextStyle(
+                  color: context.textSecondary.withAlpha(128),
+                ),
+                filled: true,
+                fillColor: context.surface,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: context.accentColor, width: 2),
+                ),
+                counterStyle: TextStyle(color: context.textSecondary),
               ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: context.accentColor, width: 2),
-              ),
-              counterStyle: TextStyle(color: context.textSecondary),
+              onChanged: (_) => setState(() {}),
             ),
-            onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: 16),
           Container(
@@ -451,8 +474,13 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
             ),
           ),
           const SizedBox(height: 24),
-          ...PrivacyLevel.values.map(
-            (level) => _buildPrivacyOption(level, theme),
+          Container(
+            key: _privacyFieldKey,
+            child: Column(
+              children: PrivacyLevel.values
+                  .map((level) => _buildPrivacyOption(level, theme))
+                  .toList(),
+            ),
           ),
           const SizedBox(height: 24),
           _buildCompatibilityInfo(theme),
@@ -642,18 +670,21 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
           if (_privacyLevel == PrivacyLevel.private ||
               _privacyLevel == PrivacyLevel.maximum) ...[
             const SizedBox(height: 12),
-            ChannelKeyField(
-              keyBase64: ChannelKeyUtils.keyToBase64(_generatedKey),
-              onKeyChanged: (newKey) {
-                final decoded = ChannelKeyUtils.base64ToKey(newKey);
-                if (decoded != null) {
-                  setState(() {
-                    _generatedKey = decoded;
-                  });
-                }
-              },
-              expectedKeyBytes: _privacyLevel.keySize.bytes,
-              accentColor: _privacyLevel.color,
+            Container(
+              key: _keyFieldKey,
+              child: ChannelKeyField(
+                keyBase64: ChannelKeyUtils.keyToBase64(_generatedKey),
+                onKeyChanged: (newKey) {
+                  final decoded = ChannelKeyUtils.base64ToKey(newKey);
+                  if (decoded != null) {
+                    setState(() {
+                      _generatedKey = decoded;
+                    });
+                  }
+                },
+                expectedKeyBytes: _privacyLevel.keySize.bytes,
+                accentColor: _privacyLevel.color,
+              ),
             ),
             const SizedBox(height: 24),
           ],
