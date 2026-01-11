@@ -76,7 +76,7 @@ class ConnectionRequiredWrapper extends ConsumerWidget {
 
     // If reconnecting and we want to show that state
     if (isReconnecting && showReconnectingState) {
-      return _buildReconnectingScreen(context, autoReconnectState);
+      return _buildReconnectingScreen(context, ref, autoReconnectState);
     }
 
     // Otherwise show disconnected state with full screen replacement
@@ -171,6 +171,7 @@ class ConnectionRequiredWrapper extends ConsumerWidget {
 
   Widget _buildReconnectingScreen(
     BuildContext context,
+    WidgetRef ref,
     AutoReconnectState autoReconnectState,
   ) {
     return Scaffold(
@@ -208,6 +209,35 @@ class ConnectionRequiredWrapper extends ConsumerWidget {
             Text(
               'Please wait...',
               style: TextStyle(fontSize: 14, color: context.textSecondary),
+            ),
+            const SizedBox(height: 32),
+            // Cancel button to stop auto-reconnect and scan for other devices
+            TextButton.icon(
+              onPressed: () {
+                // Cancel the auto-reconnect
+                ref
+                    .read(autoReconnectStateProvider.notifier)
+                    .setState(AutoReconnectState.idle);
+                // Mark as user disconnected to prevent further auto-reconnect
+                ref
+                    .read(userDisconnectedProvider.notifier)
+                    .setUserDisconnected(true);
+                // Navigate to scanner
+                if (onScanPressed != null) {
+                  onScanPressed!();
+                } else {
+                  Navigator.of(context).pushNamed('/scanner');
+                }
+              },
+              icon: Icon(
+                Icons.bluetooth_searching,
+                size: 18,
+                color: context.textSecondary,
+              ),
+              label: Text(
+                'Scan for Other Devices',
+                style: TextStyle(color: context.textSecondary),
+              ),
             ),
           ],
         ),
