@@ -187,171 +187,222 @@ class IcoSpeechBubbleWithArrow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final helpState = ref.watch(helpProvider);
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Ico mascot
-        SizedBox(
-          width: 120,
-          height: 120,
-          child: MeshNodeBrain(mood: icoMood, size: 100),
-        ),
-        const SizedBox(height: 16),
-
-        // Speech bubble
-        ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.85,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.9,
+          ),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppTheme.darkSurface.withValues(alpha: 0.85),
+                AppTheme.darkBackground.withValues(alpha: 0.9),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.1),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.3),
+                blurRadius: 30,
+                offset: const Offset(0, 10),
               ),
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    AppTheme.darkSurface.withValues(alpha: 0.85),
-                    AppTheme.darkBackground.withValues(alpha: 0.9),
+              BoxShadow(
+                color: AppTheme.primaryMagenta.withValues(alpha: 0.15),
+                blurRadius: 40,
+                spreadRadius: -5,
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Game-style header with Ico avatar
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      width: 1,
+                    ),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    // Ico avatar
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          colors: [
+                            AppTheme.primaryMagenta.withValues(alpha: 0.3),
+                            AccentColors.cyan.withValues(alpha: 0.2),
+                          ],
+                        ),
+                      ),
+                      child: MeshNodeBrain(mood: icoMood, size: 40),
+                    ),
+                    const SizedBox(width: 12),
+                    // Name label
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Ico',
+                            style: TextStyle(
+                              color: AppTheme.primaryMagenta,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          Text(
+                            'Your Mesh Guide',
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.5),
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.1),
-                  width: 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    blurRadius: 30,
-                    offset: const Offset(0, 10),
-                  ),
-                  BoxShadow(
-                    color: AppTheme.primaryMagenta.withValues(alpha: 0.15),
-                    blurRadius: 40,
-                    spreadRadius: -5,
-                  ),
-                ],
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Progress indicator
-                  if (totalSteps > 1) ...[
-                    Row(
-                      children: [
-                        Text(
-                          'Step $currentStep of $totalSteps',
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.6),
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.5,
+
+              // Message content
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Progress indicator
+                    if (totalSteps > 1) ...[
+                      Row(
+                        children: [
+                          Text(
+                            'Step $currentStep of $totalSteps',
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.6),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.5,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: LinearProgressIndicator(
-                              value: currentStep / totalSteps,
-                              minHeight: 4,
-                              backgroundColor: Colors.white.withValues(
-                                alpha: 0.1,
-                              ),
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                AppTheme.primaryMagenta,
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: LinearProgressIndicator(
+                                value: currentStep / totalSteps,
+                                minHeight: 4,
+                                backgroundColor: Colors.white.withValues(
+                                  alpha: 0.1,
+                                ),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  AppTheme.primaryMagenta,
+                                ),
                               ),
                             ),
                           ),
-                        ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
+                    // Message text
+                    AdvisorSpeechBubble(
+                      text: text,
+                      typewriterEffect: true,
+                      typingSpeed: 20,
+                      accentColor: AppTheme.primaryMagenta,
+                      hapticFeedback: helpState.hapticFeedback,
+                      onHapticToggle: (enabled) {
+                        ref
+                            .read(helpProvider.notifier)
+                            .setHapticFeedback(enabled);
+                      },
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Action buttons
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Back button
+                        if (showBack && onBack != null)
+                          TextButton.icon(
+                            onPressed: onBack,
+                            icon: const Icon(Icons.arrow_back, size: 18),
+                            label: const Text('Back'),
+                            style: TextButton.styleFrom(
+                              foregroundColor: AccentColors.cyan.withValues(
+                                alpha: 0.7,
+                              ),
+                            ),
+                          )
+                        else
+                          const SizedBox.shrink(),
+
+                        // Skip button
+                        if (showSkip && onSkip != null)
+                          TextButton(
+                            onPressed: onSkip,
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.white.withValues(
+                                alpha: 0.5,
+                              ),
+                            ),
+                            child: const Text('Skip'),
+                          ),
+
+                        // Next/Done button
+                        if (onNext != null)
+                          ElevatedButton(
+                            onPressed: onNext,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.primaryMagenta,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shadowColor: Colors.transparent,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 28,
+                                vertical: 14,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Text(
+                              nextLabel ?? 'Next',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 15,
+                              ),
+                            ),
+                          ),
                       ],
                     ),
-                    const SizedBox(height: 16),
                   ],
-
-                  // Message text
-                  AdvisorSpeechBubble(
-                    text: text,
-                    typewriterEffect: true,
-                    typingSpeed: 20,
-                    accentColor: AppTheme.primaryMagenta,
-                    hapticFeedback: helpState.hapticFeedback,
-                    onHapticToggle: (enabled) {
-                      ref
-                          .read(helpProvider.notifier)
-                          .setHapticFeedback(enabled);
-                    },
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Action buttons
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Back button
-                      if (showBack && onBack != null)
-                        TextButton.icon(
-                          onPressed: onBack,
-                          icon: const Icon(Icons.arrow_back, size: 18),
-                          label: const Text('Back'),
-                          style: TextButton.styleFrom(
-                            foregroundColor: AccentColors.cyan.withValues(
-                              alpha: 0.7,
-                            ),
-                          ),
-                        )
-                      else
-                        const SizedBox.shrink(),
-
-                      // Skip button
-                      if (showSkip && onSkip != null)
-                        TextButton(
-                          onPressed: onSkip,
-                          style: TextButton.styleFrom(
-                            foregroundColor: Colors.white.withValues(
-                              alpha: 0.5,
-                            ),
-                          ),
-                          child: const Text('Skip'),
-                        ),
-
-                      // Next/Done button
-                      if (onNext != null)
-                        ElevatedButton(
-                          onPressed: onNext,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.primaryMagenta,
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            shadowColor: Colors.transparent,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 28,
-                              vertical: 14,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: Text(
-                            nextLabel ?? 'Next',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 15,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
         ),
-      ],
+      ),
     );
   }
 }

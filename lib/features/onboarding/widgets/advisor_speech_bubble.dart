@@ -232,12 +232,6 @@ class _AdvisorSpeechBubbleState extends State<AdvisorSpeechBubble>
                     ),
                   ),
 
-                  // Corner decorations
-                  _buildCornerDecoration(Alignment.topLeft),
-                  _buildCornerDecoration(Alignment.topRight),
-                  _buildCornerDecoration(Alignment.bottomLeft),
-                  _buildCornerDecoration(Alignment.bottomRight),
-
                   // Content - Fixed height with scrollable text
                   ConstrainedBox(
                     constraints: const BoxConstraints(maxHeight: 140),
@@ -399,47 +393,6 @@ class _AdvisorSpeechBubbleState extends State<AdvisorSpeechBubble>
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildCornerDecoration(Alignment alignment) {
-    return Positioned(
-      left: alignment.x < 0 ? 4 : null,
-      right: alignment.x > 0 ? 4 : null,
-      top: alignment.y < 0 ? 4 : null,
-      bottom: alignment.y > 0 ? 4 : null,
-      child: Container(
-        width: 12,
-        height: 12,
-        decoration: BoxDecoration(
-          border: Border(
-            left: alignment.x < 0
-                ? BorderSide(
-                    color: widget.accentColor.withValues(alpha: 0.5),
-                    width: 2,
-                  )
-                : BorderSide.none,
-            right: alignment.x > 0
-                ? BorderSide(
-                    color: widget.accentColor.withValues(alpha: 0.5),
-                    width: 2,
-                  )
-                : BorderSide.none,
-            top: alignment.y < 0
-                ? BorderSide(
-                    color: widget.accentColor.withValues(alpha: 0.5),
-                    width: 2,
-                  )
-                : BorderSide.none,
-            bottom: alignment.y > 0
-                ? BorderSide(
-                    color: widget.accentColor.withValues(alpha: 0.5),
-                    width: 2,
-                  )
-                : BorderSide.none,
-          ),
-        ),
       ),
     );
   }
