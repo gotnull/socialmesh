@@ -11,6 +11,7 @@ import '../../../models/social.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/connection_providers.dart';
 import '../../../providers/signal_providers.dart';
+import '../../../providers/social_providers.dart';
 import '../../../utils/snackbar.dart';
 import '../widgets/signal_card.dart';
 import 'create_signal_screen.dart';
@@ -396,6 +397,7 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
               final currentUser = ref.watch(currentUserProvider);
               final isOwnSignal =
                   currentUser != null && signal.authorId == currentUser.uid;
+              final canReport = currentUser != null && !isOwnSignal;
               return AnimatedSignalItem(
                 key: ValueKey('animated_${signal.id}'),
                 index: index,
@@ -413,6 +415,7 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                     onTap: () => _openSignalDetail(signal),
                     onComment: () => _openSignalDetail(signal),
                     onDelete: isOwnSignal ? () => _deleteSignal(signal) : null,
+                    onReport: canReport ? () => _reportSignal(signal) : null,
                   ),
                 ),
               );
@@ -463,6 +466,76 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
 
     if (confirm == true) {
       await ref.read(signalFeedProvider.notifier).deleteSignal(signal.id);
+    }
+  }
+
+  Future<void> _reportSignal(Post signal) async {
+    final reasonController = TextEditingController();
+    final reason = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: context.card,
+        title: Text(
+          'Report Signal',
+          style: TextStyle(color: context.textPrimary),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Why are you reporting this signal?',
+              style: TextStyle(color: context.textSecondary),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: reasonController,
+              decoration: InputDecoration(
+                hintText: 'Describe the issue...',
+                hintStyle: TextStyle(color: context.textTertiary),
+                border: const OutlineInputBorder(),
+              ),
+              style: TextStyle(color: context.textPrimary),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: context.textSecondary),
+            ),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, reasonController.text.trim()),
+            child: const Text('Report'),
+          ),
+        ],
+      ),
+    );
+
+    reasonController.dispose();
+
+    if (reason != null && reason.isNotEmpty && mounted) {
+      try {
+        final socialService = ref.read(socialServiceProvider);
+        await socialService.reportSignal(
+          signalId: signal.id,
+          reason: reason,
+          authorId: signal.authorId,
+          content: signal.content,
+          imageUrl: signal.mediaUrls.isNotEmpty ? signal.mediaUrls.first : null,
+        );
+        if (mounted) {
+          showSuccessSnackBar(context, 'Report submitted. Thank you.');
+        }
+      } catch (e) {
+        if (mounted) {
+          showErrorSnackBar(context, 'Failed to report: $e');
+        }
+      }
     }
   }
 }

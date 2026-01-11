@@ -28,7 +28,7 @@ class _ReportedContentScreenState extends ConsumerState<ReportedContentScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
   }
 
   @override
@@ -44,11 +44,13 @@ class _ReportedContentScreenState extends ConsumerState<ReportedContentScreen>
         title: const Text('Reported Content'),
         bottom: TabBar(
           controller: _tabController,
+          isScrollable: true,
           tabs: const [
             Tab(text: 'Auto'),
             Tab(text: 'All'),
             Tab(text: 'Posts'),
             Tab(text: 'Comments'),
+            Tab(text: 'Signals'),
           ],
         ),
       ),
@@ -59,6 +61,7 @@ class _ReportedContentScreenState extends ConsumerState<ReportedContentScreen>
           _ReportsList(filter: null),
           _ReportsList(filter: 'post'),
           _ReportsList(filter: 'comment'),
+          _ReportsList(filter: 'signal'),
         ],
       ),
     );
@@ -1013,9 +1016,32 @@ class _ReportsList extends ConsumerWidget {
       } else {
         showErrorSnackBar(context, 'Post not found for this comment');
       }
+    } else if (type == 'signal') {
+      _showSignalPreviewSheet(context, report);
     } else if (type == 'story') {
       _showStoryPreviewSheet(context, report);
     }
+  }
+
+  void _showSignalPreviewSheet(
+    BuildContext context,
+    Map<String, dynamic> report,
+  ) {
+    final reportContext = report['context'] as Map<String, dynamic>?;
+    final content = reportContext?['content'] as String?;
+    final imageUrl = reportContext?['imageUrl'] as String?;
+    final authorId = reportContext?['authorId'] as String?;
+    final reason = report['reason'] as String? ?? 'No reason provided';
+
+    AppBottomSheet.show(
+      context: context,
+      child: _SignalPreviewContent(
+        content: content,
+        imageUrl: imageUrl,
+        authorId: authorId,
+        reason: reason,
+      ),
+    );
   }
 
   void _showStoryPreviewSheet(
@@ -1630,6 +1656,230 @@ class _BanUserSheetState extends State<_BanUserSheet> {
             ],
           ),
         ),
+      ],
+    );
+  }
+}
+
+/// Content widget for signal preview bottom sheet.
+class _SignalPreviewContent extends StatelessWidget {
+  const _SignalPreviewContent({
+    required this.content,
+    required this.imageUrl,
+    required this.authorId,
+    required this.reason,
+  });
+
+  final String? content;
+  final String? imageUrl;
+  final String? authorId;
+  final String reason;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: context.accentColor.withAlpha(30),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.sensors, size: 14, color: context.accentColor),
+                    const SizedBox(width: 6),
+                    Text(
+                      'SIGNAL',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: context.accentColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Spacer(),
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.close),
+              ),
+            ],
+          ),
+        ),
+
+        // Report reason
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.errorContainer.withAlpha(50),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.error.withAlpha(50),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.flag,
+                  size: 16,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    reason,
+                    style: const TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        // Signal content
+        if (content != null && content!.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: context.card,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                content!,
+                style: TextStyle(
+                  color: context.textPrimary,
+                  fontSize: 15,
+                  height: 1.4,
+                ),
+              ),
+            ),
+          ),
+
+        // Image preview
+        if (imageUrl != null) ...[
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.network(
+                imageUrl!,
+                height: 200,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: context.card,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.broken_image_outlined,
+                        size: 36,
+                        color: context.textTertiary,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Image unavailable',
+                        style: TextStyle(
+                          color: context.textTertiary,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+
+        // Show placeholder if no content
+        if ((content == null || content!.isEmpty) && imageUrl == null)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: context.card,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Center(
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.sensors_off,
+                      size: 48,
+                      color: context.textTertiary,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Signal content not available',
+                      style: TextStyle(color: context.textTertiary),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+        // Author info
+        if (authorId != null) ...[
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.person_outline,
+                  size: 16,
+                  color: context.textSecondary,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Author: ',
+                  style: TextStyle(fontSize: 12, color: context.textSecondary),
+                ),
+                Expanded(
+                  child: Text(
+                    authorId!,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontFamily: 'monospace',
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+
+        const SizedBox(height: 24),
       ],
     );
   }

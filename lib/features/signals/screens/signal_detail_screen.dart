@@ -556,6 +556,169 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
     );
   }
 
+  Widget _buildSignalMenu(BuildContext context, Post signal) {
+    final currentUser = ref.watch(currentUserProvider);
+    final isOwnSignal =
+        currentUser != null && signal.authorId == currentUser.uid;
+    final canReport = currentUser != null && !isOwnSignal;
+
+    if (!isOwnSignal && !canReport) {
+      return const SizedBox.shrink();
+    }
+
+    return PopupMenuButton<String>(
+      icon: Icon(Icons.more_vert, color: context.textPrimary),
+      onSelected: (value) {
+        switch (value) {
+          case 'delete':
+            _deleteSignal(signal);
+          case 'report':
+            _reportSignal(signal);
+        }
+      },
+      itemBuilder: (context) => [
+        if (isOwnSignal)
+          PopupMenuItem<String>(
+            value: 'delete',
+            child: Row(
+              children: [
+                Icon(
+                  Icons.delete_outline,
+                  color: context.textSecondary,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Text('Delete', style: TextStyle(color: context.textPrimary)),
+              ],
+            ),
+          ),
+        if (canReport)
+          PopupMenuItem<String>(
+            value: 'report',
+            child: Row(
+              children: [
+                Icon(
+                  Icons.flag_outlined,
+                  color: context.textSecondary,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Text('Report', style: TextStyle(color: context.textPrimary)),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  Future<void> _deleteSignal(Post signal) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: context.card,
+        title: Text(
+          'Delete Signal?',
+          style: TextStyle(color: context.textPrimary),
+        ),
+        content: Text(
+          'This signal will fade immediately.',
+          style: TextStyle(color: context.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: context.textSecondary),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      await ref.read(signalFeedProvider.notifier).deleteSignal(signal.id);
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    }
+  }
+
+  Future<void> _reportSignal(Post signal) async {
+    final reasonController = TextEditingController();
+    final reason = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: context.card,
+        title: Text(
+          'Report Signal',
+          style: TextStyle(color: context.textPrimary),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Why are you reporting this signal?',
+              style: TextStyle(color: context.textSecondary),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: reasonController,
+              decoration: InputDecoration(
+                hintText: 'Describe the issue...',
+                hintStyle: TextStyle(color: context.textTertiary),
+                border: const OutlineInputBorder(),
+              ),
+              style: TextStyle(color: context.textPrimary),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: context.textSecondary),
+            ),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, reasonController.text.trim()),
+            child: const Text('Report'),
+          ),
+        ],
+      ),
+    );
+
+    reasonController.dispose();
+
+    if (reason != null && reason.isNotEmpty && mounted) {
+      try {
+        final socialService = ref.read(socialServiceProvider);
+        await socialService.reportSignal(
+          signalId: signal.id,
+          reason: reason,
+          authorId: signal.authorId,
+          content: signal.content,
+          imageUrl: signal.mediaUrls.isNotEmpty ? signal.mediaUrls.first : null,
+        );
+        if (mounted) {
+          showSuccessSnackBar(context, 'Report submitted. Thank you.');
+        }
+      } catch (e) {
+        if (mounted) {
+          showErrorSnackBar(context, 'Failed to report: $e');
+        }
+      }
+    }
+  }
+
   void _scrollToTop() {
     _scrollController.animateTo(
       0,
@@ -595,14 +758,17 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
                         ),
                         onPressed: () => Navigator.of(context).pop(),
                       ),
-                      Text(
-                        'Signal',
-                        style: TextStyle(
-                          color: context.textPrimary,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 20,
+                      Expanded(
+                        child: Text(
+                          'Signal',
+                          style: TextStyle(
+                            color: context.textPrimary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 20,
+                          ),
                         ),
                       ),
+                      _buildSignalMenu(context, signal),
                     ],
                   ),
                 ),

@@ -25,6 +25,7 @@ class SignalCard extends StatelessWidget {
     required this.signal,
     this.onTap,
     this.onDelete,
+    this.onReport,
     this.onComment,
     this.showActions = true,
   });
@@ -32,6 +33,7 @@ class SignalCard extends StatelessWidget {
   final Post signal;
   final VoidCallback? onTap;
   final VoidCallback? onDelete;
+  final VoidCallback? onReport;
   final VoidCallback? onComment;
   final bool showActions;
 
@@ -52,6 +54,7 @@ class SignalCard extends StatelessWidget {
             _SignalHeader(
               signal: signal,
               onDelete: showActions ? onDelete : null,
+              onReport: showActions ? onReport : null,
             ),
 
             // Content
@@ -109,10 +112,11 @@ class SignalCard extends StatelessWidget {
 }
 
 class _SignalHeader extends ConsumerWidget {
-  const _SignalHeader({required this.signal, this.onDelete});
+  const _SignalHeader({required this.signal, this.onDelete, this.onReport});
 
   final Post signal;
   final VoidCallback? onDelete;
+  final VoidCallback? onReport;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -247,17 +251,61 @@ class _SignalHeader extends ConsumerWidget {
             ),
           ),
 
-          // Delete button
-          if (onDelete != null)
-            IconButton(
-              onPressed: onDelete,
+          // More options menu
+          if (onDelete != null || onReport != null)
+            PopupMenuButton<String>(
               icon: Icon(
                 Icons.more_vert,
                 color: context.textTertiary,
                 size: 20,
               ),
               padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
+              onSelected: (value) {
+                switch (value) {
+                  case 'delete':
+                    onDelete?.call();
+                  case 'report':
+                    onReport?.call();
+                }
+              },
+              itemBuilder: (context) => [
+                if (onDelete != null)
+                  PopupMenuItem<String>(
+                    value: 'delete',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.delete_outline,
+                          color: context.textSecondary,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Delete',
+                          style: TextStyle(color: context.textPrimary),
+                        ),
+                      ],
+                    ),
+                  ),
+                if (onReport != null)
+                  PopupMenuItem<String>(
+                    value: 'report',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.flag_outlined,
+                          color: context.textSecondary,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Report',
+                          style: TextStyle(color: context.textPrimary),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
             ),
         ],
       ),

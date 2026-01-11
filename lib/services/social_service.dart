@@ -2102,6 +2102,34 @@ class SocialService {
     });
   }
 
+  /// Report a signal for moderation.
+  Future<void> reportSignal({
+    required String signalId,
+    required String reason,
+    String? authorId,
+    String? content,
+    String? imageUrl,
+  }) async {
+    final currentUserId = _currentUserId;
+    if (currentUserId == null) {
+      throw StateError('Must be signed in to report signals');
+    }
+
+    await _firestore.collection('reports').add({
+      'type': 'signal',
+      'targetId': signalId,
+      'reporterId': currentUserId,
+      'reason': reason,
+      'status': 'pending',
+      'createdAt': FieldValue.serverTimestamp(),
+      'context': {
+        if (authorId != null) 'authorId': authorId,
+        if (content != null) 'content': content,
+        if (imageUrl != null) 'imageUrl': imageUrl,
+      },
+    });
+  }
+
   /// Report a story for moderation.
   Future<void> reportStory({
     required String storyId,
