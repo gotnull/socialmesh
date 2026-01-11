@@ -461,11 +461,11 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
     List<int> linkedNodeIds,
   ) {
     final myNode = nodes.where((n) => n.nodeNum == myNodeNum).toList();
-    final linkedNodes = nodes
-        .where(
-          (n) => n.nodeNum != myNodeNum && linkedNodeIds.contains(n.nodeNum),
-        )
-        .toList();
+    // final linkedNodes = nodes
+    //     .where(
+    //       (n) => n.nodeNum != myNodeNum && linkedNodeIds.contains(n.nodeNum),
+    //     )
+    //     .toList();
     final online = nodes
         .where(
           (n) =>
@@ -493,7 +493,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
 
     return [
       if (myNode.isNotEmpty) _NodeSection('Your Device', myNode),
-      if (linkedNodes.isNotEmpty) _NodeSection('Linked Devices', linkedNodes),
+      // if (linkedNodes.isNotEmpty) _NodeSection('Linked Devices', linkedNodes),
       _NodeSection('Online', online),
       _NodeSection('Idle (2-24h)', idle),
       _NodeSection('Offline', offline),
@@ -506,11 +506,11 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
     List<int> linkedNodeIds,
   ) {
     final myNode = nodes.where((n) => n.nodeNum == myNodeNum).toList();
-    final linkedNodes = nodes
-        .where(
-          (n) => n.nodeNum != myNodeNum && linkedNodeIds.contains(n.nodeNum),
-        )
-        .toList();
+    // final linkedNodes = nodes
+    //     .where(
+    //       (n) => n.nodeNum != myNodeNum && linkedNodeIds.contains(n.nodeNum),
+    //     )
+    //     .toList();
     final others = nodes
         .where(
           (n) => n.nodeNum != myNodeNum && !linkedNodeIds.contains(n.nodeNum),
@@ -529,7 +529,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
     final sortedKeys = grouped.keys.toList()..sort();
     return [
       if (myNode.isNotEmpty) _NodeSection('Your Device', myNode),
-      if (linkedNodes.isNotEmpty) _NodeSection('Linked Devices', linkedNodes),
+      // if (linkedNodes.isNotEmpty) _NodeSection('Linked Devices', linkedNodes),
       ...sortedKeys.map((key) => _NodeSection(key, grouped[key]!)),
     ];
   }
@@ -540,11 +540,11 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
     List<int> linkedNodeIds,
   ) {
     final myNode = nodes.where((n) => n.nodeNum == myNodeNum).toList();
-    final linkedNodes = nodes
-        .where(
-          (n) => n.nodeNum != myNodeNum && linkedNodeIds.contains(n.nodeNum),
-        )
-        .toList();
+    // final linkedNodes = nodes
+    //     .where(
+    //       (n) => n.nodeNum != myNodeNum && linkedNodeIds.contains(n.nodeNum),
+    //     )
+    //     .toList();
     final others = nodes
         .where(
           (n) => n.nodeNum != myNodeNum && !linkedNodeIds.contains(n.nodeNum),
@@ -562,7 +562,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
 
     return [
       if (myNode.isNotEmpty) _NodeSection('Your Device', myNode),
-      if (linkedNodes.isNotEmpty) _NodeSection('Linked Devices', linkedNodes),
+      // if (linkedNodes.isNotEmpty) _NodeSection('Linked Devices', linkedNodes),
       _NodeSection('Strong (>0 dB)', strong),
       _NodeSection('Medium (-10 to 0 dB)', medium),
       _NodeSection('Weak (<-10 dB)', weak),
@@ -576,11 +576,11 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
     List<int> linkedNodeIds,
   ) {
     final myNode = nodes.where((n) => n.nodeNum == myNodeNum).toList();
-    final linkedNodes = nodes
-        .where(
-          (n) => n.nodeNum != myNodeNum && linkedNodeIds.contains(n.nodeNum),
-        )
-        .toList();
+    // final linkedNodes = nodes
+    //     .where(
+    //       (n) => n.nodeNum != myNodeNum && linkedNodeIds.contains(n.nodeNum),
+    //     )
+    //     .toList();
     final others = nodes
         .where(
           (n) => n.nodeNum != myNodeNum && !linkedNodeIds.contains(n.nodeNum),
@@ -612,7 +612,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
 
     return [
       if (myNode.isNotEmpty) _NodeSection('Your Device', myNode),
-      if (linkedNodes.isNotEmpty) _NodeSection('Linked Devices', linkedNodes),
+      // if (linkedNodes.isNotEmpty) _NodeSection('Linked Devices', linkedNodes),
       _NodeSection('Charging', charging),
       _NodeSection('Full (80-100%)', full),
       _NodeSection('Good (50-80%)', good),
