@@ -1,5 +1,7 @@
 import 'dart:io';
+import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -361,42 +363,62 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
       );
       await ref.putFile(imageFile, metadata);
 
-      // Small delay to allow moderation trigger to process
-      await Future.delayed(const Duration(milliseconds: 500));
+      // Listen for moderation result from Firestore
+      final moderationDocId = 'post_${fileName.replaceAll('.jpg', '')}';
+      AppLogging.signals(
+        '[CreateSignal] Waiting for moderation result: content_moderation/$moderationDocId',
+      );
 
-      // Try to get download URL - if file was moderated, it won't exist
+      // Wait for moderation result with 10s timeout
+      final moderationSnapshot = await FirebaseFirestore.instance
+          .collection('content_moderation')
+          .doc(moderationDocId)
+          .snapshots()
+          .firstWhere(
+            (snapshot) => snapshot.exists && snapshot.data() != null,
+            orElse: () => throw TimeoutException('Moderation timeout'),
+          )
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () => throw TimeoutException('Moderation timeout'),
+          );
+
+      final moderationData = moderationSnapshot.data();
+      if (moderationData == null) {
+        throw Exception('No moderation result');
+      }
+
+      final result = moderationData['result'] as Map<String, dynamic>?;
+      final action = result?['action'] as String?;
+      final passed = result?['passed'] as bool? ?? false;
+
+      AppLogging.signals(
+        '[CreateSignal] Moderation result: action=$action, passed=$passed',
+      );
+
+      // Clean up moderation doc
       try {
-        await ref.getDownloadURL();
-        AppLogging.signals('[CreateSignal] Image passed moderation');
+        await FirebaseFirestore.instance
+            .collection('content_moderation')
+            .doc(moderationDocId)
+            .delete();
+      } catch (_) {
+        // Ignore cleanup errors
+      }
 
-        // Clean up temp file (validation passed)
+      if (!passed || action == 'reject') {
+        // Image was rejected by moderation
+        AppLogging.signals(
+          '[CreateSignal] Image blocked by content moderation: ${result?['details']}',
+        );
+
+        // Delete temp file if it still exists
         try {
           await ref.delete();
         } catch (_) {
-          // Ignore cleanup errors
+          // Already deleted by function
         }
-        return true;
-      } on FirebaseException catch (e) {
-        if (e.code == 'object-not-found') {
-          // Image was deleted by content moderation
-          AppLogging.signals(
-            '[CreateSignal] Image blocked by content moderation',
-          );
-          if (mounted) {
-            showErrorSnackBar(
-              context,
-              'Image violates content guidelines and was blocked.',
-            );
-          }
-          return false;
-        }
-        rethrow;
-      }
-    } catch (e) {
-      AppLogging.signals('[CreateSignal] Image validation error: $e');
-      // Check for object-not-found which indicates moderation
-      final errorStr = e.toString();
-      if (errorStr.contains('object-not-found')) {
+
         if (mounted) {
           showErrorSnackBar(
             context,
@@ -405,6 +427,39 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
         }
         return false;
       }
+
+      // Image passed - clean up temp file
+      AppLogging.signals('[CreateSignal] Image passed moderation');
+      try {
+        await ref.delete();
+      } catch (_) {
+        // Ignore cleanup errors
+      }
+      return true;
+    } catch (e) {
+      AppLogging.signals('[CreateSignal] Image validation error: $e');
+
+      // Check for specific error types
+      if (e is TimeoutException) {
+        if (mounted) {
+          showErrorSnackBar(
+            context,
+            'Image validation timed out. Please try again.',
+          );
+        }
+        return false;
+      }
+
+      if (e is FirebaseException && e.code == 'object-not-found') {
+        if (mounted) {
+          showErrorSnackBar(
+            context,
+            'Image violates content guidelines and was blocked.',
+          );
+        }
+        return false;
+      }
+
       // Other errors - show generic error
       if (mounted) {
         showErrorSnackBar(context, 'Failed to validate image');

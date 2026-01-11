@@ -699,6 +699,7 @@ export const moderateUploadedMedia = onObjectFinalized(
     // - profile_avatars/{userId}.jpg
     // - post_images/{filename}.jpg (userId in metadata)
     // - signal_images_temp/{filename}.jpg (userId in metadata) - temporary validation
+    // - signals/{userId}/{signalId}.jpg - final signal images
     const pathParts = filePath.split('/');
 
     let moderationContentType: ModerationQueueItem['contentType'] | null = null;
@@ -735,6 +736,12 @@ export const moderateUploadedMedia = onObjectFinalized(
         console.log(`Signal temp image ${filePath} missing authorId in metadata`);
         return;
       }
+    } else if (pathParts[0] === 'signals' && pathParts.length >= 3) {
+      // Final signal images: signals/{userId}/{signalId}.jpg
+      moderationContentType = 'post'; // Treat as post for moderation purposes
+      userId = pathParts[1];
+      contentId = pathParts[2]?.replace(/\.[^.]+$/, ''); // Remove extension
+      isTempValidation = false;
     } else {
       console.log(`Skipping unmonitored path: ${filePath}`);
       return;
@@ -772,17 +779,16 @@ export const moderateUploadedMedia = onObjectFinalized(
     const bucket = admin.storage().bucket(event.data.bucket);
     const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${event.data.bucket}/o/${encodeURIComponent(filePath)}?alt=media`;
 
-    // Store moderation result (skip for temp validation)
-    if (!isTempValidation) {
-      await db.collection('content_moderation').doc(`${moderationContentType}_${contentId}`).set({
-        contentType: moderationContentType,
-        contentId,
-        userId,
-        filePath,
-        result,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
-    }
+    // Store moderation result (always write for temp validation too, so client can listen)
+    await db.collection('content_moderation').doc(`${moderationContentType}_${contentId}`).set({
+      contentType: moderationContentType,
+      contentId,
+      userId,
+      filePath,
+      result,
+      isTempValidation,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
 
     // Take action based on result
     if (result.action === 'reject') {
