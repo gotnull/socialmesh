@@ -119,6 +119,18 @@ service firebase.storage {
     // SIGNAL IMAGES (ephemeral mesh signals)
     // =============================================================================
     
+    // Temporary signal images for validation (before final upload)
+    match /signal_images_temp/{fileName} {
+      // Public read for validation
+      allow read: if true;
+      
+      // Authenticated users can upload for validation
+      allow write: if isAuthenticated() && isValidImage();
+      
+      // Auto-cleanup or owner can delete
+      allow delete: if isAuthenticated();
+    }
+    
     // Signal images - stored at signals/{userId}/{signalId}.jpg
     match /signals/{userId}/{fileName} {
       // Public read for signal images (needed for mesh recipients to download)
