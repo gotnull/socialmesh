@@ -173,6 +173,7 @@ class _RichTextParser {
               fontSize: 15,
               height: 1.5,
               fontFamily: AppTheme.fontFamily,
+              decoration: TextDecoration.none,
             ),
           ),
         );
@@ -188,6 +189,7 @@ class _RichTextParser {
             height: 1.5,
             fontWeight: FontWeight.w600,
             fontFamily: AppTheme.fontFamily,
+            decoration: TextDecoration.none,
           ),
         ),
       );
@@ -205,6 +207,7 @@ class _RichTextParser {
             fontSize: 15,
             height: 1.5,
             fontFamily: AppTheme.fontFamily,
+            decoration: TextDecoration.none,
           ),
         ),
       );
@@ -215,32 +218,41 @@ class _RichTextParser {
 }
 
 // ============================================================================
-// ANIMATED DOTTED BORDER - For highlighting target widgets
+// ANIMATED DOTTED BORDER - Wraps a widget with animated dotted border
 // ============================================================================
 
-class AnimatedDottedBorder extends StatefulWidget {
+/// A widget that wraps its child with an animated clockwise-moving dotted border.
+/// Use this to wrap TextFields or other input widgets that need highlighting.
+class IcoHighlightedField extends ConsumerStatefulWidget {
   final Widget child;
+  final String stepId;
+  final String topicId;
   final Color color;
   final double strokeWidth;
   final double dashLength;
   final double gapLength;
   final double borderRadius;
+  final EdgeInsets padding;
 
-  const AnimatedDottedBorder({
+  const IcoHighlightedField({
     super.key,
     required this.child,
+    required this.stepId,
+    required this.topicId,
     this.color = AppTheme.primaryMagenta,
     this.strokeWidth = 2,
-    this.dashLength = 8,
+    this.dashLength = 6,
     this.gapLength = 4,
     this.borderRadius = 12,
+    this.padding = const EdgeInsets.all(4),
   });
 
   @override
-  State<AnimatedDottedBorder> createState() => _AnimatedDottedBorderState();
+  ConsumerState<IcoHighlightedField> createState() =>
+      _IcoHighlightedFieldState();
 }
 
-class _AnimatedDottedBorderState extends State<AnimatedDottedBorder>
+class _IcoHighlightedFieldState extends ConsumerState<IcoHighlightedField>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
@@ -248,7 +260,7 @@ class _AnimatedDottedBorderState extends State<AnimatedDottedBorder>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(seconds: 2),
+      duration: const Duration(milliseconds: 1500),
       vsync: this,
     )..repeat();
   }
@@ -259,13 +271,28 @@ class _AnimatedDottedBorderState extends State<AnimatedDottedBorder>
     super.dispose();
   }
 
+  bool _isHighlighted(HelpState helpState) {
+    if (helpState.activeTourId != widget.topicId) return false;
+    final topic = HelpContent.getTopic(widget.topicId);
+    if (topic == null) return false;
+    if (helpState.currentStepIndex >= topic.steps.length) return false;
+    return topic.steps[helpState.currentStepIndex].id == widget.stepId;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final helpState = ref.watch(helpProvider);
+    final isHighlighted = _isHighlighted(helpState);
+
+    if (!isHighlighted) {
+      return widget.child;
+    }
+
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
         return CustomPaint(
-          painter: _DottedBorderPainter(
+          painter: _AnimatedDottedBorderPainter(
             progress: _controller.value,
             color: widget.color,
             strokeWidth: widget.strokeWidth,
@@ -273,14 +300,14 @@ class _AnimatedDottedBorderState extends State<AnimatedDottedBorder>
             gapLength: widget.gapLength,
             borderRadius: widget.borderRadius,
           ),
-          child: widget.child,
+          child: Padding(padding: widget.padding, child: widget.child),
         );
       },
     );
   }
 }
 
-class _DottedBorderPainter extends CustomPainter {
+class _AnimatedDottedBorderPainter extends CustomPainter {
   final double progress;
   final Color color;
   final double strokeWidth;
@@ -288,7 +315,7 @@ class _DottedBorderPainter extends CustomPainter {
   final double gapLength;
   final double borderRadius;
 
-  _DottedBorderPainter({
+  _AnimatedDottedBorderPainter({
     required this.progress,
     required this.color,
     required this.strokeWidth,
@@ -302,7 +329,8 @@ class _DottedBorderPainter extends CustomPainter {
     final paint = Paint()
       ..color = color
       ..strokeWidth = strokeWidth
-      ..style = PaintingStyle.stroke;
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
 
     final rect = RRect.fromRectAndRadius(
       Rect.fromLTWH(0, 0, size.width, size.height),
@@ -312,32 +340,30 @@ class _DottedBorderPainter extends CustomPainter {
     final path = Path()..addRRect(rect);
     final pathMetrics = path.computeMetrics();
 
-    for (final metric in pathMetrics) {
-      final totalLength = metric.length;
-      final dashCount = (totalLength / (dashLength + gapLength)).ceil();
-      final offset = progress * (dashLength + gapLength);
+    if (pathMetrics.isEmpty) return;
 
-      for (int i = 0; i < dashCount; i++) {
-        final start = (i * (dashLength + gapLength) + offset) % totalLength;
-        final end = (start + dashLength) % totalLength;
+    final metric = pathMetrics.first;
+    final totalLength = metric.length;
 
-        if (end > start) {
-          final dashPath = metric.extractPath(start, end);
-          canvas.drawPath(dashPath, paint);
-        } else {
-          // Handle wrap-around
-          final dashPath1 = metric.extractPath(start, totalLength);
-          final dashPath2 = metric.extractPath(0, end);
-          canvas.drawPath(dashPath1, paint);
-          canvas.drawPath(dashPath2, paint);
-        }
-      }
+    // Animate dashes moving clockwise
+    final offset = progress * (dashLength + gapLength) * 3;
+
+    double distance = offset;
+    while (distance < totalLength + offset) {
+      final start = distance % totalLength;
+      var end = (start + dashLength);
+      if (end > totalLength) end = totalLength;
+
+      final dashPath = metric.extractPath(start, end);
+      canvas.drawPath(dashPath, paint);
+
+      distance += dashLength + gapLength;
     }
   }
 
   @override
-  bool shouldRepaint(covariant _DottedBorderPainter oldDelegate) {
-    return oldDelegate.progress != progress;
+  bool shouldRepaint(covariant _AnimatedDottedBorderPainter oldDelegate) {
+    return oldDelegate.progress != progress || oldDelegate.color != color;
   }
 }
 
@@ -453,13 +479,19 @@ class _IcoSpeechBubbleWithArrowState
                 maxWidth: MediaQuery.of(context).size.width * 0.92,
               ),
               decoration: BoxDecoration(
-                color: const Color(0xFF1A1A2E),
-                borderRadius: BorderRadius.circular(4),
+                color: context.card.withValues(alpha: 0.95),
+                borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.3),
-                  width: 2,
+                  color: AppTheme.primaryMagenta.withValues(alpha: 0.8),
+                  width: 1.5,
                 ),
                 boxShadow: [
+                  // Outer glow like onboarding
+                  BoxShadow(
+                    color: AppTheme.primaryMagenta.withValues(alpha: 0.3),
+                    blurRadius: 20,
+                    spreadRadius: 2,
+                  ),
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.5),
                     blurRadius: 20,
@@ -480,26 +512,56 @@ class _IcoSpeechBubbleWithArrowState
                     decoration: BoxDecoration(
                       border: Border(
                         bottom: BorderSide(
-                          color: Colors.white.withValues(alpha: 0.15),
+                          color: AppTheme.primaryMagenta.withValues(alpha: 0.3),
                           width: 1,
                         ),
                       ),
                     ),
                     child: Row(
                       children: [
-                        // Small Ico avatar
-                        Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: AppTheme.primaryMagenta.withValues(
-                              alpha: 0.2,
-                            ),
+                        // Ico avatar - properly sized with background
+                        SizedBox(
+                          width: 48,
+                          height: 48,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            clipBehavior: Clip.none,
+                            children: [
+                              // Background circle
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: AppTheme.primaryMagenta.withValues(
+                                    alpha: 0.15,
+                                  ),
+                                  border: Border.all(
+                                    color: AppTheme.primaryMagenta.withValues(
+                                      alpha: 0.3,
+                                    ),
+                                    width: 1,
+                                  ),
+                                ),
+                              ),
+                              // Ico floating on top - larger to show mood properly
+                              Positioned(
+                                top: -8,
+                                child: SizedBox(
+                                  width: 64,
+                                  height: 64,
+                                  child: MeshNodeBrain(
+                                    mood: widget.icoMood,
+                                    size: 64,
+                                    showThoughtParticles: false,
+                                    glowIntensity: 0.5,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                          child: MeshNodeBrain(mood: widget.icoMood, size: 28),
                         ),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: 8),
                         Text(
                           'ICO',
                           style: TextStyle(
@@ -683,9 +745,7 @@ class IcoCoachMark extends StatefulWidget {
   State<IcoCoachMark> createState() => _IcoCoachMarkState();
 }
 
-class _IcoCoachMarkState extends State<IcoCoachMark>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _borderAnimController;
+class _IcoCoachMarkState extends State<IcoCoachMark> {
   Rect? _targetRect;
   Timer? _autoAdvanceTimer;
   bool _keyboardVisible = false;
@@ -693,11 +753,6 @@ class _IcoCoachMarkState extends State<IcoCoachMark>
   @override
   void initState() {
     super.initState();
-    _borderAnimController = AnimationController(
-      duration: const Duration(seconds: 2),
-      vsync: this,
-    )..repeat();
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _calculateTargetRect();
       _setupAutoAdvance();
@@ -730,7 +785,6 @@ class _IcoCoachMarkState extends State<IcoCoachMark>
 
   @override
   void dispose() {
-    _borderAnimController.dispose();
     _autoAdvanceTimer?.cancel();
     super.dispose();
   }
@@ -747,47 +801,12 @@ class _IcoCoachMarkState extends State<IcoCoachMark>
 
     return Stack(
       children: [
-        // Semi-transparent backdrop (no blur - cleaner look)
-        GestureDetector(
-          onTap: () {}, // Absorb taps
-          child: Container(color: Colors.black.withValues(alpha: 0.6)),
-        ),
-
-        // Cutout for the target widget (let it be interactive)
-        Positioned(
-          left: _targetRect!.left - 4,
-          top: _targetRect!.top - 4,
+        // Semi-transparent backdrop with cutout for target
+        ClipPath(
+          clipper: _SpotlightClipper(_targetRect!.inflate(8)),
           child: GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            child: Container(
-              width: _targetRect!.width + 8,
-              height: _targetRect!.height + 8,
-              color: Colors.transparent,
-            ),
-          ),
-        ),
-
-        // Animated dotted border around target
-        Positioned(
-          left: _targetRect!.left - 6,
-          top: _targetRect!.top - 6,
-          child: IgnorePointer(
-            child: AnimatedBuilder(
-              animation: _borderAnimController,
-              builder: (context, child) {
-                return CustomPaint(
-                  size: Size(_targetRect!.width + 12, _targetRect!.height + 12),
-                  painter: _AnimatedDottedBorderPainter(
-                    progress: _borderAnimController.value,
-                    color: AppTheme.primaryMagenta,
-                    strokeWidth: 2,
-                    dashLength: 8,
-                    gapLength: 6,
-                    borderRadius: 8,
-                  ),
-                );
-              },
-            ),
+            onTap: () {}, // Absorb taps on backdrop
+            child: Container(color: Colors.black.withValues(alpha: 0.6)),
           ),
         ),
 
@@ -799,9 +818,8 @@ class _IcoCoachMarkState extends State<IcoCoachMark>
 
   Widget _buildSpeechBubblePosition(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
-    final bubbleHeight = 250.0; // Approximate bubble height
+    final bubbleHeight = 250.0;
 
-    // Determine best position for bubble
     final spaceAbove = _targetRect!.top;
     final spaceBelow = screenSize.height - _targetRect!.bottom;
 
@@ -832,60 +850,23 @@ class _IcoCoachMarkState extends State<IcoCoachMark>
   }
 }
 
-class _AnimatedDottedBorderPainter extends CustomPainter {
-  final double progress;
-  final Color color;
-  final double strokeWidth;
-  final double dashLength;
-  final double gapLength;
-  final double borderRadius;
+/// Clips a path with a rectangular cutout (spotlight effect)
+class _SpotlightClipper extends CustomClipper<Path> {
+  final Rect spotlight;
 
-  _AnimatedDottedBorderPainter({
-    required this.progress,
-    required this.color,
-    required this.strokeWidth,
-    required this.dashLength,
-    required this.gapLength,
-    required this.borderRadius,
-  });
+  _SpotlightClipper(this.spotlight);
 
   @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = strokeWidth
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    final rect = RRect.fromRectAndRadius(
-      Rect.fromLTWH(0, 0, size.width, size.height),
-      Radius.circular(borderRadius),
-    );
-
-    final path = Path()..addRRect(rect);
-    final pathMetrics = path.computeMetrics().first;
-    final totalLength = pathMetrics.length;
-
-    // Animate the dashes moving clockwise
-    final offset = progress * (dashLength + gapLength) * 2;
-
-    double distance = offset;
-    while (distance < totalLength) {
-      final start = distance % totalLength;
-      final end = (start + dashLength).clamp(0.0, totalLength);
-
-      if (end > start) {
-        final dashPath = pathMetrics.extractPath(start, end);
-        canvas.drawPath(dashPath, paint);
-      }
-
-      distance += dashLength + gapLength;
-    }
+  Path getClip(Size size) {
+    final outer = Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
+    final inner = Path()
+      ..addRRect(RRect.fromRectAndRadius(spotlight, const Radius.circular(12)));
+    return Path.combine(PathOperation.difference, outer, inner);
   }
 
   @override
-  bool shouldRepaint(covariant _AnimatedDottedBorderPainter oldDelegate) {
-    return oldDelegate.progress != progress;
+  bool shouldReclip(covariant _SpotlightClipper oldClipper) {
+    return oldClipper.spotlight != spotlight;
   }
 }
 

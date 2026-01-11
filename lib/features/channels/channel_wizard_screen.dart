@@ -394,8 +394,10 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
             ),
           ),
           SizedBox(height: 32),
-          Container(
+          IcoHighlightedField(
             key: _nameFieldKey,
+            topicId: 'channel_creation',
+            stepId: 'channel_name',
             child: TextField(
               controller: _nameController,
               style: TextStyle(color: context.textPrimary),
@@ -474,8 +476,10 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
             ),
           ),
           const SizedBox(height: 24),
-          Container(
+          IcoHighlightedField(
             key: _privacyFieldKey,
+            topicId: 'channel_creation',
+            stepId: 'privacy_level',
             child: Column(
               children: PrivacyLevel.values
                   .map((level) => _buildPrivacyOption(level, theme))
@@ -670,8 +674,10 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
           if (_privacyLevel == PrivacyLevel.private ||
               _privacyLevel == PrivacyLevel.maximum) ...[
             const SizedBox(height: 12),
-            Container(
+            IcoHighlightedField(
               key: _keyFieldKey,
+              topicId: 'channel_creation',
+              stepId: 'encryption_key',
               child: ChannelKeyField(
                 keyBase64: ChannelKeyUtils.keyToBase64(_generatedKey),
                 onKeyChanged: (newKey) {
