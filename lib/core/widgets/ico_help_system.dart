@@ -326,6 +326,9 @@ class _AnimatedDottedBorderPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Guard against zero-size widgets
+    if (size.width <= 0 || size.height <= 0) return;
+
     final paint = Paint()
       ..color = color
       ..strokeWidth = strokeWidth
@@ -338,12 +341,13 @@ class _AnimatedDottedBorderPainter extends CustomPainter {
     );
 
     final path = Path()..addRRect(rect);
-    final pathMetrics = path.computeMetrics();
+    final pathMetrics = path.computeMetrics().toList();
 
     if (pathMetrics.isEmpty) return;
 
     final metric = pathMetrics.first;
     final totalLength = metric.length;
+    if (totalLength <= 0) return;
 
     // Animate dashes moving clockwise
     final offset = progress * (dashLength + gapLength) * 3;
@@ -570,6 +574,7 @@ class _IcoSpeechBubbleWithArrowState
                             fontWeight: FontWeight.w700,
                             letterSpacing: 1.5,
                             fontFamily: AppTheme.fontFamily,
+                            decoration: TextDecoration.none,
                           ),
                         ),
                         const Spacer(),
@@ -581,6 +586,7 @@ class _IcoSpeechBubbleWithArrowState
                               color: Colors.white.withValues(alpha: 0.4),
                               fontSize: 11,
                               fontFamily: AppTheme.fontFamily,
+                              decoration: TextDecoration.none,
                             ),
                           ),
                         const SizedBox(width: 8),
@@ -626,7 +632,7 @@ class _IcoSpeechBubbleWithArrowState
                     decoration: BoxDecoration(
                       border: Border(
                         top: BorderSide(
-                          color: Colors.white.withValues(alpha: 0.1),
+                          color: AppTheme.primaryMagenta.withValues(alpha: 0.3),
                           width: 1,
                         ),
                       ),
@@ -656,6 +662,7 @@ class _IcoSpeechBubbleWithArrowState
                                     ),
                                     fontSize: 13,
                                     fontFamily: AppTheme.fontFamily,
+                                    decoration: TextDecoration.none,
                                   ),
                                 ),
                               ],
@@ -676,6 +683,7 @@ class _IcoSpeechBubbleWithArrowState
                                   color: Colors.white.withValues(alpha: 0.4),
                                   fontSize: 13,
                                   fontFamily: AppTheme.fontFamily,
+                                  decoration: TextDecoration.none,
                                 ),
                               ),
                             ),
@@ -700,6 +708,7 @@ class _IcoSpeechBubbleWithArrowState
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
                                   fontFamily: AppTheme.fontFamily,
+                                  decoration: TextDecoration.none,
                                 ),
                               ),
                             ),
