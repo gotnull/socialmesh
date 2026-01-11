@@ -102,7 +102,7 @@ class HelpContent {
       HelpStep(
         id: 'privacy_level',
         bubbleText:
-            "Now the important part: **privacy level**!\n\n📱 **OPEN**: Anyone can see and join\n🔓 **SHARED**: Need a QR code to join\n🔒 **PRIVATE**: Maximum encryption, invite-only",
+            "Now the important part: **privacy level**!\n\n**OPEN**: Anyone can see and join\n**SHARED**: Need a QR code to join\n**PRIVATE**: Maximum encryption, invite-only",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
@@ -223,13 +223,13 @@ class HelpContent {
       HelpStep(
         id: 'role_client',
         bubbleText:
-            "**CLIENT**: Your device sends and receives messages but doesn't relay for others. Great for **battery life**! 🔋",
+            "**CLIENT**: Your device sends and receives messages but doesn't relay for others. Great for **battery life**!",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'role_router',
         bubbleText:
-            "**ROUTER**: You're a mesh superhero! You relay messages for everyone. Uses more battery but makes the mesh stronger! 💪",
+            "**ROUTER**: You're a mesh superhero! You relay messages for everyone. Uses more battery but makes the mesh stronger!",
         icoMood: MeshBrainMood.proud,
       ),
       HelpStep(
@@ -269,7 +269,7 @@ class HelpContent {
       HelpStep(
         id: 'region_legal',
         bubbleText:
-            "Each country has different rules. Using the **wrong frequency** can be illegal! 🚨 Always match your physical location.",
+            "Each country has different rules. Using the **wrong frequency** can be illegal! Always match your physical location.",
         icoMood: MeshBrainMood.nervous,
       ),
       HelpStep(
@@ -309,13 +309,13 @@ class HelpContent {
       HelpStep(
         id: 'connection_ble',
         bubbleText:
-            "📱 **BLUETOOTH** (BLE): Wireless! Your device shows up as **Meshtastic_XXXX**. Just tap to connect. Works while device is in your pocket!",
+            "**BLUETOOTH** (BLE): Wireless! Your device shows up as **Meshtastic_XXXX**. Just tap to connect. Works while device is in your pocket!",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'connection_usb',
         bubbleText:
-            "🔌 **USB**: Plug in with a cable. More reliable, charges your device, slightly faster. Great for configuration!",
+            "**USB**: Plug in with a cable. More reliable, charges your device, slightly faster. Great for configuration!",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
@@ -327,7 +327,7 @@ class HelpContent {
       HelpStep(
         id: 'connection_troubleshoot',
         bubbleText:
-            "Can't find your device? Check:\n✓ **Bluetooth is on**\n✓ Device has power\n✓ Device isn't connected elsewhere\n✓ You're close enough (<10m)",
+            "Can't find your device? Check:\n- **Bluetooth is on**\n- Device has power\n- Device isn't connected elsewhere\n- You're close enough (under 10m)",
         icoMood: MeshBrainMood.thinking,
       ),
     ],
@@ -361,13 +361,13 @@ class HelpContent {
       HelpStep(
         id: 'gps_privacy',
         bubbleText:
-            "Privacy matters! You can **disable GPS** or set update intervals. Turn it off when you want to stay hidden! 👻",
+            "Privacy matters! You can **disable GPS** or set update intervals. Turn it off when you want to stay hidden!",
         icoMood: MeshBrainMood.inviting,
       ),
       HelpStep(
         id: 'gps_battery',
         bubbleText:
-            "GPS uses **battery**! 🔋 Longer update intervals = better battery life. Balance privacy and utility!",
+            "GPS uses **battery**! Longer update intervals = better battery life. Balance privacy and utility!",
         icoMood: MeshBrainMood.thinking,
       ),
     ],
