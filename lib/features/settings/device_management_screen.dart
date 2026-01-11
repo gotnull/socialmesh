@@ -162,13 +162,17 @@ class _DeviceManagementScreenState
                   icon: Icons.cleaning_services,
                   iconColor: Colors.orange,
                   title: 'Reset Node Database',
-                  subtitle: 'Clear all known nodes from memory',
+                  subtitle: 'Clear all known nodes from device and app',
                   enabled: isConnected,
                   onTap: () => _executeAction(
                     'Reset Node Database',
-                    () => protocol.nodeDbReset(),
+                    () async {
+                      await protocol.nodeDbReset();
+                      // Clear local nodes from the app's state and storage
+                      ref.read(nodesProvider.notifier).clearNodes();
+                    },
                     warningMessage:
-                        'This will clear all discovered nodes from the device. Nodes will be rediscovered over time.',
+                        'This will clear all discovered nodes from the device and app. Nodes will be rediscovered over time.',
                   ),
                 ),
                 const SizedBox(height: 8),

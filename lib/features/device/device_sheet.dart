@@ -296,6 +296,16 @@ class _DeviceSheetContent extends ConsumerWidget {
   Future<void> _disconnect(BuildContext context, WidgetRef ref) async {
     AppLogging.connection('🔌 DISCONNECT: User tapped disconnect button');
 
+    // Capture providers BEFORE any async operations to avoid disposed ref access
+    final userDisconnectedNotifier = ref.read(
+      userDisconnectedProvider.notifier,
+    );
+    final autoReconnectNotifier = ref.read(autoReconnectStateProvider.notifier);
+    final deviceConnectionNotifier = ref.read(
+      deviceConnectionProvider.notifier,
+    );
+    final protocol = ref.read(protocolServiceProvider);
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -329,26 +339,23 @@ class _DeviceSheetContent extends ConsumerWidget {
 
       // CRITICAL: Set userDisconnected flag FIRST to prevent ALL auto-reconnect logic
       AppLogging.connection('🔌 DISCONNECT: Setting userDisconnected=true');
-      ref.read(userDisconnectedProvider.notifier).setUserDisconnected(true);
+      userDisconnectedNotifier.setUserDisconnected(true);
 
       // Also set auto-reconnect state to idle for extra safety
       AppLogging.connection(
         '🔌 DISCONNECT: Setting autoReconnectState to idle (user disconnect)',
       );
-      ref
-          .read(autoReconnectStateProvider.notifier)
-          .setState(AutoReconnectState.idle);
+      autoReconnectNotifier.setState(AutoReconnectState.idle);
 
       // Use DeviceConnectionNotifier for proper disconnect handling
       // This sets the proper disconnect reason and prevents auto-reconnect
       AppLogging.connection(
         '🔌 DISCONNECT: Calling DeviceConnectionNotifier.disconnect()',
       );
-      await ref.read(deviceConnectionProvider.notifier).disconnect();
+      await deviceConnectionNotifier.disconnect();
 
       // Also stop protocol service
       AppLogging.connection('🔌 DISCONNECT: Stopping protocol service');
-      final protocol = ref.read(protocolServiceProvider);
       protocol.stop();
 
       AppLogging.connection('🔌 DISCONNECT: Disconnect sequence complete');
@@ -378,7 +385,7 @@ class _DeviceSheetContent extends ConsumerWidget {
         backgroundColor: context.card,
         title: const Text('Reset Node Database'),
         content: const Text(
-          'This will clear all learned nodes from the device. '
+          'This will clear all learned nodes from the device and app. '
           'The device will need to rediscover nodes on the mesh.\n\n'
           'Are you sure you want to continue?',
         ),
@@ -400,6 +407,9 @@ class _DeviceSheetContent extends ConsumerWidget {
       try {
         final protocol = ref.read(protocolServiceProvider);
         await protocol.nodeDbReset();
+
+        // Clear local nodes from the app's state and storage
+        ref.read(nodesProvider.notifier).clearNodes();
 
         if (context.mounted) {
           showSuccessSnackBar(context, 'Node database reset successfully');

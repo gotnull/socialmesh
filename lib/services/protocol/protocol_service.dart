@@ -3243,6 +3243,7 @@ class ProtocolService {
   }
 
   /// Reset the node database (removes all learned nodes)
+  /// This sends the reset command to the device and clears the local node cache.
   Future<void> nodeDbReset() async {
     if (_myNodeNum == null) {
       throw StateError('Cannot reset node DB: device not ready');
@@ -3269,6 +3270,24 @@ class ProtocolService {
 
     final toRadio = pn.ToRadio()..packet = packet;
     await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+
+    // Wait for device to process the reset command
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    // Clear local nodes cache (keep only our own node)
+    clearNodes();
+  }
+
+  /// Clear all nodes from the local cache (keeps only own node if known)
+  void clearNodes() {
+    final myNum = _myNodeNum;
+    final myNode = myNum != null ? _nodes[myNum] : null;
+    _nodes.clear();
+    // Re-add our own node so the app remains functional
+    if (myNode != null) {
+      _nodes[myNum!] = myNode;
+    }
+    AppLogging.protocol('Cleared local nodes cache');
   }
 
   /// Enter DFU (Device Firmware Update) mode
