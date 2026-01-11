@@ -1546,7 +1546,10 @@ class _BannerAvatarSection extends StatelessWidget {
         color: context.card,
         border: Border.all(color: accentColor, width: 3),
       ),
-      child: ClipOval(child: _buildAvatarContent(context)),
+      child: Padding(
+        padding: const EdgeInsets.all(3),
+        child: ClipOval(child: _buildAvatarContent(context)),
+      ),
     );
   }
 
@@ -1555,6 +1558,8 @@ class _BannerAvatarSection extends StatelessWidget {
       if (profile.avatarUrl!.startsWith('http')) {
         return Image.network(
           profile.avatarUrl!,
+          width: 94,
+          height: 94,
           fit: BoxFit.cover,
           loadingBuilder: (context, child, loadingProgress) {
             if (loadingProgress == null) return child;
@@ -1570,6 +1575,8 @@ class _BannerAvatarSection extends StatelessWidget {
       } else {
         return Image.file(
           File(profile.avatarUrl!),
+          width: 94,
+          height: 94,
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) => _buildInitials(context),
         );
@@ -2457,79 +2464,93 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                                                   width: 2,
                                                 ),
                                               ),
-                                              child: ClipOval(
-                                                child: _isUploadingAvatar
-                                                    ? Center(
-                                                        child:
-                                                            CircularProgressIndicator(
-                                                              strokeWidth: 2,
+                                              child: Padding(
+                                                padding: const EdgeInsets.all(
+                                                  2,
+                                                ),
+                                                child: ClipOval(
+                                                  child: _isUploadingAvatar
+                                                      ? Center(
+                                                          child:
+                                                              CircularProgressIndicator(
+                                                                strokeWidth: 2,
+                                                                color:
+                                                                    accentColor,
+                                                              ),
+                                                        )
+                                                      : profile?.avatarUrl !=
+                                                            null
+                                                      ? (profile!.avatarUrl!
+                                                                .startsWith(
+                                                                  'http',
+                                                                )
+                                                            ? Image.network(
+                                                                profile
+                                                                    .avatarUrl!,
+                                                                width: 96,
+                                                                height: 96,
+                                                                fit: BoxFit
+                                                                    .cover,
+                                                                loadingBuilder:
+                                                                    (
+                                                                      context,
+                                                                      child,
+                                                                      loadingProgress,
+                                                                    ) {
+                                                                      if (loadingProgress ==
+                                                                          null) {
+                                                                        return child;
+                                                                      }
+                                                                      return Center(
+                                                                        child: CircularProgressIndicator(
+                                                                          strokeWidth:
+                                                                              2,
+                                                                          color:
+                                                                              accentColor,
+                                                                        ),
+                                                                      );
+                                                                    },
+                                                                errorBuilder: (ctx, err, stack) => Center(
+                                                                  child: Text(
+                                                                    profile
+                                                                        .initials,
+                                                                    style: TextStyle(
+                                                                      fontSize:
+                                                                          32,
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .bold,
+                                                                      color:
+                                                                          accentColor,
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                              )
+                                                            : Image.file(
+                                                                File(
+                                                                  profile
+                                                                      .avatarUrl!,
+                                                                ),
+                                                                width: 96,
+                                                                height: 96,
+                                                                fit: BoxFit
+                                                                    .cover,
+                                                              ))
+                                                      : Center(
+                                                          child: Text(
+                                                            profile?.initials ??
+                                                                '?',
+                                                            style: TextStyle(
+                                                              fontSize: 32,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
                                                               color:
                                                                   accentColor,
                                                             ),
-                                                      )
-                                                    : profile?.avatarUrl != null
-                                                    ? (profile!.avatarUrl!
-                                                              .startsWith(
-                                                                'http',
-                                                              )
-                                                          ? Image.network(
-                                                              profile
-                                                                  .avatarUrl!,
-                                                              fit: BoxFit.cover,
-                                                              loadingBuilder:
-                                                                  (
-                                                                    context,
-                                                                    child,
-                                                                    loadingProgress,
-                                                                  ) {
-                                                                    if (loadingProgress ==
-                                                                        null) {
-                                                                      return child;
-                                                                    }
-                                                                    return Center(
-                                                                      child: CircularProgressIndicator(
-                                                                        strokeWidth:
-                                                                            2,
-                                                                        color:
-                                                                            accentColor,
-                                                                      ),
-                                                                    );
-                                                                  },
-                                                              errorBuilder: (ctx, err, stack) => Center(
-                                                                child: Text(
-                                                                  profile
-                                                                      .initials,
-                                                                  style: TextStyle(
-                                                                    fontSize:
-                                                                        32,
-                                                                    fontWeight:
-                                                                        FontWeight
-                                                                            .bold,
-                                                                    color:
-                                                                        accentColor,
-                                                                  ),
-                                                                ),
-                                                              ),
-                                                            )
-                                                          : Image.file(
-                                                              File(
-                                                                profile
-                                                                    .avatarUrl!,
-                                                              ),
-                                                              fit: BoxFit.cover,
-                                                            ))
-                                                    : Center(
-                                                        child: Text(
-                                                          profile?.initials ??
-                                                              '?',
-                                                          style: TextStyle(
-                                                            fontSize: 32,
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                            color: accentColor,
                                                           ),
                                                         ),
-                                                      ),
+                                                ),
                                               ),
                                             ),
                                             Positioned(
