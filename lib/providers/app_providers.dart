@@ -2069,6 +2069,14 @@ class NodeDiscoveryNotifier extends Notifier<MeshNode?> {
     if (!settings.notificationsEnabled) return;
     if (!settings.newNodeNotificationsEnabled) return;
 
+    // Check if we're in discovery cooldown period
+    final cooldown = ref.read(nodeDiscoveryCooldownProvider.notifier);
+    if (cooldown.isInCooldown) {
+      // Track node during cooldown but don't notify yet
+      cooldown.trackDiscoveredNode(node);
+      return;
+    }
+
     // Queue notification for batching (handles flood protection)
     ref
         .read(notificationBatchProvider.notifier)
@@ -2079,6 +2087,142 @@ class NodeDiscoveryNotifier extends Notifier<MeshNode?> {
 final nodeDiscoveryNotifierProvider =
     NotifierProvider<NodeDiscoveryNotifier, MeshNode?>(
       NodeDiscoveryNotifier.new,
+    );
+
+/// State for node discovery cooldown tracking
+class NodeDiscoveryCooldownState {
+  final DateTime? connectionTime;
+  final List<MeshNode> discoveredDuringCooldown;
+  final Duration cooldownDuration;
+
+  const NodeDiscoveryCooldownState({
+    this.connectionTime,
+    this.discoveredDuringCooldown = const [],
+    this.cooldownDuration = const Duration(minutes: 3),
+  });
+
+  bool get isInCooldown {
+    if (connectionTime == null) return false;
+    final elapsed = DateTime.now().difference(connectionTime!);
+    return elapsed < cooldownDuration;
+  }
+
+  NodeDiscoveryCooldownState copyWith({
+    DateTime? connectionTime,
+    List<MeshNode>? discoveredDuringCooldown,
+    Duration? cooldownDuration,
+  }) {
+    return NodeDiscoveryCooldownState(
+      connectionTime: connectionTime ?? this.connectionTime,
+      discoveredDuringCooldown:
+          discoveredDuringCooldown ?? this.discoveredDuringCooldown,
+      cooldownDuration: cooldownDuration ?? this.cooldownDuration,
+    );
+  }
+}
+
+/// Discovery cooldown - prevents notification floods when first connecting
+/// to a device that's discovering many nodes. During cooldown (default 3 min),
+/// individual node notifications are suppressed and a summary is shown afterward.
+class NodeDiscoveryCooldownNotifier
+    extends Notifier<NodeDiscoveryCooldownState> {
+  Timer? _cooldownTimer;
+
+  @override
+  NodeDiscoveryCooldownState build() {
+    // Start cooldown timer when connection is established
+    ref.listen(connectionStateProvider, (previous, next) {
+      if (next == AsyncData(DeviceConnectionState.connected)) {
+        _startCooldown();
+      } else if (next == AsyncData(DeviceConnectionState.disconnected)) {
+        _resetCooldown();
+      }
+    });
+
+    return const NodeDiscoveryCooldownState();
+  }
+
+  bool get isInCooldown => state.isInCooldown;
+
+  /// Track a node discovered during cooldown period
+  void trackDiscoveredNode(MeshNode node) {
+    if (!state.isInCooldown) return;
+
+    final updated = [...state.discoveredDuringCooldown, node];
+    state = state.copyWith(discoveredDuringCooldown: updated);
+
+    AppLogging.notifications(
+      '🔔 Node discovered during cooldown: ${node.displayName} '
+      '(${updated.length} total during cooldown)',
+    );
+  }
+
+  /// Start the cooldown period
+  void _startCooldown() {
+    _cooldownTimer?.cancel();
+    state = NodeDiscoveryCooldownState(
+      connectionTime: DateTime.now(),
+      discoveredDuringCooldown: [],
+      cooldownDuration: state.cooldownDuration,
+    );
+
+    AppLogging.notifications(
+      '🔔 Started node discovery cooldown for ${state.cooldownDuration.inMinutes} minutes',
+    );
+
+    // Schedule cooldown end
+    _cooldownTimer = Timer(state.cooldownDuration, _onCooldownComplete);
+  }
+
+  /// Reset cooldown (e.g., on disconnect)
+  void _resetCooldown() {
+    _cooldownTimer?.cancel();
+    _cooldownTimer = null;
+    state = const NodeDiscoveryCooldownState();
+    AppLogging.notifications('🔔 Reset node discovery cooldown');
+  }
+
+  /// Called when cooldown period ends
+  Future<void> _onCooldownComplete() async {
+    final discoveredCount = state.discoveredDuringCooldown.length;
+
+    AppLogging.notifications(
+      '🔔 Node discovery cooldown complete - '
+      '$discoveredCount nodes discovered',
+    );
+
+    // Show summary notification if nodes were discovered during cooldown
+    if (discoveredCount > 0) {
+      // Check settings one more time
+      final settingsAsync = ref.read(settingsServiceProvider);
+      final settings = settingsAsync.value;
+      if (settings != null &&
+          settings.notificationsEnabled &&
+          settings.newNodeNotificationsEnabled) {
+        // Show batched notification for all nodes discovered during cooldown
+        final nodes = state.discoveredDuringCooldown
+            .map((node) => PendingNodeNotification(node: node))
+            .toList();
+
+        final playSound = settings.notificationSoundEnabled;
+        final vibrate = settings.notificationVibrationEnabled;
+
+        await NotificationService().showBatchedNodesNotification(
+          nodes: nodes,
+          playSound: playSound,
+          vibrate: vibrate,
+        );
+      }
+    }
+
+    // Clear cooldown state (but keep connectionTime to prevent re-entry)
+    state = state.copyWith(discoveredDuringCooldown: []);
+  }
+}
+
+final nodeDiscoveryCooldownProvider =
+    NotifierProvider<NodeDiscoveryCooldownNotifier, NodeDiscoveryCooldownState>(
+      NodeDiscoveryCooldownNotifier.new,
     );
 
 /// Current device region - stream that emits region updates
