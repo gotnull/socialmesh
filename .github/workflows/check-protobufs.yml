@@ -72,6 +72,9 @@ jobs:
           CURRENT_VERSION: ${{ steps.current.outputs.version }}
           LATEST_VERSION: ${{ steps.latest.outputs.version }}
         run: |
+          # Create label if it doesn't exist
+          gh label create "protobuf-update" --description "Protobuf version update available" --color "0366d6" 2>/dev/null || true
+          
           cat << 'EOF' > /tmp/issue_body.md
           ## Protobuf Update Available
 
