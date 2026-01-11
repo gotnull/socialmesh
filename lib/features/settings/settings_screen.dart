@@ -72,6 +72,7 @@ import '../telemetry/detection_sensor_log_screen.dart';
 import '../routes/routes_screen.dart';
 import '../widget_builder/widget_builder_screen.dart';
 import 'debug_settings_screen.dart';
+import 'screens/help_center_screen.dart';
 import '../social/screens/follow_requests_screen.dart';
 import '../../core/widgets/loading_indicator.dart';
 
@@ -849,6 +850,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           subtitle: 'Meshtastic companion app',
           keywords: ['about', 'version', 'app', 'info'],
           section: 'ABOUT',
+        ),
+        _SearchableSettingItem(
+          icon: Icons.help,
+          title: 'Help Center',
+          subtitle: 'Interactive guides with Ico, your mesh guide',
+          keywords: ['help', 'guide', 'tutorial', 'ico', 'learn', 'tour'],
+          section: 'ABOUT',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const HelpCenterScreen(),
+            ),
+          ),
         ),
         _SearchableSettingItem(
           icon: Icons.help_outline,

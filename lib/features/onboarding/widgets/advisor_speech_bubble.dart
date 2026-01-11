@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../core/theme.dart';
 
 /// A sci-fi styled speech bubble for Ico, the mesh brain advisor.
@@ -27,6 +28,12 @@ class AdvisorSpeechBubble extends StatefulWidget {
   /// Optional subtitle/hint text
   final String? subtitle;
 
+  /// Enable haptic feedback on character typing
+  final bool hapticFeedback;
+
+  /// Callback when haptic toggle is pressed
+  final ValueChanged<bool>? onHapticToggle;
+
   const AdvisorSpeechBubble({
     super.key,
     required this.text,
@@ -36,6 +43,8 @@ class AdvisorSpeechBubble extends StatefulWidget {
     this.onTypingComplete,
     this.visible = true,
     this.subtitle,
+    this.hapticFeedback = true,
+    this.onHapticToggle,
   });
 
   @override
@@ -115,6 +124,11 @@ class _AdvisorSpeechBubbleState extends State<AdvisorSpeechBubble>
           _displayedText = widget.text.substring(0, _currentCharIndex + 1);
           _currentCharIndex++;
         });
+
+        // Haptic feedback on character typed
+        if (widget.hapticFeedback) {
+          HapticFeedback.selectionClick();
+        }
       } else {
         timer.cancel();
         widget.onTypingComplete?.call();
@@ -265,6 +279,32 @@ class _AdvisorSpeechBubbleState extends State<AdvisorSpeechBubble>
                                 ),
                               ),
                               const Spacer(),
+                              // Haptic toggle button
+                              if (widget.onHapticToggle != null)
+                                GestureDetector(
+                                  onTap: () {
+                                    HapticFeedback.lightImpact();
+                                    widget.onHapticToggle?.call(
+                                      !widget.hapticFeedback,
+                                    );
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    child: Icon(
+                                      widget.hapticFeedback
+                                          ? Icons.vibration
+                                          : Icons.mobile_off,
+                                      size: 14,
+                                      color: widget.hapticFeedback
+                                          ? widget.accentColor.withValues(
+                                              alpha: 0.7,
+                                            )
+                                          : Colors.white.withValues(alpha: 0.3),
+                                    ),
+                                  ),
+                                ),
+                              if (widget.onHapticToggle != null)
+                                const SizedBox(width: 8),
                               // Typing indicator
                               if (_currentCharIndex < widget.text.length &&
                                   widget.typewriterEffect)

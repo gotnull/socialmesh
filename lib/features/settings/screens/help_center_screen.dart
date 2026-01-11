@@ -198,6 +198,21 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen> {
                   },
                   activeTrackColor: AppTheme.primaryMagenta,
                 ),
+                SwitchListTile(
+                  title: Text(
+                    'Haptic Feedback',
+                    style: TextStyle(color: context.textPrimary),
+                  ),
+                  subtitle: Text(
+                    'Vibrate during typewriter text effect',
+                    style: TextStyle(color: context.textSecondary),
+                  ),
+                  value: helpState.hapticFeedback,
+                  onChanged: (value) {
+                    ref.read(helpProvider.notifier).setHapticFeedback(value);
+                  },
+                  activeTrackColor: AppTheme.primaryMagenta,
+                ),
                 const SizedBox(height: 8),
                 OutlinedButton.icon(
                   onPressed: () => _showResetDialog(context),

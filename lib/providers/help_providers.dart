@@ -12,6 +12,7 @@ class HelpState {
   final String? activeTourId;
   final int currentStepIndex;
   final bool showPulsingHint;
+  final bool hapticFeedback;
 
   const HelpState({
     this.completedTopics = const {},
@@ -20,6 +21,7 @@ class HelpState {
     this.activeTourId,
     this.currentStepIndex = 0,
     this.showPulsingHint = true,
+    this.hapticFeedback = true,
   });
 
   HelpState copyWith({
@@ -30,6 +32,7 @@ class HelpState {
     bool clearActiveTour = false,
     int? currentStepIndex,
     bool? showPulsingHint,
+    bool? hapticFeedback,
   }) {
     return HelpState(
       completedTopics: completedTopics ?? this.completedTopics,
@@ -40,6 +43,7 @@ class HelpState {
           : (activeTourId ?? this.activeTourId),
       currentStepIndex: currentStepIndex ?? this.currentStepIndex,
       showPulsingHint: showPulsingHint ?? this.showPulsingHint,
+      hapticFeedback: hapticFeedback ?? this.hapticFeedback,
     );
   }
 
@@ -58,6 +62,7 @@ class HelpNotifier extends Notifier<HelpState> {
   static const String _prefCompletedKey = 'help_completed_topics';
   static const String _prefDismissedKey = 'help_dismissed_topics';
   static const String _prefSkipKey = 'help_skip_future';
+  static const String _prefHapticKey = 'help_haptic_feedback';
 
   @override
   HelpState build() {
@@ -72,11 +77,13 @@ class HelpNotifier extends Notifier<HelpState> {
       final completed = prefs.getStringList(_prefCompletedKey) ?? [];
       final dismissed = prefs.getStringList(_prefDismissedKey) ?? [];
       final skipFuture = prefs.getBool(_prefSkipKey) ?? false;
+      final hapticFeedback = prefs.getBool(_prefHapticKey) ?? true;
 
       state = HelpState(
         completedTopics: completed.toSet(),
         dismissedTopics: dismissed.toSet(),
         skipFutureHelp: skipFuture,
+        hapticFeedback: hapticFeedback,
       );
 
       AppLogging.app(
@@ -99,6 +106,7 @@ class HelpNotifier extends Notifier<HelpState> {
         state.dismissedTopics.toList(),
       );
       await prefs.setBool(_prefSkipKey, state.skipFutureHelp);
+      await prefs.setBool(_prefHapticKey, state.hapticFeedback);
     } catch (e) {
       AppLogging.app('Help: Failed to save preferences: $e');
     }
@@ -182,6 +190,13 @@ class HelpNotifier extends Notifier<HelpState> {
   void setSkipFutureHelp(bool skip) {
     AppLogging.app('Help: Skip future help = $skip');
     state = state.copyWith(skipFutureHelp: skip);
+    _saveToPreferences();
+  }
+
+  /// Toggle haptic feedback for typewriter effect
+  void setHapticFeedback(bool enabled) {
+    AppLogging.app('Help: Haptic feedback = $enabled');
+    state = state.copyWith(hapticFeedback: enabled);
     _saveToPreferences();
   }
 

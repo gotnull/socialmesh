@@ -18,6 +18,14 @@ analyzer:
     - "**/*.pbenum.dart"
     - "**/*.pbjson.dart"
     - "**/*.pbserver.dart"
+  errors:
+    # Suppress deprecation warnings from generated protobuf files
+    # These are maintained upstream by the Meshtastic protobufs project
+    # and we regenerate them from the official proto definitions.
+    # The deprecation warnings are for backwards compatibility and cannot
+    # be fixed without breaking changes to the Meshtastic protocol.
+    deprecated_member_use: ignore
+    deprecated_member_use_from_same_package: ignore
 
 linter:
   # The lint rules applied to this project can be customized in the

@@ -155,7 +155,7 @@ class _IcoHelpButtonState extends ConsumerState<IcoHelpButton>
 // ICO SPEECH BUBBLE - Enhanced version with arrow and positioning
 // ============================================================================
 
-class IcoSpeechBubbleWithArrow extends StatelessWidget {
+class IcoSpeechBubbleWithArrow extends ConsumerWidget {
   final String text;
   final MeshBrainMood icoMood;
   final ArrowDirection? arrowDirection;
@@ -184,7 +184,9 @@ class IcoSpeechBubbleWithArrow extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final helpState = ref.watch(helpProvider);
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -276,6 +278,12 @@ class IcoSpeechBubbleWithArrow extends StatelessWidget {
                     typewriterEffect: true,
                     typingSpeed: 20,
                     accentColor: AppTheme.primaryMagenta,
+                    hapticFeedback: helpState.hapticFeedback,
+                    onHapticToggle: (enabled) {
+                      ref
+                          .read(helpProvider.notifier)
+                          .setHapticFeedback(enabled);
+                    },
                   ),
 
                   const SizedBox(height: 16),
