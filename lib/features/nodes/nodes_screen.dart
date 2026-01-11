@@ -6,11 +6,13 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'dart:convert';
 import '../../providers/app_providers.dart';
+import '../../providers/help_providers.dart';
 import '../../providers/social_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../utils/snackbar.dart';
+import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/info_table.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
@@ -115,227 +117,236 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
 
     return GestureDetector(
       onTap: _dismissKeyboard,
-      child: Scaffold(
-        backgroundColor: context.background,
-        appBar: AppBar(
+      child: HelpTourController(
+        topicId: 'nodes_overview',
+        stepKeys: const {},
+        child: Scaffold(
           backgroundColor: context.background,
-          leading: const HamburgerMenuButton(),
-          centerTitle: true,
-          title: Text(
-            'Nodes (${nodes.length})',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: context.textPrimary,
-            ),
-          ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.qr_code_scanner),
-              tooltip: 'Scan Node QR',
-              onPressed: () => Navigator.pushNamed(context, '/node-qr-scanner'),
-            ),
-            const DeviceStatusButton(),
-            IconButton(
-              icon: const Icon(Icons.settings_outlined),
-              tooltip: 'Settings',
-              onPressed: () => Navigator.pushNamed(context, '/settings'),
-            ),
-          ],
-        ),
-        body: Column(
-          children: [
-            // Search bar
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: context.card,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: TextField(
-                  controller: _searchController,
-                  onChanged: (value) => setState(() => _searchQuery = value),
-                  style: TextStyle(color: context.textPrimary),
-                  decoration: InputDecoration(
-                    hintText: 'Find a node',
-                    hintStyle: TextStyle(color: context.textTertiary),
-                    prefixIcon: Icon(Icons.search, color: context.textTertiary),
-                    suffixIcon: _searchQuery.isNotEmpty
-                        ? IconButton(
-                            icon: Icon(
-                              Icons.clear,
-                              color: context.textTertiary,
-                            ),
-                            onPressed: () {
-                              _searchController.clear();
-                              setState(() => _searchQuery = '');
-                            },
-                          )
-                        : null,
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
-                    ),
-                  ),
-                ),
+          appBar: AppBar(
+            backgroundColor: context.background,
+            leading: const HamburgerMenuButton(),
+            centerTitle: true,
+            title: Text(
+              'Nodes (${nodes.length})',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: context.textPrimary,
               ),
             ),
-            // Link device banner (shows when connected to unlinked device)
-            // DEPRECATED: Part of old social mechanism, no longer showing
-            // const LinkDeviceBanner(),
-            // Filter chips row with static controls at end
-            SizedBox(
-              height: 44,
-              child: Row(
-                children: [
-                  // Scrollable filter chips and sort button with edge fade
-                  Expanded(
-                    child: EdgeFade.end(
-                      fadeSize: 32,
-                      fadeColor: context.background,
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.only(left: 16),
-                        children: [
-                          _FilterChip(
-                            label: 'All',
-                            count: nodes.length,
-                            isSelected: _activeFilter == NodeFilter.all,
-                            onTap: () =>
-                                setState(() => _activeFilter = NodeFilter.all),
-                          ),
-                          SizedBox(width: 8),
-                          _FilterChip(
-                            label: 'Online',
-                            count: onlineCount,
-                            isSelected: _activeFilter == NodeFilter.online,
-                            color: AccentColors.green,
-                            onTap: () => setState(
-                              () => _activeFilter = NodeFilter.online,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          _FilterChip(
-                            label: 'Favorites',
-                            count: favoritesCount,
-                            isSelected: _activeFilter == NodeFilter.favorites,
-                            color: AppTheme.warningYellow,
-                            icon: Icons.star,
-                            onTap: () => setState(
-                              () => _activeFilter = NodeFilter.favorites,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          _FilterChip(
-                            label: 'With Position',
-                            count: withPositionCount,
-                            isSelected:
-                                _activeFilter == NodeFilter.withPosition,
-                            color: AccentColors.cyan,
-                            icon: Icons.location_on,
-                            onTap: () => setState(
-                              () => _activeFilter = NodeFilter.withPosition,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          _FilterChip(
-                            label: 'Offline',
-                            count: nodes.length - onlineCount,
-                            isSelected: _activeFilter == NodeFilter.offline,
-                            color: context.textTertiary,
-                            onTap: () => setState(
-                              () => _activeFilter = NodeFilter.offline,
-                            ),
-                          ),
-                          SizedBox(width: 8),
-                          _FilterChip(
-                            label: 'New',
-                            count: recentlyDiscoveredCount,
-                            isSelected:
-                                _activeFilter == NodeFilter.recentlyDiscovered,
-                            color: AccentColors.purple,
-                            icon: Icons.fiber_new,
-                            onTap: () => setState(
-                              () =>
-                                  _activeFilter = NodeFilter.recentlyDiscovered,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          _SortButton(
-                            sortOrder: _sortOrder,
-                            onChanged: (order) =>
-                                setState(() => _sortOrder = order),
-                          ),
-                          const SizedBox(width: 8),
-                        ],
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.qr_code_scanner),
+                tooltip: 'Scan Node QR',
+                onPressed: () =>
+                    Navigator.pushNamed(context, '/node-qr-scanner'),
+              ),
+              const DeviceStatusButton(),
+              _NodesPopupMenu(),
+            ],
+          ),
+          body: Column(
+            children: [
+              // Search bar
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: context.card,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (value) => setState(() => _searchQuery = value),
+                    style: TextStyle(color: context.textPrimary),
+                    decoration: InputDecoration(
+                      hintText: 'Find a node',
+                      hintStyle: TextStyle(color: context.textTertiary),
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: context.textTertiary,
+                      ),
+                      suffixIcon: _searchQuery.isNotEmpty
+                          ? IconButton(
+                              icon: Icon(
+                                Icons.clear,
+                                color: context.textTertiary,
+                              ),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() => _searchQuery = '');
+                              },
+                            )
+                          : null,
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
                       ),
                     ),
                   ),
-                  // Static toggle at end
-                  const SizedBox(width: 8),
-                  _HeadersToggle(
-                    enabled: _showSectionHeaders,
-                    onToggle: () => setState(
-                      () => _showSectionHeaders = !_showSectionHeaders,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                ],
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            // Divider
-            Container(height: 1, color: context.border.withValues(alpha: 0.3)),
-            // Node list
-            Expanded(
-              child: nodesList.isEmpty
-                  ? (isConnected && _activeFilter == NodeFilter.all)
-                        ? _buildLoadingShimmer()
-                        : Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Container(
-                                  width: 72,
-                                  height: 72,
-                                  decoration: BoxDecoration(
-                                    color: context.card,
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: Icon(
-                                    Icons.group,
-                                    size: 40,
-                                    color: context.textTertiary,
-                                  ),
-                                ),
-                                SizedBox(height: 24),
-                                Text(
-                                  _activeFilter == NodeFilter.all
-                                      ? 'No nodes discovered yet'
-                                      : 'No nodes match this filter',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                    color: context.textSecondary,
-                                  ),
-                                ),
-                                if (_activeFilter != NodeFilter.all) ...[
-                                  const SizedBox(height: 12),
-                                  TextButton(
-                                    onPressed: () => setState(
-                                      () => _activeFilter = NodeFilter.all,
-                                    ),
-                                    child: const Text('Show all nodes'),
-                                  ),
-                                ],
-                              ],
+              // Link device banner (shows when connected to unlinked device)
+              // DEPRECATED: Part of old social mechanism, no longer showing
+              // const LinkDeviceBanner(),
+              // Filter chips row with static controls at end
+              SizedBox(
+                height: 44,
+                child: Row(
+                  children: [
+                    // Scrollable filter chips and sort button with edge fade
+                    Expanded(
+                      child: EdgeFade.end(
+                        fadeSize: 32,
+                        fadeColor: context.background,
+                        child: ListView(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.only(left: 16),
+                          children: [
+                            _FilterChip(
+                              label: 'All',
+                              count: nodes.length,
+                              isSelected: _activeFilter == NodeFilter.all,
+                              onTap: () => setState(
+                                () => _activeFilter = NodeFilter.all,
+                              ),
                             ),
-                          )
-                  : _buildNodeList(nodesList, myNodeNum, linkedNodeIds),
-            ),
-          ],
+                            SizedBox(width: 8),
+                            _FilterChip(
+                              label: 'Online',
+                              count: onlineCount,
+                              isSelected: _activeFilter == NodeFilter.online,
+                              color: AccentColors.green,
+                              onTap: () => setState(
+                                () => _activeFilter = NodeFilter.online,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            _FilterChip(
+                              label: 'Favorites',
+                              count: favoritesCount,
+                              isSelected: _activeFilter == NodeFilter.favorites,
+                              color: AppTheme.warningYellow,
+                              icon: Icons.star,
+                              onTap: () => setState(
+                                () => _activeFilter = NodeFilter.favorites,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            _FilterChip(
+                              label: 'With Position',
+                              count: withPositionCount,
+                              isSelected:
+                                  _activeFilter == NodeFilter.withPosition,
+                              color: AccentColors.cyan,
+                              icon: Icons.location_on,
+                              onTap: () => setState(
+                                () => _activeFilter = NodeFilter.withPosition,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            _FilterChip(
+                              label: 'Offline',
+                              count: nodes.length - onlineCount,
+                              isSelected: _activeFilter == NodeFilter.offline,
+                              color: context.textTertiary,
+                              onTap: () => setState(
+                                () => _activeFilter = NodeFilter.offline,
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            _FilterChip(
+                              label: 'New',
+                              count: recentlyDiscoveredCount,
+                              isSelected:
+                                  _activeFilter ==
+                                  NodeFilter.recentlyDiscovered,
+                              color: AccentColors.purple,
+                              icon: Icons.fiber_new,
+                              onTap: () => setState(
+                                () => _activeFilter =
+                                    NodeFilter.recentlyDiscovered,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            _SortButton(
+                              sortOrder: _sortOrder,
+                              onChanged: (order) =>
+                                  setState(() => _sortOrder = order),
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                        ),
+                      ),
+                    ),
+                    // Static toggle at end
+                    const SizedBox(width: 8),
+                    _HeadersToggle(
+                      enabled: _showSectionHeaders,
+                      onToggle: () => setState(
+                        () => _showSectionHeaders = !_showSectionHeaders,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              // Divider
+              Container(
+                height: 1,
+                color: context.border.withValues(alpha: 0.3),
+              ),
+              // Node list
+              Expanded(
+                child: nodesList.isEmpty
+                    ? (isConnected && _activeFilter == NodeFilter.all)
+                          ? _buildLoadingShimmer()
+                          : Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    width: 72,
+                                    height: 72,
+                                    decoration: BoxDecoration(
+                                      color: context.card,
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: Icon(
+                                      Icons.group,
+                                      size: 40,
+                                      color: context.textTertiary,
+                                    ),
+                                  ),
+                                  SizedBox(height: 24),
+                                  Text(
+                                    _activeFilter == NodeFilter.all
+                                        ? 'No nodes discovered yet'
+                                        : 'No nodes match this filter',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                      color: context.textSecondary,
+                                    ),
+                                  ),
+                                  if (_activeFilter != NodeFilter.all) ...[
+                                    const SizedBox(height: 12),
+                                    TextButton(
+                                      onPressed: () => setState(
+                                        () => _activeFilter = NodeFilter.all,
+                                      ),
+                                      child: const Text('Show all nodes'),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            )
+                    : _buildNodeList(nodesList, myNodeNum, linkedNodeIds),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -2911,3 +2922,56 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
 //     );
 //   }
 // }
+
+/// Popup menu for nodes screen with settings and help
+class _NodesPopupMenu extends ConsumerWidget {
+  const _NodesPopupMenu();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return PopupMenuButton<String>(
+      icon: Icon(Icons.more_vert, color: context.textPrimary),
+      tooltip: 'More options',
+      color: context.card,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: context.border),
+      ),
+      onSelected: (value) {
+        switch (value) {
+          case 'settings':
+            Navigator.pushNamed(context, '/settings');
+          case 'help':
+            ref.read(helpProvider.notifier).startTour('nodes_overview');
+        }
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: 'help',
+          child: Row(
+            children: [
+              Icon(Icons.help_outline, color: context.textSecondary, size: 20),
+              const SizedBox(width: 12),
+              Text('Help', style: TextStyle(color: context.textPrimary)),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'settings',
+          child: Row(
+            children: [
+              Icon(
+                Icons.settings_outlined,
+                color: context.textSecondary,
+                size: 20,
+              ),
+              const SizedBox(width: 12),
+              Text('Settings', style: TextStyle(color: context.textPrimary)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}

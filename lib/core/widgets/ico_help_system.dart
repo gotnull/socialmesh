@@ -795,7 +795,7 @@ class _IcoSpeechBubbleWithArrowState
                   boxShadow: [
                     // Animated outer glow like onboarding
                     BoxShadow(
-                      color: AppTheme.primaryMagenta.withValues(
+                      color: context.accentColor.withValues(
                         alpha: _glow.value * 0.4,
                       ),
                       blurRadius: 20,
@@ -815,7 +815,7 @@ class _IcoSpeechBubbleWithArrowState
                       color: context.card.withValues(alpha: 0.95),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: AppTheme.primaryMagenta.withValues(
+                        color: context.accentColor.withValues(
                           alpha: _glow.value,
                         ),
                         width: 1.5,
@@ -828,7 +828,7 @@ class _IcoSpeechBubbleWithArrowState
                           child: CustomPaint(
                             painter: _ScanlinePainter(
                               progress: _scanline.value,
-                              color: AppTheme.primaryMagenta.withValues(
+                              color: context.accentColor.withValues(
                                 alpha: 0.08,
                               ),
                             ),
@@ -848,7 +848,7 @@ class _IcoSpeechBubbleWithArrowState
                               decoration: BoxDecoration(
                                 border: Border(
                                   bottom: BorderSide(
-                                    color: AppTheme.primaryMagenta.withValues(
+                                    color: context.accentColor.withValues(
                                       alpha: 0.3,
                                     ),
                                     width: 1,
@@ -871,10 +871,10 @@ class _IcoSpeechBubbleWithArrowState
                                           height: 40,
                                           decoration: BoxDecoration(
                                             shape: BoxShape.circle,
-                                            color: AppTheme.primaryMagenta
+                                            color: context.accentColor
                                                 .withValues(alpha: 0.15),
                                             border: Border.all(
-                                              color: AppTheme.primaryMagenta
+                                              color: context.accentColor
                                                   .withValues(alpha: 0.3),
                                               width: 1,
                                             ),
@@ -904,7 +904,7 @@ class _IcoSpeechBubbleWithArrowState
                                   Text(
                                     'ICO',
                                     style: TextStyle(
-                                      color: AppTheme.primaryMagenta,
+                                      color: context.accentColor,
                                       fontSize: 13,
                                       fontWeight: FontWeight.w700,
                                       letterSpacing: 1.5,
@@ -971,7 +971,7 @@ class _IcoSpeechBubbleWithArrowState
                               decoration: BoxDecoration(
                                 border: Border(
                                   top: BorderSide(
-                                    color: AppTheme.primaryMagenta.withValues(
+                                    color: context.accentColor.withValues(
                                       alpha: 0.3,
                                     ),
                                     width: 1,
@@ -990,15 +990,14 @@ class _IcoSpeechBubbleWithArrowState
                                           Icon(
                                             Icons.arrow_back_ios,
                                             size: 14,
-                                            color: AccentColors.cyan.withValues(
-                                              alpha: 0.7,
-                                            ),
+                                            color: context.accentColor
+                                                .withValues(alpha: 0.7),
                                           ),
                                           const SizedBox(width: 4),
                                           Text(
                                             'Back',
                                             style: TextStyle(
-                                              color: AccentColors.cyan
+                                              color: context.accentColor
                                                   .withValues(alpha: 0.7),
                                               fontSize: 13,
                                               fontFamily: AppTheme.fontFamily,
@@ -1040,7 +1039,7 @@ class _IcoSpeechBubbleWithArrowState
                                           vertical: 8,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: AppTheme.primaryMagenta,
+                                          color: context.accentColor,
                                           borderRadius: BorderRadius.circular(
                                             4,
                                           ),

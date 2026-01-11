@@ -8,12 +8,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import '../../core/map_config.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/map_controls.dart';
 import '../../core/widgets/node_info_card.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/help_providers.dart';
 import '../../services/share_link_service.dart';
 import '../messaging/messaging_screen.dart';
 import '../navigation/main_shell.dart';
@@ -468,561 +470,571 @@ class _MapScreenState extends ConsumerState<MapScreen>
       }
     }
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
+    return HelpTourController(
+      topicId: 'map_overview',
+      stepKeys: const {},
+      child: Scaffold(
         backgroundColor: context.background,
-        leading: const HamburgerMenuButton(),
-        centerTitle: true,
-        title: Text(
-          'Mesh Map',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: context.textPrimary,
-          ),
-        ),
-        actions: [
-          // Filter toggle
-          IconButton(
-            icon: Icon(
-              _nodeFilter != NodeFilter.all || _showFilters
-                  ? Icons.filter_alt
-                  : Icons.filter_alt_outlined,
-              color: _nodeFilter != NodeFilter.all || _showFilters
-                  ? context.accentColor
-                  : context.textSecondary,
+        appBar: AppBar(
+          backgroundColor: context.background,
+          leading: const HamburgerMenuButton(),
+          centerTitle: true,
+          title: Text(
+            'Mesh Map',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
             ),
-            onPressed: () => setState(() => _showFilters = !_showFilters),
-            tooltip: 'Filter nodes',
           ),
-          // Map style
-          PopupMenuButton<MapTileStyle>(
-            icon: Icon(Icons.map, color: context.textSecondary),
-            tooltip: 'Map style',
-            onSelected: (style) => setState(() => _mapStyle = style),
-            itemBuilder: (context) => MapTileStyle.values.map((style) {
-              return PopupMenuItem(
-                value: style,
-                child: Row(
-                  children: [
-                    Icon(
-                      _mapStyle == style ? Icons.check : Icons.map_outlined,
-                      size: 18,
-                      color: _mapStyle == style
-                          ? context.accentColor
-                          : context.textSecondary,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(style.label),
-                  ],
-                ),
-              );
-            }).toList(),
-          ),
-          // Device status
-          const DeviceStatusButton(),
-          // More options menu
-          PopupMenuButton<String>(
-            icon: Icon(Icons.more_vert, color: context.textSecondary),
-            onSelected: (value) {
-              switch (value) {
-                case 'refresh':
-                  _refreshPositions();
-                  break;
-                case 'heatmap':
-                  setState(() => _showHeatmap = !_showHeatmap);
-                  break;
-                case 'connections':
-                  setState(() => _showConnectionLines = !_showConnectionLines);
-                  break;
-                case 'distance_1':
-                  setState(() => _connectionMaxDistance = 1.0);
-                  break;
-                case 'distance_5':
-                  setState(() => _connectionMaxDistance = 5.0);
-                  break;
-                case 'distance_10':
-                  setState(() => _connectionMaxDistance = 10.0);
-                  break;
-                case 'distance_25':
-                  setState(() => _connectionMaxDistance = 25.0);
-                  break;
-                case 'distance_all':
-                  setState(() => _connectionMaxDistance = 100.0);
-                  break;
-                case 'range':
-                  setState(() => _showRangeCircles = !_showRangeCircles);
-                  break;
-                case 'measure':
-                  setState(() {
-                    _measureMode = !_measureMode;
-                    _measureStart = null;
-                    _measureEnd = null;
-                  });
-                  break;
-                case 'globe':
-                  Navigator.of(context).pushNamed('/globe');
-                  break;
-                case 'settings':
-                  Navigator.of(context).pushNamed('/settings');
-                  break;
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'refresh',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.refresh,
-                      size: 18,
-                      color: _isRefreshing
-                          ? context.textTertiary
-                          : context.textSecondary,
-                    ),
-                    SizedBox(width: 8),
-                    Text(_isRefreshing ? 'Refreshing...' : 'Refresh positions'),
-                  ],
-                ),
+          actions: [
+            // Filter toggle
+            IconButton(
+              icon: Icon(
+                _nodeFilter != NodeFilter.all || _showFilters
+                    ? Icons.filter_alt
+                    : Icons.filter_alt_outlined,
+                color: _nodeFilter != NodeFilter.all || _showFilters
+                    ? context.accentColor
+                    : context.textSecondary,
               ),
-              PopupMenuItem(
-                value: 'heatmap',
-                child: Row(
-                  children: [
-                    Icon(
-                      _showHeatmap ? Icons.layers : Icons.layers_outlined,
-                      size: 18,
-                      color: _showHeatmap
-                          ? context.accentColor
-                          : context.textSecondary,
-                    ),
-                    SizedBox(width: 8),
-                    Text(_showHeatmap ? 'Hide heatmap' : 'Show heatmap'),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'connections',
-                child: Row(
-                  children: [
-                    Icon(
-                      _showConnectionLines ? Icons.share : Icons.share_outlined,
-                      size: 18,
-                      color: _showConnectionLines
-                          ? context.accentColor
-                          : context.textSecondary,
-                    ),
-                    SizedBox(width: 8),
-                    Text(
-                      _showConnectionLines
-                          ? 'Hide connection lines'
-                          : 'Show connection lines',
-                    ),
-                  ],
-                ),
-              ),
-              // Distance filter options (only shown when connections are enabled)
-              if (_showConnectionLines) ...[
-                PopupMenuItem(
-                  enabled: false,
-                  height: 32,
-                  child: Text(
-                    'Max Distance',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: context.textTertiary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'distance_1',
+              onPressed: () => setState(() => _showFilters = !_showFilters),
+              tooltip: 'Filter nodes',
+            ),
+            // Map style
+            PopupMenuButton<MapTileStyle>(
+              icon: Icon(Icons.map, color: context.textSecondary),
+              tooltip: 'Map style',
+              onSelected: (style) => setState(() => _mapStyle = style),
+              itemBuilder: (context) => MapTileStyle.values.map((style) {
+                return PopupMenuItem(
+                  value: style,
                   child: Row(
                     children: [
                       Icon(
-                        _connectionMaxDistance == 1.0
-                            ? Icons.check_circle
-                            : Icons.circle_outlined,
-                        size: 16,
-                        color: _connectionMaxDistance == 1.0
+                        _mapStyle == style ? Icons.check : Icons.map_outlined,
+                        size: 18,
+                        color: _mapStyle == style
                             ? context.accentColor
-                            : context.textTertiary,
+                            : context.textSecondary,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(style.label),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+            // Device status
+            const DeviceStatusButton(),
+            // More options menu
+            PopupMenuButton<String>(
+              icon: Icon(Icons.more_vert, color: context.textSecondary),
+              onSelected: (value) {
+                switch (value) {
+                  case 'refresh':
+                    _refreshPositions();
+                    break;
+                  case 'heatmap':
+                    setState(() => _showHeatmap = !_showHeatmap);
+                    break;
+                  case 'connections':
+                    setState(
+                      () => _showConnectionLines = !_showConnectionLines,
+                    );
+                    break;
+                  case 'distance_1':
+                    setState(() => _connectionMaxDistance = 1.0);
+                    break;
+                  case 'distance_5':
+                    setState(() => _connectionMaxDistance = 5.0);
+                    break;
+                  case 'distance_10':
+                    setState(() => _connectionMaxDistance = 10.0);
+                    break;
+                  case 'distance_25':
+                    setState(() => _connectionMaxDistance = 25.0);
+                    break;
+                  case 'distance_all':
+                    setState(() => _connectionMaxDistance = 100.0);
+                    break;
+                  case 'range':
+                    setState(() => _showRangeCircles = !_showRangeCircles);
+                    break;
+                  case 'measure':
+                    setState(() {
+                      _measureMode = !_measureMode;
+                      _measureStart = null;
+                      _measureEnd = null;
+                    });
+                    break;
+                  case 'globe':
+                    Navigator.of(context).pushNamed('/globe');
+                    break;
+                  case 'help':
+                    ref.read(helpProvider.notifier).startTour('map_overview');
+                    break;
+                  case 'settings':
+                    Navigator.of(context).pushNamed('/settings');
+                    break;
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'refresh',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.refresh,
+                        size: 18,
+                        color: _isRefreshing
+                            ? context.textTertiary
+                            : context.textSecondary,
                       ),
                       SizedBox(width: 8),
-                      const Text('1 km'),
+                      Text(
+                        _isRefreshing ? 'Refreshing...' : 'Refresh positions',
+                      ),
                     ],
                   ),
                 ),
                 PopupMenuItem(
-                  value: 'distance_5',
+                  value: 'heatmap',
                   child: Row(
                     children: [
                       Icon(
-                        _connectionMaxDistance == 5.0
-                            ? Icons.check_circle
-                            : Icons.circle_outlined,
-                        size: 16,
-                        color: _connectionMaxDistance == 5.0
+                        _showHeatmap ? Icons.layers : Icons.layers_outlined,
+                        size: 18,
+                        color: _showHeatmap
                             ? context.accentColor
-                            : context.textTertiary,
+                            : context.textSecondary,
                       ),
                       SizedBox(width: 8),
-                      const Text('5 km'),
+                      Text(_showHeatmap ? 'Hide heatmap' : 'Show heatmap'),
                     ],
                   ),
                 ),
                 PopupMenuItem(
-                  value: 'distance_10',
+                  value: 'connections',
                   child: Row(
                     children: [
                       Icon(
-                        _connectionMaxDistance == 10.0
-                            ? Icons.check_circle
-                            : Icons.circle_outlined,
-                        size: 16,
-                        color: _connectionMaxDistance == 10.0
+                        _showConnectionLines
+                            ? Icons.share
+                            : Icons.share_outlined,
+                        size: 18,
+                        color: _showConnectionLines
                             ? context.accentColor
-                            : context.textTertiary,
+                            : context.textSecondary,
                       ),
                       SizedBox(width: 8),
-                      const Text('10 km'),
+                      Text(
+                        _showConnectionLines
+                            ? 'Hide connection lines'
+                            : 'Show connection lines',
+                      ),
+                    ],
+                  ),
+                ),
+                // Distance filter options (only shown when connections are enabled)
+                if (_showConnectionLines) ...[
+                  PopupMenuItem(
+                    enabled: false,
+                    height: 32,
+                    child: Text(
+                      'Max Distance',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.textTertiary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'distance_1',
+                    child: Row(
+                      children: [
+                        Icon(
+                          _connectionMaxDistance == 1.0
+                              ? Icons.check_circle
+                              : Icons.circle_outlined,
+                          size: 16,
+                          color: _connectionMaxDistance == 1.0
+                              ? context.accentColor
+                              : context.textTertiary,
+                        ),
+                        SizedBox(width: 8),
+                        const Text('1 km'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'distance_5',
+                    child: Row(
+                      children: [
+                        Icon(
+                          _connectionMaxDistance == 5.0
+                              ? Icons.check_circle
+                              : Icons.circle_outlined,
+                          size: 16,
+                          color: _connectionMaxDistance == 5.0
+                              ? context.accentColor
+                              : context.textTertiary,
+                        ),
+                        SizedBox(width: 8),
+                        const Text('5 km'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'distance_10',
+                    child: Row(
+                      children: [
+                        Icon(
+                          _connectionMaxDistance == 10.0
+                              ? Icons.check_circle
+                              : Icons.circle_outlined,
+                          size: 16,
+                          color: _connectionMaxDistance == 10.0
+                              ? context.accentColor
+                              : context.textTertiary,
+                        ),
+                        SizedBox(width: 8),
+                        const Text('10 km'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'distance_25',
+                    child: Row(
+                      children: [
+                        Icon(
+                          _connectionMaxDistance == 25.0
+                              ? Icons.check_circle
+                              : Icons.circle_outlined,
+                          size: 16,
+                          color: _connectionMaxDistance == 25.0
+                              ? context.accentColor
+                              : context.textTertiary,
+                        ),
+                        SizedBox(width: 8),
+                        const Text('25 km'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'distance_all',
+                    child: Row(
+                      children: [
+                        Icon(
+                          _connectionMaxDistance >= 100.0
+                              ? Icons.check_circle
+                              : Icons.circle_outlined,
+                          size: 16,
+                          color: _connectionMaxDistance >= 100.0
+                              ? context.accentColor
+                              : context.textTertiary,
+                        ),
+                        SizedBox(width: 8),
+                        const Text('All'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuDivider(),
+                ],
+                PopupMenuItem(
+                  value: 'range',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.radio_button_unchecked,
+                        size: 18,
+                        color: _showRangeCircles
+                            ? context.accentColor
+                            : context.textSecondary,
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        _showRangeCircles
+                            ? 'Hide range circles'
+                            : 'Show range circles',
+                      ),
                     ],
                   ),
                 ),
                 PopupMenuItem(
-                  value: 'distance_25',
+                  value: 'measure',
                   child: Row(
                     children: [
                       Icon(
-                        _connectionMaxDistance == 25.0
-                            ? Icons.check_circle
-                            : Icons.circle_outlined,
-                        size: 16,
-                        color: _connectionMaxDistance == 25.0
+                        Icons.straighten,
+                        size: 18,
+                        color: _measureMode
                             ? context.accentColor
-                            : context.textTertiary,
+                            : context.textSecondary,
                       ),
                       SizedBox(width: 8),
-                      const Text('25 km'),
-                    ],
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'distance_all',
-                  child: Row(
-                    children: [
-                      Icon(
-                        _connectionMaxDistance >= 100.0
-                            ? Icons.check_circle
-                            : Icons.circle_outlined,
-                        size: 16,
-                        color: _connectionMaxDistance >= 100.0
-                            ? context.accentColor
-                            : context.textTertiary,
+                      Text(
+                        _measureMode ? 'Exit measure mode' : 'Measure distance',
                       ),
-                      SizedBox(width: 8),
-                      const Text('All'),
                     ],
                   ),
                 ),
                 const PopupMenuDivider(),
-              ],
-              PopupMenuItem(
-                value: 'range',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.radio_button_unchecked,
-                      size: 18,
-                      color: _showRangeCircles
-                          ? context.accentColor
-                          : context.textSecondary,
-                    ),
-                    SizedBox(width: 8),
-                    Text(
-                      _showRangeCircles
-                          ? 'Hide range circles'
-                          : 'Show range circles',
-                    ),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'measure',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.straighten,
-                      size: 18,
-                      color: _measureMode
-                          ? context.accentColor
-                          : context.textSecondary,
-                    ),
-                    SizedBox(width: 8),
-                    Text(
-                      _measureMode ? 'Exit measure mode' : 'Measure distance',
-                    ),
-                  ],
-                ),
-              ),
-              const PopupMenuDivider(),
-              PopupMenuItem(
-                value: 'globe',
-                child: Row(
-                  children: [
-                    Icon(Icons.public, size: 18, color: context.textSecondary),
-                    SizedBox(width: 8),
-                    const Text('3D Globe View'),
-                  ],
-                ),
-              ),
-              const PopupMenuDivider(),
-              PopupMenuItem(
-                value: 'settings',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.settings_outlined,
-                      size: 18,
-                      color: context.textSecondary,
-                    ),
-                    SizedBox(width: 8),
-                    const Text('Settings'),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-      body: allNodesWithPosition.isEmpty
-          ? _buildEmptyState()
-          : Stack(
-              children: [
-                FlutterMap(
-                  mapController: _mapController,
-                  options: MapOptions(
-                    initialCenter: center,
-                    initialZoom: zoom,
-                    minZoom: 4,
-                    maxZoom: 18,
-                    backgroundColor: context.background,
-                    interactionOptions: const InteractionOptions(
-                      flags: InteractiveFlag.all,
-                      pinchZoomThreshold: 0.5,
-                      scrollWheelVelocity: 0.005,
-                    ),
-                    onPositionChanged: (position, hasGesture) {
-                      if (hasGesture) {
-                        setState(() {
-                          _currentZoom = position.zoom;
-                          _mapRotation = position.rotation;
-                        });
-                      }
-                    },
-                    onTap: (tapPos, point) {
-                      if (_measureMode) {
-                        _handleMeasureTap(point);
-                      } else {
-                        setState(() {
-                          _selectedNode = null;
-                          _showNodeList = false;
-                          _showFilters = false;
-                        });
-                      }
-                    },
-                    onLongPress: (tapPos, point) {
-                      if (!_measureMode) {
-                        _showWaypointMenu(point);
-                      }
-                    },
+                PopupMenuItem(
+                  value: 'globe',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.public,
+                        size: 18,
+                        color: context.textSecondary,
+                      ),
+                      SizedBox(width: 8),
+                      const Text('3D Globe View'),
+                    ],
                   ),
-                  children: [
-                    // Map tiles
-                    TileLayer(
-                      urlTemplate: _mapStyle.url,
-                      subdomains: _mapStyle.subdomains,
-                      userAgentPackageName: MapConfig.userAgentPackageName,
-                      retinaMode: _mapStyle != MapTileStyle.satellite,
-                      tileBuilder: (context, tileWidget, tile) {
-                        return AnimatedOpacity(
-                          opacity: 1.0,
-                          duration: const Duration(milliseconds: 300),
-                          child: tileWidget,
-                        );
+                ),
+                const PopupMenuDivider(),
+                PopupMenuItem(
+                  value: 'help',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.help_outline,
+                        size: 18,
+                        color: context.textSecondary,
+                      ),
+                      SizedBox(width: 8),
+                      const Text('Help'),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'settings',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.settings_outlined,
+                        size: 18,
+                        color: context.textSecondary,
+                      ),
+                      SizedBox(width: 8),
+                      const Text('Settings'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        body: allNodesWithPosition.isEmpty
+            ? _buildEmptyState()
+            : Stack(
+                children: [
+                  FlutterMap(
+                    mapController: _mapController,
+                    options: MapOptions(
+                      initialCenter: center,
+                      initialZoom: zoom,
+                      minZoom: 4,
+                      maxZoom: 18,
+                      backgroundColor: context.background,
+                      interactionOptions: const InteractionOptions(
+                        flags: InteractiveFlag.all,
+                        pinchZoomThreshold: 0.5,
+                        scrollWheelVelocity: 0.005,
+                      ),
+                      onPositionChanged: (position, hasGesture) {
+                        if (hasGesture) {
+                          setState(() {
+                            _currentZoom = position.zoom;
+                            _mapRotation = position.rotation;
+                          });
+                        }
+                      },
+                      onTap: (tapPos, point) {
+                        if (_measureMode) {
+                          _handleMeasureTap(point);
+                        } else {
+                          setState(() {
+                            _selectedNode = null;
+                            _showNodeList = false;
+                            _showFilters = false;
+                          });
+                        }
+                      },
+                      onLongPress: (tapPos, point) {
+                        if (!_measureMode) {
+                          _showWaypointMenu(point);
+                        }
                       },
                     ),
-                    // Range circles (theoretical coverage)
-                    if (_showRangeCircles)
-                      CircleLayer(
-                        circles: nodesWithPosition.map((n) {
-                          final isMyNode = n.node.nodeNum == myNodeNum;
-                          return CircleMarker(
-                            point: LatLng(n.latitude, n.longitude),
-                            radius: 5000, // 5km range circle
-                            useRadiusInMeter: true,
-                            color:
-                                (isMyNode
-                                        ? context.accentColor
-                                        : AppTheme.primaryPurple)
-                                    .withValues(alpha: 0.08),
-                            borderColor:
-                                (isMyNode
-                                        ? context.accentColor
-                                        : AppTheme.primaryPurple)
-                                    .withValues(alpha: 0.2),
-                            borderStrokeWidth: 1,
+                    children: [
+                      // Map tiles
+                      TileLayer(
+                        urlTemplate: _mapStyle.url,
+                        subdomains: _mapStyle.subdomains,
+                        userAgentPackageName: MapConfig.userAgentPackageName,
+                        retinaMode: _mapStyle != MapTileStyle.satellite,
+                        tileBuilder: (context, tileWidget, tile) {
+                          return AnimatedOpacity(
+                            opacity: 1.0,
+                            duration: const Duration(milliseconds: 300),
+                            child: tileWidget,
                           );
-                        }).toList(),
+                        },
                       ),
-                    // Heatmap layer
-                    if (_showHeatmap)
-                      CircleLayer(
-                        circles: nodesWithPosition.map((n) {
-                          return CircleMarker(
-                            point: LatLng(n.latitude, n.longitude),
-                            radius: 50,
-                            color: context.accentColor.withValues(alpha: 0.15),
-                            borderColor: context.accentColor.withValues(
-                              alpha: 0.3,
-                            ),
-                            borderStrokeWidth: 1,
-                          );
-                        }).toList(),
-                      ),
-                    // Node trails (movement history)
-                    PolylineLayer(
-                      polylines: _buildNodeTrails(nodesWithPosition, myNodeNum),
-                    ),
-                    // Connection lines (optional)
-                    if (_showConnectionLines)
+                      // Range circles (theoretical coverage)
+                      if (_showRangeCircles)
+                        CircleLayer(
+                          circles: nodesWithPosition.map((n) {
+                            final isMyNode = n.node.nodeNum == myNodeNum;
+                            return CircleMarker(
+                              point: LatLng(n.latitude, n.longitude),
+                              radius: 5000, // 5km range circle
+                              useRadiusInMeter: true,
+                              color:
+                                  (isMyNode
+                                          ? context.accentColor
+                                          : AppTheme.primaryPurple)
+                                      .withValues(alpha: 0.08),
+                              borderColor:
+                                  (isMyNode
+                                          ? context.accentColor
+                                          : AppTheme.primaryPurple)
+                                      .withValues(alpha: 0.2),
+                              borderStrokeWidth: 1,
+                            );
+                          }).toList(),
+                        ),
+                      // Heatmap layer
+                      if (_showHeatmap)
+                        CircleLayer(
+                          circles: nodesWithPosition.map((n) {
+                            return CircleMarker(
+                              point: LatLng(n.latitude, n.longitude),
+                              radius: 50,
+                              color: context.accentColor.withValues(
+                                alpha: 0.15,
+                              ),
+                              borderColor: context.accentColor.withValues(
+                                alpha: 0.3,
+                              ),
+                              borderStrokeWidth: 1,
+                            );
+                          }).toList(),
+                        ),
+                      // Node trails (movement history)
                       PolylineLayer(
-                        polylines: _buildConnectionLines(
+                        polylines: _buildNodeTrails(
                           nodesWithPosition,
                           myNodeNum,
                         ),
                       ),
-                    // Measurement line
-                    if (_measureStart != null && _measureEnd != null)
-                      PolylineLayer(
-                        polylines: [
-                          Polyline(
-                            points: [_measureStart!, _measureEnd!],
-                            color: AppTheme.warningYellow,
-                            strokeWidth: 3,
-                            pattern: const StrokePattern.dotted(
-                              spacingFactor: 1.5,
-                            ),
+                      // Connection lines (optional)
+                      if (_showConnectionLines)
+                        PolylineLayer(
+                          polylines: _buildConnectionLines(
+                            nodesWithPosition,
+                            myNodeNum,
                           ),
-                        ],
-                      ),
-                    // Waypoint markers
-                    MarkerLayer(
-                      rotate: true,
-                      markers: _waypoints.map((w) {
-                        return Marker(
-                          point: w.position,
-                          width: 32,
-                          height: 40,
-                          child: GestureDetector(
-                            onTap: () => _showWaypointDetails(w),
-                            child: Column(
-                              children: [
-                                Container(
-                                  width: 24,
-                                  height: 24,
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.warningYellow,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: Colors.white,
-                                      width: 2,
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(
-                                          alpha: 0.3,
-                                        ),
-                                        blurRadius: 4,
-                                      ),
-                                    ],
-                                  ),
-                                  child: const Icon(
-                                    Icons.place,
-                                    size: 14,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                Container(
-                                  width: 2,
-                                  height: 12,
-                                  color: AppTheme.warningYellow,
-                                ),
-                              ],
+                        ),
+                      // Measurement line
+                      if (_measureStart != null && _measureEnd != null)
+                        PolylineLayer(
+                          polylines: [
+                            Polyline(
+                              points: [_measureStart!, _measureEnd!],
+                              color: AppTheme.warningYellow,
+                              strokeWidth: 3,
+                              pattern: const StrokePattern.dotted(
+                                spacingFactor: 1.5,
+                              ),
                             ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                    // Node markers
-                    MarkerLayer(
-                      rotate: true,
-                      markers: nodesWithPosition.map((n) {
-                        final isMyNode = n.node.nodeNum == myNodeNum;
-                        final isSelected =
-                            _selectedNode?.nodeNum == n.node.nodeNum;
-                        return Marker(
-                          point: LatLng(n.latitude, n.longitude),
-                          width: isSelected ? 56 : 44,
-                          height: isSelected ? 56 : 44,
-                          child: GestureDetector(
-                            onTap: () {
-                              HapticFeedback.selectionClick();
-                              setState(() => _selectedNode = n.node);
-                            },
-                            child: _NodeMarker(
-                              node: n.node,
-                              isMyNode: isMyNode,
-                              isSelected: isSelected,
-                              isStale: n.isStale,
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                    // Measurement markers
-                    if (_measureStart != null)
+                          ],
+                        ),
+                      // Waypoint markers
                       MarkerLayer(
                         rotate: true,
-                        markers: [
-                          Marker(
-                            point: _measureStart!,
-                            width: 20,
-                            height: 20,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: AppTheme.warningYellow,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.white,
-                                  width: 2,
-                                ),
-                              ),
-                              child: const Center(
-                                child: Text(
-                                  'A',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
+                        markers: _waypoints.map((w) {
+                          return Marker(
+                            point: w.position,
+                            width: 32,
+                            height: 40,
+                            child: GestureDetector(
+                              onTap: () => _showWaypointDetails(w),
+                              child: Column(
+                                children: [
+                                  Container(
+                                    width: 24,
+                                    height: 24,
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.warningYellow,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: Colors.white,
+                                        width: 2,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(
+                                            alpha: 0.3,
+                                          ),
+                                          blurRadius: 4,
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Icon(
+                                      Icons.place,
+                                      size: 14,
+                                      color: Colors.white,
+                                    ),
                                   ),
-                                ),
+                                  Container(
+                                    width: 2,
+                                    height: 12,
+                                    color: AppTheme.warningYellow,
+                                  ),
+                                ],
                               ),
                             ),
-                          ),
-                          if (_measureEnd != null)
+                          );
+                        }).toList(),
+                      ),
+                      // Node markers
+                      MarkerLayer(
+                        rotate: true,
+                        markers: nodesWithPosition.map((n) {
+                          final isMyNode = n.node.nodeNum == myNodeNum;
+                          final isSelected =
+                              _selectedNode?.nodeNum == n.node.nodeNum;
+                          return Marker(
+                            point: LatLng(n.latitude, n.longitude),
+                            width: isSelected ? 56 : 44,
+                            height: isSelected ? 56 : 44,
+                            child: GestureDetector(
+                              onTap: () {
+                                HapticFeedback.selectionClick();
+                                setState(() => _selectedNode = n.node);
+                              },
+                              child: _NodeMarker(
+                                node: n.node,
+                                isMyNode: isMyNode,
+                                isSelected: isSelected,
+                                isStale: n.isStale,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                      // Measurement markers
+                      if (_measureStart != null)
+                        MarkerLayer(
+                          rotate: true,
+                          markers: [
                             Marker(
-                              point: _measureEnd!,
+                              point: _measureStart!,
                               width: 20,
                               height: 20,
                               child: Container(
@@ -1036,7 +1048,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                                 ),
                                 child: const Center(
                                   child: Text(
-                                    'B',
+                                    'A',
                                     style: TextStyle(
                                       fontSize: 10,
                                       fontWeight: FontWeight.bold,
@@ -1045,278 +1057,311 @@ class _MapScreenState extends ConsumerState<MapScreen>
                                 ),
                               ),
                             ),
-                        ],
-                      ),
-                    // Distance labels layer
-                    MarkerLayer(
-                      rotate: true,
-                      markers: _buildDistanceLabels(
-                        nodesWithPosition,
-                        myNodeNum,
-                      ),
-                    ),
-                  ],
-                ),
-                // Filter bar
-                if (_showFilters)
-                  Positioned(
-                    left: _mapPadding,
-                    right: _mapPadding + _controlSize + _controlSpacing,
-                    top: _mapPadding,
-                    child: _FilterBar(
-                      currentFilter: _nodeFilter,
-                      onFilterChanged: (filter) =>
-                          setState(() => _nodeFilter = filter),
-                      totalCount: allNodesWithPosition.length,
-                      filteredCount: nodesWithPosition.length,
-                    ),
-                  ),
-                // Measurement card (shown at bottom when measurement complete)
-                if (_measureMode &&
-                    _measureStart != null &&
-                    _measureEnd != null)
-                  Positioned(
-                    left: _mapPadding,
-                    right: _mapPadding,
-                    bottom: _selectedNode != null ? 220 : _mapPadding,
-                    child: _MeasurementCard(
-                      start: _measureStart!,
-                      end: _measureEnd!,
-                      onClear: () => setState(() {
-                        _measureStart = null;
-                        _measureEnd = null;
-                      }),
-                      onShare: () => _shareLocation(
-                        _measureStart!,
-                        label:
-                            'Distance: ${_formatDistance(_calculateDistance(_measureStart!.latitude, _measureStart!.longitude, _measureEnd!.latitude, _measureEnd!.longitude))}',
-                      ),
-                      onExitMeasureMode: () => setState(() {
-                        _measureMode = false;
-                        _measureStart = null;
-                        _measureEnd = null;
-                      }),
-                    ),
-                  ),
-                // Mode indicator (centered at top)
-                if (_measureMode &&
-                    (_measureStart == null || _measureEnd == null))
-                  Positioned(
-                    top: _mapPadding,
-                    left: _mapPadding + 140, // Leave room for node count badge
-                    right: _mapPadding + _controlSize + _controlSpacing,
-                    child: Center(
-                      child: Container(
-                        padding: const EdgeInsets.only(
-                          left: 16,
-                          top: 4,
-                          bottom: 4,
-                          right: 4,
+                            if (_measureEnd != null)
+                              Marker(
+                                point: _measureEnd!,
+                                width: 20,
+                                height: 20,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.warningYellow,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Colors.white,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: const Center(
+                                    child: Text(
+                                      'B',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.warningYellow,
-                          borderRadius: BorderRadius.circular(20),
+                      // Distance labels layer
+                      MarkerLayer(
+                        rotate: true,
+                        markers: _buildDistanceLabels(
+                          nodesWithPosition,
+                          myNodeNum,
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.straighten,
-                              size: 16,
-                              color: Colors.black,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              _measureStart == null
-                                  ? 'Tap to set start point'
-                                  : 'Tap to set end point',
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
+                      ),
+                    ],
+                  ),
+                  // Filter bar
+                  if (_showFilters)
+                    Positioned(
+                      left: _mapPadding,
+                      right: _mapPadding + _controlSize + _controlSpacing,
+                      top: _mapPadding,
+                      child: _FilterBar(
+                        currentFilter: _nodeFilter,
+                        onFilterChanged: (filter) =>
+                            setState(() => _nodeFilter = filter),
+                        totalCount: allNodesWithPosition.length,
+                        filteredCount: nodesWithPosition.length,
+                      ),
+                    ),
+                  // Measurement card (shown at bottom when measurement complete)
+                  if (_measureMode &&
+                      _measureStart != null &&
+                      _measureEnd != null)
+                    Positioned(
+                      left: _mapPadding,
+                      right: _mapPadding,
+                      bottom: _selectedNode != null ? 220 : _mapPadding,
+                      child: _MeasurementCard(
+                        start: _measureStart!,
+                        end: _measureEnd!,
+                        onClear: () => setState(() {
+                          _measureStart = null;
+                          _measureEnd = null;
+                        }),
+                        onShare: () => _shareLocation(
+                          _measureStart!,
+                          label:
+                              'Distance: ${_formatDistance(_calculateDistance(_measureStart!.latitude, _measureStart!.longitude, _measureEnd!.latitude, _measureEnd!.longitude))}',
+                        ),
+                        onExitMeasureMode: () => setState(() {
+                          _measureMode = false;
+                          _measureStart = null;
+                          _measureEnd = null;
+                        }),
+                      ),
+                    ),
+                  // Mode indicator (centered at top)
+                  if (_measureMode &&
+                      (_measureStart == null || _measureEnd == null))
+                    Positioned(
+                      top: _mapPadding,
+                      left:
+                          _mapPadding + 140, // Leave room for node count badge
+                      right: _mapPadding + _controlSize + _controlSpacing,
+                      child: Center(
+                        child: Container(
+                          padding: const EdgeInsets.only(
+                            left: 16,
+                            top: 4,
+                            bottom: 4,
+                            right: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.warningYellow,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.straighten,
+                                size: 16,
                                 color: Colors.black,
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            GestureDetector(
-                              onTap: () => setState(() {
-                                _measureMode = false;
-                                _measureStart = null;
-                                _measureEnd = null;
-                              }),
-                              child: Container(
-                                width: 28,
-                                height: 28,
-                                decoration: BoxDecoration(
-                                  color: Colors.black.withValues(alpha: 0.2),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.close,
-                                  size: 16,
+                              const SizedBox(width: 8),
+                              Text(
+                                _measureStart == null
+                                    ? 'Tap to set start point'
+                                    : 'Tap to set end point',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
                                   color: Colors.black,
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                // Node info card
-                if (_selectedNode != null)
-                  Positioned(
-                    left: _mapPadding,
-                    right: _mapPadding,
-                    bottom: _mapPadding,
-                    child: NodeInfoCard(
-                      node: _selectedNode!,
-                      isMyNode: _selectedNode!.nodeNum == myNodeNum,
-                      onClose: () => setState(() => _selectedNode = null),
-                      onMessage: () => _openDM(_selectedNode!),
-                      distanceFromMe: _getDistanceFromMyNode(
-                        _selectedNode!,
-                        nodesWithPosition,
-                        myNodeNum,
-                      ),
-                      bearingFromMe: _getBearingFromMyNode(
-                        _selectedNode!,
-                        nodesWithPosition,
-                        myNodeNum,
-                      ),
-                      onShareLocation: () {
-                        final nodeWithPos = nodesWithPosition
-                            .where(
-                              (n) => n.node.nodeNum == _selectedNode!.nodeNum,
-                            )
-                            .firstOrNull;
-                        if (nodeWithPos != null) {
-                          _shareLocation(
-                            LatLng(nodeWithPos.latitude, nodeWithPos.longitude),
-                            label: _selectedNode!.displayName,
-                          );
-                        }
-                      },
-                      onCopyCoordinates: () {
-                        final nodeWithPos = nodesWithPosition
-                            .where(
-                              (n) => n.node.nodeNum == _selectedNode!.nodeNum,
-                            )
-                            .firstOrNull;
-                        if (nodeWithPos != null) {
-                          _copyCoordinates(
-                            LatLng(nodeWithPos.latitude, nodeWithPos.longitude),
-                          );
-                        }
-                      },
-                    ),
-                  ),
-                // Node list panel
-                AnimatedPositioned(
-                  duration: const Duration(milliseconds: 250),
-                  curve: Curves.easeOutCubic,
-                  left: _showNodeList ? 0 : -300,
-                  top: 0,
-                  bottom: 0,
-                  width: 300,
-                  child: _NodeListPanel(
-                    nodesWithPosition: nodesWithPosition,
-                    myNodeNum: myNodeNum,
-                    selectedNode: _selectedNode,
-                    onNodeSelected: _selectNodeAndCenter,
-                    onClose: () => setState(() => _showNodeList = false),
-                    calculateDistanceFromMe: (node) => _getDistanceFromMyNode(
-                      node.node,
-                      nodesWithPosition,
-                      myNodeNum,
-                    ),
-                    searchController: _searchController,
-                    onSearchChanged: (query) =>
-                        setState(() => _searchQuery = query),
-                  ),
-                ),
-                // Node count indicator
-                if (!_showNodeList && !_showFilters)
-                  Positioned(
-                    left: _mapPadding,
-                    top: _mapPadding,
-                    child: GestureDetector(
-                      onTap: () => setState(() => _showNodeList = true),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: context.card.withValues(alpha: 0.9),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: context.border.withValues(alpha: 0.5),
+                              const SizedBox(width: 8),
+                              GestureDetector(
+                                onTap: () => setState(() {
+                                  _measureMode = false;
+                                  _measureStart = null;
+                                  _measureEnd = null;
+                                }),
+                                child: Container(
+                                  width: 28,
+                                  height: 28,
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withValues(alpha: 0.2),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.close,
+                                    size: 16,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                color: AppTheme.successGreen,
-                                shape: BoxShape.circle,
+                      ),
+                    ),
+                  // Node info card
+                  if (_selectedNode != null)
+                    Positioned(
+                      left: _mapPadding,
+                      right: _mapPadding,
+                      bottom: _mapPadding,
+                      child: NodeInfoCard(
+                        node: _selectedNode!,
+                        isMyNode: _selectedNode!.nodeNum == myNodeNum,
+                        onClose: () => setState(() => _selectedNode = null),
+                        onMessage: () => _openDM(_selectedNode!),
+                        distanceFromMe: _getDistanceFromMyNode(
+                          _selectedNode!,
+                          nodesWithPosition,
+                          myNodeNum,
+                        ),
+                        bearingFromMe: _getBearingFromMyNode(
+                          _selectedNode!,
+                          nodesWithPosition,
+                          myNodeNum,
+                        ),
+                        onShareLocation: () {
+                          final nodeWithPos = nodesWithPosition
+                              .where(
+                                (n) => n.node.nodeNum == _selectedNode!.nodeNum,
+                              )
+                              .firstOrNull;
+                          if (nodeWithPos != null) {
+                            _shareLocation(
+                              LatLng(
+                                nodeWithPos.latitude,
+                                nodeWithPos.longitude,
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              '${nodesWithPosition.length}${nodesWithPosition.length != allNodesWithPosition.length ? '/${allNodesWithPosition.length}' : ''} nodes',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                                color: context.textPrimary,
+                              label: _selectedNode!.displayName,
+                            );
+                          }
+                        },
+                        onCopyCoordinates: () {
+                          final nodeWithPos = nodesWithPosition
+                              .where(
+                                (n) => n.node.nodeNum == _selectedNode!.nodeNum,
+                              )
+                              .firstOrNull;
+                          if (nodeWithPos != null) {
+                            _copyCoordinates(
+                              LatLng(
+                                nodeWithPos.latitude,
+                                nodeWithPos.longitude,
                               ),
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                  // Node list panel
+                  AnimatedPositioned(
+                    duration: const Duration(milliseconds: 250),
+                    curve: Curves.easeOutCubic,
+                    left: _showNodeList ? 0 : -300,
+                    top: 0,
+                    bottom: 0,
+                    width: 300,
+                    child: _NodeListPanel(
+                      nodesWithPosition: nodesWithPosition,
+                      myNodeNum: myNodeNum,
+                      selectedNode: _selectedNode,
+                      onNodeSelected: _selectNodeAndCenter,
+                      onClose: () => setState(() => _showNodeList = false),
+                      calculateDistanceFromMe: (node) => _getDistanceFromMyNode(
+                        node.node,
+                        nodesWithPosition,
+                        myNodeNum,
+                      ),
+                      searchController: _searchController,
+                      onSearchChanged: (query) =>
+                          setState(() => _searchQuery = query),
+                    ),
+                  ),
+                  // Node count indicator
+                  if (!_showNodeList && !_showFilters)
+                    Positioned(
+                      left: _mapPadding,
+                      top: _mapPadding,
+                      child: GestureDetector(
+                        onTap: () => setState(() => _showNodeList = true),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: context.card.withValues(alpha: 0.9),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: context.border.withValues(alpha: 0.5),
                             ),
-                            const SizedBox(width: 4),
-                            Icon(
-                              Icons.chevron_right,
-                              size: 16,
-                              color: context.textTertiary,
-                            ),
-                          ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: AppTheme.successGreen,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                '${nodesWithPosition.length}${nodesWithPosition.length != allNodesWithPosition.length ? '/${allNodesWithPosition.length}' : ''} nodes',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: context.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Icon(
+                                Icons.chevron_right,
+                                size: 16,
+                                color: context.textTertiary,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
+                  // Map controls - use shared overlay for consistency
+                  MapControlsOverlay(
+                    currentZoom: _currentZoom,
+                    minZoom: 4,
+                    maxZoom: 18,
+                    mapRotation: _mapRotation,
+                    onZoomIn: () {
+                      final newZoom = (_currentZoom + 1).clamp(4.0, 18.0);
+                      _animatedMove(_mapController.camera.center, newZoom);
+                      HapticFeedback.selectionClick();
+                    },
+                    onZoomOut: () {
+                      final newZoom = (_currentZoom - 1).clamp(4.0, 18.0);
+                      _animatedMove(_mapController.camera.center, newZoom);
+                      HapticFeedback.selectionClick();
+                    },
+                    onFitAll: () => _fitAllNodes(nodesWithPosition),
+                    onCenterOnMe: () =>
+                        _centerOnMyNode(nodesWithPosition, myNodeNum),
+                    onResetNorth: () => _animatedMove(
+                      _mapController.camera.center,
+                      _currentZoom,
+                      rotation: 0,
+                    ),
+                    hasMyLocation: nodesWithPosition.any(
+                      (n) => n.node.nodeNum == myNodeNum,
+                    ),
+                    showFitAll: true,
+                    showNavigation: true,
+                    showCompass: true,
                   ),
-                // Map controls - use shared overlay for consistency
-                MapControlsOverlay(
-                  currentZoom: _currentZoom,
-                  minZoom: 4,
-                  maxZoom: 18,
-                  mapRotation: _mapRotation,
-                  onZoomIn: () {
-                    final newZoom = (_currentZoom + 1).clamp(4.0, 18.0);
-                    _animatedMove(_mapController.camera.center, newZoom);
-                    HapticFeedback.selectionClick();
-                  },
-                  onZoomOut: () {
-                    final newZoom = (_currentZoom - 1).clamp(4.0, 18.0);
-                    _animatedMove(_mapController.camera.center, newZoom);
-                    HapticFeedback.selectionClick();
-                  },
-                  onFitAll: () => _fitAllNodes(nodesWithPosition),
-                  onCenterOnMe: () =>
-                      _centerOnMyNode(nodesWithPosition, myNodeNum),
-                  onResetNorth: () => _animatedMove(
-                    _mapController.camera.center,
-                    _currentZoom,
-                    rotation: 0,
-                  ),
-                  hasMyLocation: nodesWithPosition.any(
-                    (n) => n.node.nodeNum == myNodeNum,
-                  ),
-                  showFitAll: true,
-                  showNavigation: true,
-                  showCompass: true,
-                ),
-              ],
-            ),
+                ],
+              ),
+      ),
     );
   }
 

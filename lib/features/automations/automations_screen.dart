@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../config/admin_config.dart';
+import '../../core/widgets/ico_help_system.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/help_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/animations.dart';
@@ -25,60 +27,84 @@ class AutomationsScreen extends ConsumerWidget {
     final automationsAsync = ref.watch(automationsProvider);
     final stats = ref.watch(automationStatsProvider);
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        centerTitle: true,
-        title: const Text('Automations'),
-        actions: [
-          if (AdminConfig.showAutomationDebug)
+    return HelpTourController(
+      topicId: 'automations_overview',
+      stepKeys: const {},
+      child: Scaffold(
+        backgroundColor: context.background,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          centerTitle: true,
+          title: const Text('Automations'),
+          actions: [
+            if (AdminConfig.showAutomationDebug)
+              IconButton(
+                icon: const Icon(Icons.bug_report),
+                tooltip: 'Debug Panel',
+                onPressed: () => _showDebugPanel(context, ref),
+              ),
             IconButton(
-              icon: const Icon(Icons.bug_report),
-              tooltip: 'Debug Panel',
-              onPressed: () => _showDebugPanel(context, ref),
+              icon: const Icon(Icons.history),
+              tooltip: 'Execution Log',
+              onPressed: () => _showExecutionLog(context, ref),
             ),
-          IconButton(
-            icon: const Icon(Icons.history),
-            tooltip: 'Execution Log',
-            onPressed: () => _showExecutionLog(context, ref),
-          ),
-          IconButton(
-            icon: const Icon(Icons.add),
-            tooltip: 'New Automation',
-            onPressed: () => _showAddAutomation(context, ref),
-          ),
-        ],
-      ),
-      body: automationsAsync.when(
-        data: (automations) {
-          if (automations.isEmpty) {
-            return _buildEmptyState(context, ref);
-          }
-          return _buildAutomationsList(context, ref, automations, stats);
-        },
-        loading: () => const ScreenLoadingIndicator(),
-        error: (error, _) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.error_outline,
-                size: 48,
-                color: AppTheme.errorRed,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Failed to load automations',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: () =>
-                    ref.read(automationsProvider.notifier).refresh(),
-                child: const Text('Retry'),
-              ),
-            ],
+            IconButton(
+              icon: const Icon(Icons.add),
+              tooltip: 'New Automation',
+              onPressed: () => _showAddAutomation(context, ref),
+            ),
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert),
+              onSelected: (value) {
+                if (value == 'help') {
+                  ref
+                      .read(helpProvider.notifier)
+                      .startTour('automations_overview');
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'help',
+                  child: ListTile(
+                    leading: Icon(Icons.help_outline),
+                    title: Text('Help'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        body: automationsAsync.when(
+          data: (automations) {
+            if (automations.isEmpty) {
+              return _buildEmptyState(context, ref);
+            }
+            return _buildAutomationsList(context, ref, automations, stats);
+          },
+          loading: () => const ScreenLoadingIndicator(),
+          error: (error, _) => Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.error_outline,
+                  size: 48,
+                  color: AppTheme.errorRed,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Failed to load automations',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () =>
+                      ref.read(automationsProvider.notifier).refresh(),
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
           ),
         ),
       ),

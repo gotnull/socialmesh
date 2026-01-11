@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'dart:convert';
 import '../../providers/app_providers.dart';
+import '../../providers/help_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
@@ -11,6 +12,7 @@ import '../../utils/snackbar.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/edge_fade.dart';
+import '../../core/widgets/ico_help_system.dart';
 import '../../generated/meshtastic/channel.pb.dart' as channel_pb;
 import '../../generated/meshtastic/channel.pbenum.dart' as channel_pbenum;
 import '../messaging/messaging_screen.dart';
@@ -81,239 +83,301 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen> {
 
     return GestureDetector(
       onTap: _dismissKeyboard,
-      child: Scaffold(
-        backgroundColor: context.background,
-        appBar: AppBar(
+      child: HelpTourController(
+        topicId: 'channels_overview',
+        stepKeys: const {},
+        child: Scaffold(
           backgroundColor: context.background,
-          leading: const HamburgerMenuButton(),
-          centerTitle: true,
-          title: Text(
-            'Channels (${channels.length})',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: context.textPrimary,
+          appBar: AppBar(
+            backgroundColor: context.background,
+            leading: const HamburgerMenuButton(),
+            centerTitle: true,
+            title: Text(
+              'Channels (${channels.length})',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: context.textPrimary,
+              ),
             ),
-          ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.qr_code_scanner),
-              tooltip: 'Scan QR code',
-              onPressed: () {
-                Navigator.of(context).pushNamed('/qr-import');
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.add),
-              tooltip: 'Add channel',
-              onPressed: () {
-                // Find next available channel index (1-7, 0 is Primary)
-                final usedIndices = channels.map((c) => c.index).toSet();
-                int nextIndex = 1;
-                for (int i = 1; i <= 7; i++) {
-                  if (!usedIndices.contains(i)) {
-                    nextIndex = i;
-                    break;
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.qr_code_scanner),
+                tooltip: 'Scan QR code',
+                onPressed: () {
+                  Navigator.of(context).pushNamed('/qr-import');
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.add),
+                tooltip: 'Add channel',
+                onPressed: () {
+                  // Find next available channel index (1-7, 0 is Primary)
+                  final usedIndices = channels.map((c) => c.index).toSet();
+                  int nextIndex = 1;
+                  for (int i = 1; i <= 7; i++) {
+                    if (!usedIndices.contains(i)) {
+                      nextIndex = i;
+                      break;
+                    }
                   }
-                }
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        ChannelWizardScreen(channelIndex: nextIndex),
-                  ),
-                );
-              },
-            ),
-            const DeviceStatusButton(),
-            IconButton(
-              icon: Icon(Icons.settings_outlined),
-              tooltip: 'Settings',
-              onPressed: () => Navigator.of(context).pushNamed('/settings'),
-            ),
-          ],
-        ),
-        body: Column(
-          children: [
-            // Search bar
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: context.card,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: TextField(
-                  controller: _searchController,
-                  onChanged: (value) => setState(() => _searchQuery = value),
-                  style: TextStyle(color: context.textPrimary),
-                  decoration: InputDecoration(
-                    hintText: 'Search channels',
-                    hintStyle: TextStyle(color: context.textTertiary),
-                    prefixIcon: Icon(Icons.search, color: context.textTertiary),
-                    suffixIcon: _searchQuery.isNotEmpty
-                        ? IconButton(
-                            icon: Icon(
-                              Icons.clear,
-                              color: context.textTertiary,
-                            ),
-                            onPressed: () {
-                              _searchController.clear();
-                              setState(() => _searchQuery = '');
-                            },
-                          )
-                        : null,
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          ChannelWizardScreen(channelIndex: nextIndex),
                     ),
-                  ),
-                ),
+                  );
+                },
               ),
-            ),
-            // Filter chips row
-            SizedBox(
-              height: 44,
-              child: EdgeFade.end(
-                fadeSize: 32,
-                fadeColor: context.background,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  children: [
-                    _ChannelFilterChip(
-                      label: 'All',
-                      count: channels.length,
-                      isSelected: _activeFilter == ChannelFilter.all,
-                      onTap: () =>
-                          setState(() => _activeFilter = ChannelFilter.all),
-                    ),
-                    SizedBox(width: 8),
-                    _ChannelFilterChip(
-                      label: 'Primary',
-                      count: primaryCount,
-                      isSelected: _activeFilter == ChannelFilter.primary,
-                      color: AccentColors.blue,
-                      icon: Icons.star,
-                      onTap: () =>
-                          setState(() => _activeFilter = ChannelFilter.primary),
-                    ),
-                    const SizedBox(width: 8),
-                    _ChannelFilterChip(
-                      label: 'Encrypted',
-                      count: encryptedCount,
-                      isSelected: _activeFilter == ChannelFilter.encrypted,
-                      color: AccentColors.green,
-                      icon: Icons.lock,
-                      onTap: () => setState(
-                        () => _activeFilter = ChannelFilter.encrypted,
+              const DeviceStatusButton(),
+              _ChannelsPopupMenu(ref: ref),
+            ],
+          ),
+          body: Column(
+            children: [
+              // Search bar
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: context.card,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (value) => setState(() => _searchQuery = value),
+                    style: TextStyle(color: context.textPrimary),
+                    decoration: InputDecoration(
+                      hintText: 'Search channels',
+                      hintStyle: TextStyle(color: context.textTertiary),
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: context.textTertiary,
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    _ChannelFilterChip(
-                      label: 'Position',
-                      count: positionCount,
-                      isSelected: _activeFilter == ChannelFilter.position,
-                      color: AccentColors.orange,
-                      icon: Icons.location_on,
-                      onTap: () => setState(
-                        () => _activeFilter = ChannelFilter.position,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    _ChannelFilterChip(
-                      label: 'MQTT',
-                      count: mqttCount,
-                      isSelected: _activeFilter == ChannelFilter.mqtt,
-                      color: AccentColors.purple,
-                      icon: Icons.cloud,
-                      onTap: () =>
-                          setState(() => _activeFilter = ChannelFilter.mqtt),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            // Divider
-            Container(height: 1, color: context.border.withValues(alpha: 0.3)),
-            // Channels list
-            Expanded(
-              child: filteredChannels.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            width: 72,
-                            height: 72,
-                            decoration: BoxDecoration(
-                              color: context.card,
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Icon(
-                              Icons.wifi_tethering,
-                              size: 40,
-                              color: context.textTertiary,
-                            ),
-                          ),
-                          SizedBox(height: 24),
-                          Text(
-                            _searchQuery.isNotEmpty
-                                ? 'No channels match "$_searchQuery"'
-                                : 'No channels configured',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: context.textSecondary,
-                            ),
-                          ),
-                          if (_searchQuery.isEmpty) ...[
-                            SizedBox(height: 8),
-                            Text(
-                              'Channels are still being loaded from device\nor use the icons above to add channels',
-                              style: TextStyle(
-                                fontSize: 14,
+                      suffixIcon: _searchQuery.isNotEmpty
+                          ? IconButton(
+                              icon: Icon(
+                                Icons.clear,
                                 color: context.textTertiary,
                               ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                          if (_searchQuery.isNotEmpty) ...[
-                            const SizedBox(height: 12),
-                            TextButton(
-                              onPressed: () =>
-                                  setState(() => _searchQuery = ''),
-                              child: const Text('Clear search'),
-                            ),
-                          ],
-                        ],
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() => _searchQuery = '');
+                              },
+                            )
+                          : null,
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
                       ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: filteredChannels.length,
-                      itemBuilder: (context, index) {
-                        final channel = filteredChannels[index];
-                        final animationsEnabled = ref.watch(
-                          animationsEnabledProvider,
-                        );
-                        return Perspective3DSlide(
-                          index: index,
-                          direction: SlideDirection.left,
-                          enabled: animationsEnabled,
-                          child: _ChannelTile(
-                            channel: channel,
-                            animationsEnabled: animationsEnabled,
-                          ),
-                        );
-                      },
                     ),
-            ),
-          ],
+                  ),
+                ),
+              ),
+              // Filter chips row
+              SizedBox(
+                height: 44,
+                child: EdgeFade.end(
+                  fadeSize: 32,
+                  fadeColor: context.background,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    children: [
+                      _ChannelFilterChip(
+                        label: 'All',
+                        count: channels.length,
+                        isSelected: _activeFilter == ChannelFilter.all,
+                        onTap: () =>
+                            setState(() => _activeFilter = ChannelFilter.all),
+                      ),
+                      SizedBox(width: 8),
+                      _ChannelFilterChip(
+                        label: 'Primary',
+                        count: primaryCount,
+                        isSelected: _activeFilter == ChannelFilter.primary,
+                        color: AccentColors.blue,
+                        icon: Icons.star,
+                        onTap: () => setState(
+                          () => _activeFilter = ChannelFilter.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      _ChannelFilterChip(
+                        label: 'Encrypted',
+                        count: encryptedCount,
+                        isSelected: _activeFilter == ChannelFilter.encrypted,
+                        color: AccentColors.green,
+                        icon: Icons.lock,
+                        onTap: () => setState(
+                          () => _activeFilter = ChannelFilter.encrypted,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      _ChannelFilterChip(
+                        label: 'Position',
+                        count: positionCount,
+                        isSelected: _activeFilter == ChannelFilter.position,
+                        color: AccentColors.orange,
+                        icon: Icons.location_on,
+                        onTap: () => setState(
+                          () => _activeFilter = ChannelFilter.position,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      _ChannelFilterChip(
+                        label: 'MQTT',
+                        count: mqttCount,
+                        isSelected: _activeFilter == ChannelFilter.mqtt,
+                        color: AccentColors.purple,
+                        icon: Icons.cloud,
+                        onTap: () =>
+                            setState(() => _activeFilter = ChannelFilter.mqtt),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              // Divider
+              Container(
+                height: 1,
+                color: context.border.withValues(alpha: 0.3),
+              ),
+              // Channels list
+              Expanded(
+                child: filteredChannels.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 72,
+                              height: 72,
+                              decoration: BoxDecoration(
+                                color: context.card,
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Icon(
+                                Icons.wifi_tethering,
+                                size: 40,
+                                color: context.textTertiary,
+                              ),
+                            ),
+                            SizedBox(height: 24),
+                            Text(
+                              _searchQuery.isNotEmpty
+                                  ? 'No channels match "$_searchQuery"'
+                                  : 'No channels configured',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: context.textSecondary,
+                              ),
+                            ),
+                            if (_searchQuery.isEmpty) ...[
+                              SizedBox(height: 8),
+                              Text(
+                                'Channels are still being loaded from device\nor use the icons above to add channels',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: context.textTertiary,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                            if (_searchQuery.isNotEmpty) ...[
+                              const SizedBox(height: 12),
+                              TextButton(
+                                onPressed: () =>
+                                    setState(() => _searchQuery = ''),
+                                child: const Text('Clear search'),
+                              ),
+                            ],
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: filteredChannels.length,
+                        itemBuilder: (context, index) {
+                          final channel = filteredChannels[index];
+                          final animationsEnabled = ref.watch(
+                            animationsEnabledProvider,
+                          );
+                          return Perspective3DSlide(
+                            index: index,
+                            direction: SlideDirection.left,
+                            enabled: animationsEnabled,
+                            child: _ChannelTile(
+                              channel: channel,
+                              animationsEnabled: animationsEnabled,
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
         ),
       ),
+    );
+  }
+}
+
+/// Popup menu for channels screen with settings and help
+class _ChannelsPopupMenu extends StatelessWidget {
+  final WidgetRef ref;
+
+  const _ChannelsPopupMenu({required this.ref});
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<String>(
+      icon: Icon(Icons.more_vert, color: context.textPrimary),
+      tooltip: 'More options',
+      color: context.card,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: context.border),
+      ),
+      onSelected: (value) {
+        switch (value) {
+          case 'settings':
+            Navigator.pushNamed(context, '/settings');
+          case 'help':
+            ref.read(helpProvider.notifier).startTour('channels_overview');
+        }
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: 'help',
+          child: Row(
+            children: [
+              Icon(Icons.help_outline, color: context.textSecondary, size: 20),
+              const SizedBox(width: 12),
+              Text('Help', style: TextStyle(color: context.textPrimary)),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'settings',
+          child: Row(
+            children: [
+              Icon(
+                Icons.settings_outlined,
+                color: context.textSecondary,
+                size: 20,
+              ),
+              const SizedBox(width: 12),
+              Text('Settings', style: TextStyle(color: context.textPrimary)),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

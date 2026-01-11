@@ -89,32 +89,32 @@ class HelpContent {
       HelpStep(
         id: 'channel_intro',
         bubbleText:
-            "Hey! Let's create a **channel** together. Think of it like creating a **private radio frequency** - only people with the key can tune in!",
+            "Let's make a **channel**! It's like a walkie-talkie. Only your friends who know the secret can listen in.",
         icoMood: MeshBrainMood.excited,
         canGoBack: false,
       ),
       HelpStep(
         id: 'channel_name',
         bubbleText:
-            "First, give your channel a **name**! This helps you identify it. Your friends will see this name when they join.",
+            "First, pick a **name** for your channel. Something easy to remember, like 'Family' or 'Hiking Buddies'.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
         id: 'privacy_level',
         bubbleText:
-            "Now the important part: **privacy level**!\n\n**OPEN**: Anyone can see and join\n**SHARED**: Need a QR code to join\n**PRIVATE**: Maximum encryption, invite-only",
+            "How secret should your channel be?\n\n**OPEN**: Anyone can listen in.\n**SHARED**: Like a password everyone knows.\n**PRIVATE**: Only friends you invite.\n**MAXIMUM**: Super duper secret!",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'encryption_key',
         bubbleText:
-            "I'll generate a super random **encryption key** for you! This scrambles your messages so only channel members can read them. Pretty cool, right?",
+            "I made a **secret key** for you! It scrambles your messages so only your friends can read them. Like a secret code!",
         icoMood: MeshBrainMood.playful,
       ),
       HelpStep(
         id: 'channel_complete',
         bubbleText:
-            "Perfect! Your channel is ready. Share the **QR code** with friends to let them join. They'll need to scan it with their Meshtastic device!",
+            "All done! Show your friends the **QR code** and they can join your channel. Easy peasy!",
         icoMood: MeshBrainMood.celebrating,
         canSkip: false,
       ),
@@ -196,6 +196,52 @@ class HelpContent {
         id: 'routing_store_forward',
         bubbleText:
             "**Store & Forward** is awesome! If the recipient is offline, I'll hold onto the message and deliver it when they come back online!",
+        icoMood: MeshBrainMood.playful,
+      ),
+    ],
+  );
+
+  // ============================================================================
+  // NODES LIST HELP
+  // ============================================================================
+
+  static final HelpTopic nodesOverview = HelpTopic(
+    id: 'nodes_overview',
+    title: 'Your Mesh Network',
+    description: 'Understanding the nodes in your mesh',
+    icon: Icons.hub,
+    category: catNodes,
+    priority: 3,
+    steps: [
+      HelpStep(
+        id: 'nodes_intro',
+        bubbleText:
+            "This is your **mesh network**! Every device you see here is a node that can talk to you.",
+        icoMood: MeshBrainMood.excited,
+        canGoBack: false,
+      ),
+      HelpStep(
+        id: 'nodes_status',
+        bubbleText:
+            "**Green dot** means online and ready. **Yellow** means they were here recently. **Gray** means they've been quiet for a while.",
+        icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
+        id: 'nodes_info',
+        bubbleText:
+            "Each card shows the node's **name**, **battery level**, and **signal strength**. Tap any node to see more details!",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'nodes_filters',
+        bubbleText:
+            "Use the **filters** at the top to find specific nodes. You can show only online nodes, favorites, or nodes with GPS.",
+        icoMood: MeshBrainMood.approving,
+      ),
+      HelpStep(
+        id: 'nodes_actions',
+        bubbleText:
+            "Tap a node to **send a message**, see their **location on the map**, or check their **telemetry data**!",
         icoMood: MeshBrainMood.playful,
       ),
     ],
@@ -414,16 +460,158 @@ class HelpContent {
   );
 
   // ============================================================================
+  // MAP SCREEN HELP
+  // ============================================================================
+
+  static final HelpTopic mapOverview = HelpTopic(
+    id: 'map_overview',
+    title: 'Mesh Map',
+    description: 'See your mesh network on a map',
+    icon: Icons.map,
+    category: catNodes,
+    priority: 5,
+    steps: [
+      HelpStep(
+        id: 'map_intro',
+        bubbleText:
+            "Welcome to the **Mesh Map**! Every dot you see is a node with GPS. They're all part of your network!",
+        icoMood: MeshBrainMood.excited,
+        canGoBack: false,
+      ),
+      HelpStep(
+        id: 'map_markers',
+        bubbleText:
+            "**Tap any marker** to see who it is. You can send them a message, check their battery, or see when they were last heard!",
+        icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
+        id: 'map_features',
+        bubbleText:
+            "Try the **heatmap** to see where nodes cluster, or **connection lines** to see who can talk to who!",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'map_measure',
+        bubbleText:
+            "Use **measure mode** to check distances between points. Great for planning where to put a new node!",
+        icoMood: MeshBrainMood.approving,
+      ),
+      HelpStep(
+        id: 'map_filters',
+        bubbleText:
+            "Use **filters** to show only online nodes, or nodes with GPS. Helps when your map gets crowded!",
+        icoMood: MeshBrainMood.playful,
+      ),
+    ],
+  );
+
+  // ============================================================================
+  // CHANNELS LIST HELP
+  // ============================================================================
+
+  static final HelpTopic channelsOverview = HelpTopic(
+    id: 'channels_overview',
+    title: 'Your Channels',
+    description: 'Managing mesh communication channels',
+    icon: Icons.forum,
+    category: catChannels,
+    priority: 2,
+    steps: [
+      HelpStep(
+        id: 'channels_intro',
+        bubbleText:
+            "These are your **channels**! Think of them like different radio frequencies. Each one is a separate conversation.",
+        icoMood: MeshBrainMood.excited,
+        canGoBack: false,
+      ),
+      HelpStep(
+        id: 'channels_primary',
+        bubbleText:
+            "The **Primary** channel is special. It's always slot 0 and can't be deleted. Most mesh traffic goes here!",
+        icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
+        id: 'channels_secondary',
+        bubbleText:
+            "**Secondary channels** are for private groups. Create one for your family, hiking club, or emergency team!",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'channels_encryption',
+        bubbleText:
+            "See the **lock icon**? That means the channel is encrypted. Only people with the key can read messages!",
+        icoMood: MeshBrainMood.approving,
+      ),
+      HelpStep(
+        id: 'channels_share',
+        bubbleText:
+            "Tap a channel to see its **QR code**. Friends can scan it to join instantly with the right settings!",
+        icoMood: MeshBrainMood.playful,
+      ),
+    ],
+  );
+
+  // ============================================================================
+  // AUTOMATIONS HELP
+  // ============================================================================
+
+  static final HelpTopic automationsOverview = HelpTopic(
+    id: 'automations_overview',
+    title: 'Automations',
+    description: 'Automatic actions for your mesh',
+    icon: Icons.auto_awesome,
+    category: catAutomations,
+    priority: 8,
+    steps: [
+      HelpStep(
+        id: 'automations_intro',
+        bubbleText:
+            "**Automations** make your mesh smarter! Set up rules and I'll do things automatically for you.",
+        icoMood: MeshBrainMood.excited,
+        canGoBack: false,
+      ),
+      HelpStep(
+        id: 'automations_triggers',
+        bubbleText:
+            "Every automation starts with a **trigger**. Like when a node goes offline, battery gets low, or you enter an area!",
+        icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
+        id: 'automations_actions',
+        bubbleText:
+            "Then pick an **action**! Send a message, play a sound, show a notification, or even trigger IFTTT!",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'automations_examples',
+        bubbleText:
+            "Example: **Alert me when Dad's battery drops below 20%**. Or **Send 'I'm home!' when I enter my geofence**!",
+        icoMood: MeshBrainMood.approving,
+      ),
+      HelpStep(
+        id: 'automations_toggle',
+        bubbleText:
+            "Use the **toggle switch** to enable or disable automations. Test them out before going live!",
+        icoMood: MeshBrainMood.playful,
+      ),
+    ],
+  );
+
+  // ============================================================================
   // ALL TOPICS
   // ============================================================================
 
   static final List<HelpTopic> allTopics = [
     channelCreation,
+    channelsOverview,
     encryptionLevels,
     deviceConnection,
     regionSelection,
+    nodesOverview,
     nodeRoles,
+    mapOverview,
     messageRouting,
+    automationsOverview,
     gpsSettings,
     signalMetrics,
   ];

@@ -10,6 +10,7 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import '../../core/transport.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/connecting_content.dart';
+import '../../core/widgets/ico_help_system.dart';
 import '../../utils/snackbar.dart';
 import '../../providers/app_providers.dart';
 import '../../services/storage/storage_service.dart';
@@ -589,230 +590,245 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       );
     }
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
+    return HelpTourController(
+      topicId: 'device_connection',
+      stepKeys: const {},
+      child: Scaffold(
         backgroundColor: context.background,
-        leading: widget.isOnboarding
-            ? IconButton(
-                icon: Icon(Icons.arrow_back, color: context.textPrimary),
-                onPressed: () => Navigator.of(context).pop(),
-              )
-            : null,
-        title: Text(
-          widget.isOnboarding ? 'Connect Device' : 'Meshtastic',
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.w600,
-            color: context.textPrimary,
+        appBar: AppBar(
+          backgroundColor: context.background,
+          leading: widget.isOnboarding
+              ? IconButton(
+                  icon: Icon(Icons.arrow_back, color: context.textPrimary),
+                  onPressed: () => Navigator.of(context).pop(),
+                )
+              : null,
+          title: Text(
+            widget.isOnboarding ? 'Connect Device' : 'Meshtastic',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
+            ),
           ),
+          actions: [
+            if (_scanning)
+              const SizedBox(
+                width: 48,
+                child: Center(child: LoadingIndicator(size: 20)),
+              ),
+            IcoHelpAppBarButton(
+              topicId: 'device_connection',
+              autoTrigger: widget.isOnboarding,
+            ),
+          ],
         ),
-        actions: [
-          if (_scanning)
-            const SizedBox(
-              width: 48,
-              child: Center(child: LoadingIndicator(size: 20)),
-            ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          if (_errorMessage != null)
-            Container(
-              padding: const EdgeInsets.all(16),
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: AppTheme.errorRed.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: AppTheme.errorRed.withValues(alpha: 0.5),
+        body: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            if (_errorMessage != null)
+              Container(
+                padding: const EdgeInsets.all(16),
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: AppTheme.errorRed.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppTheme.errorRed.withValues(alpha: 0.5),
+                  ),
                 ),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.error_outline, color: AppTheme.errorRed),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      _errorMessage!,
-                      style: const TextStyle(color: AppTheme.errorRed),
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.close, color: AppTheme.errorRed),
-                    onPressed: () => setState(() => _errorMessage = null),
-                    iconSize: 20,
-                  ),
-                ],
-              ),
-            ),
-
-          if (_scanning)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: context.accentColor.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: context.accentColor.withValues(alpha: 0.3),
-                ),
-              ),
-              child: Row(
-                children: [
-                  LoadingIndicator(size: 20),
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Scanning for nearby devices',
-                          style: TextStyle(
-                            color: context.textPrimary,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          _devices.isEmpty
-                              ? 'Looking for Meshtastic devices...'
-                              : '${_devices.length} ${_devices.length == 1 ? 'device' : 'devices'} found so far',
-                          style: TextStyle(
-                            color: context.textSecondary,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-          if (_devices.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Row(
-                children: [
-                  Text(
-                    'Available Devices',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: context.textSecondary,
-
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: context.accentColor.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      '${_devices.length}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: context.accentColor,
+                child: Row(
+                  children: [
+                    const Icon(Icons.error_outline, color: AppTheme.errorRed),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        _errorMessage!,
+                        style: const TextStyle(color: AppTheme.errorRed),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-
-          if (_devices.isEmpty && !_scanning)
-            Center(
-              child: Column(
-                children: [
-                  SizedBox(height: 100),
-                  Icon(
-                    Icons.bluetooth_searching,
-                    size: 80,
-                    color: context.textTertiary,
-                  ),
-                  SizedBox(height: 24),
-                  Text(
-                    'No devices found',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                      color: context.textSecondary,
+                    IconButton(
+                      icon: Icon(Icons.close, color: AppTheme.errorRed),
+                      onPressed: () => setState(() => _errorMessage = null),
+                      iconSize: 20,
                     ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Make sure Bluetooth is enabled and\nyour Meshtastic device is powered on',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 14, color: context.textTertiary),
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton.icon(
-                    onPressed: _startScan,
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Scan Again'),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            )
-          else
-            ..._devices.map(
-              (device) => Column(
-                children: [
-                  _DeviceCard(device: device, onTap: () => _connect(device)),
-                  if (device.rssi != null) _DeviceDetailsTable(device: device),
-                ],
-              ),
-            ),
-        ],
-      ),
-      bottomNavigationBar: Consumer(
-        builder: (context, ref, child) {
-          final appVersionAsync = ref.watch(appVersionProvider);
-          final versionText = appVersionAsync.when(
-            data: (version) => 'Socialmesh v$version',
-            loading: () => 'Socialmesh',
-            error: (_, _) => 'Socialmesh',
-          );
 
-          return Container(
-            color: context.background,
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-            child: SafeArea(
-              top: false,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    versionText,
-                    style: TextStyle(
-                      fontSize: 12,
+            if (_scanning)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: context.accentColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: context.accentColor.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    LoadingIndicator(size: 20),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Scanning for nearby devices',
+                            style: TextStyle(
+                              color: context.textPrimary,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            _devices.isEmpty
+                                ? 'Looking for Meshtastic devices...'
+                                : '${_devices.length} ${_devices.length == 1 ? 'device' : 'devices'} found so far',
+                            style: TextStyle(
+                              color: context.textSecondary,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            if (_devices.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Row(
+                  children: [
+                    Text(
+                      'Available Devices',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: context.textSecondary,
+
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: context.accentColor.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '${_devices.length}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: context.accentColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            if (_devices.isEmpty && !_scanning)
+              Center(
+                child: Column(
+                  children: [
+                    SizedBox(height: 100),
+                    Icon(
+                      Icons.bluetooth_searching,
+                      size: 80,
                       color: context.textTertiary,
-                      fontWeight: FontWeight.w500,
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '© 2025 Socialmesh. All rights reserved.',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: context.textTertiary.withValues(alpha: 0.7),
+                    SizedBox(height: 24),
+                    Text(
+                      'No devices found',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                        color: context.textSecondary,
+                      ),
                     ),
-                  ),
-                ],
+                    SizedBox(height: 8),
+                    Text(
+                      'Make sure Bluetooth is enabled and\nyour Meshtastic device is powered on',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: context.textTertiary,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton.icon(
+                      onPressed: _startScan,
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Scan Again'),
+                    ),
+                  ],
+                ),
+              )
+            else
+              ..._devices.map(
+                (device) => Column(
+                  children: [
+                    _DeviceCard(device: device, onTap: () => _connect(device)),
+                    if (device.rssi != null)
+                      _DeviceDetailsTable(device: device),
+                  ],
+                ),
               ),
-            ),
-          );
-        },
+          ],
+        ),
+        bottomNavigationBar: Consumer(
+          builder: (context, ref, child) {
+            final appVersionAsync = ref.watch(appVersionProvider);
+            final versionText = appVersionAsync.when(
+              data: (version) => 'Socialmesh v$version',
+              loading: () => 'Socialmesh',
+              error: (_, _) => 'Socialmesh',
+            );
+
+            return Container(
+              color: context.background,
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      versionText,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.textTertiary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '© 2025 Socialmesh. All rights reserved.',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: context.textTertiary.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
