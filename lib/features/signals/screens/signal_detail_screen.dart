@@ -91,7 +91,8 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
       AppLogging.signals(
         '🔔 Firestore comment update for signal ${widget.signal.id}',
       );
-      _loadComments();
+      // Refresh without showing loading indicator to preserve scroll position
+      _refreshComments();
     }
   }
 
@@ -143,6 +144,28 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
           _isLoadingComments = false;
         });
       }
+    }
+  }
+
+  /// Refresh comments without showing loading indicator (preserves scroll position).
+  Future<void> _refreshComments() async {
+    if (!mounted) return;
+
+    try {
+      final signalService = ref.read(signalServiceProvider);
+      final responses = await signalService.getComments(widget.signal.id);
+      final votes = Map<String, int>.from(
+        signalService.getMyVotesForSignal(widget.signal.id),
+      );
+
+      if (mounted) {
+        setState(() {
+          _comments = responses;
+          _myVotes = votes;
+        });
+      }
+    } catch (e) {
+      AppLogging.signals('Error refreshing comments: $e');
     }
   }
 
@@ -592,7 +615,9 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
         children: [
           // Main content - with top padding for AppBar and bottom for reply input
           ListView(
+            key: PageStorageKey('signal_detail_${widget.signal.id}'),
             controller: _scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
             padding: EdgeInsets.fromLTRB(
               16,
               MediaQuery.of(context).padding.top + kToolbarHeight + 16,

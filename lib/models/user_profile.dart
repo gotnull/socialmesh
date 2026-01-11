@@ -391,7 +391,7 @@ class UserProfile {
     final now = DateTime.now();
     return UserProfile(
       id: 'guest_${now.millisecondsSinceEpoch}',
-      displayName: 'Mesh User',
+      displayName: 'meshuser',
       createdAt: now,
       updatedAt: now,
     );
