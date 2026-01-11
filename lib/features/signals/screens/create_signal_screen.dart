@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -43,6 +45,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
   static const int _maxLength = 280;
   bool _isSubmitting = false;
   bool _isLoadingLocation = false;
+  bool _isValidatingImage = false;
   int _ttlMinutes = SignalTTL.defaultTTL;
   PostLocation? _location;
   String? _imageLocalPath;
@@ -296,14 +299,120 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
           imageQuality: 85,
         );
         if (pickedFile != null && mounted) {
-          setState(() => _imageLocalPath = pickedFile.path);
+          final validated = await _validateImage(pickedFile.path);
+          if (validated && mounted) {
+            setState(() => _imageLocalPath = pickedFile.path);
+          }
         }
       } else if (result.asset != null) {
         // Use selected asset from gallery
         final file = await result.asset!.file;
         if (file != null && mounted) {
-          setState(() => _imageLocalPath = file.path);
+          final validated = await _validateImage(file.path);
+          if (validated && mounted) {
+            setState(() => _imageLocalPath = file.path);
+          }
         }
+      }
+    }
+  }
+
+  /// Validate image through content moderation before accepting it.
+  /// Returns true if image passes validation, false otherwise.
+  Future<bool> _validateImage(String localPath) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      // Can't validate without auth - allow image (will be validated on upload)
+      AppLogging.signals(
+        '[CreateSignal] Skipping image validation: not authenticated',
+      );
+      return true;
+    }
+
+    setState(() => _isValidatingImage = true);
+
+    try {
+      final imageFile = File(localPath);
+      if (!await imageFile.exists()) {
+        AppLogging.signals('[CreateSignal] Image file not found: $localPath');
+        return false;
+      }
+
+      // Upload to temp location for moderation
+      final fileName =
+          'temp_${DateTime.now().millisecondsSinceEpoch}_${currentUser.uid}.jpg';
+      final ref = FirebaseStorage.instance
+          .ref()
+          .child('signal_images_temp')
+          .child(fileName);
+
+      // Add metadata with authorId for content moderation
+      final metadata = SettableMetadata(
+        contentType: 'image/jpeg',
+        customMetadata: {
+          'authorId': currentUser.uid,
+          'uploadedAt': DateTime.now().toIso8601String(),
+          'purpose': 'signal_validation',
+        },
+      );
+
+      AppLogging.signals(
+        '[CreateSignal] Uploading for validation: signal_images_temp/$fileName',
+      );
+      await ref.putFile(imageFile, metadata);
+
+      // Small delay to allow moderation trigger to process
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      // Try to get download URL - if file was moderated, it won't exist
+      try {
+        await ref.getDownloadURL();
+        AppLogging.signals('[CreateSignal] Image passed moderation');
+
+        // Clean up temp file (validation passed)
+        try {
+          await ref.delete();
+        } catch (_) {
+          // Ignore cleanup errors
+        }
+        return true;
+      } on FirebaseException catch (e) {
+        if (e.code == 'object-not-found') {
+          // Image was deleted by content moderation
+          AppLogging.signals(
+            '[CreateSignal] Image blocked by content moderation',
+          );
+          if (mounted) {
+            showErrorSnackBar(
+              context,
+              'Image violates content guidelines and was blocked.',
+            );
+          }
+          return false;
+        }
+        rethrow;
+      }
+    } catch (e) {
+      AppLogging.signals('[CreateSignal] Image validation error: $e');
+      // Check for object-not-found which indicates moderation
+      final errorStr = e.toString();
+      if (errorStr.contains('object-not-found')) {
+        if (mounted) {
+          showErrorSnackBar(
+            context,
+            'Image violates content guidelines and was blocked.',
+          );
+        }
+        return false;
+      }
+      // Other errors - show generic error
+      if (mounted) {
+        showErrorSnackBar(context, 'Failed to validate image');
+      }
+      return false;
+    } finally {
+      if (mounted) {
+        setState(() => _isValidatingImage = false);
       }
     }
   }
@@ -735,8 +844,11 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
                   _ActionButton(
                     icon: Icons.image_outlined,
                     label: 'Image',
-                    onTap: _isSubmitting ? null : _pickImage,
+                    onTap: _isSubmitting || _isValidatingImage
+                        ? null
+                        : _pickImage,
                     isSelected: _imageLocalPath != null,
+                    isLoading: _isValidatingImage,
                   ),
                   const SizedBox(width: 12),
                   _ActionButton(

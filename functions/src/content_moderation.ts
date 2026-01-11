@@ -698,11 +698,13 @@ export const moderateUploadedMedia = onObjectFinalized(
     // - stories/{userId}/{storyId}/media.jpg
     // - profile_avatars/{userId}.jpg
     // - post_images/{filename}.jpg (userId in metadata)
+    // - signal_images_temp/{filename}.jpg (userId in metadata) - temporary validation
     const pathParts = filePath.split('/');
 
     let moderationContentType: ModerationQueueItem['contentType'] | null = null;
     let userId: string | null = null;
     let contentId: string | null = null;
+    let isTempValidation = false;
 
     if (pathParts[0] === 'stories' && pathParts.length >= 3) {
       moderationContentType = 'story';
@@ -720,6 +722,17 @@ export const moderateUploadedMedia = onObjectFinalized(
 
       if (!userId) {
         console.log(`Post image ${filePath} missing authorId in metadata`);
+        return;
+      }
+    } else if (pathParts[0] === 'signal_images_temp') {
+      // Signal image temp validation: Extract userId from metadata
+      moderationContentType = 'post'; // Treat as post for moderation purposes
+      userId = event.data.metadata?.authorId || null;
+      contentId = pathParts[1]?.replace(/\.[^.]+$/, ''); // Filename without extension
+      isTempValidation = true;
+
+      if (!userId) {
+        console.log(`Signal temp image ${filePath} missing authorId in metadata`);
         return;
       }
     } else {
@@ -759,46 +772,52 @@ export const moderateUploadedMedia = onObjectFinalized(
     const bucket = admin.storage().bucket(event.data.bucket);
     const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${event.data.bucket}/o/${encodeURIComponent(filePath)}?alt=media`;
 
-    // Store moderation result
-    await db.collection('content_moderation').doc(`${moderationContentType}_${contentId}`).set({
-      contentType: moderationContentType,
-      contentId,
-      userId,
-      filePath,
-      result,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
+    // Store moderation result (skip for temp validation)
+    if (!isTempValidation) {
+      await db.collection('content_moderation').doc(`${moderationContentType}_${contentId}`).set({
+        contentType: moderationContentType,
+        contentId,
+        userId,
+        filePath,
+        result,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+    }
 
     // Take action based on result
     if (result.action === 'reject') {
-      console.log(`Auto-rejecting ${moderationContentType} ${contentId}`);
+      console.log(`Auto-rejecting ${moderationContentType} ${contentId}${isTempValidation ? ' (temp validation)' : ''}`);
 
       // Delete the uploaded file
       await bucket.file(filePath).delete();
 
-      // Remove the content document
-      await removeViolatingContent(moderationContentType, contentId, false);
+      // For temp validation, just delete the file - don't remove content or record strike
+      if (!isTempValidation) {
+        // Remove the content document
+        await removeViolatingContent(moderationContentType, contentId, false);
 
-      // Record strike against user
-      await recordUserStrike(
-        userId,
-        `Auto-rejected ${moderationContentType}: ${result.details}`,
-        contentId,
-        moderationContentType,
-      );
-
+        // Record strike against user
+        await recordUserStrike(
+          userId,
+          `Auto-rejected ${moderationContentType}: ${result.details}`,
+          contentId,
+          moderationContentType,
+        );
+      }
     } else if (result.action === 'review') {
-      console.log(`Flagging ${moderationContentType} ${contentId} for review`);
+      // Skip review queue for temp validation
+      if (!isTempValidation) {
+        console.log(`Flagging ${moderationContentType} ${contentId} for review`);
 
-      // Add to review queue
-      await addToModerationQueue(
-        moderationContentType,
-        contentId,
-        userId,
-        result,
-        publicUrl,
-      );
-
+        // Add to review queue
+        await addToModerationQueue(
+          moderationContentType,
+          contentId,
+          userId,
+          result,
+          publicUrl,
+        );
+      }
     } else if (result.action === 'flag') {
       // Flag but don't remove - just log
       console.log(`Flagged ${moderationContentType} ${contentId}: ${result.details}`);
