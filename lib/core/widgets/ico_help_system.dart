@@ -151,6 +151,140 @@ class _IcoHelpButtonState extends ConsumerState<IcoHelpButton>
 }
 
 // ============================================================================
+// ICO HELP APP BAR BUTTON - App bar icon with accent ring when help mode active
+// ============================================================================
+
+/// A help button designed for app bars that shows an accent-colored ring
+/// when help mode is active. Use this instead of IcoHelpButton for a cleaner
+/// integration with standard app bar actions.
+class IcoHelpAppBarButton extends ConsumerStatefulWidget {
+  final String topicId;
+  final bool autoTrigger;
+
+  const IcoHelpAppBarButton({
+    super.key,
+    required this.topicId,
+    this.autoTrigger = false,
+  });
+
+  @override
+  ConsumerState<IcoHelpAppBarButton> createState() =>
+      _IcoHelpAppBarButtonState();
+}
+
+class _IcoHelpAppBarButtonState extends ConsumerState<IcoHelpAppBarButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ringController;
+  bool _autoTriggered = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _ringController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Auto-trigger help on first visit
+    if (widget.autoTrigger && !_autoTriggered) {
+      _autoTriggered = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final helpNotifier = ref.read(helpProvider.notifier);
+        if (helpNotifier.shouldAutoTrigger(widget.topicId)) {
+          helpNotifier.startTour(widget.topicId);
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _ringController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final helpState = ref.watch(helpProvider);
+    final isHelpActive = helpState.activeTourId != null;
+
+    return AnimatedBuilder(
+      animation: _ringController,
+      builder: (context, child) {
+        final ringOpacity = isHelpActive
+            ? 0.5 + (_ringController.value * 0.5)
+            : 0.0;
+        final ringScale = isHelpActive
+            ? 1.0 + (_ringController.value * 0.15)
+            : 1.0;
+
+        return GestureDetector(
+          onTap: () {
+            HapticFeedback.lightImpact();
+            if (isHelpActive) {
+              ref.read(helpProvider.notifier).dismissTopic(widget.topicId);
+            } else {
+              ref.read(helpProvider.notifier).startTour(widget.topicId);
+            }
+          },
+          behavior: HitTestBehavior.opaque,
+          child: Container(
+            width: 48,
+            height: 48,
+            alignment: Alignment.center,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Animated ring when help mode is active
+                if (isHelpActive)
+                  Transform.scale(
+                    scale: ringScale,
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: context.accentColor.withValues(
+                            alpha: ringOpacity,
+                          ),
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                  ),
+                // Icon with background when active
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isHelpActive
+                        ? context.accentColor.withValues(alpha: 0.2)
+                        : Colors.transparent,
+                  ),
+                  child: Icon(
+                    isHelpActive ? Icons.help : Icons.help_outline,
+                    color: isHelpActive
+                        ? context.accentColor
+                        : context.textSecondary,
+                    size: 22,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ============================================================================
 // RICH TEXT PARSER - Parses **text** for colored highlights
 // ============================================================================
 
@@ -317,68 +451,47 @@ class AnimatedDottedInputBorder extends InputBorder {
     final gapLeftX = hasGap ? left + gapStart - gapPadding : 0.0;
     final gapRightX = hasGap ? left + gapStart + gapExtent + gapPadding : 0.0;
 
-    // Build continuous path for everything EXCEPT the gap area
+    // Build a SINGLE continuous path (no moveTo except at start)
+    // This ensures smooth animation around the entire border
     final path = Path();
 
-    // Start at top-left corner (after radius), draw top edge with gap
+    // Start at top-left corner end (where top edge begins)
+    path.moveTo(left + r, top);
+
     if (hasGap) {
-      // Top edge part 1: from after top-left arc to gap start
-      if (gapLeftX > left + r) {
-        path.moveTo(left + r, top);
-        path.lineTo(gapLeftX, top);
-      }
-      // Top edge part 2: from gap end to before top-right arc
-      if (gapRightX < right - r) {
-        path.moveTo(gapRightX, top);
-        path.lineTo(right - r, top);
-      }
+      // Top edge part 1: to gap
+      path.lineTo(gapLeftX, top);
+      // Jump over gap
+      path.moveTo(gapRightX, top);
+      // Top edge part 2: to top-right corner
+      path.lineTo(right - r, top);
     } else {
       // Full top edge
-      path.moveTo(left + r, top);
       path.lineTo(right - r, top);
     }
 
-    // Top-right arc
-    path.addArc(
-      Rect.fromLTWH(right - 2 * r, top, 2 * r, 2 * r),
-      -1.5708, // -π/2 (top)
-      1.5708, // π/2 (to right)
-    );
+    // Top-right arc (continuous from top edge)
+    path.arcToPoint(Offset(right, top + r), radius: Radius.circular(r));
 
     // Right edge
-    path.moveTo(right, top + r);
     path.lineTo(right, bottom - r);
 
     // Bottom-right arc
-    path.addArc(
-      Rect.fromLTWH(right - 2 * r, bottom - 2 * r, 2 * r, 2 * r),
-      0, // right
-      1.5708, // π/2 (to bottom)
-    );
+    path.arcToPoint(Offset(right - r, bottom), radius: Radius.circular(r));
 
     // Bottom edge
-    path.moveTo(right - r, bottom);
     path.lineTo(left + r, bottom);
 
     // Bottom-left arc
-    path.addArc(
-      Rect.fromLTWH(left, bottom - 2 * r, 2 * r, 2 * r),
-      1.5708, // π/2 (bottom)
-      1.5708, // π/2 (to left)
-    );
+    path.arcToPoint(Offset(left, bottom - r), radius: Radius.circular(r));
 
     // Left edge
-    path.moveTo(left, bottom - r);
     path.lineTo(left, top + r);
 
     // Top-left arc
-    path.addArc(
-      Rect.fromLTWH(left, top, 2 * r, 2 * r),
-      3.1416, // π (left)
-      1.5708, // π/2 (to top)
-    );
+    path.arcToPoint(Offset(left + r, top), radius: Radius.circular(r));
 
-    // Draw animated dashes along the path
+    // Draw animated dashes along each contiguous segment
     final animOffset = animation.value * (dashLength + gapLength) * 3;
 
     for (final metric in path.computeMetrics()) {
@@ -758,11 +871,14 @@ class _IcoSpeechBubbleWithArrowState
                                         child: SizedBox(
                                           width: 64,
                                           height: 64,
-                                          child: MeshNodeBrain(
-                                            mood: widget.icoMood,
-                                            size: 64,
-                                            showThoughtParticles: false,
-                                            glowIntensity: 0.5,
+                                          child: Material(
+                                            type: MaterialType.transparency,
+                                            child: MeshNodeBrain(
+                                              mood: widget.icoMood,
+                                              size: 64,
+                                              showThoughtParticles: false,
+                                              glowIntensity: 0.5,
+                                            ),
                                           ),
                                         ),
                                       ),

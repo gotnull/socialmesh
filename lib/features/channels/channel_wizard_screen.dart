@@ -284,37 +284,34 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
             icon: const Icon(Icons.close),
             onPressed: () => Navigator.pop(context),
           ),
-        ),
-        body: Stack(
-          children: [
-            GestureDetector(
-              onTap: () => FocusScope.of(context).unfocus(),
-              behavior: HitTestBehavior.opaque,
-              child: Column(
-                children: [
-                  // Progress indicator
-                  _buildProgressIndicator(),
-                  // Page content
-                  Expanded(
-                    child: PageView(
-                      controller: _pageController,
-                      physics: const NeverScrollableScrollPhysics(),
-                      children: [
-                        _buildNameStep(theme),
-                        _buildPrivacyStep(theme),
-                        _buildOptionsStep(theme),
-                        _buildCompleteStep(theme),
-                      ],
-                    ),
-                  ),
-                  // Navigation buttons
-                  if (!_saveComplete) _buildNavigationButtons(),
-                ],
-              ),
-            ),
-            // Help button
-            IcoHelpButton(topicId: 'channel_creation', autoTrigger: true),
+          actions: [
+            IcoHelpAppBarButton(topicId: 'channel_creation', autoTrigger: true),
           ],
+        ),
+        body: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          behavior: HitTestBehavior.opaque,
+          child: Column(
+            children: [
+              // Progress indicator
+              _buildProgressIndicator(),
+              // Page content
+              Expanded(
+                child: PageView(
+                  controller: _pageController,
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: [
+                    _buildNameStep(theme),
+                    _buildPrivacyStep(theme),
+                    _buildOptionsStep(theme),
+                    _buildCompleteStep(theme),
+                  ],
+                ),
+              ),
+              // Navigation buttons
+              if (!_saveComplete) _buildNavigationButtons(),
+            ],
+          ),
         ),
       ),
     );
@@ -414,21 +411,15 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
                 ),
                 filled: true,
                 fillColor: context.surface,
-                // Use animated dotted border when highlighted, normal border otherwise
+                // Animated dotted border ONLY when focused AND highlighted
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
                 ),
-                enabledBorder: isHighlighted
-                    ? AnimatedDottedInputBorder(
-                        animation: animation,
-                        color: AppTheme.primaryMagenta,
-                        borderRadius: 12,
-                      )
-                    : OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
                 focusedBorder: isHighlighted
                     ? AnimatedDottedInputBorder(
                         animation: animation,

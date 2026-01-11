@@ -3034,6 +3034,7 @@ class _MeshNodeBrainState extends State<MeshNodeBrain>
           fontSize: widget.size * 0.25,
           color: _colors[1].withAlpha((200 * _pulse.value).round()),
           fontWeight: FontWeight.bold,
+          decoration: TextDecoration.none,
         ),
       ),
     );
@@ -4222,6 +4223,7 @@ class _ConfusionSwirlsPainter extends CustomPainter {
           color: color.withAlpha(
             (150 * math.sin(progress * math.pi * 2).abs()).round(),
           ),
+          decoration: TextDecoration.none,
         ),
       ),
       textDirection: TextDirection.ltr,
