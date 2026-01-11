@@ -122,7 +122,10 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
       final responses = await signalService.getComments(widget.signal.id);
 
       // Get user's votes from the service cache (populated by Firestore listener)
-      final votes = signalService.getMyVotesForSignal(widget.signal.id);
+      // Make a mutable copy since the service returns an unmodifiable view
+      final votes = Map<String, int>.from(
+        signalService.getMyVotesForSignal(widget.signal.id),
+      );
 
       if (mounted) {
         setState(() {
@@ -1081,10 +1084,11 @@ class _VoteButton extends StatelessWidget {
         : context.textTertiary;
 
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(4),
-        child: Icon(icon, size: 16, color: color),
+        padding: const EdgeInsets.all(8),
+        child: Icon(icon, size: 18, color: color),
       ),
     );
   }
