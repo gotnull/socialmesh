@@ -27,6 +27,7 @@ class HelpState {
     Set<String>? dismissedTopics,
     bool? skipFutureHelp,
     String? activeTourId,
+    bool clearActiveTour = false,
     int? currentStepIndex,
     bool? showPulsingHint,
   }) {
@@ -34,7 +35,9 @@ class HelpState {
       completedTopics: completedTopics ?? this.completedTopics,
       dismissedTopics: dismissedTopics ?? this.dismissedTopics,
       skipFutureHelp: skipFutureHelp ?? this.skipFutureHelp,
-      activeTourId: activeTourId,
+      activeTourId: clearActiveTour
+          ? null
+          : (activeTourId ?? this.activeTourId),
       currentStepIndex: currentStepIndex ?? this.currentStepIndex,
       showPulsingHint: showPulsingHint ?? this.showPulsingHint,
     );
@@ -141,7 +144,7 @@ class HelpNotifier extends Notifier<HelpState> {
 
     state = state.copyWith(
       completedTopics: {...state.completedTopics, topicId},
-      activeTourId: null,
+      clearActiveTour: true,
       currentStepIndex: 0,
     );
 
@@ -155,13 +158,14 @@ class HelpNotifier extends Notifier<HelpState> {
     if (dontShowAgain) {
       state = state.copyWith(
         dismissedTopics: {...state.dismissedTopics, topicId},
-        activeTourId: state.activeTourId == topicId ? null : state.activeTourId,
+        clearActiveTour: state.activeTourId == topicId,
+        currentStepIndex: 0,
       );
       _saveToPreferences();
     } else {
       // Just close without marking dismissed
       if (state.activeTourId == topicId) {
-        state = state.copyWith(activeTourId: null, currentStepIndex: 0);
+        state = state.copyWith(clearActiveTour: true, currentStepIndex: 0);
       }
     }
   }
@@ -171,7 +175,7 @@ class HelpNotifier extends Notifier<HelpState> {
     if (state.activeTourId == null) return;
 
     AppLogging.app('Help: Cancelled tour ${state.activeTourId}');
-    state = state.copyWith(activeTourId: null, currentStepIndex: 0);
+    state = state.copyWith(clearActiveTour: true, currentStepIndex: 0);
   }
 
   /// Set skip future help preference

@@ -77,66 +77,73 @@ class _IcoHelpButtonState extends ConsumerState<IcoHelpButton>
     }
 
     return Positioned.fill(
-      child: Align(
-        alignment: widget.alignment,
-        child: Padding(
-          padding: widget.margin,
-          child: AnimatedBuilder(
-            animation: _pulseController,
-            builder: (context, child) {
-              final pulseScale = shouldShow
-                  ? 1.0 + (_pulseController.value * 0.15)
-                  : 1.0;
-              final glowOpacity = shouldShow
-                  ? 0.3 + (_pulseController.value * 0.4)
-                  : 0.0;
+      child: SafeArea(
+        child: Align(
+          alignment: widget.alignment,
+          child: Padding(
+            padding: widget.margin,
+            child: AnimatedBuilder(
+              animation: _pulseController,
+              builder: (context, child) {
+                final pulseScale = shouldShow
+                    ? 1.0 + (_pulseController.value * 0.15)
+                    : 1.0;
+                final glowOpacity = shouldShow
+                    ? 0.3 + (_pulseController.value * 0.4)
+                    : 0.0;
 
-              return GestureDetector(
-                onTap: () =>
-                    ref.read(helpProvider.notifier).startTour(widget.topicId),
-                child: Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppTheme.primaryMagenta.withValues(
-                          alpha: glowOpacity,
+                return GestureDetector(
+                  onTap: () =>
+                      ref.read(helpProvider.notifier).startTour(widget.topicId),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppTheme.primaryMagenta.withValues(
+                            alpha: glowOpacity,
+                          ),
+                          blurRadius: 20,
+                          spreadRadius: 5,
                         ),
-                        blurRadius: 20,
-                        spreadRadius: 5,
-                      ),
-                    ],
-                  ),
-                  child: Transform.scale(
-                    scale: pulseScale,
-                    child: Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            AppTheme.primaryMagenta.withValues(alpha: 0.8),
-                            AccentColors.cyan.withValues(alpha: 0.6),
+                      ],
+                    ),
+                    child: Transform.scale(
+                      scale: pulseScale,
+                      child: Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              AppTheme.primaryMagenta.withValues(alpha: 0.9),
+                              AccentColors.cyan.withValues(alpha: 0.7),
+                            ],
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppTheme.primaryMagenta.withValues(
+                                alpha: 0.5,
+                              ),
+                              blurRadius: 12,
+                              spreadRadius: 2,
+                            ),
                           ],
                         ),
-                        border: Border.all(
-                          color: AppTheme.primaryMagenta.withValues(alpha: 0.5),
-                          width: 2,
+                        child: Icon(
+                          Icons.help_outline,
+                          color: Colors.white,
+                          size: 28,
                         ),
-                      ),
-                      child: Icon(
-                        Icons.help_outline,
-                        color: Colors.white,
-                        size: 28,
                       ),
                     ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -190,121 +197,150 @@ class IcoSpeechBubbleWithArrow extends StatelessWidget {
         const SizedBox(height: 16),
 
         // Speech bubble
-        Container(
-          constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.85,
-          ),
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                AppTheme.darkBackground.withValues(alpha: 0.95),
-                AppTheme.darkSurface.withValues(alpha: 0.95),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: AppTheme.primaryMagenta.withValues(alpha: 0.3),
-              width: 2,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: AppTheme.primaryMagenta.withValues(alpha: 0.2),
-                blurRadius: 20,
-                spreadRadius: 2,
+        ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.85,
               ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Progress indicator
-              if (totalSteps > 1) ...[
-                Row(
-                  children: [
-                    Text(
-                      'Step $currentStep of $totalSteps',
-                      style: TextStyle(
-                        color: AppTheme.primaryMagenta.withValues(alpha: 0.7),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: LinearProgressIndicator(
-                        value: currentStep / totalSteps,
-                        backgroundColor: AppTheme.primaryMagenta.withValues(
-                          alpha: 0.2,
-                        ),
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          AppTheme.primaryMagenta,
-                        ),
-                      ),
-                    ),
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppTheme.darkSurface.withValues(alpha: 0.85),
+                    AppTheme.darkBackground.withValues(alpha: 0.9),
                   ],
                 ),
-                const SizedBox(height: 16),
-              ],
-
-              // Message text
-              AdvisorSpeechBubble(
-                text: text,
-                typewriterEffect: true,
-                typingSpeed: 20,
-                accentColor: AppTheme.primaryMagenta,
-              ),
-
-              const SizedBox(height: 16),
-
-              // Action buttons
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Back button
-                  if (showBack && onBack != null)
-                    TextButton.icon(
-                      onPressed: onBack,
-                      icon: const Icon(Icons.arrow_back, size: 18),
-                      label: const Text('Back'),
-                      style: TextButton.styleFrom(
-                        foregroundColor: AccentColors.cyan.withValues(
-                          alpha: 0.7,
-                        ),
-                      ),
-                    )
-                  else
-                    const SizedBox.shrink(),
-
-                  // Skip button
-                  if (showSkip && onSkip != null)
-                    TextButton(
-                      onPressed: onSkip,
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.white.withValues(alpha: 0.5),
-                      ),
-                      child: const Text('Skip'),
-                    ),
-
-                  // Next/Done button
-                  if (onNext != null)
-                    ElevatedButton(
-                      onPressed: onNext,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primaryMagenta,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 12,
-                        ),
-                      ),
-                      child: Text(nextLabel ?? 'Next'),
-                    ),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.1),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    blurRadius: 30,
+                    offset: const Offset(0, 10),
+                  ),
+                  BoxShadow(
+                    color: AppTheme.primaryMagenta.withValues(alpha: 0.15),
+                    blurRadius: 40,
+                    spreadRadius: -5,
+                  ),
                 ],
               ),
-            ],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Progress indicator
+                  if (totalSteps > 1) ...[
+                    Row(
+                      children: [
+                        Text(
+                          'Step $currentStep of $totalSteps',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.6),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: LinearProgressIndicator(
+                              value: currentStep / totalSteps,
+                              minHeight: 4,
+                              backgroundColor: Colors.white.withValues(
+                                alpha: 0.1,
+                              ),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                AppTheme.primaryMagenta,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+
+                  // Message text
+                  AdvisorSpeechBubble(
+                    text: text,
+                    typewriterEffect: true,
+                    typingSpeed: 20,
+                    accentColor: AppTheme.primaryMagenta,
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Action buttons
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Back button
+                      if (showBack && onBack != null)
+                        TextButton.icon(
+                          onPressed: onBack,
+                          icon: const Icon(Icons.arrow_back, size: 18),
+                          label: const Text('Back'),
+                          style: TextButton.styleFrom(
+                            foregroundColor: AccentColors.cyan.withValues(
+                              alpha: 0.7,
+                            ),
+                          ),
+                        )
+                      else
+                        const SizedBox.shrink(),
+
+                      // Skip button
+                      if (showSkip && onSkip != null)
+                        TextButton(
+                          onPressed: onSkip,
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.white.withValues(
+                              alpha: 0.5,
+                            ),
+                          ),
+                          child: const Text('Skip'),
+                        ),
+
+                      // Next/Done button
+                      if (onNext != null)
+                        ElevatedButton(
+                          onPressed: onNext,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primaryMagenta,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shadowColor: Colors.transparent,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 28,
+                              vertical: 14,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            nextLabel ?? 'Next',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ],
@@ -414,37 +450,40 @@ class _IcoCoachMarkState extends State<IcoCoachMark>
           },
         ),
 
-        // Glowing border around target
+        // Subtle glow around target
         Positioned(
-          left: _targetRect!.left - 8,
-          top: _targetRect!.top - 8,
-          child: AnimatedBuilder(
-            animation: _pulseController,
-            builder: (context, child) {
-              final pulseRadius = 8.0 + (_pulseController.value * 4);
-              return Container(
-                width: _targetRect!.width + (pulseRadius * 2),
-                height: _targetRect!.height + (pulseRadius * 2),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: AppTheme.primaryMagenta.withValues(
-                      alpha: 0.3 + (_pulseController.value * 0.4),
-                    ),
-                    width: 3,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.primaryMagenta.withValues(
-                        alpha: 0.2 + (_pulseController.value * 0.3),
+          left: _targetRect!.left - 12,
+          top: _targetRect!.top - 12,
+          child: IgnorePointer(
+            child: AnimatedBuilder(
+              animation: _pulseController,
+              builder: (context, child) {
+                final pulseRadius = 12.0 + (_pulseController.value * 6);
+                return Container(
+                  width: _targetRect!.width + (pulseRadius * 2),
+                  height: _targetRect!.height + (pulseRadius * 2),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.primaryMagenta.withValues(
+                          alpha: 0.4 + (_pulseController.value * 0.3),
+                        ),
+                        blurRadius: 30,
+                        spreadRadius: 8,
                       ),
-                      blurRadius: 15,
-                      spreadRadius: 5,
-                    ),
-                  ],
-                ),
-              );
-            },
+                      BoxShadow(
+                        color: AccentColors.cyan.withValues(
+                          alpha: 0.2 + (_pulseController.value * 0.2),
+                        ),
+                        blurRadius: 40,
+                        spreadRadius: 4,
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
         ),
 
