@@ -29,6 +29,7 @@ class PresenceFeedScreen extends ConsumerStatefulWidget {
 
 class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
   final ScrollController _scrollController = ScrollController();
+  bool _isRefreshing = false;
 
   @override
   void dispose() {
@@ -38,7 +39,19 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
 
   Future<void> _handleRefresh() async {
     HapticFeedback.mediumImpact();
+
+    // Start refresh animation
+    setState(() => _isRefreshing = true);
+
+    // Small delay to let the slide-out animation start
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+
     await ref.read(signalFeedProvider.notifier).refresh();
+
+    // End refresh animation (triggers slide-back-in)
+    if (mounted) {
+      setState(() => _isRefreshing = false);
+    }
   }
 
   void _openCreateSignal() {
@@ -357,19 +370,24 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
               final currentUser = ref.watch(currentUserProvider);
               final isOwnSignal =
                   currentUser != null && signal.authorId == currentUser.uid;
-              return Padding(
-                key: ValueKey(signal.id), // Use signalId as stable key
-                padding: EdgeInsets.only(
-                  left: 16,
-                  right: 16,
-                  bottom: index == feedState.signals.length - 1 ? 100 : 12,
-                ),
-                child: SignalCard(
-                  key: ValueKey('card_${signal.id}'), // Stable key for card
-                  signal: signal,
-                  onTap: () => _openSignalDetail(signal),
-                  onComment: () => _openSignalDetail(signal),
-                  onDelete: isOwnSignal ? () => _deleteSignal(signal) : null,
+              return AnimatedSignalItem(
+                key: ValueKey('animated_${signal.id}'),
+                index: index,
+                isRefreshing: _isRefreshing,
+                child: Padding(
+                  key: ValueKey(signal.id), // Use signalId as stable key
+                  padding: EdgeInsets.only(
+                    left: 16,
+                    right: 16,
+                    bottom: index == feedState.signals.length - 1 ? 100 : 12,
+                  ),
+                  child: SignalCard(
+                    key: ValueKey('card_${signal.id}'), // Stable key for card
+                    signal: signal,
+                    onTap: () => _openSignalDetail(signal),
+                    onComment: () => _openSignalDetail(signal),
+                    onDelete: isOwnSignal ? () => _deleteSignal(signal) : null,
+                  ),
                 ),
               );
             }, childCount: feedState.signals.length),

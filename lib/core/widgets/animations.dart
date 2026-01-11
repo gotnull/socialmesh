@@ -2089,3 +2089,165 @@ class _ZoomBlur3DState extends State<ZoomBlur3D>
     );
   }
 }
+
+/// Animated signal item with Apple TV-style entrance and refresh animations.
+///
+/// On initial appear: fade + slide up from bottom (staggered by index)
+/// On refresh: randomly slide out left or right, then return from opposite direction
+class AnimatedSignalItem extends StatefulWidget {
+  const AnimatedSignalItem({
+    super.key,
+    required this.child,
+    required this.index,
+    this.isRefreshing = false,
+    this.appearDuration = const Duration(milliseconds: 600),
+    this.refreshDuration = const Duration(milliseconds: 400),
+    this.staggerDelay = const Duration(milliseconds: 80),
+  });
+
+  final Widget child;
+  final int index;
+  final bool isRefreshing;
+  final Duration appearDuration;
+  final Duration refreshDuration;
+  final Duration staggerDelay;
+
+  @override
+  State<AnimatedSignalItem> createState() => _AnimatedSignalItemState();
+}
+
+class _AnimatedSignalItemState extends State<AnimatedSignalItem>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  bool _hasAppeared = false;
+  bool _wasRefreshing = false;
+  bool _slideFromLeft = false; // Track direction for refresh return
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: widget.appearDuration,
+    );
+
+    _setupAppearAnimation();
+    _startAppearAnimation();
+  }
+
+  void _setupAppearAnimation() {
+    // Apple TV style: fade + slide up from bottom
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.7, curve: Curves.easeOut),
+      ),
+    );
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.3), // Start below
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
+  }
+
+  void _setupRefreshOutAnimation(bool slideLeft) {
+    _slideFromLeft = slideLeft;
+    _controller.duration = widget.refreshDuration;
+
+    _fadeAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
+    _slideAnimation = Tween<Offset>(
+      begin: Offset.zero,
+      end: Offset(slideLeft ? -1.0 : 1.0, 0), // Slide out horizontally
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInCubic));
+  }
+
+  void _setupRefreshInAnimation() {
+    _controller.duration = widget.refreshDuration;
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+    // Return from opposite direction
+    _slideAnimation = Tween<Offset>(
+      begin: Offset(_slideFromLeft ? 1.0 : -1.0, 0),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
+  }
+
+  void _startAppearAnimation() {
+    final delay = widget.staggerDelay * widget.index;
+    Future.delayed(delay, () {
+      if (mounted && !_hasAppeared) {
+        _hasAppeared = true;
+        _controller.forward();
+      }
+    });
+  }
+
+  @override
+  void didUpdateWidget(AnimatedSignalItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // Detect refresh state change
+    if (widget.isRefreshing && !_wasRefreshing) {
+      // Starting refresh - slide out randomly left or right
+      _wasRefreshing = true;
+      final slideLeft = math.Random().nextBool();
+      _setupRefreshOutAnimation(slideLeft);
+      _controller.forward(from: 0);
+    } else if (!widget.isRefreshing && _wasRefreshing) {
+      // Refresh ended - slide back in from opposite direction
+      _wasRefreshing = false;
+
+      // Wait for slide out to complete, then slide back in
+      _controller.addStatusListener(_onRefreshOutComplete);
+    }
+  }
+
+  void _onRefreshOutComplete(AnimationStatus status) {
+    if (status == AnimationStatus.completed) {
+      _controller.removeStatusListener(_onRefreshOutComplete);
+      _setupRefreshInAnimation();
+
+      // Stagger the return animation
+      final delay = widget.staggerDelay * widget.index;
+      Future.delayed(delay, () {
+        if (mounted) {
+          _controller.forward(from: 0);
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Transform.translate(
+          offset: Offset(
+            _slideAnimation.value.dx * MediaQuery.of(context).size.width,
+            _slideAnimation.value.dy * 100, // 100px vertical slide
+          ),
+          child: Opacity(
+            opacity: _fadeAnimation.value.clamp(0.0, 1.0),
+            child: child,
+          ),
+        );
+      },
+      child: widget.child,
+    );
+  }
+}
