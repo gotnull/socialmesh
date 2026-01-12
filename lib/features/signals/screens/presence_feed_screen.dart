@@ -18,6 +18,7 @@ import '../../../utils/snackbar.dart';
 import '../../navigation/main_shell.dart';
 import '../widgets/signal_card.dart';
 import '../widgets/signal_grid_card.dart';
+import '../widgets/signal_gallery_view.dart';
 import '../widgets/signal_skeleton.dart';
 import '../widgets/signals_empty_state.dart';
 import '../widgets/active_signals_banner.dart';
@@ -41,10 +42,7 @@ enum SignalSortOrder {
 }
 
 /// View mode for the signals display
-enum SignalViewMode {
-  list,
-  grid,
-}
+enum SignalViewMode { list, grid }
 
 /// The Presence Feed screen - local view of active signals.
 ///
@@ -130,14 +128,10 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
             .where((s) => s.hopCount != null && s.hopCount! <= 1)
             .toList();
       case SignalFilter.meshOnly:
-        return signals
-            .where((s) => s.authorId.startsWith('mesh_'))
-            .toList();
+        return signals.where((s) => s.authorId.startsWith('mesh_')).toList();
       case SignalFilter.withMedia:
         return signals
-            .where(
-              (s) => s.mediaUrls.isNotEmpty || s.imageLocalPath != null,
-            )
+            .where((s) => s.mediaUrls.isNotEmpty || s.imageLocalPath != null)
             .toList();
       case SignalFilter.expiringSoon:
         return signals.where((s) {
@@ -210,10 +204,12 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
 
     // Calculate counts before filtering for badges
     final allCount = signals.length;
-    final nearbyCount =
-        signals.where((s) => s.hopCount != null && s.hopCount! <= 1).length;
-    final meshCount =
-        signals.where((s) => s.authorId.startsWith('mesh_')).length;
+    final nearbyCount = signals
+        .where((s) => s.hopCount != null && s.hopCount! <= 1)
+        .length;
+    final meshCount = signals
+        .where((s) => s.authorId.startsWith('mesh_'))
+        .length;
     final mediaCount = signals
         .where((s) => s.mediaUrls.isNotEmpty || s.imageLocalPath != null)
         .length;
@@ -251,14 +247,19 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
               // Go Active button
               Padding(
                 padding: const EdgeInsets.only(right: 4),
-                child:
-                    _buildGoActiveButton(canGoActive, isSignedIn, isConnected),
+                child: _buildGoActiveButton(
+                  canGoActive,
+                  isSignedIn,
+                  isConnected,
+                ),
               ),
               PopupMenuButton<String>(
                 icon: const Icon(Icons.more_vert),
                 onSelected: (value) {
                   if (value == 'help') {
-                    ref.read(helpProvider.notifier).startTour('signals_overview');
+                    ref
+                        .read(helpProvider.notifier)
+                        .startTour('signals_overview');
                   }
                 },
                 itemBuilder: (context) => [
@@ -408,6 +409,14 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                             : SignalViewMode.list,
                       ),
                     ),
+                    // Gallery button (only visible when media signals exist)
+                    if (mediaCount > 0) ...[
+                      const SizedBox(width: 8),
+                      _GalleryButton(
+                        onTap: () =>
+                            SignalGalleryView.show(context, signals: signals),
+                      ),
+                    ],
                     const SizedBox(width: 12),
                   ],
                 ),
@@ -425,10 +434,10 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                 child: feedState.isLoading && feedState.signals.isEmpty
                     ? _buildLoading()
                     : signals.isEmpty
-                        ? _buildEmptyState()
-                        : _viewMode == SignalViewMode.list
-                            ? _buildSignalList(signals)
-                            : _buildSignalGrid(signals),
+                    ? _buildEmptyState()
+                    : _viewMode == SignalViewMode.list
+                    ? _buildSignalList(signals)
+                    : _buildSignalGrid(signals),
               ),
             ],
           ),
@@ -477,9 +486,7 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
   }
 
   Widget _buildLoading() {
-    return const SingleChildScrollView(
-      child: SignalListSkeleton(itemCount: 3),
-    );
+    return const SingleChildScrollView(child: SignalListSkeleton(itemCount: 3));
   }
 
   Widget _buildEmptyState() {
@@ -560,12 +567,7 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
           // TTL info banner
           SliverToBoxAdapter(
             child: Container(
-              margin: EdgeInsets.fromLTRB(
-                16,
-                signals.isEmpty ? 16 : 8,
-                16,
-                16,
-              ),
+              margin: EdgeInsets.fromLTRB(16, signals.isEmpty ? 16 : 8, 16, 16),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 color: context.card,
@@ -652,24 +654,24 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                 crossAxisSpacing: 12,
                 childAspectRatio: 0.85,
               ),
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final signal = signals[index];
-                  return SignalGridCard(
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final signal = signals[index];
+                return AnimatedGridItem(
+                  key: ValueKey('animated_grid_${signal.id}'),
+                  index: index,
+                  isRefreshing: _isRefreshing,
+                  child: SignalGridCard(
                     key: ValueKey('grid_${signal.id}'),
                     signal: signal,
                     onTap: () => _openSignalDetail(signal),
-                  );
-                },
-                childCount: signals.length,
-              ),
+                  ),
+                );
+              }, childCount: signals.length),
             ),
           ),
 
           // Bottom padding
-          const SliverToBoxAdapter(
-            child: SizedBox(height: 80),
-          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 80)),
         ],
       ),
     );
@@ -1012,8 +1014,9 @@ class _ViewToggle extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
-          color:
-              isGrid ? context.accentColor.withValues(alpha: 0.2) : context.card,
+          color: isGrid
+              ? context.accentColor.withValues(alpha: 0.2)
+              : context.card,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isGrid
@@ -1025,6 +1028,38 @@ class _ViewToggle extends StatelessWidget {
           isGrid ? Icons.grid_view_rounded : Icons.view_list_rounded,
           size: 16,
           color: isGrid ? context.accentColor : context.textTertiary,
+        ),
+      ),
+    );
+  }
+}
+
+/// Gallery view button with media count badge
+class _GalleryButton extends StatelessWidget {
+  const _GalleryButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: 'View gallery',
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: AccentColors.purple.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: AccentColors.purple.withValues(alpha: 0.4),
+            ),
+          ),
+          child: Icon(
+            Icons.photo_library_outlined,
+            size: 16,
+            color: AccentColors.purple,
+          ),
         ),
       ),
     );
@@ -1103,10 +1138,88 @@ class _AnimatedSignalItemState extends State<AnimatedSignalItem>
   Widget build(BuildContext context) {
     return SlideTransition(
       position: _slideAnimation,
-      child: FadeTransition(
-        opacity: _fadeAnimation,
-        child: widget.child,
-      ),
+      child: FadeTransition(opacity: _fadeAnimation, child: widget.child),
+    );
+  }
+}
+
+/// Animated wrapper for grid items with scale and fade animations
+class AnimatedGridItem extends StatefulWidget {
+  const AnimatedGridItem({
+    super.key,
+    required this.child,
+    required this.index,
+    required this.isRefreshing,
+  });
+
+  final Widget child;
+  final int index;
+  final bool isRefreshing;
+
+  @override
+  State<AnimatedGridItem> createState() => _AnimatedGridItemState();
+}
+
+class _AnimatedGridItemState extends State<AnimatedGridItem>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 350),
+      vsync: this,
+    );
+
+    _scaleAnimation = Tween<double>(
+      begin: 0.8,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+
+    // Staggered animation - grid alternates for visual interest
+    final row = widget.index ~/ 2;
+    final col = widget.index % 2;
+    final delay = (row * 60) + (col * 30);
+    Future<void>.delayed(Duration(milliseconds: delay), () {
+      if (mounted) _controller.forward();
+    });
+  }
+
+  @override
+  void didUpdateWidget(AnimatedGridItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.isRefreshing && !oldWidget.isRefreshing) {
+      _controller.reverse();
+    } else if (!widget.isRefreshing && oldWidget.isRefreshing) {
+      final row = widget.index ~/ 2;
+      final col = widget.index % 2;
+      final delay = (row * 60) + (col * 30);
+      Future<void>.delayed(Duration(milliseconds: delay), () {
+        if (mounted) _controller.forward();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaleTransition(
+      scale: _scaleAnimation,
+      child: FadeTransition(opacity: _fadeAnimation, child: widget.child),
     );
   }
 }

@@ -713,6 +713,10 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
                   enabled: !_isSubmitting,
                   maxLines: 5,
                   maxLength: _maxLength,
+                  maxLengthEnforcement: MaxLengthEnforcement.enforced,
+                  inputFormatters: [
+                    LengthLimitingTextInputFormatter(_maxLength),
+                  ],
                   style: TextStyle(color: context.textPrimary, fontSize: 16),
                   decoration: InputDecoration(
                     hintText: 'What are you signaling?',

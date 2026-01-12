@@ -106,6 +106,7 @@ class _SignalHeader extends ConsumerWidget {
 
     // Get author info
     String authorName = 'Anonymous';
+    String? authorShortName;
     String? avatarUrl;
     Color avatarColor = context.accentColor;
 
@@ -114,15 +115,18 @@ class _SignalHeader extends ConsumerWidget {
       avatarUrl = signal.authorSnapshot!.avatarUrl;
     } else if (isMeshSignal && signal.meshNodeId != null) {
       // Look up node info
+      final hexId = signal.meshNodeId!.toRadixString(16).toUpperCase();
+      final shortHex = hexId.length >= 4
+          ? hexId.substring(hexId.length - 4)
+          : hexId;
       final node = nodes[signal.meshNodeId!];
       if (node != null) {
-        authorName =
-            node.longName ??
-            node.shortName ??
-            '!${signal.meshNodeId!.toRadixString(16)}';
+        authorName = node.longName ?? node.shortName ?? '!$hexId';
+        authorShortName = node.shortName ?? shortHex;
         avatarColor = Color((node.hardwareModel?.hashCode ?? 0) | 0xFF000000);
       } else {
-        authorName = '!${signal.meshNodeId!.toRadixString(16)}';
+        authorName = '!$hexId';
+        authorShortName = shortHex;
       }
     }
 
@@ -163,9 +167,33 @@ class _SignalHeader extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  _timeAgo(signal.createdAt),
-                  style: TextStyle(color: context.textTertiary, fontSize: 12),
+                Row(
+                  children: [
+                    if (isMeshSignal && authorShortName != null) ...[
+                      Text(
+                        authorShortName,
+                        style: TextStyle(
+                          color: AccentColors.cyan,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        ' · ',
+                        style: TextStyle(
+                          color: context.textTertiary,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                    Text(
+                      _timeAgo(signal.createdAt),
+                      style: TextStyle(
+                        color: context.textTertiary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

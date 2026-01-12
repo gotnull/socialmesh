@@ -28,7 +28,8 @@ class SignalDetailScreen extends ConsumerStatefulWidget {
   ConsumerState<SignalDetailScreen> createState() => _SignalDetailScreenState();
 }
 
-class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
+class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
+    with SingleTickerProviderStateMixin {
   final TextEditingController _replyController = TextEditingController();
   final FocusNode _replyFocusNode = FocusNode();
   final ScrollController _scrollController = ScrollController();
@@ -50,6 +51,13 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
   bool _showStickyHeader = false;
   static const double _stickyThreshold = 150.0;
 
+  // Animation controller for entry animations
+  late AnimationController _entryController;
+  late Animation<double> _cardFadeAnimation;
+  late Animation<Offset> _cardSlideAnimation;
+  late Animation<double> _headerFadeAnimation;
+  late Animation<Offset> _headerSlideAnimation;
+
   @override
   void initState() {
     super.initState();
@@ -57,6 +65,45 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
     _loadComments();
     _setupRefreshListeners();
     _scrollController.addListener(_onScroll);
+
+    // Entry animation setup
+    _entryController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+
+    _cardFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _entryController,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
+      ),
+    );
+
+    _cardSlideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _entryController,
+            curve: const Interval(0.0, 0.6, curve: Curves.easeOutCubic),
+          ),
+        );
+
+    _headerFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _entryController,
+        curve: const Interval(0.3, 0.8, curve: Curves.easeOut),
+      ),
+    );
+
+    _headerSlideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _entryController,
+            curve: const Interval(0.3, 0.8, curve: Curves.easeOutCubic),
+          ),
+        );
+
+    // Start entry animation
+    _entryController.forward();
 
     // Ensure the Firestore comments listener is active for this signal
     ref.read(signalServiceProvider).ensureCommentsListener(widget.signal.id);
@@ -178,6 +225,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
     _scrollController.dispose();
     _replyController.dispose();
     _replyFocusNode.dispose();
+    _entryController.dispose();
     super.dispose();
   }
 
@@ -539,19 +587,23 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
             index < displayList.length - 1 &&
             displayList[index + 1].response.parentId == item.response.id;
 
-        return _ResponseTile(
-          key: ValueKey(item.response.id),
-          response: item.response,
-          depth: item.depth,
-          hasReplies: item.hasReplies,
-          hasDirectReplyBelow: hasDirectReplyBelow,
-          isFirstChild: item.isFirstChild,
-          isLastChild: item.isLastChild,
-          ancestorHasMoreSiblings: item.ancestorHasMoreSiblings,
-          onReplyTap: () => _handleReplyTo(item.response),
-          onUpvote: () => _handleVote(item.response, 1),
-          onDownvote: () => _handleVote(item.response, -1),
-          myVote: _myVotes[item.response.id],
+        return _AnimatedCommentItem(
+          key: ValueKey('animated_${item.response.id}'),
+          index: index,
+          child: _ResponseTile(
+            key: ValueKey(item.response.id),
+            response: item.response,
+            depth: item.depth,
+            hasReplies: item.hasReplies,
+            hasDirectReplyBelow: hasDirectReplyBelow,
+            isFirstChild: item.isFirstChild,
+            isLastChild: item.isLastChild,
+            ancestorHasMoreSiblings: item.ancestorHasMoreSiblings,
+            onReplyTap: () => _handleReplyTo(item.response),
+            onUpvote: () => _handleVote(item.response, 1),
+            onDownvote: () => _handleVote(item.response, -1),
+            myVote: _myVotes[item.response.id],
+          ),
         );
       }).toList(),
     );
@@ -788,77 +840,93 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen> {
               100,
             ),
             children: [
-              SignalCard(signal: signal, showActions: false),
+              // Animated signal card
+              SlideTransition(
+                position: _cardSlideAnimation,
+                child: FadeTransition(
+                  opacity: _cardFadeAnimation,
+                  child: SignalCard(signal: signal, showActions: false),
+                ),
+              ),
               const SizedBox(height: 24),
 
-              // Responses header
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: context.accentColor.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: context.accentColor.withValues(alpha: 0.1),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: context.accentColor.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        Icons.forum_rounded,
-                        size: 16,
-                        color: context.accentColor,
+              // Animated responses header
+              SlideTransition(
+                position: _headerSlideAnimation,
+                child: FadeTransition(
+                  opacity: _headerFadeAnimation,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: context.accentColor.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: context.accentColor.withValues(alpha: 0.1),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Conversation',
-                            style: TextStyle(
-                              color: context.textPrimary,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: context.accentColor.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            Icons.forum_rounded,
+                            size: 16,
+                            color: context.accentColor,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Conversation',
+                                style: TextStyle(
+                                  color: context.textPrimary,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              if (_comments != null && _comments!.isNotEmpty)
+                                Text(
+                                  '${_comments!.length} ${_comments!.length == 1 ? 'comment' : 'comments'}',
+                                  style: TextStyle(
+                                    color: context.textTertiary,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        if (_isLoadingComments)
+                          SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: context.accentColor,
                             ),
                           ),
-                          if (_comments != null && _comments!.isNotEmpty)
-                            Text(
-                              '${_comments!.length} ${_comments!.length == 1 ? 'comment' : 'comments'}',
-                              style: TextStyle(
-                                color: context.textTertiary,
-                                fontSize: 12,
-                              ),
-                            ),
-                        ],
-                      ),
+                      ],
                     ),
-                    if (_isLoadingComments)
-                      SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: context.accentColor,
-                        ),
-                      ),
-                  ],
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
 
-              // Responses list
-              _buildCommentsList(context),
+              // Animated responses list
+              FadeTransition(
+                opacity: _headerFadeAnimation,
+                child: _buildCommentsList(context),
+              ),
             ],
           ),
 
@@ -1549,5 +1617,65 @@ class _StickySignalHeaderState extends State<_StickySignalHeader>
     if (diff.inMinutes < 60) return '${diff.inMinutes}m';
     if (diff.inHours < 24) return '${diff.inHours}h';
     return '${diff.inDays}d';
+  }
+}
+
+/// Animated wrapper for comment items with staggered entrance
+class _AnimatedCommentItem extends StatefulWidget {
+  const _AnimatedCommentItem({
+    super.key,
+    required this.child,
+    required this.index,
+  });
+
+  final Widget child;
+  final int index;
+
+  @override
+  State<_AnimatedCommentItem> createState() => _AnimatedCommentItemState();
+}
+
+class _AnimatedCommentItemState extends State<_AnimatedCommentItem>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0.05, 0),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
+
+    // Staggered entrance with delay based on index
+    Future<void>.delayed(Duration(milliseconds: 50 * widget.index), () {
+      if (mounted) _controller.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SlideTransition(
+      position: _slideAnimation,
+      child: FadeTransition(opacity: _fadeAnimation, child: widget.child),
+    );
   }
 }

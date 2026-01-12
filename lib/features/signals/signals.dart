@@ -15,5 +15,6 @@ export 'screens/signal_detail_screen.dart';
 // Widgets
 export 'widgets/signal_card.dart';
 export 'widgets/signal_grid_card.dart';
+export 'widgets/signal_gallery_view.dart';
 export 'widgets/signal_composer.dart';
 export 'widgets/ttl_selector.dart';

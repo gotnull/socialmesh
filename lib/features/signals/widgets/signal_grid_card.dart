@@ -16,6 +16,9 @@ import '../../../providers/app_providers.dart';
 /// - Image preview or content snippet
 /// - TTL indicator badge
 /// - Proximity indicator
+/// - Comment count
+/// - Location indicator
+/// - Media indicator
 class SignalGridCard extends ConsumerWidget {
   const SignalGridCard({super.key, required this.signal, this.onTap});
 
@@ -28,24 +31,36 @@ class SignalGridCard extends ConsumerWidget {
     final isMeshSignal = signal.authorId.startsWith('mesh_');
     final hasImage =
         signal.mediaUrls.isNotEmpty || signal.imageLocalPath != null;
+    final hasLocation = signal.location != null;
 
     // Get author info
     String authorName = 'Anon';
+    String? authorShortName;
     String? avatarUrl;
     Color avatarColor = context.accentColor;
 
     if (signal.authorSnapshot != null) {
       authorName = signal.authorSnapshot!.displayName;
-      if (authorName.length > 8) authorName = '${authorName.substring(0, 7)}…';
+      if (authorName.length > 12) {
+        authorName = '${authorName.substring(0, 11)}…';
+      }
       avatarUrl = signal.authorSnapshot!.avatarUrl;
     } else if (isMeshSignal && signal.meshNodeId != null) {
+      final hexId = signal.meshNodeId!.toRadixString(16).toUpperCase();
+      final shortHex = hexId.length >= 4
+          ? hexId.substring(hexId.length - 4)
+          : hexId;
       final node = nodes[signal.meshNodeId!];
       if (node != null) {
-        authorName =
-            node.shortName ?? '!${signal.meshNodeId!.toRadixString(16)}';
+        authorName = node.longName ?? node.shortName ?? '!$hexId';
+        authorShortName = node.shortName ?? shortHex;
+        if (authorName.length > 12) {
+          authorName = '${authorName.substring(0, 11)}…';
+        }
         avatarColor = Color((node.hardwareModel?.hashCode ?? 0) | 0xFF000000);
       } else {
-        authorName = '!${signal.meshNodeId!.toRadixString(16).substring(0, 4)}';
+        authorName = '!$hexId';
+        authorShortName = shortHex;
       }
     }
 
@@ -67,7 +82,7 @@ class SignalGridCard extends ConsumerWidget {
                   : _buildContentBackground(context),
             ),
 
-            // Gradient overlay for readability
+            // Gradient overlay for readability - stronger for better icon visibility
             Positioned.fill(
               child: Container(
                 decoration: BoxDecoration(
@@ -75,81 +90,177 @@ class SignalGridCard extends ConsumerWidget {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Colors.black.withValues(alpha: 0.1),
-                      Colors.black.withValues(alpha: 0.6),
+                      Colors.black.withValues(alpha: 0.35),
+                      Colors.black.withValues(alpha: 0.15),
+                      Colors.black.withValues(alpha: 0.65),
                     ],
-                    stops: const [0.3, 1.0],
+                    stops: const [0.0, 0.4, 1.0],
                   ),
                 ),
               ),
             ),
 
-            // TTL badge (top right)
-            Positioned(top: 8, right: 8, child: _TTLBadge(signal: signal)),
-
-            // Hop count badge (top left)
-            if (signal.hopCount != null)
-              Positioned(
-                top: 8,
-                left: 8,
-                child: _HopBadge(hopCount: signal.hopCount!),
-              ),
-
-            // Author info (bottom)
+            // Top row badges with frosted background
             Positioned(
-              left: 8,
-              right: 8,
-              bottom: 8,
-              child: Row(
-                children: [
-                  UserAvatar(
-                    imageUrl: avatarUrl,
-                    size: 24,
-                    foregroundColor: avatarColor,
-                    fallbackIcon: isMeshSignal ? Icons.router : Icons.person,
+              top: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withValues(alpha: 0.5),
+                      Colors.black.withValues(alpha: 0.0),
+                    ],
                   ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Left side: hop count
+                    if (signal.hopCount != null)
+                      _BadgePill(
+                        icon: _getHopIcon(signal.hopCount!),
+                        iconColor: _getHopColor(signal.hopCount!),
+                        text: '${signal.hopCount}h',
+                      )
+                    else
+                      const SizedBox.shrink(),
+                    // Right side: TTL
+                    _TTLBadge(signal: signal),
+                  ],
+                ),
+              ),
+            ),
+
+            // Bottom info area with frosted background
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [
+                      Colors.black.withValues(alpha: 0.7),
+                      Colors.black.withValues(alpha: 0.0),
+                    ],
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Info badges row
+                    Row(
                       children: [
-                        Text(
-                          authorName,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            shadows: [
-                              Shadow(color: Colors.black54, blurRadius: 4),
-                            ],
+                        // Comment count
+                        if (signal.commentCount > 0) ...[
+                          _IconBadge(
+                            icon: Icons.chat_bubble_outline,
+                            text: signal.commentCount.toString(),
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        if (!hasImage && signal.content.isNotEmpty)
-                          Text(
-                            signal.content,
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.8),
-                              fontSize: 10,
-                              shadows: const [
-                                Shadow(color: Colors.black54, blurRadius: 4),
-                              ],
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                          const SizedBox(width: 8),
+                        ],
+                        // Location indicator
+                        if (hasLocation) ...[
+                          const _IconBadge(icon: Icons.location_on, text: null),
+                          const SizedBox(width: 8),
+                        ],
+                        // Image indicator (only show if has image)
+                        if (hasImage) ...[
+                          const _IconBadge(icon: Icons.image, text: null),
+                        ],
+                        const Spacer(),
+                        // Mesh origin indicator
+                        if (isMeshSignal)
+                          const _IconBadge(icon: Icons.router, text: null),
                       ],
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 6),
+                    // Author row
+                    Row(
+                      children: [
+                        UserAvatar(
+                          imageUrl: avatarUrl,
+                          size: 22,
+                          foregroundColor: avatarColor,
+                          fallbackIcon: isMeshSignal
+                              ? Icons.router
+                              : Icons.person,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                authorName,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  shadows: [
+                                    Shadow(
+                                      color: Colors.black87,
+                                      blurRadius: 4,
+                                    ),
+                                  ],
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              if (isMeshSignal &&
+                                  authorShortName != null &&
+                                  authorShortName.isNotEmpty)
+                                Text(
+                                  authorShortName,
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.8),
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w500,
+                                    shadows: const [
+                                      Shadow(
+                                        color: Colors.black87,
+                                        blurRadius: 4,
+                                      ),
+                                    ],
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  IconData _getHopIcon(int hopCount) {
+    if (hopCount == 0) return Icons.signal_cellular_4_bar;
+    if (hopCount == 1) return Icons.signal_cellular_alt;
+    return Icons.signal_cellular_alt_1_bar;
+  }
+
+  Color _getHopColor(int hopCount) {
+    if (hopCount == 0) return AccentColors.green;
+    if (hopCount == 1) return AccentColors.cyan;
+    return AppTheme.warningYellow;
   }
 
   Widget _buildImageBackground() {
@@ -187,7 +298,7 @@ class SignalGridCard extends ConsumerWidget {
       ),
       child: Center(
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.fromLTRB(12, 32, 12, 56),
           child: Text(
             signal.content,
             style: TextStyle(
@@ -211,6 +322,84 @@ class SignalGridCard extends ConsumerWidget {
         Icons.sensors,
         size: 32,
         color: context?.textTertiary ?? Colors.grey,
+      ),
+    );
+  }
+}
+
+/// Generic icon badge with optional text
+class _IconBadge extends StatelessWidget {
+  const _IconBadge({required this.icon, this.text});
+
+  final IconData icon;
+  final String? text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          icon,
+          size: 12,
+          color: Colors.white.withValues(alpha: 0.9),
+          shadows: const [Shadow(color: Colors.black87, blurRadius: 4)],
+        ),
+        if (text != null) ...[
+          const SizedBox(width: 2),
+          Text(
+            text!,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.9),
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              shadows: const [Shadow(color: Colors.black87, blurRadius: 4)],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Badge pill with background for top row
+class _BadgePill extends StatelessWidget {
+  const _BadgePill({
+    required this.icon,
+    required this.iconColor,
+    required this.text,
+  });
+
+  final IconData icon;
+  final Color iconColor;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.1),
+          width: 0.5,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: iconColor),
+          const SizedBox(width: 2),
+          Text(
+            text,
+            style: TextStyle(
+              color: iconColor,
+              fontSize: 9,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -247,13 +436,17 @@ class _TTLBadge extends StatelessWidget {
         ? AppTheme.errorRed.withValues(alpha: 0.9)
         : isExpiringSoon
         ? AppTheme.warningYellow.withValues(alpha: 0.9)
-        : Colors.black.withValues(alpha: 0.6);
+        : Colors.black.withValues(alpha: 0.5);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(4),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.1),
+          width: 0.5,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -269,54 +462,6 @@ class _TTLBadge extends StatelessWidget {
             style: const TextStyle(
               color: Colors.white,
               fontSize: 10,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Compact hop count badge for grid cards
-class _HopBadge extends StatelessWidget {
-  const _HopBadge({required this.hopCount});
-
-  final int hopCount;
-
-  @override
-  Widget build(BuildContext context) {
-    // Determine signal strength icon based on hops
-    final IconData icon;
-    final Color color;
-
-    if (hopCount == 0) {
-      icon = Icons.signal_cellular_4_bar;
-      color = AccentColors.green;
-    } else if (hopCount == 1) {
-      icon = Icons.signal_cellular_alt;
-      color = AccentColors.cyan;
-    } else {
-      icon = Icons.signal_cellular_alt_1_bar;
-      color = AppTheme.warningYellow;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: color),
-          const SizedBox(width: 2),
-          Text(
-            '${hopCount}h',
-            style: TextStyle(
-              color: color,
-              fontSize: 9,
               fontWeight: FontWeight.w600,
             ),
           ),
