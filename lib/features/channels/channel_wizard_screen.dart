@@ -411,15 +411,27 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
                 ),
                 filled: true,
                 fillColor: context.surface,
-                // Animated dotted border ONLY when focused AND highlighted
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
+                // Apply animated border to BOTH enabled and focused when highlighted
+                border: isHighlighted
+                    ? AnimatedDottedInputBorder(
+                        animation: animation,
+                        color: AppTheme.primaryMagenta,
+                        borderRadius: 12,
+                      )
+                    : OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                enabledBorder: isHighlighted
+                    ? AnimatedDottedInputBorder(
+                        animation: animation,
+                        color: AppTheme.primaryMagenta,
+                        borderRadius: 12,
+                      )
+                    : OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
                 focusedBorder: isHighlighted
                     ? AnimatedDottedInputBorder(
                         animation: animation,

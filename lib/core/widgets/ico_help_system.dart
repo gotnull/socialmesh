@@ -534,13 +534,23 @@ class AnimatedDottedInputBorder extends InputBorder {
 }
 
 // ============================================================================
-// ICO HIGHLIGHTED FIELD - Provides animation controller for TextField borders
+// ICO HIGHLIGHTED FIELD - Universal highlight wrapper for any control
 // ============================================================================
 
-/// A widget that provides an animation controller for highlighting TextFields.
-/// Use the builder to access the animation and apply AnimatedDottedInputBorder.
+/// A widget that highlights any control with an animated dotted border when
+/// the associated help step is active.
 ///
-/// Example:
+/// For TextFields, use the [builder] to get animation and apply borders.
+/// For any other widget, just provide a [child] - it will be wrapped with
+/// an animated dotted border automatically when highlighted.
+///
+/// Features:
+/// - Handles focus internally (auto-requests focus for focusable children)
+/// - Works with any widget type (TextFields, buttons, cards, etc.)
+/// - Animated marching-ants border effect when highlighted
+/// - Configurable colors, stroke, and border radius
+///
+/// Example with TextField:
 /// ```dart
 /// IcoHighlightedField(
 ///   topicId: 'channel_creation',
@@ -550,12 +560,25 @@ class AnimatedDottedInputBorder extends InputBorder {
 ///       border: isHighlighted
 ///         ? AnimatedDottedInputBorder(animation: animation)
 ///         : OutlineInputBorder(...),
+///       enabledBorder: isHighlighted
+///         ? AnimatedDottedInputBorder(animation: animation)
+///         : OutlineInputBorder(...),
 ///     ),
 ///   ),
 /// )
 /// ```
+///
+/// Example with any widget:
+/// ```dart
+/// IcoHighlightedField(
+///   topicId: 'settings',
+///   stepId: 'privacy_toggle',
+///   child: MyToggleWidget(),
+/// )
+/// ```
 class IcoHighlightedField extends ConsumerStatefulWidget {
   /// Builder that receives highlight state and animation controller.
+  /// Use this for TextFields where you need to apply the border to InputDecoration.
   final Widget Function(
     BuildContext context,
     bool isHighlighted,
@@ -563,7 +586,7 @@ class IcoHighlightedField extends ConsumerStatefulWidget {
   )?
   builder;
 
-  /// Simple child widget (won't have animated border - use builder for TextFields)
+  /// Simple child widget - will be wrapped with AnimatedDottedBorder when highlighted.
   final Widget? child;
 
   final String stepId;
@@ -573,6 +596,17 @@ class IcoHighlightedField extends ConsumerStatefulWidget {
   final double dashLength;
   final double gapLength;
   final double borderRadius;
+
+  /// Whether to auto-focus focusable children when this step becomes active.
+  /// Defaults to true for TextFields (when using builder).
+  final bool autoFocus;
+
+  /// Optional FocusNode to control focus externally.
+  /// If not provided, one will be created internally for auto-focus behavior.
+  final FocusNode? focusNode;
+
+  /// Padding between the child and the animated border.
+  final EdgeInsets borderPadding;
 
   const IcoHighlightedField({
     super.key,
@@ -585,6 +619,9 @@ class IcoHighlightedField extends ConsumerStatefulWidget {
     this.dashLength = 6,
     this.gapLength = 4,
     this.borderRadius = 12,
+    this.autoFocus = true,
+    this.focusNode,
+    this.borderPadding = const EdgeInsets.all(4),
   }) : assert(
          builder != null || child != null,
          'Either builder or child must be provided',
@@ -598,6 +635,10 @@ class IcoHighlightedField extends ConsumerStatefulWidget {
 class _IcoHighlightedFieldState extends ConsumerState<IcoHighlightedField>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
+  FocusNode? _internalFocusNode;
+  bool _wasHighlighted = false;
+
+  FocusNode get _focusNode => widget.focusNode ?? _internalFocusNode!;
 
   @override
   void initState() {
@@ -606,11 +647,17 @@ class _IcoHighlightedFieldState extends ConsumerState<IcoHighlightedField>
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     )..repeat();
+
+    // Create internal focus node if not provided externally
+    if (widget.focusNode == null) {
+      _internalFocusNode = FocusNode();
+    }
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _internalFocusNode?.dispose();
     super.dispose();
   }
 
@@ -622,14 +669,28 @@ class _IcoHighlightedFieldState extends ConsumerState<IcoHighlightedField>
     return topic.steps[helpState.currentStepIndex].id == widget.stepId;
   }
 
+  void _handleHighlightChange(bool isHighlighted) {
+    // Auto-focus when becoming highlighted
+    if (isHighlighted && !_wasHighlighted && widget.autoFocus) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _focusNode.canRequestFocus) {
+          _focusNode.requestFocus();
+        }
+      });
+    }
+    _wasHighlighted = isHighlighted;
+  }
+
   @override
   Widget build(BuildContext context) {
     final helpState = ref.watch(helpProvider);
     final isHighlighted = _isHighlighted(helpState);
 
-    // Use builder with animation, or just return child
+    // Handle focus changes
+    _handleHighlightChange(isHighlighted);
+
+    // For builder pattern (TextFields) - pass animation for InputBorder
     if (widget.builder != null) {
-      // Builder gets the animation so it can use AnimatedDottedInputBorder
       return AnimatedBuilder(
         animation: _controller,
         builder: (context, _) {
@@ -638,9 +699,150 @@ class _IcoHighlightedFieldState extends ConsumerState<IcoHighlightedField>
       );
     }
 
-    // Simple child - no animated border capability
-    return widget.child!;
+    // For child pattern - wrap with AnimatedDottedBorder
+    return AnimatedDottedBorder(
+      animation: _controller,
+      isVisible: isHighlighted,
+      color: widget.color,
+      strokeWidth: widget.strokeWidth,
+      dashLength: widget.dashLength,
+      gapLength: widget.gapLength,
+      borderRadius: widget.borderRadius,
+      padding: widget.borderPadding,
+      child: widget.child!,
+    );
   }
+}
+
+// ============================================================================
+// ANIMATED DOTTED BORDER - Wraps any widget with animated border
+// ============================================================================
+
+/// A widget that draws an animated dotted border around its child.
+/// The border has a "marching ants" effect that moves clockwise.
+///
+/// Use this to highlight any widget, not just TextFields.
+class AnimatedDottedBorder extends StatelessWidget {
+  final Widget child;
+  final Animation<double> animation;
+  final bool isVisible;
+  final Color color;
+  final double strokeWidth;
+  final double dashLength;
+  final double gapLength;
+  final double borderRadius;
+  final EdgeInsets padding;
+
+  const AnimatedDottedBorder({
+    super.key,
+    required this.child,
+    required this.animation,
+    this.isVisible = true,
+    this.color = AppTheme.primaryMagenta,
+    this.strokeWidth = 2,
+    this.dashLength = 6,
+    this.gapLength = 4,
+    this.borderRadius = 12,
+    this.padding = const EdgeInsets.all(4),
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (!isVisible) return child;
+
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (context, _) {
+        return CustomPaint(
+          painter: _DottedBorderPainter(
+            animation: animation,
+            color: color,
+            strokeWidth: strokeWidth,
+            dashLength: dashLength,
+            gapLength: gapLength,
+            borderRadius: borderRadius,
+            padding: padding,
+          ),
+          child: Padding(padding: padding, child: child),
+        );
+      },
+    );
+  }
+}
+
+class _DottedBorderPainter extends CustomPainter {
+  final Animation<double> animation;
+  final Color color;
+  final double strokeWidth;
+  final double dashLength;
+  final double gapLength;
+  final double borderRadius;
+  final EdgeInsets padding;
+
+  _DottedBorderPainter({
+    required this.animation,
+    required this.color,
+    required this.strokeWidth,
+    required this.dashLength,
+    required this.gapLength,
+    required this.borderRadius,
+    required this.padding,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    // Draw glow effect
+    final glowPaint = Paint()
+      ..color = color.withValues(alpha: 0.3)
+      ..strokeWidth = strokeWidth + 4
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+
+    final rect = Rect.fromLTWH(
+      strokeWidth / 2,
+      strokeWidth / 2,
+      size.width - strokeWidth,
+      size.height - strokeWidth,
+    );
+
+    final rrect = RRect.fromRectAndRadius(rect, Radius.circular(borderRadius));
+    final path = Path()..addRRect(rrect);
+
+    // Draw glow behind
+    _drawDashedPath(canvas, path, glowPaint);
+
+    // Draw main border
+    _drawDashedPath(canvas, path, paint);
+  }
+
+  void _drawDashedPath(Canvas canvas, Path path, Paint paint) {
+    final animOffset = animation.value * (dashLength + gapLength) * 3;
+
+    for (final metric in path.computeMetrics()) {
+      final len = metric.length;
+      if (len <= 0) continue;
+
+      double dist = animOffset % (dashLength + gapLength);
+      while (dist < len) {
+        final start = dist;
+        var end = start + dashLength;
+        if (end > len) end = len;
+
+        canvas.drawPath(metric.extractPath(start, end), paint);
+        dist += dashLength + gapLength;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DottedBorderPainter oldDelegate) => true;
 }
 
 // ============================================================================
@@ -1212,64 +1414,67 @@ class _IcoCoachMarkState extends State<IcoCoachMark> {
     // Available height is screen height minus app bar
     final availableHeight = screenSize.height - widget.appBarHeight;
 
+    // Dimmed overlay color
+    final dimColor = Colors.black.withValues(alpha: 0.6);
+
     // Only dim the area AROUND the target, not the whole screen
+    // Each strip is tappable to dismiss help, but the target area passes through
     return Stack(
       fit: StackFit.expand,
       children: [
-        // Tap anywhere outside target to dismiss
-        Positioned.fill(
-          child: GestureDetector(
-            onTap: widget.onSkip,
-            behavior: HitTestBehavior.translucent,
-            child: const SizedBox.expand(),
-          ),
-        ),
-
-        // Top strip (above target)
+        // Top strip (above target) - tappable to dismiss
         if (adjustedTarget.top > 0)
           Positioned(
             left: 0,
             right: 0,
             top: 0,
             height: adjustedTarget.top,
-            child: IgnorePointer(
-              child: Container(color: Colors.black.withValues(alpha: 0.6)),
+            child: GestureDetector(
+              onTap: widget.onSkip,
+              behavior: HitTestBehavior.opaque,
+              child: Container(color: dimColor),
             ),
           ),
 
-        // Left strip (beside target)
+        // Left strip (beside target) - tappable to dismiss
         if (adjustedTarget.left > 0)
           Positioned(
             left: 0,
             width: adjustedTarget.left,
             top: adjustedTarget.top,
             height: adjustedTarget.height,
-            child: IgnorePointer(
-              child: Container(color: Colors.black.withValues(alpha: 0.6)),
+            child: GestureDetector(
+              onTap: widget.onSkip,
+              behavior: HitTestBehavior.opaque,
+              child: Container(color: dimColor),
             ),
           ),
 
-        // Right strip (beside target)
+        // Right strip (beside target) - tappable to dismiss
         if (adjustedTarget.right < screenSize.width)
           Positioned(
             left: adjustedTarget.right,
             right: 0,
             top: adjustedTarget.top,
             height: adjustedTarget.height,
-            child: IgnorePointer(
-              child: Container(color: Colors.black.withValues(alpha: 0.6)),
+            child: GestureDetector(
+              onTap: widget.onSkip,
+              behavior: HitTestBehavior.opaque,
+              child: Container(color: dimColor),
             ),
           ),
 
-        // Bottom strip (below target)
+        // Bottom strip (below target) - tappable to dismiss
         if (adjustedTarget.bottom < availableHeight)
           Positioned(
             left: 0,
             right: 0,
             top: adjustedTarget.bottom,
             bottom: 0,
-            child: IgnorePointer(
-              child: Container(color: Colors.black.withValues(alpha: 0.6)),
+            child: GestureDetector(
+              onTap: widget.onSkip,
+              behavior: HitTestBehavior.opaque,
+              child: Container(color: dimColor),
             ),
           ),
 

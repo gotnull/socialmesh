@@ -44,7 +44,7 @@ class _SignalTTLFooterState extends State<SignalTTLFooter>
 
     if (shouldPulse && _pulseController == null) {
       // Start pulsing - faster as time runs out
-      final pulseDuration = remaining!.inMinutes < 1
+      final pulseDuration = remaining.inMinutes < 1
           ? const Duration(milliseconds: 400)
           : const Duration(milliseconds: 800);
 
