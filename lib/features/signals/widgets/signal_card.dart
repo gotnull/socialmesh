@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
+import '../../../core/widgets/user_avatar.dart';
 import '../../../core/widgets/fullscreen_gallery.dart';
 import '../../../models/social.dart';
 import '../../../providers/app_providers.dart';
@@ -150,44 +151,11 @@ class _SignalHeader extends ConsumerWidget {
       child: Row(
         children: [
           // Avatar
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: avatarUrl != null
-                  ? Colors.transparent
-                  : avatarColor.withValues(alpha: 0.2),
-              shape: BoxShape.circle,
-            ),
-            child: avatarUrl != null
-                ? ClipOval(
-                    child: Image.network(
-                      avatarUrl,
-                      width: 40,
-                      height: 40,
-                      fit: BoxFit.cover,
-                      loadingBuilder: (ctx, child, progress) {
-                        if (progress == null) return child;
-                        return Container(
-                          color: avatarColor.withValues(alpha: 0.2),
-                          child: Icon(
-                            Icons.person,
-                            color: avatarColor,
-                            size: 20,
-                          ),
-                        );
-                      },
-                      errorBuilder: (ctx, error, stack) => Container(
-                        color: avatarColor.withValues(alpha: 0.2),
-                        child: Icon(Icons.person, color: avatarColor, size: 20),
-                      ),
-                    ),
-                  )
-                : Icon(
-                    isMeshSignal ? Icons.router : Icons.person,
-                    color: avatarColor,
-                    size: 20,
-                  ),
+          UserAvatar(
+            imageUrl: avatarUrl,
+            size: 40,
+            foregroundColor: avatarColor,
+            fallbackIcon: isMeshSignal ? Icons.router : Icons.person,
           ),
           const SizedBox(width: 12),
 

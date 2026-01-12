@@ -10,6 +10,7 @@ import '../../core/theme.dart';
 import '../../core/widgets/content_moderation_warning.dart';
 import '../../core/widgets/default_banner.dart';
 import '../../core/widgets/ico_help_system.dart';
+import '../../core/widgets/user_avatar.dart';
 import '../../core/widgets/verified_badge.dart';
 import '../../providers/help_providers.dart';
 import '../../models/user_profile.dart';
@@ -1538,69 +1539,14 @@ class _BannerAvatarSection extends StatelessWidget {
   }
 
   Widget _buildAvatar(BuildContext context) {
-    return Container(
-      width: 100,
-      height: 100,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: context.card,
-        border: Border.all(color: accentColor, width: 3),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(3),
-        child: ClipOval(child: _buildAvatarContent(context)),
-      ),
-    );
-  }
-
-  Widget _buildAvatarContent(BuildContext context) {
-    if (profile.avatarUrl != null) {
-      if (profile.avatarUrl!.startsWith('http')) {
-        return Image.network(
-          profile.avatarUrl!,
-          width: 94,
-          height: 94,
-          fit: BoxFit.cover,
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            return Center(
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: accentColor,
-              ),
-            );
-          },
-          errorBuilder: (context, error, stackTrace) => _buildInitials(context),
-        );
-      } else {
-        return Image.file(
-          File(profile.avatarUrl!),
-          width: 94,
-          height: 94,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => _buildInitials(context),
-        );
-      }
-    }
-    return _buildInitials(context);
-  }
-
-  Widget _buildInitials(BuildContext context) {
-    final initials = profile.displayName.isNotEmpty
-        ? profile.displayName[0].toUpperCase()
-        : '?';
-    return Container(
-      color: accentColor.withValues(alpha: 0.2),
-      child: Center(
-        child: Text(
-          initials,
-          style: TextStyle(
-            fontSize: 36,
-            fontWeight: FontWeight.bold,
-            color: accentColor,
-          ),
-        ),
-      ),
+    return UserAvatar(
+      imageUrl: profile.avatarUrl,
+      initials: profile.initials,
+      size: 100,
+      borderWidth: 3,
+      borderColor: accentColor,
+      foregroundColor: accentColor,
+      backgroundColor: context.card,
     );
   }
 }
@@ -2453,106 +2399,39 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                                         ),
                                         child: Stack(
                                           children: [
-                                            Container(
-                                              width: 100,
-                                              height: 100,
-                                              decoration: BoxDecoration(
-                                                shape: BoxShape.circle,
-                                                color: context.card,
-                                                border: Border.all(
-                                                  color: accentColor,
-                                                  width: 2,
-                                                ),
-                                              ),
-                                              child: Padding(
-                                                padding: const EdgeInsets.all(
-                                                  2,
-                                                ),
-                                                child: ClipOval(
-                                                  child: _isUploadingAvatar
-                                                      ? Center(
-                                                          child:
-                                                              CircularProgressIndicator(
-                                                                strokeWidth: 2,
-                                                                color:
-                                                                    accentColor,
-                                                              ),
-                                                        )
-                                                      : profile?.avatarUrl !=
-                                                            null
-                                                      ? (profile!.avatarUrl!
-                                                                .startsWith(
-                                                                  'http',
-                                                                )
-                                                            ? Image.network(
-                                                                profile
-                                                                    .avatarUrl!,
-                                                                width: 96,
-                                                                height: 96,
-                                                                fit: BoxFit
-                                                                    .cover,
-                                                                loadingBuilder:
-                                                                    (
-                                                                      context,
-                                                                      child,
-                                                                      loadingProgress,
-                                                                    ) {
-                                                                      if (loadingProgress ==
-                                                                          null) {
-                                                                        return child;
-                                                                      }
-                                                                      return Center(
-                                                                        child: CircularProgressIndicator(
-                                                                          strokeWidth:
-                                                                              2,
-                                                                          color:
-                                                                              accentColor,
-                                                                        ),
-                                                                      );
-                                                                    },
-                                                                errorBuilder: (ctx, err, stack) => Center(
-                                                                  child: Text(
-                                                                    profile
-                                                                        .initials,
-                                                                    style: TextStyle(
-                                                                      fontSize:
-                                                                          32,
-                                                                      fontWeight:
-                                                                          FontWeight
-                                                                              .bold,
-                                                                      color:
-                                                                          accentColor,
-                                                                    ),
-                                                                  ),
-                                                                ),
-                                                              )
-                                                            : Image.file(
-                                                                File(
-                                                                  profile
-                                                                      .avatarUrl!,
-                                                                ),
-                                                                width: 96,
-                                                                height: 96,
-                                                                fit: BoxFit
-                                                                    .cover,
-                                                              ))
-                                                      : Center(
-                                                          child: Text(
-                                                            profile?.initials ??
-                                                                '?',
-                                                            style: TextStyle(
-                                                              fontSize: 32,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .bold,
-                                                              color:
-                                                                  accentColor,
-                                                            ),
+                                            _isUploadingAvatar
+                                                ? Container(
+                                                    width: 100,
+                                                    height: 100,
+                                                    decoration: BoxDecoration(
+                                                      shape: BoxShape.circle,
+                                                      color: context.card,
+                                                      border: Border.all(
+                                                        color: accentColor,
+                                                        width: 2,
+                                                      ),
+                                                    ),
+                                                    child: Center(
+                                                      child:
+                                                          CircularProgressIndicator(
+                                                            strokeWidth: 2,
+                                                            color: accentColor,
                                                           ),
-                                                        ),
-                                                ),
-                                              ),
-                                            ),
+                                                    ),
+                                                  )
+                                                : UserAvatar(
+                                                    imageUrl:
+                                                        profile?.avatarUrl,
+                                                    initials:
+                                                        profile?.initials,
+                                                    size: 100,
+                                                    borderWidth: 2,
+                                                    borderColor: accentColor,
+                                                    foregroundColor:
+                                                        accentColor,
+                                                    backgroundColor:
+                                                        context.card,
+                                                  ),
                                             Positioned(
                                               right: 0,
                                               bottom: 0,

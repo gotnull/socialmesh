@@ -8,6 +8,7 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import '../../core/logging.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/legal_document_sheet.dart';
+import '../../core/widgets/user_avatar.dart';
 import '../../models/subscription_models.dart';
 import '../../models/user_profile.dart';
 import '../../providers/auth_providers.dart';
@@ -1182,50 +1183,14 @@ class _ProfilePreviewCard extends StatelessWidget {
             child: Row(
               children: [
                 // Avatar
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: accentColor.withValues(alpha: 0.2),
-                    border: Border.all(
-                      color: accentColor.withValues(alpha: 0.5),
-                      width: 2,
-                    ),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(2),
-                    child: ClipOval(
-                      child: avatarUrl != null
-                          ? Image.network(
-                              avatarUrl,
-                              width: 52,
-                              height: 52,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  Center(
-                                    child: Text(
-                                      initials,
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: accentColor,
-                                      ),
-                                    ),
-                                  ),
-                            )
-                          : Center(
-                              child: Text(
-                                initials,
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: accentColor,
-                                ),
-                              ),
-                            ),
-                    ),
-                  ),
+                UserAvatar(
+                  imageUrl: avatarUrl,
+                  initials: initials,
+                  size: 56,
+                  borderWidth: 2,
+                  borderColor: accentColor.withValues(alpha: 0.5),
+                  foregroundColor: accentColor,
+                  backgroundColor: accentColor.withValues(alpha: 0.2),
                 ),
                 SizedBox(width: 16),
                 Expanded(

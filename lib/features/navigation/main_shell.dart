@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import '../../core/logging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,6 +6,7 @@ import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/node_avatar.dart';
 import '../../core/widgets/connection_required_wrapper.dart';
+import '../../core/widgets/user_avatar.dart';
 import '../../models/user_profile.dart' show UserPreferences;
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/legal_document_sheet.dart';
@@ -636,56 +635,14 @@ class _MainShellState extends ConsumerState<MainShell> {
           child: Row(
             children: [
               // Avatar
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: accentColor.withValues(alpha: 0.15),
-                  border: Border.all(
-                    color: accentColor.withValues(alpha: 0.3),
-                    width: 1.5,
-                  ),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(1.5),
-                  child: ClipOval(
-                    child: avatarUrl != null
-                        ? (avatarUrl.startsWith('http')
-                              ? Image.network(
-                                  avatarUrl,
-                                  width: 37,
-                                  height: 37,
-                                  fit: BoxFit.cover,
-                                  loadingBuilder:
-                                      (context, child, loadingProgress) {
-                                        if (loadingProgress == null)
-                                          return child;
-                                        return Center(
-                                          child: SizedBox(
-                                            width: 20,
-                                            height: 20,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                              color: accentColor,
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                  errorBuilder: (ctx, err, stack) =>
-                                      _buildInitials(initials, accentColor),
-                                )
-                              : Image.file(
-                                  File(avatarUrl),
-                                  width: 37,
-                                  height: 37,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (ctx, err, stack) =>
-                                      _buildInitials(initials, accentColor),
-                                ))
-                        : _buildInitials(initials, accentColor),
-                  ),
-                ),
+              UserAvatar(
+                imageUrl: avatarUrl,
+                initials: initials,
+                size: 40,
+                borderWidth: 1.5,
+                borderColor: accentColor.withValues(alpha: 0.3),
+                foregroundColor: accentColor,
+                backgroundColor: accentColor.withValues(alpha: 0.15),
               ),
               const SizedBox(width: 12),
               // Name and subtitle
@@ -740,19 +697,6 @@ class _MainShellState extends ConsumerState<MainShell> {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInitials(String initials, Color accentColor) {
-    return Center(
-      child: Text(
-        initials,
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          color: accentColor,
         ),
       ),
     );

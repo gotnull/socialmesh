@@ -1,5 +1,3 @@
-import 'dart:io' as io;
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -28,6 +26,7 @@ import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/legal_document_sheet.dart';
 import '../../core/widgets/remote_admin_selector_sheet.dart';
 import '../../core/widgets/secret_gesture_detector.dart';
+import '../../core/widgets/user_avatar.dart';
 import '../../providers/help_providers.dart';
 import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
@@ -3393,66 +3392,14 @@ class _ProfileTile extends ConsumerWidget {
                 child: Row(
                   children: [
                     // Avatar
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: context.surface,
-                        border: Border.all(
-                          color: accentColor.withValues(alpha: 0.5),
-                          width: 2,
-                        ),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(2),
-                        child: ClipOval(
-                          child: profile.avatarUrl != null
-                              ? (profile.avatarUrl!.startsWith('http')
-                                    ? Image.network(
-                                        profile.avatarUrl!,
-                                        width: 44,
-                                        height: 44,
-                                        fit: BoxFit.cover,
-                                        loadingBuilder:
-                                            (context, child, loadingProgress) {
-                                              if (loadingProgress == null) {
-                                                return child;
-                                              }
-                                              return Center(
-                                                child: SizedBox(
-                                                  width: 20,
-                                                  height: 20,
-                                                  child:
-                                                      CircularProgressIndicator(
-                                                        strokeWidth: 2,
-                                                        color: accentColor,
-                                                      ),
-                                                ),
-                                              );
-                                            },
-                                        errorBuilder:
-                                            (context, error, stackTrace) =>
-                                                _buildInitials(
-                                                  profile.initials,
-                                                  accentColor,
-                                                ),
-                                      )
-                                    : Image.file(
-                                        io.File(profile.avatarUrl!),
-                                        width: 44,
-                                        height: 44,
-                                        fit: BoxFit.cover,
-                                        errorBuilder:
-                                            (context, error, stackTrace) =>
-                                                _buildInitials(
-                                                  profile.initials,
-                                                  accentColor,
-                                                ),
-                                      ))
-                              : _buildInitials(profile.initials, accentColor),
-                        ),
-                      ),
+                    UserAvatar(
+                      imageUrl: profile.avatarUrl,
+                      initials: profile.initials,
+                      size: 48,
+                      borderWidth: 2,
+                      borderColor: accentColor.withValues(alpha: 0.5),
+                      foregroundColor: accentColor,
+                      backgroundColor: context.surface,
                     ),
                     SizedBox(width: 12),
                     // Info
@@ -3559,19 +3506,6 @@ class _ProfileTile extends ConsumerWidget {
         title: 'Profile',
         subtitle: 'Set up your profile',
         onTap: onTap,
-      ),
-    );
-  }
-
-  Widget _buildInitials(String initials, Color accentColor) {
-    return Center(
-      child: Text(
-        initials,
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          color: accentColor,
-        ),
       ),
     );
   }

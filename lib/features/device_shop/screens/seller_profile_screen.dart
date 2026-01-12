@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
+import '../../../core/widgets/user_avatar.dart';
 import '../models/shop_models.dart';
 import '../providers/device_shop_providers.dart';
 import 'device_shop_screen.dart';
@@ -299,37 +300,14 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen> {
               children: [
                 SizedBox(height: 40),
                 // Logo
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: context.background,
-                    border: Border.all(color: context.accentColor, width: 2),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(2),
-                    child: ClipOval(
-                      child: seller.logoUrl != null
-                          ? Image.network(
-                              seller.logoUrl!,
-                              width: 76,
-                              height: 76,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  Icon(
-                                    Icons.store,
-                                    color: context.accentColor,
-                                    size: 40,
-                                  ),
-                            )
-                          : Icon(
-                              Icons.store,
-                              color: context.accentColor,
-                              size: 40,
-                            ),
-                    ),
-                  ),
+                UserAvatar(
+                  imageUrl: seller.logoUrl,
+                  size: 80,
+                  borderWidth: 2,
+                  borderColor: context.accentColor,
+                  foregroundColor: context.accentColor,
+                  backgroundColor: context.background,
+                  fallbackIcon: Icons.store,
                 ),
                 const SizedBox(height: 12),
                 // Name with badges
