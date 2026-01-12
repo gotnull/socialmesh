@@ -1568,8 +1568,8 @@ class _HelpTourControllerState extends ConsumerState<HelpTourController> {
     return Stack(
       children: [
         widget.child,
+        // Show coach mark if target exists and is currently visible
         if (targetKey != null && targetKey.currentContext != null)
-          // Position coach mark BELOW app bar so it doesn't block help button
           Positioned(
             left: 0,
             right: 0,
@@ -1589,7 +1589,7 @@ class _HelpTourControllerState extends ConsumerState<HelpTourController> {
             ),
           )
         else
-          // No target - show floating bubble with dim overlay below app bar
+          // No target OR target not visible - show floating bubble
           Positioned(
             left: 0,
             right: 0,

@@ -186,6 +186,35 @@ class HelpNotifier extends Notifier<HelpState> {
     state = state.copyWith(clearActiveTour: true, currentStepIndex: 0);
   }
 
+  /// Jump to a specific step by step ID (for syncing with wizard pages)
+  void goToStepById(String stepId) {
+    if (state.activeTourId == null) return;
+
+    final topic = HelpContent.getTopic(state.activeTourId!);
+    if (topic == null) return;
+
+    final index = topic.steps.indexWhere((s) => s.id == stepId);
+    if (index >= 0 && index != state.currentStepIndex) {
+      AppLogging.app('Help: Jump to step "$stepId" (index $index)');
+      state = state.copyWith(currentStepIndex: index);
+    }
+  }
+
+  /// Jump to a specific step index
+  void goToStepIndex(int index) {
+    if (state.activeTourId == null) return;
+
+    final topic = HelpContent.getTopic(state.activeTourId!);
+    if (topic == null) return;
+
+    if (index >= 0 &&
+        index < topic.steps.length &&
+        index != state.currentStepIndex) {
+      AppLogging.app('Help: Jump to step index $index');
+      state = state.copyWith(currentStepIndex: index);
+    }
+  }
+
   /// Set skip future help preference
   void setSkipFutureHelp(bool skip) {
     AppLogging.app('Help: Skip future help = $skip');

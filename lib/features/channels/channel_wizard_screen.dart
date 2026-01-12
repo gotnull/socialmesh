@@ -11,13 +11,14 @@ import '../../core/transport.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/channel_key_field.dart';
 import '../../core/widgets/ico_help_system.dart';
+import '../../core/widgets/loading_indicator.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/help_providers.dart';
 import '../../utils/encoding.dart';
 import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/channel.pb.dart' as channel_pb;
 import '../../generated/meshtastic/channel.pbenum.dart' as channel_pbenum;
-import '../../core/widgets/loading_indicator.dart';
 
 /// Key size options with security explanations
 enum WizardKeySize {
@@ -177,6 +178,8 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
+      // Sync help to the new page's step
+      _syncHelpToPage(_currentStep);
     }
   }
 
@@ -189,6 +192,31 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
+      // Sync help to the new page's step
+      _syncHelpToPage(_currentStep);
+    }
+  }
+
+  /// Map wizard page index to help step ID and sync
+  void _syncHelpToPage(int pageIndex) {
+    final helpState = ref.read(helpProvider);
+    if (helpState.activeTourId != 'channel_creation') return;
+
+    // Map wizard pages to help step IDs:
+    // Page 0 (Name) -> 'channel_name'
+    // Page 1 (Privacy) -> 'privacy_level'
+    // Page 2 (Options) -> 'encryption_key'
+    // Page 3 (Complete) -> 'channel_complete'
+    const pageToStepId = {
+      0: 'channel_name',
+      1: 'privacy_level',
+      2: 'encryption_key',
+      3: 'channel_complete',
+    };
+
+    final stepId = pageToStepId[pageIndex];
+    if (stepId != null) {
+      ref.read(helpProvider.notifier).goToStepById(stepId);
     }
   }
 
