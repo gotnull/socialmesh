@@ -723,36 +723,42 @@ class HelpContent {
 
   static final HelpTopic signalsOverview = HelpTopic(
     id: 'signals_overview',
-    title: 'Signals',
-    description: 'Ephemeral mesh-first social feed',
-    icon: Icons.cell_tower,
+    title: 'Presence Feed',
+    description: 'Broadcast ephemeral signals to your mesh',
+    icon: Icons.sensors,
     category: catMessaging,
     priority: 6,
     steps: [
       HelpStep(
         id: 'signals_intro',
         bubbleText:
-            "Welcome to **Signals**! Share moments with your mesh network. Posts are **ephemeral** - they disappear after 24 hours!",
+            "Welcome to **Presence**! Broadcast moments to your mesh. Signals are **ephemeral** - you choose how long they last, from **15 minutes** up to **24 hours**.",
         icoMood: MeshBrainMood.excited,
         canGoBack: false,
       ),
       HelpStep(
         id: 'signals_create',
         bubbleText:
-            "Tap the **+** to broadcast a signal! Add text, a photo, or your location. Everyone on your mesh will see it!",
+            "Tap the **sensor icon** to go active! Add text, a photo, or your location. Choose your TTL - shorter times work great for quick check-ins.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
-        id: 'signals_react',
+        id: 'signals_proximity',
         bubbleText:
-            "**React** to signals with emoji! It's a quick way to acknowledge without sending a full message.",
+            "Signals show **proximity badges** - how many hops away the sender is. **Nearby** signals (0-1 hops) appear first!",
         icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'signals_filters',
+        bubbleText:
+            "Use **filters** to focus on what matters: nearby signals, mesh-only, or content with media. Toggle between **list** and **grid** views!",
+        icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
         id: 'signals_privacy',
         bubbleText:
-            "Signals stay on the **mesh only**. No cloud servers, no permanent storage. True off-grid social!",
-        icoMood: MeshBrainMood.approving,
+            "Signals are **mesh-first** - they travel through the radio network. When they fade, they're gone. True ephemeral, off-grid presence!",
+        icoMood: MeshBrainMood.playful,
       ),
     ],
   );

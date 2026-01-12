@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/logging.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/ico_help_system.dart';
+import '../../../core/widgets/edge_fade.dart';
 import '../../../providers/help_providers.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
@@ -14,12 +15,36 @@ import '../../../providers/connection_providers.dart';
 import '../../../providers/signal_providers.dart';
 import '../../../providers/social_providers.dart';
 import '../../../utils/snackbar.dart';
+import '../../navigation/main_shell.dart';
 import '../widgets/signal_card.dart';
+import '../widgets/signal_grid_card.dart';
 import '../widgets/signal_skeleton.dart';
 import '../widgets/signals_empty_state.dart';
 import '../widgets/active_signals_banner.dart';
 import 'create_signal_screen.dart';
 import 'signal_detail_screen.dart';
+
+/// Filter options for the signals list
+enum SignalFilter {
+  all,
+  nearby, // hop count 0-1
+  meshOnly, // from mesh (authorId starts with mesh_)
+  withMedia, // has images
+  expiringSoon, // < 5 minutes TTL remaining
+}
+
+/// Sort options for the signals list
+enum SignalSortOrder {
+  proximity, // by hop count (closer first)
+  expiring, // by TTL (expiring soon first)
+  newest, // by creation time (newest first)
+}
+
+/// View mode for the signals display
+enum SignalViewMode {
+  list,
+  grid,
+}
 
 /// The Presence Feed screen - local view of active signals.
 ///
@@ -27,6 +52,7 @@ import 'signal_detail_screen.dart';
 /// - Sorted by proximity (if mesh data available), then expiry, then time
 /// - Filtered to only show active (non-expired) signals
 /// - Updated in real-time as signals expire
+/// - Viewable in list or compact grid mode
 class PresenceFeedScreen extends ConsumerStatefulWidget {
   const PresenceFeedScreen({super.key});
 
@@ -36,12 +62,23 @@ class PresenceFeedScreen extends ConsumerStatefulWidget {
 
 class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
   final ScrollController _scrollController = ScrollController();
+  final TextEditingController _searchController = TextEditingController();
+
   bool _isRefreshing = false;
+  String _searchQuery = '';
+  SignalFilter _activeFilter = SignalFilter.all;
+  SignalSortOrder _sortOrder = SignalSortOrder.proximity;
+  SignalViewMode _viewMode = SignalViewMode.list;
 
   @override
   void dispose() {
     _scrollController.dispose();
+    _searchController.dispose();
     super.dispose();
+  }
+
+  void _dismissKeyboard() {
+    FocusScope.of(context).unfocus();
   }
 
   Future<void> _handleRefresh() async {
@@ -84,6 +121,81 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
     );
   }
 
+  List<Post> _applyFilter(List<Post> signals) {
+    switch (_activeFilter) {
+      case SignalFilter.all:
+        return signals;
+      case SignalFilter.nearby:
+        return signals
+            .where((s) => s.hopCount != null && s.hopCount! <= 1)
+            .toList();
+      case SignalFilter.meshOnly:
+        return signals
+            .where((s) => s.authorId.startsWith('mesh_'))
+            .toList();
+      case SignalFilter.withMedia:
+        return signals
+            .where(
+              (s) => s.mediaUrls.isNotEmpty || s.imageLocalPath != null,
+            )
+            .toList();
+      case SignalFilter.expiringSoon:
+        return signals.where((s) {
+          if (s.expiresAt == null) return false;
+          final remaining = s.expiresAt!.difference(DateTime.now());
+          return remaining.inMinutes < 5 && !remaining.isNegative;
+        }).toList();
+    }
+  }
+
+  List<Post> _applySort(List<Post> signals) {
+    final sorted = List<Post>.from(signals);
+    switch (_sortOrder) {
+      case SignalSortOrder.proximity:
+        sorted.sort((a, b) {
+          // Null hop count = lowest priority (furthest)
+          final aHop = a.hopCount ?? 999;
+          final bHop = b.hopCount ?? 999;
+          if (aHop != bHop) return aHop.compareTo(bHop);
+          // Then by expiry (expiring soon first)
+          if (a.expiresAt != null && b.expiresAt != null) {
+            return a.expiresAt!.compareTo(b.expiresAt!);
+          }
+          return 0;
+        });
+      case SignalSortOrder.expiring:
+        sorted.sort((a, b) {
+          // Null expiry = lowest priority
+          if (a.expiresAt == null && b.expiresAt == null) return 0;
+          if (a.expiresAt == null) return 1;
+          if (b.expiresAt == null) return -1;
+          return a.expiresAt!.compareTo(b.expiresAt!);
+        });
+      case SignalSortOrder.newest:
+        sorted.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    }
+    return sorted;
+  }
+
+  List<Post> _applySearch(List<Post> signals) {
+    if (_searchQuery.isEmpty) return signals;
+    final query = _searchQuery.toLowerCase();
+    return signals.where((s) {
+      // Search in content
+      if (s.content.toLowerCase().contains(query)) return true;
+      // Search in author name
+      if (s.authorSnapshot?.displayName.toLowerCase().contains(query) == true) {
+        return true;
+      }
+      // Search in mesh node ID (hex)
+      if (s.meshNodeId != null &&
+          s.meshNodeId!.toRadixString(16).toLowerCase().contains(query)) {
+        return true;
+      }
+      return false;
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final feedState = ref.watch(signalFeedProvider);
@@ -93,58 +205,234 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
     final isConnected = ref.watch(isDeviceConnectedProvider);
     final canGoActive = isSignedIn && isConnected;
 
-    return HelpTourController(
-      topicId: 'signals_overview',
-      stepKeys: const {},
-      child: Scaffold(
-        backgroundColor: context.background,
-        appBar: AppBar(
+    // Get all signals then apply filters
+    var signals = feedState.signals;
+
+    // Calculate counts before filtering for badges
+    final allCount = signals.length;
+    final nearbyCount =
+        signals.where((s) => s.hopCount != null && s.hopCount! <= 1).length;
+    final meshCount =
+        signals.where((s) => s.authorId.startsWith('mesh_')).length;
+    final mediaCount = signals
+        .where((s) => s.mediaUrls.isNotEmpty || s.imageLocalPath != null)
+        .length;
+    final expiringSoonCount = signals.where((s) {
+      if (s.expiresAt == null) return false;
+      final remaining = s.expiresAt!.difference(DateTime.now());
+      return remaining.inMinutes < 5 && !remaining.isNegative;
+    }).length;
+
+    // Apply filter, sort, and search
+    signals = _applyFilter(signals);
+    signals = _applySort(signals);
+    signals = _applySearch(signals);
+
+    return GestureDetector(
+      onTap: _dismissKeyboard,
+      child: HelpTourController(
+        topicId: 'signals_overview',
+        stepKeys: const {},
+        child: Scaffold(
           backgroundColor: context.background,
-          title: Row(
-            children: [
-              Icon(Icons.sensors, color: context.accentColor, size: 24),
-              const SizedBox(width: 8),
-              Text(
-                'Presence',
-                style: TextStyle(
-                  color: context.textPrimary,
-                  fontWeight: FontWeight.w600,
-                ),
+          appBar: AppBar(
+            backgroundColor: context.background,
+            leading: const HamburgerMenuButton(),
+            centerTitle: true,
+            title: Text(
+              'Presence${allCount > 0 ? ' ($allCount)' : ''}',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: context.textPrimary,
+              ),
+            ),
+            actions: [
+              // Go Active button
+              Padding(
+                padding: const EdgeInsets.only(right: 4),
+                child:
+                    _buildGoActiveButton(canGoActive, isSignedIn, isConnected),
+              ),
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert),
+                onSelected: (value) {
+                  if (value == 'help') {
+                    ref.read(helpProvider.notifier).startTour('signals_overview');
+                  }
+                },
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'help',
+                    child: ListTile(
+                      leading: Icon(Icons.help_outline),
+                      title: Text('Help'),
+                      contentPadding: EdgeInsets.zero,
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-          actions: [
-            // Go Active button in AppBar
-            Padding(
-              padding: const EdgeInsets.only(right: 4),
-              child: _buildGoActiveButton(canGoActive, isSignedIn, isConnected),
-            ),
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert),
-              onSelected: (value) {
-                if (value == 'help') {
-                  ref.read(helpProvider.notifier).startTour('signals_overview');
-                }
-              },
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'help',
-                  child: ListTile(
-                    leading: Icon(Icons.help_outline),
-                    title: Text('Help'),
-                    contentPadding: EdgeInsets.zero,
-                    visualDensity: VisualDensity.compact,
+          body: Column(
+            children: [
+              // Search bar
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: context.card,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (value) => setState(() => _searchQuery = value),
+                    style: TextStyle(color: context.textPrimary),
+                    decoration: InputDecoration(
+                      hintText: 'Search signals',
+                      hintStyle: TextStyle(color: context.textTertiary),
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: context.textTertiary,
+                      ),
+                      suffixIcon: _searchQuery.isNotEmpty
+                          ? IconButton(
+                              icon: Icon(
+                                Icons.clear,
+                                color: context.textTertiary,
+                              ),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() => _searchQuery = '');
+                              },
+                            )
+                          : null,
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                    ),
                   ),
                 ),
-              ],
-            ),
-          ],
+              ),
+
+              // Filter chips row with view toggle at end
+              SizedBox(
+                height: 44,
+                child: Row(
+                  children: [
+                    // Scrollable filter chips and sort button
+                    Expanded(
+                      child: EdgeFade.end(
+                        fadeSize: 32,
+                        fadeColor: context.background,
+                        child: ListView(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.only(left: 16),
+                          children: [
+                            _FilterChip(
+                              label: 'All',
+                              count: allCount,
+                              isSelected: _activeFilter == SignalFilter.all,
+                              onTap: () => setState(
+                                () => _activeFilter = SignalFilter.all,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            _FilterChip(
+                              label: 'Nearby',
+                              count: nearbyCount,
+                              isSelected: _activeFilter == SignalFilter.nearby,
+                              color: AccentColors.green,
+                              icon: Icons.near_me,
+                              onTap: () => setState(
+                                () => _activeFilter = SignalFilter.nearby,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            _FilterChip(
+                              label: 'Mesh',
+                              count: meshCount,
+                              isSelected:
+                                  _activeFilter == SignalFilter.meshOnly,
+                              color: AccentColors.cyan,
+                              icon: Icons.router,
+                              onTap: () => setState(
+                                () => _activeFilter = SignalFilter.meshOnly,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            _FilterChip(
+                              label: 'Media',
+                              count: mediaCount,
+                              isSelected:
+                                  _activeFilter == SignalFilter.withMedia,
+                              color: AccentColors.purple,
+                              icon: Icons.image,
+                              onTap: () => setState(
+                                () => _activeFilter = SignalFilter.withMedia,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            _FilterChip(
+                              label: 'Expiring',
+                              count: expiringSoonCount,
+                              isSelected:
+                                  _activeFilter == SignalFilter.expiringSoon,
+                              color: AppTheme.warningYellow,
+                              icon: Icons.schedule,
+                              onTap: () => setState(
+                                () => _activeFilter = SignalFilter.expiringSoon,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            _SortButton(
+                              sortOrder: _sortOrder,
+                              onChanged: (order) =>
+                                  setState(() => _sortOrder = order),
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                        ),
+                      ),
+                    ),
+                    // View toggle at end
+                    const SizedBox(width: 8),
+                    _ViewToggle(
+                      viewMode: _viewMode,
+                      onToggle: () => setState(
+                        () => _viewMode = _viewMode == SignalViewMode.list
+                            ? SignalViewMode.grid
+                            : SignalViewMode.list,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // Divider
+              Container(
+                height: 1,
+                color: context.border.withValues(alpha: 0.3),
+              ),
+
+              // Signal list/grid
+              Expanded(
+                child: feedState.isLoading && feedState.signals.isEmpty
+                    ? _buildLoading()
+                    : signals.isEmpty
+                        ? _buildEmptyState()
+                        : _viewMode == SignalViewMode.list
+                            ? _buildSignalList(signals)
+                            : _buildSignalGrid(signals),
+              ),
+            ],
+          ),
         ),
-        body: feedState.isLoading && feedState.signals.isEmpty
-            ? _buildLoading()
-            : feedState.signals.isEmpty
-            ? _buildEmptyState()
-            : _buildSignalList(feedState),
       ),
     );
   }
@@ -207,6 +495,48 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
       blockedReason = 'Device not connected';
     }
 
+    // Show different empty state if filtering
+    if (_activeFilter != SignalFilter.all || _searchQuery.isNotEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: context.card,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(
+                Icons.filter_list_off,
+                size: 40,
+                color: context.textTertiary,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'No signals match this filter',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: context.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: () => setState(() {
+                _activeFilter = SignalFilter.all;
+                _searchQuery = '';
+                _searchController.clear();
+              }),
+              child: const Text('Show all signals'),
+            ),
+          ],
+        ),
+      );
+    }
+
     return SignalsEmptyState(
       canGoActive: canGoActive,
       blockedReason: blockedReason,
@@ -214,7 +544,7 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
     );
   }
 
-  Widget _buildSignalList(SignalFeedState feedState) {
+  Widget _buildSignalList(List<Post> signals) {
     return RefreshIndicator(
       onRefresh: _handleRefresh,
       color: context.accentColor,
@@ -222,17 +552,17 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
         controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
-          // Active count badge header with pulsing indicator
-          if (feedState.signals.isNotEmpty)
+          // Active count badge header
+          if (signals.isNotEmpty)
             SliverToBoxAdapter(
-              child: ActiveSignalsBanner(count: feedState.signals.length),
+              child: ActiveSignalsBanner(count: signals.length),
             ),
           // TTL info banner
           SliverToBoxAdapter(
             child: Container(
               margin: EdgeInsets.fromLTRB(
                 16,
-                feedState.signals.isEmpty ? 16 : 8,
+                signals.isEmpty ? 16 : 8,
                 16,
                 16,
               ),
@@ -265,7 +595,7 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
           // Signal list
           SliverList(
             delegate: SliverChildBuilderDelegate((context, index) {
-              final signal = feedState.signals[index];
+              final signal = signals[index];
               final currentUser = ref.watch(currentUserProvider);
               final isOwnSignal =
                   currentUser != null && signal.authorId == currentUser.uid;
@@ -275,14 +605,14 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                 index: index,
                 isRefreshing: _isRefreshing,
                 child: Padding(
-                  key: ValueKey(signal.id), // Use signalId as stable key
+                  key: ValueKey(signal.id),
                   padding: EdgeInsets.only(
                     left: 16,
                     right: 16,
-                    bottom: index == feedState.signals.length - 1 ? 100 : 12,
+                    bottom: index == signals.length - 1 ? 100 : 12,
                   ),
                   child: SignalCard(
-                    key: ValueKey('card_${signal.id}'), // Stable key for card
+                    key: ValueKey('card_${signal.id}'),
                     signal: signal,
                     onTap: () => _openSignalDetail(signal),
                     onComment: () => _openSignalDetail(signal),
@@ -291,7 +621,54 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                   ),
                 ),
               );
-            }, childCount: feedState.signals.length),
+            }, childCount: signals.length),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSignalGrid(List<Post> signals) {
+    return RefreshIndicator(
+      onRefresh: _handleRefresh,
+      color: context.accentColor,
+      child: CustomScrollView(
+        controller: _scrollController,
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          // Active count badge header
+          if (signals.isNotEmpty)
+            SliverToBoxAdapter(
+              child: ActiveSignalsBanner(count: signals.length),
+            ),
+
+          // Grid of signals
+          SliverPadding(
+            padding: const EdgeInsets.all(16),
+            sliver: SliverGrid(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 0.85,
+              ),
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final signal = signals[index];
+                  return SignalGridCard(
+                    key: ValueKey('grid_${signal.id}'),
+                    signal: signal,
+                    onTap: () => _openSignalDetail(signal),
+                  );
+                },
+                childCount: signals.length,
+              ),
+            ),
+          ),
+
+          // Bottom padding
+          const SliverToBoxAdapter(
+            child: SizedBox(height: 80),
           ),
         ],
       ),
@@ -405,5 +782,331 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
         }
       }
     }
+  }
+}
+
+/// Filter chip widget (styled consistently with nodes screen)
+class _FilterChip extends StatelessWidget {
+  const _FilterChip({
+    required this.label,
+    required this.count,
+    required this.isSelected,
+    required this.onTap,
+    this.color,
+    this.icon,
+  });
+
+  final String label;
+  final int count;
+  final bool isSelected;
+  final Color? color;
+  final IconData? icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final chipColor = color ?? AppTheme.primaryBlue;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? chipColor.withValues(alpha: 0.2) : context.card,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected
+                ? chipColor.withValues(alpha: 0.5)
+                : context.border.withValues(alpha: 0.3),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(
+                icon,
+                size: 14,
+                color: isSelected ? chipColor : context.textTertiary,
+              ),
+              const SizedBox(width: 4),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                color: isSelected ? chipColor : context.textSecondary,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? chipColor.withValues(alpha: 0.3)
+                    : context.border.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                count.toString(),
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: isSelected ? chipColor : context.textTertiary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Sort button with dropdown
+class _SortButton extends StatelessWidget {
+  const _SortButton({required this.sortOrder, required this.onChanged});
+
+  final SignalSortOrder sortOrder;
+  final ValueChanged<SignalSortOrder> onChanged;
+
+  String get _sortLabel {
+    switch (sortOrder) {
+      case SignalSortOrder.proximity:
+        return 'Closest';
+      case SignalSortOrder.expiring:
+        return 'Expiring';
+      case SignalSortOrder.newest:
+        return 'Newest';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: Material(
+        color: context.card,
+        child: InkWell(
+          onTap: () => _showSortMenu(context),
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: context.border.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.sort, size: 14, color: context.textTertiary),
+                const SizedBox(width: 4),
+                Text(
+                  _sortLabel,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: context.textSecondary,
+                  ),
+                ),
+                const SizedBox(width: 2),
+                Icon(
+                  Icons.arrow_drop_down,
+                  size: 18,
+                  color: context.textTertiary,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showSortMenu(BuildContext context) {
+    final RenderBox button = context.findRenderObject()! as RenderBox;
+    final RenderBox overlay =
+        Navigator.of(context).overlay!.context.findRenderObject()! as RenderBox;
+    final Offset offset = button.localToGlobal(
+      Offset(0, button.size.height + 4),
+      ancestor: overlay,
+    );
+
+    showMenu<SignalSortOrder>(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        offset.dx,
+        offset.dy,
+        overlay.size.width - offset.dx - button.size.width,
+        0,
+      ),
+      color: context.card,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      items: [
+        _buildMenuItem(
+          SignalSortOrder.proximity,
+          'By Proximity',
+          Icons.near_me,
+          context,
+        ),
+        _buildMenuItem(
+          SignalSortOrder.expiring,
+          'Expiring Soon',
+          Icons.schedule,
+          context,
+        ),
+        _buildMenuItem(
+          SignalSortOrder.newest,
+          'Most Recent',
+          Icons.schedule,
+          context,
+        ),
+      ],
+    ).then((value) {
+      if (value != null) {
+        onChanged(value);
+      }
+    });
+  }
+
+  PopupMenuItem<SignalSortOrder> _buildMenuItem(
+    SignalSortOrder value,
+    String label,
+    IconData icon,
+    BuildContext context,
+  ) {
+    final isSelected = sortOrder == value;
+    final accentColor = context.accentColor;
+    return PopupMenuItem<SignalSortOrder>(
+      value: value,
+      child: Row(
+        children: [
+          Icon(
+            isSelected ? Icons.check : icon,
+            size: 18,
+            color: isSelected ? accentColor : context.textSecondary,
+          ),
+          const SizedBox(width: 12),
+          Text(label),
+        ],
+      ),
+    );
+  }
+}
+
+/// View mode toggle button
+class _ViewToggle extends StatelessWidget {
+  const _ViewToggle({required this.viewMode, required this.onToggle});
+
+  final SignalViewMode viewMode;
+  final VoidCallback onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    final isGrid = viewMode == SignalViewMode.grid;
+
+    return GestureDetector(
+      onTap: onToggle,
+      child: Container(
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color:
+              isGrid ? context.accentColor.withValues(alpha: 0.2) : context.card,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isGrid
+                ? context.accentColor.withValues(alpha: 0.5)
+                : context.border.withValues(alpha: 0.3),
+          ),
+        ),
+        child: Icon(
+          isGrid ? Icons.grid_view_rounded : Icons.view_list_rounded,
+          size: 16,
+          color: isGrid ? context.accentColor : context.textTertiary,
+        ),
+      ),
+    );
+  }
+}
+
+/// Animated item wrapper for stagger animations
+class AnimatedSignalItem extends StatefulWidget {
+  const AnimatedSignalItem({
+    super.key,
+    required this.child,
+    required this.index,
+    required this.isRefreshing,
+  });
+
+  final Widget child;
+  final int index;
+  final bool isRefreshing;
+
+  @override
+  State<AnimatedSignalItem> createState() => _AnimatedSignalItemState();
+}
+
+class _AnimatedSignalItemState extends State<AnimatedSignalItem>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<Offset> _slideAnimation;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0.1, 0),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+
+    // Stagger animation based on index
+    Future<void>.delayed(Duration(milliseconds: 50 * widget.index), () {
+      if (mounted) _controller.forward();
+    });
+  }
+
+  @override
+  void didUpdateWidget(AnimatedSignalItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.isRefreshing && !oldWidget.isRefreshing) {
+      // Slide out when refreshing
+      _controller.reverse();
+    } else if (!widget.isRefreshing && oldWidget.isRefreshing) {
+      // Slide back in after refresh
+      Future<void>.delayed(Duration(milliseconds: 50 * widget.index), () {
+        if (mounted) _controller.forward();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SlideTransition(
+      position: _slideAnimation,
+      child: FadeTransition(
+        opacity: _fadeAnimation,
+        child: widget.child,
+      ),
+    );
   }
 }
