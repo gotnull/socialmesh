@@ -145,10 +145,10 @@ class MeshGlobeState extends State<MeshGlobe> {
     double latitude,
     double longitude, {
     bool animate = true,
-    double height = 2000000,
+    double height = 2.5, // Three.js globe uses normalized Earth radius (1.0)
   }) {
     if (_webViewController == null || !_isReady) return;
-    final duration = animate ? 2.0 : 0.0;
+    final duration = animate ? 2000 : 0; // Duration in milliseconds
     _webViewController?.evaluateJavascript(
       source: 'flyTo($latitude, $longitude, $height, $duration);',
     );
@@ -161,7 +161,7 @@ class MeshGlobeState extends State<MeshGlobe> {
       rotateToLocation(
         node.latitude!,
         node.longitude!,
-        height: 50000,
+        height: 1.8, // Close-up view
         animate: animate,
       );
     }
@@ -241,9 +241,9 @@ class MeshGlobeState extends State<MeshGlobe> {
 
     return Stack(
       children: [
-        // WebView with CesiumJS
+        // WebView with Three.js atmospheric globe
         InAppWebView(
-          initialFile: 'assets/globe/cesium_globe.html',
+          initialFile: 'assets/globe/mesh_globe.html',
           initialSettings: InAppWebViewSettings(
             mediaPlaybackRequiresUserGesture: false,
             allowsInlineMediaPlayback: true,

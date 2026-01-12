@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Socialmesh Globe</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      touch-action: none;
+    }
+
+    #canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Controls Panel */
+    .controls-panel {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 12px;
+      padding: 14px;
+      min-width: 200px;
+      z-index: 100;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      opacity: 0;
+      transform: translateY(-10px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      pointer-events: none;
+    }
+
+    .controls-panel.visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .controls-toggle {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      width: 40px;
+      height: 40px;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 18px;
+      cursor: pointer;
+      z-index: 101;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .controls-toggle:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .controls-toggle.active {
+      background: rgba(100, 200, 255, 0.2);
+      border-color: rgba(100, 200, 255, 0.4);
+    }
+
+    .control-group {
+      margin-bottom: 14px;
+    }
+
+    .control-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .control-label {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.6);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .control-value {
+      color: rgba(100, 200, 255, 0.9);
+      font-weight: 500;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 4px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 2px;
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      background: linear-gradient(135deg, #64c8ff, #4080ff);
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(100, 200, 255, 0.4);
+    }
+
+    .checkbox-control {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      padding: 8px 0;
+    }
+
+    .checkbox-control input {
+      display: none;
+    }
+
+    .checkbox-box {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .checkbox-control input:checked+.checkbox-box {
+      background: linear-gradient(135deg, #64c8ff, #4080ff);
+      border-color: transparent;
+    }
+
+    .checkbox-box::after {
+      content: '✓';
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+      opacity: 0;
+      transform: scale(0.5);
+      transition: all 0.15s ease;
+    }
+
+    .checkbox-control input:checked+.checkbox-box::after {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .checkbox-text {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    /* Tooltip */
+    .tooltip {
+      position: fixed;
+      background: rgba(10, 15, 25, 0.92);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(100, 200, 255, 0.25);
+      border-radius: 10px;
+      padding: 12px 14px;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(5px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      z-index: 1000;
+      max-width: 240px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 20px rgba(100, 200, 255, 0.1);
+    }
+
+    .tooltip.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .tooltip .name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .tooltip .short-name {
+      font-size: 11px;
+      color: rgba(100, 200, 255, 0.8);
+      font-family: 'SF Mono', Monaco, monospace;
+      margin-bottom: 8px;
+    }
+
+    .tooltip .coords {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.5);
+      font-family: 'SF Mono', Monaco, monospace;
+    }
+
+    .tooltip .status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .tooltip .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255, 100, 100, 0.8);
+      box-shadow: 0 0 8px rgba(255, 100, 100, 0.5);
+    }
+
+    .tooltip .status-dot.online {
+      background: rgba(100, 255, 150, 0.9);
+      box-shadow: 0 0 8px rgba(100, 255, 150, 0.6);
+    }
+
+    /* Loading */
+    .loading {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at center, #0a0f1a 0%, #000 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      transition: opacity 0.6s ease;
+    }
+
+    .loading.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid rgba(100, 200, 255, 0.15);
+      border-top-color: rgba(100, 200, 255, 0.9);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    .loading-text {
+      margin-top: 20px;
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 13px;
+      letter-spacing: 1px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Node count badge */
+    .node-count {
+      position: fixed;
+      bottom: 16px;
+      left: 16px;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 8px 14px;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.8);
+      z-index: 100;
+    }
+
+    .node-count span {
+      color: rgba(100, 200, 255, 0.9);
+      font-weight: 600;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="loading" id="loading">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Loading Globe...</div>
+  </div>
+
+  <canvas id="canvas"></canvas>
+
+  <button class="controls-toggle" id="controlsToggle">⚙</button>
+
+  <div class="controls-panel" id="controlsPanel">
+    <div class="control-group">
+      <div class="control-label">
+        <span>Cloud Opacity</span>
+        <span class="control-value" id="cloudValue">40%</span>
+      </div>
+      <input type="range" id="cloudOpacity" min="0" max="1" step="0.05" value="0.4">
+    </div>
+
+    <div class="control-group">
+      <div class="control-label">
+        <span>Atmosphere</span>
+        <span class="control-value" id="atmosphereValue">100%</span>
+      </div>
+      <input type="range" id="atmosphereIntensity" min="0" max="2" step="0.1" value="1.0">
+    </div>
+
+    <div class="control-group">
+      <div class="control-label">
+        <span>Auto-Rotate Delay</span>
+        <span class="control-value" id="rotateDelayValue">5s</span>
+      </div>
+      <input type="range" id="rotateDelay" min="1" max="15" step="1" value="5">
+    </div>
+
+    <div class="control-group">
+      <label class="checkbox-control">
+        <input type="checkbox" id="autoRotate">
+        <span class="checkbox-box"></span>
+        <span class="checkbox-text">Auto-Rotate</span>
+      </label>
+    </div>
+
+    <div class="control-group">
+      <label class="checkbox-control">
+        <input type="checkbox" id="showConnections" checked>
+        <span class="checkbox-box"></span>
+        <span class="checkbox-text">Show Connections</span>
+      </label>
+    </div>
+  </div>
+
+  <div class="tooltip" id="tooltip"></div>
+
+  <div class="node-count" id="nodeCount">
+    <span>0</span> nodes
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+  <script>
+    // ============================================
+    // CONFIGURATION
+    // ============================================
+    const CONFIG = {
+      globeRadius: 1,
+      atmosphereScale: 1.12,
+      cloudScale: 1.008,
+      nodeBaseSize: 0.012,
+      nodeMinSize: 0.006,
+      arcHeight: 0.15,
+      arcSegments: 64,
+      minDistance: 1.08,  // Very close zoom
+      maxDistance: 6,
+      autoRotateSpeed: 0.15,
+      autoRotateDelay: 5000,  // ms before auto-rotate resumes
+      cameraFOV: 50,
+      cameraNear: 0.01,
+      cameraFar: 100,
+    };
+
+    // ============================================
+    // STATE
+    // ============================================
+    let scene, camera, renderer, controls;
+    let globe, clouds, atmosphere, starField;
+    let nodeGroup, connectionGroup;
+    let nodeObjects = [];
+    let connectionObjects = [];
+    let selectedNode = null;
+    let hoveredNode = null;
+    let lastInteractionTime = 0;
+    let autoRotateEnabled = false;  // OFF by default
+    let autoRotateDelay = CONFIG.autoRotateDelay;
+    let isUserInteracting = false;
+
+    // DOM Elements
+    const canvas = document.getElementById('canvas');
+    const loading = document.getElementById('loading');
+    const tooltip = document.getElementById('tooltip');
+    const nodeCountEl = document.getElementById('nodeCount');
+    const controlsToggle = document.getElementById('controlsToggle');
+    const controlsPanel = document.getElementById('controlsPanel');
+
+    // ============================================
+    // SCENE SETUP
+    // ============================================
+    function initScene() {
+      scene = new THREE.Scene();
+
+      // Camera
+      camera = new THREE.PerspectiveCamera(
+        CONFIG.cameraFOV,
+        window.innerWidth / window.innerHeight,
+        CONFIG.cameraNear,
+        CONFIG.cameraFar
+      );
+      camera.position.set(0, 0, 2.8);
+
+      // Renderer
+      renderer = new THREE.WebGLRenderer({
+        canvas: canvas,
+        antialias: true,
+        alpha: true,
+        powerPreference: 'high-performance'
+      });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setClearColor(0x000000, 1);
+      renderer.outputEncoding = THREE.sRGBEncoding;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.2;
+
+      // Controls
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.08;
+      controls.enablePan = false;
+      controls.minDistance = CONFIG.minDistance;
+      controls.maxDistance = CONFIG.maxDistance;
+      controls.autoRotate = false;  // Start with no rotation
+      controls.autoRotateSpeed = CONFIG.autoRotateSpeed;
+      controls.rotateSpeed = 0.5;
+      controls.zoomSpeed = 0.8;
+
+      // Track interactions
+      controls.addEventListener('start', onControlStart);
+      controls.addEventListener('end', onControlEnd);
+
+      // Groups
+      nodeGroup = new THREE.Group();
+      connectionGroup = new THREE.Group();
+      scene.add(nodeGroup);
+      scene.add(connectionGroup);
+
+      // Ambient light for general illumination
+      const ambientLight = new THREE.AmbientLight(0x404050, 0.4);
+      scene.add(ambientLight);
+
+      // Sun light
+      const sunLight = new THREE.DirectionalLight(0xffffff, 1.2);
+      sunLight.position.set(5, 3, 5);
+      scene.add(sunLight);
+
+      // Subtle fill light from opposite side
+      const fillLight = new THREE.DirectionalLight(0x4060a0, 0.3);
+      fillLight.position.set(-5, -2, -5);
+      scene.add(fillLight);
+    }
+
+    // ============================================
+    // INTERACTION TRACKING
+    // ============================================
+    function onControlStart() {
+      isUserInteracting = true;
+      controls.autoRotate = false;
+    }
+
+    function onControlEnd() {
+      isUserInteracting = false;
+      lastInteractionTime = Date.now();
+    }
+
+    function updateAutoRotate() {
+      if (!autoRotateEnabled || isUserInteracting) {
+        controls.autoRotate = false;
+        return;
+      }
+
+      const timeSinceInteraction = Date.now() - lastInteractionTime;
+      if (timeSinceInteraction >= autoRotateDelay) {
+        controls.autoRotate = true;
+      }
+    }
+
+    // ============================================
+    // STARS
+    // ============================================
+    function createStars() {
+      const starCount = 3000;
+      const positions = new Float32Array(starCount * 3);
+      const colors = new Float32Array(starCount * 3);
+      const sizes = new Float32Array(starCount);
+
+      for (let i = 0; i < starCount; i++) {
+        // Distribute on sphere
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos(2 * Math.random() - 1);
+        const r = 40 + Math.random() * 20;
+
+        positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+        positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+        positions[i * 3 + 2] = r * Math.cos(phi);
+
+        // Slight color variation
+        const brightness = 0.7 + Math.random() * 0.3;
+        const tint = Math.random();
+        colors[i * 3] = brightness * (0.9 + tint * 0.1);
+        colors[i * 3 + 1] = brightness;
+        colors[i * 3 + 2] = brightness * (1 + (1 - tint) * 0.15);
+
+        sizes[i] = 0.5 + Math.random() * 1.5;
+      }
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+      geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+
+      const material = new THREE.PointsMaterial({
+        size: 0.08,
+        sizeAttenuation: true,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.9,
+        blending: THREE.AdditiveBlending
+      });
+
+      starField = new THREE.Points(geometry, material);
+      scene.add(starField);
+    }
+
+    // ============================================
+    // ATMOSPHERE SHADER
+    // ============================================
+    function createAtmosphereShader() {
+      return {
+        uniforms: {
+          sunDirection: { value: new THREE.Vector3(1, 0.5, 1).normalize() },
+          intensity: { value: 1.0 },
+          atmosphereColor: { value: new THREE.Color(0.3, 0.6, 1.0) },
+          glowColor: { value: new THREE.Color(0.4, 0.7, 1.0) }
+        },
+        vertexShader: `
+          varying vec3 vNormal;
+          varying vec3 vPosition;
+          varying vec3 vWorldPosition;
+          
+          void main() {
+            vNormal = normalize(normalMatrix * normal);
+            vPosition = position;
+            vec4 worldPos = modelMatrix * vec4(position, 1.0);
+            vWorldPosition = worldPos.xyz;
+            gl_Position = projectionMatrix * viewMatrix * worldPos;
+          }
+        `,
+        fragmentShader: `
+          uniform vec3 sunDirection;
+          uniform float intensity;
+          uniform vec3 atmosphereColor;
+          uniform vec3 glowColor;
+          
+          varying vec3 vNormal;
+          varying vec3 vPosition;
+          varying vec3 vWorldPosition;
+          
+          void main() {
+            vec3 viewDir = normalize(cameraPosition - vWorldPosition);
+            
+            // Fresnel effect for rim glow
+            float fresnel = 1.0 - max(0.0, dot(viewDir, vNormal));
+            fresnel = pow(fresnel, 3.0);
+            
+            // Atmospheric scattering approximation
+            float sunInfluence = max(0.0, dot(vNormal, sunDirection));
+            sunInfluence = pow(sunInfluence, 0.5);
+            
+            // Day/night gradient
+            vec3 dayColor = atmosphereColor;
+            vec3 nightColor = vec3(0.05, 0.1, 0.2);
+            vec3 scatterColor = mix(nightColor, dayColor, sunInfluence * 0.7 + 0.3);
+            
+            // Combine fresnel rim with atmospheric color
+            vec3 finalColor = mix(scatterColor, glowColor, fresnel * 0.5);
+            
+            // Intensity falloff
+            float alpha = fresnel * intensity * 0.6;
+            alpha = clamp(alpha, 0.0, 0.8);
+            
+            gl_FragColor = vec4(finalColor, alpha);
+          }
+        `
+      };
+    }
+
+    // ============================================
+    // GLOBE CREATION
+    // ============================================
+    function createGlobe() {
+      const textureLoader = new THREE.TextureLoader();
+
+      // Earth textures from three-globe package
+      const baseUrl = 'https://unpkg.com/three-globe@2.30.0/example/img/';
+
+      let texturesLoaded = 0;
+      const totalTextures = 4;
+
+      function onTextureLoad() {
+        texturesLoaded++;
+        if (texturesLoaded >= totalTextures) {
+          loading.classList.add('hidden');
+          notifyReady();
+        }
+      }
+
+      function onTextureError(name) {
+        console.warn(`[Globe] Failed to load ${name}, using fallback`);
+        texturesLoaded++;
+        if (texturesLoaded >= totalTextures) {
+          loading.classList.add('hidden');
+          notifyReady();
+        }
+      }
+
+      // Earth surface
+      const earthGeometry = new THREE.SphereGeometry(CONFIG.globeRadius, 64, 64);
+
+      const earthTexture = textureLoader.load(
+        baseUrl + 'earth-blue-marble.jpg',
+        onTextureLoad,
+        undefined,
+        () => onTextureError('earth')
+      );
+      earthTexture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+
+      const bumpMap = textureLoader.load(
+        baseUrl + 'earth-topology.png',
+        onTextureLoad,
+        undefined,
+        () => onTextureError('bump')
+      );
+
+      const specularMap = textureLoader.load(
+        baseUrl + 'earth-water.png',
+        onTextureLoad,
+        undefined,
+        () => onTextureError('specular')
+      );
+
+      const nightTexture = textureLoader.load(
+        baseUrl + 'earth-night.jpg',
+        onTextureLoad,
+        undefined,
+        () => onTextureError('night')
+      );
+
+      const earthMaterial = new THREE.MeshPhongMaterial({
+        map: earthTexture,
+        bumpMap: bumpMap,
+        bumpScale: 0.008,
+        specularMap: specularMap,
+        specular: new THREE.Color(0x333333),
+        shininess: 15,
+        emissiveMap: nightTexture,
+        emissive: new THREE.Color(0xffff80),
+        emissiveIntensity: 0.12
+      });
+
+      globe = new THREE.Mesh(earthGeometry, earthMaterial);
+      scene.add(globe);
+
+      // Clouds
+      const cloudGeometry = new THREE.SphereGeometry(CONFIG.globeRadius * CONFIG.cloudScale, 48, 48);
+      const cloudTexture = textureLoader.load(baseUrl + 'earth-clouds.png');
+
+      const cloudMaterial = new THREE.MeshPhongMaterial({
+        map: cloudTexture,
+        transparent: true,
+        opacity: 0.4,
+        depthWrite: false,
+        side: THREE.DoubleSide
+      });
+
+      clouds = new THREE.Mesh(cloudGeometry, cloudMaterial);
+      scene.add(clouds);
+
+      // Atmosphere
+      const atmosphereGeometry = new THREE.SphereGeometry(
+        CONFIG.globeRadius * CONFIG.atmosphereScale,
+        48, 48
+      );
+
+      const atmosphereShader = createAtmosphereShader();
+      const atmosphereMaterial = new THREE.ShaderMaterial({
+        uniforms: atmosphereShader.uniforms,
+        vertexShader: atmosphereShader.vertexShader,
+        fragmentShader: atmosphereShader.fragmentShader,
+        transparent: true,
+        side: THREE.BackSide,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      });
+
+      atmosphere = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
+      scene.add(atmosphere);
+    }
+
+    // ============================================
+    // COORDINATE CONVERSION
+    // ============================================
+    function latLonToVector3(lat, lon, radius = CONFIG.globeRadius) {
+      const phi = (90 - lat) * (Math.PI / 180);
+      const theta = (lon + 180) * (Math.PI / 180);
+
+      return new THREE.Vector3(
+        -radius * Math.sin(phi) * Math.cos(theta),
+        radius * Math.cos(phi),
+        radius * Math.sin(phi) * Math.sin(theta)
+      );
+    }
+
+    // ============================================
+    // NODE MARKERS
+    // ============================================
+    function createNodeMarker(node, index) {
+      const group = new THREE.Group();
+
+      const pos = latLonToVector3(node.latitude, node.longitude, CONFIG.globeRadius * 1.002);
+      group.position.copy(pos);
+
+      // Orient to surface normal
+      group.lookAt(0, 0, 0);
+      group.rotateX(Math.PI / 2);
+
+      // Color based on online status
+      const color = node.isOnline
+        ? new THREE.Color(0.2, 0.9, 0.5)  // Green for online
+        : new THREE.Color(0.4, 0.5, 0.6); // Gray for offline
+
+      const glowColor = node.isOnline
+        ? new THREE.Color(0.3, 1.0, 0.6)
+        : new THREE.Color(0.5, 0.6, 0.7);
+
+      // Main dot - small glowing sphere
+      const dotSize = CONFIG.nodeBaseSize;
+      const dotGeometry = new THREE.SphereGeometry(dotSize, 16, 16);
+      const dotMaterial = new THREE.MeshBasicMaterial({
+        color: color,
+        transparent: true,
+        opacity: 1.0
+      });
+
+      const dot = new THREE.Mesh(dotGeometry, dotMaterial);
+      dot.userData = { type: 'node', node: node };
+      group.add(dot);
+
+      // Subtle glow ring
+      const ringGeometry = new THREE.RingGeometry(dotSize * 1.5, dotSize * 2.5, 32);
+      const ringMaterial = new THREE.MeshBasicMaterial({
+        color: glowColor,
+        transparent: true,
+        opacity: 0.3,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      });
+
+      const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+      group.add(ring);
+
+      // Pulse ring (animated)
+      const pulseGeometry = new THREE.RingGeometry(dotSize * 2, dotSize * 2.3, 32);
+      const pulseMaterial = new THREE.MeshBasicMaterial({
+        color: glowColor,
+        transparent: true,
+        opacity: 0.2,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      });
+
+      const pulse = new THREE.Mesh(pulseGeometry, pulseMaterial);
+      group.add(pulse);
+
+      nodeGroup.add(group);
+
+      return {
+        group: group,
+        dot: dot,
+        ring: ring,
+        pulse: pulse,
+        node: node,
+        phase: index * 0.7
+      };
+    }
+
+    // ============================================
+    // ARC CONNECTIONS
+    // ============================================
+    function createArcConnection(node1, node2, index) {
+      const start = latLonToVector3(node1.latitude, node1.longitude, CONFIG.globeRadius * 1.005);
+      const end = latLonToVector3(node2.latitude, node2.longitude, CONFIG.globeRadius * 1.005);
+
+      // Calculate arc height based on distance
+      const distance = start.distanceTo(end);
+      const arcHeight = Math.min(CONFIG.arcHeight, distance * 0.5);
+
+      // Mid point with height offset
+      const mid = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
+      mid.normalize().multiplyScalar(CONFIG.globeRadius + arcHeight);
+
+      // Create curve
+      const curve = new THREE.QuadraticBezierCurve3(start, mid, end);
+      const points = curve.getPoints(CONFIG.arcSegments);
+
+      // Arc line
+      const geometry = new THREE.BufferGeometry().setFromPoints(points);
+      const material = new THREE.LineBasicMaterial({
+        color: 0x64c8ff,
+        transparent: true,
+        opacity: 0.35,
+        blending: THREE.AdditiveBlending
+      });
+
+      const line = new THREE.Line(geometry, material);
+      connectionGroup.add(line);
+
+      // Traveling pulse
+      const pulseGeometry = new THREE.SphereGeometry(0.006, 8, 8);
+      const pulseMaterial = new THREE.MeshBasicMaterial({
+        color: 0x80d0ff,
+        transparent: true,
+        opacity: 0.8,
+        blending: THREE.AdditiveBlending
+      });
+
+      const pulse = new THREE.Mesh(pulseGeometry, pulseMaterial);
+      connectionGroup.add(pulse);
+
+      return {
+        line: line,
+        pulse: pulse,
+        curve: curve,
+        phase: index * 0.3
+      };
+    }
+
+    // ============================================
+    // NODE MANAGEMENT
+    // ============================================
+    function clearNodes() {
+      if (!nodeGroup || !connectionGroup) return;
+
+      nodeObjects.forEach(obj => {
+        nodeGroup.remove(obj.group);
+        obj.group.traverse(child => {
+          if (child.geometry) child.geometry.dispose();
+          if (child.material) child.material.dispose();
+        });
+      });
+      nodeObjects = [];
+
+      connectionObjects.forEach(obj => {
+        connectionGroup.remove(obj.line);
+        connectionGroup.remove(obj.pulse);
+        obj.line.geometry.dispose();
+        obj.line.material.dispose();
+        obj.pulse.geometry.dispose();
+        obj.pulse.material.dispose();
+      });
+      connectionObjects = [];
+    }
+
+    function setNodes(nodesJson) {
+      console.log('[Globe] setNodes called');
+
+      // Guard against being called before initialization
+      if (!nodeGroup || !connectionGroup) {
+        console.warn('[Globe] setNodes called before initialization, retrying in 100ms');
+        setTimeout(() => setNodes(nodesJson), 100);
+        return;
+      }
+
+      let nodes;
+      try {
+        nodes = typeof nodesJson === 'string' ? JSON.parse(nodesJson) : nodesJson;
+      } catch (e) {
+        console.error('[Globe] Failed to parse nodes:', e);
+        return;
+      }
+
+      clearNodes();
+
+      // Filter nodes with valid coordinates
+      const validNodes = nodes.filter(n =>
+        typeof n.latitude === 'number' &&
+        typeof n.longitude === 'number' &&
+        !isNaN(n.latitude) &&
+        !isNaN(n.longitude) &&
+        Math.abs(n.latitude) <= 90 &&
+        Math.abs(n.longitude) <= 180
+      );
+
+      console.log(`[Globe] Creating ${validNodes.length} node markers`);
+
+      // Create node markers
+      validNodes.forEach((node, i) => {
+        const marker = createNodeMarker(node, i);
+        nodeObjects.push(marker);
+      });
+
+      // Create connections between nearby nodes
+      const maxConnectionDistance = 0.5; // Globe units
+      const maxConnections = 100; // Limit for performance
+
+      let connectionCount = 0;
+      for (let i = 0; i < validNodes.length && connectionCount < maxConnections; i++) {
+        for (let j = i + 1; j < validNodes.length && connectionCount < maxConnections; j++) {
+          const pos1 = latLonToVector3(validNodes[i].latitude, validNodes[i].longitude);
+          const pos2 = latLonToVector3(validNodes[j].latitude, validNodes[j].longitude);
+          const dist = pos1.distanceTo(pos2);
+
+          if (dist < maxConnectionDistance) {
+            const conn = createArcConnection(validNodes[i], validNodes[j], connectionCount);
+            connectionObjects.push(conn);
+            connectionCount++;
+          }
+        }
+      }
+
+      // Update node count display
+      nodeCountEl.innerHTML = `<span>${validNodes.length}</span> nodes`;
+
+      console.log(`[Globe] Created ${validNodes.length} markers, ${connectionCount} connections`);
+    }
+
+    function setConnectionsVisible(visible) {
+      connectionGroup.visible = visible;
+    }
+
+    // ============================================
+    // CAMERA CONTROLS
+    // ============================================
+    function flyTo(nodeJson) {
+      let node;
+      try {
+        node = typeof nodeJson === 'string' ? JSON.parse(nodeJson) : nodeJson;
+      } catch (e) {
+        console.error('[Globe] Failed to parse flyTo node:', e);
+        return;
+      }
+
+      flyToLocation(node.latitude, node.longitude, 1.3);
+    }
+
+    function flyToLocation(lat, lon, height = 1.5) {
+      if (!camera || !controls) {
+        console.warn('[Globe] flyToLocation called before initialization');
+        return;
+      }
+
+      console.log(`[Globe] Flying to: ${lat}, ${lon}, height: ${height}`);
+
+      const targetPos = latLonToVector3(lat, lon, height);
+
+      // Animate camera
+      const startPos = camera.position.clone();
+      const startTime = Date.now();
+      const duration = 1500;
+
+      function animateFly() {
+        const elapsed = Date.now() - startTime;
+        const t = Math.min(1, elapsed / duration);
+
+        // Ease out cubic
+        const ease = 1 - Math.pow(1 - t, 3);
+
+        camera.position.lerpVectors(startPos, targetPos, ease);
+        camera.lookAt(0, 0, 0);
+
+        if (t < 1) {
+          requestAnimationFrame(animateFly);
+        } else {
+          controls.target.set(0, 0, 0);
+          controls.update();
+          lastInteractionTime = Date.now();
+        }
+      }
+
+      isUserInteracting = true;
+      controls.autoRotate = false;
+      animateFly();
+      setTimeout(() => { isUserInteracting = false; }, duration + 100);
+    }
+
+    // Expose to Flutter
+    window.setNodes = setNodes;
+    window.flyTo = flyTo;
+    window.flyToLocation = flyToLocation;
+
+    // ============================================
+    // RAYCASTING & INTERACTION
+    // ============================================
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    function getNodeAtPoint(x, y) {
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((x - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((y - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+
+      // Check node intersections
+      for (const obj of nodeObjects) {
+        const intersects = raycaster.intersectObject(obj.dot, false);
+        if (intersects.length > 0) {
+          return obj.node;
+        }
+      }
+      return null;
+    }
+
+    function onPointerMove(event) {
+      const node = getNodeAtPoint(event.clientX, event.clientY);
+
+      if (node) {
+        if (hoveredNode !== node) {
+          hoveredNode = node;
+          showTooltip(node, event.clientX, event.clientY);
+        } else {
+          // Update tooltip position
+          positionTooltip(event.clientX, event.clientY);
+        }
+        renderer.domElement.style.cursor = 'pointer';
+      } else {
+        if (hoveredNode) {
+          hoveredNode = null;
+          hideTooltip();
+        }
+        renderer.domElement.style.cursor = 'default';
+      }
+    }
+
+    function onPointerDown(event) {
+      const node = getNodeAtPoint(event.clientX, event.clientY);
+      if (node) {
+        selectNode(node);
+      }
+    }
+
+    function selectNode(node) {
+      console.log('[Globe] Node selected:', node.shortName || node.nodeNum);
+      selectedNode = node;
+
+      if (window.flutter_inappwebview) {
+        window.flutter_inappwebview.callHandler('onNodeSelected', JSON.stringify(node));
+      }
+    }
+
+    function showTooltip(node, x, y) {
+      const name = node.longName || node.shortName || 'Unknown';
+      const shortName = node.shortName || '!' + (node.nodeNum || 0).toString(16).slice(-4).toUpperCase();
+
+      tooltip.innerHTML = `
+        <div class="name">${name}</div>
+        <div class="short-name">${shortName}</div>
+        <div class="coords">${node.latitude.toFixed(5)}, ${node.longitude.toFixed(5)}</div>
+        <div class="status">
+          <span class="status-dot ${node.isOnline ? 'online' : ''}"></span>
+          ${node.isOnline ? 'Online' : 'Offline'}
+        </div>
+      `;
+
+      positionTooltip(x, y);
+      tooltip.classList.add('visible');
+    }
+
+    function positionTooltip(x, y) {
+      let left = x + 15;
+      let top = y - 15;
+
+      if (left + 250 > window.innerWidth) {
+        left = x - 265;
+      }
+      if (top + 120 > window.innerHeight) {
+        top = y - 135;
+      }
+      if (top < 10) {
+        top = 10;
+      }
+
+      tooltip.style.left = left + 'px';
+      tooltip.style.top = top + 'px';
+    }
+
+    function hideTooltip() {
+      tooltip.classList.remove('visible');
+    }
+
+    // Touch handling
+    let touchStartTime = 0;
+    let touchStartPos = { x: 0, y: 0 };
+
+    function onTouchStart(event) {
+      if (event.touches.length === 1) {
+        touchStartTime = Date.now();
+        touchStartPos = {
+          x: event.touches[0].clientX,
+          y: event.touches[0].clientY
+        };
+      }
+    }
+
+    function onTouchEnd(event) {
+      const duration = Date.now() - touchStartTime;
+      const changedTouch = event.changedTouches[0];
+      const dx = changedTouch.clientX - touchStartPos.x;
+      const dy = changedTouch.clientY - touchStartPos.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      // Quick tap with minimal movement = tap
+      if (duration < 300 && distance < 15) {
+        const node = getNodeAtPoint(changedTouch.clientX, changedTouch.clientY);
+        if (node) {
+          selectNode(node);
+        }
+      }
+    }
+
+    // Event listeners will be added after initScene
+    function addEventListeners() {
+      renderer.domElement.addEventListener('pointermove', onPointerMove);
+      renderer.domElement.addEventListener('pointerdown', onPointerDown);
+      renderer.domElement.addEventListener('touchstart', onTouchStart, { passive: true });
+      renderer.domElement.addEventListener('touchend', onTouchEnd, { passive: true });
+    }
+
+    // ============================================
+    // CONTROLS PANEL
+    // ============================================
+    let controlsPanelVisible = false;
+
+    controlsToggle.addEventListener('click', () => {
+      controlsPanelVisible = !controlsPanelVisible;
+      controlsPanel.classList.toggle('visible', controlsPanelVisible);
+      controlsToggle.classList.toggle('active', controlsPanelVisible);
+    });
+
+    function setupControls() {
+      const cloudSlider = document.getElementById('cloudOpacity');
+      const cloudValue = document.getElementById('cloudValue');
+      const atmosphereSlider = document.getElementById('atmosphereIntensity');
+      const atmosphereValue = document.getElementById('atmosphereValue');
+      const rotateDelaySlider = document.getElementById('rotateDelay');
+      const rotateDelayValue = document.getElementById('rotateDelayValue');
+      const autoRotateCheck = document.getElementById('autoRotate');
+      const connectionsCheck = document.getElementById('showConnections');
+
+      cloudSlider.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        if (clouds) clouds.material.opacity = val;
+        cloudValue.textContent = Math.round(val * 100) + '%';
+      });
+
+      atmosphereSlider.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        if (atmosphere) atmosphere.material.uniforms.intensity.value = val;
+        atmosphereValue.textContent = Math.round(val * 100) + '%';
+      });
+
+      rotateDelaySlider.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value);
+        autoRotateDelay = val * 1000;
+        rotateDelayValue.textContent = val + 's';
+      });
+
+      autoRotateCheck.addEventListener('change', (e) => {
+        autoRotateEnabled = e.target.checked;
+        if (autoRotateEnabled) {
+          lastInteractionTime = Date.now();
+        } else {
+          controls.autoRotate = false;
+        }
+      });
+
+      connectionsCheck.addEventListener('change', (e) => {
+        setConnectionsVisible(e.target.checked);
+      });
+
+      // Set initial checkbox states
+      autoRotateCheck.checked = autoRotateEnabled;
+      connectionsCheck.checked = true;
+    }
+
+    // ============================================
+    // ANIMATION LOOP
+    // ============================================
+    let animTime = 0;
+
+    function animate() {
+      requestAnimationFrame(animate);
+      animTime += 0.016;
+
+      // Update auto-rotate state
+      updateAutoRotate();
+
+      controls.update();
+
+      // Rotate clouds slowly
+      if (clouds) {
+        clouds.rotation.y += 0.00008;
+      }
+
+      // Animate node pulses
+      nodeObjects.forEach((obj) => {
+        const pulseScale = 1 + 0.4 * Math.sin(animTime * 2 + obj.phase);
+        const pulseAlpha = 0.15 + 0.1 * Math.sin(animTime * 2 + obj.phase);
+
+        if (obj.pulse) {
+          obj.pulse.scale.setScalar(pulseScale);
+          obj.pulse.material.opacity = pulseAlpha;
+        }
+
+        if (obj.ring) {
+          obj.ring.material.opacity = 0.25 + 0.1 * Math.sin(animTime * 1.5 + obj.phase);
+        }
+      });
+
+      // Animate connection pulses
+      connectionObjects.forEach((conn) => {
+        const t = (animTime * 0.25 + conn.phase) % 1;
+        const point = conn.curve.getPoint(t);
+        conn.pulse.position.copy(point);
+        conn.pulse.material.opacity = 0.7 * Math.sin(t * Math.PI);
+      });
+
+      renderer.render(scene, camera);
+    }
+
+    // ============================================
+    // RESIZE HANDLER
+    // ============================================
+    function onResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    window.addEventListener('resize', onResize);
+
+    // ============================================
+    // INITIALIZATION
+    // ============================================
+    function notifyReady() {
+      console.log('[Globe] Ready!');
+      setupControls();
+      if (window.flutter_inappwebview) {
+        window.flutter_inappwebview.callHandler('onGlobeReady');
+      }
+    }
+
+    // Initialize
+    initScene();
+    addEventListeners();
+    createStars();
+    createGlobe();
+    animate();
+
+    // Fallback timeout
+    setTimeout(() => {
+      if (loading && !loading.classList.contains('hidden')) {
+        console.warn('[Globe] Texture load timeout, showing anyway');
+        loading.classList.add('hidden');
+        notifyReady();
+      }
+    }, 8000);
+  </script>
+</body>
+
+</html>
