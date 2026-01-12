@@ -2791,8 +2791,8 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
   }
 }
 
-// TODO(social): Re-enable when social features are restored
-// /// Widget to show linked social profile if a user has linked this node
+// Re-enable when social features are restored
+// Widget to show linked social profile if a user has linked this node
 // class _LinkedProfileSection extends ConsumerWidget {
 //   const _LinkedProfileSection({required this.nodeNum});
 //
