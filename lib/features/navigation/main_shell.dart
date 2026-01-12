@@ -418,6 +418,8 @@ class _MainShellState extends ConsumerState<MainShell> {
   /// Build drawer menu slivers with sticky section headers
   List<Widget> _buildDrawerMenuSlivers(BuildContext context, ThemeData theme) {
     final slivers = <Widget>[];
+    final isDark = theme.brightness == Brightness.dark;
+    final dividerAlpha = isDark ? 0.1 : 0.2;
 
     // Add top padding
     slivers.add(const SliverPadding(padding: EdgeInsets.only(top: 8)));
@@ -523,7 +525,9 @@ class _MainShellState extends ConsumerState<MainShell> {
                     Padding(
                       padding: const EdgeInsets.only(top: 4, bottom: 4),
                       child: Divider(
-                        color: theme.dividerColor.withValues(alpha: 0.1),
+                        color: theme.dividerColor.withValues(
+                          alpha: dividerAlpha,
+                        ),
                       ),
                     ),
                 ],
@@ -619,13 +623,10 @@ class _MainShellState extends ConsumerState<MainShell> {
         onTap: () {
           ref.haptics.tabChange();
           Navigator.of(context).pop();
-          // If not signed in, navigate to ProfileScreen to prompt sign-in
-          // Otherwise, navigate to Signals screen (user's social profile)
+          // Always navigate to ProfileScreen - to view/edit profile or sign in
           Navigator.of(context).push(
             MaterialPageRoute<void>(
-              builder: (context) => isSignedIn
-                  ? _drawerMenuItems[0].screen
-                  : const ProfileScreen(),
+              builder: (context) => const ProfileScreen(),
             ),
           );
         },
@@ -704,6 +705,8 @@ class _MainShellState extends ConsumerState<MainShell> {
 
   Widget _buildDrawer(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final dividerAlpha = isDark ? 0.1 : 0.2;
 
     return Drawer(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -722,7 +725,9 @@ class _MainShellState extends ConsumerState<MainShell> {
             // Divider after header
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Divider(color: theme.dividerColor.withValues(alpha: 0.1)),
+              child: Divider(
+                color: theme.dividerColor.withValues(alpha: dividerAlpha),
+              ),
             ),
 
             // Account section - inline so setState works
@@ -731,7 +736,9 @@ class _MainShellState extends ConsumerState<MainShell> {
             // Divider after account
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Divider(color: theme.dividerColor.withValues(alpha: 0.1)),
+              child: Divider(
+                color: theme.dividerColor.withValues(alpha: dividerAlpha),
+              ),
             ),
 
             // Menu items with sticky headers
@@ -760,7 +767,9 @@ class _MainShellState extends ConsumerState<MainShell> {
                         vertical: 8,
                       ),
                       child: Divider(
-                        color: theme.dividerColor.withValues(alpha: 0.1),
+                        color: theme.dividerColor.withValues(
+                          alpha: dividerAlpha,
+                        ),
                       ),
                     ),
                   ),
@@ -789,7 +798,9 @@ class _MainShellState extends ConsumerState<MainShell> {
             // Divider before theme toggle
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Divider(color: theme.dividerColor.withValues(alpha: 0.1)),
+              child: Divider(
+                color: theme.dividerColor.withValues(alpha: dividerAlpha),
+              ),
             ),
 
             // Theme toggle & Settings
@@ -900,7 +911,11 @@ class _MainShellState extends ConsumerState<MainShell> {
         decoration: BoxDecoration(
           color: theme.scaffoldBackgroundColor,
           border: Border(
-            top: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+            top: BorderSide(
+              color: theme.dividerColor.withValues(
+                alpha: theme.brightness == Brightness.dark ? 0.1 : 0.2,
+              ),
+            ),
           ),
           boxShadow: [
             BoxShadow(
@@ -1681,7 +1696,11 @@ class _DrawerAdminSection extends ConsumerWidget {
             // Divider after admin section
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Divider(color: theme.dividerColor.withValues(alpha: 0.1)),
+              child: Divider(
+                color: theme.dividerColor.withValues(
+                  alpha: theme.brightness == Brightness.dark ? 0.1 : 0.2,
+                ),
+              ),
             ),
           ],
         );

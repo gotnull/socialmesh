@@ -188,87 +188,68 @@ class SignalStrengthContentState extends ConsumerState<SignalStrengthContent> {
     final signalPercentage = _getSignalPercentage(rssi);
 
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       child: Row(
         children: [
           // 3D Percentage display - minimalistic version
-          Expanded(
-            flex: 2,
-            child: Flip3DPercentageMinimal(
-              value: signalPercentage,
-              label: 'SIGNAL',
-              color: signalColor,
-              size: Flip3DSize.medium,
-            ),
+          Flip3DPercentageMinimal(
+            value: signalPercentage,
+            label: 'SIGNAL',
+            color: signalColor,
+            size: Flip3DSize.medium,
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           // Signal stats column
           Expanded(
-            flex: 3,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
-                      transitionBuilder: (child, animation) {
-                        return FadeTransition(
-                          opacity: animation,
-                          child: SlideTransition(
-                            position: Tween<Offset>(
-                              begin: const Offset(0, 0.2),
-                              end: Offset.zero,
-                            ).animate(animation),
-                            child: child,
-                          ),
-                        );
-                      },
-                      child: Text(
-                        _getSignalQuality(rssi),
-                        key: ValueKey(_getSignalQuality(rssi)),
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: signalColor,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 4),
-                AnimatedContainer(
+                AnimatedSwitcher(
                   duration: const Duration(milliseconds: 300),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: context.background,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
+                  transitionBuilder: (child, animation) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0, 0.2),
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: child,
+                      ),
+                    );
+                  },
                   child: Text(
-                    '${rssi.toInt()} dBm',
+                    _getSignalQuality(rssi),
+                    key: ValueKey(_getSignalQuality(rssi)),
                     style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: context.textSecondary,
-                      fontFamily: AppTheme.fontFamily,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: signalColor,
                     ),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
+                Text(
+                  '${rssi.toInt()} dBm',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: context.textSecondary,
+                    fontFamily: AppTheme.fontFamily,
+                  ),
+                ),
+                const SizedBox(height: 6),
                 Row(
                   children: [
-                    _AnimatedStatChip(
+                    _CompactStatChip(
                       label: 'SNR',
                       value: snr,
                       unit: 'dB',
                       color: AppTheme.graphBlue,
                     ),
-                    const SizedBox(width: 8),
-                    _AnimatedStatChip(
-                      label: 'ChUtil',
+                    const SizedBox(width: 6),
+                    _CompactStatChip(
+                      label: 'Ch',
                       value: channelUtil,
                       unit: '%',
                       color: AppTheme.accentOrange,
@@ -300,14 +281,14 @@ class SignalStrengthContentState extends ConsumerState<SignalStrengthContent> {
   }
 }
 
-/// Animated stat chip with smooth value transitions
-class _AnimatedStatChip extends StatelessWidget {
+/// Compact stat chip - no dot indicator, tighter spacing
+class _CompactStatChip extends StatelessWidget {
   final String label;
   final double value;
   final String unit;
   final Color color;
 
-  const _AnimatedStatChip({
+  const _CompactStatChip({
     required this.label,
     required this.value,
     required this.unit,
@@ -316,40 +297,21 @@ class _AnimatedStatChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: value, end: value),
-      duration: const Duration(milliseconds: 400),
-      curve: Curves.easeOutCubic,
-      builder: (context, animatedValue, child) {
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                '$label: ${animatedValue.toStringAsFixed(1)} $unit',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: color,
-                  fontFamily: AppTheme.fontFamily,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        '$label ${value.toStringAsFixed(1)}$unit',
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: color,
+          fontFamily: AppTheme.fontFamily,
+        ),
+      ),
     );
   }
 }
