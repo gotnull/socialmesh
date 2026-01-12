@@ -15,6 +15,9 @@ import '../../../providers/signal_providers.dart';
 import '../../../providers/social_providers.dart';
 import '../../../utils/snackbar.dart';
 import '../widgets/signal_card.dart';
+import '../widgets/signal_skeleton.dart';
+import '../widgets/signals_empty_state.dart';
+import '../widgets/active_signals_banner.dart';
 import 'create_signal_screen.dart';
 import 'signal_detail_screen.dart';
 
@@ -186,23 +189,8 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
   }
 
   Widget _buildLoading() {
-    return Center(
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CircularProgressIndicator(
-              color: context.accentColor,
-              strokeWidth: 2,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Scanning for active signals...',
-              style: TextStyle(color: context.textSecondary, fontSize: 14),
-            ),
-          ],
-        ),
-      ),
+    return const SingleChildScrollView(
+      child: SignalListSkeleton(itemCount: 3),
     );
   }
 
@@ -219,95 +207,10 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
       blockedReason = 'Device not connected';
     }
 
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: context.card,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.sensors_off,
-                size: 48,
-                color: context.textTertiary,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'No active signals nearby',
-              style: TextStyle(
-                color: context.textPrimary,
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Nothing active here right now.\nWhen someone nearby goes active, it will appear here.',
-              style: TextStyle(color: context.textSecondary, fontSize: 14),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 32),
-            Tooltip(
-              message: blockedReason ?? '',
-              child: BouncyTap(
-                onTap: _openCreateSignal,
-                child: Builder(
-                  builder: (context) {
-                    final accentColor = context.accentColor;
-                    final gradient = LinearGradient(
-                      colors: [
-                        accentColor,
-                        Color.lerp(accentColor, Colors.white, 0.2)!,
-                      ],
-                    );
-                    return Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        gradient: canGoActive ? gradient : null,
-                        color: canGoActive
-                            ? null
-                            : context.border.withValues(alpha: 0.5),
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.sensors,
-                            color: canGoActive
-                                ? Colors.white
-                                : context.textTertiary,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Go Active',
-                            style: TextStyle(
-                              color: canGoActive
-                                  ? Colors.white
-                                  : context.textTertiary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+    return SignalsEmptyState(
+      canGoActive: canGoActive,
+      blockedReason: blockedReason,
+      onGoActive: _openCreateSignal,
     );
   }
 
@@ -319,42 +222,10 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
         controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
-          // Active count badge header
+          // Active count badge header with pulsing indicator
           if (feedState.signals.isNotEmpty)
             SliverToBoxAdapter(
-              child: Container(
-                margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: context.card,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: context.accentColor.withValues(alpha: 0.3),
-                    width: 1,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.radio_button_checked,
-                      size: 18,
-                      color: context.accentColor,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '${feedState.signals.length} ${feedState.signals.length == 1 ? "signal" : "signals"} active',
-                      style: TextStyle(
-                        color: context.accentColor,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              child: ActiveSignalsBanner(count: feedState.signals.length),
             ),
           // TTL info banner
           SliverToBoxAdapter(

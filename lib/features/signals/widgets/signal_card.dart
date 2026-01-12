@@ -9,6 +9,8 @@ import '../../../core/widgets/user_avatar.dart';
 import '../../../core/widgets/fullscreen_gallery.dart';
 import '../../../models/social.dart';
 import '../../../providers/app_providers.dart';
+import 'proximity_indicator.dart';
+import 'signal_ttl_footer.dart';
 
 /// Card widget for displaying a signal.
 ///
@@ -104,7 +106,7 @@ class SignalCard extends StatelessWidget {
               ),
 
             // Footer with TTL
-            _SignalFooter(signal: signal, onComment: onComment),
+            SignalTTLFooter(signal: signal, onComment: onComment),
           ],
         ),
       ),
@@ -180,35 +182,7 @@ class _SignalHeader extends ConsumerWidget {
                     ),
                     if (isMeshSignal) ...[
                       const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: context.accentColor.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.sensors,
-                              size: 10,
-                              color: context.accentColor,
-                            ),
-                            const SizedBox(width: 3),
-                            Text(
-                              'nearby',
-                              style: TextStyle(
-                                color: context.accentColor,
-                                fontSize: 9,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      ProximityBadge(hopCount: signal.hopCount),
                     ],
                   ],
                 ),
@@ -464,96 +438,5 @@ class _LocalImageFullscreen extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-/// Footer widget for signal cards showing TTL countdown and reply count.
-/// Countdown is computed from expiresAt on each build - no local timer needed.
-/// The parent provider ticks every second and triggers rebuilds.
-class _SignalFooter extends StatelessWidget {
-  const _SignalFooter({required this.signal, this.onComment});
-
-  final Post signal;
-  final VoidCallback? onComment;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          // TTL indicator
-          if (signal.expiresAt != null) ...[
-            Icon(
-              Icons.schedule,
-              size: 14,
-              color: _isExpiringSoon ? Colors.orange : context.textTertiary,
-            ),
-            const SizedBox(width: 4),
-            Text(
-              _expiresIn,
-              style: TextStyle(
-                color: _isExpiringSoon ? Colors.orange : context.textTertiary,
-                fontSize: 12,
-                fontWeight: _isExpiringSoon
-                    ? FontWeight.w600
-                    : FontWeight.normal,
-              ),
-            ),
-          ],
-
-          const Spacer(),
-
-          // Reply indicator - tappable to open replies
-          GestureDetector(
-            onTap: onComment,
-            behavior: HitTestBehavior.opaque,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.chat_bubble_outline,
-                    size: 14,
-                    color: onComment != null
-                        ? context.textSecondary
-                        : context.textTertiary,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${signal.commentCount}',
-                    style: TextStyle(
-                      color: onComment != null
-                          ? context.textSecondary
-                          : context.textTertiary,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  bool get _isExpiringSoon {
-    if (signal.expiresAt == null) return false;
-    final remaining = signal.expiresAt!.difference(DateTime.now());
-    return remaining.inMinutes < 5 && !remaining.isNegative;
-  }
-
-  String get _expiresIn {
-    if (signal.expiresAt == null) return '';
-
-    final remaining = signal.expiresAt!.difference(DateTime.now());
-
-    if (remaining.isNegative) return 'Faded';
-    if (remaining.inSeconds < 60) return 'Fades in ${remaining.inSeconds}s';
-    if (remaining.inMinutes < 60) return 'Fades in ${remaining.inMinutes}m';
-    if (remaining.inHours < 24) return 'Fades in ${remaining.inHours}h';
-    return 'Fades in ${remaining.inDays}d';
   }
 }
