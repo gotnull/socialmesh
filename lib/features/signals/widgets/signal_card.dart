@@ -180,10 +180,8 @@ class _SignalHeader extends ConsumerWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    if (isMeshSignal) ...[
-                      const SizedBox(width: 6),
-                      ProximityBadge(hopCount: signal.hopCount),
-                    ],
+                    const SizedBox(width: 6),
+                    ProximityBadge(hopCount: signal.hopCount),
                   ],
                 ),
                 const SizedBox(height: 2),
