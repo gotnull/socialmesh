@@ -20,32 +20,32 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background: #0a0a0f;
+      background: #000;
     }
 
-    /* Hide Cesium credits/logo for cleaner look */
-    .cesium-viewer-bottom {
+    /* Hide all Cesium UI */
+    .cesium-viewer-bottom,
+    .cesium-viewer-toolbar,
+    .cesium-viewer-animationContainer,
+    .cesium-viewer-timelineContainer,
+    .cesium-viewer-fullscreenContainer {
       display: none !important;
     }
 
-    .cesium-viewer-toolbar {
-      display: none !important;
-    }
-
-    /* Custom node tooltip */
+    /* Node tooltip */
     .node-tooltip {
       position: absolute;
-      background: rgba(0, 0, 0, 0.85);
-      border: 1px solid #42A5F5;
+      background: rgba(10, 10, 20, 0.95);
+      border: 1px solid var(--accent, #f97316);
       border-radius: 8px;
-      padding: 8px 12px;
+      padding: 10px 14px;
       color: white;
       font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
       font-size: 13px;
       pointer-events: none;
       z-index: 1000;
       display: none;
-      box-shadow: 0 0 15px rgba(66, 165, 245, 0.3);
+      box-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
     }
 
     .node-tooltip .name {
@@ -53,27 +53,10 @@
       margin-bottom: 4px;
     }
 
-    .node-tooltip .status {
-      display: flex;
-      align-items: center;
-      gap: 6px;
+    .node-tooltip .coords {
       font-size: 11px;
-      color: #aaa;
-    }
-
-    .node-tooltip .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-    }
-
-    .node-tooltip .status-dot.online {
-      background: #4ade80;
-      box-shadow: 0 0 8px #4ade80;
-    }
-
-    .node-tooltip .status-dot.offline {
-      background: #666;
+      color: #888;
+      font-family: 'SF Mono', monospace;
     }
   </style>
 </head>
@@ -83,23 +66,19 @@
   <div id="tooltip" class="node-tooltip"></div>
 
   <script>
-    // Logging helper
     function log(msg) {
       console.log('[CesiumGlobe] ' + msg);
     }
 
-    log('Script starting...');
-    log('Cesium object exists: ' + (typeof Cesium !== 'undefined'));
+    log('Initializing...');
 
-    // Use ion default access token (free tier) or no token for basic imagery
-    Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI0MTM2NTQ4Zi0wOTgzLTRhN2ItYjJmOS0xYzViODk0MDMxMjEiLCJpZCI6Mzc3NDI2LCJpYXQiOjE3NjgxODI1NzB9.RSX7GLtIFPbUBT6swRJncmUS5qvwzlnmXQxCh0-969A';
-    log('Ion token set');
+    // Disable Cesium Ion (we'll use free imagery)
+    Cesium.Ion.defaultAccessToken = undefined;
 
-    log('Creating viewer...');
     let viewer;
     try {
-      // Initialize viewer with dark theme
       viewer = new Cesium.Viewer('cesiumContainer', {
+        // Disable all UI
         baseLayerPicker: false,
         geocoder: false,
         homeButton: false,
@@ -111,334 +90,223 @@
         vrButton: false,
         infoBox: false,
         selectionIndicator: false,
-        shadows: false,
-        shouldAnimate: false,
-        // Enable lighting for day/night effect
-        requestRenderMode: true,
-        maximumRenderTimeChange: Infinity
+        creditContainer: document.createElement('div'), // Hide credits
+        // Use simple imagery - no Ion required
+        imageryProvider: new Cesium.OpenStreetMapImageryProvider({
+          url: 'https://tile.openstreetmap.org/'
+        }),
+        // Performance settings
+        requestRenderMode: false,
+        maximumRenderTimeChange: Infinity,
+        targetFrameRate: 60,
+        // Disable terrain for cleaner look
+        terrainProvider: undefined
       });
-      log('Viewer created successfully');
-      log('Globe exists: ' + (viewer.scene.globe !== null));
-      log('Scene mode: ' + viewer.scene.mode);
+      log('Viewer created');
     } catch (e) {
-      log('ERROR creating viewer: ' + e.message);
+      log('ERROR: ' + e.message);
       console.error(e);
     }
 
-    // Set up globe appearance
-    try {
-      log('Setting up globe appearance...');
-      // Dark atmosphere
-      viewer.scene.backgroundColor = Cesium.Color.fromCssColorString('#0a0a0f');
-      log('Background color set');
+    // Configure scene for dark space look
+    const scene = viewer.scene;
+    const globe = scene.globe;
 
-      viewer.scene.globe.baseColor = Cesium.Color.fromCssColorString('#1a1a2e');
-      log('Globe base color set');
+    // Black space background
+    scene.backgroundColor = Cesium.Color.BLACK;
+    scene.skyBox = undefined;
+    scene.sun = undefined;
+    scene.moon = undefined;
+    scene.skyAtmosphere.show = false;
 
-      // Enable lighting
-      viewer.scene.globe.enableLighting = true;
-      log('Lighting enabled');
+    // Globe settings - NO lighting (causes ugly shadows)
+    globe.enableLighting = false;
+    globe.showGroundAtmosphere = false;
+    globe.baseColor = Cesium.Color.fromCssColorString('#1a1a2e');
 
-      // Check if globe is rendering
-      log('Globe show: ' + viewer.scene.globe.show);
-      log('Globe tile load progress: ' + viewer.scene.globe.tilesLoaded);
+    // Disable depth testing for markers (always visible)
+    scene.globe.depthTestAgainstTerrain = false;
 
-    } catch (e) {
-      log('ERROR setting up globe: ' + e.message);
-      console.error(e);
-    }
+    // Initial camera position - looking at Earth from space
+    viewer.camera.setView({
+      destination: Cesium.Cartesian3.fromDegrees(145, -37, 15000000),
+      orientation: {
+        heading: 0,
+        pitch: Cesium.Math.toRadians(-90),
+        roll: 0
+      }
+    });
 
-    // Smoother camera controls
-    try {
-      log('Setting up camera controls...');
-      viewer.scene.screenSpaceCameraController.zoomEventTypes = [
-        Cesium.CameraEventType.WHEEL,
-        Cesium.CameraEventType.PINCH
-      ];
-      viewer.scene.screenSpaceCameraController.tiltEventTypes = [
-        Cesium.CameraEventType.PINCH,
-        {
-          eventType: Cesium.CameraEventType.LEFT_DRAG,
-          modifier: Cesium.KeyboardEventModifier.CTRL
-        },
-        {
-          eventType: Cesium.CameraEventType.RIGHT_DRAG
-        }
-      ];
-      log('Camera controls configured');
-    } catch (e) {
-      log('ERROR setting up camera: ' + e.message);
-    }
+    log('Scene configured');
 
-    // Add imagery layer explicitly
-    try {
-      log('Adding imagery layer...');
-      // Use OpenStreetMap as fallback (no token needed)
-      const osmProvider = new Cesium.OpenStreetMapImageryProvider({
-        url: 'https://tile.openstreetmap.org/'
-      });
-      viewer.imageryLayers.addImageryProvider(osmProvider);
-      log('OSM imagery layer added');
-      log('Imagery layers count: ' + viewer.imageryLayers.length);
-    } catch (e) {
-      log('ERROR adding imagery: ' + e.message);
-      console.error(e);
-    }
-
-    // Force a render
-    try {
-      log('Requesting render...');
-      viewer.scene.requestRender();
-      log('Render requested');
-    } catch (e) {
-      log('ERROR requesting render: ' + e.message);
-    }
-
-    // Store nodes and connections
+    // Data storage
     let nodes = {};
-    let connections = [];
     let connectionEntities = [];
+    let accentColor = '#f97316';
     const tooltip = document.getElementById('tooltip');
 
-    // Accent color (will be overridden by Flutter)
-    let accentColor = '#42A5F5';
-
-    // Convert lat/lng to Cesium Cartesian3
-    function toCartesian(lat, lng, height = 0) {
-      return Cesium.Cartesian3.fromDegrees(lng, lat, height);
+    // Helper to create position
+    function toPosition(lat, lng, altitudeKm = 50) {
+      return Cesium.Cartesian3.fromDegrees(lng, lat, altitudeKm * 1000);
     }
 
-    // Create node marker billboard
+    // Create a node marker
     function createNodeMarker(node) {
-      const color = node.avatarColor || accentColor;
-      const isOnline = node.isOnline;
+      const color = Cesium.Color.fromCssColorString(node.avatarColor || accentColor);
+      const name = node.shortName || node.longName || '!' + node.nodeNum.toString(16).slice(-4);
 
-      // Create a point with glow effect
       return viewer.entities.add({
         id: 'node_' + node.nodeNum,
-        position: toCartesian(node.latitude, node.longitude, 100),
+        position: toPosition(node.latitude, node.longitude, 10),
         point: {
-          pixelSize: 12,
-          color: Cesium.Color.fromCssColorString(color),
+          pixelSize: 10,
+          color: color,
           outlineColor: Cesium.Color.WHITE,
           outlineWidth: 2,
-          heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
-          disableDepthTestDistance: Number.POSITIVE_INFINITY,
-          scaleByDistance: new Cesium.NearFarScalar(1000, 1.5, 5000000, 0.5)
+          disableDepthTestDistance: Number.POSITIVE_INFINITY
         },
         label: {
-          text: node.shortName || node.longName || '!' + node.nodeNum.toString(16),
-          font: '13px -apple-system, BlinkMacSystemFont, SF Pro Display, sans-serif',
+          text: name,
+          font: 'bold 12px -apple-system, sans-serif',
           fillColor: Cesium.Color.WHITE,
           outlineColor: Cesium.Color.BLACK,
-          outlineWidth: 2,
+          outlineWidth: 3,
           style: Cesium.LabelStyle.FILL_AND_OUTLINE,
           verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-          pixelOffset: new Cesium.Cartesian2(0, -20),
-          heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
+          pixelOffset: new Cesium.Cartesian2(0, -16),
           disableDepthTestDistance: Number.POSITIVE_INFINITY,
-          scaleByDistance: new Cesium.NearFarScalar(1000, 1.0, 2000000, 0.3),
-          distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 5000000)
+          scaleByDistance: new Cesium.NearFarScalar(500000, 1.2, 10000000, 0.4)
         },
-        properties: {
-          nodeData: node
-        }
+        properties: { nodeData: node }
       });
     }
 
-    // Create connection line between two nodes
-    function createConnection(fromNode, toNode) {
-      const color = Cesium.Color.fromCssColorString(accentColor).withAlpha(0.4);
+    // Create connection line
+    function createConnection(from, to) {
+      const color = Cesium.Color.fromCssColorString(accentColor).withAlpha(0.3);
 
       return viewer.entities.add({
         polyline: {
           positions: [
-            toCartesian(fromNode.latitude, fromNode.longitude, 50),
-            toCartesian(toNode.latitude, toNode.longitude, 50)
+            toPosition(from.latitude, from.longitude, 5),
+            toPosition(to.latitude, to.longitude, 5)
           ],
-          width: 1.5,
-          material: new Cesium.PolylineDashMaterialProperty({
-            color: color,
-            dashLength: 16.0
-          }),
-          clampToGround: false
+          width: 1,
+          material: color
         }
       });
     }
 
-    // Add/update nodes
+    // Set all nodes
     function setNodes(nodeList, showConnections = true) {
-      log('setNodes called with ' + nodeList.length + ' nodes, showConnections=' + showConnections);
-      // Clear existing
+      log('setNodes: ' + nodeList.length + ' nodes');
+
       viewer.entities.removeAll();
       nodes = {};
       connectionEntities = [];
 
-      // Add nodes
-      nodeList.forEach(node => {
-        if (node.latitude && node.longitude) {
-          nodes[node.nodeNum] = node;
-          createNodeMarker(node);
-          log('Added node: ' + (node.shortName || node.nodeNum) + ' at ' + node.latitude + ',' + node.longitude);
+      // Add node markers
+      nodeList.forEach(n => {
+        if (n.latitude && n.longitude) {
+          nodes[n.nodeNum] = n;
+          createNodeMarker(n);
         }
       });
 
-      // Add connections between all nodes
+      // Add connections
       if (showConnections) {
-        const nodeArray = Object.values(nodes);
-        for (let i = 0; i < nodeArray.length - 1; i++) {
-          for (let j = i + 1; j < nodeArray.length; j++) {
-            const entity = createConnection(nodeArray[i], nodeArray[j]);
-            connectionEntities.push(entity);
+        const arr = Object.values(nodes);
+        for (let i = 0; i < arr.length - 1; i++) {
+          for (let j = i + 1; j < arr.length; j++) {
+            connectionEntities.push(createConnection(arr[i], arr[j]));
           }
         }
         log('Added ' + connectionEntities.length + ' connections');
       }
 
-      viewer.scene.requestRender();
-      log('Render requested after setNodes');
+      // Zoom to nodes if we have any
+      if (Object.keys(nodes).length > 0) {
+        const firstNode = Object.values(nodes)[0];
+        viewer.camera.flyTo({
+          destination: Cesium.Cartesian3.fromDegrees(firstNode.longitude, firstNode.latitude, 2000000),
+          duration: 2.0
+        });
+      }
     }
 
-    // Fly to specific coordinates
-    function flyTo(latitude, longitude, height = 2000000, duration = 2.0) {
-      log('flyTo: lat=' + latitude + ', lng=' + longitude + ', height=' + height + ', duration=' + duration);
+    function flyTo(lat, lng, height = 2000000, duration = 2.0) {
+      log('flyTo: ' + lat + ', ' + lng);
       viewer.camera.flyTo({
-        destination: toCartesian(latitude, longitude, height),
-        orientation: {
-          heading: Cesium.Math.toRadians(0),
-          pitch: Cesium.Math.toRadians(-90),
-          roll: 0
-        },
+        destination: Cesium.Cartesian3.fromDegrees(lng, lat, height),
         duration: duration
       });
     }
 
-    // Fly to node
     function flyToNode(nodeNum) {
-      log('flyToNode: ' + nodeNum);
       const node = nodes[nodeNum];
       if (node) {
         viewer.camera.flyTo({
-          destination: toCartesian(node.latitude, node.longitude, 50000),
-          orientation: {
-            heading: Cesium.Math.toRadians(0),
-            pitch: Cesium.Math.toRadians(-45),
-            roll: 0
-          },
+          destination: Cesium.Cartesian3.fromDegrees(node.longitude, node.latitude, 100000),
           duration: 1.5
         });
-      } else {
-        log('Node not found: ' + nodeNum);
       }
     }
 
-    // Reset view
     function resetView() {
-      log('resetView called');
       viewer.camera.flyTo({
-        destination: Cesium.Cartesian3.fromDegrees(0, 20, 20000000),
-        orientation: {
-          heading: 0,
-          pitch: Cesium.Math.toRadians(-90),
-          roll: 0
-        },
+        destination: Cesium.Cartesian3.fromDegrees(0, 0, 20000000),
         duration: 1.5
       });
     }
 
-    // Set accent color
     function setAccentColor(color) {
       log('setAccentColor: ' + color);
       accentColor = color;
+      document.documentElement.style.setProperty('--accent', color);
     }
 
-    // Toggle connections visibility
     function setConnectionsVisible(visible) {
-      log('setConnectionsVisible: ' + visible);
-      connectionEntities.forEach(entity => {
-        entity.show = visible;
-      });
-      viewer.scene.requestRender();
+      connectionEntities.forEach(e => e.show = visible);
     }
 
-    // Handle node click
-    const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+    // Click handler
+    const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
 
     handler.setInputAction(function (click) {
-      const pickedObject = viewer.scene.pick(click.position);
-      if (Cesium.defined(pickedObject) && Cesium.defined(pickedObject.id)) {
-        const entity = pickedObject.id;
-        if (entity.properties && entity.properties.nodeData) {
-          const node = entity.properties.nodeData.getValue();
-          // Send to Flutter
-          if (window.flutter_inappwebview) {
-            window.flutter_inappwebview.callHandler('onNodeSelected', JSON.stringify(node));
-          }
+      const picked = scene.pick(click.position);
+      if (Cesium.defined(picked) && picked.id && picked.id.properties) {
+        const node = picked.id.properties.nodeData.getValue();
+        if (window.flutter_inappwebview) {
+          window.flutter_inappwebview.callHandler('onNodeSelected', JSON.stringify(node));
         }
       }
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-    // Handle hover for tooltip
+    // Hover tooltip
     handler.setInputAction(function (movement) {
-      const pickedObject = viewer.scene.pick(movement.endPosition);
-      if (Cesium.defined(pickedObject) && Cesium.defined(pickedObject.id)) {
-        const entity = pickedObject.id;
-        if (entity.properties && entity.properties.nodeData) {
-          const node = entity.properties.nodeData.getValue();
-          tooltip.innerHTML = `
-            <div class="name">${node.longName || node.shortName || '!' + node.nodeNum.toString(16)}</div>
-            <div class="status">
-              <span class="status-dot ${node.isOnline ? 'online' : 'offline'}"></span>
-              ${node.isOnline ? 'Online' : 'Offline'}
-            </div>
-          `;
-          tooltip.style.left = (movement.endPosition.x + 15) + 'px';
-          tooltip.style.top = (movement.endPosition.y + 15) + 'px';
-          tooltip.style.display = 'block';
-          document.body.style.cursor = 'pointer';
-        } else {
-          tooltip.style.display = 'none';
-          document.body.style.cursor = 'default';
-        }
+      const picked = scene.pick(movement.endPosition);
+      if (Cesium.defined(picked) && picked.id && picked.id.properties) {
+        const node = picked.id.properties.nodeData.getValue();
+        tooltip.innerHTML = `
+          <div class="name">${node.longName || node.shortName || 'Node'}</div>
+          <div class="coords">${node.latitude.toFixed(4)}, ${node.longitude.toFixed(4)}</div>
+        `;
+        tooltip.style.left = (movement.endPosition.x + 15) + 'px';
+        tooltip.style.top = (movement.endPosition.y - 10) + 'px';
+        tooltip.style.display = 'block';
+        document.body.style.cursor = 'pointer';
       } else {
         tooltip.style.display = 'none';
         document.body.style.cursor = 'default';
       }
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
-    // Notify Flutter when ready
+    // Notify Flutter
     window.onload = function () {
-      log('window.onload fired');
-      log('flutter_inappwebview exists: ' + (typeof window.flutter_inappwebview !== 'undefined'));
-
-      // Log globe state
-      log('Final globe state check:');
-      log('  - viewer exists: ' + (typeof viewer !== 'undefined'));
-      if (viewer) {
-        log('  - scene exists: ' + (viewer.scene !== null));
-        log('  - globe exists: ' + (viewer.scene.globe !== null));
-        log('  - globe.show: ' + viewer.scene.globe.show);
-        log('  - camera position: ' + viewer.camera.positionCartographic);
-        log('  - imagery layers: ' + viewer.imageryLayers.length);
-      }
-
+      log('Ready');
       if (window.flutter_inappwebview) {
-        log('Calling onGlobeReady handler...');
         window.flutter_inappwebview.callHandler('onGlobeReady');
-      } else {
-        log('WARNING: flutter_inappwebview not available');
       }
-    };
-
-    // Also try DOMContentLoaded
-    document.addEventListener('DOMContentLoaded', function () {
-      log('DOMContentLoaded fired');
-    });
-
-    // Error handler
-    window.onerror = function (msg, url, lineNo, columnNo, error) {
-      log('GLOBAL ERROR: ' + msg + ' at line ' + lineNo);
-      return false;
     };
   </script>
 </body>
