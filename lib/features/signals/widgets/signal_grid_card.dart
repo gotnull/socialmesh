@@ -266,23 +266,23 @@ class SignalGridCard extends ConsumerWidget {
   Widget _buildImageBackground() {
     final hasCloudImage = signal.mediaUrls.isNotEmpty;
 
+    // No ClipRRect needed - parent Container has clipBehavior: Clip.antiAlias
+    // Use width/height: double.infinity to ensure image fills the space
     if (hasCloudImage) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Image.network(
-          signal.mediaUrls.first,
-          fit: BoxFit.cover,
-          errorBuilder: (ctx, error, stack) => _buildPlaceholder(ctx),
-        ),
+      return Image.network(
+        signal.mediaUrls.first,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        errorBuilder: (ctx, error, stack) => _buildPlaceholder(ctx),
       );
     } else if (signal.imageLocalPath != null) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Image.file(
-          File(signal.imageLocalPath!),
-          fit: BoxFit.cover,
-          errorBuilder: (ctx, error, stack) => _buildPlaceholder(ctx),
-        ),
+      return Image.file(
+        File(signal.imageLocalPath!),
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        errorBuilder: (ctx, error, stack) => _buildPlaceholder(ctx),
       );
     }
     return _buildPlaceholder(null);
