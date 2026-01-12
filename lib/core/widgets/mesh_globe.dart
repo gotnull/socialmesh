@@ -77,7 +77,7 @@ class MeshGlobeState extends State<MeshGlobe> {
   @override
   void initState() {
     super.initState();
-    AppLogging.app(
+    AppLogging.map(
       '[MeshGlobe] initState - enabled=${widget.enabled}, nodes=${widget.nodes.length}',
     );
   }
@@ -85,12 +85,12 @@ class MeshGlobeState extends State<MeshGlobe> {
   @override
   void didUpdateWidget(MeshGlobe oldWidget) {
     super.didUpdateWidget(oldWidget);
-    AppLogging.app('[MeshGlobe] didUpdateWidget - isReady=$_isReady');
+    AppLogging.map('[MeshGlobe] didUpdateWidget - isReady=$_isReady');
 
     // Check if nodes changed
     if (!_listEquals(widget.nodes, oldWidget.nodes) ||
         widget.showConnections != oldWidget.showConnections) {
-      AppLogging.app('[MeshGlobe] Nodes or connections changed');
+      AppLogging.map('[MeshGlobe] Nodes or connections changed');
       if (_isReady) {
         _updateNodes();
       }
@@ -107,13 +107,13 @@ class MeshGlobeState extends State<MeshGlobe> {
   }
 
   Future<void> _updateNodes() async {
-    AppLogging.app(
+    AppLogging.map(
       '[MeshGlobe] _updateNodes - controller=${_webViewController != null}, ready=$_isReady',
     );
     if (_webViewController == null || !_isReady) return;
 
     final nodesWithPos = widget.nodes.where((n) => n.hasPosition).toList();
-    AppLogging.app(
+    AppLogging.map(
       '[MeshGlobe] Sending ${nodesWithPos.length} nodes with position',
     );
 
@@ -134,7 +134,7 @@ class MeshGlobeState extends State<MeshGlobe> {
         .toList();
 
     final js = 'setNodes(${jsonEncode(nodesJson)}, ${widget.showConnections});';
-    AppLogging.app(
+    AppLogging.map(
       '[MeshGlobe] Executing JS: setNodes with ${nodesJson.length} nodes',
     );
     await _webViewController?.evaluateJavascript(source: js);
@@ -182,7 +182,7 @@ class MeshGlobeState extends State<MeshGlobe> {
   }
 
   void _onGlobeReady() {
-    AppLogging.app('[MeshGlobe] _onGlobeReady called!');
+    AppLogging.map('[MeshGlobe] _onGlobeReady called!');
     setState(() {
       _isReady = true;
       _isLoading = false;
@@ -191,18 +191,18 @@ class MeshGlobeState extends State<MeshGlobe> {
     // Set accent color
     final colorHex =
         '#${widget.markerColor.value.toRadixString(16).padLeft(8, '0').substring(2)}';
-    AppLogging.app('[MeshGlobe] Setting accent color: $colorHex');
+    AppLogging.map('[MeshGlobe] Setting accent color: $colorHex');
     _webViewController?.evaluateJavascript(
       source: 'setAccentColor("$colorHex");',
     );
 
     // Send pending nodes
-    AppLogging.app('[MeshGlobe] Calling _updateNodes');
+    AppLogging.map('[MeshGlobe] Calling _updateNodes');
     _updateNodes();
 
     // Fly to initial location if provided
     if (widget.initialLatitude != null && widget.initialLongitude != null) {
-      AppLogging.app(
+      AppLogging.map(
         '[MeshGlobe] Flying to initial location: ${widget.initialLatitude}, ${widget.initialLongitude}',
       );
       Future.delayed(const Duration(milliseconds: 500), () {
@@ -229,7 +229,7 @@ class MeshGlobeState extends State<MeshGlobe> {
       HapticFeedback.selectionClick();
       widget.onNodeSelected?.call(node);
     } catch (e) {
-      AppLogging.app('Error parsing node selection: $e');
+      AppLogging.map('Error parsing node selection: $e');
     }
   }
 
@@ -257,14 +257,14 @@ class MeshGlobeState extends State<MeshGlobe> {
             allowUniversalAccessFromFileURLs: true,
           ),
           onWebViewCreated: (controller) {
-            AppLogging.app('[MeshGlobe] onWebViewCreated');
+            AppLogging.map('[MeshGlobe] onWebViewCreated');
             _webViewController = controller;
 
             // Register handlers for communication from JS
             controller.addJavaScriptHandler(
               handlerName: 'onGlobeReady',
               callback: (args) {
-                AppLogging.app('[MeshGlobe] JS handler onGlobeReady received');
+                AppLogging.map('[MeshGlobe] JS handler onGlobeReady received');
                 _onGlobeReady();
                 return null;
               },
@@ -273,7 +273,7 @@ class MeshGlobeState extends State<MeshGlobe> {
             controller.addJavaScriptHandler(
               handlerName: 'onNodeSelected',
               callback: (args) {
-                AppLogging.app('[MeshGlobe] JS handler onNodeSelected: $args');
+                AppLogging.map('[MeshGlobe] JS handler onNodeSelected: $args');
                 if (args.isNotEmpty) {
                   _onNodeSelected(args[0] as String);
                 }
@@ -282,14 +282,14 @@ class MeshGlobeState extends State<MeshGlobe> {
             );
           },
           onLoadStart: (controller, url) {
-            AppLogging.app('[MeshGlobe] onLoadStart: $url');
+            AppLogging.map('[MeshGlobe] onLoadStart: $url');
           },
           onLoadStop: (controller, url) {
-            AppLogging.app('[MeshGlobe] onLoadStop: $url');
+            AppLogging.map('[MeshGlobe] onLoadStop: $url');
             // Fallback if onGlobeReady not called
             Future.delayed(const Duration(seconds: 3), () {
               if (!_isReady && mounted) {
-                AppLogging.app(
+                AppLogging.map(
                   '[MeshGlobe] Fallback: calling _onGlobeReady after timeout',
                 );
                 _onGlobeReady();
@@ -297,17 +297,17 @@ class MeshGlobeState extends State<MeshGlobe> {
             });
           },
           onLoadError: (controller, url, code, message) {
-            AppLogging.app(
+            AppLogging.map(
               '[MeshGlobe] onLoadError: code=$code, message=$message, url=$url',
             );
           },
           onReceivedError: (controller, request, error) {
-            AppLogging.app(
+            AppLogging.map(
               '[MeshGlobe] onReceivedError: ${error.description} for ${request.url}',
             );
           },
           onConsoleMessage: (controller, message) {
-            AppLogging.app('[MeshGlobe/JS] ${message.message}');
+            AppLogging.map('[MeshGlobe/JS] ${message.message}');
           },
         ),
 

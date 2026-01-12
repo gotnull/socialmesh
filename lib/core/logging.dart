@@ -23,6 +23,7 @@ String? _safeGetEnv(String key) {
 /// Centralized logging configuration
 class AppLogging {
   static bool? _bleLoggingEnabled;
+  static bool? _mapLoggingEnabled;
   static bool? _protocolLoggingEnabled;
   static bool? _widgetBuilderLoggingEnabled;
   static bool? _liveActivityLoggingEnabled;
@@ -49,12 +50,19 @@ class AppLogging {
   static bool? _marketplaceLoggingEnabled;
   static bool? _qrLoggingEnabled;
   static Logger? _bleLogger;
+  static Logger? _mapLogger;
   static Logger? _noOpLogger;
 
   static bool get bleLoggingEnabled {
     _bleLoggingEnabled ??=
         _safeGetEnv('BLE_LOGGING_ENABLED')?.toLowerCase() != 'false';
     return _bleLoggingEnabled!;
+  }
+
+  static bool get mapLoggingEnabled {
+    _mapLoggingEnabled ??=
+        _safeGetEnv('MAP_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    return _mapLoggingEnabled!;
   }
 
   static bool get protocolLoggingEnabled {
@@ -221,6 +229,22 @@ class AppLogging {
 
   static void ble(String message) {
     if (bleLoggingEnabled) debugPrint('📱 BLE: $message');
+  }
+
+  static Logger get mapLogger {
+    if (mapLoggingEnabled) {
+      _mapLogger ??= Logger(
+        printer: PrettyPrinter(methodCount: 0, printEmojis: false),
+      );
+      return _mapLogger!;
+    } else {
+      _noOpLogger ??= Logger(output: _NoOpOutput());
+      return _noOpLogger!;
+    }
+  }
+
+  static void map(String message) {
+    if (mapLoggingEnabled) debugPrint('🗺️ MAP: $message');
   }
 
   static void protocol(String message) {

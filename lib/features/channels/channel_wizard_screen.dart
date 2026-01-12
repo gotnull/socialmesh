@@ -10,15 +10,77 @@ import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/channel_key_field.dart';
-import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
-import '../../providers/help_providers.dart';
 import '../../utils/encoding.dart';
 import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/channel.pb.dart' as channel_pb;
 import '../../generated/meshtastic/channel.pbenum.dart' as channel_pbenum;
+
+/// Step-specific help content for the channel wizard
+class _WizardStepHelp {
+  final String title;
+  final String content;
+  final IconData icon;
+  final Color color;
+
+  const _WizardStepHelp({
+    required this.title,
+    required this.content,
+    required this.icon,
+    required this.color,
+  });
+
+  static const List<_WizardStepHelp> steps = [
+    _WizardStepHelp(
+      title: 'Channel Name',
+      icon: Icons.edit,
+      color: AppTheme.primaryBlue,
+      content:
+          'Choose a memorable name for your channel.\n\n'
+          '• Names are limited to 12 characters\n'
+          '• Only letters and numbers allowed\n'
+          '• The name is visible to anyone who joins\n'
+          '• Pick something descriptive like "Family" or "Hiking"',
+    ),
+    _WizardStepHelp(
+      title: 'Privacy Level',
+      icon: Icons.security,
+      color: AppTheme.primaryPurple,
+      content:
+          'Select how secure your channel should be.\n\n'
+          '• OPEN: No encryption - anyone can read messages\n'
+          '• SHARED: Uses the default Meshtastic key - not private\n'
+          '• PRIVATE (Recommended): Unique AES-128 key - secure\n'
+          '• MAXIMUM: AES-256 encryption - highest security\n\n'
+          'Higher security requires sharing your channel key with others.',
+    ),
+    _WizardStepHelp(
+      title: 'Advanced Options',
+      icon: Icons.tune,
+      color: AppTheme.primaryBlue,
+      content:
+          'Configure optional channel settings.\n\n'
+          '• Position Sharing: Allow location sharing on this channel\n'
+          '• MQTT Uplink: Send messages to the internet (requires MQTT setup)\n'
+          '• MQTT Downlink: Receive messages from the internet\n'
+          '• Encryption Key: Auto-generated, but you can paste a custom key\n\n'
+          'Most users can skip these advanced options.',
+    ),
+    _WizardStepHelp(
+      title: 'Review & Create',
+      icon: Icons.check_circle,
+      color: AppTheme.successGreen,
+      content:
+          'Review your channel settings before creating.\n\n'
+          '• Verify the name and privacy level are correct\n'
+          '• After creation, share the QR code with others\n'
+          '• Others scan the QR code to join your channel\n'
+          '• You can also copy the URL to share via text',
+    ),
+  ];
+}
 
 /// Key size options with security explanations
 enum WizardKeySize {
@@ -121,11 +183,9 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
 
   // Step 1: Name
   final _nameController = TextEditingController();
-  final _nameFieldKey = GlobalKey();
 
   // Step 2: Privacy level
   PrivacyLevel _privacyLevel = PrivacyLevel.private;
-  final _privacyFieldKey = GlobalKey();
 
   // Step 3: Advanced options (optional)
   bool _uplinkEnabled = false;
@@ -134,7 +194,6 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
 
   // Key management
   List<int> _generatedKey = [];
-  final _keyFieldKey = GlobalKey();
 
   // Saving state
   bool _isSaving = false;
@@ -178,8 +237,6 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
-      // Sync help to the new page's step
-      _syncHelpToPage(_currentStep);
     }
   }
 
@@ -192,32 +249,65 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
-      // Sync help to the new page's step
-      _syncHelpToPage(_currentStep);
     }
   }
 
-  /// Map wizard page index to help step ID and sync
-  void _syncHelpToPage(int pageIndex) {
-    final helpState = ref.read(helpProvider);
-    if (helpState.activeTourId != 'channel_creation') return;
-
-    // Map wizard pages to help step IDs:
-    // Page 0 (Name) -> 'channel_name'
-    // Page 1 (Privacy) -> 'privacy_level'
-    // Page 2 (Options) -> 'encryption_key'
-    // Page 3 (Complete) -> 'channel_complete'
-    const pageToStepId = {
-      0: 'channel_name',
-      1: 'privacy_level',
-      2: 'encryption_key',
-      3: 'channel_complete',
-    };
-
-    final stepId = pageToStepId[pageIndex];
-    if (stepId != null) {
-      ref.read(helpProvider.notifier).goToStepById(stepId);
-    }
+  void _showStepHelp() {
+    final stepHelp = _WizardStepHelp.steps[_currentStep];
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: context.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: stepHelp.color.withAlpha(51),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(stepHelp.icon, color: stepHelp.color),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text(
+                      stepHelp.title,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: context.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.close, color: context.textSecondary),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Text(
+                stepHelp.content,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: context.textSecondary,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _saveChannel() async {
@@ -295,51 +385,48 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final stepHelp = _WizardStepHelp.steps[_currentStep];
 
-    return HelpTourController(
-      topicId: 'channel_creation',
-      stepKeys: {
-        'channel_name': _nameFieldKey,
-        'privacy_level': _privacyFieldKey,
-        'encryption_key': _keyFieldKey,
-      },
-      child: Scaffold(
-        backgroundColor: context.background,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          title: const Text('Create Channel'),
-          leading: IconButton(
-            icon: const Icon(Icons.close),
-            onPressed: () => Navigator.pop(context),
-          ),
-          actions: [
-            IcoHelpAppBarButton(topicId: 'channel_creation', autoTrigger: true),
-          ],
+    return Scaffold(
+      backgroundColor: context.background,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        title: const Text('Create Channel'),
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => Navigator.pop(context),
         ),
-        body: GestureDetector(
-          onTap: () => FocusScope.of(context).unfocus(),
-          behavior: HitTestBehavior.opaque,
-          child: Column(
-            children: [
-              // Progress indicator
-              _buildProgressIndicator(),
-              // Page content
-              Expanded(
-                child: PageView(
-                  controller: _pageController,
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: [
-                    _buildNameStep(theme),
-                    _buildPrivacyStep(theme),
-                    _buildOptionsStep(theme),
-                    _buildCompleteStep(theme),
-                  ],
-                ),
-              ),
-              // Navigation buttons
-              if (!_saveComplete) _buildNavigationButtons(),
-            ],
+        actions: [
+          IconButton(
+            icon: Icon(stepHelp.icon, color: stepHelp.color),
+            onPressed: _showStepHelp,
+            tooltip: 'Help',
           ),
+        ],
+      ),
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          children: [
+            // Progress indicator
+            _buildProgressIndicator(),
+            // Page content
+            Expanded(
+              child: PageView(
+                controller: _pageController,
+                physics: const NeverScrollableScrollPhysics(),
+                children: [
+                  _buildNameStep(theme),
+                  _buildPrivacyStep(theme),
+                  _buildOptionsStep(theme),
+                  _buildCompleteStep(theme),
+                ],
+              ),
+            ),
+            // Navigation buttons
+            if (!_saveComplete) _buildNavigationButtons(),
+          ],
         ),
       ),
     );
@@ -419,64 +506,35 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
             ),
           ),
           SizedBox(height: 32),
-          IcoHighlightedField(
-            key: _nameFieldKey,
-            topicId: 'channel_creation',
-            stepId: 'channel_name',
-            builder: (context, isHighlighted, animation) => TextField(
-              controller: _nameController,
-              style: TextStyle(color: context.textPrimary),
-              maxLength: 12,
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
-              ],
-              decoration: InputDecoration(
-                labelText: 'Channel Name',
-                labelStyle: TextStyle(color: context.textSecondary),
-                hintText: 'e.g., Family, Friends, Hiking',
-                hintStyle: TextStyle(
-                  color: context.textSecondary.withAlpha(128),
-                ),
-                filled: true,
-                fillColor: context.surface,
-                // Apply animated border to BOTH enabled and focused when highlighted
-                border: isHighlighted
-                    ? AnimatedDottedInputBorder(
-                        animation: animation,
-                        color: AppTheme.primaryMagenta,
-                        borderRadius: 12,
-                      )
-                    : OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                enabledBorder: isHighlighted
-                    ? AnimatedDottedInputBorder(
-                        animation: animation,
-                        color: AppTheme.primaryMagenta,
-                        borderRadius: 12,
-                      )
-                    : OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                focusedBorder: isHighlighted
-                    ? AnimatedDottedInputBorder(
-                        animation: animation,
-                        color: AppTheme.primaryMagenta,
-                        borderRadius: 12,
-                      )
-                    : OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: context.accentColor,
-                          width: 2,
-                        ),
-                      ),
-                counterStyle: TextStyle(color: context.textSecondary),
+          TextField(
+            controller: _nameController,
+            style: TextStyle(color: context.textPrimary),
+            maxLength: 12,
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
+            ],
+            decoration: InputDecoration(
+              labelText: 'Channel Name',
+              labelStyle: TextStyle(color: context.textSecondary),
+              hintText: 'e.g., Family, Friends, Hiking',
+              hintStyle: TextStyle(color: context.textSecondary.withAlpha(128)),
+              filled: true,
+              fillColor: context.surface,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
               ),
-              onChanged: (_) => setState(() {}),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: context.accentColor, width: 2),
+              ),
+              counterStyle: TextStyle(color: context.textSecondary),
             ),
+            onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: 16),
           Container(
@@ -527,15 +585,10 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
             ),
           ),
           const SizedBox(height: 24),
-          IcoHighlightedField(
-            key: _privacyFieldKey,
-            topicId: 'channel_creation',
-            stepId: 'privacy_level',
-            child: Column(
-              children: PrivacyLevel.values
-                  .map((level) => _buildPrivacyOption(level, theme))
-                  .toList(),
-            ),
+          Column(
+            children: PrivacyLevel.values
+                .map((level) => _buildPrivacyOption(level, theme))
+                .toList(),
           ),
           const SizedBox(height: 24),
           _buildCompatibilityInfo(theme),
@@ -725,23 +778,18 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
           if (_privacyLevel == PrivacyLevel.private ||
               _privacyLevel == PrivacyLevel.maximum) ...[
             const SizedBox(height: 12),
-            IcoHighlightedField(
-              key: _keyFieldKey,
-              topicId: 'channel_creation',
-              stepId: 'encryption_key',
-              child: ChannelKeyField(
-                keyBase64: ChannelKeyUtils.keyToBase64(_generatedKey),
-                onKeyChanged: (newKey) {
-                  final decoded = ChannelKeyUtils.base64ToKey(newKey);
-                  if (decoded != null) {
-                    setState(() {
-                      _generatedKey = decoded;
-                    });
-                  }
-                },
-                expectedKeyBytes: _privacyLevel.keySize.bytes,
-                accentColor: _privacyLevel.color,
-              ),
+            ChannelKeyField(
+              keyBase64: ChannelKeyUtils.keyToBase64(_generatedKey),
+              onKeyChanged: (newKey) {
+                final decoded = ChannelKeyUtils.base64ToKey(newKey);
+                if (decoded != null) {
+                  setState(() {
+                    _generatedKey = decoded;
+                  });
+                }
+              },
+              expectedKeyBytes: _privacyLevel.keySize.bytes,
+              accentColor: _privacyLevel.color,
             ),
             const SizedBox(height: 24),
           ],
