@@ -470,6 +470,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
       }
     }
 
+    // Check if this screen was pushed (can pop) or is a root drawer screen
+    final canPop = Navigator.canPop(context);
+
     return HelpTourController(
       topicId: 'map_overview',
       stepKeys: const {},
@@ -477,7 +480,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
         backgroundColor: context.background,
         appBar: AppBar(
           backgroundColor: context.background,
-          leading: const HamburgerMenuButton(),
+          leading: canPop ? const BackButton() : const HamburgerMenuButton(),
           centerTitle: true,
           title: Text(
             'Mesh Map',
