@@ -33,6 +33,7 @@ class SignalCard extends StatelessWidget {
     this.onComment,
     this.showActions = true,
     this.isBookmarked = false,
+    this.isLive = false,
   });
 
   final Post signal;
@@ -42,6 +43,7 @@ class SignalCard extends StatelessWidget {
   final VoidCallback? onComment;
   final bool showActions;
   final bool isBookmarked;
+  final bool isLive;
 
   @override
   Widget build(BuildContext context) {
@@ -60,6 +62,7 @@ class SignalCard extends StatelessWidget {
             _SignalHeader(
               signal: signal,
               isBookmarked: isBookmarked,
+              isLive: isLive,
               onDelete: showActions ? onDelete : null,
               onReport: showActions ? onReport : null,
             ),
@@ -99,12 +102,14 @@ class _SignalHeader extends ConsumerWidget {
   const _SignalHeader({
     required this.signal,
     this.isBookmarked = false,
+    this.isLive = false,
     this.onDelete,
     this.onReport,
   });
 
   final Post signal;
   final bool isBookmarked;
+  final bool isLive;
   final VoidCallback? onDelete;
   final VoidCallback? onReport;
 
@@ -210,6 +215,17 @@ class _SignalHeader extends ConsumerWidget {
                         fontSize: 12,
                       ),
                     ),
+                    if (isLive) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: AccentColors.green,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ],

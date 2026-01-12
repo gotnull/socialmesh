@@ -18,7 +18,6 @@ import '../../../providers/social_providers.dart';
 import '../../../utils/snackbar.dart';
 import '../../navigation/main_shell.dart';
 import '../widgets/double_tap_heart.dart';
-import '../widgets/live_pulse_indicator.dart';
 import '../widgets/signal_card.dart';
 import '../widgets/signal_grid_card.dart';
 import '../widgets/signal_gallery_view.dart';
@@ -682,29 +681,27 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                           .hideSignal(signal.id);
                       showSuccessSnackBar(context, 'Signal hidden');
                     },
-                    child: LivePulseWrapper(
-                      isLive: hasRecentActivity,
-                      child: DoubleTapLikeWrapper(
-                        onDoubleTap: () {
-                          HapticFeedback.mediumImpact();
-                          ref
-                              .read(signalBookmarksProvider.notifier)
-                              .addBookmark(signal.id);
-                          showSuccessSnackBar(context, 'Signal saved');
-                        },
-                        child: SignalCard(
-                          key: ValueKey('card_${signal.id}'),
-                          signal: signal,
-                          isBookmarked: isBookmarked,
-                          onTap: () => _openSignalDetail(signal),
-                          onComment: () => _openSignalDetail(signal),
-                          onDelete: isOwnSignal
-                              ? () => _deleteSignal(signal)
-                              : null,
-                          onReport: canReport
-                              ? () => _reportSignal(signal)
-                              : null,
-                        ),
+                    child: DoubleTapLikeWrapper(
+                      onDoubleTap: () {
+                        HapticFeedback.mediumImpact();
+                        ref
+                            .read(signalBookmarksProvider.notifier)
+                            .addBookmark(signal.id);
+                        showSuccessSnackBar(context, 'Signal saved');
+                      },
+                      child: SignalCard(
+                        key: ValueKey('card_${signal.id}'),
+                        signal: signal,
+                        isBookmarked: isBookmarked,
+                        isLive: hasRecentActivity,
+                        onTap: () => _openSignalDetail(signal),
+                        onComment: () => _openSignalDetail(signal),
+                        onDelete: isOwnSignal
+                            ? () => _deleteSignal(signal)
+                            : null,
+                        onReport: canReport
+                            ? () => _reportSignal(signal)
+                            : null,
                       ),
                     ),
                   ),
