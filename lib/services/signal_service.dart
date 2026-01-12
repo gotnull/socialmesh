@@ -1508,6 +1508,105 @@ class SignalService {
   }
 
   // ===========================================================================
+  // CLOUD SYNC RETRY
+  // ===========================================================================
+
+  /// Retry cloud lookups for signals that may have been received while offline.
+  ///
+  /// Scans active signals that:
+  /// - Have no image (imageState == none)
+  /// - Are not legacy (have a proper signalId format for cloud lookup)
+  /// - Might have cloud data we couldn't fetch when offline
+  ///
+  /// For each, attempts to lookup cloud document and attach listeners.
+  /// Called on app resume and when auth state changes.
+  Future<int> retryCloudLookups() async {
+    if (_currentUserId == null) {
+      AppLogging.signals('📡 Cloud retry: skipping - not authenticated');
+      return 0;
+    }
+
+    await init();
+
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    // Find active signals without images that might have cloud data
+    final rows = await _db!.query(
+      _tableName,
+      where: '''
+        (expiresAt IS NULL OR expiresAt > ?)
+        AND (imageState IS NULL OR imageState = 'none')
+        AND (imageLocalPath IS NULL OR imageLocalPath = '')
+        AND (mediaUrls IS NULL OR mediaUrls = '[]')
+      ''',
+      whereArgs: [now],
+    );
+
+    if (rows.isEmpty) {
+      AppLogging.signals('📡 Cloud retry: no signals need cloud lookup');
+      return 0;
+    }
+
+    AppLogging.signals(
+      '📡 Cloud retry: checking ${rows.length} signals for cloud data',
+    );
+
+    var updatedCount = 0;
+
+    for (final row in rows) {
+      final signal = _postFromDbMap(row);
+
+      // Skip if already has a post listener
+      if (_postListeners.containsKey(signal.id)) {
+        continue;
+      }
+
+      // Attempt cloud lookup
+      try {
+        final cloudSignal = await _lookupCloudSignal(signal.id);
+
+        if (cloudSignal != null && cloudSignal.mediaUrls.isNotEmpty) {
+          final cloudImageUrl = cloudSignal.mediaUrls.first;
+
+          AppLogging.signals(
+            '📡 Cloud retry: found image for ${signal.id}: $cloudImageUrl',
+          );
+
+          // Update local signal with cloud data
+          final updated = signal.copyWith(
+            mediaUrls: [cloudImageUrl],
+            imageState: ImageState.cloud,
+            commentCount: cloudSignal.commentCount,
+          );
+          await updateSignal(updated);
+          updatedCount++;
+
+          // Download if unlocked
+          if (isImageUnlocked(signal)) {
+            _downloadAndCacheImage(signal.id, cloudImageUrl);
+          }
+        }
+
+        // Start listeners for ongoing updates (even if no image yet)
+        _startPostListener(signal.id);
+        if (!_commentsListeners.containsKey(signal.id)) {
+          _startCommentsListener(signal.id);
+        }
+      } catch (e) {
+        AppLogging.signals('📡 Cloud retry: failed for ${signal.id}: $e');
+      }
+    }
+
+    if (updatedCount > 0) {
+      AppLogging.signals(
+        '📡 Cloud retry complete: updated $updatedCount signals with cloud data',
+      );
+    }
+
+    return updatedCount;
+  }
+
+  // ===========================================================================
   // FIREBASE SYNC
   // ===========================================================================
 

@@ -143,8 +143,12 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
       _stopLifecycleObserver();
     });
 
-    // Load signals immediately
-    Future.microtask(() => refresh());
+    // Load signals immediately, then retry cloud lookups
+    Future.microtask(() async {
+      await refresh();
+      // After initial load, check for signals that need cloud data
+      await _retryCloudLookups();
+    });
 
     return SignalFeedState(isLoading: true);
   }
@@ -262,8 +266,21 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      AppLogging.signals('App resumed - running signal cleanup');
+      AppLogging.signals(
+        'App resumed - running signal cleanup and cloud retry',
+      );
       _cleanupExpired();
+      _retryCloudLookups();
+      refresh(silent: true);
+    }
+  }
+
+  /// Retry cloud lookups for signals received while offline.
+  Future<void> _retryCloudLookups() async {
+    final service = ref.read(signalServiceProvider);
+    final updatedCount = await service.retryCloudLookups();
+    if (updatedCount > 0) {
+      // Refresh to show newly fetched images
       refresh(silent: true);
     }
   }
