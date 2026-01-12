@@ -87,6 +87,18 @@ service cloud.firestore {
     }
     
     // =============================================================================
+    // COLLECTION GROUP QUERIES
+    // =============================================================================
+    
+    // Votes collection group - allows querying votes across all comments
+    // Used to fetch all of a user's votes on a signal's comments in one query
+    match /{path=**}/votes/{voteId} {
+      // Users can read their own votes via collection group query
+      allow read: if isAuthenticated() && 
+        resource.data.voterId == request.auth.uid;
+    }
+    
+    // =============================================================================
     // USER DATA COLLECTIONS
     // =============================================================================
     

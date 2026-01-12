@@ -693,6 +693,7 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                         child: SignalCard(
                           key: ValueKey('card_${signal.id}'),
                           signal: signal,
+                          isBookmarked: isBookmarked,
                           onTap: () => _openSignalDetail(signal),
                           onComment: () => _openSignalDetail(signal),
                           onDelete: isOwnSignal
@@ -768,20 +769,27 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                           signal: signal,
                           onTap: () => _openSignalDetail(signal),
                         ),
-                        // Bookmark indicator
+                        // Bookmark indicator - top left with matching badge style
                         if (isBookmarked)
                           Positioned(
                             top: 8,
-                            right: 8,
+                            left: 8,
                             child: Container(
-                              padding: const EdgeInsets.all(4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 5,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
-                                color: Colors.black54,
+                                color: Colors.black.withValues(alpha: 0.5),
                                 borderRadius: BorderRadius.circular(4),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.1),
+                                  width: 0.5,
+                                ),
                               ),
                               child: Icon(
                                 Icons.bookmark_rounded,
-                                size: 16,
+                                size: 12,
                                 color: AccentColors.yellow,
                               ),
                             ),

@@ -9,7 +9,7 @@ import '../../../core/theme.dart';
 /// Features:
 /// - Swipe right to bookmark/save
 /// - Swipe left to hide
-/// - Visual hints for discoverability
+/// - Visual hints for discoverability (smooth animation)
 /// - Matching border radius with card
 class SwipeableSignalItem extends StatefulWidget {
   const SwipeableSignalItem({
@@ -42,9 +42,11 @@ class SwipeableSignalItem extends StatefulWidget {
 }
 
 class _SwipeableSignalItemState extends State<SwipeableSignalItem>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<Offset> _slideAnimation;
+    with TickerProviderStateMixin {
+  late AnimationController _snapBackController;
+  late AnimationController _hintController;
+  late Animation<double> _hintAnimation;
+  
   double _dragExtent = 0;
   static const _threshold = 80.0;
   bool _hasTriggeredHaptic = false;
@@ -56,14 +58,54 @@ class _SwipeableSignalItemState extends State<SwipeableSignalItem>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
+    _snapBackController = AnimationController(
       duration: const Duration(milliseconds: 200),
       vsync: this,
     );
-    _slideAnimation = Tween<Offset>(
-      begin: Offset.zero,
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+    
+    // Smooth hint animation controller
+    _hintController = AnimationController(
+      duration: const Duration(milliseconds: 1800),
+      vsync: this,
+    );
+    
+    // Smooth sequence: 0->40 (right peek) -> -40 (left peek) -> 0 (back)
+    _hintAnimation = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween(begin: 0.0, end: 45.0)
+            .chain(CurveTween(curve: Curves.easeOutCubic)),
+        weight: 25,
+      ),
+      TweenSequenceItem(
+        tween: Tween(begin: 45.0, end: -45.0)
+            .chain(CurveTween(curve: Curves.easeInOutCubic)),
+        weight: 50,
+      ),
+      TweenSequenceItem(
+        tween: Tween(begin: -45.0, end: 0.0)
+            .chain(CurveTween(curve: Curves.easeOutCubic)),
+        weight: 25,
+      ),
+    ]).animate(_hintController);
+    
+    _hintAnimation.addListener(() {
+      if (_showingHint && mounted) {
+        setState(() {
+          _dragExtent = _hintAnimation.value;
+        });
+      }
+    });
+    
+    _hintController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        if (mounted) {
+          setState(() {
+            _showingHint = false;
+            _dragExtent = 0;
+          });
+        }
+      }
+    });
 
     // Show hint animation once per session
     _maybeShowHint();
@@ -77,39 +119,29 @@ class _SwipeableSignalItemState extends State<SwipeableSignalItem>
 
     if (!hasSeenHint && mounted) {
       _hasShownHint = true;
-      await Future<void>.delayed(const Duration(milliseconds: 800));
+      await Future<void>.delayed(const Duration(milliseconds: 1000));
       if (!mounted) return;
 
       setState(() => _showingHint = true);
-
-      // Animate hint - peek right then left
-      await Future<void>.delayed(const Duration(milliseconds: 100));
-      if (!mounted) return;
-      setState(() => _dragExtent = 40);
-
-      await Future<void>.delayed(const Duration(milliseconds: 400));
-      if (!mounted) return;
-      setState(() => _dragExtent = -40);
-
-      await Future<void>.delayed(const Duration(milliseconds: 400));
-      if (!mounted) return;
-      setState(() {
-        _dragExtent = 0;
-        _showingHint = false;
-      });
-
+      _hintController.forward(from: 0);
+      
       await prefs.setBool('signal_swipe_hint_seen', true);
     }
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _snapBackController.dispose();
+    _hintController.dispose();
     super.dispose();
   }
 
   void _handleDragUpdate(DragUpdateDetails details) {
-    if (_showingHint) return;
+    if (_showingHint) {
+      // Cancel hint if user starts dragging
+      _hintController.stop();
+      setState(() => _showingHint = false);
+    }
 
     setState(() {
       _dragExtent += details.delta.dx;
@@ -139,16 +171,21 @@ class _SwipeableSignalItemState extends State<SwipeableSignalItem>
     }
 
     // Animate back to center
-    _slideAnimation = Tween<Offset>(
-      begin: Offset(_dragExtent / (context.size?.width ?? 300), 0),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-
-    _controller.forward(from: 0).then((_) {
+    final startExtent = _dragExtent;
+    _snapBackController.reset();
+    
+    void animateBack() {
+      if (!mounted) return;
+      setState(() {
+        _dragExtent = startExtent * (1 - _snapBackController.value);
+      });
+    }
+    
+    _snapBackController.addListener(animateBack);
+    _snapBackController.forward().then((_) {
+      _snapBackController.removeListener(animateBack);
       if (mounted) {
-        setState(() {
-          _dragExtent = 0;
-        });
+        setState(() => _dragExtent = 0);
       }
     });
 
@@ -171,7 +208,7 @@ class _SwipeableSignalItemState extends State<SwipeableSignalItem>
       child: Stack(
         children: [
           // Right action background (bookmark) - revealed when swiping right
-          if (_dragExtent > 0 || _showingHint && _dragExtent > 0)
+          if (_dragExtent > 0)
             Positioned.fill(
               child: ClipRRect(
                 borderRadius: radius,
@@ -207,7 +244,7 @@ class _SwipeableSignalItemState extends State<SwipeableSignalItem>
             ),
 
           // Left action background (hide) - revealed when swiping left
-          if (_dragExtent < 0 || _showingHint && _dragExtent < 0)
+          if (_dragExtent < 0)
             Positioned.fill(
               child: ClipRRect(
                 borderRadius: radius,
@@ -241,17 +278,8 @@ class _SwipeableSignalItemState extends State<SwipeableSignalItem>
             ),
 
           // Main content
-          AnimatedBuilder(
-            animation: _controller,
-            builder: (context, child) {
-              final offset = _controller.isAnimating
-                  ? _slideAnimation.value
-                  : Offset(_dragExtent / (context.size?.width ?? 300), 0);
-              return Transform.translate(
-                offset: Offset(offset.dx * (context.size?.width ?? 300), 0),
-                child: child,
-              );
-            },
+          Transform.translate(
+            offset: Offset(_dragExtent, 0),
             child: widget.child,
           ),
         ],
