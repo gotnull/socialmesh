@@ -40,12 +40,17 @@ class MapScreen extends ConsumerStatefulWidget {
   final double? initialLongitude;
   final String? initialLocationLabel;
 
+  /// When true, hides all mesh nodes and only shows the location marker.
+  /// Useful for viewing a specific location without clutter.
+  final bool locationOnlyMode;
+
   const MapScreen({
     super.key,
     this.initialNodeNum,
     this.initialLatitude,
     this.initialLongitude,
     this.initialLocationLabel,
+    this.locationOnlyMode = false,
   });
 
   @override
@@ -445,7 +450,13 @@ class _MapScreenState extends ConsumerState<MapScreen>
     LatLng center = const LatLng(0, 0);
     double zoom = 2.0;
 
-    if (nodesWithPosition.isNotEmpty) {
+    // In location only mode, use the provided coordinates
+    if (widget.locationOnlyMode &&
+        widget.initialLatitude != null &&
+        widget.initialLongitude != null) {
+      center = LatLng(widget.initialLatitude!, widget.initialLongitude!);
+      zoom = 15.0;
+    } else if (nodesWithPosition.isNotEmpty) {
       final myNode = myNodeNum != null ? nodes[myNodeNum] : null;
       final myNodeWithPos = nodesWithPosition
           .where((n) => n.node.nodeNum == myNodeNum)
@@ -483,7 +494,9 @@ class _MapScreenState extends ConsumerState<MapScreen>
           leading: canPop ? const BackButton() : const HamburgerMenuButton(),
           centerTitle: true,
           title: Text(
-            'Mesh Map',
+            widget.locationOnlyMode
+                ? (widget.initialLocationLabel ?? 'Location')
+                : 'Mesh Map',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
@@ -491,19 +504,20 @@ class _MapScreenState extends ConsumerState<MapScreen>
             ),
           ),
           actions: [
-            // Filter toggle
-            IconButton(
-              icon: Icon(
-                _nodeFilter != NodeFilter.all || _showFilters
-                    ? Icons.filter_alt
-                    : Icons.filter_alt_outlined,
-                color: _nodeFilter != NodeFilter.all || _showFilters
-                    ? context.accentColor
-                    : context.textSecondary,
+            // Filter toggle - hide in location only mode
+            if (!widget.locationOnlyMode)
+              IconButton(
+                icon: Icon(
+                  _nodeFilter != NodeFilter.all || _showFilters
+                      ? Icons.filter_alt
+                      : Icons.filter_alt_outlined,
+                  color: _nodeFilter != NodeFilter.all || _showFilters
+                      ? context.accentColor
+                      : context.textSecondary,
+                ),
+                onPressed: () => setState(() => _showFilters = !_showFilters),
+                tooltip: 'Filter nodes',
               ),
-              onPressed: () => setState(() => _showFilters = !_showFilters),
-              tooltip: 'Filter nodes',
-            ),
             // Map style
             PopupMenuButton<MapTileStyle>(
               icon: Icon(Icons.map, color: context.textSecondary),
@@ -528,8 +542,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 );
               }).toList(),
             ),
-            // Device status
-            const DeviceStatusButton(),
+            // Device status - hide in location only mode
+            if (!widget.locationOnlyMode) const DeviceStatusButton(),
             // More options menu
             PopupMenuButton<String>(
               icon: Icon(Icons.more_vert, color: context.textSecondary),
@@ -583,188 +597,191 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 }
               },
               itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: 'refresh',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.refresh,
-                        size: 18,
-                        color: _isRefreshing
-                            ? context.textTertiary
-                            : context.textSecondary,
-                      ),
-                      SizedBox(width: 8),
-                      Text(
-                        _isRefreshing ? 'Refreshing...' : 'Refresh positions',
-                      ),
-                    ],
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'heatmap',
-                  child: Row(
-                    children: [
-                      Icon(
-                        _showHeatmap ? Icons.layers : Icons.layers_outlined,
-                        size: 18,
-                        color: _showHeatmap
-                            ? context.accentColor
-                            : context.textSecondary,
-                      ),
-                      SizedBox(width: 8),
-                      Text(_showHeatmap ? 'Hide heatmap' : 'Show heatmap'),
-                    ],
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'connections',
-                  child: Row(
-                    children: [
-                      Icon(
-                        _showConnectionLines
-                            ? Icons.share
-                            : Icons.share_outlined,
-                        size: 18,
-                        color: _showConnectionLines
-                            ? context.accentColor
-                            : context.textSecondary,
-                      ),
-                      SizedBox(width: 8),
-                      Text(
-                        _showConnectionLines
-                            ? 'Hide connection lines'
-                            : 'Show connection lines',
-                      ),
-                    ],
-                  ),
-                ),
-                // Distance filter options (only shown when connections are enabled)
-                if (_showConnectionLines) ...[
+                // Node-related options - hide in location only mode
+                if (!widget.locationOnlyMode) ...[
                   PopupMenuItem(
-                    enabled: false,
-                    height: 32,
-                    child: Text(
-                      'Max Distance',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: context.textTertiary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'distance_1',
+                    value: 'refresh',
                     child: Row(
                       children: [
                         Icon(
-                          _connectionMaxDistance == 1.0
-                              ? Icons.check_circle
-                              : Icons.circle_outlined,
-                          size: 16,
-                          color: _connectionMaxDistance == 1.0
-                              ? context.accentColor
-                              : context.textTertiary,
+                          Icons.refresh,
+                          size: 18,
+                          color: _isRefreshing
+                              ? context.textTertiary
+                              : context.textSecondary,
                         ),
                         SizedBox(width: 8),
-                        const Text('1 km'),
+                        Text(
+                          _isRefreshing ? 'Refreshing...' : 'Refresh positions',
+                        ),
                       ],
                     ),
                   ),
                   PopupMenuItem(
-                    value: 'distance_5',
+                    value: 'heatmap',
                     child: Row(
                       children: [
                         Icon(
-                          _connectionMaxDistance == 5.0
-                              ? Icons.check_circle
-                              : Icons.circle_outlined,
-                          size: 16,
-                          color: _connectionMaxDistance == 5.0
+                          _showHeatmap ? Icons.layers : Icons.layers_outlined,
+                          size: 18,
+                          color: _showHeatmap
                               ? context.accentColor
-                              : context.textTertiary,
+                              : context.textSecondary,
                         ),
                         SizedBox(width: 8),
-                        const Text('5 km'),
+                        Text(_showHeatmap ? 'Hide heatmap' : 'Show heatmap'),
                       ],
                     ),
                   ),
                   PopupMenuItem(
-                    value: 'distance_10',
+                    value: 'connections',
                     child: Row(
                       children: [
                         Icon(
-                          _connectionMaxDistance == 10.0
-                              ? Icons.check_circle
-                              : Icons.circle_outlined,
-                          size: 16,
-                          color: _connectionMaxDistance == 10.0
+                          _showConnectionLines
+                              ? Icons.share
+                              : Icons.share_outlined,
+                          size: 18,
+                          color: _showConnectionLines
                               ? context.accentColor
-                              : context.textTertiary,
+                              : context.textSecondary,
                         ),
                         SizedBox(width: 8),
-                        const Text('10 km'),
+                        Text(
+                          _showConnectionLines
+                              ? 'Hide connection lines'
+                              : 'Show connection lines',
+                        ),
                       ],
                     ),
                   ),
-                  PopupMenuItem(
-                    value: 'distance_25',
-                    child: Row(
-                      children: [
-                        Icon(
-                          _connectionMaxDistance == 25.0
-                              ? Icons.check_circle
-                              : Icons.circle_outlined,
-                          size: 16,
-                          color: _connectionMaxDistance == 25.0
-                              ? context.accentColor
-                              : context.textTertiary,
+                  // Distance filter options (only shown when connections are enabled)
+                  if (_showConnectionLines) ...[
+                    PopupMenuItem(
+                      enabled: false,
+                      height: 32,
+                      child: Text(
+                        'Max Distance',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: context.textTertiary,
+                          fontWeight: FontWeight.w600,
                         ),
-                        SizedBox(width: 8),
-                        const Text('25 km'),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'distance_all',
-                    child: Row(
-                      children: [
-                        Icon(
-                          _connectionMaxDistance >= 100.0
-                              ? Icons.check_circle
-                              : Icons.circle_outlined,
-                          size: 16,
-                          color: _connectionMaxDistance >= 100.0
-                              ? context.accentColor
-                              : context.textTertiary,
-                        ),
-                        SizedBox(width: 8),
-                        const Text('All'),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuDivider(),
-                ],
-                PopupMenuItem(
-                  value: 'range',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.radio_button_unchecked,
-                        size: 18,
-                        color: _showRangeCircles
-                            ? context.accentColor
-                            : context.textSecondary,
                       ),
-                      SizedBox(width: 8),
-                      Text(
-                        _showRangeCircles
-                            ? 'Hide range circles'
-                            : 'Show range circles',
+                    ),
+                    PopupMenuItem(
+                      value: 'distance_1',
+                      child: Row(
+                        children: [
+                          Icon(
+                            _connectionMaxDistance == 1.0
+                                ? Icons.check_circle
+                                : Icons.circle_outlined,
+                            size: 16,
+                            color: _connectionMaxDistance == 1.0
+                                ? context.accentColor
+                                : context.textTertiary,
+                          ),
+                          SizedBox(width: 8),
+                          const Text('1 km'),
+                        ],
                       ),
-                    ],
+                    ),
+                    PopupMenuItem(
+                      value: 'distance_5',
+                      child: Row(
+                        children: [
+                          Icon(
+                            _connectionMaxDistance == 5.0
+                                ? Icons.check_circle
+                                : Icons.circle_outlined,
+                            size: 16,
+                            color: _connectionMaxDistance == 5.0
+                                ? context.accentColor
+                                : context.textTertiary,
+                          ),
+                          SizedBox(width: 8),
+                          const Text('5 km'),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'distance_10',
+                      child: Row(
+                        children: [
+                          Icon(
+                            _connectionMaxDistance == 10.0
+                                ? Icons.check_circle
+                                : Icons.circle_outlined,
+                            size: 16,
+                            color: _connectionMaxDistance == 10.0
+                                ? context.accentColor
+                                : context.textTertiary,
+                          ),
+                          SizedBox(width: 8),
+                          const Text('10 km'),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'distance_25',
+                      child: Row(
+                        children: [
+                          Icon(
+                            _connectionMaxDistance == 25.0
+                                ? Icons.check_circle
+                                : Icons.circle_outlined,
+                            size: 16,
+                            color: _connectionMaxDistance == 25.0
+                                ? context.accentColor
+                                : context.textTertiary,
+                          ),
+                          SizedBox(width: 8),
+                          const Text('25 km'),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'distance_all',
+                      child: Row(
+                        children: [
+                          Icon(
+                            _connectionMaxDistance >= 100.0
+                                ? Icons.check_circle
+                                : Icons.circle_outlined,
+                            size: 16,
+                            color: _connectionMaxDistance >= 100.0
+                                ? context.accentColor
+                                : context.textTertiary,
+                          ),
+                          SizedBox(width: 8),
+                          const Text('All'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuDivider(),
+                  ],
+                  PopupMenuItem(
+                    value: 'range',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.radio_button_unchecked,
+                          size: 18,
+                          color: _showRangeCircles
+                              ? context.accentColor
+                              : context.textSecondary,
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          _showRangeCircles
+                              ? 'Hide range circles'
+                              : 'Show range circles',
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                ], // End of node-related options
                 PopupMenuItem(
                   value: 'measure',
                   child: Row(
@@ -831,7 +848,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
             ),
           ],
         ),
-        body: allNodesWithPosition.isEmpty
+        body: (!widget.locationOnlyMode && allNodesWithPosition.isEmpty)
             ? _buildEmptyState()
             : Stack(
                 children: [
@@ -888,8 +905,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
                           );
                         },
                       ),
-                      // Range circles (theoretical coverage)
-                      if (_showRangeCircles)
+                      // Range circles (theoretical coverage) - hide in location only mode
+                      if (_showRangeCircles && !widget.locationOnlyMode)
                         CircleLayer(
                           circles: nodesWithPosition.map((n) {
                             final isMyNode = n.node.nodeNum == myNodeNum;
@@ -911,8 +928,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
                             );
                           }).toList(),
                         ),
-                      // Heatmap layer
-                      if (_showHeatmap)
+                      // Heatmap layer - hide in location only mode
+                      if (_showHeatmap && !widget.locationOnlyMode)
                         CircleLayer(
                           circles: nodesWithPosition.map((n) {
                             return CircleMarker(
@@ -928,15 +945,16 @@ class _MapScreenState extends ConsumerState<MapScreen>
                             );
                           }).toList(),
                         ),
-                      // Node trails (movement history)
-                      PolylineLayer(
-                        polylines: _buildNodeTrails(
-                          nodesWithPosition,
-                          myNodeNum,
+                      // Node trails (movement history) - hide in location only mode
+                      if (!widget.locationOnlyMode)
+                        PolylineLayer(
+                          polylines: _buildNodeTrails(
+                            nodesWithPosition,
+                            myNodeNum,
+                          ),
                         ),
-                      ),
-                      // Connection lines (optional)
-                      if (_showConnectionLines)
+                      // Connection lines (optional) - hide in location only mode
+                      if (_showConnectionLines && !widget.locationOnlyMode)
                         PolylineLayer(
                           polylines: _buildConnectionLines(
                             nodesWithPosition,
@@ -1005,32 +1023,33 @@ class _MapScreenState extends ConsumerState<MapScreen>
                           );
                         }).toList(),
                       ),
-                      // Node markers
-                      MarkerLayer(
-                        rotate: true,
-                        markers: nodesWithPosition.map((n) {
-                          final isMyNode = n.node.nodeNum == myNodeNum;
-                          final isSelected =
-                              _selectedNode?.nodeNum == n.node.nodeNum;
-                          return Marker(
-                            point: LatLng(n.latitude, n.longitude),
-                            width: isSelected ? 56 : 44,
-                            height: isSelected ? 56 : 44,
-                            child: GestureDetector(
-                              onTap: () {
-                                HapticFeedback.selectionClick();
-                                setState(() => _selectedNode = n.node);
-                              },
-                              child: _NodeMarker(
-                                node: n.node,
-                                isMyNode: isMyNode,
-                                isSelected: isSelected,
-                                isStale: n.isStale,
+                      // Node markers - hide in location only mode
+                      if (!widget.locationOnlyMode)
+                        MarkerLayer(
+                          rotate: true,
+                          markers: nodesWithPosition.map((n) {
+                            final isMyNode = n.node.nodeNum == myNodeNum;
+                            final isSelected =
+                                _selectedNode?.nodeNum == n.node.nodeNum;
+                            return Marker(
+                              point: LatLng(n.latitude, n.longitude),
+                              width: isSelected ? 56 : 44,
+                              height: isSelected ? 56 : 44,
+                              child: GestureDetector(
+                                onTap: () {
+                                  HapticFeedback.selectionClick();
+                                  setState(() => _selectedNode = n.node);
+                                },
+                                child: _NodeMarker(
+                                  node: n.node,
+                                  isMyNode: isMyNode,
+                                  isSelected: isSelected,
+                                  isStale: n.isStale,
+                                ),
                               ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
+                            );
+                          }).toList(),
+                        ),
                       // Measurement markers
                       if (_measureStart != null)
                         MarkerLayer(
@@ -1087,18 +1106,19 @@ class _MapScreenState extends ConsumerState<MapScreen>
                               ),
                           ],
                         ),
-                      // Distance labels layer
-                      MarkerLayer(
-                        rotate: true,
-                        markers: _buildDistanceLabels(
-                          nodesWithPosition,
-                          myNodeNum,
+                      // Distance labels layer - hide in location only mode
+                      if (!widget.locationOnlyMode)
+                        MarkerLayer(
+                          rotate: true,
+                          markers: _buildDistanceLabels(
+                            nodesWithPosition,
+                            myNodeNum,
+                          ),
                         ),
-                      ),
                     ],
                   ),
-                  // Filter bar
-                  if (_showFilters)
+                  // Filter bar - hide in location only mode
+                  if (_showFilters && !widget.locationOnlyMode)
                     Positioned(
                       left: _mapPadding,
                       right: _mapPadding + _controlSize + _controlSpacing,
@@ -1203,8 +1223,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         ),
                       ),
                     ),
-                  // Node info card
-                  if (_selectedNode != null)
+                  // Node info card - hide in location only mode
+                  if (_selectedNode != null && !widget.locationOnlyMode)
                     Positioned(
                       left: _mapPadding,
                       right: _mapPadding,
@@ -1257,32 +1277,36 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         },
                       ),
                     ),
-                  // Node list panel
-                  AnimatedPositioned(
-                    duration: const Duration(milliseconds: 250),
-                    curve: Curves.easeOutCubic,
-                    left: _showNodeList ? 0 : -300,
-                    top: 0,
-                    bottom: 0,
-                    width: 300,
-                    child: _NodeListPanel(
-                      nodesWithPosition: nodesWithPosition,
-                      myNodeNum: myNodeNum,
-                      selectedNode: _selectedNode,
-                      onNodeSelected: _selectNodeAndCenter,
-                      onClose: () => setState(() => _showNodeList = false),
-                      calculateDistanceFromMe: (node) => _getDistanceFromMyNode(
-                        node.node,
-                        nodesWithPosition,
-                        myNodeNum,
+                  // Node list panel - hide in location only mode
+                  if (!widget.locationOnlyMode)
+                    AnimatedPositioned(
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeOutCubic,
+                      left: _showNodeList ? 0 : -300,
+                      top: 0,
+                      bottom: 0,
+                      width: 300,
+                      child: _NodeListPanel(
+                        nodesWithPosition: nodesWithPosition,
+                        myNodeNum: myNodeNum,
+                        selectedNode: _selectedNode,
+                        onNodeSelected: _selectNodeAndCenter,
+                        onClose: () => setState(() => _showNodeList = false),
+                        calculateDistanceFromMe: (node) =>
+                            _getDistanceFromMyNode(
+                              node.node,
+                              nodesWithPosition,
+                              myNodeNum,
+                            ),
+                        searchController: _searchController,
+                        onSearchChanged: (query) =>
+                            setState(() => _searchQuery = query),
                       ),
-                      searchController: _searchController,
-                      onSearchChanged: (query) =>
-                          setState(() => _searchQuery = query),
                     ),
-                  ),
-                  // Node count indicator
-                  if (!_showNodeList && !_showFilters)
+                  // Node count indicator - hide in location only mode
+                  if (!_showNodeList &&
+                      !_showFilters &&
+                      !widget.locationOnlyMode)
                     Positioned(
                       left: _mapPadding,
                       top: _mapPadding,

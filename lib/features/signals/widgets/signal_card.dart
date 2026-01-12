@@ -431,6 +431,7 @@ class _SignalLocation extends StatelessWidget {
           initialLatitude: location.latitude,
           initialLongitude: location.longitude,
           initialLocationLabel: location.name ?? 'Signal Location',
+          locationOnlyMode: true,
         ),
       ),
     );
