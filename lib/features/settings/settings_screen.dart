@@ -1485,30 +1485,35 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             return Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(6),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () => onKeyPress(number),
-                    borderRadius: BorderRadius.circular(40),
-                    splashColor: Colors.white.withAlpha(30),
-                    highlightColor: Colors.white.withAlpha(15),
-                    child: Container(
-                      height: 64,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withAlpha(10),
-                        border: Border.all(
-                          color: Colors.white.withAlpha(30),
-                          width: 1,
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          number,
-                          style: const TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w300,
-                            color: Colors.white,
+                child: Center(
+                  child: SizedBox(
+                    width: 64,
+                    height: 64,
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => onKeyPress(number),
+                        customBorder: const CircleBorder(),
+                        splashColor: Colors.white.withAlpha(30),
+                        highlightColor: Colors.white.withAlpha(15),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withAlpha(10),
+                            border: Border.all(
+                              color: Colors.white.withAlpha(30),
+                              width: 1,
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              number,
+                              style: const TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.w300,
+                                color: Colors.white,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -1527,20 +1532,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             return Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(6),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: onTap,
-                    borderRadius: BorderRadius.circular(40),
-                    splashColor: Colors.white.withAlpha(30),
-                    highlightColor: Colors.white.withAlpha(15),
-                    child: SizedBox(
-                      height: 64,
-                      child: Center(
-                        child: Icon(
-                          icon,
-                          size: 28,
-                          color: iconColor ?? Colors.white.withAlpha(180),
+                child: Center(
+                  child: SizedBox(
+                    width: 64,
+                    height: 64,
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: onTap,
+                        customBorder: const CircleBorder(),
+                        splashColor: Colors.white.withAlpha(30),
+                        highlightColor: Colors.white.withAlpha(15),
+                        child: Center(
+                          child: Icon(
+                            icon,
+                            size: 28,
+                            color: iconColor ?? Colors.white.withAlpha(180),
+                          ),
                         ),
                       ),
                     ),
