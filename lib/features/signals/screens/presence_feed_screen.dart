@@ -12,15 +12,20 @@ import '../../../core/widgets/animations.dart';
 import '../../../models/social.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/connection_providers.dart';
+import '../../../providers/signal_bookmark_provider.dart';
 import '../../../providers/signal_providers.dart';
 import '../../../providers/social_providers.dart';
 import '../../../utils/snackbar.dart';
 import '../../navigation/main_shell.dart';
+import '../widgets/double_tap_heart.dart';
+import '../widgets/live_pulse_indicator.dart';
 import '../widgets/signal_card.dart';
 import '../widgets/signal_grid_card.dart';
 import '../widgets/signal_gallery_view.dart';
+import '../widgets/signal_map_view.dart';
 import '../widgets/signal_skeleton.dart';
 import '../widgets/signals_empty_state.dart';
+import '../widgets/swipeable_signal_item.dart';
 import '../widgets/active_signals_banner.dart';
 import 'create_signal_screen.dart';
 import 'signal_detail_screen.dart';
@@ -28,6 +33,7 @@ import 'signal_detail_screen.dart';
 /// Filter options for the signals list
 enum SignalFilter {
   all,
+  saved, // bookmarked signals
   nearby, // hop count 0-1
   meshOnly, // from mesh (authorId starts with mesh_)
   withMedia, // has images
@@ -40,9 +46,6 @@ enum SignalSortOrder {
   expiring, // by TTL (expiring soon first)
   newest, // by creation time (newest first)
 }
-
-/// View mode for the signals display
-enum SignalViewMode { list, grid }
 
 /// The Presence Feed screen - local view of active signals.
 ///
@@ -66,7 +69,6 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
   String _searchQuery = '';
   SignalFilter _activeFilter = SignalFilter.all;
   SignalSortOrder _sortOrder = SignalSortOrder.proximity;
-  SignalViewMode _viewMode = SignalViewMode.list;
 
   @override
   void dispose() {
@@ -120,9 +122,20 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
   }
 
   List<Post> _applyFilter(List<Post> signals) {
+    // First filter out hidden signals (unless viewing saved)
+    final hiddenIds = ref.read(hiddenSignalsProvider);
+    final bookmarkedIds = ref.read(signalBookmarksProvider).value ?? {};
+
+    // Don't filter hidden from saved view
+    if (_activeFilter != SignalFilter.saved) {
+      signals = signals.where((s) => !hiddenIds.contains(s.id)).toList();
+    }
+
     switch (_activeFilter) {
       case SignalFilter.all:
         return signals;
+      case SignalFilter.saved:
+        return signals.where((s) => bookmarkedIds.contains(s.id)).toList();
       case SignalFilter.nearby:
         return signals
             .where((s) => s.hopCount != null && s.hopCount! <= 1)
@@ -199,11 +212,17 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
     final isConnected = ref.watch(isDeviceConnectedProvider);
     final canGoActive = isSignedIn && isConnected;
 
+    // Watch bookmarks for saved count
+    final bookmarkedIds = ref.watch(signalBookmarksProvider).value ?? {};
+
     // Get all signals then apply filters
     var signals = feedState.signals;
 
     // Calculate counts before filtering for badges
     final allCount = signals.length;
+    final savedCount = signals
+        .where((s) => bookmarkedIds.contains(s.id))
+        .length;
     final nearbyCount = signals
         .where((s) => s.hopCount != null && s.hopCount! <= 1)
         .length;
@@ -343,6 +362,17 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                             ),
                             const SizedBox(width: 8),
                             _FilterChip(
+                              label: 'Saved',
+                              count: savedCount,
+                              isSelected: _activeFilter == SignalFilter.saved,
+                              color: AccentColors.yellow,
+                              icon: Icons.bookmark_rounded,
+                              onTap: () => setState(
+                                () => _activeFilter = SignalFilter.saved,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            _FilterChip(
                               label: 'Nearby',
                               count: nearbyCount,
                               isSelected: _activeFilter == SignalFilter.nearby,
@@ -401,13 +431,11 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                     ),
                     // View toggle at end
                     const SizedBox(width: 8),
-                    _ViewToggle(
-                      viewMode: _viewMode,
-                      onToggle: () => setState(
-                        () => _viewMode = _viewMode == SignalViewMode.list
-                            ? SignalViewMode.grid
-                            : SignalViewMode.list,
-                      ),
+                    _ViewModeSelector(
+                      viewMode: ref.watch(signalViewModeProvider),
+                      onModeChanged: (mode) => ref
+                          .read(signalViewModeProvider.notifier)
+                          .setMode(mode),
                     ),
                     // Gallery button (only visible when media signals exist)
                     if (mediaCount > 0) ...[
@@ -429,21 +457,36 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                 color: context.border.withValues(alpha: 0.3),
               ),
 
-              // Signal list/grid
+              // Signal list/grid/map based on view mode
               Expanded(
                 child: feedState.isLoading && feedState.signals.isEmpty
                     ? _buildLoading()
                     : signals.isEmpty
                     ? _buildEmptyState()
-                    : _viewMode == SignalViewMode.list
-                    ? _buildSignalList(signals)
-                    : _buildSignalGrid(signals),
+                    : _buildSignalView(
+                        signals,
+                        ref.watch(signalViewModeProvider),
+                      ),
               ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  Widget _buildSignalView(List<Post> signals, SignalViewMode viewMode) {
+    switch (viewMode) {
+      case SignalViewMode.list:
+        return _buildSignalList(signals);
+      case SignalViewMode.grid:
+        return _buildSignalGrid(signals);
+      case SignalViewMode.gallery:
+        // Gallery is shown via overlay, just show list
+        return _buildSignalList(signals);
+      case SignalViewMode.map:
+        return _buildSignalMap(signals);
+    }
   }
 
   Widget _buildGoActiveButton(
@@ -602,6 +645,13 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
               final isOwnSignal =
                   currentUser != null && signal.authorId == currentUser.uid;
               final canReport = currentUser != null && !isOwnSignal;
+              final isBookmarked = ref.watch(
+                isSignalBookmarkedProvider(signal.id),
+              );
+              final hasRecentActivity =
+                  signal.commentCount > 0 &&
+                  DateTime.now().difference(signal.createdAt).inMinutes < 10;
+
               return AnimatedSignalItem(
                 key: ValueKey('animated_${signal.id}'),
                 index: index,
@@ -613,13 +663,47 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                     right: 16,
                     bottom: index == signals.length - 1 ? 100 : 12,
                   ),
-                  child: SignalCard(
-                    key: ValueKey('card_${signal.id}'),
-                    signal: signal,
-                    onTap: () => _openSignalDetail(signal),
-                    onComment: () => _openSignalDetail(signal),
-                    onDelete: isOwnSignal ? () => _deleteSignal(signal) : null,
-                    onReport: canReport ? () => _reportSignal(signal) : null,
+                  child: SwipeableSignalItem(
+                    isBookmarked: isBookmarked,
+                    onSwipeRight: () {
+                      ref
+                          .read(signalBookmarksProvider.notifier)
+                          .toggleBookmark(signal.id);
+                      showSuccessSnackBar(
+                        context,
+                        isBookmarked ? 'Removed from saved' : 'Signal saved',
+                      );
+                    },
+                    onSwipeLeft: () {
+                      ref
+                          .read(hiddenSignalsProvider.notifier)
+                          .hideSignal(signal.id);
+                      showSuccessSnackBar(context, 'Signal hidden');
+                    },
+                    child: LivePulseWrapper(
+                      isLive: hasRecentActivity,
+                      child: DoubleTapLikeWrapper(
+                        onDoubleTap: () {
+                          HapticFeedback.mediumImpact();
+                          ref
+                              .read(signalBookmarksProvider.notifier)
+                              .addBookmark(signal.id);
+                          showSuccessSnackBar(context, 'Signal saved');
+                        },
+                        child: SignalCard(
+                          key: ValueKey('card_${signal.id}'),
+                          signal: signal,
+                          onTap: () => _openSignalDetail(signal),
+                          onComment: () => _openSignalDetail(signal),
+                          onDelete: isOwnSignal
+                              ? () => _deleteSignal(signal)
+                              : null,
+                          onReport: canReport
+                              ? () => _reportSignal(signal)
+                              : null,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               );
@@ -631,6 +715,9 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
   }
 
   Widget _buildSignalGrid(List<Post> signals) {
+    final user = ref.watch(currentUserProvider);
+    final bookmarkedIds = ref.watch(signalBookmarksProvider).value ?? {};
+
     return RefreshIndicator(
       onRefresh: _handleRefresh,
       color: context.accentColor,
@@ -656,14 +743,51 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
               ),
               delegate: SliverChildBuilderDelegate((context, index) {
                 final signal = signals[index];
+                final isBookmarked = bookmarkedIds.contains(signal.id);
+                final isOwn = user?.uid == signal.authorId;
+
                 return AnimatedGridItem(
                   key: ValueKey('animated_grid_${signal.id}'),
                   index: index,
                   isRefreshing: _isRefreshing,
-                  child: SignalGridCard(
-                    key: ValueKey('grid_${signal.id}'),
-                    signal: signal,
-                    onTap: () => _openSignalDetail(signal),
+                  child: DoubleTapLikeWrapper(
+                    onDoubleTap: () async {
+                      HapticFeedback.mediumImpact();
+                      if (isOwn) return; // Can't bookmark own signal
+
+                      if (!isBookmarked) {
+                        await ref
+                            .read(signalBookmarksProvider.notifier)
+                            .addBookmark(signal.id);
+                      }
+                    },
+                    child: Stack(
+                      children: [
+                        SignalGridCard(
+                          key: ValueKey('grid_${signal.id}'),
+                          signal: signal,
+                          onTap: () => _openSignalDetail(signal),
+                        ),
+                        // Bookmark indicator
+                        if (isBookmarked)
+                          Positioned(
+                            top: 8,
+                            right: 8,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Colors.black54,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Icon(
+                                Icons.bookmark_rounded,
+                                size: 16,
+                                color: AccentColors.yellow,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 );
               }, childCount: signals.length),
@@ -677,7 +801,17 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
     );
   }
 
+  Widget _buildSignalMap(List<Post> signals) {
+    return SignalMapView(signals: signals, onSignalTap: _openSignalDetail);
+  }
+
   void _openSignalDetail(Post signal) {
+    // Record view for stats
+    final user = ref.read(currentUserProvider);
+    if (user != null && signal.authorId != user.uid) {
+      recordSignalView(signal.id, user.uid);
+    }
+
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (context) => SignalDetailScreen(signal: signal),
@@ -999,35 +1133,83 @@ class _SortButton extends StatelessWidget {
 }
 
 /// View mode toggle button
-class _ViewToggle extends StatelessWidget {
-  const _ViewToggle({required this.viewMode, required this.onToggle});
+/// View mode selector supporting list, grid, and map
+class _ViewModeSelector extends StatelessWidget {
+  const _ViewModeSelector({
+    required this.viewMode,
+    required this.onModeChanged,
+  });
 
   final SignalViewMode viewMode;
-  final VoidCallback onToggle;
+  final void Function(SignalViewMode) onModeChanged;
 
   @override
   Widget build(BuildContext context) {
-    final isGrid = viewMode == SignalViewMode.grid;
-
-    return GestureDetector(
-      onTap: onToggle,
-      child: Container(
-        padding: const EdgeInsets.all(6),
-        decoration: BoxDecoration(
-          color: isGrid
-              ? context.accentColor.withValues(alpha: 0.2)
-              : context.card,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: isGrid
-                ? context.accentColor.withValues(alpha: 0.5)
-                : context.border.withValues(alpha: 0.3),
-          ),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _ViewModeButton(
+          icon: Icons.view_list_rounded,
+          isSelected: viewMode == SignalViewMode.list,
+          onTap: () => onModeChanged(SignalViewMode.list),
+          tooltip: 'List view',
         ),
-        child: Icon(
-          isGrid ? Icons.grid_view_rounded : Icons.view_list_rounded,
-          size: 16,
-          color: isGrid ? context.accentColor : context.textTertiary,
+        const SizedBox(width: 4),
+        _ViewModeButton(
+          icon: Icons.grid_view_rounded,
+          isSelected: viewMode == SignalViewMode.grid,
+          onTap: () => onModeChanged(SignalViewMode.grid),
+          tooltip: 'Grid view',
+        ),
+        const SizedBox(width: 4),
+        _ViewModeButton(
+          icon: Icons.map_outlined,
+          isSelected: viewMode == SignalViewMode.map,
+          onTap: () => onModeChanged(SignalViewMode.map),
+          tooltip: 'Map view',
+        ),
+      ],
+    );
+  }
+}
+
+class _ViewModeButton extends StatelessWidget {
+  const _ViewModeButton({
+    required this.icon,
+    required this.isSelected,
+    required this.onTap,
+    required this.tooltip,
+  });
+
+  final IconData icon;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final String tooltip;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? context.accentColor.withValues(alpha: 0.2)
+                : context.card,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isSelected
+                  ? context.accentColor.withValues(alpha: 0.5)
+                  : context.border.withValues(alpha: 0.3),
+            ),
+          ),
+          child: Icon(
+            icon,
+            size: 16,
+            color: isSelected ? context.accentColor : context.textTertiary,
+          ),
         ),
       ),
     );

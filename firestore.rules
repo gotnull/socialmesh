@@ -113,6 +113,19 @@ service cloud.firestore {
         // User can delete their own activities
         allow delete: if isOwner(userId);
       }
+
+      // Saved signals subcollection - bookmarked signals for later
+      match /saved_signals/{signalId} {
+        // Only owner can read their saved signals
+        allow read: if isOwner(userId);
+        
+        // Only owner can create/delete their saved signals
+        allow create: if isOwner(userId);
+        allow delete: if isOwner(userId);
+        
+        // No updates needed - just add/remove
+        allow update: if false;
+      }
     }
     
     // User presence - public read, owner write
@@ -445,6 +458,35 @@ service cloud.firestore {
           // Delete: voter can remove their vote
           allow delete: if isOwner(voterId);
         }
+      }
+
+      // Signal viewers subcollection - tracks who viewed the signal
+      match /viewers/{viewerId} {
+        // Author can read viewers (for stats)
+        allow read: if isAuthenticated() && resource.data.viewerId == request.auth.uid ||
+          resource.data.authorId == request.auth.uid;
+        
+        // Any authenticated user can record a view (only once per user)
+        allow create: if isOwner(viewerId);
+        
+        // Merge updates allowed for first-view tracking
+        allow update: if isOwner(viewerId);
+        
+        // No delete - views are permanent for analytics
+        allow delete: if false;
+      }
+
+      // Signal stats subcollection - aggregated view counts
+      match /stats/{statsId} {
+        // Public read for displaying view counts
+        allow read: if true;
+        
+        // Authenticated users can increment counters
+        allow create: if isAuthenticated();
+        allow update: if isAuthenticated();
+        
+        // No delete - stats are permanent
+        allow delete: if false;
       }
     }
 

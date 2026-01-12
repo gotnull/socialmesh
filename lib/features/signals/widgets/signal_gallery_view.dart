@@ -8,7 +8,9 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/user_avatar.dart';
 import '../../../models/social.dart';
 import '../../../providers/app_providers.dart';
+import '../../../providers/signal_bookmark_provider.dart';
 import '../screens/signal_detail_screen.dart';
+import 'double_tap_heart.dart';
 
 /// A fullscreen gallery view for signal images with metadata overlays.
 ///
@@ -146,10 +148,19 @@ class _SignalGalleryViewState extends ConsumerState<SignalGalleryView>
             itemCount: widget.signals.length,
             onPageChanged: _onPageChanged,
             itemBuilder: (context, index) {
-              return _AnimatedImagePage(
-                signal: widget.signals[index],
-                isActive: index == _currentIndex,
-                onTap: () => Navigator.of(context).pop(),
+              final signal = widget.signals[index];
+              return DoubleTapLikeWrapper(
+                onDoubleTap: () {
+                  HapticFeedback.mediumImpact();
+                  ref
+                      .read(signalBookmarksProvider.notifier)
+                      .addBookmark(signal.id);
+                },
+                child: _AnimatedImagePage(
+                  signal: signal,
+                  isActive: index == _currentIndex,
+                  onTap: () => Navigator.of(context).pop(),
+                ),
               );
             },
           ),
@@ -543,6 +554,14 @@ class _BottomInfoOverlay extends ConsumerWidget {
                 spacing: 8,
                 runSpacing: 8,
                 children: [
+                  // Saved/Bookmark badge
+                  if (ref.watch(isSignalBookmarkedProvider(signal.id)))
+                    const _InfoBadge(
+                      icon: Icons.bookmark_rounded,
+                      label: 'Saved',
+                      color: AccentColors.yellow,
+                    ),
+
                   // TTL badge
                   if (signal.expiresAt != null)
                     _buildTtlBadge(signal.expiresAt!),

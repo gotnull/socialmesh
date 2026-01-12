@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
 import '../../../models/social.dart';
+import '../../../providers/signal_bookmark_provider.dart';
 
 /// Footer widget for signal cards showing TTL countdown with urgency animation.
 ///
@@ -10,17 +12,18 @@ import '../../../models/social.dart';
 /// - Orange color when < 5 minutes remaining
 /// - Pulsing text animation when expiring soon
 /// - Intensity increases as expiry approaches
-class SignalTTLFooter extends StatefulWidget {
+/// - View count indicator
+class SignalTTLFooter extends ConsumerStatefulWidget {
   const SignalTTLFooter({super.key, required this.signal, this.onComment});
 
   final Post signal;
   final VoidCallback? onComment;
 
   @override
-  State<SignalTTLFooter> createState() => _SignalTTLFooterState();
+  ConsumerState<SignalTTLFooter> createState() => _SignalTTLFooterState();
 }
 
-class _SignalTTLFooterState extends State<SignalTTLFooter>
+class _SignalTTLFooterState extends ConsumerState<SignalTTLFooter>
     with SingleTickerProviderStateMixin {
   AnimationController? _pulseController;
   Animation<double>? _pulseAnimation;
@@ -115,6 +118,11 @@ class _SignalTTLFooterState extends State<SignalTTLFooter>
 
           const Spacer(),
 
+          // View count indicator
+          _ViewCountIndicator(signalId: widget.signal.id),
+
+          const SizedBox(width: 12),
+
           // Reply indicator
           GestureDetector(
             onTap: widget.onComment,
@@ -180,6 +188,41 @@ class _SignalTTLFooterState extends State<SignalTTLFooter>
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [icon, const SizedBox(width: 4), text],
+    );
+  }
+}
+
+/// Widget that displays the view count for a signal.
+class _ViewCountIndicator extends ConsumerWidget {
+  const _ViewCountIndicator({required this.signalId});
+
+  final String signalId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final viewCountAsync = ref.watch(signalViewCountProvider(signalId));
+
+    return viewCountAsync.when(
+      data: (count) {
+        if (count == 0) return const SizedBox.shrink();
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.visibility_outlined,
+              size: 14,
+              color: context.textTertiary,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              '$count',
+              style: TextStyle(color: context.textTertiary, fontSize: 12),
+            ),
+          ],
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (e, s) => const SizedBox.shrink(),
     );
   }
 }
