@@ -5,6 +5,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 
 import '../../core/logging.dart';
 
@@ -163,28 +165,71 @@ class PushNotificationService {
     final notification = message.notification;
     if (notification == null) return;
 
+    // Try to get image URL from data payload
+    final imageUrl = message.data['imageUrl'] as String?;
+    AppLogging.notifications('🔔 Foreground message imageUrl: $imageUrl');
+
+    // Download image for attachment if available
+    String? imagePath;
+    if (imageUrl != null && imageUrl.isNotEmpty) {
+      imagePath = await _downloadImage(imageUrl);
+      AppLogging.notifications('🔔 Downloaded image to: $imagePath');
+    }
+
+    // Build notification details with image if available
+    final androidDetails = AndroidNotificationDetails(
+      _socialChannel.id,
+      _socialChannel.name,
+      channelDescription: _socialChannel.description,
+      icon: '@mipmap/ic_launcher',
+      importance: Importance.high,
+      priority: Priority.high,
+      largeIcon: imagePath != null ? FilePathAndroidBitmap(imagePath) : null,
+      styleInformation: imagePath != null
+          ? BigPictureStyleInformation(
+              FilePathAndroidBitmap(imagePath),
+              hideExpandedLargeIcon: false,
+            )
+          : null,
+    );
+
+    final iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+      attachments: imagePath != null
+          ? [DarwinNotificationAttachment(imagePath)]
+          : null,
+    );
+
     // Show local notification for foreground messages
     await _localNotifications.show(
       notification.hashCode,
       notification.title,
       notification.body,
-      NotificationDetails(
-        android: AndroidNotificationDetails(
-          _socialChannel.id,
-          _socialChannel.name,
-          channelDescription: _socialChannel.description,
-          icon: '@mipmap/ic_launcher',
-          importance: Importance.high,
-          priority: Priority.high,
-        ),
-        iOS: const DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
-        ),
-      ),
+      NotificationDetails(android: androidDetails, iOS: iosDetails),
       payload: message.data['type'],
     );
+  }
+
+  /// Download an image from URL and save to temp directory
+  Future<String?> _downloadImage(String imageUrl) async {
+    try {
+      final response = await http
+          .get(Uri.parse(imageUrl))
+          .timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        final tempDir = await getTemporaryDirectory();
+        final fileName =
+            'notification_${DateTime.now().millisecondsSinceEpoch}.jpg';
+        final file = File('${tempDir.path}/$fileName');
+        await file.writeAsBytes(response.bodyBytes);
+        return file.path;
+      }
+    } catch (e) {
+      AppLogging.notifications('🔔 Error downloading notification image: $e');
+    }
+    return null;
   }
 
   /// Emit content refresh events based on notification type
