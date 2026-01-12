@@ -1,6 +1,9 @@
 import 'dart:convert';
+import 'dart:io' show Platform;
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -1373,6 +1376,47 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                       color: context.textTertiary,
                     ),
                   ),
+                  if (token != null) ...[
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: BouncyTap(
+                        onTap: () => _reRegisterFcmToken(token),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 10,
+                            horizontal: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withAlpha(15),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: Colors.orange.withAlpha(40),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.refresh_rounded,
+                                size: 16,
+                                color: Colors.orange,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Re-register FCM Token',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.orange,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             );
@@ -1380,6 +1424,35 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
         ),
       ],
     );
+  }
+
+  Future<void> _reRegisterFcmToken(String token) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      showErrorSnackBar(context, 'Not signed in');
+      return;
+    }
+
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        'fcmTokens': {
+          token: {
+            'platform': Platform.operatingSystem,
+            'updatedAt': FieldValue.serverTimestamp(),
+          },
+        },
+      }, SetOptions(merge: true));
+
+      if (mounted) {
+        showSuccessSnackBar(context, 'FCM token registered!');
+      }
+      AppLogging.notifications('🔔 FCM token re-registered for ${user.uid}');
+    } catch (e) {
+      AppLogging.notifications('🔔 Error re-registering FCM token: $e');
+      if (mounted) {
+        showErrorSnackBar(context, 'Error: $e');
+      }
+    }
   }
 
   Widget _buildPushTestButton({
