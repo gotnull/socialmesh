@@ -539,6 +539,9 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
 
     // Flatten tree into display list with depth and sibling info
     final displayList = <_ResponseDisplayItem>[];
+    final visitedIds = <String>{}; // Cycle detection
+    const maxDepth = 50; // Prevent infinite recursion
+    const maxItems = 500; // Hard limit on total items
 
     void addWithReplies(
       SignalResponse response,
@@ -547,6 +550,12 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
       bool isFirstChild,
       bool isLastChild,
     ) {
+      // Safety checks to prevent infinite loops/overflow
+      if (depth > maxDepth) return;
+      if (displayList.length >= maxItems) return;
+      if (visitedIds.contains(response.id)) return; // Cycle detected
+      visitedIds.add(response.id);
+
       final replies = repliesMap[response.id] ?? [];
       replies.sort((a, b) => a.createdAt.compareTo(b.createdAt));
       final hasReplies = replies.isNotEmpty;
@@ -563,6 +572,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
       );
 
       for (var i = 0; i < replies.length; i++) {
+        if (displayList.length >= maxItems) break;
         final isFirst = i == 0;
         final isLast = i == replies.length - 1;
         // For children, pass down whether THIS node has more siblings after it
