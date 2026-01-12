@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
+import '../../map/map_screen.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/user_avatar.dart';
 import '../../../core/widgets/fullscreen_gallery.dart';
@@ -78,32 +79,9 @@ class SignalCard extends StatelessWidget {
             if (signal.mediaUrls.isNotEmpty || signal.imageLocalPath != null)
               _SignalImage(signal: signal),
 
-            // Location
+            // Location - tappable to open in maps
             if (signal.location != null)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.location_on,
-                      size: 14,
-                      color: context.textTertiary,
-                    ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        signal.location!.name ?? 'Location attached',
-                        style: TextStyle(
-                          color: context.textTertiary,
-                          fontSize: 12,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              _SignalLocation(location: signal.location!),
 
             // Footer with TTL
             SignalTTLFooter(signal: signal, onComment: onComment),
@@ -432,6 +410,71 @@ class _LocalImageFullscreen extends StatelessWidget {
                 size: 64,
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Tappable location row that opens in-app map
+class _SignalLocation extends StatelessWidget {
+  const _SignalLocation({required this.location});
+
+  final PostLocation location;
+
+  void _openMap(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MapScreen(
+          initialLatitude: location.latitude,
+          initialLongitude: location.longitude,
+          initialLocationLabel: location.name ?? 'Signal Location',
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: GestureDetector(
+        onTap: () => _openMap(context),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: context.accentColor.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: context.accentColor.withValues(alpha: 0.2),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.location_on, size: 16, color: context.accentColor),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  location.name ?? 'View Location',
+                  style: TextStyle(
+                    color: context.accentColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(
+                Icons.open_in_new,
+                size: 12,
+                color: context.accentColor.withValues(alpha: 0.7),
+              ),
+            ],
           ),
         ),
       ),
