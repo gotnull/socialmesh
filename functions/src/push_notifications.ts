@@ -81,7 +81,8 @@ async function sendPushNotification(
   userId: string,
   title: string,
   body: string,
-  data: Record<string, string>
+  data: Record<string, string>,
+  imageUrl?: string
 ): Promise<void> {
   const tokens = await getFcmTokens(userId);
   if (tokens.length === 0) {
@@ -89,20 +90,31 @@ async function sendPushNotification(
     return;
   }
 
+  // Include imageUrl in data payload for iOS Notification Service Extension
+  const dataWithImage = imageUrl
+    ? { ...data, imageUrl }
+    : data;
+
+  console.log(`[Push] Sending to ${userId} with imageUrl: ${imageUrl || 'none'}`);
+  console.log('[Push] Data payload:', JSON.stringify(dataWithImage));
+
   const message: admin.messaging.MulticastMessage = {
     notification: {
       title,
       body,
+      ...(imageUrl && { imageUrl }),
     },
-    data,
+    data: dataWithImage,
     tokens,
     apns: {
       payload: {
         aps: {
           sound: 'default',
           badge: 1,
+          'mutable-content': 1,
         },
       },
+      fcmOptions: imageUrl ? { imageUrl } : undefined,
     },
     android: {
       priority: 'high',
@@ -110,6 +122,7 @@ async function sendPushNotification(
         sound: 'default',
         channelId: 'social_notifications',
         priority: 'high',
+        ...(imageUrl && { imageUrl }),
       },
     },
   };
@@ -179,7 +192,8 @@ export const onFollowCreatedNotification = onDocumentCreated(
       {
         type: 'new_follower',
         targetId: followerId,
-      }
+      },
+      followerProfile?.avatarUrl
     );
   }
 );
@@ -215,7 +229,8 @@ export const onFollowRequestCreatedNotification = onDocumentCreated(
       {
         type: 'follow_request',
         targetId: requesterId,
-      }
+      },
+      requesterProfile?.avatarUrl
     );
   }
 );
@@ -255,7 +270,8 @@ export const onFollowRequestAcceptedNotification = onDocumentUpdated(
       {
         type: 'follow_request_accepted',
         targetId: targetId,
-      }
+      },
+      accepterProfile?.avatarUrl
     );
   }
 );
@@ -324,7 +340,8 @@ export const onSignalCreatedNotification = onDocumentCreated(
           type: 'new_signal',
           targetId: postId,
           authorId: authorId,
-        }
+        },
+        authorProfile?.avatarUrl
       );
     });
 
@@ -377,7 +394,8 @@ export const onLikeCreatedNotification = onDocumentCreated(
         {
           type: 'comment_like',
           targetId: commentData.postId as string,
-        }
+        },
+        likerProfile?.avatarUrl
       );
       return;
     }
@@ -413,7 +431,8 @@ export const onLikeCreatedNotification = onDocumentCreated(
       {
         type: 'new_like',
         targetId: postId,
-      }
+      },
+      likerProfile?.avatarUrl
     );
   }
 );
@@ -462,7 +481,8 @@ export const onStoryLikeCreatedNotification = onDocumentCreated(
         type: 'story_like',
         targetId: storyId,
         likerId: likerId,
-      }
+      },
+      likerProfile?.avatarUrl
     );
   }
 );
@@ -548,7 +568,8 @@ export const onCommentCreatedNotification = onDocumentCreated(
                 type: 'new_reply',
                 targetId: postId,
                 commentId: event.data!.id,
-              }
+              },
+              commenterProfile?.avatarUrl
             );
           }
         }
@@ -568,7 +589,8 @@ export const onCommentCreatedNotification = onDocumentCreated(
             type: 'new_comment',
             targetId: postId,
             commentId: event.data!.id,
-          }
+          },
+          commenterProfile?.avatarUrl
         );
       }
     }
@@ -590,7 +612,8 @@ export const onCommentCreatedNotification = onDocumentCreated(
             type: 'mention',
             targetId: postId,
             commentId: event.data!.id,
-          }
+          },
+          commenterProfile?.avatarUrl
         );
       }
     }
@@ -663,7 +686,8 @@ export const onSignalCommentNotification = onDocumentCreated(
         type: 'signal_comment',
         targetId: postId,
         commentId: commentId,
-      }
+      },
+      commenterProfile?.avatarUrl
     );
   }
 );
@@ -690,6 +714,10 @@ export const sendTestPushNotification = onCall(async (request) => {
   if (tokens.length === 0) {
     throw new HttpsError('failed-precondition', 'No FCM tokens registered for this user');
   }
+
+  // Get the user's own profile to use their avatar in test notifications
+  const userProfile = await getProfile(userId);
+  const avatarUrl = userProfile?.avatarUrl;
 
   // Build notification based on type
   let title: string;
@@ -728,26 +756,38 @@ export const sendTestPushNotification = onCall(async (request) => {
       data = { type: 'test' };
   }
 
-  // Send the notification
+  // Send the notification with avatar if available
+  // Include imageUrl in data payload for iOS Notification Service Extension
+  const dataWithImage = avatarUrl
+    ? { ...data, imageUrl: avatarUrl }
+    : data;
+
+  console.log(`[TestPush] Sending to ${userId} with avatarUrl: ${avatarUrl || 'none'}`);
+  console.log('[TestPush] Data payload:', JSON.stringify(dataWithImage));
+
   const message: admin.messaging.MulticastMessage = {
     notification: {
       title,
       body,
+      ...(avatarUrl && { imageUrl: avatarUrl }),
     },
-    data,
+    data: dataWithImage,
     tokens,
     apns: {
       payload: {
         aps: {
           sound: 'default',
           badge: 1,
+          'mutable-content': 1,
         },
       },
+      fcmOptions: avatarUrl ? { imageUrl: avatarUrl } : undefined,
     },
     android: {
       notification: {
         sound: 'default',
         channelId: 'social_notifications',
+        ...(avatarUrl && { imageUrl: avatarUrl }),
       },
     },
   };
