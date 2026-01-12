@@ -1,13 +1,14 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_globe_3d/flutter_globe_3d.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import '../../models/mesh_models.dart';
-import '../../providers/splash_mesh_provider.dart';
 import '../theme.dart';
 import '../logging.dart';
 
 /// 3D Interactive Globe widget showing mesh node positions
-/// Uses flutter_globe_3d for GPU-accelerated rendering
+/// Uses CesiumJS via WebView for Google Earth-style rendering with deep zoom
 class MeshGlobe extends StatefulWidget {
   /// List of nodes to display (must have position data)
   final List<MeshNode> nodes;
@@ -18,7 +19,7 @@ class MeshGlobe extends StatefulWidget {
   /// Called when a node is tapped
   final void Function(MeshNode node)? onNodeSelected;
 
-  /// Auto-rotate speed (0 to disable)
+  /// Auto-rotate speed (0 to disable) - not currently used with CesiumJS
   final double autoRotateSpeed;
 
   /// Whether the globe is enabled/visible
@@ -36,7 +37,7 @@ class MeshGlobe extends StatefulWidget {
   /// Connection line color
   final Color connectionColor;
 
-  // Legacy parameters (kept for API compatibility, but not used)
+  // Legacy parameters (kept for API compatibility)
   final double initialPhi;
   final double initialTheta;
   final Color baseColor;
@@ -69,130 +70,31 @@ class MeshGlobe extends StatefulWidget {
 }
 
 class MeshGlobeState extends State<MeshGlobe> {
-  EarthController? _controller;
-  bool _isInitialized = false;
-  List<MeshNode> _currentNodes = [];
-  bool _currentShowConnections = true;
-
-  // Track node IDs for connections
-  final Map<int, String> _nodeIdMap = {};
+  InAppWebViewController? _webViewController;
+  bool _isReady = false;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    if (widget.enabled) {
-      _initializeController();
-    }
-  }
-
-  void _initializeController() {
-    _controller = EarthController();
-
-    // Disable auto-rotation by default (too distracting)
-    _controller!.enableAutoRotate = false;
-    _controller!.rotateSpeed = 5.0; // Slow rotation if enabled
-    _controller!.minZoom = 0.8;
-    _controller!.maxZoom = 4.0;
-
-    // Lock vertical rotation to prevent polar tilt
-    _controller!.lockNorthSouth = false;
-
-    // Set light mode to follow camera for consistent lighting
-    _controller!.setLightMode(EarthLightMode.followCamera);
-
-    // Focus on initial coordinates if provided
-    if (widget.initialLatitude != null && widget.initialLongitude != null) {
-      _controller!.setCameraFocus(
-        widget.initialLatitude!,
-        widget.initialLongitude!,
-      );
-    }
-
-    _currentNodes = List.from(widget.nodes);
-    _currentShowConnections = widget.showConnections;
-
-    // Add nodes
-    _addNodes();
-
-    setState(() => _isInitialized = true);
-  }
-
-  void _addNodes() {
-    if (_controller == null) return;
-    _nodeIdMap.clear();
-
-    // Add markers for nodes with position data
-    for (final node in _currentNodes) {
-      if (node.hasPosition) {
-        final nodeId = 'node_${node.nodeNum}';
-        _nodeIdMap[node.nodeNum] = nodeId;
-
-        final color = node.avatarColor != null
-            ? Color(node.avatarColor!)
-            : widget.markerColor;
-
-        _controller!.addNode(
-          EarthNode(
-            id: nodeId,
-            latitude: node.latitude!,
-            longitude: node.longitude!,
-            child: _buildNodeLabel(node, color),
-          ),
-        );
-      }
-    }
-
-    // Add connections between all nodes with position
-    if (_currentShowConnections) {
-      final nodesWithPos = _currentNodes.where((n) => n.hasPosition).toList();
-      for (int i = 0; i < nodesWithPos.length - 1; i++) {
-        for (int j = i + 1; j < nodesWithPos.length; j++) {
-          final fromId = _nodeIdMap[nodesWithPos[i].nodeNum];
-          final toId = _nodeIdMap[nodesWithPos[j].nodeNum];
-          if (fromId != null && toId != null) {
-            _controller!.connect(
-              EarthConnection(
-                fromId: fromId,
-                toId: toId,
-                color: widget.connectionColor,
-                width: 2.0,
-                isDashed: true,
-                showArrow: false,
-              ),
-            );
-          }
-        }
-      }
-    }
+    AppLogging.app(
+      '[MeshGlobe] initState - enabled=${widget.enabled}, nodes=${widget.nodes.length}',
+    );
   }
 
   @override
   void didUpdateWidget(MeshGlobe oldWidget) {
     super.didUpdateWidget(oldWidget);
+    AppLogging.app('[MeshGlobe] didUpdateWidget - isReady=$_isReady');
 
-    if (widget.enabled != oldWidget.enabled) {
-      if (widget.enabled && !_isInitialized) {
-        _initializeController();
+    // Check if nodes changed
+    if (!_listEquals(widget.nodes, oldWidget.nodes) ||
+        widget.showConnections != oldWidget.showConnections) {
+      AppLogging.app('[MeshGlobe] Nodes or connections changed');
+      if (_isReady) {
+        _updateNodes();
       }
-    }
-
-    // Check if nodes or connections changed - need to rebuild controller
-    final nodesChanged = !_listEquals(widget.nodes, _currentNodes);
-    final connectionsChanged =
-        widget.showConnections != _currentShowConnections;
-
-    if (_isInitialized && (nodesChanged || connectionsChanged)) {
-      // Rebuild controller with new data
-      _controller?.dispose();
-      _currentNodes = List.from(widget.nodes);
-      _currentShowConnections = widget.showConnections;
-      _initializeController();
-    }
-
-    // Update auto-rotation settings - keep disabled unless explicitly enabled
-    if (widget.autoRotateSpeed != oldWidget.autoRotateSpeed &&
-        _controller != null) {
-      _controller!.enableAutoRotate = false;
+      // If not ready yet, _updateNodes will be called when globe is ready
     }
   }
 
@@ -204,72 +106,38 @@ class MeshGlobeState extends State<MeshGlobe> {
     return true;
   }
 
-  Widget _buildNodeLabel(MeshNode node, Color color) {
-    final name =
-        node.shortName ?? node.longName ?? '!${node.nodeNum.toRadixString(16)}';
-
-    // The parent Earth3D has a GestureDetector with onScaleStart that captures
-    // all gestures. To intercept taps on nodes, we need to use Listener which
-    // receives raw pointer events BEFORE the gesture arena processes them.
-    return Listener(
-      behavior: HitTestBehavior.opaque,
-      onPointerUp: (event) {
-        // Only trigger on short taps (not drags)
-        AppLogging.app(
-          '=== NODE POINTER UP: ${node.longName ?? node.shortName} ===',
-        );
-        HapticFeedback.selectionClick();
-        widget.onNodeSelected?.call(node);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: Colors.black.withAlpha(200),
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: color, width: 1.5),
-          boxShadow: [
-            BoxShadow(
-              color: color.withAlpha(100),
-              blurRadius: 8,
-              spreadRadius: 2,
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Status indicator dot
-            Container(
-              width: 10,
-              height: 10,
-              decoration: BoxDecoration(
-                color: node.isOnline ? Colors.greenAccent : color,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: (node.isOnline ? Colors.greenAccent : color)
-                        .withAlpha(180),
-                    blurRadius: 6,
-                    spreadRadius: 2,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            // Node name
-            Text(
-              name,
-              style: const TextStyle(
-                color: SemanticColors.onBrand,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                shadows: [Shadow(color: Colors.black, blurRadius: 3)],
-              ),
-            ),
-          ],
-        ),
-      ),
+  Future<void> _updateNodes() async {
+    AppLogging.app(
+      '[MeshGlobe] _updateNodes - controller=${_webViewController != null}, ready=$_isReady',
     );
+    if (_webViewController == null || !_isReady) return;
+
+    final nodesWithPos = widget.nodes.where((n) => n.hasPosition).toList();
+    AppLogging.app(
+      '[MeshGlobe] Sending ${nodesWithPos.length} nodes with position',
+    );
+
+    final nodesJson = nodesWithPos
+        .map(
+          (n) => {
+            'nodeNum': n.nodeNum,
+            'shortName': n.shortName,
+            'longName': n.longName,
+            'latitude': n.latitude,
+            'longitude': n.longitude,
+            'isOnline': n.isOnline,
+            'avatarColor': n.avatarColor != null
+                ? '#${n.avatarColor!.toRadixString(16).padLeft(8, '0').substring(2)}'
+                : null,
+          },
+        )
+        .toList();
+
+    final js = 'setNodes(${jsonEncode(nodesJson)}, ${widget.showConnections});';
+    AppLogging.app(
+      '[MeshGlobe] Executing JS: setNodes with ${nodesJson.length} nodes',
+    );
+    await _webViewController?.evaluateJavascript(source: js);
   }
 
   /// Rotate to focus on a specific location
@@ -277,33 +145,92 @@ class MeshGlobeState extends State<MeshGlobe> {
     double latitude,
     double longitude, {
     bool animate = true,
+    double height = 2000000,
   }) {
-    _controller?.setCameraFocus(latitude, longitude);
-    // Disable auto-rotation when focusing on a location
-    if (animate && _controller != null) {
-      _controller!.enableAutoRotate = false;
-    }
+    if (_webViewController == null || !_isReady) return;
+    final duration = animate ? 2.0 : 0.0;
+    _webViewController?.evaluateJavascript(
+      source: 'flyTo($latitude, $longitude, $height, $duration);',
+    );
   }
 
   /// Rotate to focus on a specific node
   void rotateToNode(MeshNode node, {bool animate = true}) {
     if (node.hasPosition) {
-      rotateToLocation(node.latitude!, node.longitude!, animate: animate);
+      // Fly closer for individual node view
+      rotateToLocation(
+        node.latitude!,
+        node.longitude!,
+        height: 50000,
+        animate: animate,
+      );
     }
   }
 
   /// Reset rotation to default view
   void resetView() {
-    _controller?.setCameraFocus(0, 0);
-    if (_controller != null) {
-      _controller!.enableAutoRotate = false;
+    if (_webViewController == null || !_isReady) return;
+    _webViewController?.evaluateJavascript(source: 'resetView();');
+  }
+
+  /// Toggle connection lines visibility
+  void setConnectionsVisible(bool visible) {
+    if (_webViewController == null || !_isReady) return;
+    _webViewController?.evaluateJavascript(
+      source: 'setConnectionsVisible($visible);',
+    );
+  }
+
+  void _onGlobeReady() {
+    AppLogging.app('[MeshGlobe] _onGlobeReady called!');
+    setState(() {
+      _isReady = true;
+      _isLoading = false;
+    });
+
+    // Set accent color
+    final colorHex =
+        '#${widget.markerColor.value.toRadixString(16).padLeft(8, '0').substring(2)}';
+    AppLogging.app('[MeshGlobe] Setting accent color: $colorHex');
+    _webViewController?.evaluateJavascript(
+      source: 'setAccentColor("$colorHex");',
+    );
+
+    // Send pending nodes
+    AppLogging.app('[MeshGlobe] Calling _updateNodes');
+    _updateNodes();
+
+    // Fly to initial location if provided
+    if (widget.initialLatitude != null && widget.initialLongitude != null) {
+      AppLogging.app(
+        '[MeshGlobe] Flying to initial location: ${widget.initialLatitude}, ${widget.initialLongitude}',
+      );
+      Future.delayed(const Duration(milliseconds: 500), () {
+        rotateToLocation(
+          widget.initialLatitude!,
+          widget.initialLongitude!,
+          height: 5000000,
+        );
+      });
     }
   }
 
-  @override
-  void dispose() {
-    _controller?.dispose();
-    super.dispose();
+  void _onNodeSelected(String nodeJson) {
+    try {
+      final data = jsonDecode(nodeJson) as Map<String, dynamic>;
+      final nodeNum = data['nodeNum'] as int;
+
+      // Find the node in our list
+      final node = widget.nodes.firstWhere(
+        (n) => n.nodeNum == nodeNum,
+        orElse: () => widget.nodes.first,
+      );
+
+      HapticFeedback.selectionClick();
+      widget.onNodeSelected?.call(node);
+    } catch (e) {
+      AppLogging.app('Error parsing node selection: $e');
+    }
   }
 
   @override
@@ -312,30 +239,107 @@ class MeshGlobeState extends State<MeshGlobe> {
       return const SizedBox.shrink();
     }
 
-    if (_controller == null || !_isInitialized) {
-      return Container(
-        color: context.background,
-        child: const ScreenLoadingIndicator(),
-      );
-    }
+    return Stack(
+      children: [
+        // WebView with CesiumJS
+        InAppWebView(
+          initialFile: 'assets/globe/cesium_globe.html',
+          initialSettings: InAppWebViewSettings(
+            mediaPlaybackRequiresUserGesture: false,
+            allowsInlineMediaPlayback: true,
+            javaScriptEnabled: true,
+            transparentBackground: true,
+            supportZoom: false,
+            disableHorizontalScroll: false,
+            disableVerticalScroll: false,
+            useHybridComposition: true,
+            allowFileAccessFromFileURLs: true,
+            allowUniversalAccessFromFileURLs: true,
+          ),
+          onWebViewCreated: (controller) {
+            AppLogging.app('[MeshGlobe] onWebViewCreated');
+            _webViewController = controller;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Use the full available size for the globe
-        final size = Size(constraints.maxWidth, constraints.maxHeight);
+            // Register handlers for communication from JS
+            controller.addJavaScriptHandler(
+              handlerName: 'onGlobeReady',
+              callback: (args) {
+                AppLogging.app('[MeshGlobe] JS handler onGlobeReady received');
+                _onGlobeReady();
+                return null;
+              },
+            );
 
-        return Container(
-          color: context.background,
-          child: Center(
-            child: Earth3D(
-              controller: _controller!,
-              texture: const AssetImage('assets/globe/earth_texture.png'),
-              initialScale: 4.0,
-              size: size,
+            controller.addJavaScriptHandler(
+              handlerName: 'onNodeSelected',
+              callback: (args) {
+                AppLogging.app('[MeshGlobe] JS handler onNodeSelected: $args');
+                if (args.isNotEmpty) {
+                  _onNodeSelected(args[0] as String);
+                }
+                return null;
+              },
+            );
+          },
+          onLoadStart: (controller, url) {
+            AppLogging.app('[MeshGlobe] onLoadStart: $url');
+          },
+          onLoadStop: (controller, url) {
+            AppLogging.app('[MeshGlobe] onLoadStop: $url');
+            // Fallback if onGlobeReady not called
+            Future.delayed(const Duration(seconds: 3), () {
+              if (!_isReady && mounted) {
+                AppLogging.app(
+                  '[MeshGlobe] Fallback: calling _onGlobeReady after timeout',
+                );
+                _onGlobeReady();
+              }
+            });
+          },
+          onLoadError: (controller, url, code, message) {
+            AppLogging.app(
+              '[MeshGlobe] onLoadError: code=$code, message=$message, url=$url',
+            );
+          },
+          onReceivedError: (controller, request, error) {
+            AppLogging.app(
+              '[MeshGlobe] onReceivedError: ${error.description} for ${request.url}',
+            );
+          },
+          onConsoleMessage: (controller, message) {
+            AppLogging.app('[MeshGlobe/JS] ${message.message}');
+          },
+        ),
+
+        // Loading indicator
+        if (_isLoading)
+          Container(
+            color: context.background,
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation(context.accentColor),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Loading Globe...',
+                    style: TextStyle(
+                      color: context.textSecondary,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        );
-      },
+      ],
     );
   }
 }

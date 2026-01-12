@@ -798,14 +798,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.0.0"
-  flutter_globe_3d:
-    dependency: "direct main"
-    description:
-      name: flutter_globe_3d
-      sha256: "6401e83ba21324a7dbfb95a87a71717ea243eec36d95c837c8925552006e0eba"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.2.5"
   flutter_inappwebview:
     dependency: "direct main"
     description:

@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 
 void main() {
   group('MeshGlobe Widget', () {
-    // Note: Tests with enabled: true are skipped because flutter_globe_3d requires
-    // an actual GPU context and creates timers that don't clean up in tests.
+    // Note: Tests with enabled: true are skipped because CesiumJS WebView requires
+    // a platform-specific WebView context that's not available in widget tests.
 
     testWidgets('renders when disabled', (tester) async {
       await tester.pumpWidget(

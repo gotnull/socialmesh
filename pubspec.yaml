@@ -68,8 +68,7 @@ dependencies:
   # In-App Purchases (RevenueCat)
   purchases_flutter: ^9.9.10
   
-  # 3D Globe
-  flutter_globe_3d: ^2.2.5
+  # 3D Globe (CesiumJS via WebView - flutter_inappwebview already included)
   three_js: ^0.2.6
   
   # Animations
