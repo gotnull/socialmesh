@@ -341,6 +341,13 @@ class SignalService {
   /// Stream of comment updates. Emits the signalId when its comments are updated.
   Stream<String> get onCommentUpdate => _commentUpdateController.stream;
 
+  /// Stream controller for remote signal deletions.
+  /// Emits signalId when a signal is deleted remotely (by the author on another device).
+  final _remoteDeleteController = StreamController<String>.broadcast();
+
+  /// Stream of remote signal deletions.
+  Stream<String> get onRemoteDelete => _remoteDeleteController.stream;
+
   /// Track node last-seen times for proximity-based image unlock.
   /// Key: nodeId, Value: DateTime of last proximity ping.
   final Map<int, List<DateTime>> _nodeProximityHistory = {};
@@ -1326,10 +1333,52 @@ class SignalService {
           }
           await doc.reference.delete();
         }
+
+        // Delete image from Firebase Storage if it exists
+        if (signal != null && signal.mediaUrls.isNotEmpty) {
+          try {
+            final ref = _storage.ref('signals/$_currentUserId/$signalId.jpg');
+            await ref.delete();
+            AppLogging.signals('Deleted signal image from Storage: $signalId');
+          } catch (storageError) {
+            AppLogging.signals(
+              'Failed to delete signal image from Storage (may not exist): $storageError',
+            );
+          }
+        }
       } catch (e) {
         AppLogging.signals('Failed to delete signal from Firebase: $e');
       }
     }
+  }
+
+  /// Delete a signal from local storage only (without touching Firebase).
+  /// Used when handling remote deletions from Firestore listener.
+  Future<void> _deleteSignalLocally(String signalId) async {
+    await init();
+
+    AppLogging.signals('Deleting signal locally (remote deletion): $signalId');
+
+    // Get signal to delete its image file
+    final signal = await getSignalById(signalId);
+    if (signal != null) {
+      await _deleteSignalImage(signal.imageLocalPath);
+    }
+
+    // Delete cached cloud image if exists
+    await _deleteCachedCloudImages([signalId]);
+
+    // Delete comments for this signal
+    await _db!.delete(
+      _commentsTable,
+      where: 'signalId = ?',
+      whereArgs: [signalId],
+    );
+
+    // Delete from local database
+    await _db!.delete(_tableName, where: 'id = ?', whereArgs: [signalId]);
+
+    AppLogging.signals('Signal $signalId deleted locally');
   }
 
   // ===========================================================================
@@ -1368,6 +1417,20 @@ class SignalService {
 
       AppLogging.signals('Signal expired: id=$id, expiredAt=$expiresAt');
       await _deleteSignalImage(imagePath);
+
+      // Delete from Firebase Storage if authenticated
+      if (_currentUserId != null) {
+        try {
+          final ref = _storage.ref('signals/$_currentUserId/$id.jpg');
+          await ref.delete();
+          AppLogging.signals('Deleted expired signal image from Storage: $id');
+        } catch (storageError) {
+          // Ignore - image may not exist in Storage
+          AppLogging.signals(
+            'Storage deletion skipped for expired signal (may not exist): $id',
+          );
+        }
+      }
 
       // Stop cloud listeners for this signal
       _stopCommentsListener(id);
@@ -1958,9 +2021,29 @@ class SignalService {
             );
 
             if (!snapshot.exists) {
-              AppLogging.signals(
-                '📡 Post listener: doc posts/$signalId does NOT exist yet - waiting',
-              );
+              // Check if we have this signal locally
+              final localSignal = await getSignalById(signalId);
+              if (localSignal != null) {
+                // Signal exists locally but not in cloud - author deleted it
+                AppLogging.signals(
+                  '📡 Post listener: doc posts/$signalId DELETED by author - '
+                  'removing locally',
+                );
+
+                // Delete locally (without trying to delete from Firestore again)
+                await _deleteSignalLocally(signalId);
+
+                // Notify UI to remove from feed
+                _remoteDeleteController.add(signalId);
+
+                // Stop this listener
+                _stopPostListener(signalId);
+                _stopCommentsListener(signalId);
+              } else {
+                AppLogging.signals(
+                  '📡 Post listener: doc posts/$signalId does NOT exist yet - waiting',
+                );
+              }
               return;
             }
 

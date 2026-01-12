@@ -121,6 +121,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
   Timer? _refreshTimer;
   Timer? _countdownTimer;
   StreamSubscription<MeshSignalPacket>? _signalSubscription;
+  StreamSubscription<String>? _remoteDeleteSubscription;
   bool _isObserving = false;
 
   @override
@@ -138,6 +139,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
       _refreshTimer?.cancel();
       _countdownTimer?.cancel();
       _signalSubscription?.cancel();
+      _remoteDeleteSubscription?.cancel();
       _stopLifecycleObserver();
     });
 
@@ -182,6 +184,34 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
       _handleIncomingMeshSignal,
       onError: (e) {
         AppLogging.signals('Signal stream error: $e');
+      },
+    );
+
+    // Subscribe to remote deletions (signal deleted by author on another device)
+    _remoteDeleteSubscription?.cancel();
+    _remoteDeleteSubscription = service.onRemoteDelete.listen(
+      (signalId) {
+        AppLogging.signals(
+          'Remote deletion received for signal: $signalId - removing from feed',
+        );
+        state = state.withoutSignal(signalId);
+      },
+      onError: (e) {
+        AppLogging.signals('Remote delete stream error: $e');
+      },
+    );
+
+    // Subscribe to remote deletions (signal deleted by author on another device)
+    _remoteDeleteSubscription?.cancel();
+    _remoteDeleteSubscription = service.onRemoteDelete.listen(
+      (signalId) {
+        AppLogging.signals(
+          'Remote deletion received for signal: $signalId - removing from feed',
+        );
+        state = state.withoutSignal(signalId);
+      },
+      onError: (e) {
+        AppLogging.signals('Remote delete stream error: $e');
       },
     );
 
