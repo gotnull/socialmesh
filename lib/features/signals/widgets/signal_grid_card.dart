@@ -68,23 +68,22 @@ class SignalGridCard extends ConsumerWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: context.card,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: context.border.withValues(alpha: 0.5)),
         ),
-        clipBehavior: Clip.antiAlias,
-        child: Stack(
-          children: [
-            // Background - image or content preview
-            Positioned.fill(
-              child: hasImage
-                  ? _buildImageBackground()
-                  : _buildContentBackground(context),
-            ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(11),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // Background - image or content preview (MUST be first)
+              if (hasImage)
+                _buildImageBackground()
+              else
+                _buildContentBackground(context),
 
-            // Gradient overlay for readability - stronger for better icon visibility
-            Positioned.fill(
-              child: Container(
+              // Gradient overlay for readability
+              DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
@@ -97,136 +96,120 @@ class SignalGridCard extends ConsumerWidget {
                     stops: const [0.0, 0.4, 1.0],
                   ),
                 ),
+                child: const SizedBox.expand(),
               ),
-            ),
 
-            // Top row badges with frosted background
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.black.withValues(alpha: 0.5),
-                      Colors.black.withValues(alpha: 0.0),
-                    ],
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Left side: hop count
-                    if (signal.hopCount != null)
-                      _BadgePill(
-                        icon: _getHopIcon(signal.hopCount!),
-                        iconColor: _getHopColor(signal.hopCount!),
-                        text: '${signal.hopCount}h',
-                      )
-                    else
-                      const SizedBox.shrink(),
-                    // Right side: TTL
-                    _TTLBadge(signal: signal),
-                  ],
-                ),
-              ),
-            ),
-
-            // Bottom info area with frosted background
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.bottomCenter,
-                    end: Alignment.topCenter,
-                    colors: [
-                      Colors.black.withValues(alpha: 0.7),
-                      Colors.black.withValues(alpha: 0.0),
-                    ],
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Info badges row
-                    Row(
-                      children: [
-                        // Comment count
-                        if (signal.commentCount > 0) ...[
-                          _IconBadge(
-                            icon: Icons.chat_bubble_outline,
-                            text: signal.commentCount.toString(),
-                          ),
-                          const SizedBox(width: 8),
-                        ],
-                        // Location indicator
-                        if (hasLocation) ...[
-                          const _IconBadge(icon: Icons.location_on, text: null),
-                          const SizedBox(width: 8),
-                        ],
-                        // Image indicator (only show if has image)
-                        if (hasImage) ...[
-                          const _IconBadge(icon: Icons.image, text: null),
-                        ],
-                        const Spacer(),
-                        // Mesh origin indicator
-                        if (isMeshSignal)
-                          const _IconBadge(icon: Icons.router, text: null),
+              // Top row badges
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.black.withValues(alpha: 0.5),
+                        Colors.black.withValues(alpha: 0.0),
                       ],
                     ),
-                    const SizedBox(height: 6),
-                    // Author row
-                    Row(
-                      children: [
-                        UserAvatar(
-                          imageUrl: avatarUrl,
-                          size: 22,
-                          foregroundColor: avatarColor,
-                          fallbackIcon: isMeshSignal
-                              ? Icons.router
-                              : Icons.person,
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                authorName,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  shadows: [
-                                    Shadow(
-                                      color: Colors.black87,
-                                      blurRadius: 4,
-                                    ),
-                                  ],
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              if (isMeshSignal &&
-                                  authorShortName != null &&
-                                  authorShortName.isNotEmpty)
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Left side: hop count
+                      if (signal.hopCount != null)
+                        _BadgePill(
+                          icon: _getHopIcon(signal.hopCount!),
+                          iconColor: _getHopColor(signal.hopCount!),
+                          text: '${signal.hopCount}h',
+                        )
+                      else
+                        const SizedBox.shrink(),
+                      // Right side: TTL
+                      _TTLBadge(signal: signal),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Bottom info area
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                      colors: [
+                        Colors.black.withValues(alpha: 0.7),
+                        Colors.black.withValues(alpha: 0.0),
+                      ],
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Info badges row
+                      Row(
+                        children: [
+                          // Comment count
+                          if (signal.commentCount > 0) ...[
+                            _IconBadge(
+                              icon: Icons.chat_bubble_outline,
+                              text: signal.commentCount.toString(),
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                          // Location indicator
+                          if (hasLocation) ...[
+                            const _IconBadge(
+                              icon: Icons.location_on,
+                              text: null,
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                          // Image indicator (only show if has image)
+                          if (hasImage) ...[
+                            const _IconBadge(icon: Icons.image, text: null),
+                          ],
+                          const Spacer(),
+                          // Mesh origin indicator
+                          if (isMeshSignal)
+                            const _IconBadge(icon: Icons.router, text: null),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      // Author row
+                      Row(
+                        children: [
+                          UserAvatar(
+                            imageUrl: avatarUrl,
+                            size: 22,
+                            foregroundColor: avatarColor,
+                            fallbackIcon: isMeshSignal
+                                ? Icons.router
+                                : Icons.person,
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
                                 Text(
-                                  authorShortName,
-                                  style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.8),
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w500,
-                                    shadows: const [
+                                  authorName,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    shadows: [
                                       Shadow(
                                         color: Colors.black87,
                                         blurRadius: 4,
@@ -236,16 +219,38 @@ class SignalGridCard extends ConsumerWidget {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                            ],
+                                if (isMeshSignal &&
+                                    authorShortName != null &&
+                                    authorShortName.isNotEmpty)
+                                  Text(
+                                    authorShortName,
+                                    style: TextStyle(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.8,
+                                      ),
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w500,
+                                      shadows: const [
+                                        Shadow(
+                                          color: Colors.black87,
+                                          blurRadius: 4,
+                                        ),
+                                      ],
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -266,23 +271,22 @@ class SignalGridCard extends ConsumerWidget {
   Widget _buildImageBackground() {
     final hasCloudImage = signal.mediaUrls.isNotEmpty;
 
-    // No ClipRRect needed - parent Container has clipBehavior: Clip.antiAlias
-    // Use width/height: double.infinity to ensure image fills the space
+    // SizedBox.expand ensures the image takes full space of parent
     if (hasCloudImage) {
-      return Image.network(
-        signal.mediaUrls.first,
-        fit: BoxFit.cover,
-        width: double.infinity,
-        height: double.infinity,
-        errorBuilder: (ctx, error, stack) => _buildPlaceholder(ctx),
+      return SizedBox.expand(
+        child: Image.network(
+          signal.mediaUrls.first,
+          fit: BoxFit.cover,
+          errorBuilder: (ctx, error, stack) => _buildPlaceholder(ctx),
+        ),
       );
     } else if (signal.imageLocalPath != null) {
-      return Image.file(
-        File(signal.imageLocalPath!),
-        fit: BoxFit.cover,
-        width: double.infinity,
-        height: double.infinity,
-        errorBuilder: (ctx, error, stack) => _buildPlaceholder(ctx),
+      return SizedBox.expand(
+        child: Image.file(
+          File(signal.imageLocalPath!),
+          fit: BoxFit.cover,
+          errorBuilder: (ctx, error, stack) => _buildPlaceholder(ctx),
+        ),
       );
     }
     return _buildPlaceholder(null);
