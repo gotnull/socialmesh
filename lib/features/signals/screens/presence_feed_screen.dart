@@ -243,6 +243,8 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
     signals = _applySort(signals);
     signals = _applySearch(signals);
 
+    final canPop = Navigator.of(context).canPop();
+
     return GestureDetector(
       onTap: _dismissKeyboard,
       child: HelpTourController(
@@ -252,7 +254,7 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
           backgroundColor: context.background,
           appBar: AppBar(
             backgroundColor: context.background,
-            leading: const HamburgerMenuButton(),
+            leading: canPop ? const BackButton() : const HamburgerMenuButton(),
             centerTitle: true,
             title: Text(
               'Presence${allCount > 0 ? ' ($allCount)' : ''}',
