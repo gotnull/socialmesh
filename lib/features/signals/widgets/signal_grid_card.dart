@@ -267,16 +267,22 @@ class SignalGridCard extends ConsumerWidget {
     final hasCloudImage = signal.mediaUrls.isNotEmpty;
 
     if (hasCloudImage) {
-      return Image.network(
-        signal.mediaUrls.first,
-        fit: BoxFit.cover,
-        errorBuilder: (ctx, error, stack) => _buildPlaceholder(ctx),
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Image.network(
+          signal.mediaUrls.first,
+          fit: BoxFit.cover,
+          errorBuilder: (ctx, error, stack) => _buildPlaceholder(ctx),
+        ),
       );
     } else if (signal.imageLocalPath != null) {
-      return Image.file(
-        File(signal.imageLocalPath!),
-        fit: BoxFit.cover,
-        errorBuilder: (ctx, error, stack) => _buildPlaceholder(ctx),
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Image.file(
+          File(signal.imageLocalPath!),
+          fit: BoxFit.cover,
+          errorBuilder: (ctx, error, stack) => _buildPlaceholder(ctx),
+        ),
       );
     }
     return _buildPlaceholder(null);
