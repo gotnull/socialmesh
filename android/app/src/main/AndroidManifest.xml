@@ -1,5 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Override GlyphMatrix SDK minSdk requirement (34) since we only use it on Phone 3 (API 34+) -->
+    <uses-sdk tools:overrideLibrary="com.nothing.ketchum" />
+
     <!-- Bluetooth permissions for Android 12+ (API 31+) -->
     <!-- neverForLocation allows BLE scanning without location permission -->
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN"

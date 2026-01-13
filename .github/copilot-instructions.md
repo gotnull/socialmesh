@@ -151,7 +151,6 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
 ## Code Quality Rules
 - Zero `flutter analyze` issues (info, warning, error)
 - **ALL tests must pass** - never leave failing tests, regardless of when they broke
-- Use `debugPrint()` not `print()`
 - NEVER use `// ignore:` or `// noinspection`
 - Cancel all `StreamSubscription` in `dispose()`
 - Dispose all `TextEditingController`s

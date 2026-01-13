@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -228,7 +227,7 @@ Future<void> recordSignalView(String signalId, String? viewerId) async {
       'lastViewedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   } catch (e) {
-    debugPrint('Failed to record signal view: $e');
+    AppLogging.signals('Failed to record signal view: $e');
   }
 }
 
