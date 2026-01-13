@@ -71,8 +71,12 @@ class SnappableState extends State<Snappable>
   /// Layers of image
   List<Uint8List>? _layers;
 
-  /// Values from -1 to 1 to dislocate the layers a bit
-  List<double>? _randoms;
+  /// Direction particles move (away from erosion origin), normalized
+  double _directionX = 1.0;
+  double _directionY = 0.0;
+
+  /// Small per-layer random offsets for slight variation
+  List<double>? _randomOffsets;
 
   /// Size of child widget
   Size? size;
@@ -129,14 +133,8 @@ class SnappableState extends State<Snappable>
     final fullImage = await _getImageFromWidget();
     if (fullImage == null) return;
 
-    // Prepare random dislocations immediately (before heavy processing)
-    final randoms = List.generate(
-      widget.numberOfBuckets,
-      (i) => (math.Random().nextDouble() - 0.5) * 2,
-    );
-
     // Do ALL heavy work in isolate: pixel distribution + PNG encoding
-    _layers = await compute<_SnapParams, List<Uint8List>>(
+    final result = await compute<_SnapParams, _SnapResult>(
       _processAndEncodeImages,
       _SnapParams(
         imageBytes: fullImage.buffer.asUint8List(),
@@ -148,7 +146,14 @@ class SnappableState extends State<Snappable>
 
     // Set state and start animation immediately
     setState(() {
-      _randoms = randoms;
+      _layers = result.layers;
+      _directionX = result.directionX;
+      _directionY = result.directionY;
+      // Small random offsets for slight per-layer variation (±15%)
+      _randomOffsets = List.generate(
+        widget.numberOfBuckets,
+        (i) => (math.Random().nextDouble() - 0.5) * 0.3,
+      );
     });
 
     // Start the snap!
@@ -159,6 +164,7 @@ class SnappableState extends State<Snappable>
   void reset() {
     setState(() {
       _layers = null;
+      _randomOffsets = null;
       _animationController.reset();
     });
   }
@@ -178,14 +184,21 @@ class SnappableState extends State<Snappable>
       curve: Interval(animationStart, animationEnd, curve: Curves.easeOut),
     );
 
-    Offset randomOffset = widget.randomDislocationOffset.scale(
-      _randoms![index],
-      _randoms![index],
-    );
+    // Calculate total magnitude from base offset
+    final baseMagnitude =
+        widget.offset.distance + widget.randomDislocationOffset.distance;
+
+    // All layers move in same direction (away from erosion origin)
+    // with small per-layer variation in distance
+    final distanceVariation = 1.0 + _randomOffsets![index];
+    final distance = baseMagnitude * distanceVariation;
+
+    // Particles move in the erosion direction (away from origin)
+    final endOffset = Offset(_directionX * distance, _directionY * distance);
 
     Animation<Offset> offsetAnimation = Tween<Offset>(
       begin: Offset.zero,
-      end: widget.offset + randomOffset,
+      end: endOffset,
     ).animate(animation);
 
     return Positioned(
@@ -195,7 +208,12 @@ class SnappableState extends State<Snappable>
       height: size?.height,
       child: AnimatedBuilder(
         animation: _animationController,
-        child: Image.memory(layer, fit: BoxFit.fill),
+        child: Image.memory(
+          layer,
+          fit: BoxFit.none,
+          filterQuality: FilterQuality.none,
+          scale: 1.0,
+        ),
         builder: (context, child) {
           return Transform.translate(
             offset: offsetAnimation.value,
@@ -250,8 +268,21 @@ class _SnapParams {
   });
 }
 
+/// Result from isolate processing - layers + direction
+class _SnapResult {
+  final List<Uint8List> layers;
+  final double directionX;
+  final double directionY;
+
+  _SnapResult({
+    required this.layers,
+    required this.directionX,
+    required this.directionY,
+  });
+}
+
 /// Process pixels and encode to PNG - runs in isolate for performance
-List<Uint8List> _processAndEncodeImages(_SnapParams params) {
+_SnapResult _processAndEncodeImages(_SnapParams params) {
   final random = math.Random();
 
   // Recreate source image from bytes
@@ -275,37 +306,48 @@ List<Uint8List> _processAndEncodeImages(_SnapParams params) {
     ),
   );
 
-  // Gaussian function for weight calculation - wider spread for more randomness
-  int gauss(double center, double value) =>
-      (1000 * math.exp(-(math.pow((value - center), 2) / 0.4))).round();
+  // Pick a random erosion origin point - this is where the snap STARTS
+  // Can be anywhere: corner, edge, or even outside the image for diagonal sweeps
+  final originX =
+      random.nextDouble() * params.width * 1.5 - params.width * 0.25;
+  final originY =
+      random.nextDouble() * params.height * 1.5 - params.height * 0.25;
 
-  // Pick a bucket based on weights with added randomness
-  int pickABucket(List<int> weights, int sumOfWeights) {
-    int rnd = random.nextInt(sumOfWeights);
-    for (int i = 0; i < params.numberOfBuckets; i++) {
-      if (rnd < weights[i]) return i;
-      rnd -= weights[i];
-    }
-    return 0;
-  }
+  // Calculate max possible distance for normalization
+  final corners = [
+    math.sqrt(math.pow(originX, 2) + math.pow(originY, 2)),
+    math.sqrt(math.pow(originX - params.width, 2) + math.pow(originY, 2)),
+    math.sqrt(math.pow(originX, 2) + math.pow(originY - params.height, 2)),
+    math.sqrt(
+      math.pow(originX - params.width, 2) +
+          math.pow(originY - params.height, 2),
+    ),
+  ];
+  final maxDistance = corners.reduce(math.max);
 
-  // For every pixel (not just by line - add per-pixel randomness)
+  // For every pixel, assign to bucket based on distance from erosion origin
+  // Closer pixels = earlier buckets = fade first (erosion starts here)
+  // Farther pixels = later buckets = fade last (erosion reaches here later)
   for (int y = 0; y < params.height; y++) {
     for (int x = 0; x < params.width; x++) {
-      // Add per-pixel noise to the y position for more chaotic distribution
-      final noiseY = y + (random.nextDouble() - 0.5) * params.height * 0.3;
-      final normalizedY = (noiseY / params.height).clamp(0.0, 1.0);
-
-      // Generate weight list with noisy position
-      final weights = List<int>.generate(
-        params.numberOfBuckets,
-        (bucket) => gauss(normalizedY, bucket / params.numberOfBuckets),
+      // Distance from erosion origin
+      final distance = math.sqrt(
+        math.pow(x - originX, 2) + math.pow(y - originY, 2),
       );
-      final sumOfWeights = weights.fold(0, (sum, el) => sum + el);
+
+      // Normalize to 0-1 range
+      final normalizedDistance = distance / maxDistance;
+
+      // Add small random noise so edges aren't perfectly smooth
+      // This creates the dusty/particle look at the erosion boundary
+      final noise = (random.nextDouble() - 0.5) * 0.15;
+      final adjustedDistance = (normalizedDistance + noise).clamp(0.0, 0.999);
+
+      // Map to bucket - closer = lower bucket = fades first
+      final bucket = (adjustedDistance * params.numberOfBuckets).floor();
 
       final pixel = fullImage.getPixel(x, y);
-      final imageIndex = pickABucket(weights, sumOfWeights);
-      final targetPixel = images[imageIndex].getPixel(x, y);
+      final targetPixel = images[bucket].getPixel(x, y);
       targetPixel.r = pixel.r;
       targetPixel.g = pixel.g;
       targetPixel.b = pixel.b;
@@ -313,6 +355,25 @@ List<Uint8List> _processAndEncodeImages(_SnapParams params) {
     }
   }
 
+  // Calculate direction particles should move (away from origin = toward center)
+  // Find center of image
+  final centerX = params.width / 2;
+  final centerY = params.height / 2;
+  // Direction is from origin toward center (so particles move away from erosion)
+  final dirX = centerX - originX;
+  final dirY = centerY - originY;
+  final dirMagnitude = math.sqrt(dirX * dirX + dirY * dirY);
+  final normalizedDirX = dirMagnitude > 0 ? dirX / dirMagnitude : 1.0;
+  final normalizedDirY = dirMagnitude > 0 ? dirY / dirMagnitude : 0.0;
+
   // Encode all images to PNG
-  return images.map((img) => Uint8List.fromList(image.encodePng(img))).toList();
+  final encodedLayers = images
+      .map((img) => Uint8List.fromList(image.encodePng(img)))
+      .toList();
+
+  return _SnapResult(
+    layers: encodedLayers,
+    directionX: normalizedDirX,
+    directionY: normalizedDirY,
+  );
 }

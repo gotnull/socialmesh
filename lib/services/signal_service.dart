@@ -17,6 +17,7 @@ import '../models/social.dart';
 
 /// Default signal TTL options in minutes.
 class SignalTTL {
+  static const int min1 = 1; // For testing
   static const int min15 = 15;
   static const int min30 = 30;
   static const int hour1 = 60;
@@ -25,7 +26,7 @@ class SignalTTL {
 
   static const int defaultTTL = hour1;
 
-  static const List<int> options = [min15, min30, hour1, hour6, hour24];
+  static const List<int> options = [min1, min15, min30, hour1, hour6, hour24];
 
   static String label(int minutes) {
     if (minutes < 60) return '${minutes}m';
