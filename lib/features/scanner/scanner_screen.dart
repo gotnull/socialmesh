@@ -209,6 +209,17 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
     AppLogging.connection('📡 SCANNER: Starting 10s scan...');
 
+    // Get saved device info before scan to check if it was found afterward
+    String? savedDeviceId;
+    String? savedDeviceName;
+    try {
+      final settingsService = await ref.read(settingsServiceProvider.future);
+      savedDeviceId = settingsService.lastDeviceId;
+      savedDeviceName = settingsService.lastDeviceName;
+    } catch (e) {
+      AppLogging.connection('📡 SCANNER: Failed to load saved device info: $e');
+    }
+
     setState(() {
       _scanning = true;
       _devices.clear();
@@ -260,6 +271,21 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       AppLogging.connection(
         '📡 SCANNER: Scan stream completed, found ${_devices.length} devices',
       );
+
+      // After scan completes, check if saved device was found
+      // If not, show info banner that it may be connected elsewhere
+      if (mounted && savedDeviceId != null) {
+        final savedDeviceFound = _devices.any((d) => d.id == savedDeviceId);
+        if (!savedDeviceFound && _devices.isNotEmpty) {
+          // Found other devices but not the saved one - likely connected elsewhere
+          AppLogging.connection(
+            '📡 SCANNER: Saved device $savedDeviceId not found, may be connected elsewhere',
+          );
+          setState(() {
+            _savedDeviceNotFoundName = savedDeviceName ?? 'Your saved device';
+          });
+        }
+      }
     } catch (e) {
       AppLogging.connection('📡 SCANNER: Scan error: $e');
       if (mounted) {
@@ -663,7 +689,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'If another app (like Meshtastic) is connected to this device, disconnect from it first. Only one app can use Bluetooth at a time.',
+                            'If another app is connected to this device, disconnect from it first. Only one app can use Bluetooth at a time.',
                             style: TextStyle(
                               color: Colors.orange.shade700,
                               fontSize: 13,
