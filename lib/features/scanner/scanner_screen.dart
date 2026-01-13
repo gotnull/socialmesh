@@ -229,7 +229,12 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       return;
     }
 
-    AppLogging.connection('📡 SCANNER: Starting 10s scan...');
+    // Check if user just manually disconnected - need extra time for device
+    // to start advertising again after we released the BLE connection
+    final userJustDisconnected = ref.read(userDisconnectedProvider);
+    AppLogging.connection(
+      '📡 SCANNER: Starting 10s scan... (userJustDisconnected=$userJustDisconnected)',
+    );
 
     // Get saved device info before scan to check if it was found afterward
     String? savedDeviceId;
@@ -262,7 +267,36 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
         AppLogging.connection('📡 SCANNER: stopScan error (ignoring): $e');
       }
 
-      // 2. Try to disconnect any stale connections to our saved device
+      // 2. Clean up ALL system devices if user just disconnected
+      // When user manually disconnects, the device we just released may still
+      // have stale BLE state. Clean up everything to ensure fresh scan.
+      if (userJustDisconnected) {
+        AppLogging.connection(
+          '📡 SCANNER: User just disconnected - cleaning all system devices',
+        );
+        try {
+          final systemDevices = await FlutterBluePlus.systemDevices([]);
+          for (final device in systemDevices) {
+            try {
+              if (Platform.isAndroid) {
+                await device.clearGattCache();
+              }
+              if (device.isConnected) {
+                await device.disconnect();
+              }
+            } catch (e) {
+              // Ignore individual device errors
+            }
+          }
+          AppLogging.connection(
+            '📡 SCANNER: Cleaned ${systemDevices.length} system devices',
+          );
+        } catch (e) {
+          AppLogging.connection('📡 SCANNER: System devices cleanup error: $e');
+        }
+      }
+
+      // 3. Try to disconnect any stale connections to our saved device
       // This helps when the device was connected to another app
       if (savedDeviceId != null) {
         try {
@@ -331,8 +365,17 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       }
 
       // 3. Wait for BLE subsystem to fully reset
-      // Android needs a bit longer due to GATT cache clearing
-      final resetDelay = Platform.isAndroid ? 1500 : 1000;
+      // - Android needs longer due to GATT cache clearing
+      // - After user manual disconnect, the device needs extra time to start
+      //   advertising again since we just released the BLE connection
+      int resetDelay = Platform.isAndroid ? 1500 : 1000;
+      if (userJustDisconnected) {
+        // Extra time for the device to transition to advertising mode
+        resetDelay += 1000;
+        AppLogging.connection(
+          '📡 SCANNER: User just disconnected, adding extra delay',
+        );
+      }
       AppLogging.connection(
         '📡 SCANNER: Waiting ${resetDelay}ms for BLE to fully reset...',
       );
