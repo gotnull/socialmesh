@@ -16,6 +16,7 @@ import '../../utils/snackbar.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/auto_scroll_text.dart';
+import '../../core/widgets/edge_fade.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/node_avatar.dart';
 import '../../generated/meshtastic/channel.pb.dart' as channel_pb;
@@ -33,9 +34,16 @@ import '../../core/widgets/loading_indicator.dart';
 /// Conversation type enum
 enum ConversationType { channel, directMessage }
 
+/// Contact filter enum
+enum ContactFilter { all, favorites, messaged, unread, online }
+
 /// Main messaging screen - shows list of conversations
 class MessagingScreen extends ConsumerStatefulWidget {
-  const MessagingScreen({super.key});
+  /// When true, shows only the body content without AppBar/Scaffold
+  /// Used when embedded in tabs
+  final bool embedded;
+
+  const MessagingScreen({super.key, this.embedded = false});
 
   @override
   ConsumerState<MessagingScreen> createState() => _MessagingScreenState();
@@ -44,6 +52,7 @@ class MessagingScreen extends ConsumerStatefulWidget {
 class _MessagingScreenState extends ConsumerState<MessagingScreen> {
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
+  ContactFilter _currentFilter = ContactFilter.all;
 
   @override
   void dispose() {
@@ -117,6 +126,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
           shortName: node.shortName,
           avatarColor: node.avatarColor,
           isOnline: node.isOnline,
+          isFavorite: node.isFavorite,
           lastMessage: dmInfo?.lastMessage,
           lastMessageTime: dmInfo?.lastMessageTime,
           unreadCount: dmInfo?.unreadCount ?? 0,
@@ -157,16 +167,244 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
       return a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase());
     });
 
-    // Filter contacts by search
+    // Calculate filter counts
+    final favoritesCount = contacts.where((c) => c.isFavorite).length;
+    final messagedCount = contacts.where((c) => c.hasMessages).length;
+    final unreadCount = contacts.where((c) => c.unreadCount > 0).length;
+    final onlineCount = contacts.where((c) => c.isOnline).length;
+
+    // Apply filter
     var filteredContacts = contacts;
+    switch (_currentFilter) {
+      case ContactFilter.all:
+        break;
+      case ContactFilter.favorites:
+        filteredContacts = contacts.where((c) => c.isFavorite).toList();
+        break;
+      case ContactFilter.messaged:
+        filteredContacts = contacts.where((c) => c.hasMessages).toList();
+        break;
+      case ContactFilter.unread:
+        filteredContacts = contacts.where((c) => c.unreadCount > 0).toList();
+        break;
+      case ContactFilter.online:
+        filteredContacts = contacts.where((c) => c.isOnline).toList();
+        break;
+    }
+
+    // Then filter by search
     if (_searchQuery.isNotEmpty) {
       final query = _searchQuery.toLowerCase();
-      filteredContacts = contacts.where((c) {
+      filteredContacts = filteredContacts.where((c) {
         return c.displayName.toLowerCase().contains(query) ||
             (c.shortName?.toLowerCase().contains(query) ?? false);
       }).toList();
     }
 
+    // Build the body content
+    final bodyContent = Column(
+      children: [
+        // Search bar
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          child: Container(
+            decoration: BoxDecoration(
+              color: context.card,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: TextField(
+              controller: _searchController,
+              onChanged: (value) => setState(() => _searchQuery = value),
+              style: TextStyle(color: context.textPrimary),
+              decoration: InputDecoration(
+                hintText: 'Search contacts',
+                hintStyle: TextStyle(color: context.textTertiary),
+                prefixIcon: Icon(Icons.search, color: context.textTertiary),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: Icon(Icons.clear, color: context.textTertiary),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _searchQuery = '');
+                        },
+                      )
+                    : null,
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+              ),
+            ),
+          ),
+        ),
+        // Filter chips
+        SizedBox(
+          height: 44,
+          child: Row(
+            children: [
+              Expanded(
+                child: EdgeFade.end(
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    children: [
+                      _ContactFilterChip(
+                        label: 'All',
+                        count: contacts.length,
+                        isSelected: _currentFilter == ContactFilter.all,
+                        onTap: () =>
+                            setState(() => _currentFilter = ContactFilter.all),
+                      ),
+                      SizedBox(width: 8),
+                      _ContactFilterChip(
+                        label: 'Favorites',
+                        count: favoritesCount,
+                        isSelected: _currentFilter == ContactFilter.favorites,
+                        icon: Icons.star,
+                        color: AppTheme.warningYellow,
+                        onTap: () => setState(
+                          () => _currentFilter = ContactFilter.favorites,
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      _ContactFilterChip(
+                        label: 'Messaged',
+                        count: messagedCount,
+                        isSelected: _currentFilter == ContactFilter.messaged,
+                        icon: Icons.chat_bubble_outline,
+                        color: AppTheme.primaryBlue,
+                        onTap: () => setState(
+                          () => _currentFilter = ContactFilter.messaged,
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      _ContactFilterChip(
+                        label: 'Unread',
+                        count: unreadCount,
+                        isSelected: _currentFilter == ContactFilter.unread,
+                        icon: Icons.mark_email_unread_outlined,
+                        color: AccentColors.red,
+                        onTap: () => setState(
+                          () => _currentFilter = ContactFilter.unread,
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      _ContactFilterChip(
+                        label: 'Online',
+                        count: onlineCount,
+                        isSelected: _currentFilter == ContactFilter.online,
+                        color: AccentColors.green,
+                        onTap: () => setState(
+                          () => _currentFilter = ContactFilter.online,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 8),
+        // Divider
+        Container(height: 1, color: context.border.withValues(alpha: 0.3)),
+        // Contacts list
+        Expanded(
+          child: filteredContacts.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 72,
+                        height: 72,
+                        decoration: BoxDecoration(
+                          color: context.card,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Icon(
+                          Icons.people_outline,
+                          size: 40,
+                          color: context.textTertiary,
+                        ),
+                      ),
+                      SizedBox(height: 24),
+                      Text(
+                        _searchQuery.isNotEmpty
+                            ? 'No contacts match "$_searchQuery"'
+                            : _currentFilter != ContactFilter.all
+                            ? 'No ${_currentFilter.name} contacts'
+                            : 'No contacts yet',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: context.textSecondary,
+                        ),
+                      ),
+                      if (_searchQuery.isEmpty) ...[
+                        SizedBox(height: 8),
+                        Text(
+                          'Discovered nodes will appear here',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: context.textTertiary,
+                          ),
+                        ),
+                      ],
+                      if (_searchQuery.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        TextButton(
+                          onPressed: () => setState(() => _searchQuery = ''),
+                          child: const Text('Clear search'),
+                        ),
+                      ],
+                    ],
+                  ),
+                )
+              : ListView.builder(
+                  itemCount: filteredContacts.length,
+                  itemBuilder: (context, index) {
+                    final contact = filteredContacts[index];
+                    final animationsEnabled = ref.watch(
+                      animationsEnabledProvider,
+                    );
+                    return Perspective3DSlide(
+                      index: index,
+                      direction: SlideDirection.left,
+                      enabled: animationsEnabled,
+                      child: _ContactTile(
+                        contact: contact,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ChatScreen(
+                                type: ConversationType.directMessage,
+                                nodeNum: contact.nodeNum,
+                                title: contact.displayName,
+                                avatarColor: contact.avatarColor,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
+        ),
+      ],
+    );
+
+    // If embedded (in tabs), return just the body with gesture detector
+    if (widget.embedded) {
+      return GestureDetector(
+        onTap: _dismissKeyboard,
+        child: Container(color: context.background, child: bodyContent),
+      );
+    }
+
+    // Full standalone screen with AppBar
     return GestureDetector(
       onTap: _dismissKeyboard,
       child: HelpTourController(
@@ -188,138 +426,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
             ),
             actions: [const DeviceStatusButton(), const _MessagingPopupMenu()],
           ),
-          body: Column(
-            children: [
-              // Search bar
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: context.card,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: (value) => setState(() => _searchQuery = value),
-                    style: TextStyle(color: context.textPrimary),
-                    decoration: InputDecoration(
-                      hintText: 'Search contacts',
-                      hintStyle: TextStyle(color: context.textTertiary),
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: context.textTertiary,
-                      ),
-                      suffixIcon: _searchQuery.isNotEmpty
-                          ? IconButton(
-                              icon: Icon(
-                                Icons.clear,
-                                color: context.textTertiary,
-                              ),
-                              onPressed: () {
-                                _searchController.clear();
-                                setState(() => _searchQuery = '');
-                              },
-                            )
-                          : null,
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              // Divider
-              Container(
-                height: 1,
-                color: context.border.withValues(alpha: 0.3),
-              ),
-              // Contacts list
-              Expanded(
-                child: filteredContacts.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              width: 72,
-                              height: 72,
-                              decoration: BoxDecoration(
-                                color: context.card,
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Icon(
-                                Icons.people_outline,
-                                size: 40,
-                                color: context.textTertiary,
-                              ),
-                            ),
-                            SizedBox(height: 24),
-                            Text(
-                              _searchQuery.isNotEmpty
-                                  ? 'No contacts match "$_searchQuery"'
-                                  : 'No contacts yet',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                color: context.textSecondary,
-                              ),
-                            ),
-                            if (_searchQuery.isEmpty) ...[
-                              SizedBox(height: 8),
-                              Text(
-                                'Discovered nodes will appear here',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: context.textTertiary,
-                                ),
-                              ),
-                            ],
-                            if (_searchQuery.isNotEmpty) ...[
-                              const SizedBox(height: 12),
-                              TextButton(
-                                onPressed: () =>
-                                    setState(() => _searchQuery = ''),
-                                child: const Text('Clear search'),
-                              ),
-                            ],
-                          ],
-                        ),
-                      )
-                    : ListView.builder(
-                        itemCount: filteredContacts.length,
-                        itemBuilder: (context, index) {
-                          final contact = filteredContacts[index];
-                          final animationsEnabled = ref.watch(
-                            animationsEnabledProvider,
-                          );
-                          return Perspective3DSlide(
-                            index: index,
-                            direction: SlideDirection.left,
-                            enabled: animationsEnabled,
-                            child: _ContactTile(
-                              contact: contact,
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => ChatScreen(
-                                      type: ConversationType.directMessage,
-                                      nodeNum: contact.nodeNum,
-                                      title: contact.displayName,
-                                      avatarColor: contact.avatarColor,
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          );
-                        },
-                      ),
-              ),
-            ],
-          ),
+          body: bodyContent,
         ),
       ),
     );
@@ -352,6 +459,7 @@ class _Contact {
   final String? shortName;
   final int? avatarColor;
   final bool isOnline;
+  final bool isFavorite;
   final String? lastMessage;
   final DateTime? lastMessageTime;
   final int unreadCount;
@@ -362,10 +470,13 @@ class _Contact {
     this.shortName,
     this.avatarColor,
     this.isOnline = false,
+    this.isFavorite = false,
     this.lastMessage,
     this.lastMessageTime,
     this.unreadCount = 0,
   });
+
+  bool get hasMessages => lastMessage != null;
 }
 
 class _ContactTile extends StatelessWidget {
@@ -2307,6 +2418,116 @@ class _MessagingPopupMenu extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Filter chip widget for contacts
+class _ContactFilterChip extends StatelessWidget {
+  final String label;
+  final int count;
+  final bool isSelected;
+  final Color? color;
+  final IconData? icon;
+  final VoidCallback onTap;
+
+  const _ContactFilterChip({
+    required this.label,
+    required this.count,
+    required this.isSelected,
+    required this.onTap,
+    this.color,
+    this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final chipColor = color ?? AppTheme.primaryBlue;
+    final showStatusIndicator = label == 'Online';
+
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? chipColor.withValues(alpha: 0.2) : context.card,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected
+                ? chipColor.withValues(alpha: 0.5)
+                : context.border.withValues(alpha: 0.3),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Status indicator for Online chip
+            if (showStatusIndicator) ...[
+              Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [chipColor, chipColor.withValues(alpha: 0.6)],
+                  ),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: chipColor.withValues(alpha: 0.4),
+                            blurRadius: 4,
+                            spreadRadius: 1,
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Container(
+                  margin: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    color: chipColor.withValues(alpha: 0.3),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+              SizedBox(width: 6),
+            ] else if (icon != null) ...[
+              Icon(
+                icon,
+                size: 14,
+                color: isSelected ? chipColor : context.textTertiary,
+              ),
+              SizedBox(width: 4),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                color: isSelected ? chipColor : context.textSecondary,
+              ),
+            ),
+            SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? chipColor.withValues(alpha: 0.3)
+                    : context.border.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                count.toString(),
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: isSelected ? chipColor : context.textTertiary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

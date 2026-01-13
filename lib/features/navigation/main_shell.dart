@@ -14,11 +14,11 @@ import '../../models/subscription_models.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/profile_providers.dart';
+import '../../providers/signal_providers.dart';
 import '../../providers/social_providers.dart';
 import '../../providers/subscription_providers.dart';
 import '../../services/haptic_service.dart';
-import '../channels/channels_screen.dart';
-import '../messaging/messaging_screen.dart';
+import '../messaging/messages_container_screen.dart';
 import '../nodes/nodes_screen.dart';
 import '../map/map_screen.dart';
 import '../dashboard/widget_dashboard_screen.dart';
@@ -249,14 +249,6 @@ class _MainShellState extends ConsumerState<MainShell> {
   /// Drawer menu items for quick access screens not in bottom nav
   /// Organized into logical sections with headers
   final List<_DrawerMenuItem> _drawerMenuItems = [
-    // Signals - mesh-first ephemeral presence (v1)
-    _DrawerMenuItem(
-      icon: Icons.sensors_outlined,
-      label: 'Signals',
-      screen: const PresenceFeedScreen(),
-      iconColor: Colors.teal.shade400,
-    ),
-
     // Activity
     _DrawerMenuItem(
       icon: Icons.timeline,
@@ -355,16 +347,16 @@ class _MainShellState extends ConsumerState<MainShell> {
 
   final List<_NavItem> _navItems = [
     _NavItem(
-      icon: Icons.wifi_tethering_outlined,
-      activeIcon: Icons.wifi_tethering,
-      label: 'Channels',
-    ),
-    _NavItem(
       icon: Icons.chat_bubble_outline,
       activeIcon: Icons.chat_bubble,
-      label: 'Contacts',
+      label: 'Messages',
     ),
     _NavItem(icon: Icons.map_outlined, activeIcon: Icons.map, label: 'Map'),
+    _NavItem(
+      icon: Icons.sensors_outlined,
+      activeIcon: Icons.sensors,
+      label: 'Signals',
+    ),
     _NavItem(
       icon: Icons.people_outline,
       activeIcon: Icons.people,
@@ -384,18 +376,18 @@ class _MainShellState extends ConsumerState<MainShell> {
     switch (index) {
       case 0:
         return const ConnectionRequiredWrapper(
-          screenTitle: 'Channels',
-          child: ChannelsScreen(),
+          screenTitle: 'Messages',
+          child: MessagesContainerScreen(),
         );
       case 1:
         return const ConnectionRequiredWrapper(
-          screenTitle: 'Contacts',
-          child: MessagingScreen(),
+          screenTitle: 'Map',
+          child: MapScreen(),
         );
       case 2:
         return const ConnectionRequiredWrapper(
-          screenTitle: 'Map',
-          child: MapScreen(),
+          screenTitle: 'Signals',
+          child: PresenceFeedScreen(),
         );
       case 3:
         return const ConnectionRequiredWrapper(
@@ -409,8 +401,8 @@ class _MainShellState extends ConsumerState<MainShell> {
         );
       default:
         return const ConnectionRequiredWrapper(
-          screenTitle: 'Channels',
-          child: ChannelsScreen(),
+          screenTitle: 'Messages',
+          child: MessagesContainerScreen(),
         );
     }
   }
@@ -944,21 +936,21 @@ class _MainShellState extends ConsumerState<MainShell> {
                 final item = _navItems[index];
                 final isSelected = _currentIndex == index;
 
-                // Show warning badge on Device tab (index 4) when disconnected
-                final showWarningBadge = index == 4 && !isConnected;
-                // Show reconnecting indicator
-                final showReconnectingBadge = index == 4 && isReconnecting;
                 // Show badge on Nodes tab (index 3) when new nodes discovered
                 final showNodesBadge = index == 3 && _hasNewNodes(ref);
+                // Show badge on Signals tab (index 2) when there are active signals
+                final showSignalsBadge = index == 2 && _hasActiveSignals(ref);
 
                 return _NavBarItem(
                   icon: isSelected ? item.activeIcon : item.icon,
                   label: item.label,
                   isSelected: isSelected,
                   showBadge:
-                      (index == 1 && _hasUnreadMessages(ref)) || showNodesBadge,
-                  showWarningBadge: showWarningBadge && !showReconnectingBadge,
-                  showReconnectingBadge: showReconnectingBadge,
+                      (index == 0 && _hasUnreadMessages(ref)) ||
+                      showNodesBadge ||
+                      showSignalsBadge,
+                  showWarningBadge: false,
+                  showReconnectingBadge: false,
                   onTap: () {
                     ref.haptics.tabChange();
                     // Clear new nodes badge when navigating to Nodes tab
@@ -984,6 +976,10 @@ class _MainShellState extends ConsumerState<MainShell> {
 
   bool _hasNewNodes(WidgetRef ref) {
     return ref.watch(newNodesCountProvider) > 0;
+  }
+
+  bool _hasActiveSignals(WidgetRef ref) {
+    return ref.watch(activeSignalCountProvider) > 0;
   }
 }
 
