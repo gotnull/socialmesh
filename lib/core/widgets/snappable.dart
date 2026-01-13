@@ -123,58 +123,27 @@ class SnappableState extends State<Snappable>
     final fullImage = await _getImageFromWidget();
     if (fullImage == null) return;
 
-    // Create an image for every bucket with RGBA format and transparent background
-    List<image.Image> images = List<image.Image>.generate(
+    // Prepare random dislocations immediately (before heavy processing)
+    final randoms = List.generate(
       widget.numberOfBuckets,
-      (i) => image.Image(
+      (i) => (math.Random().nextDouble() - 0.5) * 2,
+    );
+
+    // Do ALL heavy work in isolate: pixel distribution + PNG encoding
+    _layers = await compute<_SnapParams, List<Uint8List>>(
+      _processAndEncodeImages,
+      _SnapParams(
+        imageBytes: fullImage.buffer.asUint8List(),
         width: fullImage.width,
         height: fullImage.height,
-        format: image.Format.uint8,
-        numChannels: 4,
+        numberOfBuckets: widget.numberOfBuckets,
       ),
     );
 
-    // For every line of pixels
-    for (int y = 0; y < fullImage.height; y++) {
-      // Generate weight list of probabilities determining
-      // to which bucket should given pixels go
-      List<int> weights = List.generate(
-        widget.numberOfBuckets,
-        (bucket) =>
-            _gauss(y / fullImage.height, bucket / widget.numberOfBuckets),
-      );
-      int sumOfWeights = weights.fold(0, (sum, el) => sum + el);
-
-      // For every pixel in a line
-      for (int x = 0; x < fullImage.width; x++) {
-        // Get the pixel from fullImage
-        final pixel = fullImage.getPixel(x, y);
-        // Choose a bucket for a pixel
-        int imageIndex = _pickABucket(weights, sumOfWeights);
-        // Copy the pixel color using setPixelRgba with proper channel values
-        final targetPixel = images[imageIndex].getPixel(x, y);
-        targetPixel.r = pixel.r;
-        targetPixel.g = pixel.g;
-        targetPixel.b = pixel.b;
-        targetPixel.a = pixel.a;
-      }
-    }
-
-    _layers = await compute<List<image.Image>, List<Uint8List>>(
-      _encodeImages,
-      images,
-    );
-
-    // Prepare random dislocations and set state
+    // Set state and start animation immediately
     setState(() {
-      _randoms = List.generate(
-        widget.numberOfBuckets,
-        (i) => (math.Random().nextDouble() - 0.5) * 2,
-      );
+      _randoms = randoms;
     });
-
-    // Give a short delay to draw images
-    await Future.delayed(const Duration(milliseconds: 100));
 
     // Start the snap!
     _animationController.forward();
@@ -228,20 +197,6 @@ class SnappableState extends State<Snappable>
     );
   }
 
-  /// Returns index of a randomly chosen bucket
-  int _pickABucket(List<int> weights, int sumOfWeights) {
-    int rnd = math.Random().nextInt(sumOfWeights);
-    int chosenImage = 0;
-    for (int i = 0; i < widget.numberOfBuckets; i++) {
-      if (rnd < weights[i]) {
-        chosenImage = i;
-        break;
-      }
-      rnd -= weights[i];
-    }
-    return chosenImage;
-  }
-
   /// Gets an Image from a [child] and caches [size] for later use
   Future<image.Image?> _getImageFromWidget() async {
     final boundary =
@@ -266,12 +221,83 @@ class SnappableState extends State<Snappable>
       order: image.ChannelOrder.rgba,
     );
   }
-
-  int _gauss(double center, double value) =>
-      (1000 * math.exp(-(math.pow((value - center), 2) / 0.14))).round();
 }
 
-/// This is slow! Run it in separate isolate
-List<Uint8List> _encodeImages(List<image.Image> images) {
+/// Parameters for isolate processing
+class _SnapParams {
+  final Uint8List imageBytes;
+  final int width;
+  final int height;
+  final int numberOfBuckets;
+
+  _SnapParams({
+    required this.imageBytes,
+    required this.width,
+    required this.height,
+    required this.numberOfBuckets,
+  });
+}
+
+/// Process pixels and encode to PNG - runs in isolate for performance
+List<Uint8List> _processAndEncodeImages(_SnapParams params) {
+  final random = math.Random();
+
+  // Recreate source image from bytes
+  final fullImage = image.Image.fromBytes(
+    width: params.width,
+    height: params.height,
+    bytes: params.imageBytes.buffer,
+    format: image.Format.uint8,
+    numChannels: 4,
+    order: image.ChannelOrder.rgba,
+  );
+
+  // Create an image for every bucket
+  final images = List<image.Image>.generate(
+    params.numberOfBuckets,
+    (i) => image.Image(
+      width: params.width,
+      height: params.height,
+      format: image.Format.uint8,
+      numChannels: 4,
+    ),
+  );
+
+  // Gaussian function for weight calculation
+  int gauss(double center, double value) =>
+      (1000 * math.exp(-(math.pow((value - center), 2) / 0.14))).round();
+
+  // Pick a bucket based on weights
+  int pickABucket(List<int> weights, int sumOfWeights) {
+    int rnd = random.nextInt(sumOfWeights);
+    for (int i = 0; i < params.numberOfBuckets; i++) {
+      if (rnd < weights[i]) return i;
+      rnd -= weights[i];
+    }
+    return 0;
+  }
+
+  // For every line of pixels
+  for (int y = 0; y < params.height; y++) {
+    // Generate weight list
+    final weights = List<int>.generate(
+      params.numberOfBuckets,
+      (bucket) => gauss(y / params.height, bucket / params.numberOfBuckets),
+    );
+    final sumOfWeights = weights.fold(0, (sum, el) => sum + el);
+
+    // For every pixel in a line
+    for (int x = 0; x < params.width; x++) {
+      final pixel = fullImage.getPixel(x, y);
+      final imageIndex = pickABucket(weights, sumOfWeights);
+      final targetPixel = images[imageIndex].getPixel(x, y);
+      targetPixel.r = pixel.r;
+      targetPixel.g = pixel.g;
+      targetPixel.b = pixel.b;
+      targetPixel.a = pixel.a;
+    }
+  }
+
+  // Encode all images to PNG
   return images.map((img) => Uint8List.fromList(image.encodePng(img))).toList();
 }
