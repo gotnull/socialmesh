@@ -514,11 +514,11 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                     feedState.isLoading && feedState.signals.isEmpty
                         ? _buildLoading()
                         : signals.isEmpty
-                            ? _buildEmptyState()
-                            : _buildSignalView(
-                                signals,
-                                ref.watch(signalViewModeProvider),
-                              ),
+                        ? _buildEmptyState()
+                        : _buildSignalView(
+                            signals,
+                            ref.watch(signalViewModeProvider),
+                          ),
 
                     // Sticky header overlay with overlapping author avatars
                     if (activeAuthors.isNotEmpty)
@@ -1589,12 +1589,10 @@ class _ActiveAuthorsHeaderState extends State<_ActiveAuthorsHeader>
       vsync: this,
       duration: const Duration(milliseconds: 250),
     );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, -1),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
-    );
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, -1), end: Offset.zero).animate(
+          CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
+        );
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
@@ -1661,93 +1659,93 @@ class _ActiveAuthorsHeaderState extends State<_ActiveAuthorsHeader>
                       ),
                     ],
                   ),
-                child: Row(
-                  children: [
-                    // Overlapping avatars (Instagram-style)
-                    SizedBox(
-                      height: 36,
-                      width: 36.0 + (displayAuthors.length - 1) * 20.0,
-                      child: Stack(
-                        children: [
-                          for (var i = displayAuthors.length - 1; i >= 0; i--)
-                            Positioned(
-                              left: i * 20.0,
-                              child: _AuthorAvatar(
-                                author: displayAuthors[i],
-                                size: 36,
-                                borderColor: context.card,
-                                accentColor: accentColor,
+                  child: Row(
+                    children: [
+                      // Overlapping avatars (Instagram-style)
+                      SizedBox(
+                        height: 36,
+                        width: 36.0 + (displayAuthors.length - 1) * 20.0,
+                        child: Stack(
+                          children: [
+                            for (var i = displayAuthors.length - 1; i >= 0; i--)
+                              Positioned(
+                                left: i * 20.0,
+                                child: _AuthorAvatar(
+                                  author: displayAuthors[i],
+                                  size: 36,
+                                  borderColor: context.card,
+                                  accentColor: accentColor,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+
+                      // Extra count badge
+                      if (remainingCount > 0) ...[
+                        const SizedBox(width: 4),
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: context.surface,
+                            border: Border.all(color: context.card, width: 2),
+                          ),
+                          child: Center(
+                            child: Text(
+                              '+$remainingCount',
+                              style: TextStyle(
+                                color: context.textSecondary,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
-                        ],
-                      ),
-                    ),
-
-                    // Extra count badge
-                    if (remainingCount > 0) ...[
-                      const SizedBox(width: 4),
-                      Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: context.surface,
-                          border: Border.all(color: context.card, width: 2),
-                        ),
-                        child: Center(
-                          child: Text(
-                            '+$remainingCount',
-                            style: TextStyle(
-                              color: context.textSecondary,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                            ),
                           ),
                         ),
+                      ],
+
+                      const SizedBox(width: 12),
+
+                      // Text info
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '${widget.authors.length} ${widget.authors.length == 1 ? "person" : "people"} active',
+                              style: TextStyle(
+                                color: context.textPrimary,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              '${widget.signalCount} ${widget.signalCount == 1 ? "signal" : "signals"} nearby',
+                              style: TextStyle(
+                                color: context.textTertiary,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Scroll to top indicator
+                      Icon(
+                        Icons.keyboard_arrow_up,
+                        color: context.textTertiary,
+                        size: 20,
                       ),
                     ],
-
-                    const SizedBox(width: 12),
-
-                    // Text info
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            '${widget.authors.length} ${widget.authors.length == 1 ? "person" : "people"} active',
-                            style: TextStyle(
-                              color: context.textPrimary,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          Text(
-                            '${widget.signalCount} ${widget.signalCount == 1 ? "signal" : "signals"} nearby',
-                            style: TextStyle(
-                              color: context.textTertiary,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // Scroll to top indicator
-                    Icon(
-                      Icons.keyboard_arrow_up,
-                      color: context.textTertiary,
-                      size: 20,
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
           ),
         ),
       ),
-    ),
     );
   }
 }
