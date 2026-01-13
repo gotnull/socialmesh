@@ -61,6 +61,10 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
   bool _showSectionHeaders = true;
   final TextEditingController _searchController = TextEditingController();
 
+  /// Track node IDs that have already been seen/animated
+  /// This allows new nodes to animate in while existing ones don't re-animate
+  final Set<int> _seenNodeIds = {};
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -359,6 +363,19 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
   ) {
     final animationsEnabled = ref.watch(animationsEnabledProvider);
 
+    // Find new nodes that haven't been seen yet for animation
+    final newNodeIds = <int>[];
+    for (final node in nodesList) {
+      if (!_seenNodeIds.contains(node.nodeNum)) {
+        newNodeIds.add(node.nodeNum);
+      }
+    }
+
+    // Mark new nodes as seen
+    if (newNodeIds.isNotEmpty) {
+      _seenNodeIds.addAll(newNodeIds);
+    }
+
     if (!_showSectionHeaders) {
       // Simple list without headers
       return ListView.builder(
@@ -366,10 +383,16 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
         itemBuilder: (context, index) {
           final node = nodesList[index];
           final isMyNode = node.nodeNum == myNodeNum;
+          final isNewNode = newNodeIds.contains(node.nodeNum);
+
+          // Only animate if it's a new node, use batch index for stagger
+          final animIndex = isNewNode ? newNodeIds.indexOf(node.nodeNum) : 0;
+
           return Perspective3DSlide(
-            index: index,
+            key: ValueKey('node_${node.nodeNum}'),
+            index: animIndex,
             direction: SlideDirection.left,
-            enabled: animationsEnabled,
+            enabled: animationsEnabled && isNewNode,
             child: _NodeCard(
               node: node,
               isMyNode: isMyNode,
@@ -412,10 +435,18 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
             delegate: SliverChildBuilderDelegate((context, index) {
               final node = nonEmptySections[sectionIndex].nodes[index];
               final isMyNode = node.nodeNum == myNodeNum;
+              final isNewNode = newNodeIds.contains(node.nodeNum);
+
+              // Calculate animation index for new nodes across sections
+              final animIndex = isNewNode
+                  ? newNodeIds.indexOf(node.nodeNum)
+                  : 0;
+
               return Perspective3DSlide(
-                index: index,
+                key: ValueKey('node_${node.nodeNum}'),
+                index: animIndex,
                 direction: SlideDirection.left,
-                enabled: animationsEnabled,
+                enabled: animationsEnabled && isNewNode,
                 child: _NodeCard(
                   node: node,
                   isMyNode: isMyNode,

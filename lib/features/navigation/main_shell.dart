@@ -212,6 +212,7 @@ class _DrawerMenuItem {
   final PremiumFeature? premiumFeature;
   final String? sectionHeader;
   final Color? iconColor;
+  final bool requiresConnection;
 
   const _DrawerMenuItem({
     required this.icon,
@@ -220,6 +221,7 @@ class _DrawerMenuItem {
     this.premiumFeature,
     this.sectionHeader,
     this.iconColor,
+    this.requiresConnection = false,
   });
 }
 
@@ -249,55 +251,62 @@ class _MainShellState extends ConsumerState<MainShell> {
   /// Drawer menu items for quick access screens not in bottom nav
   /// Organized into logical sections with headers
   final List<_DrawerMenuItem> _drawerMenuItems = [
-    // Activity
+    // Activity - require connection for mesh data
     _DrawerMenuItem(
       icon: Icons.timeline,
       label: 'Timeline',
       screen: const TimelineScreen(),
       sectionHeader: 'ACTIVITY',
       iconColor: Colors.indigo.shade400,
+      requiresConnection: true,
     ),
     _DrawerMenuItem(
       icon: Icons.people_alt_outlined,
       label: 'Presence',
       screen: const PresenceScreen(),
       iconColor: Colors.green.shade400,
+      requiresConnection: true,
     ),
 
-    // Mesh Features
+    // Mesh Features - all require connection
     _DrawerMenuItem(
       icon: Icons.public,
       label: 'World Map',
       screen: const WorldMeshScreen(),
       sectionHeader: 'MESH FEATURES',
       iconColor: Colors.blue.shade400,
+      requiresConnection: false, // Shows global mesh data from server
     ),
     _DrawerMenuItem(
       icon: Icons.view_in_ar,
       label: '3D Mesh View',
       screen: const Mesh3DScreen(),
       iconColor: Colors.cyan.shade400,
+      requiresConnection: true,
     ),
     _DrawerMenuItem(
       icon: Icons.route,
       label: 'Routes',
       screen: const RoutesScreen(),
       iconColor: Colors.purple.shade400,
+      requiresConnection: true,
     ),
     _DrawerMenuItem(
       icon: Icons.wifi_find,
       label: 'Reachability',
       screen: const MeshReachabilityScreen(),
       iconColor: Colors.teal.shade400,
+      requiresConnection: true,
     ),
     _DrawerMenuItem(
       icon: Icons.monitor_heart_outlined,
       label: 'Mesh Health',
       screen: const MeshHealthDashboard(),
       iconColor: Colors.pink.shade400,
+      requiresConnection: true,
     ),
 
-    // Tools
+    // Tools - don't require connection
     _DrawerMenuItem(
       icon: Icons.store,
       label: 'Device Shop',
@@ -306,7 +315,7 @@ class _MainShellState extends ConsumerState<MainShell> {
       iconColor: Colors.amber.shade600,
     ),
 
-    // Premium Features
+    // Premium Features - mixed requirements
     _DrawerMenuItem(
       icon: Icons.palette_outlined,
       label: 'Theme Pack',
@@ -335,6 +344,7 @@ class _MainShellState extends ConsumerState<MainShell> {
       screen: const AutomationsScreen(),
       premiumFeature: PremiumFeature.automations,
       iconColor: Colors.yellow.shade700,
+      requiresConnection: true,
     ),
     _DrawerMenuItem(
       icon: Icons.webhook_outlined,
@@ -418,6 +428,14 @@ class _MainShellState extends ConsumerState<MainShell> {
             MediaQuery.platformBrightnessOf(context) == Brightness.dark);
     final dividerAlpha = isDark ? 0.1 : 0.2;
 
+    // Check connection status for items that require it
+    final connectionStateAsync = ref.watch(connectionStateProvider);
+    final isConnected = connectionStateAsync.when(
+      data: (state) => state == DeviceConnectionState.connected,
+      loading: () => false,
+      error: (_, _) => false,
+    );
+
     // Add top padding
     slivers.add(const SliverPadding(padding: EdgeInsets.only(top: 8)));
 
@@ -486,6 +504,9 @@ class _MainShellState extends ConsumerState<MainShell> {
                   !isPremium ||
                   ref.watch(hasFeatureProvider(item.premiumFeature!));
 
+              // Check if item requires connection but we're not connected
+              final needsConnection = item.requiresConnection && !isConnected;
+
               return Column(
                 children: [
                   _DrawerMenuTile(
@@ -494,26 +515,30 @@ class _MainShellState extends ConsumerState<MainShell> {
                     isSelected: false, // Never selected, items push new screens
                     isPremium: isPremium,
                     isLocked: isPremium && !hasAccess,
+                    isDisabled: needsConnection,
                     iconColor: item.iconColor,
-                    onTap: () {
-                      ref.haptics.tabChange();
-                      Navigator.of(context).pop();
+                    onTap: needsConnection
+                        ? null
+                        : () {
+                            ref.haptics.tabChange();
+                            Navigator.of(context).pop();
 
-                      if (isPremium && !hasAccess) {
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (context) => const SubscriptionScreen(),
-                          ),
-                        );
-                      } else {
-                        // Push screen with back button for consistent navigation
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (context) => item.screen,
-                          ),
-                        );
-                      }
-                    },
+                            if (isPremium && !hasAccess) {
+                              Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (context) =>
+                                      const SubscriptionScreen(),
+                                ),
+                              );
+                            } else {
+                              // Push screen with back button for consistent navigation
+                              Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (context) => item.screen,
+                                ),
+                              );
+                            }
+                          },
                   ),
                   // Add spacing between items within a section
                   if (!isLastInSection) const SizedBox(height: 4),
@@ -1139,7 +1164,8 @@ class _DrawerMenuTile extends StatelessWidget {
   final bool isSelected;
   final bool isPremium;
   final bool isLocked;
-  final VoidCallback onTap;
+  final bool isDisabled;
+  final VoidCallback? onTap;
   final int? badgeCount;
   final Color? iconColor;
 
@@ -1150,6 +1176,7 @@ class _DrawerMenuTile extends StatelessWidget {
     required this.onTap,
     this.isPremium = false,
     this.isLocked = false,
+    this.isDisabled = false,
     this.badgeCount,
     this.iconColor,
   });
@@ -1159,9 +1186,11 @@ class _DrawerMenuTile extends StatelessWidget {
     final theme = Theme.of(context);
     final accentColor = theme.colorScheme.primary;
     final goldColor = Colors.amber.shade600;
+    final disabledAlpha = 0.35;
 
     return BouncyTap(
       onTap: onTap,
+      enabled: !isDisabled,
       scaleFactor: 0.98,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
@@ -1180,140 +1209,146 @@ class _DrawerMenuTile extends StatelessWidget {
               ? Border.all(color: goldColor.withValues(alpha: 0.2))
               : null,
         ),
-        child: Row(
-          children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? accentColor.withValues(alpha: 0.2)
-                    : isLocked
-                    ? goldColor.withValues(alpha: 0.1)
-                    : theme.colorScheme.surface,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Icon(
-                    icon,
-                    size: 22,
-                    color: isSelected
-                        ? accentColor
-                        : isLocked
-                        ? goldColor
-                        : iconColor ??
-                              theme.colorScheme.onSurface.withValues(
-                                alpha: 0.6,
-                              ),
-                  ),
-                  // Badge overlay on icon
-                  if (badgeCount != null && badgeCount! > 0)
-                    Positioned(
-                      right: -6,
-                      top: -4,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: theme.scaffoldBackgroundColor,
-                            width: 2,
+        child: Opacity(
+          opacity: isDisabled ? disabledAlpha : 1.0,
+          child: Row(
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? accentColor.withValues(alpha: 0.2)
+                      : isLocked
+                      ? goldColor.withValues(alpha: 0.1)
+                      : theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Icon(
+                      icon,
+                      size: 22,
+                      color: isSelected
+                          ? accentColor
+                          : isLocked
+                          ? goldColor
+                          : iconColor ??
+                                theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.6,
+                                ),
+                    ),
+                    // Badge overlay on icon
+                    if (badgeCount != null && badgeCount! > 0)
+                      Positioned(
+                        right: -6,
+                        top: -4,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: theme.scaffoldBackgroundColor,
+                              width: 2,
+                            ),
                           ),
-                        ),
-                        constraints: const BoxConstraints(
-                          minWidth: 16,
-                          minHeight: 16,
-                        ),
-                        child: Center(
-                          child: Text(
-                            badgeCount! > 99 ? '99+' : '$badgeCount',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 9,
-                              fontWeight: FontWeight.bold,
+                          constraints: const BoxConstraints(
+                            minWidth: 16,
+                            minHeight: 16,
+                          ),
+                          child: Center(
+                            child: Text(
+                              badgeCount! > 99 ? '99+' : '$badgeCount',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                  fontFamily: AppTheme.fontFamily,
-                  color: isSelected
-                      ? accentColor
-                      : isLocked
-                      ? theme.colorScheme.onSurface.withValues(alpha: 0.5)
-                      : theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                  ],
                 ),
               ),
-            ),
-            // Show lock icon and PRO badge for locked premium features
-            if (isLocked) ...[
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [goldColor, goldColor.withValues(alpha: 0.8)],
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                    fontFamily: AppTheme.fontFamily,
+                    color: isSelected
+                        ? accentColor
+                        : isLocked
+                        ? theme.colorScheme.onSurface.withValues(alpha: 0.5)
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.8),
                   ),
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: [
-                    BoxShadow(
-                      color: goldColor.withValues(alpha: 0.3),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.lock_rounded,
-                      size: 12,
-                      color: Colors.white,
+              ),
+              // Show lock icon and PRO badge for locked premium features
+              if (isLocked) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [goldColor, goldColor.withValues(alpha: 0.8)],
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'PRO',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: AppTheme.fontFamily,
-                        color: Colors.white,
-                        letterSpacing: 0.5,
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: goldColor.withValues(alpha: 0.3),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.lock_rounded,
+                        size: 12,
+                        color: Colors.white,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'PRO',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: AppTheme.fontFamily,
+                          color: Colors.white,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ] else if (isPremium) ...[
-              // Show unlocked badge for purchased premium features
-              Icon(
-                Icons.verified_rounded,
-                size: 18,
-                color: Colors.green.shade400,
-              ),
-            ] else if (isSelected) ...[
-              Icon(
-                Icons.chevron_right,
-                size: 20,
-                color: accentColor.withValues(alpha: 0.6),
-              ),
+              ] else if (isPremium) ...[
+                // Show unlocked badge for purchased premium features
+                Icon(
+                  Icons.verified_rounded,
+                  size: 18,
+                  color: Colors.green.shade400,
+                ),
+              ] else if (isSelected) ...[
+                Icon(
+                  Icons.chevron_right,
+                  size: 20,
+                  color: accentColor.withValues(alpha: 0.6),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
