@@ -61,71 +61,109 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
     final messages = ref.watch(messagesProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
 
-    // Build DM conversations only (group messages by node)
-    final List<_Conversation> conversations = [];
-    final dmNodes = <int>{};
-
+    // Build map of DM info per node (for showing last message, unread count)
+    final dmInfoByNode = <int, _DmInfo>{};
     for (final message in messages) {
       if (message.isDirect) {
         final otherNode = message.from == myNodeNum ? message.to : message.from;
-        dmNodes.add(otherNode);
+        final existing = dmInfoByNode[otherNode];
+        final isUnread = message.received && message.from == otherNode;
+
+        if (existing == null) {
+          dmInfoByNode[otherNode] = _DmInfo(
+            lastMessage: message.text,
+            lastMessageTime: message.timestamp,
+            unreadCount: isUnread ? 1 : 0,
+            senderDisplayName: message.senderDisplayName,
+            senderShortName: message.senderShortName,
+            senderAvatarColor: message.senderAvatarColor,
+          );
+        } else {
+          // Update if this message is newer
+          if (message.timestamp.isAfter(existing.lastMessageTime)) {
+            dmInfoByNode[otherNode] = _DmInfo(
+              lastMessage: message.text,
+              lastMessageTime: message.timestamp,
+              unreadCount: existing.unreadCount + (isUnread ? 1 : 0),
+              senderDisplayName: message.senderDisplayName,
+              senderShortName: message.senderShortName,
+              senderAvatarColor: message.senderAvatarColor,
+            );
+          } else if (isUnread) {
+            dmInfoByNode[otherNode] = _DmInfo(
+              lastMessage: existing.lastMessage,
+              lastMessageTime: existing.lastMessageTime,
+              unreadCount: existing.unreadCount + 1,
+              senderDisplayName: existing.senderDisplayName,
+              senderShortName: existing.senderShortName,
+              senderAvatarColor: existing.senderAvatarColor,
+            );
+          }
+        }
       }
     }
 
-    for (final nodeNum in dmNodes) {
-      final node = nodes[nodeNum];
-      final nodeMessages = messages
-          .where((m) => m.isDirect && (m.from == nodeNum || m.to == nodeNum))
-          .toList();
-      final lastMessage = nodeMessages.isNotEmpty ? nodeMessages.last : null;
-      final unreadCount = nodeMessages
-          .where((m) => m.received && m.from == nodeNum)
-          .length;
+    // Build contacts list from ALL nodes (except self)
+    final List<_Contact> contacts = [];
 
-      // Get sender info - prefer fresh node lookup, fallback to message's cached info
-      // Find the most recent message from this node to get cached sender info
-      final latestFromNode = nodeMessages
-          .where((m) => m.from == nodeNum)
-          .lastOrNull;
+    for (final node in nodes.values) {
+      if (node.nodeNum == myNodeNum) continue;
 
-      final displayName =
-          node?.displayName ??
-          latestFromNode?.senderDisplayName ??
-          'Node ${nodeNum.toRadixString(16).toUpperCase()}';
-      final shortName = node?.shortName ?? latestFromNode?.senderShortName;
-      final avatarColor =
-          node?.avatarColor ?? latestFromNode?.senderAvatarColor;
-
-      conversations.add(
-        _Conversation(
-          type: ConversationType.directMessage,
-          nodeNum: nodeNum,
-          name: displayName,
-          shortName: shortName,
-          avatarColor: avatarColor,
-          lastMessage: lastMessage?.text,
-          lastMessageTime: lastMessage?.timestamp,
-          unreadCount: unreadCount,
+      final dmInfo = dmInfoByNode[node.nodeNum];
+      contacts.add(
+        _Contact(
+          nodeNum: node.nodeNum,
+          displayName: node.displayName,
+          shortName: node.shortName,
+          avatarColor: node.avatarColor,
+          isOnline: node.isOnline,
+          lastMessage: dmInfo?.lastMessage,
+          lastMessageTime: dmInfo?.lastMessageTime,
+          unreadCount: dmInfo?.unreadCount ?? 0,
         ),
       );
     }
 
-    // Sort by last message time
-    conversations.sort((a, b) {
-      if (a.lastMessageTime == null && b.lastMessageTime == null) return 0;
-      if (a.lastMessageTime == null) return 1;
-      if (b.lastMessageTime == null) return -1;
-      return b.lastMessageTime!.compareTo(a.lastMessageTime!);
+    // Also add nodes we have messages from but aren't in the nodes list anymore
+    for (final entry in dmInfoByNode.entries) {
+      final nodeNum = entry.key;
+      if (nodes.containsKey(nodeNum)) continue; // Already added
+
+      final dmInfo = entry.value;
+      contacts.add(
+        _Contact(
+          nodeNum: nodeNum,
+          displayName:
+              dmInfo.senderDisplayName ??
+              'Node ${nodeNum.toRadixString(16).toUpperCase()}',
+          shortName: dmInfo.senderShortName,
+          avatarColor: dmInfo.senderAvatarColor,
+          isOnline: false,
+          lastMessage: dmInfo.lastMessage,
+          lastMessageTime: dmInfo.lastMessageTime,
+          unreadCount: dmInfo.unreadCount,
+        ),
+      );
+    }
+
+    // Sort: online first, then by name
+    contacts.sort((a, b) {
+      // Unread messages first
+      if (a.unreadCount > 0 && b.unreadCount == 0) return -1;
+      if (b.unreadCount > 0 && a.unreadCount == 0) return 1;
+      // Then online nodes
+      if (a.isOnline != b.isOnline) return a.isOnline ? -1 : 1;
+      // Then alphabetically
+      return a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase());
     });
 
-    // Filter conversations by search
-    var filteredConversations = conversations;
+    // Filter contacts by search
+    var filteredContacts = contacts;
     if (_searchQuery.isNotEmpty) {
       final query = _searchQuery.toLowerCase();
-      filteredConversations = conversations.where((conv) {
-        return conv.name.toLowerCase().contains(query) ||
-            (conv.shortName?.toLowerCase().contains(query) ?? false) ||
-            (conv.lastMessage?.toLowerCase().contains(query) ?? false);
+      filteredContacts = contacts.where((c) {
+        return c.displayName.toLowerCase().contains(query) ||
+            (c.shortName?.toLowerCase().contains(query) ?? false);
       }).toList();
     }
 
@@ -141,21 +179,14 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
             leading: const HamburgerMenuButton(),
             centerTitle: true,
             title: Text(
-              'Messages${conversations.isNotEmpty ? ' (${conversations.length})' : ''}',
+              'Contacts${contacts.isNotEmpty ? ' (${contacts.length})' : ''}',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
                 color: context.textPrimary,
               ),
             ),
-            actions: [
-              IconButton(
-                icon: Icon(Icons.edit_square, color: context.textPrimary),
-                onPressed: () => _showNewMessageSheet(context, ref),
-              ),
-              const DeviceStatusButton(),
-              const _MessagingPopupMenu(),
-            ],
+            actions: [const DeviceStatusButton(), const _MessagingPopupMenu()],
           ),
           body: Column(
             children: [
@@ -172,7 +203,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
                     onChanged: (value) => setState(() => _searchQuery = value),
                     style: TextStyle(color: context.textPrimary),
                     decoration: InputDecoration(
-                      hintText: 'Search conversations',
+                      hintText: 'Search contacts',
                       hintStyle: TextStyle(color: context.textTertiary),
                       prefixIcon: Icon(
                         Icons.search,
@@ -204,9 +235,9 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
                 height: 1,
                 color: context.border.withValues(alpha: 0.3),
               ),
-              // Conversations list
+              // Contacts list
               Expanded(
-                child: filteredConversations.isEmpty
+                child: filteredContacts.isEmpty
                     ? Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -219,7 +250,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               child: Icon(
-                                Icons.chat_bubble_outline,
+                                Icons.people_outline,
                                 size: 40,
                                 color: context.textTertiary,
                               ),
@@ -227,8 +258,8 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
                             SizedBox(height: 24),
                             Text(
                               _searchQuery.isNotEmpty
-                                  ? 'No conversations match "$_searchQuery"'
-                                  : 'No conversations yet',
+                                  ? 'No contacts match "$_searchQuery"'
+                                  : 'No contacts yet',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
@@ -238,7 +269,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
                             if (_searchQuery.isEmpty) ...[
                               SizedBox(height: 8),
                               Text(
-                                'Start a new message',
+                                'Discovered nodes will appear here',
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: context.textTertiary,
@@ -257,9 +288,9 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
                         ),
                       )
                     : ListView.builder(
-                        itemCount: filteredConversations.length,
+                        itemCount: filteredContacts.length,
                         itemBuilder: (context, index) {
-                          final conv = filteredConversations[index];
+                          final contact = filteredContacts[index];
                           final animationsEnabled = ref.watch(
                             animationsEnabledProvider,
                           );
@@ -267,17 +298,17 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
                             index: index,
                             direction: SlideDirection.left,
                             enabled: animationsEnabled,
-                            child: _ConversationTile(
-                              conversation: conv,
+                            child: _ContactTile(
+                              contact: contact,
                               onTap: () {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
                                     builder: (_) => ChatScreen(
-                                      type: conv.type,
-                                      nodeNum: conv.nodeNum,
-                                      title: conv.name,
-                                      avatarColor: conv.avatarColor,
+                                      type: ConversationType.directMessage,
+                                      nodeNum: contact.nodeNum,
+                                      title: contact.displayName,
+                                      avatarColor: contact.avatarColor,
                                     ),
                                   ),
                                 );
@@ -293,262 +324,58 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
       ),
     );
   }
-
-  void _showNewMessageSheet(BuildContext context, WidgetRef ref) {
-    final nodes = ref.read(nodesProvider);
-    final myNodeNum = ref.read(myNodeNumProvider);
-
-    // Filter out self from potential recipients
-    final otherNodes =
-        nodes.values.where((n) => n.nodeNum != myNodeNum).toList()
-          ..sort((a, b) {
-            // Online nodes first, then by name
-            if (a.isOnline != b.isOnline) return a.isOnline ? -1 : 1;
-            final aName = a.longName ?? a.shortName ?? '';
-            final bName = b.longName ?? b.shortName ?? '';
-            return aName.compareTo(bName);
-          });
-
-    var searchQuery = '';
-
-    AppBottomSheet.show(
-      context: context,
-      padding: const EdgeInsets.fromLTRB(0, 0, 0, 16),
-      child: StatefulBuilder(
-        builder: (context, setSheetState) {
-          final filteredNodes = searchQuery.isEmpty
-              ? otherNodes
-              : otherNodes.where((n) {
-                  final query = searchQuery.toLowerCase();
-                  final name = (n.longName ?? n.shortName ?? '').toLowerCase();
-                  final shortName = (n.shortName ?? '').toLowerCase();
-                  return name.contains(query) || shortName.contains(query);
-                }).toList();
-
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: EdgeInsets.fromLTRB(24, 0, 24, 16),
-                child: Text(
-                  'New Message',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: context.textPrimary,
-                  ),
-                ),
-              ),
-
-              // Search bar
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                child: TextField(
-                  autofocus: false,
-                  style: TextStyle(color: context.textPrimary, fontSize: 14),
-                  decoration: InputDecoration(
-                    hintText: 'Search nodes...',
-                    hintStyle: TextStyle(
-                      color: context.textTertiary,
-                      fontSize: 14,
-                    ),
-                    prefixIcon: Icon(
-                      Icons.search,
-                      color: context.textTertiary,
-                      size: 20,
-                    ),
-                    filled: true,
-                    fillColor: context.background,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 10,
-                    ),
-                    isDense: true,
-                  ),
-                  onChanged: (value) =>
-                      setSheetState(() => searchQuery = value),
-                ),
-              ),
-
-              Container(
-                height: 1,
-                color: context.border.withValues(alpha: 0.3),
-              ),
-
-              // Nodes section
-              if (filteredNodes.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Center(
-                    child: Column(
-                      children: [
-                        Icon(
-                          searchQuery.isEmpty
-                              ? Icons.people_outline
-                              : Icons.search_off,
-                          size: 48,
-                          color: context.textTertiary,
-                        ),
-                        SizedBox(height: 12),
-                        Text(
-                          searchQuery.isEmpty
-                              ? 'No other nodes in range'
-                              : 'No nodes match "$searchQuery"',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: context.textTertiary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-              else ...[
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  child: Row(
-                    children: [
-                      Text(
-                        'NEARBY NODES',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: context.textTertiary,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                      const Spacer(),
-                      Text(
-                        '${filteredNodes.length} ${filteredNodes.length == 1 ? 'node' : 'nodes'}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: context.textTertiary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxHeight: MediaQuery.of(context).size.height * 0.4,
-                  ),
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: filteredNodes.length,
-                    itemBuilder: (context, index) {
-                      final node = filteredNodes[index];
-                      return ListTile(
-                        leading: Stack(
-                          children: [
-                            NodeAvatar(
-                              text: node.avatarName,
-                              color: node.avatarColor != null
-                                  ? Color(node.avatarColor!)
-                                  : AppTheme.graphPurple,
-                              size: 40,
-                            ),
-                            if (node.isOnline)
-                              Positioned(
-                                right: 0,
-                                bottom: 0,
-                                child: Container(
-                                  width: 12,
-                                  height: 12,
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.successGreen,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: context.card,
-                                      width: 2,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                        title: Text(
-                          node.displayName,
-                          style: TextStyle(color: context.textPrimary),
-                        ),
-                        subtitle: node.isOnline
-                            ? Text(
-                                'Online',
-                                style: TextStyle(
-                                  color: AppTheme.successGreen,
-                                  fontSize: 12,
-                                ),
-                              )
-                            : Text(
-                                node.shortName ?? 'Offline',
-                                style: TextStyle(
-                                  color: context.textTertiary,
-                                  fontSize: 12,
-                                ),
-                              ),
-                        onTap: () {
-                          Navigator.pop(context);
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => ChatScreen(
-                                type: ConversationType.directMessage,
-                                nodeNum: node.nodeNum,
-                                title: node.displayName,
-                                avatarColor: node.avatarColor,
-                              ),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ],
-          );
-        },
-      ),
-    );
-  }
 }
 
-class _Conversation {
-  final ConversationType type;
-  final int? nodeNum;
-  final String name;
+/// Helper class to track DM info for a node
+class _DmInfo {
+  final String? lastMessage;
+  final DateTime lastMessageTime;
+  final int unreadCount;
+  final String? senderDisplayName;
+  final String? senderShortName;
+  final int? senderAvatarColor;
+
+  _DmInfo({
+    this.lastMessage,
+    required this.lastMessageTime,
+    this.unreadCount = 0,
+    this.senderDisplayName,
+    this.senderShortName,
+    this.senderAvatarColor,
+  });
+}
+
+/// Contact model representing a messageable node
+class _Contact {
+  final int nodeNum;
+  final String displayName;
   final String? shortName;
   final int? avatarColor;
+  final bool isOnline;
   final String? lastMessage;
   final DateTime? lastMessageTime;
   final int unreadCount;
 
-  _Conversation({
-    required this.type,
-    this.nodeNum,
-    required this.name,
+  _Contact({
+    required this.nodeNum,
+    required this.displayName,
     this.shortName,
     this.avatarColor,
+    this.isOnline = false,
     this.lastMessage,
     this.lastMessageTime,
     this.unreadCount = 0,
   });
 }
 
-class _ConversationTile extends StatelessWidget {
-  final _Conversation conversation;
+class _ContactTile extends StatelessWidget {
+  final _Contact contact;
   final VoidCallback onTap;
 
-  const _ConversationTile({required this.conversation, required this.onTap});
+  const _ContactTile({required this.contact, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final timeFormat = DateFormat('h:mm a');
-
     return BouncyTap(
       onTap: onTap,
       scaleFactor: 0.98,
@@ -563,17 +390,35 @@ class _ConversationTile extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           child: Row(
             children: [
-              // Avatar
-              NodeAvatar(
-                text:
-                    conversation.shortName ??
-                    (conversation.name.length >= 2
-                        ? conversation.name.substring(0, 2)
-                        : conversation.name),
-                color: conversation.avatarColor != null
-                    ? Color(conversation.avatarColor!)
-                    : AppTheme.graphPurple,
-                size: 52,
+              // Avatar with online indicator
+              Stack(
+                children: [
+                  NodeAvatar(
+                    text:
+                        contact.shortName ??
+                        (contact.displayName.length >= 2
+                            ? contact.displayName.substring(0, 2)
+                            : contact.displayName),
+                    color: contact.avatarColor != null
+                        ? Color(contact.avatarColor!)
+                        : AppTheme.graphPurple,
+                    size: 48,
+                  ),
+                  if (contact.isOnline)
+                    Positioned(
+                      right: 0,
+                      bottom: 0,
+                      child: Container(
+                        width: 14,
+                        height: 14,
+                        decoration: BoxDecoration(
+                          color: AppTheme.successGreen,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: context.card, width: 2),
+                        ),
+                      ),
+                    ),
+                ],
               ),
               SizedBox(width: 12),
               // Content
@@ -585,7 +430,7 @@ class _ConversationTile extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            conversation.name,
+                            contact.displayName,
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -595,31 +440,7 @@ class _ConversationTile extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        if (conversation.lastMessageTime != null)
-                          Text(
-                            timeFormat.format(conversation.lastMessageTime!),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: context.textTertiary,
-                            ),
-                          ),
-                      ],
-                    ),
-                    SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            conversation.lastMessage ?? 'Start a conversation',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: context.textSecondary,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        if (conversation.unreadCount > 0) ...[
+                        if (contact.unreadCount > 0) ...[
                           SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -631,7 +452,7 @@ class _ConversationTile extends StatelessWidget {
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
-                              '${conversation.unreadCount}',
+                              '${contact.unreadCount}',
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
@@ -641,6 +462,21 @@ class _ConversationTile extends StatelessWidget {
                           ),
                         ],
                       ],
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      contact.lastMessage ??
+                          (contact.isOnline ? 'Online' : 'Offline'),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: contact.lastMessage != null
+                            ? context.textSecondary
+                            : (contact.isOnline
+                                  ? AppTheme.successGreen
+                                  : context.textTertiary),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),

@@ -360,9 +360,9 @@ class _MainShellState extends ConsumerState<MainShell> {
       label: 'Channels',
     ),
     _NavItem(
-      icon: Icons.message_outlined,
-      activeIcon: Icons.message,
-      label: 'Messages',
+      icon: Icons.chat_bubble_outline,
+      activeIcon: Icons.chat_bubble,
+      label: 'Contacts',
     ),
     _NavItem(icon: Icons.map_outlined, activeIcon: Icons.map, label: 'Map'),
     _NavItem(
@@ -389,7 +389,7 @@ class _MainShellState extends ConsumerState<MainShell> {
         );
       case 1:
         return const ConnectionRequiredWrapper(
-          screenTitle: 'Messages',
+          screenTitle: 'Contacts',
           child: MessagingScreen(),
         );
       case 2:
@@ -418,7 +418,12 @@ class _MainShellState extends ConsumerState<MainShell> {
   /// Build drawer menu slivers with sticky section headers
   List<Widget> _buildDrawerMenuSlivers(BuildContext context, ThemeData theme) {
     final slivers = <Widget>[];
-    final isDark = theme.brightness == Brightness.dark;
+    // Use themeModeProvider for brightness to stay in sync with toggle button
+    final currentMode = ref.watch(themeModeProvider);
+    final isDark =
+        currentMode == ThemeMode.dark ||
+        (currentMode == ThemeMode.system &&
+            MediaQuery.platformBrightnessOf(context) == Brightness.dark);
     final dividerAlpha = isDark ? 0.1 : 0.2;
 
     // Add top padding
@@ -705,7 +710,12 @@ class _MainShellState extends ConsumerState<MainShell> {
 
   Widget _buildDrawer(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    // Use themeModeProvider for brightness to stay in sync with toggle button
+    final currentMode = ref.watch(themeModeProvider);
+    final isDark =
+        currentMode == ThemeMode.dark ||
+        (currentMode == ThemeMode.system &&
+            MediaQuery.platformBrightnessOf(context) == Brightness.dark);
     final dividerAlpha = isDark ? 0.1 : 0.2;
 
     return Drawer(
