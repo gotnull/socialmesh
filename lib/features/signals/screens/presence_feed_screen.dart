@@ -821,10 +821,15 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                             .unhideSignal(signal.id);
                         showSuccessSnackBar(context, 'Signal restored');
                         // Switch back to All if this was the last hidden signal
-                        final remainingHidden = ref.read(hiddenSignalsProvider);
-                        if (remainingHidden.isEmpty) {
-                          setState(() => _activeFilter = SignalFilter.all);
-                        }
+                        // Use a microtask to check after the state has updated
+                        Future.microtask(() {
+                          final remainingHidden = ref.read(
+                            hiddenSignalsProvider,
+                          );
+                          if (remainingHidden.isEmpty && mounted) {
+                            setState(() => _activeFilter = SignalFilter.all);
+                          }
+                        });
                       } else {
                         ref
                             .read(hiddenSignalsProvider.notifier)

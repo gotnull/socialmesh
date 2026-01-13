@@ -1108,8 +1108,8 @@ class _NavBarItem extends StatelessWidget {
       onTap: onTap,
       scaleFactor: 0.9,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOutCubic,
+        duration: const Duration(milliseconds: 300),
+        curve: AppCurves.overshoot,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
@@ -1124,9 +1124,9 @@ class _NavBarItem extends StatelessWidget {
               clipBehavior: Clip.none,
               children: [
                 AnimatedScale(
-                  scale: isSelected ? 1.1 : 1.0,
-                  duration: const Duration(milliseconds: 200),
-                  curve: Curves.easeOutBack,
+                  scale: isSelected ? 1.15 : 1.0,
+                  duration: const Duration(milliseconds: 350),
+                  curve: AppCurves.overshoot,
                   child: isSelected
                       ? ShaderMask(
                           shaderCallback: (bounds) {
@@ -1213,7 +1213,8 @@ class _NavBarItem extends StatelessWidget {
                     ),
                   )
                 : AnimatedDefaultTextStyle(
-                    duration: const Duration(milliseconds: 200),
+                    duration: const Duration(milliseconds: 300),
+                    curve: AppCurves.overshoot,
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.normal,
