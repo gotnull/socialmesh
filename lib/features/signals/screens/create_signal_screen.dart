@@ -1019,7 +1019,7 @@ class _ActionButton extends StatelessWidget {
               ),
             const SizedBox(width: 8),
             Text(
-              isLoading ? 'Getting...' : label,
+              label,
               style: TextStyle(
                 color: isSelected ? context.accentColor : context.textSecondary,
                 fontSize: 13,

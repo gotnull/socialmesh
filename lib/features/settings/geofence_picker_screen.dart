@@ -740,7 +740,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
                               : Icon(Icons.my_location, size: 18),
                           label: Text(
                             _isLoadingLocation
-                                ? 'Getting...'
+                                ? 'Locating...'
                                 : 'Use My Location',
                           ),
                         ),
