@@ -12,6 +12,7 @@
 // - `FeatureAvailabilityNotifier`: Computed feature availability
 
 import 'dart:async';
+import 'dart:io' show Platform;
 
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -380,6 +381,71 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     DeviceInfo? foundDevice;
 
     try {
+      // Aggressive BLE cleanup - device may have just been released by another app
+      AppLogging.connection(
+        '🔌 startBackgroundConnection: Aggressive BLE cleanup starting...',
+      );
+
+      // 1. Stop any existing scan
+      try {
+        await FlutterBluePlus.stopScan();
+      } catch (e) {
+        // Ignore
+      }
+
+      // 2. Check system devices for stale connections to our target
+      try {
+        final systemDevices = await FlutterBluePlus.systemDevices([]);
+        for (final device in systemDevices) {
+          if (device.remoteId.toString() == lastDeviceId) {
+            AppLogging.connection(
+              '🔌 startBackgroundConnection: Found target in system devices, cleaning up...',
+            );
+            try {
+              if (Platform.isAndroid) {
+                await device.clearGattCache();
+              }
+              await device.disconnect();
+            } catch (e) {
+              // Ignore cleanup errors
+            }
+          }
+        }
+      } catch (e) {
+        // Ignore
+      }
+
+      // 3. Android: Also check bonded devices
+      if (Platform.isAndroid) {
+        try {
+          final bondedDevices = await FlutterBluePlus.bondedDevices;
+          for (final device in bondedDevices) {
+            if (device.remoteId.toString() == lastDeviceId) {
+              AppLogging.connection(
+                '🔌 startBackgroundConnection: Found target in bonded devices, cleaning up...',
+              );
+              try {
+                await device.clearGattCache();
+                if (device.isConnected) {
+                  await device.disconnect();
+                }
+              } catch (e) {
+                // Ignore
+              }
+            }
+          }
+        } catch (e) {
+          // Ignore
+        }
+      }
+
+      // 4. Wait for BLE to reset (longer on Android due to GATT cache)
+      final resetDelay = Platform.isAndroid ? 1500 : 1000;
+      AppLogging.connection(
+        '🔌 startBackgroundConnection: Waiting ${resetDelay}ms for BLE reset...',
+      );
+      await Future.delayed(Duration(milliseconds: resetDelay));
+
       // Scan for 5 seconds
       AppLogging.connection(
         '🔌 startBackgroundConnection: Starting 5s scan...',
