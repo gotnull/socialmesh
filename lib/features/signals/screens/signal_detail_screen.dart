@@ -1453,11 +1453,9 @@ class _StickySignalHeaderState extends State<_StickySignalHeader>
                       ),
                     ),
                     boxShadow: [
-                      // Upward shadow to blend with AppBar junction
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.15),
                         blurRadius: 8,
-                        offset: const Offset(0, -4),
                       ),
                     ],
                   ),

@@ -70,7 +70,7 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
   bool _isRefreshing = false;
   String _searchQuery = '';
   SignalFilter _activeFilter = SignalFilter.all;
-  SignalSortOrder _sortOrder = SignalSortOrder.proximity;
+  SignalSortOrder _sortOrder = SignalSortOrder.newest;
 
   // Sticky header state
   bool _showStickyHeader = false;
@@ -181,26 +181,36 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
     switch (_sortOrder) {
       case SignalSortOrder.proximity:
         sorted.sort((a, b) {
-          // Null hop count = lowest priority (furthest)
+          // Primary: hop count (closer first, null = furthest)
           final aHop = a.hopCount ?? 999;
           final bHop = b.hopCount ?? 999;
           if (aHop != bHop) return aHop.compareTo(bHop);
-          // Then by expiry (expiring soon first)
-          if (a.expiresAt != null && b.expiresAt != null) {
-            return a.expiresAt!.compareTo(b.expiresAt!);
-          }
-          return 0;
+          // Secondary: newest first
+          return b.createdAt.compareTo(a.createdAt);
         });
       case SignalSortOrder.expiring:
         sorted.sort((a, b) {
-          // Null expiry = lowest priority
-          if (a.expiresAt == null && b.expiresAt == null) return 0;
+          // Primary: expiry time (expiring soon first, null = last)
+          if (a.expiresAt == null && b.expiresAt == null) {
+            return b.createdAt.compareTo(a.createdAt);
+          }
           if (a.expiresAt == null) return 1;
           if (b.expiresAt == null) return -1;
-          return a.expiresAt!.compareTo(b.expiresAt!);
+          final expiryCompare = a.expiresAt!.compareTo(b.expiresAt!);
+          if (expiryCompare != 0) return expiryCompare;
+          // Secondary: newest first
+          return b.createdAt.compareTo(a.createdAt);
         });
       case SignalSortOrder.newest:
-        sorted.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        sorted.sort((a, b) {
+          // Primary: newest first
+          final dateCompare = b.createdAt.compareTo(a.createdAt);
+          if (dateCompare != 0) return dateCompare;
+          // Secondary: closer signals first (lower hop count)
+          final aHop = a.hopCount ?? 999;
+          final bHop = b.hopCount ?? 999;
+          return aHop.compareTo(bHop);
+        });
     }
     return sorted;
   }
@@ -496,25 +506,35 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                 color: context.border.withValues(alpha: 0.3),
               ),
 
-              // Sticky header with overlapping author avatars
-              if (activeAuthors.isNotEmpty)
-                _ActiveAuthorsHeader(
-                  authors: activeAuthors,
-                  signalCount: feedState.signals.length,
-                  isVisible: _showStickyHeader,
-                  onTap: _scrollToTop,
-                ),
-
-              // Signal list/grid/map based on view mode
+              // Signal list/grid/map based on view mode with sticky header overlay
               Expanded(
-                child: feedState.isLoading && feedState.signals.isEmpty
-                    ? _buildLoading()
-                    : signals.isEmpty
-                    ? _buildEmptyState()
-                    : _buildSignalView(
-                        signals,
-                        ref.watch(signalViewModeProvider),
+                child: Stack(
+                  children: [
+                    // Content
+                    feedState.isLoading && feedState.signals.isEmpty
+                        ? _buildLoading()
+                        : signals.isEmpty
+                            ? _buildEmptyState()
+                            : _buildSignalView(
+                                signals,
+                                ref.watch(signalViewModeProvider),
+                              ),
+
+                    // Sticky header overlay with overlapping author avatars
+                    if (activeAuthors.isNotEmpty)
+                      Positioned(
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        child: _ActiveAuthorsHeader(
+                          authors: activeAuthors,
+                          signalCount: feedState.signals.length,
+                          isVisible: _showStickyHeader,
+                          onTap: _scrollToTop,
+                        ),
                       ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -1559,7 +1579,7 @@ class _ActiveAuthorsHeader extends StatefulWidget {
 class _ActiveAuthorsHeaderState extends State<_ActiveAuthorsHeader>
     with SingleTickerProviderStateMixin {
   late AnimationController _slideController;
-  late Animation<double> _sizeAnimation;
+  late Animation<Offset> _slideAnimation;
   late Animation<double> _fadeAnimation;
 
   @override
@@ -1569,9 +1589,11 @@ class _ActiveAuthorsHeaderState extends State<_ActiveAuthorsHeader>
       vsync: this,
       duration: const Duration(milliseconds: 250),
     );
-    _sizeAnimation = CurvedAnimation(
-      parent: _slideController,
-      curve: Curves.easeOutCubic,
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, -1),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
     );
     _fadeAnimation = Tween<double>(
       begin: 0.0,
@@ -1608,124 +1630,124 @@ class _ActiveAuthorsHeaderState extends State<_ActiveAuthorsHeader>
     final displayAuthors = widget.authors.take(maxAvatars).toList();
     final remainingCount = widget.authors.length - maxAvatars;
 
-    return SizeTransition(
-      sizeFactor: _sizeAnimation,
-      axisAlignment: -1,
-      child: FadeTransition(
-        opacity: _fadeAnimation,
-        child: ClipRRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: GestureDetector(
-              onTap: widget.onTap,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  color: context.card.withValues(alpha: 0.7),
-                  border: Border(
-                    bottom: BorderSide(
-                      color: accentColor.withValues(alpha: 0.3),
-                      width: 1,
-                    ),
+    return IgnorePointer(
+      ignoring: !widget.isVisible,
+      child: SlideTransition(
+        position: _slideAnimation,
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: ClipRRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: GestureDetector(
+                onTap: widget.onTap,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
-                      blurRadius: 8,
-                      offset: const Offset(0, -4),
+                  decoration: BoxDecoration(
+                    color: context.card.withValues(alpha: 0.7),
+                    border: Border(
+                      bottom: BorderSide(
+                        color: accentColor.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
                     ),
-                  ],
-                ),
-                child: Row(
-                    children: [
-                      // Overlapping avatars (Instagram-style)
-                      SizedBox(
-                        height: 36,
-                        width: 36.0 + (displayAuthors.length - 1) * 20.0,
-                        child: Stack(
-                          children: [
-                            for (var i = displayAuthors.length - 1; i >= 0; i--)
-                              Positioned(
-                                left: i * 20.0,
-                                child: _AuthorAvatar(
-                                  author: displayAuthors[i],
-                                  size: 36,
-                                  borderColor: context.card,
-                                  accentColor: accentColor,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-
-                      // Extra count badge
-                      if (remainingCount > 0) ...[
-                        const SizedBox(width: 4),
-                        Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: context.surface,
-                            border: Border.all(color: context.card, width: 2),
-                          ),
-                          child: Center(
-                            child: Text(
-                              '+$remainingCount',
-                              style: TextStyle(
-                                color: context.textSecondary,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-
-                      const SizedBox(width: 12),
-
-                      // Text info
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              '${widget.authors.length} ${widget.authors.length == 1 ? "person" : "people"} active',
-                              style: TextStyle(
-                                color: context.textPrimary,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Text(
-                              '${widget.signalCount} ${widget.signalCount == 1 ? "signal" : "signals"} nearby',
-                              style: TextStyle(
-                                color: context.textTertiary,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      // Scroll to top indicator
-                      Icon(
-                        Icons.keyboard_arrow_up,
-                        color: context.textTertiary,
-                        size: 20,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        blurRadius: 8,
                       ),
                     ],
                   ),
+                child: Row(
+                  children: [
+                    // Overlapping avatars (Instagram-style)
+                    SizedBox(
+                      height: 36,
+                      width: 36.0 + (displayAuthors.length - 1) * 20.0,
+                      child: Stack(
+                        children: [
+                          for (var i = displayAuthors.length - 1; i >= 0; i--)
+                            Positioned(
+                              left: i * 20.0,
+                              child: _AuthorAvatar(
+                                author: displayAuthors[i],
+                                size: 36,
+                                borderColor: context.card,
+                                accentColor: accentColor,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+
+                    // Extra count badge
+                    if (remainingCount > 0) ...[
+                      const SizedBox(width: 4),
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: context.surface,
+                          border: Border.all(color: context.card, width: 2),
+                        ),
+                        child: Center(
+                          child: Text(
+                            '+$remainingCount',
+                            style: TextStyle(
+                              color: context.textSecondary,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+
+                    const SizedBox(width: 12),
+
+                    // Text info
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '${widget.authors.length} ${widget.authors.length == 1 ? "person" : "people"} active',
+                            style: TextStyle(
+                              color: context.textPrimary,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            '${widget.signalCount} ${widget.signalCount == 1 ? "signal" : "signals"} nearby',
+                            style: TextStyle(
+                              color: context.textTertiary,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Scroll to top indicator
+                    Icon(
+                      Icons.keyboard_arrow_up,
+                      color: context.textTertiary,
+                      size: 20,
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
         ),
       ),
+    ),
     );
   }
 }
