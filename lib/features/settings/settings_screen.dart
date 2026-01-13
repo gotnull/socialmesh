@@ -850,7 +850,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
         ),
         // Only show Glyph Test on Nothing Phones
-        if (ref.watch(glyphServiceProvider).isSupported)
+        if (ref.watch(glyphSupportedProvider))
           _SearchableSettingItem(
             icon: Icons.lightbulb,
             title: 'Glyph Test',
