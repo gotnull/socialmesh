@@ -630,9 +630,9 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
       blockedReason = 'Device not connected';
     }
 
-    final accentColor = context.accentColor;
+    final gradientColors = AccentColors.gradientFor(context.accentColor);
     final gradient = LinearGradient(
-      colors: [accentColor, Color.lerp(accentColor, Colors.white, 0.2)!],
+      colors: [gradientColors[0], gradientColors[1]],
     );
 
     return Tooltip(
