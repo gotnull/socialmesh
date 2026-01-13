@@ -259,33 +259,51 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       // may not immediately see newly-available devices.
       AppLogging.connection('📡 SCANNER: Aggressive BLE cleanup starting...');
 
-      // 1. Stop any existing scan and wait for it to fully complete
+      // 1. Wait for any active scans to fully complete BEFORE stopping
       // This is critical because background connection scans may still be running
       // and their finally blocks call stopScan() which would kill our scan
+      if (userJustDisconnected) {
+        try {
+          // First check if there's an active scan
+          final isCurrentlyScanning = await FlutterBluePlus.isScanning.first;
+          if (isCurrentlyScanning) {
+            AppLogging.connection(
+              '📡 SCANNER: Active scan detected, waiting for it to complete...',
+            );
+            // Wait for the active scan to finish (up to 6 seconds for a 5s scan)
+            await FlutterBluePlus.isScanning
+                .firstWhere((scanning) => !scanning)
+                .timeout(
+                  const Duration(seconds: 6),
+                  onTimeout: () {
+                    AppLogging.connection(
+                      '📡 SCANNER: Timeout waiting for scan, forcing stop',
+                    );
+                    return false;
+                  },
+                );
+            AppLogging.connection(
+              '📡 SCANNER: Previous scan completed naturally',
+            );
+            // Extra delay to let the scan's finally block complete
+            await Future.delayed(const Duration(milliseconds: 500));
+          }
+        } catch (e) {
+          AppLogging.connection(
+            '📡 SCANNER: Error waiting for scan completion: $e',
+          );
+        }
+      }
+
+      // 2. Now stop any lingering scan state
       try {
         await FlutterBluePlus.stopScan();
         AppLogging.connection('📡 SCANNER: Stopped existing scan');
-
-        // Wait for any active scans to fully complete (including finally blocks)
-        // This prevents race conditions where background scans call stopScan()
-        // after we've started our own scan
-        if (userJustDisconnected) {
-          final isScanning = await FlutterBluePlus.isScanning.first;
-          if (isScanning) {
-            AppLogging.connection(
-              '📡 SCANNER: Waiting for active scans to complete...',
-            );
-            await FlutterBluePlus.isScanning
-                .firstWhere((scanning) => !scanning)
-                .timeout(const Duration(seconds: 3), onTimeout: () => false);
-            AppLogging.connection('📡 SCANNER: All scans completed');
-          }
-        }
       } catch (e) {
         AppLogging.connection('📡 SCANNER: stopScan error (ignoring): $e');
       }
 
-      // 2. Clean up ALL system devices if user just disconnected
+      // 3. Clean up ALL system devices if user just disconnected
       // When user manually disconnects, the device we just released may still
       // have stale BLE state. Clean up everything to ensure fresh scan.
       if (userJustDisconnected) {
@@ -314,7 +332,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
         }
       }
 
-      // 3. Try to disconnect any stale connections to our saved device
+      // 4. Try to disconnect any stale connections to our saved device
       // This helps when the device was connected to another app
       if (savedDeviceId != null) {
         try {
@@ -382,7 +400,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
         }
       }
 
-      // 3. Wait for BLE subsystem to fully reset
+      // 5. Wait for BLE subsystem to fully reset
       // - Android needs longer due to GATT cache clearing
       // - After user manual disconnect, the device needs extra time to start
       //   advertising again since we just released the BLE connection
