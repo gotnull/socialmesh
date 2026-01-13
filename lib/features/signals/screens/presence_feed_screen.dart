@@ -81,6 +81,10 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    // Clean up hidden signals on init
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _cleanupHiddenSignals();
+    });
   }
 
   void _onScroll() {
@@ -100,6 +104,26 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
 
   void _dismissKeyboard() {
     FocusScope.of(context).unfocus();
+  }
+
+  /// Clean up hidden signals that no longer exist in the feed
+  Future<void> _cleanupHiddenSignals() async {
+    final allSignals = ref.read(signalFeedProvider).signals;
+    final validSignalIds = allSignals.map((s) => s.id).toSet();
+    final hiddenIds = ref.read(hiddenSignalsProvider);
+
+    // Find ghost hidden signals (hidden but don't exist in feed)
+    final ghostIds = hiddenIds
+        .where((id) => !validSignalIds.contains(id))
+        .toSet();
+
+    if (ghostIds.isNotEmpty) {
+      AppLogging.signals('Cleaning up ${ghostIds.length} ghost hidden signals');
+      final notifier = ref.read(hiddenSignalsProvider.notifier);
+      for (final ghostId in ghostIds) {
+        await notifier.unhideSignal(ghostId);
+      }
+    }
   }
 
   Future<void> _handleRefresh() async {
