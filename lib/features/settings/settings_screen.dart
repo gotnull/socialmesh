@@ -849,19 +849,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             MaterialPageRoute(builder: (_) => const AppLogScreen()),
           ),
         ),
-        // Only show Glyph Test on Nothing Phones
-        if (ref.watch(glyphSupportedProvider))
-          _SearchableSettingItem(
-            icon: Icons.lightbulb,
-            title: 'Glyph Test',
-            subtitle: 'Test Nothing Phone LED patterns',
-            keywords: ['glyph', 'nothing', 'led', 'test', 'light'],
-            section: 'TOOLS',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const GlyphTestScreen()),
-            ),
+        // Glyph Test - show for all Android devices, screen handles unsupported case
+        _SearchableSettingItem(
+          icon: Icons.lightbulb,
+          title: 'Glyph Matrix Test',
+          subtitle: 'Nothing Phone 3 LED patterns',
+          keywords: ['glyph', 'nothing', 'led', 'test', 'light', 'matrix'],
+          section: 'TOOLS',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const GlyphTestScreen()),
           ),
+        ),
 
         // About
         _SearchableSettingItem(
