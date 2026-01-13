@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -70,8 +72,26 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
   SignalFilter _activeFilter = SignalFilter.all;
   SignalSortOrder _sortOrder = SignalSortOrder.proximity;
 
+  // Sticky header state
+  bool _showStickyHeader = false;
+  static const double _stickyThreshold = 100.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    final shouldShow = _scrollController.offset > _stickyThreshold;
+    if (shouldShow != _showStickyHeader) {
+      setState(() => _showStickyHeader = shouldShow);
+    }
+  }
+
   @override
   void dispose() {
+    _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     _searchController.dispose();
     super.dispose();
@@ -244,6 +264,9 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
     signals = _applyFilter(signals);
     signals = _applySort(signals);
     signals = _applySearch(signals);
+
+    // Extract unique active authors for sticky header (most recent first)
+    final activeAuthors = _getUniqueAuthors(feedState.signals);
 
     return GestureDetector(
       onTap: _dismissKeyboard,
@@ -473,6 +496,15 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                 color: context.border.withValues(alpha: 0.3),
               ),
 
+              // Sticky header with overlapping author avatars
+              if (activeAuthors.isNotEmpty)
+                _ActiveAuthorsHeader(
+                  authors: activeAuthors,
+                  signalCount: feedState.signals.length,
+                  isVisible: _showStickyHeader,
+                  onTap: _scrollToTop,
+                ),
+
               // Signal list/grid/map based on view mode
               Expanded(
                 child: feedState.isLoading && feedState.signals.isEmpty
@@ -489,6 +521,46 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
         ),
       ),
     );
+  }
+
+  void _scrollToTop() {
+    _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
+  }
+
+  /// Extract unique authors from signals, sorted by most recent signal first.
+  List<_AuthorInfo> _getUniqueAuthors(List<Post> signals) {
+    final Map<String, _AuthorInfo> authorMap = {};
+
+    for (final signal in signals) {
+      if (!authorMap.containsKey(signal.authorId)) {
+        authorMap[signal.authorId] = _AuthorInfo(
+          authorId: signal.authorId,
+          displayName: signal.authorSnapshot?.displayName ?? 'Anonymous',
+          avatarUrl: signal.authorSnapshot?.avatarUrl,
+          meshNodeId: signal.meshNodeId,
+          signalCount: 1,
+          mostRecentSignal: signal.createdAt,
+        );
+      } else {
+        final existing = authorMap[signal.authorId]!;
+        authorMap[signal.authorId] = existing.copyWith(
+          signalCount: existing.signalCount + 1,
+          mostRecentSignal: signal.createdAt.isAfter(existing.mostRecentSignal)
+              ? signal.createdAt
+              : existing.mostRecentSignal,
+        );
+      }
+    }
+
+    // Sort by most recent signal
+    final authors = authorMap.values.toList()
+      ..sort((a, b) => b.mostRecentSignal.compareTo(a.mostRecentSignal));
+
+    return authors;
   }
 
   Widget _buildSignalView(List<Post> signals, SignalViewMode viewMode) {
@@ -1425,6 +1497,310 @@ class _AnimatedGridItemState extends State<AnimatedGridItem>
     return ScaleTransition(
       scale: _scaleAnimation,
       child: FadeTransition(opacity: _fadeAnimation, child: widget.child),
+    );
+  }
+}
+
+/// Author info for the sticky header
+class _AuthorInfo {
+  final String authorId;
+  final String displayName;
+  final String? avatarUrl;
+  final int? meshNodeId;
+  final int signalCount;
+  final DateTime mostRecentSignal;
+
+  const _AuthorInfo({
+    required this.authorId,
+    required this.displayName,
+    this.avatarUrl,
+    this.meshNodeId,
+    required this.signalCount,
+    required this.mostRecentSignal,
+  });
+
+  _AuthorInfo copyWith({
+    String? authorId,
+    String? displayName,
+    String? avatarUrl,
+    int? meshNodeId,
+    int? signalCount,
+    DateTime? mostRecentSignal,
+  }) {
+    return _AuthorInfo(
+      authorId: authorId ?? this.authorId,
+      displayName: displayName ?? this.displayName,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      meshNodeId: meshNodeId ?? this.meshNodeId,
+      signalCount: signalCount ?? this.signalCount,
+      mostRecentSignal: mostRecentSignal ?? this.mostRecentSignal,
+    );
+  }
+}
+
+/// Instagram-style sticky header with overlapping author avatars
+class _ActiveAuthorsHeader extends StatefulWidget {
+  const _ActiveAuthorsHeader({
+    required this.authors,
+    required this.signalCount,
+    required this.isVisible,
+    this.onTap,
+  });
+
+  final List<_AuthorInfo> authors;
+  final int signalCount;
+  final bool isVisible;
+  final VoidCallback? onTap;
+
+  @override
+  State<_ActiveAuthorsHeader> createState() => _ActiveAuthorsHeaderState();
+}
+
+class _ActiveAuthorsHeaderState extends State<_ActiveAuthorsHeader>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _slideController;
+  late Animation<double> _sizeAnimation;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _slideController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 250),
+    );
+    _sizeAnimation = CurvedAnimation(
+      parent: _slideController,
+      curve: Curves.easeOutCubic,
+    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _slideController, curve: Curves.easeOut));
+
+    if (widget.isVisible) {
+      _slideController.forward();
+    }
+  }
+
+  @override
+  void didUpdateWidget(_ActiveAuthorsHeader oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isVisible != oldWidget.isVisible) {
+      if (widget.isVisible) {
+        _slideController.forward();
+      } else {
+        _slideController.reverse();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _slideController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final accentColor = context.accentColor;
+    final maxAvatars = 5;
+    final displayAuthors = widget.authors.take(maxAvatars).toList();
+    final remainingCount = widget.authors.length - maxAvatars;
+
+    return SizeTransition(
+      sizeFactor: _sizeAnimation,
+      axisAlignment: -1,
+      child: FadeTransition(
+        opacity: _fadeAnimation,
+        child: ClipRRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: GestureDetector(
+              onTap: widget.onTap,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: context.card.withValues(alpha: 0.7),
+                  border: Border(
+                    bottom: BorderSide(
+                      color: accentColor.withValues(alpha: 0.3),
+                      width: 1,
+                    ),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 8,
+                      offset: const Offset(0, -4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                    children: [
+                      // Overlapping avatars (Instagram-style)
+                      SizedBox(
+                        height: 36,
+                        width: 36.0 + (displayAuthors.length - 1) * 20.0,
+                        child: Stack(
+                          children: [
+                            for (var i = displayAuthors.length - 1; i >= 0; i--)
+                              Positioned(
+                                left: i * 20.0,
+                                child: _AuthorAvatar(
+                                  author: displayAuthors[i],
+                                  size: 36,
+                                  borderColor: context.card,
+                                  accentColor: accentColor,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+
+                      // Extra count badge
+                      if (remainingCount > 0) ...[
+                        const SizedBox(width: 4),
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: context.surface,
+                            border: Border.all(color: context.card, width: 2),
+                          ),
+                          child: Center(
+                            child: Text(
+                              '+$remainingCount',
+                              style: TextStyle(
+                                color: context.textSecondary,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+
+                      const SizedBox(width: 12),
+
+                      // Text info
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '${widget.authors.length} ${widget.authors.length == 1 ? "person" : "people"} active',
+                              style: TextStyle(
+                                color: context.textPrimary,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              '${widget.signalCount} ${widget.signalCount == 1 ? "signal" : "signals"} nearby',
+                              style: TextStyle(
+                                color: context.textTertiary,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Scroll to top indicator
+                      Icon(
+                        Icons.keyboard_arrow_up,
+                        color: context.textTertiary,
+                        size: 20,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Individual author avatar with glow effect
+class _AuthorAvatar extends StatelessWidget {
+  const _AuthorAvatar({
+    required this.author,
+    required this.size,
+    required this.borderColor,
+    required this.accentColor,
+  });
+
+  final _AuthorInfo author;
+  final double size;
+  final Color borderColor;
+  final Color accentColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final isMeshNode = author.authorId.startsWith('mesh_');
+
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: borderColor, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: accentColor.withValues(alpha: 0.3),
+            blurRadius: 4,
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: ClipOval(
+        child: author.avatarUrl != null
+            ? Image.network(
+                author.avatarUrl!,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) =>
+                    _buildPlaceholder(context, isMeshNode),
+              )
+            : _buildPlaceholder(context, isMeshNode),
+      ),
+    );
+  }
+
+  Widget _buildPlaceholder(BuildContext context, bool isMeshNode) {
+    // Generate color from author ID
+    final hash = author.authorId.hashCode;
+    final hue = (hash % 360).toDouble();
+    final color = HSLColor.fromAHSL(1, hue, 0.6, 0.4).toColor();
+
+    return Container(
+      color: color,
+      child: Center(
+        child: isMeshNode
+            ? Icon(
+                Icons.router,
+                color: Colors.white.withValues(alpha: 0.9),
+                size: size * 0.5,
+              )
+            : Text(
+                author.displayName.isNotEmpty
+                    ? author.displayName[0].toUpperCase()
+                    : '?',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: size * 0.4,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+      ),
     );
   }
 }
