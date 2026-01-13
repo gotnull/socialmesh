@@ -1032,21 +1032,83 @@ class ThemedSwitch extends StatelessWidget {
 // ============================================================================
 
 /// Professional animation curves for premium feel
+///
+/// Use these consistently throughout the app for a polished, cohesive experience.
 class AppCurves {
-  /// Smooth deceleration - great for entrances
+  // ---------------------------------------------------------------------------
+  // STANDARD CURVES - For most UI transitions
+  // ---------------------------------------------------------------------------
+
+  /// Smooth deceleration - the workhorse for most entrances and exits
   static const Curve smooth = Curves.easeOutCubic;
 
-  /// Snappy response - great for taps/interactions
-  static const Curve snappy = Curves.easeOutBack;
+  /// Standard ease - balanced in/out for reversible animations
+  static const Curve standard = Curves.easeInOutCubic;
 
-  /// Bouncy - great for success states
+  /// Fast out, slow in - for elements leaving the screen
+  static const Curve exit = Curves.easeInCubic;
+
+  // ---------------------------------------------------------------------------
+  // EMPHASIS CURVES - For attention-grabbing animations
+  // ---------------------------------------------------------------------------
+
+  /// Snappy response - quick settle for taps and micro-interactions
+  static const Curve snappy = Cubic(0.2, 0.0, 0.0, 1.0);
+
+  /// Bouncy overshoot - playful, great for success states and celebrations
   static const Curve bouncy = Curves.elasticOut;
 
-  /// Spring-like - great for dialogs/sheets
-  static const Curve spring = Curves.easeOutQuart;
-
-  /// Subtle overshoot - professional entrance
+  /// Subtle overshoot - professional entrance with slight pop
   static const Curve overshoot = Curves.easeOutBack;
+
+  /// Dramatic overshoot - more pronounced pop for important elements
+  static const Curve dramaticOvershoot = Cubic(0.34, 1.56, 0.64, 1.0);
+
+  // ---------------------------------------------------------------------------
+  // SPRING CURVES - Natural, physics-based feel
+  // ---------------------------------------------------------------------------
+
+  /// Light spring - gentle bounce, good for dialogs and sheets
+  static const Curve spring = Cubic(0.175, 0.885, 0.32, 1.1);
+
+  /// Medium spring - more pronounced spring for modals
+  static const Curve springMedium = Cubic(0.68, -0.55, 0.265, 1.55);
+
+  /// Heavy spring - dramatic spring for large elements
+  static const Curve springHeavy = Cubic(0.68, -0.6, 0.32, 1.6);
+
+  // ---------------------------------------------------------------------------
+  // DECELERATION CURVES - For arriving elements
+  // ---------------------------------------------------------------------------
+
+  /// Fast deceleration - arrives quickly then settles (Material 3 style)
+  static const Curve decelerate = Cubic(0.0, 0.0, 0.2, 1.0);
+
+  /// Emphasized deceleration - dramatic entrance with long settle
+  static const Curve decelerateEmphasized = Cubic(0.05, 0.7, 0.1, 1.0);
+
+  // ---------------------------------------------------------------------------
+  // ACCELERATION CURVES - For departing elements
+  // ---------------------------------------------------------------------------
+
+  /// Fast acceleration - quick departure (Material 3 style)
+  static const Curve accelerate = Cubic(0.4, 0.0, 1.0, 1.0);
+
+  /// Emphasized acceleration - slow start then quick exit
+  static const Curve accelerateEmphasized = Cubic(0.3, 0.0, 0.8, 0.15);
+
+  // ---------------------------------------------------------------------------
+  // SPECIAL PURPOSE CURVES
+  // ---------------------------------------------------------------------------
+
+  /// Linear - for continuous animations (spinners, progress)
+  static const Curve linear = Curves.linear;
+
+  /// Anticipation - slight pullback before action (like a jump)
+  static const Curve anticipate = Cubic(0.36, 0.0, 0.66, -0.56);
+
+  /// Sharp - very quick with abrupt stop, for urgent feedback
+  static const Curve sharp = Cubic(0.4, 0.0, 0.6, 1.0);
 }
 
 /// Standard animation durations for consistency

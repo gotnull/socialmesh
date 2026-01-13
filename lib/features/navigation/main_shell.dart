@@ -1127,11 +1127,27 @@ class _NavBarItem extends StatelessWidget {
                   scale: isSelected ? 1.1 : 1.0,
                   duration: const Duration(milliseconds: 200),
                   curve: Curves.easeOutBack,
-                  child: AnimatedMorphIcon(
-                    icon: icon,
-                    size: 24,
-                    color: iconColor,
-                  ),
+                  child: isSelected
+                      ? ShaderMask(
+                          shaderCallback: (bounds) {
+                            final gradientColors = AccentColors.gradientFor(
+                              accentColor,
+                            );
+                            return LinearGradient(
+                              colors: [gradientColors[0], gradientColors[1]],
+                            ).createShader(bounds);
+                          },
+                          child: AnimatedMorphIcon(
+                            icon: icon,
+                            size: 24,
+                            color: Colors.white,
+                          ),
+                        )
+                      : AnimatedMorphIcon(
+                          icon: icon,
+                          size: 24,
+                          color: iconColor,
+                        ),
                 ),
                 if (showBadge)
                   Positioned(
@@ -1176,16 +1192,36 @@ class _NavBarItem extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 4),
-            AnimatedDefaultTextStyle(
-              duration: const Duration(milliseconds: 200),
-              style: TextStyle(
-                fontSize: isSelected ? 11 : 10,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                color: labelColor,
-                fontFamily: AppTheme.fontFamily,
-              ),
-              child: Text(label),
-            ),
+            isSelected
+                ? ShaderMask(
+                    shaderCallback: (bounds) {
+                      final gradientColors = AccentColors.gradientFor(
+                        accentColor,
+                      );
+                      return LinearGradient(
+                        colors: [gradientColors[0], gradientColors[1]],
+                      ).createShader(bounds);
+                    },
+                    child: Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                        fontFamily: AppTheme.fontFamily,
+                      ),
+                    ),
+                  )
+                : AnimatedDefaultTextStyle(
+                    duration: const Duration(milliseconds: 200),
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.normal,
+                      color: labelColor,
+                      fontFamily: AppTheme.fontFamily,
+                    ),
+                    child: Text(label),
+                  ),
           ],
         ),
       ),
