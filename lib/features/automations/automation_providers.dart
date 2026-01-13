@@ -7,6 +7,7 @@ import '../../models/user_profile.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/profile_providers.dart';
+import '../../providers/glyph_provider.dart';
 import 'automation_debug_service.dart';
 import 'automation_engine.dart';
 import 'automation_repository.dart';
@@ -32,6 +33,7 @@ final automationEngineProvider = Provider<AutomationEngine>((ref) {
   final repository = ref.watch(automationRepositoryProvider);
   final iftttService = ref.watch(iftttServiceProvider);
   final protocol = ref.watch(protocolServiceProvider);
+  final glyphService = ref.watch(glyphServiceProvider);
 
   // Get the notification plugin instance
   final notifications = FlutterLocalNotificationsPlugin();
@@ -40,6 +42,7 @@ final automationEngineProvider = Provider<AutomationEngine>((ref) {
     repository: repository,
     iftttService: iftttService,
     notifications: notifications,
+    glyphService: glyphService,
     onSendMessage: (nodeNum, message) async {
       try {
         await protocol.sendMessage(

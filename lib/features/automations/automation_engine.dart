@@ -13,6 +13,7 @@ import '../../models/mesh_models.dart' show MeshNode;
 import '../../services/ifttt/ifttt_service.dart';
 import '../../services/audio/rtttl_player.dart';
 import '../../services/audio/notification_sound_service.dart';
+import '../../services/glyph_service.dart';
 import 'models/automation.dart';
 import 'automation_repository.dart';
 
@@ -30,6 +31,7 @@ class AutomationEngine {
   final AutomationRepository _repository;
   final IftttService _iftttService;
   final FlutterLocalNotificationsPlugin? _notifications;
+  final GlyphService? _glyphService;
 
   /// Callback to send a message via the mesh
   final Future<bool> Function(int nodeNum, String message)? onSendMessage;
@@ -60,11 +62,13 @@ class AutomationEngine {
     required AutomationRepository repository,
     required IftttService iftttService,
     FlutterLocalNotificationsPlugin? notifications,
+    GlyphService? glyphService,
     this.onSendMessage,
     this.onSendToChannel,
-  }) : _repository = repository,
-       _iftttService = iftttService,
-       _notifications = notifications;
+  })  : _repository = repository,
+        _iftttService = iftttService,
+        _notifications = notifications,
+        _glyphService = glyphService;
 
   /// Start the automation engine
   void start() {
@@ -771,6 +775,58 @@ class AutomationEngine {
               actionName: actionName,
               success: false,
               errorMessage: 'Failed to run shortcut: $e',
+            );
+          }
+
+        case ActionType.glyphPattern:
+          // Nothing Phone glyph patterns
+          if (_glyphService == null || !_glyphService.isSupported) {
+            return ActionResult(
+              actionName: actionName,
+              success: false,
+              errorMessage: 'Glyph interface not available',
+            );
+          }
+
+          final pattern = action.config['pattern'] as String? ?? 'pulse';
+          
+          try {
+            switch (pattern) {
+              case 'connected':
+                await _glyphService.showConnected();
+              case 'disconnected':
+                await _glyphService.showDisconnected();
+              case 'message':
+                await _glyphService.showMessageReceived();
+              case 'dm':
+                await _glyphService.showMessageReceived(isDM: true);
+              case 'sent':
+                await _glyphService.showMessageSent();
+              case 'node_online':
+                await _glyphService.showNodeOnline();
+              case 'node_offline':
+                await _glyphService.showNodeOffline();
+              case 'signal_nearby':
+                await _glyphService.showSignalNearby();
+              case 'low_battery':
+                await _glyphService.showLowBattery();
+              case 'error':
+                await _glyphService.showError();
+              case 'success':
+                await _glyphService.showSuccess();
+              case 'syncing':
+                await _glyphService.showSyncing();
+              case 'pulse':
+              default:
+                await _glyphService.showAutomationTriggered();
+            }
+            
+            return ActionResult(actionName: actionName, success: true);
+          } catch (e) {
+            return ActionResult(
+              actionName: actionName,
+              success: false,
+              errorMessage: 'Failed to show glyph pattern: $e',
             );
           }
       }

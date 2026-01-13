@@ -385,6 +385,7 @@ enum ActionType {
   updateWidget,
   sendToChannel,
   triggerShortcut,
+  glyphPattern,
 }
 
 extension ActionTypeExtension on ActionType {
@@ -408,6 +409,8 @@ extension ActionTypeExtension on ActionType {
         return 'Send to channel';
       case ActionType.triggerShortcut:
         return 'Run iOS Shortcut';
+      case ActionType.glyphPattern:
+        return 'Glyph pattern (Nothing Phone)';
     }
   }
 
@@ -431,6 +434,8 @@ extension ActionTypeExtension on ActionType {
         return Icons.forum;
       case ActionType.triggerShortcut:
         return Icons.play_circle;
+      case ActionType.glyphPattern:
+        return Icons.lightbulb;
     }
   }
 }

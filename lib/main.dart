@@ -32,6 +32,7 @@ import 'providers/subscription_providers.dart';
 import 'providers/cloud_sync_entitlement_providers.dart';
 import 'providers/analytics_providers.dart';
 import 'providers/signal_providers.dart';
+import 'providers/glyph_provider.dart';
 import 'features/automations/automation_providers.dart';
 import 'models/mesh_models.dart';
 import 'models/social.dart';
@@ -167,6 +168,8 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       _initializeDeepLinks();
       // Initialize push notification navigation
       _initializePushNotificationNavigation();
+      // Initialize glyph service (Nothing Phone)
+      _initializeGlyphService();
     });
   }
 
@@ -427,6 +430,19 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       AppLogging.debug('🔗 Deep link service initialized');
     } catch (e) {
       AppLogging.debug('🔗 Deep link init failed: $e');
+    }
+  }
+
+  /// Initialize glyph service (Nothing Phone)
+  Future<void> _initializeGlyphService() async {
+    try {
+      await ref.read(glyphServiceInitProvider.future);
+      final isSupported = ref.read(glyphSupportedProvider);
+      if (isSupported) {
+        AppLogging.app('🔆 Glyph interface ready');
+      }
+    } catch (e) {
+      AppLogging.app('🔆 Glyph init failed: $e');
     }
   }
 

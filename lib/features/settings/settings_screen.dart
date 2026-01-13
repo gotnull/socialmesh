@@ -53,6 +53,7 @@ import '../automations/automation_providers.dart';
 import 'canned_responses_screen.dart';
 import 'canned_message_module_config_screen.dart';
 import 'range_test_screen.dart';
+import 'glyph_test_screen.dart';
 import 'store_forward_config_screen.dart';
 import 'detection_sensor_config_screen.dart';
 import 'external_notification_config_screen.dart';
@@ -847,6 +848,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             MaterialPageRoute(builder: (_) => const AppLogScreen()),
           ),
         ),
+        // Only show Glyph Test on Nothing Phones
+        if (ref.watch(glyphServiceProvider).isSupported)
+          _SearchableSettingItem(
+            icon: Icons.lightbulb,
+            title: 'Glyph Test',
+            subtitle: 'Test Nothing Phone LED patterns',
+            keywords: ['glyph', 'nothing', 'led', 'test', 'light'],
+            section: 'TOOLS',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const GlyphTestScreen()),
+            ),
+          ),
 
         // About
         _SearchableSettingItem(

@@ -210,6 +210,7 @@ class _ActionEditorState extends State<ActionEditor> {
       case ActionType.vibrate:
       case ActionType.logEvent:
       case ActionType.updateWidget:
+      case ActionType.glyphPattern:
         return const SizedBox.shrink();
     }
   }
