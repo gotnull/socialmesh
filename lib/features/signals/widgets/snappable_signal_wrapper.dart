@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/widgets/snappable.dart';
@@ -95,8 +94,6 @@ class SnappableSignalWrapperState extends State<SnappableSignalWrapper> {
   void snap() {
     if (_hasSnapped) return;
     _hasSnapped = true;
-
-    HapticFeedback.heavyImpact();
     _snappableKey.currentState?.snap();
   }
 
@@ -180,6 +177,7 @@ class _SnapSwipeableSignalItemState extends State<SnapSwipeableSignalItem>
   final GlobalKey<SnappableState> _snappableKey = GlobalKey<SnappableState>();
   late AnimationController _swipeController;
   late AnimationController _hintController;
+  late AnimationController _fadeController;
   late Animation<double> _hintAnimation;
 
   Timer? _expiryTimer;
@@ -198,6 +196,12 @@ class _SnapSwipeableSignalItemState extends State<SnapSwipeableSignalItem>
     _swipeController = AnimationController(
       duration: const Duration(milliseconds: 200),
       vsync: this,
+    );
+
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+      value: 1.0,
     );
 
     _hintController = AnimationController(
@@ -291,7 +295,6 @@ class _SnapSwipeableSignalItemState extends State<SnapSwipeableSignalItem>
   void _triggerExpirySnap() {
     if (_isSnapping) return;
     _isSnapping = true;
-    HapticFeedback.heavyImpact();
     _snappableKey.currentState?.snap();
   }
 
@@ -307,6 +310,7 @@ class _SnapSwipeableSignalItemState extends State<SnapSwipeableSignalItem>
   void dispose() {
     _swipeController.dispose();
     _hintController.dispose();
+    _fadeController.dispose();
     _expiryTimer?.cancel();
     super.dispose();
   }
@@ -324,7 +328,6 @@ class _SnapSwipeableSignalItemState extends State<SnapSwipeableSignalItem>
     });
 
     if (!_hasTriggeredHaptic && _dragExtent.abs() >= _threshold) {
-      HapticFeedback.selectionClick();
       _hasTriggeredHaptic = true;
     } else if (_hasTriggeredHaptic && _dragExtent.abs() < _threshold) {
       _hasTriggeredHaptic = false;
@@ -336,13 +339,23 @@ class _SnapSwipeableSignalItemState extends State<SnapSwipeableSignalItem>
 
     if (_dragExtent >= _threshold) {
       // Swipe right - bookmark (no snap)
-      HapticFeedback.mediumImpact();
       widget.onSwipeRight();
       _snapBack();
     } else if (_dragExtent <= -_threshold) {
       // Swipe left - hide with SNAP effect!
-      HapticFeedback.heavyImpact();
       _isSnapping = true;
+      // Animate drag extent back to 0 and fade out whole widget
+      _fadeController.reverse();
+      final startExtent = _dragExtent;
+      _swipeController.reset();
+      _swipeController.addListener(() {
+        if (mounted) {
+          setState(
+            () => _dragExtent = startExtent * (1 - _swipeController.value),
+          );
+        }
+      });
+      _swipeController.forward();
       _snappableKey.currentState?.snap();
     } else {
       _snapBack();
@@ -381,103 +394,122 @@ class _SnapSwipeableSignalItemState extends State<SnapSwipeableSignalItem>
     final leftColor = Colors.grey;
     final radius = BorderRadius.circular(widget.borderRadius);
 
+    // Only fade action backgrounds when snapping, not the whole thing
+    final actionOpacity = _isSnapping ? _fadeController.value : 1.0;
+
     return GestureDetector(
       onHorizontalDragUpdate: _handleDragUpdate,
       onHorizontalDragEnd: _handleDragEnd,
-      child: Stack(
-        children: [
-          // Right action background (bookmark)
-          if (_dragExtent > 0)
-            Positioned.fill(
-              child: ClipRRect(
-                borderRadius: radius,
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: radius,
-                    gradient: LinearGradient(
-                      begin: Alignment.centerLeft,
-                      end: Alignment.center,
-                      colors: [
-                        rightColor.withValues(alpha: 0.2 + rightProgress * 0.2),
-                        rightColor.withValues(alpha: 0.05),
-                      ],
-                    ),
-                  ),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 20),
-                      child: _SwipeActionIndicator(
-                        progress: rightProgress,
-                        color: rightColor,
-                        icon: widget.isBookmarked
-                            ? widget.rightActionIconActive
-                            : widget.rightActionIcon,
-                        label: widget.isBookmarked ? 'Unsave' : 'Save',
-                        isHint: _showingHint,
+      child: AnimatedBuilder(
+        animation: _fadeController,
+        builder: (context, child) {
+          return Stack(
+            clipBehavior: Clip.none,
+            children: [
+              // Right action background (bookmark)
+              if (_dragExtent > 0)
+                Positioned.fill(
+                  child: Opacity(
+                    opacity: actionOpacity,
+                    child: ClipRRect(
+                      borderRadius: radius,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: radius,
+                          gradient: LinearGradient(
+                            begin: Alignment.centerLeft,
+                            end: Alignment.center,
+                            colors: [
+                              rightColor.withValues(
+                                alpha: 0.2 + rightProgress * 0.2,
+                              ),
+                              rightColor.withValues(alpha: 0.05),
+                            ],
+                          ),
+                        ),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 20),
+                            child: _SwipeActionIndicator(
+                              progress: rightProgress,
+                              color: rightColor,
+                              icon: widget.isBookmarked
+                                  ? widget.rightActionIconActive
+                                  : widget.rightActionIcon,
+                              label: widget.isBookmarked ? 'Unsave' : 'Save',
+                              isHint: _showingHint,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ),
 
-          // Left action background (hide)
-          if (_dragExtent < 0)
-            Positioned.fill(
-              child: ClipRRect(
-                borderRadius: radius,
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: radius,
-                    gradient: LinearGradient(
-                      begin: Alignment.centerRight,
-                      end: Alignment.center,
-                      colors: [
-                        leftColor.withValues(alpha: 0.2 + leftProgress * 0.2),
-                        leftColor.withValues(alpha: 0.05),
-                      ],
-                    ),
-                  ),
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: 20),
-                      child: _SwipeActionIndicator(
-                        progress: leftProgress,
-                        color: leftColor,
-                        icon: widget.leftActionIcon,
-                        label: widget.leftActionLabel,
-                        isHint: _showingHint,
+              // Left action background (hide)
+              if (_dragExtent < 0)
+                Positioned.fill(
+                  child: Opacity(
+                    opacity: actionOpacity,
+                    child: ClipRRect(
+                      borderRadius: radius,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: radius,
+                          gradient: LinearGradient(
+                            begin: Alignment.centerRight,
+                            end: Alignment.center,
+                            colors: [
+                              leftColor.withValues(
+                                alpha: 0.2 + leftProgress * 0.2,
+                              ),
+                              leftColor.withValues(alpha: 0.05),
+                            ],
+                          ),
+                        ),
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 20),
+                            child: _SwipeActionIndicator(
+                              progress: leftProgress,
+                              color: leftColor,
+                              icon: widget.leftActionIcon,
+                              label: widget.leftActionLabel,
+                              isHint: _showingHint,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ),
 
-          // Main content with snap effect
-          Transform.translate(
-            offset: Offset(_dragExtent, 0),
-            child: Snappable(
-              key: _snappableKey,
-              duration: const Duration(milliseconds: 2500),
-              offset: const Offset(100, -50),
-              randomDislocationOffset: const Offset(40, 25),
-              numberOfBuckets: 20,
-              onSnapped: () {
-                // Call the onSwipeLeft after snap completes (for hide action)
-                // or onExpired for TTL expiry
-                if (_dragExtent <= -_threshold) {
-                  widget.onSwipeLeft();
-                } else {
-                  widget.onExpired?.call();
-                }
-              },
-              child: widget.child,
-            ),
-          ),
-        ],
+              // Main content with snap effect
+              Transform.translate(
+                offset: Offset(_dragExtent, 0),
+                child: Snappable(
+                  key: _snappableKey,
+                  duration: const Duration(milliseconds: 2500),
+                  offset: const Offset(100, -50),
+                  randomDislocationOffset: const Offset(40, 25),
+                  numberOfBuckets: 20,
+                  onSnapped: () {
+                    // Call the onSwipeLeft after snap completes (for hide action)
+                    // or onExpired for TTL expiry
+                    if (_isSnapping) {
+                      widget.onSwipeLeft();
+                    } else {
+                      widget.onExpired?.call();
+                    }
+                  },
+                  child: widget.child,
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

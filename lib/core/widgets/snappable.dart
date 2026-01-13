@@ -103,12 +103,18 @@ class SnappableState extends State<Snappable>
     return GestureDetector(
       onTap: widget.snapOnTap ? () => isGone ? reset() : snap() : null,
       child: Stack(
+        clipBehavior: Clip.none,
         children: <Widget>[
+          // Layers positioned at origin to prevent layout shifts
           if (_layers != null) ..._layers!.map(_imageToWidget),
+          // Original child - hidden when animation starts
           AnimatedBuilder(
             animation: _animationController,
             builder: (context, child) {
-              return _animationController.isDismissed ? child! : Container();
+              return Opacity(
+                opacity: _animationController.isDismissed ? 1.0 : 0.0,
+                child: child,
+              );
             },
             child: RepaintBoundary(key: _globalKey, child: widget.child),
           ),
@@ -182,18 +188,24 @@ class SnappableState extends State<Snappable>
       end: widget.offset + randomOffset,
     ).animate(animation);
 
-    return AnimatedBuilder(
-      animation: _animationController,
-      child: Image.memory(layer),
-      builder: (context, child) {
-        return Transform.translate(
-          offset: offsetAnimation.value,
-          child: Opacity(
-            opacity: math.cos(animation.value * math.pi / 2),
-            child: child,
-          ),
-        );
-      },
+    return Positioned(
+      left: 0,
+      top: 0,
+      width: size?.width,
+      height: size?.height,
+      child: AnimatedBuilder(
+        animation: _animationController,
+        child: Image.memory(layer, fit: BoxFit.fill),
+        builder: (context, child) {
+          return Transform.translate(
+            offset: offsetAnimation.value,
+            child: Opacity(
+              opacity: math.cos(animation.value * math.pi / 2),
+              child: child,
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -263,11 +275,11 @@ List<Uint8List> _processAndEncodeImages(_SnapParams params) {
     ),
   );
 
-  // Gaussian function for weight calculation
+  // Gaussian function for weight calculation - wider spread for more randomness
   int gauss(double center, double value) =>
-      (1000 * math.exp(-(math.pow((value - center), 2) / 0.14))).round();
+      (1000 * math.exp(-(math.pow((value - center), 2) / 0.4))).round();
 
-  // Pick a bucket based on weights
+  // Pick a bucket based on weights with added randomness
   int pickABucket(List<int> weights, int sumOfWeights) {
     int rnd = random.nextInt(sumOfWeights);
     for (int i = 0; i < params.numberOfBuckets; i++) {
@@ -277,17 +289,20 @@ List<Uint8List> _processAndEncodeImages(_SnapParams params) {
     return 0;
   }
 
-  // For every line of pixels
+  // For every pixel (not just by line - add per-pixel randomness)
   for (int y = 0; y < params.height; y++) {
-    // Generate weight list
-    final weights = List<int>.generate(
-      params.numberOfBuckets,
-      (bucket) => gauss(y / params.height, bucket / params.numberOfBuckets),
-    );
-    final sumOfWeights = weights.fold(0, (sum, el) => sum + el);
-
-    // For every pixel in a line
     for (int x = 0; x < params.width; x++) {
+      // Add per-pixel noise to the y position for more chaotic distribution
+      final noiseY = y + (random.nextDouble() - 0.5) * params.height * 0.3;
+      final normalizedY = (noiseY / params.height).clamp(0.0, 1.0);
+
+      // Generate weight list with noisy position
+      final weights = List<int>.generate(
+        params.numberOfBuckets,
+        (bucket) => gauss(normalizedY, bucket / params.numberOfBuckets),
+      );
+      final sumOfWeights = weights.fold(0, (sum, el) => sum + el);
+
       final pixel = fullImage.getPixel(x, y);
       final imageIndex = pickABucket(weights, sumOfWeights);
       final targetPixel = images[imageIndex].getPixel(x, y);
