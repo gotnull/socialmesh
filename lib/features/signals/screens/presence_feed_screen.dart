@@ -40,6 +40,7 @@ enum SignalFilter {
   meshOnly, // from mesh (authorId starts with mesh_)
   withMedia, // has images
   expiringSoon, // < 5 minutes TTL remaining
+  hidden, // manually hidden signals
 }
 
 /// Sort options for the signals list
@@ -143,12 +144,13 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
   }
 
   List<Post> _applyFilter(List<Post> signals) {
-    // First filter out hidden signals (unless viewing saved)
+    // First filter out hidden signals (unless viewing saved or hidden)
     final hiddenIds = ref.read(hiddenSignalsProvider);
     final bookmarkedIds = ref.read(signalBookmarksProvider).value ?? {};
 
-    // Don't filter hidden from saved view
-    if (_activeFilter != SignalFilter.saved) {
+    // Don't filter hidden from saved or hidden views
+    if (_activeFilter != SignalFilter.saved &&
+        _activeFilter != SignalFilter.hidden) {
       signals = signals.where((s) => !hiddenIds.contains(s.id)).toList();
     }
 
@@ -173,6 +175,8 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
           final remaining = s.expiresAt!.difference(DateTime.now());
           return remaining.inMinutes < 5 && !remaining.isNegative;
         }).toList();
+      case SignalFilter.hidden:
+        return signals.where((s) => hiddenIds.contains(s.id)).toList();
     }
   }
 
@@ -269,6 +273,8 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
       final remaining = s.expiresAt!.difference(DateTime.now());
       return remaining.inMinutes < 5 && !remaining.isNegative;
     }).length;
+    final hiddenIds = ref.watch(hiddenSignalsProvider);
+    final hiddenCount = hiddenIds.length;
 
     // Apply filter, sort, and search
     signals = _applyFilter(signals);
@@ -467,6 +473,20 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                                 () => _activeFilter = SignalFilter.expiringSoon,
                               ),
                             ),
+                            if (hiddenCount > 0) ...[
+                              const SizedBox(width: 8),
+                              _FilterChip(
+                                label: 'Hidden',
+                                count: hiddenCount,
+                                isSelected:
+                                    _activeFilter == SignalFilter.hidden,
+                                color: context.textTertiary,
+                                icon: Icons.visibility_off,
+                                onTap: () => setState(
+                                  () => _activeFilter = SignalFilter.hidden,
+                                ),
+                              ),
+                            ],
                             const SizedBox(width: 8),
                             _SortButton(
                               sortOrder: _sortOrder,
@@ -775,6 +795,15 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                   ),
                   child: SwipeableSignalItem(
                     isBookmarked: isBookmarked,
+                    leftActionIcon: _activeFilter == SignalFilter.hidden
+                        ? Icons.visibility_rounded
+                        : Icons.visibility_off_rounded,
+                    leftActionLabel: _activeFilter == SignalFilter.hidden
+                        ? 'Restore'
+                        : 'Hide',
+                    hintKey: _activeFilter == SignalFilter.hidden
+                        ? 'signal_swipe_restore_hint_seen'
+                        : 'signal_swipe_hint_seen',
                     onSwipeRight: () {
                       ref
                           .read(signalBookmarksProvider.notifier)
@@ -785,10 +814,22 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                       );
                     },
                     onSwipeLeft: () {
-                      ref
-                          .read(hiddenSignalsProvider.notifier)
-                          .hideSignal(signal.id);
-                      showSuccessSnackBar(context, 'Signal hidden');
+                      if (_activeFilter == SignalFilter.hidden) {
+                        ref
+                            .read(hiddenSignalsProvider.notifier)
+                            .unhideSignal(signal.id);
+                        showSuccessSnackBar(context, 'Signal restored');
+                        // Switch back to All if this was the last hidden signal
+                        final remainingHidden = ref.read(hiddenSignalsProvider);
+                        if (remainingHidden.isEmpty) {
+                          setState(() => _activeFilter = SignalFilter.all);
+                        }
+                      } else {
+                        ref
+                            .read(hiddenSignalsProvider.notifier)
+                            .hideSignal(signal.id);
+                        showSuccessSnackBar(context, 'Signal hidden');
+                      }
                     },
                     child: DoubleTapLikeWrapper(
                       onDoubleTap: () {

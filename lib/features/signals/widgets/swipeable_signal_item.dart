@@ -20,9 +20,11 @@ class SwipeableSignalItem extends StatefulWidget {
     this.rightActionIcon = Icons.bookmark_add_rounded,
     this.rightActionIconActive = Icons.bookmark_remove_rounded,
     this.leftActionIcon = Icons.visibility_off_rounded,
+    this.leftActionLabel = 'Hide',
     this.rightActionColor,
     this.leftActionColor,
     this.borderRadius = 16.0,
+    this.hintKey = 'signal_swipe_hint_seen',
     super.key,
   });
 
@@ -33,9 +35,14 @@ class SwipeableSignalItem extends StatefulWidget {
   final IconData rightActionIcon;
   final IconData rightActionIconActive;
   final IconData leftActionIcon;
+  final String leftActionLabel;
   final Color? rightActionColor;
   final Color? leftActionColor;
   final double borderRadius;
+
+  /// SharedPreferences key for tracking if hint has been shown.
+  /// Use different keys for different contexts (e.g., normal vs hidden view).
+  final String hintKey;
 
   @override
   State<SwipeableSignalItem> createState() => _SwipeableSignalItemState();
@@ -46,13 +53,13 @@ class _SwipeableSignalItemState extends State<SwipeableSignalItem>
   late AnimationController _snapBackController;
   late AnimationController _hintController;
   late Animation<double> _hintAnimation;
-  
+
   double _dragExtent = 0;
   static const _threshold = 80.0;
   bool _hasTriggeredHaptic = false;
 
-  // For hint animation
-  static bool _hasShownHint = false;
+  // For hint animation - track shown hints per key
+  static final Set<String> _shownHintKeys = {};
   bool _showingHint = false;
 
   @override
@@ -62,32 +69,38 @@ class _SwipeableSignalItemState extends State<SwipeableSignalItem>
       duration: const Duration(milliseconds: 200),
       vsync: this,
     );
-    
+
     // Smooth hint animation controller
     _hintController = AnimationController(
       duration: const Duration(milliseconds: 1800),
       vsync: this,
     );
-    
+
     // Smooth sequence: 0->40 (right peek) -> -40 (left peek) -> 0 (back)
     _hintAnimation = TweenSequence<double>([
       TweenSequenceItem(
-        tween: Tween(begin: 0.0, end: 45.0)
-            .chain(CurveTween(curve: Curves.easeOutCubic)),
+        tween: Tween(
+          begin: 0.0,
+          end: 45.0,
+        ).chain(CurveTween(curve: Curves.easeOutCubic)),
         weight: 25,
       ),
       TweenSequenceItem(
-        tween: Tween(begin: 45.0, end: -45.0)
-            .chain(CurveTween(curve: Curves.easeInOutCubic)),
+        tween: Tween(
+          begin: 45.0,
+          end: -45.0,
+        ).chain(CurveTween(curve: Curves.easeInOutCubic)),
         weight: 50,
       ),
       TweenSequenceItem(
-        tween: Tween(begin: -45.0, end: 0.0)
-            .chain(CurveTween(curve: Curves.easeOutCubic)),
+        tween: Tween(
+          begin: -45.0,
+          end: 0.0,
+        ).chain(CurveTween(curve: Curves.easeOutCubic)),
         weight: 25,
       ),
     ]).animate(_hintController);
-    
+
     _hintAnimation.addListener(() {
       if (_showingHint && mounted) {
         setState(() {
@@ -95,7 +108,7 @@ class _SwipeableSignalItemState extends State<SwipeableSignalItem>
         });
       }
     });
-    
+
     _hintController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         if (mounted) {
@@ -112,20 +125,20 @@ class _SwipeableSignalItemState extends State<SwipeableSignalItem>
   }
 
   Future<void> _maybeShowHint() async {
-    if (_hasShownHint) return;
+    if (_shownHintKeys.contains(widget.hintKey)) return;
 
     final prefs = await SharedPreferences.getInstance();
-    final hasSeenHint = prefs.getBool('signal_swipe_hint_seen') ?? false;
+    final hasSeenHint = prefs.getBool(widget.hintKey) ?? false;
 
     if (!hasSeenHint && mounted) {
-      _hasShownHint = true;
+      _shownHintKeys.add(widget.hintKey);
       await Future<void>.delayed(const Duration(milliseconds: 1000));
       if (!mounted) return;
 
       setState(() => _showingHint = true);
       _hintController.forward(from: 0);
-      
-      await prefs.setBool('signal_swipe_hint_seen', true);
+
+      await prefs.setBool(widget.hintKey, true);
     }
   }
 
@@ -173,14 +186,14 @@ class _SwipeableSignalItemState extends State<SwipeableSignalItem>
     // Animate back to center
     final startExtent = _dragExtent;
     _snapBackController.reset();
-    
+
     void animateBack() {
       if (!mounted) return;
       setState(() {
         _dragExtent = startExtent * (1 - _snapBackController.value);
       });
     }
-    
+
     _snapBackController.addListener(animateBack);
     _snapBackController.forward().then((_) {
       _snapBackController.removeListener(animateBack);
@@ -268,7 +281,7 @@ class _SwipeableSignalItemState extends State<SwipeableSignalItem>
                         progress: leftProgress,
                         color: leftColor,
                         icon: widget.leftActionIcon,
-                        label: 'Hide',
+                        label: widget.leftActionLabel,
                         isHint: _showingHint,
                       ),
                     ),
