@@ -1528,14 +1528,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.2"
-  nothing_glyph_interface:
-    dependency: "direct main"
-    description:
-      name: nothing_glyph_interface
-      sha256: cbdb0fb3275887842e64a05e57927e85a8c8cb79ddf2f7bc10505abff7c3c690
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.0.9"
   opentype_dart:
     dependency: transitive
     description:
