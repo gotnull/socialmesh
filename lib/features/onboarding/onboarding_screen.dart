@@ -41,13 +41,31 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       accentColor: AppTheme.primaryMagenta,
     ),
     _OnboardingPage(
-      title: 'Off-Grid Comms',
+      title: 'Connect Any Way',
       description:
-          'Send messages through the mesh.\nDevice to device. Mile after mile.',
+          'Bluetooth or USB. Wireless or wired.\nYour radio, your choice.',
       advisorText:
-          "Watch this! Your messages hop from node to node, bouncing across the mesh like digital whispers. No cell towers needed. Just us nodes, working together.",
+          "See that radio? Connect it however you like! Bluetooth for wireless freedom, USB for rock-solid reliability. I speak both languages fluently.",
       mood: MeshBrainMood.speaking,
       accentColor: AccentColors.cyan,
+    ),
+    _OnboardingPage(
+      title: 'Broadcast Your Signal',
+      description:
+          'Share your presence with the mesh.\nPhotos, status, location. All off-grid.',
+      advisorText:
+          "Signals are your digital flare! Broadcast photos, your mood, or your location to nearby nodes. It all stays in the mesh. No internet, no problem.",
+      mood: MeshBrainMood.approving,
+      accentColor: AccentColors.pink,
+    ),
+    _OnboardingPage(
+      title: 'See the World',
+      description:
+          'Explore the global mesh map in real-time.\nDownload maps for offline adventures.',
+      advisorText:
+          "Look at all those nodes! The World Map shows every node reporting in. Download regions for offline use. The mesh doesn't need WiFi, and neither do you.",
+      mood: MeshBrainMood.excited,
+      accentColor: AppTheme.graphBlue,
     ),
     _OnboardingPage(
       title: 'Zero Knowledge',
@@ -59,21 +77,21 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       accentColor: AccentColors.green,
     ),
     _OnboardingPage(
-      title: 'Grow the Network',
+      title: 'Automate Everything',
       description:
-          'Every device extends the reach.\nBuild infrastructure that belongs to everyone.',
+          'Battery alerts. Geofence triggers. Auto-replies.\nYour mesh, your rules.',
       advisorText:
-          "Every new node makes me stronger! When you connect, you're not just joining. You're building something bigger. A network that belongs to everyone.",
-      mood: MeshBrainMood.approving,
-      accentColor: AppTheme.graphBlue,
+          "I love a good automation! Set triggers for low battery, node offline alerts, or geofence events. I'll execute your commands while you sleep.",
+      mood: MeshBrainMood.idle,
+      accentColor: AccentColors.yellow,
     ),
     _OnboardingPage(
       title: 'Your Command Center',
       description:
-          'Monitor signal strength, battery, node count,\nmessages, range and more. All in real-time.',
+          'Customizable dashboard widgets.\nHome screen widgets. Real-time telemetry.',
       advisorText:
-          "This is where the magic happens! Your dashboard shows everything: signal strength, battery, nearby nodes. I'll keep you informed of every pulse in the mesh.",
-      mood: MeshBrainMood.idle,
+          "This is mission control! Build your perfect dashboard with drag-and-drop widgets. Add them to your home screen too. I'll keep you informed of every pulse.",
+      mood: MeshBrainMood.approving,
       isWidgetShowcase: true,
       accentColor: AccentColors.orange,
     ),
