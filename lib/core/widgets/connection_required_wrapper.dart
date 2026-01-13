@@ -331,7 +331,7 @@ class ConnectionRequiredWrapper extends ConsumerWidget {
                     ),
                     const SizedBox(height: 32),
                     // Cancel button to stop auto-reconnect and scan for other devices
-                    TextButton.icon(
+                    ElevatedButton.icon(
                       onPressed: () {
                         // Cancel the auto-reconnect
                         ref
@@ -348,14 +348,18 @@ class ConnectionRequiredWrapper extends ConsumerWidget {
                           Navigator.of(context).pushNamed('/scanner');
                         }
                       },
-                      icon: Icon(
-                        Icons.bluetooth_searching,
-                        size: 18,
-                        color: context.textSecondary,
-                      ),
-                      label: Text(
-                        'Scan for Other Devices',
-                        style: TextStyle(color: context.textSecondary),
+                      icon: const Icon(Icons.bluetooth_searching, size: 20),
+                      label: const Text('Scan for Devices'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: context.accentColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 28,
+                          vertical: 16,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                   ],
