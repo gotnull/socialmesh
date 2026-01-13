@@ -14,9 +14,16 @@ final glyphServiceInitProvider = FutureProvider<void>((ref) async {
 });
 
 /// Provider for glyph support status (after initialization)
+/// Returns true only when init completes AND device supports glyph
 final glyphSupportedProvider = Provider<bool>((ref) {
-  // Watch the init provider to ensure we update after initialization
-  ref.watch(glyphServiceInitProvider);
-  final service = ref.watch(glyphServiceProvider);
-  return service.isSupported;
+  // Must wait for init to complete before checking support
+  final initState = ref.watch(glyphServiceInitProvider);
+
+  return initState.maybeWhen(
+    data: (_) {
+      final service = ref.read(glyphServiceProvider);
+      return service.isSupported;
+    },
+    orElse: () => false,
+  );
 });
