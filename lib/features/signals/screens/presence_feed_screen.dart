@@ -274,30 +274,37 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
 
     // Watch bookmarks for saved count
     final bookmarkedIds = ref.watch(signalBookmarksProvider).value ?? {};
+    final hiddenIds = ref.watch(hiddenSignalsProvider);
 
     // Get all signals then apply filters
     var signals = feedState.signals;
 
-    // Calculate counts before filtering for badges
-    final allCount = signals.length;
-    final savedCount = signals
+    // For count calculations, filter out hidden signals unless viewing saved/hidden
+    final signalsForCounts =
+        (_activeFilter == SignalFilter.saved ||
+            _activeFilter == SignalFilter.hidden)
+        ? signals
+        : signals.where((s) => !hiddenIds.contains(s.id)).toList();
+
+    // Calculate counts for badges using filtered list
+    final allCount = signalsForCounts.length;
+    final savedCount = signalsForCounts
         .where((s) => bookmarkedIds.contains(s.id))
         .length;
-    final nearbyCount = signals
+    final nearbyCount = signalsForCounts
         .where((s) => s.hopCount != null && s.hopCount! <= 1)
         .length;
-    final meshCount = signals
+    final meshCount = signalsForCounts
         .where((s) => s.authorId.startsWith('mesh_'))
         .length;
-    final mediaCount = signals
+    final mediaCount = signalsForCounts
         .where((s) => s.mediaUrls.isNotEmpty || s.imageLocalPath != null)
         .length;
-    final expiringSoonCount = signals.where((s) {
+    final expiringSoonCount = signalsForCounts.where((s) {
       if (s.expiresAt == null) return false;
       final remaining = s.expiresAt!.difference(DateTime.now());
       return remaining.inMinutes < 5 && !remaining.isNegative;
     }).length;
-    final hiddenIds = ref.watch(hiddenSignalsProvider);
     // Only count hidden signals that actually exist in the feed
     final hiddenCount = signals.where((s) => hiddenIds.contains(s.id)).length;
 
