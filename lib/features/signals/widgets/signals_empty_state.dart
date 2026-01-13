@@ -279,9 +279,8 @@ class _GoActiveButtonState extends State<_GoActiveButton>
   @override
   Widget build(BuildContext context) {
     final accentColor = context.accentColor;
-    final gradient = LinearGradient(
-      colors: [accentColor, Color.lerp(accentColor, Colors.white, 0.2)!],
-    );
+    final gradientColors = AccentColors.gradientFor(accentColor);
+    final gradient = LinearGradient(colors: gradientColors);
 
     return Tooltip(
       message: widget.blockedReason ?? '',

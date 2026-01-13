@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/logging.dart';
 import '../../config/admin_config.dart';
@@ -14,6 +15,8 @@ import '../../providers/profile_providers.dart';
 import '../../providers/social_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../providers/subscription_providers.dart';
+import '../../providers/signal_bookmark_provider.dart';
+import '../../providers/signal_providers.dart';
 import '../../models/subscription_models.dart';
 import '../../services/storage/storage_service.dart';
 import '../../services/notifications/push_notification_service.dart';
@@ -46,6 +49,7 @@ import 'subscription_screen.dart';
 import 'ifttt_config_screen.dart';
 import 'theme_settings_screen.dart';
 import '../automations/automations_screen.dart';
+import '../automations/automation_providers.dart';
 import 'canned_responses_screen.dart';
 import 'canned_message_module_config_screen.dart';
 import 'range_test_screen.dart';
@@ -1804,7 +1808,38 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               ElevatedButton(
                                 onPressed: () =>
                                     ref.invalidate(settingsServiceProvider),
-                                child: const Text('Retry'),
+                                style:
+                                    ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.transparent,
+                                      foregroundColor: Colors.white,
+                                      shadowColor: Colors.transparent,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 24,
+                                        vertical: 16,
+                                      ),
+                                    ).copyWith(
+                                      backgroundColor: WidgetStateProperty.all(
+                                        Colors.transparent,
+                                      ),
+                                    ),
+                                child: Ink(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        context.accentColor,
+                                        context.accentColor.withOpacity(0.8),
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Container(
+                                    constraints: const BoxConstraints(
+                                      minHeight: 48,
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: const Text('Retry'),
+                                  ),
+                                ),
                               ),
                             ],
                           ),
@@ -3034,7 +3069,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           style: TextStyle(color: context.textPrimary),
         ),
         content: Text(
-          'This will delete all messages, settings, and channel keys. This action cannot be undone.',
+          'This will delete ALL app data: messages, nodes, channels, settings, keys, signals, bookmarks, automations, widgets, and saved preferences. This action cannot be undone.',
           style: TextStyle(color: context.textSecondary),
         ),
         actions: [
@@ -3052,24 +3087,61 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
 
     if (confirmed == true && context.mounted) {
-      final secureStorage = ref.read(secureStorageProvider);
-      final settingsServiceAsync = ref.read(settingsServiceProvider);
-      final messagesNotifier = ref.read(messagesProvider.notifier);
-      final nodesNotifier = ref.read(nodesProvider.notifier);
-      final channelsNotifier = ref.read(channelsProvider.notifier);
+      try {
+        // Secure storage (channel keys, device info)
+        final secureStorage = ref.read(secureStorageProvider);
+        await secureStorage.clearAll();
 
-      await secureStorage.clearAll();
+        // Settings service
+        final settingsServiceAsync = ref.read(settingsServiceProvider);
+        settingsServiceAsync.whenData((settingsService) {
+          settingsService.clearAll();
+        });
 
-      settingsServiceAsync.whenData((settingsService) async {
-        await settingsService.clearAll();
-      });
+        // Messages, nodes, channels
+        final messagesNotifier = ref.read(messagesProvider.notifier);
+        final nodesNotifier = ref.read(nodesProvider.notifier);
+        final channelsNotifier = ref.read(channelsProvider.notifier);
+        messagesNotifier.clearMessages();
+        nodesNotifier.clearNodes();
+        channelsNotifier.clearChannels();
 
-      messagesNotifier.clearMessages();
-      nodesNotifier.clearNodes();
-      channelsNotifier.clearChannels();
+        // Hidden signals (local only)
+        final hiddenSignalsNotifier = ref.read(hiddenSignalsProvider.notifier);
+        await hiddenSignalsNotifier.clearAll();
 
-      if (context.mounted) {
-        showSuccessSnackBar(context, 'All data cleared');
+        // Automations - delete all one by one
+        try {
+          final automationsNotifier = ref.read(automationsProvider.notifier);
+          final automations = ref.read(automationsProvider).value ?? [];
+          for (final automation in automations) {
+            await automationsNotifier.deleteAutomation(automation.id);
+          }
+        } catch (e) {
+          AppLogging.app('Failed to clear automations: $e');
+        }
+
+        // SharedPreferences (all other cached data including hidden signals, bookmarks)
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.clear();
+
+        // Signal database - close and delete
+        try {
+          final signalService = ref.read(signalServiceProvider);
+          await signalService.close();
+          // Database will be recreated on next use
+        } catch (e) {
+          AppLogging.app('Failed to close signal database: $e');
+        }
+
+        if (context.mounted) {
+          showSuccessSnackBar(context, 'All data cleared successfully');
+        }
+      } catch (e) {
+        AppLogging.app('Error clearing data: $e');
+        if (context.mounted) {
+          showErrorSnackBar(context, 'Failed to clear some data: $e');
+        }
       }
     }
   }
