@@ -814,25 +814,39 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                         isBookmarked ? 'Removed from saved' : 'Signal saved',
                       );
                     },
-                    onSwipeLeft: () {
+                    onSwipeLeft: () async {
                       if (_activeFilter == SignalFilter.hidden) {
                         // Check if this is the last hidden signal BEFORE unhiding
                         final currentHidden = ref.read(hiddenSignalsProvider);
                         final isLastHidden = currentHidden.length == 1;
 
-                        ref
+                        AppLogging.signals(
+                          'Unhiding signal, was last hidden: $isLastHidden (count: ${currentHidden.length})',
+                        );
+
+                        await ref
                             .read(hiddenSignalsProvider.notifier)
                             .unhideSignal(signal.id);
+
+                        if (!mounted) return;
+
+                        // ignore: use_build_context_synchronously
                         showSuccessSnackBar(context, 'Signal restored');
 
                         // Switch back to All if this was the last hidden signal
                         if (isLastHidden) {
+                          AppLogging.signals('Switching filter back to All');
                           setState(() => _activeFilter = SignalFilter.all);
+                          AppLogging.signals('Filter is now: $_activeFilter');
                         }
                       } else {
-                        ref
+                        await ref
                             .read(hiddenSignalsProvider.notifier)
                             .hideSignal(signal.id);
+
+                        if (!mounted) return;
+
+                        // ignore: use_build_context_synchronously
                         showSuccessSnackBar(context, 'Signal hidden');
                       }
                     },
