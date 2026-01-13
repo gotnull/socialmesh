@@ -17,6 +17,7 @@ import '../../../providers/signal_providers.dart';
 import '../../../providers/social_providers.dart';
 import '../../../utils/snackbar.dart';
 import '../../navigation/main_shell.dart';
+import '../../settings/settings_screen.dart';
 import '../widgets/double_tap_heart.dart';
 import '../widgets/signal_card.dart';
 import '../widgets/signal_grid_card.dart';
@@ -98,8 +99,9 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
   }
 
   void _openCreateSignal() {
-    // Auth gating check
-    if (!ref.read(isSignedInProvider)) {
+    // Auth gating check - use authStateProvider.value directly
+    final authState = ref.read(authStateProvider);
+    if (authState.value == null) {
       AppLogging.signals('🔒 Go Active blocked: user not authenticated');
       showErrorSnackBar(context, 'Sign in required to go active');
       return;
@@ -206,8 +208,9 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
   Widget build(BuildContext context) {
     final feedState = ref.watch(signalFeedProvider);
 
-    // Watch providers for reactive updates
-    final isSignedIn = ref.watch(isSignedInProvider);
+    // Watch auth state directly to properly handle async loading
+    final authState = ref.watch(authStateProvider);
+    final isSignedIn = authState.value != null;
     final isConnected = ref.watch(isDeviceConnectedProvider);
     final canGoActive = isSignedIn && isConnected;
 
@@ -242,8 +245,6 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
     signals = _applySort(signals);
     signals = _applySearch(signals);
 
-    final canPop = Navigator.of(context).canPop();
-
     return GestureDetector(
       onTap: _dismissKeyboard,
       child: HelpTourController(
@@ -253,7 +254,7 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
           backgroundColor: context.background,
           appBar: AppBar(
             backgroundColor: context.background,
-            leading: canPop ? const BackButton() : const HamburgerMenuButton(),
+            leading: const HamburgerMenuButton(),
             centerTitle: true,
             title: Text(
               'Presence${allCount > 0 ? ' ($allCount)' : ''}',
@@ -280,6 +281,11 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                     ref
                         .read(helpProvider.notifier)
                         .startTour('signals_overview');
+                  } else if (value == 'settings') {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                    );
                   }
                 },
                 itemBuilder: (context) => [
@@ -288,6 +294,15 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                     child: ListTile(
                       leading: Icon(Icons.help_outline),
                       title: Text('Help'),
+                      contentPadding: EdgeInsets.zero,
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'settings',
+                    child: ListTile(
+                      leading: Icon(Icons.settings_outlined),
+                      title: Text('Settings'),
                       contentPadding: EdgeInsets.zero,
                       visualDensity: VisualDensity.compact,
                     ),
@@ -534,8 +549,9 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
   }
 
   Widget _buildEmptyState() {
-    // Watch providers for reactive updates
-    final isSignedIn = ref.watch(isSignedInProvider);
+    // Watch auth state directly to properly handle async loading
+    final authState = ref.watch(authStateProvider);
+    final isSignedIn = authState.value != null;
     final isConnected = ref.watch(isDeviceConnectedProvider);
     final canGoActive = isSignedIn && isConnected;
 
