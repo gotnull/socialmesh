@@ -29,9 +29,12 @@ class GlyphService {
   Future<void> init() async {
     if (_isInitialized) return;
 
+    AppLogging.automations('GlyphService: Starting initialization...');
+
     try {
       _glyphInterface = NothingGlyphInterface();
       await _glyphInterface!.init();
+      AppLogging.automations('GlyphService: NothingGlyphInterface initialized');
 
       // Check if it's a Nothing Phone
       final isPhone1 = await _glyphInterface!.is20111() ?? false;
@@ -40,27 +43,37 @@ class GlyphService {
       final isPhone2aPlus = await _glyphInterface!.is23113() ?? false;
       final isPhone3a = await _glyphInterface!.is24111() ?? false;
 
+      AppLogging.automations(
+        'GlyphService: Package detection - Phone1=$isPhone1, Phone2=$isPhone2, '
+        'Phone2a=$isPhone2a, Phone2aPlus=$isPhone2aPlus, Phone3a=$isPhone3a',
+      );
+
       // TEMPORARY WORKAROUND: Detect Nothing Phone 3 via device model
-      // The package doesn't officially support Phone 3 yet (model A063/24011)
+      // The package doesn't officially support Phone 3 yet (model A024)
       bool isPhone3 = false;
       if (Platform.isAndroid) {
         try {
           // Check Android device model
           final result = await Process.run('getprop', ['ro.product.model']);
           final model = result.stdout.toString().trim().toLowerCase();
+          AppLogging.automations(
+            'GlyphService: Device model from getprop: "$model"',
+          );
+
           isPhone3 =
+              model.contains('a024') ||
               model.contains('a063') ||
               model.contains('phone 3') ||
               model.contains('phone(3)');
 
-          if (isPhone3) {
-            AppLogging.automations(
-              'GlyphService: Detected Nothing Phone 3 via fallback: $model',
-            );
-          }
+          AppLogging.automations(
+            'GlyphService: Phone 3 fallback detection result: $isPhone3',
+          );
         } catch (e) {
           AppLogging.automations('GlyphService: Device model check failed: $e');
         }
+      } else {
+        AppLogging.automations('GlyphService: Not Android, skipping fallback');
       }
 
       // Determine device model
@@ -92,8 +105,9 @@ class GlyphService {
       AppLogging.automations(
         'GlyphService: Initialized as $_deviceModel, supported: $_isSupported',
       );
-    } catch (e) {
+    } catch (e, stack) {
       AppLogging.automations('GlyphService: Initialization failed: $e');
+      AppLogging.automations('GlyphService: Stack trace: $stack');
       _isSupported = false;
       _isInitialized = false;
     }
