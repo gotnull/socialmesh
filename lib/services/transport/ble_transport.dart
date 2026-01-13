@@ -74,156 +74,245 @@ class BleTransport implements DeviceTransport {
   }
 
   @override
-  Stream<DeviceInfo> scan({Duration? timeout}) async* {
+  Stream<DeviceInfo> scan({Duration? timeout}) {
     AppLogging.ble('📡 BLE_TRANSPORT: scan() called');
 
-    try {
-      // Check if Bluetooth is supported
-      AppLogging.ble('📡 BLE_TRANSPORT: Checking if BT is supported...');
-      if (!await FlutterBluePlus.isSupported) {
-        AppLogging.ble('⚠️ 📡 BLE_TRANSPORT: Bluetooth not supported');
-        throw Exception('Bluetooth is not supported on this device');
-      }
-      AppLogging.ble('📡 BLE_TRANSPORT: BT is supported');
+    // Use a StreamController so we can properly cancel the scan
+    // The old await for approach didn't exit when stopScan() was called,
+    // causing race conditions where multiple scans interfered with each other
+    final controller = StreamController<DeviceInfo>();
+    StreamSubscription<List<ScanResult>>? scanSubscription;
+    Timer? timeoutTimer;
+    int deviceCount = 0;
+    bool scanStarted = false;
 
-      // Wait for Bluetooth adapter to be ready (up to 3 seconds)
-      AppLogging.ble('📡 BLE_TRANSPORT: Checking adapter state...');
-      final adapterState = await FlutterBluePlus.adapterState
-          .where(
-            (s) =>
-                s == BluetoothAdapterState.on || s == BluetoothAdapterState.off,
-          )
-          .first
-          .timeout(
-            const Duration(seconds: 3),
-            onTimeout: () => BluetoothAdapterState.unknown,
+    // Start the scan asynchronously
+    () async {
+      try {
+        // Check if Bluetooth is supported
+        AppLogging.ble('📡 BLE_TRANSPORT: Checking if BT is supported...');
+        if (!await FlutterBluePlus.isSupported) {
+          AppLogging.ble('⚠️ 📡 BLE_TRANSPORT: Bluetooth not supported');
+          controller.addError(
+            Exception('Bluetooth is not supported on this device'),
           );
+          return;
+        }
+        AppLogging.ble('📡 BLE_TRANSPORT: BT is supported');
 
-      AppLogging.ble('📡 BLE_TRANSPORT: Adapter state = $adapterState');
+        // Wait for Bluetooth adapter to be ready (up to 3 seconds)
+        AppLogging.ble('📡 BLE_TRANSPORT: Checking adapter state...');
+        final adapterState = await FlutterBluePlus.adapterState
+            .where(
+              (s) =>
+                  s == BluetoothAdapterState.on ||
+                  s == BluetoothAdapterState.off,
+            )
+            .first
+            .timeout(
+              const Duration(seconds: 3),
+              onTimeout: () => BluetoothAdapterState.unknown,
+            );
 
-      if (adapterState == BluetoothAdapterState.off) {
-        AppLogging.ble('⚠️ 📡 BLE_TRANSPORT: Bluetooth is turned off');
-        throw Exception('Please turn on Bluetooth to scan for devices');
-      }
+        AppLogging.ble('📡 BLE_TRANSPORT: Adapter state = $adapterState');
 
-      if (adapterState == BluetoothAdapterState.unknown) {
+        if (adapterState == BluetoothAdapterState.off) {
+          AppLogging.ble('⚠️ 📡 BLE_TRANSPORT: Bluetooth is turned off');
+          controller.addError(
+            Exception('Please turn on Bluetooth to scan for devices'),
+          );
+          return;
+        }
+
+        if (adapterState == BluetoothAdapterState.unknown) {
+          AppLogging.ble(
+            '⚠️ 📡 BLE_TRANSPORT: Bluetooth state unknown, attempting scan anyway...',
+          );
+        }
+
+        final scanDuration = timeout ?? const Duration(seconds: 10);
         AppLogging.ble(
-          '⚠️ 📡 BLE_TRANSPORT: Bluetooth state unknown, attempting scan anyway...',
+          '📡 BLE_TRANSPORT: Scan duration = ${scanDuration.inSeconds}s',
         );
+
+        // Stop any existing scan first
+        AppLogging.ble('📡 BLE_TRANSPORT: Stopping any existing scan...');
+        try {
+          await FlutterBluePlus.stopScan();
+        } catch (e) {
+          AppLogging.ble('⚠️ 📡 BLE_TRANSPORT: stopScan error (ignored): $e');
+        }
+
+        // Small delay to let BLE subsystem settle
+        AppLogging.ble('📡 BLE_TRANSPORT: Waiting 300ms for BLE to settle...');
+        await Future.delayed(const Duration(milliseconds: 300));
+
+        // Check if controller was closed while waiting
+        if (controller.isClosed) {
+          AppLogging.ble('📡 BLE_TRANSPORT: Controller closed during setup');
+          return;
+        }
+
+        // Try to start scan with retry for transient states
+        int retryCount = 0;
+        const maxRetries = 3;
+        AppLogging.ble(
+          '📡 BLE_TRANSPORT: Starting scan (max $maxRetries retries)...',
+        );
+
+        while (retryCount < maxRetries) {
+          try {
+            AppLogging.ble(
+              '📡 BLE_TRANSPORT: Calling FlutterBluePlus.startScan() (attempt ${retryCount + 1})...',
+            );
+            await FlutterBluePlus.startScan(
+              timeout: scanDuration,
+              withServices: [Guid(_serviceUuid)],
+            );
+            AppLogging.ble(
+              '📡 BLE_TRANSPORT: startScan() completed successfully',
+            );
+            scanStarted = true;
+            break; // Success, exit retry loop
+          } catch (e) {
+            retryCount++;
+            final errorStr = e.toString();
+            AppLogging.ble('⚠️ 📡 BLE_TRANSPORT: startScan() error: $errorStr');
+            // Handle transient Bluetooth states
+            if (errorStr.contains('CBManagerStateUnknown') ||
+                errorStr.contains('bluetooth must be turned on') ||
+                errorStr.contains('Bluetooth adapter is not available')) {
+              if (retryCount < maxRetries) {
+                AppLogging.ble(
+                  '⚠️ 📡 BLE_TRANSPORT: Bluetooth not ready (attempt $retryCount/$maxRetries), retrying...',
+                );
+                await Future.delayed(Duration(milliseconds: 500 * retryCount));
+                continue;
+              }
+              // All retries exhausted
+              controller.addError(
+                Exception(
+                  'Bluetooth is not ready. Please ensure Bluetooth is enabled and try again.',
+                ),
+              );
+              return;
+            }
+            controller.addError(e);
+            return;
+          }
+        }
+
+        // Set up timeout timer
+        timeoutTimer = Timer(
+          scanDuration + const Duration(milliseconds: 500),
+          () {
+            AppLogging.ble('📡 BLE_TRANSPORT: Scan timeout timer fired');
+            _finishScan(
+              controller,
+              scanSubscription,
+              timeoutTimer,
+              deviceCount,
+              scanStarted,
+            );
+          },
+        );
+
+        // Subscribe to scan results
+        AppLogging.ble('📡 BLE_TRANSPORT: Listening to scanResults stream...');
+        scanSubscription = FlutterBluePlus.scanResults.listen(
+          (results) {
+            if (controller.isClosed) return;
+
+            AppLogging.ble(
+              '📡 BLE_TRANSPORT: scanResults batch received, ${results.length} items',
+            );
+            for (final r in results) {
+              deviceCount++;
+              AppLogging.ble(
+                '📡 BLE_TRANSPORT: Found device #$deviceCount: ${r.device.remoteId} (${r.device.platformName})',
+              );
+              controller.add(
+                DeviceInfo(
+                  id: r.device.remoteId.toString(),
+                  name: r.device.platformName.isNotEmpty
+                      ? r.device.platformName
+                      : 'Unknown Meshtastic Device',
+                  type: TransportType.ble,
+                  address: r.device.remoteId.toString(),
+                  rssi: r.rssi,
+                ),
+              );
+            }
+          },
+          onError: (e) {
+            AppLogging.ble('⚠️ 📡 BLE_TRANSPORT: scanResults error: $e');
+            if (!controller.isClosed) {
+              controller.addError(e);
+            }
+          },
+          onDone: () {
+            AppLogging.ble('📡 BLE_TRANSPORT: scanResults stream done');
+            _finishScan(
+              controller,
+              scanSubscription,
+              timeoutTimer,
+              deviceCount,
+              scanStarted,
+            );
+          },
+        );
+      } catch (e) {
+        AppLogging.ble('⚠️ 📡 BLE_TRANSPORT: BLE scan error: $e');
+        if (!controller.isClosed) {
+          controller.addError(e);
+          controller.close();
+        }
       }
+    }();
 
-      final scanDuration = timeout ?? const Duration(seconds: 10);
-      AppLogging.ble(
-        '📡 BLE_TRANSPORT: Scan duration = ${scanDuration.inSeconds}s',
+    // Handle cancellation when the stream subscription is cancelled
+    controller.onCancel = () async {
+      AppLogging.ble('📡 BLE_TRANSPORT: Scan stream cancelled');
+      await _finishScan(
+        controller,
+        scanSubscription,
+        timeoutTimer,
+        deviceCount,
+        scanStarted,
       );
+    };
 
-      // Stop any existing scan first
-      AppLogging.ble('📡 BLE_TRANSPORT: Stopping any existing scan...');
+    return controller.stream;
+  }
+
+  Future<void> _finishScan(
+    StreamController<DeviceInfo> controller,
+    StreamSubscription<List<ScanResult>>? scanSubscription,
+    Timer? timeoutTimer,
+    int deviceCount,
+    bool scanStarted,
+  ) async {
+    if (controller.isClosed) return;
+
+    AppLogging.ble(
+      '📡 BLE_TRANSPORT: Finishing scan, found $deviceCount devices total',
+    );
+
+    timeoutTimer?.cancel();
+    await scanSubscription?.cancel();
+
+    if (scanStarted) {
+      AppLogging.ble('📡 BLE_TRANSPORT: Stopping hardware scan...');
       try {
         await FlutterBluePlus.stopScan();
       } catch (e) {
         AppLogging.ble('⚠️ 📡 BLE_TRANSPORT: stopScan error (ignored): $e');
       }
-
-      // Small delay to let BLE subsystem settle
-      AppLogging.ble('📡 BLE_TRANSPORT: Waiting 300ms for BLE to settle...');
-      await Future.delayed(const Duration(milliseconds: 300));
-
-      // Try to start scan with retry for transient states
-      int retryCount = 0;
-      const maxRetries = 3;
-      AppLogging.ble(
-        '📡 BLE_TRANSPORT: Starting scan (max $maxRetries retries)...',
-      );
-
-      while (retryCount < maxRetries) {
-        try {
-          AppLogging.ble(
-            '📡 BLE_TRANSPORT: Calling FlutterBluePlus.startScan() (attempt ${retryCount + 1})...',
-          );
-          await FlutterBluePlus.startScan(
-            timeout: scanDuration,
-            withServices: [Guid(_serviceUuid)],
-          );
-          AppLogging.ble(
-            '📡 BLE_TRANSPORT: startScan() completed successfully',
-          );
-          break; // Success, exit retry loop
-        } catch (e) {
-          retryCount++;
-          final errorStr = e.toString();
-          AppLogging.ble('⚠️ 📡 BLE_TRANSPORT: startScan() error: $errorStr');
-          // Handle transient Bluetooth states
-          if (errorStr.contains('CBManagerStateUnknown') ||
-              errorStr.contains('bluetooth must be turned on') ||
-              errorStr.contains('Bluetooth adapter is not available')) {
-            if (retryCount < maxRetries) {
-              AppLogging.ble(
-                '⚠️ 📡 BLE_TRANSPORT: Bluetooth not ready (attempt $retryCount/$maxRetries), retrying...',
-              );
-              await Future.delayed(Duration(milliseconds: 500 * retryCount));
-              continue;
-            }
-            // All retries exhausted
-            throw Exception(
-              'Bluetooth is not ready. Please ensure Bluetooth is enabled and try again.',
-            );
-          }
-          rethrow;
-        }
-      }
-
-      // Create timer to complete scan after timeout
-      final scanCompleter = Completer<void>();
-      final timer = Timer(scanDuration + const Duration(milliseconds: 500), () {
-        AppLogging.ble('📡 BLE_TRANSPORT: Scan timeout timer fired');
-        if (!scanCompleter.isCompleted) {
-          scanCompleter.complete();
-        }
-      });
-
-      // Yield results until timeout
-      AppLogging.ble('📡 BLE_TRANSPORT: Listening to scanResults stream...');
-      int deviceCount = 0;
-      await for (final result in FlutterBluePlus.scanResults) {
-        if (scanCompleter.isCompleted) {
-          AppLogging.ble(
-            '📡 BLE_TRANSPORT: Scan completer completed, breaking',
-          );
-          break;
-        }
-
-        AppLogging.ble(
-          '📡 BLE_TRANSPORT: scanResults batch received, ${result.length} items',
-        );
-        for (final r in result) {
-          deviceCount++;
-          AppLogging.ble(
-            '📡 BLE_TRANSPORT: Found device #$deviceCount: ${r.device.remoteId} (${r.device.platformName})',
-          );
-          yield DeviceInfo(
-            id: r.device.remoteId.toString(),
-            name: r.device.platformName.isNotEmpty
-                ? r.device.platformName
-                : 'Unknown Meshtastic Device',
-            type: TransportType.ble,
-            address: r.device.remoteId.toString(),
-            rssi: r.rssi,
-          );
-        }
-      }
-
-      AppLogging.ble(
-        '📡 BLE_TRANSPORT: Scan stream ended, found $deviceCount devices total',
-      );
-      timer.cancel();
-    } catch (e) {
-      AppLogging.ble('⚠️ 📡 BLE_TRANSPORT: BLE scan error: $e');
-      rethrow;
-    } finally {
-      AppLogging.ble('📡 BLE_TRANSPORT: Finally block, stopping scan...');
-      await FlutterBluePlus.stopScan();
       AppLogging.ble('📡 BLE_TRANSPORT: Scan stopped');
+    }
+
+    if (!controller.isClosed) {
+      await controller.close();
     }
   }
 
