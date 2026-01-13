@@ -303,9 +303,11 @@ class SignalService {
   static const _maxLocalSignals = 200;
   static const _seenPacketTTLMinutes = 30;
 
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseStorage _storage = FirebaseStorage.instance;
+  // Firebase instances are accessed lazily to avoid crashes when
+  // Firebase isn't initialized yet (offline-first architecture)
+  FirebaseFirestore get _firestore => FirebaseFirestore.instance;
+  FirebaseAuth get _auth => FirebaseAuth.instance;
+  FirebaseStorage get _storage => FirebaseStorage.instance;
 
   Database? _db;
   final _uuid = const Uuid();
