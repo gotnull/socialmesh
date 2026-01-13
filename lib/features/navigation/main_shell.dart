@@ -48,6 +48,7 @@ import '../social/screens/reported_content_screen.dart';
 import '../settings/admin_follow_requests_screen.dart';
 import '../signals/signals.dart';
 import '../profile/profile_screen.dart';
+import '../showcase/snap_effect_screen.dart';
 
 /// Combined admin notification count provider
 /// Uses FutureProvider to properly handle the async stream states
@@ -314,6 +315,12 @@ class _MainShellState extends ConsumerState<MainShell> {
       screen: const DeviceShopScreen(),
       sectionHeader: 'TOOLS',
       iconColor: Colors.amber.shade600,
+    ),
+    _DrawerMenuItem(
+      icon: Icons.auto_awesome,
+      label: 'Snap Effect',
+      screen: const SnapEffectScreen(),
+      iconColor: Colors.deepPurple.shade300,
     ),
 
     // Premium Features - mixed requirements
