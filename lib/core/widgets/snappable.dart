@@ -123,10 +123,15 @@ class SnappableState extends State<Snappable>
     final fullImage = await _getImageFromWidget();
     if (fullImage == null) return;
 
-    // Create an image for every bucket
+    // Create an image for every bucket with RGBA format and transparent background
     List<image.Image> images = List<image.Image>.generate(
       widget.numberOfBuckets,
-      (i) => image.Image(width: fullImage.width, height: fullImage.height),
+      (i) => image.Image(
+        width: fullImage.width,
+        height: fullImage.height,
+        format: image.Format.uint8,
+        numChannels: 4,
+      ),
     );
 
     // For every line of pixels
@@ -142,12 +147,16 @@ class SnappableState extends State<Snappable>
 
       // For every pixel in a line
       for (int x = 0; x < fullImage.width; x++) {
-        // Get the pixel from fullImage (image 4.x returns Pixel object)
+        // Get the pixel from fullImage
         final pixel = fullImage.getPixel(x, y);
         // Choose a bucket for a pixel
         int imageIndex = _pickABucket(weights, sumOfWeights);
-        // Set the pixel from chosen bucket (image 4.x takes Pixel object)
-        images[imageIndex].setPixel(x, y, pixel);
+        // Copy the pixel color using setPixelRgba with proper channel values
+        final targetPixel = images[imageIndex].getPixel(x, y);
+        targetPixel.r = pixel.r;
+        targetPixel.g = pixel.g;
+        targetPixel.b = pixel.b;
+        targetPixel.a = pixel.a;
       }
     }
 
@@ -241,12 +250,21 @@ class SnappableState extends State<Snappable>
 
     // Cache image for later
     size = boundary.size;
-    var img = await boundary.toImage();
-    var byteData = await img.toByteData(format: ImageByteFormat.png);
-    if (byteData == null) return null;
-    var pngBytes = byteData.buffer.asUint8List();
+    final img = await boundary.toImage();
 
-    return image.decodeImage(pngBytes);
+    // Get raw RGBA bytes directly from Flutter (more reliable than PNG encode/decode)
+    final byteData = await img.toByteData(format: ImageByteFormat.rawRgba);
+    if (byteData == null) return null;
+
+    // Create image directly from RGBA bytes - this preserves exact pixel colors
+    return image.Image.fromBytes(
+      width: img.width,
+      height: img.height,
+      bytes: byteData.buffer,
+      format: image.Format.uint8,
+      numChannels: 4,
+      order: image.ChannelOrder.rgba,
+    );
   }
 
   int _gauss(double center, double value) =>
