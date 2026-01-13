@@ -13,8 +13,10 @@ final glyphServiceInitProvider = FutureProvider<void>((ref) async {
   await service.init();
 });
 
-/// Provider for glyph support status
+/// Provider for glyph support status (after initialization)
 final glyphSupportedProvider = Provider<bool>((ref) {
+  // Watch the init provider to ensure we update after initialization
+  ref.watch(glyphServiceInitProvider);
   final service = ref.watch(glyphServiceProvider);
   return service.isSupported;
 });

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:nothing_glyph_interface/nothing_glyph_interface.dart';
 
 import '../core/logging.dart';
@@ -12,12 +14,16 @@ class GlyphService {
   NothingGlyphInterface? _glyphInterface;
   bool _isSupported = false;
   bool _isInitialized = false;
+  String _deviceModel = 'Unknown';
 
   /// Check if device supports glyph interface
   bool get isSupported => _isSupported;
 
   /// Check if service is initialized
   bool get isInitialized => _isInitialized;
+
+  /// Get the detected device model
+  String get deviceModel => _deviceModel;
 
   /// Initialize the glyph service
   Future<void> init() async {
@@ -34,11 +40,57 @@ class GlyphService {
       final isPhone2aPlus = await _glyphInterface!.is23113() ?? false;
       final isPhone3a = await _glyphInterface!.is24111() ?? false;
 
+      // TEMPORARY WORKAROUND: Detect Nothing Phone 3 via device model
+      // The package doesn't officially support Phone 3 yet (model A063/24011)
+      bool isPhone3 = false;
+      if (Platform.isAndroid) {
+        try {
+          // Check Android device model
+          final result = await Process.run('getprop', ['ro.product.model']);
+          final model = result.stdout.toString().trim().toLowerCase();
+          isPhone3 =
+              model.contains('a063') ||
+              model.contains('phone 3') ||
+              model.contains('phone(3)');
+
+          if (isPhone3) {
+            AppLogging.automations(
+              'GlyphService: Detected Nothing Phone 3 via fallback: $model',
+            );
+          }
+        } catch (e) {
+          AppLogging.automations('GlyphService: Device model check failed: $e');
+        }
+      }
+
+      // Determine device model
+      if (isPhone1) {
+        _deviceModel = 'Nothing Phone (1)';
+      } else if (isPhone2) {
+        _deviceModel = 'Nothing Phone (2)';
+      } else if (isPhone2a) {
+        _deviceModel = 'Nothing Phone (2a)';
+      } else if (isPhone2aPlus) {
+        _deviceModel = 'Nothing Phone (2a Plus)';
+      } else if (isPhone3) {
+        _deviceModel = 'Nothing Phone (3) [Experimental]';
+      } else if (isPhone3a) {
+        _deviceModel = 'Nothing Phone (3a)';
+      } else {
+        _deviceModel = 'Not a Nothing Phone';
+      }
+
       _isSupported =
-          isPhone1 || isPhone2 || isPhone2a || isPhone2aPlus || isPhone3a;
+          isPhone1 ||
+          isPhone2 ||
+          isPhone2a ||
+          isPhone2aPlus ||
+          isPhone3 ||
+          isPhone3a;
       _isInitialized = true;
+
       AppLogging.automations(
-        'GlyphService: Initialized, supported: $_isSupported',
+        'GlyphService: Initialized as $_deviceModel, supported: $_isSupported',
       );
     } catch (e) {
       AppLogging.automations('GlyphService: Initialization failed: $e');
@@ -323,7 +375,7 @@ class GlyphService {
     }
   }
 
-  /// Custom pattern with full control
+  /// Custom pattern with full control (simplified single channel)
   Future<void> customPattern({
     required int period,
     required int cycles,
@@ -346,5 +398,86 @@ class GlyphService {
     } catch (e) {
       AppLogging.automations('customPattern failed: $e');
     }
+  }
+
+  /// Advanced multi-channel pattern with full zone control
+  /// Allows individual control of all glyph zones (A, B, C, D, E)
+  Future<void> advancedPattern({required List<GlyphChannel> channels}) async {
+    if (!_isSupported || !_isInitialized) return;
+
+    try {
+      var builder = GlyphFrameBuilder();
+
+      // Build each channel sequentially
+      for (final channel in channels) {
+        switch (channel.zone) {
+          case GlyphZone.a:
+            builder = builder.buildChannelA();
+          case GlyphZone.b:
+            builder = builder.buildChannelB();
+          case GlyphZone.c:
+            builder = builder.buildChannelC();
+          case GlyphZone.d:
+            builder = builder.buildChannelD();
+          case GlyphZone.e:
+            builder = builder.buildChannelE();
+        }
+
+        builder = builder
+            .buildPeriod(channel.period)
+            .buildCycles(channel.cycles);
+
+        if (channel.interval != null) {
+          builder = builder.buildInterval(channel.interval!);
+        }
+      }
+
+      await _glyphInterface!.buildGlyphFrame(builder.build());
+      await _glyphInterface!.animate();
+    } catch (e) {
+      AppLogging.automations('advancedPattern failed: $e');
+    }
+  }
+}
+
+/// Enum for glyph zones on Nothing Phones
+enum GlyphZone {
+  a('Zone A', 'Camera'),
+  b('Zone B', 'Diagonal Strip'),
+  c('Zone C', 'USB-C Port'),
+  d('Zone D', 'Lower Strip'),
+  e('Zone E', 'Battery');
+
+  const GlyphZone(this.displayName, this.description);
+  final String displayName;
+  final String description;
+}
+
+/// Configuration for a single glyph channel
+class GlyphChannel {
+  final GlyphZone zone;
+  final int period; // Duration in milliseconds
+  final int cycles; // Number of repetitions
+  final int? interval; // Delay between cycles in milliseconds
+
+  const GlyphChannel({
+    required this.zone,
+    required this.period,
+    required this.cycles,
+    this.interval,
+  });
+
+  GlyphChannel copyWith({
+    GlyphZone? zone,
+    int? period,
+    int? cycles,
+    int? interval,
+  }) {
+    return GlyphChannel(
+      zone: zone ?? this.zone,
+      period: period ?? this.period,
+      cycles: cycles ?? this.cycles,
+      interval: interval ?? this.interval,
+    );
   }
 }

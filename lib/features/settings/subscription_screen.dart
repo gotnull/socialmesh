@@ -379,12 +379,15 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                     children: [
                       Row(
                         children: [
-                          const Text(
-                            'Complete Pack',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                          const Flexible(
+                            child: Text(
+                              'Complete Pack',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -537,15 +540,18 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
         children: [
           Icon(icon, size: 18, color: context.accentColor),
           const SizedBox(width: 10),
-          Text(
-            name,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
+          Flexible(
+            child: Text(
+              name,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
-          const Spacer(),
+          const SizedBox(width: 10),
           Text(
             detail,
             style: TextStyle(
@@ -633,13 +639,16 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                           children: [
                             Row(
                               children: [
-                                Text(
-                                  storeProducts[purchase.productId]?.title ??
-                                      purchase.name,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 16,
-                                    color: context.textPrimary,
+                                Flexible(
+                                  child: Text(
+                                    storeProducts[purchase.productId]?.title ??
+                                        purchase.name,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 16,
+                                      color: context.textPrimary,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
                                 if (isPurchased) ...[

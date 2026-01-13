@@ -872,6 +872,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           section: 'ABOUT',
         ),
         _SearchableSettingItem(
+          icon: Icons.phone_android,
+          title: 'Device Info',
+          subtitle: ref.watch(glyphServiceProvider).deviceModel,
+          keywords: ['device', 'phone', 'model', 'hardware', 'nothing'],
+          section: 'ABOUT',
+        ),
+        _SearchableSettingItem(
           icon: Icons.help,
           title: 'Help Center',
           subtitle: 'Interactive guides with Ico, your mesh guide',
