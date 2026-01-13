@@ -38,6 +38,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
   bool _connecting = false;
   bool _autoReconnecting = false;
   String? _errorMessage;
+  String? _savedDeviceNotFoundName;
 
   @override
   void initState() {
@@ -180,9 +181,10 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
         AppLogging.connection(
           '📡 SCANNER: Auto-reconnect device not found, starting regular scan',
         );
-        // Device not found, start regular scan
+        // Device not found, start regular scan and show info message
         setState(() {
           _autoReconnecting = false;
+          _savedDeviceNotFoundName = lastDeviceName ?? 'your saved device';
         });
         _startScan();
       }
@@ -626,6 +628,65 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
         body: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            // Info banner when saved device wasn't found
+            if (_savedDeviceNotFoundName != null)
+              Container(
+                padding: const EdgeInsets.all(16),
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.orange.withValues(alpha: 0.4),
+                  ),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      color: Colors.orange.shade700,
+                      size: 22,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '$_savedDeviceNotFoundName not found',
+                            style: TextStyle(
+                              color: Colors.orange.shade800,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'If another app (like Meshtastic) is connected to this device, disconnect from it first. Only one app can use Bluetooth at a time.',
+                            style: TextStyle(
+                              color: Colors.orange.shade700,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        Icons.close,
+                        color: Colors.orange.shade700,
+                        size: 20,
+                      ),
+                      onPressed: () =>
+                          setState(() => _savedDeviceNotFoundName = null),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
+                ),
+              ),
+
             if (_errorMessage != null)
               Container(
                 padding: const EdgeInsets.all(16),
