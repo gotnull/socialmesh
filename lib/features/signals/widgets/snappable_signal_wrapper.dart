@@ -342,21 +342,9 @@ class _SnapSwipeableSignalItemState extends State<SnapSwipeableSignalItem>
       widget.onSwipeRight();
       _snapBack();
     } else if (_dragExtent <= -_threshold) {
-      // Swipe left - hide with SNAP effect!
-      _isSnapping = true;
-      // Animate drag extent back to 0 and fade out whole widget
-      _fadeController.reverse();
-      final startExtent = _dragExtent;
-      _swipeController.reset();
-      _swipeController.addListener(() {
-        if (mounted) {
-          setState(
-            () => _dragExtent = startExtent * (1 - _swipeController.value),
-          );
-        }
-      });
-      _swipeController.forward();
-      _snappableKey.currentState?.snap();
+      // Swipe left - hide (no snap, just call callback)
+      _snapBack();
+      widget.onSwipeLeft();
     } else {
       _snapBack();
     }

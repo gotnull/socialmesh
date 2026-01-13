@@ -822,6 +822,7 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                 signalId: signal.id,
                 index: index,
                 isRefreshing: _isRefreshing,
+                disableFadeOut: useSnapEffect, // Snap handles its own fade
                 child: Padding(
                   key: ValueKey(signal.id),
                   padding: EdgeInsets.only(
@@ -1004,6 +1005,7 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                   signalId: signal.id,
                   index: index,
                   isRefreshing: _isRefreshing,
+                  disableFadeOut: true, // Snap handles its own fade
                   child: SnappableSignalWrapper(
                     signalId: signal.id,
                     expiresAt: signal.expiresAt,
@@ -1529,12 +1531,16 @@ class AnimatedSignalItem extends ConsumerStatefulWidget {
     required this.signalId,
     required this.index,
     required this.isRefreshing,
+    this.disableFadeOut = false,
   });
 
   final Widget child;
   final String signalId;
   final int index;
   final bool isRefreshing;
+
+  /// When true, skip the fade-out animation (e.g., when snap effect handles it)
+  final bool disableFadeOut;
 
   @override
   ConsumerState<AnimatedSignalItem> createState() => _AnimatedSignalItemState();
@@ -1628,8 +1634,10 @@ class _AnimatedSignalItemState extends ConsumerState<AnimatedSignalItem>
 
   @override
   Widget build(BuildContext context) {
-    // Watch for fading state
-    final isFading = ref.watch(isSignalFadingProvider(widget.signalId));
+    // Watch for fading state (unless fade-out is disabled for snap effect)
+    final isFading = widget.disableFadeOut
+        ? false
+        : ref.watch(isSignalFadingProvider(widget.signalId));
 
     // Start fade-out animation when signal is marked as fading
     if (isFading && !_hasStartedFadeOut) {
@@ -1674,12 +1682,16 @@ class AnimatedGridItem extends ConsumerStatefulWidget {
     required this.signalId,
     required this.index,
     required this.isRefreshing,
+    this.disableFadeOut = false,
   });
 
   final Widget child;
   final String signalId;
   final int index;
   final bool isRefreshing;
+
+  /// When true, skip the fade-out animation (e.g., when snap effect handles it)
+  final bool disableFadeOut;
 
   @override
   ConsumerState<AnimatedGridItem> createState() => _AnimatedGridItemState();
@@ -1778,8 +1790,10 @@ class _AnimatedGridItemState extends ConsumerState<AnimatedGridItem>
 
   @override
   Widget build(BuildContext context) {
-    // Watch for fading state
-    final isFading = ref.watch(isSignalFadingProvider(widget.signalId));
+    // Watch for fading state (unless fade-out is disabled for snap effect)
+    final isFading = widget.disableFadeOut
+        ? false
+        : ref.watch(isSignalFadingProvider(widget.signalId));
 
     // Start fade-out animation when signal is marked as fading
     if (isFading && !_hasStartedFadeOut) {

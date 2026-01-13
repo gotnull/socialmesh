@@ -320,7 +320,9 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
   }
 
   /// Duration for fade-out animation when signals expire.
-  static const _fadeOutDuration = Duration(milliseconds: 800);
+  /// Must be longer than the snap animation duration (2500ms) to allow
+  /// the snap effect to complete before the widget is unmounted.
+  static const _fadeOutDuration = Duration(milliseconds: 3000);
 
   /// Called every second to update countdown display and remove expired signals.
   void _tickCountdown() {
