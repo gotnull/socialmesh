@@ -1,32 +1,15 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/theme.dart';
-import '../../core/widgets/animations.dart';
 import '../../providers/glyph_provider.dart';
 import '../../services/glyph_matrix_service.dart';
 
-/// Pattern definition for swipable demo
-class _GlyphPattern {
-  final String name;
-  final String description;
-  final IconData icon;
-  final Color color;
-  final Future<void> Function(GlyphMatrixService service) execute;
-
-  const _GlyphPattern({
-    required this.name,
-    required this.description,
-    required this.icon,
-    required this.color,
-    required this.execute,
-  });
-}
-
-/// Screen for testing Nothing Phone 3 GlyphMatrix patterns
-/// Features swipable pattern cards that execute when swiped
+/// Nothing Phone 3 Glyph Matrix Test Screen
+/// Features a live on-screen preview of the 25x25 LED matrix with circular mask
 class GlyphTestScreen extends ConsumerStatefulWidget {
   const GlyphTestScreen({super.key});
 
@@ -34,162 +17,168 @@ class GlyphTestScreen extends ConsumerStatefulWidget {
   ConsumerState<GlyphTestScreen> createState() => _GlyphTestScreenState();
 }
 
-class _GlyphTestScreenState extends ConsumerState<GlyphTestScreen> {
-  final PageController _pageController = PageController(viewportFraction: 0.85);
+class _GlyphTestScreenState extends ConsumerState<GlyphTestScreen>
+    with TickerProviderStateMixin {
   final GlyphMatrixService _matrixService = GlyphMatrixService();
-  int _currentIndex = 0;
+
+  // Current pattern state - 25x25 grid of brightness values (0.0 to 1.0)
+  List<List<double>> _matrixState = List.generate(
+    25,
+    (_) => List.filled(25, 0.0),
+  );
+
+  int _selectedPatternIndex = 0;
   bool _isExecuting = false;
   Timer? _autoOffTimer;
+  Timer? _animationTimer;
 
-  final List<_GlyphPattern> _patterns = [
-    _GlyphPattern(
-      name: 'Pulse',
-      description: 'Radial gradient emanating from center',
+  // Animation controllers
+  late AnimationController _glowController;
+  late Animation<double> _glowAnimation;
+
+  // Pattern definitions
+  final List<_PatternDef> _patterns = [
+    _PatternDef(
+      name: 'PULSE',
       icon: Icons.radio_button_checked,
-      color: Colors.blue,
-      execute: (s) async {
-        await s.showPattern('pulse');
-      },
+      color: const Color(0xFF00D4FF),
+      generate: _generatePulse,
     ),
-    _GlyphPattern(
-      name: 'Border',
-      description: 'Illuminated frame around the edge',
+    _PatternDef(
+      name: 'BORDER',
       icon: Icons.crop_square,
-      color: Colors.green,
-      execute: (s) async {
-        await s.showPattern('border');
-      },
+      color: const Color(0xFF00FF88),
+      generate: _generateBorder,
     ),
-    _GlyphPattern(
-      name: 'Cross',
-      description: 'Diagonal X pattern across the matrix',
+    _PatternDef(
+      name: 'CROSS',
       icon: Icons.close,
-      color: Colors.red,
-      execute: (s) async {
-        await s.showPattern('cross');
-      },
+      color: const Color(0xFFFF3366),
+      generate: _generateCross,
     ),
-    _GlyphPattern(
-      name: 'Dots',
-      description: 'Scattered dot grid pattern',
+    _PatternDef(
+      name: 'DOTS',
       icon: Icons.grid_on,
-      color: Colors.purple,
-      execute: (s) async {
-        await s.showPattern('dots');
-      },
+      color: const Color(0xFFAA66FF),
+      generate: _generateDots,
     ),
-    _GlyphPattern(
-      name: 'Full',
-      description: 'All 625 LEDs at maximum brightness',
+    _PatternDef(
+      name: 'FULL',
       icon: Icons.brightness_7,
-      color: Colors.orange,
-      execute: (s) async {
-        await s.showPattern('full');
-      },
+      color: const Color(0xFFFFAA00),
+      generate: _generateFull,
     ),
-    _GlyphPattern(
-      name: 'Progress 25%',
-      description: 'Quarter filled progress bar',
-      icon: Icons.battery_1_bar,
-      color: Colors.teal,
-      execute: (s) async {
-        await s.showProgress(25);
-      },
+    _PatternDef(
+      name: 'SPIRAL',
+      icon: Icons.radar,
+      color: const Color(0xFFFF66AA),
+      generate: _generateSpiral,
     ),
-    _GlyphPattern(
-      name: 'Progress 50%',
-      description: 'Half filled progress bar',
-      icon: Icons.battery_3_bar,
-      color: Colors.teal,
-      execute: (s) async {
-        await s.showProgress(50);
-      },
+    _PatternDef(
+      name: 'WAVE',
+      icon: Icons.waves,
+      color: const Color(0xFF66FFAA),
+      generate: _generateWave,
     ),
-    _GlyphPattern(
-      name: 'Progress 75%',
-      description: 'Three-quarter filled progress bar',
-      icon: Icons.battery_5_bar,
-      color: Colors.teal,
-      execute: (s) async {
-        await s.showProgress(75);
-      },
+    _PatternDef(
+      name: 'HEART',
+      icon: Icons.favorite,
+      color: const Color(0xFFFF4466),
+      generate: _generateHeart,
     ),
-    _GlyphPattern(
-      name: 'Progress 100%',
-      description: 'Fully filled progress bar',
-      icon: Icons.battery_full,
-      color: Colors.teal,
-      execute: (s) async {
-        await s.showProgress(100);
-      },
-    ),
-    _GlyphPattern(
-      name: 'Text: M',
-      description: 'Display the letter M for Mesh',
-      icon: Icons.text_fields,
-      color: Colors.indigo,
-      execute: (s) async {
-        await s.showText('M');
-      },
-    ),
-    _GlyphPattern(
-      name: 'Connected',
-      description: 'Quick pulse for connection established',
-      icon: Icons.bluetooth_connected,
-      color: Colors.lightBlue,
-      execute: (s) async {
-        await s.showConnected();
-      },
-    ),
-    _GlyphPattern(
-      name: 'Disconnected',
-      description: 'Border flash for disconnection',
-      icon: Icons.bluetooth_disabled,
-      color: Colors.grey,
-      execute: (s) async {
-        await s.showDisconnected();
-      },
-    ),
-    _GlyphPattern(
-      name: 'Message',
-      description: 'Cross pattern for message received',
-      icon: Icons.message,
-      color: Colors.amber,
-      execute: (s) async {
-        await s.showMessageReceived();
-      },
-    ),
-    _GlyphPattern(
-      name: 'Node Online',
-      description: 'Dots pattern when a node comes online',
-      icon: Icons.sensors,
-      color: Colors.lime,
-      execute: (s) async {
-        await s.showNodeOnline();
-      },
+    _PatternDef(
+      name: 'MESH',
+      icon: Icons.hub,
+      color: const Color(0xFF4488FF),
+      generate: _generateMesh,
     ),
   ];
+
+  late PageController _pageController;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _pageController = PageController(viewportFraction: 0.35, initialPage: 0);
+
+    _glowController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    )..repeat(reverse: true);
+
+    _glowAnimation = Tween<double>(begin: 0.3, end: 0.8).animate(
+      CurvedAnimation(parent: _glowController, curve: Curves.easeInOut),
+    );
+
+    // Show initial pattern preview (without executing on launch)
+    final pattern = _patterns[_selectedPatternIndex];
+    setState(() {
+      _matrixState = pattern.generate();
+    });
+  }
 
   @override
   void dispose() {
     _pageController.dispose();
+    _glowController.dispose();
     _autoOffTimer?.cancel();
+    _animationTimer?.cancel();
     _matrixService.turnOff();
     super.dispose();
   }
 
-  Future<void> _executePattern(_GlyphPattern pattern) async {
+  void _updatePreview(int index) {
+    final pattern = _patterns[index];
+    setState(() {
+      _matrixState = pattern.generate();
+      _selectedPatternIndex = index;
+    });
+    // Immediately execute the pattern when selected
+    _executePattern();
+  }
+
+  Future<void> _executePattern() async {
     if (_isExecuting) return;
 
     setState(() => _isExecuting = true);
+    HapticFeedback.mediumImpact();
+
     _autoOffTimer?.cancel();
 
     try {
-      await pattern.execute(_matrixService);
+      final pattern = _patterns[_selectedPatternIndex];
+
+      // Map pattern name to native method
+      switch (pattern.name) {
+        case 'PULSE':
+          await _matrixService.showPattern('pulse');
+        case 'BORDER':
+          await _matrixService.showPattern('border');
+        case 'CROSS':
+          await _matrixService.showPattern('cross');
+        case 'DOTS':
+          await _matrixService.showPattern('dots');
+        case 'FULL':
+          await _matrixService.showPattern('full');
+        case 'SPIRAL':
+          await _executeCustomPattern(_generateSpiral());
+        case 'WAVE':
+          await _executeCustomPattern(_generateWave());
+        case 'HEART':
+          await _executeCustomPattern(_generateHeart());
+        case 'MESH':
+          await _executeCustomPattern(_generateMesh());
+      }
 
       // Auto-off after 3 seconds
       _autoOffTimer = Timer(const Duration(seconds: 3), () async {
         await _matrixService.turnOff();
+        if (mounted) {
+          setState(() {
+            _matrixState = List.generate(25, (_) => List.filled(25, 0.0));
+          });
+        }
       });
     } finally {
       if (mounted) {
@@ -198,9 +187,199 @@ class _GlyphTestScreenState extends ConsumerState<GlyphTestScreen> {
     }
   }
 
+  Future<void> _executeCustomPattern(List<List<double>> pattern) async {
+    // Convert to flat brightness array for native
+    final pixels = <int>[];
+    for (var y = 0; y < 25; y++) {
+      for (var x = 0; x < 25; x++) {
+        pixels.add((pattern[y][x] * 255).round().clamp(0, 255));
+      }
+    }
+    await _matrixService.setMatrix(pixels);
+  }
+
   Future<void> _turnOff() async {
     _autoOffTimer?.cancel();
+    _animationTimer?.cancel();
     await _matrixService.turnOff();
+    HapticFeedback.lightImpact();
+    setState(() {
+      _matrixState = List.generate(25, (_) => List.filled(25, 0.0));
+    });
+  }
+
+  // ============== Pattern Generators ==============
+
+  static List<List<double>> _generatePulse() {
+    final matrix = List.generate(25, (_) => List.filled(25, 0.0));
+    const center = 12.0;
+    const maxDist = 12.0;
+
+    for (var y = 0; y < 25; y++) {
+      for (var x = 0; x < 25; x++) {
+        final dx = x - center;
+        final dy = y - center;
+        final dist = math.sqrt(dx * dx + dy * dy);
+        matrix[y][x] = (1.0 - (dist / maxDist)).clamp(0.0, 1.0);
+      }
+    }
+    return matrix;
+  }
+
+  static List<List<double>> _generateBorder() {
+    final matrix = List.generate(25, (_) => List.filled(25, 0.0));
+    for (var i = 0; i < 25; i++) {
+      matrix[0][i] = 1.0;
+      matrix[24][i] = 1.0;
+      matrix[i][0] = 1.0;
+      matrix[i][24] = 1.0;
+    }
+    return matrix;
+  }
+
+  static List<List<double>> _generateCross() {
+    final matrix = List.generate(25, (_) => List.filled(25, 0.0));
+    for (var i = 0; i < 25; i++) {
+      matrix[i][i] = 1.0;
+      matrix[i][24 - i] = 1.0;
+    }
+    return matrix;
+  }
+
+  static List<List<double>> _generateDots() {
+    final matrix = List.generate(25, (_) => List.filled(25, 0.0));
+    for (var y = 0; y < 25; y += 4) {
+      for (var x = 0; x < 25; x += 4) {
+        matrix[y][x] = 1.0;
+      }
+    }
+    return matrix;
+  }
+
+  static List<List<double>> _generateFull() {
+    return List.generate(25, (_) => List.filled(25, 1.0));
+  }
+
+  static List<List<double>> _generateSpiral() {
+    final matrix = List.generate(25, (_) => List.filled(25, 0.0));
+    const center = 12.0;
+
+    for (var y = 0; y < 25; y++) {
+      for (var x = 0; x < 25; x++) {
+        final dx = x - center;
+        final dy = y - center;
+        final angle = math.atan2(dy, dx);
+        final dist = math.sqrt(dx * dx + dy * dy);
+        final spiralPhase = (angle + dist * 0.5) % (2 * math.pi);
+        if (spiralPhase < math.pi * 0.3 && dist < 12) {
+          matrix[y][x] = 1.0 - (dist / 12);
+        }
+      }
+    }
+    return matrix;
+  }
+
+  static List<List<double>> _generateWave() {
+    final matrix = List.generate(25, (_) => List.filled(25, 0.0));
+    for (var y = 0; y < 25; y++) {
+      for (var x = 0; x < 25; x++) {
+        final wave = math.sin(x * 0.5) * 0.5 + 0.5;
+        final yPos = (12 + wave * 5).round();
+        if ((y - yPos).abs() <= 2) {
+          matrix[y][x] = 1.0 - ((y - yPos).abs() * 0.3);
+        }
+      }
+    }
+    return matrix;
+  }
+
+  static List<List<double>> _generateHeart() {
+    final matrix = List.generate(25, (_) => List.filled(25, 0.0));
+    const center = 12.0;
+
+    for (var y = 0; y < 25; y++) {
+      for (var x = 0; x < 25; x++) {
+        final nx = (x - center) / 8;
+        final ny = (y - center) / 8;
+        // Heart equation: (x^2 + y^2 - 1)^3 - x^2 * y^3 = 0
+        final val = math.pow(nx * nx + ny * ny - 1, 3) - nx * nx * ny * ny * ny;
+        if (val <= 0) {
+          matrix[y][x] = 1.0;
+        }
+      }
+    }
+    return matrix;
+  }
+
+  static List<List<double>> _generateMesh() {
+    final matrix = List.generate(25, (_) => List.filled(25, 0.0));
+    final random = math.Random(42); // Fixed seed for consistent pattern
+
+    // Create nodes
+    final nodes = <(int, int)>[];
+    for (var i = 0; i < 8; i++) {
+      nodes.add((random.nextInt(21) + 2, random.nextInt(21) + 2));
+    }
+
+    // Draw nodes
+    for (final node in nodes) {
+      final (x, y) = node;
+      if (x >= 0 && x < 25 && y >= 0 && y < 25) {
+        matrix[y][x] = 1.0;
+        // Glow around node
+        for (var dy = -1; dy <= 1; dy++) {
+          for (var dx = -1; dx <= 1; dx++) {
+            final nx = x + dx;
+            final ny = y + dy;
+            if (nx >= 0 && nx < 25 && ny >= 0 && ny < 25) {
+              matrix[ny][nx] = math.max(matrix[ny][nx], 0.5);
+            }
+          }
+        }
+      }
+    }
+
+    // Draw connections (simplified)
+    for (var i = 0; i < nodes.length - 1; i++) {
+      final (x1, y1) = nodes[i];
+      final (x2, y2) = nodes[i + 1];
+      _drawLine(matrix, x1, y1, x2, y2, 0.3);
+    }
+
+    return matrix;
+  }
+
+  static void _drawLine(
+    List<List<double>> matrix,
+    int x1,
+    int y1,
+    int x2,
+    int y2,
+    double brightness,
+  ) {
+    final dx = (x2 - x1).abs();
+    final dy = (y2 - y1).abs();
+    final sx = x1 < x2 ? 1 : -1;
+    final sy = y1 < y2 ? 1 : -1;
+    var err = dx - dy;
+    var x = x1;
+    var y = y1;
+
+    while (true) {
+      if (x >= 0 && x < 25 && y >= 0 && y < 25) {
+        matrix[y][x] = math.max(matrix[y][x], brightness);
+      }
+      if (x == x2 && y == y2) break;
+      final e2 = 2 * err;
+      if (e2 > -dy) {
+        err -= dy;
+        x += sx;
+      }
+      if (e2 < dx) {
+        err += dx;
+        y += sy;
+      }
+    }
   }
 
   @override
@@ -210,233 +389,288 @@ class _GlyphTestScreenState extends ConsumerState<GlyphTestScreen> {
     final isSupported = ref.watch(glyphSupportedProvider);
 
     return Scaffold(
-      backgroundColor: context.background,
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: context.background,
+        backgroundColor: Colors.black,
+        elevation: 0,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Glyph Matrix Test',
+              'GLYPH MATRIX',
               style: TextStyle(
-                color: context.textPrimary,
-                fontWeight: FontWeight.w600,
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
                 fontSize: 18,
+                letterSpacing: 2,
               ),
             ),
             Text(
-              glyphService.deviceModel,
+              glyphService.deviceModel.toUpperCase(),
               style: TextStyle(
-                color: context.textSecondary,
-                fontSize: 12,
-                fontWeight: FontWeight.normal,
+                color: Colors.white54,
+                fontSize: 11,
+                letterSpacing: 1,
               ),
             ),
           ],
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.lightbulb_outline, color: context.textSecondary),
+            icon: Icon(
+              Icons.power_settings_new,
+              color: _matrixState.any((row) => row.any((v) => v > 0))
+                  ? Colors.redAccent
+                  : Colors.white30,
+            ),
             onPressed: _turnOff,
             tooltip: 'Turn off',
           ),
         ],
       ),
       body: initState.when(
-        loading: () => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const CircularProgressIndicator(),
-              const SizedBox(height: 16),
-              Text(
-                'Initializing Glyph Matrix...',
-                style: TextStyle(color: context.textSecondary),
+        loading: () => _buildLoadingState(),
+        error: (error, _) => _buildErrorState(error),
+        data: (_) => isSupported
+            ? _buildMainContent(context)
+            : _buildNotSupportedState(),
+      ),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 60,
+            height: 60,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation(Colors.white30),
+            ),
+          ),
+          SizedBox(height: 24),
+          Text(
+            'INITIALIZING GLYPH MATRIX...',
+            style: TextStyle(
+              color: Colors.white30,
+              fontSize: 12,
+              letterSpacing: 2,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(Object error) {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 64, color: Colors.redAccent),
+            SizedBox(height: 16),
+            Text(
+              'INIT FAILED',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 2,
               ),
-            ],
+            ),
+            SizedBox(height: 8),
+            Text(
+              error.toString(),
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white54, fontSize: 12),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNotSupportedState() {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.phonelink_off, size: 64, color: Colors.white30),
+            SizedBox(height: 24),
+            Text(
+              'DEVICE NOT SUPPORTED',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 2,
+              ),
+            ),
+            SizedBox(height: 12),
+            Text(
+              'Glyph Matrix requires\nNothing Phone (3)',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white54, fontSize: 14),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMainContent(BuildContext context) {
+    final currentPattern = _patterns[_selectedPatternIndex];
+
+    return Column(
+      children: [
+        // Matrix Preview
+        Expanded(
+          flex: 3,
+          child: Center(
+            child: AnimatedBuilder(
+              animation: _glowAnimation,
+              builder: (context, child) {
+                return Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: currentPattern.color.withValues(
+                          alpha: _glowAnimation.value * 0.5,
+                        ),
+                        blurRadius: 60,
+                        spreadRadius: 10,
+                      ),
+                    ],
+                  ),
+                  child: child,
+                );
+              },
+              child: _GlyphMatrixPreview(
+                matrix: _matrixState,
+                accentColor: currentPattern.color,
+                isExecuting: _isExecuting,
+              ),
+            ),
           ),
         ),
-        error: (error, _) => Center(
-          child: Column(
+
+        // Pattern name with executing indicator
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 24),
+          child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 64, color: Colors.red),
-              const SizedBox(height: 16),
+              if (_isExecuting)
+                Padding(
+                  padding: EdgeInsets.only(right: 12),
+                  child: SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation(currentPattern.color),
+                    ),
+                  ),
+                ),
               Text(
-                'Glyph init failed',
-                style: TextStyle(color: context.textPrimary, fontSize: 18),
-              ),
-              const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: Text(
-                  error.toString(),
-                  style: TextStyle(color: context.textSecondary, fontSize: 14),
-                  textAlign: TextAlign.center,
+                currentPattern.name,
+                style: TextStyle(
+                  color: currentPattern.color,
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 4,
                 ),
               ),
             ],
           ),
         ),
-        data: (_) => isSupported
-            ? _buildPatternCarousel(context)
-            : _buildNotSupportedMessage(context),
-      ),
-    );
-  }
 
-  Widget _buildPatternCarousel(BuildContext context) {
-    return Column(
-      children: [
-        const SizedBox(height: 24),
+        SizedBox(height: 8),
 
-        // Header
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Text(
-            'Swipe to preview patterns',
-            style: TextStyle(color: context.textSecondary, fontSize: 16),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Text(
-            'Tap card to execute on your Phone 3',
-            style: TextStyle(color: context.textTertiary, fontSize: 14),
+        // Swipe hint
+        Text(
+          '← SWIPE TO EXECUTE →',
+          style: TextStyle(
+            color: Colors.white30,
+            fontSize: 12,
+            letterSpacing: 2,
           ),
         ),
 
-        const SizedBox(height: 32),
+        SizedBox(height: 24),
 
-        // Pattern cards carousel
-        Expanded(
+        // Swipeable pattern selector - swipe executes immediately
+        SizedBox(
+          height: 120,
           child: PageView.builder(
             controller: _pageController,
-            itemCount: _patterns.length,
             onPageChanged: (index) {
-              setState(() => _currentIndex = index);
-              // Execute pattern when swiped
-              _executePattern(_patterns[index]);
+              HapticFeedback.selectionClick();
+              _updatePreview(index);
             },
+            itemCount: _patterns.length,
             itemBuilder: (context, index) {
               final pattern = _patterns[index];
-              final isActive = index == _currentIndex;
+              final isSelected = index == _selectedPatternIndex;
 
               return AnimatedScale(
-                scale: isActive ? 1.0 : 0.9,
-                duration: const Duration(milliseconds: 200),
+                scale: isSelected ? 1.0 : 0.8,
+                duration: Duration(milliseconds: 200),
                 child: AnimatedOpacity(
-                  opacity: isActive ? 1.0 : 0.6,
-                  duration: const Duration(milliseconds: 200),
-                  child: BouncyTap(
-                    onTap: () => _executePattern(pattern),
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 16,
+                  opacity: isSelected ? 1.0 : 0.5,
+                  duration: Duration(milliseconds: 200),
+                  child: Container(
+                    margin: EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? pattern.color.withValues(alpha: 0.2)
+                          : Colors.white.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isSelected
+                            ? pattern.color
+                            : Colors.white.withValues(alpha: 0.1),
+                        width: isSelected ? 2 : 1,
                       ),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            pattern.color.withValues(alpha: 0.8),
-                            pattern.color.withValues(alpha: 0.4),
-                          ],
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color: pattern.color.withValues(alpha: 0.3),
+                                blurRadius: 20,
+                                spreadRadius: 2,
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          pattern.icon,
+                          color: isSelected ? pattern.color : Colors.white54,
+                          size: 36,
                         ),
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: isActive
-                            ? [
-                                BoxShadow(
-                                  color: pattern.color.withValues(alpha: 0.4),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 8),
-                                ),
-                              ]
-                            : null,
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          // Icon
-                          Container(
-                            padding: const EdgeInsets.all(24),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              pattern.icon,
-                              size: 64,
-                              color: Colors.white,
-                            ),
+                        SizedBox(height: 8),
+                        Text(
+                          pattern.name,
+                          style: TextStyle(
+                            color: isSelected ? pattern.color : Colors.white54,
+                            fontSize: 11,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                            letterSpacing: 1,
                           ),
-                          const SizedBox(height: 24),
-
-                          // Pattern name
-                          Text(
-                            pattern.name,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-
-                          // Description
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 24),
-                            child: Text(
-                              pattern.description,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.9),
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(height: 32),
-
-                          // Executing indicator
-                          if (_isExecuting && isActive)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: const Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    'Executing...',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -445,111 +679,838 @@ class _GlyphTestScreenState extends ConsumerState<GlyphTestScreen> {
           ),
         ),
 
-        // Page indicator
-        Padding(
-          padding: const EdgeInsets.only(bottom: 32),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(
-              _patterns.length,
-              (index) => AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                width: index == _currentIndex ? 24 : 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: index == _currentIndex
-                      ? _patterns[_currentIndex].color
-                      : context.textTertiary.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-            ),
-          ),
-        ),
-
-        // Turn off button
-        Padding(
-          padding: const EdgeInsets.only(bottom: 24, left: 24, right: 24),
-          child: SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: _turnOff,
-              icon: const Icon(Icons.lightbulb_outline),
-              label: const Text('Turn Off All LEDs'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: context.textSecondary,
-                side: BorderSide(color: context.border),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
-            ),
-          ),
-        ),
+        SizedBox(height: 24),
       ],
     );
   }
+}
 
-  Widget _buildNotSupportedMessage(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.lightbulb_outline, size: 80, color: context.textTertiary),
-          const SizedBox(height: 24),
-          Text(
-            'Glyph Matrix Not Available',
-            style: TextStyle(
-              color: context.textPrimary,
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 48),
-            child: Text(
-              'This feature requires a Nothing Phone (3) with GlyphMatrix SDK support.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: context.textSecondary, fontSize: 15),
-            ),
-          ),
-          const SizedBox(height: 32),
-          Container(
-            padding: const EdgeInsets.all(16),
-            margin: const EdgeInsets.symmetric(horizontal: 48),
-            decoration: BoxDecoration(
-              color: context.card,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: context.border),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.phone_android, color: context.textSecondary),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Detected Device',
-                        style: TextStyle(color: context.textSecondary),
-                      ),
-                    ),
-                  ],
+/// Pattern definition
+class _PatternDef {
+  final String name;
+  final IconData icon;
+  final Color color;
+  final List<List<double>> Function() generate;
+
+  const _PatternDef({
+    required this.name,
+    required this.icon,
+    required this.color,
+    required this.generate,
+  });
+}
+
+/// Visual preview of the 25x25 LED matrix with circular mask
+/// Matches the actual Nothing Phone 3 glyph layout
+class _GlyphMatrixPreview extends StatelessWidget {
+  final List<List<double>> matrix;
+  final Color accentColor;
+  final bool isExecuting;
+
+  const _GlyphMatrixPreview({
+    required this.matrix,
+    required this.accentColor,
+    this.isExecuting = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AspectRatio(
+      aspectRatio: 1,
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final size = constraints.maxWidth;
+            return SizedBox(
+              width: size,
+              height: size,
+              child: CustomPaint(
+                size: Size(size, size),
+                painter: _GlyphMatrixPainter(
+                  matrix: matrix,
+                  accentColor: accentColor,
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  ref.watch(glyphServiceProvider).deviceModel,
-                  style: TextStyle(
-                    color: context.textPrimary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+              ),
+            );
+          },
+        ),
       ),
     );
+  }
+}
+
+/// Custom painter for the glyph matrix
+/// Draws LEDs with proper circular boundary matching Phone 3 specs
+class _GlyphMatrixPainter extends CustomPainter {
+  final List<List<double>> matrix;
+  final Color accentColor;
+
+  static const int gridSize = 25;
+
+  _GlyphMatrixPainter({required this.matrix, required this.accentColor});
+
+  // Pre-computed mask matching the actual Phone 3 LED layout
+  // true = LED exists at this position, false = outside circular boundary
+  static const List<List<bool>> _ledMask = [
+    // Row 0  (y=0)
+    [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+    ],
+    // Row 1
+    [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+    ],
+    // Row 2
+    [
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+    ],
+    // Row 3
+    [
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+    ],
+    // Row 4
+    [
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+    ],
+    // Row 5
+    [
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+    ],
+    // Row 6
+    [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+    ],
+    // Row 7
+    [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+    ],
+    // Row 8
+    [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+    ],
+    // Row 9
+    [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+    ],
+    // Row 10
+    [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+    ],
+    // Row 11
+    [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+    ],
+    // Row 12 (center)
+    [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+    ],
+    // Row 13
+    [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+    ],
+    // Row 14
+    [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+    ],
+    // Row 15
+    [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+    ],
+    // Row 16
+    [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+    ],
+    // Row 17
+    [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+    ],
+    // Row 18
+    [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+    ],
+    // Row 19
+    [
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+    ],
+    // Row 20
+    [
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+    ],
+    // Row 21
+    [
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+    ],
+    // Row 22
+    [
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+    ],
+    // Row 23
+    [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+    ],
+    // Row 24 (y=24)
+    [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+    ],
+  ];
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final cellSize = size.width / gridSize;
+    final center = Offset(size.width / 2, size.height / 2);
+    final maxRadius = size.width * 0.5;
+
+    // Background circle
+    final bgPaint = Paint()
+      ..color = const Color(0xFF000000)
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(center, maxRadius, bgPaint);
+
+    // Outer ring glow
+    final ringPaint = Paint()
+      ..color = accentColor.withValues(alpha: 0.15)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    canvas.drawCircle(center, maxRadius - 2, ringPaint);
+
+    // Draw LEDs using exact mask
+    for (var y = 0; y < gridSize; y++) {
+      for (var x = 0; x < gridSize; x++) {
+        // Skip LEDs outside the circular boundary
+        if (!_ledMask[y][x]) continue;
+
+        final ledCenter = Offset((x + 0.5) * cellSize, (y + 0.5) * cellSize);
+        final brightness = matrix[y][x].clamp(0.0, 1.0);
+        final ledRadius = cellSize * 0.4;
+
+        if (brightness > 0) {
+          // LED glow
+          final glowPaint = Paint()
+            ..color = accentColor.withValues(alpha: brightness * 0.3)
+            ..maskFilter = MaskFilter.blur(BlurStyle.normal, cellSize * 0.4);
+          canvas.drawCircle(ledCenter, ledRadius * 1.3, glowPaint);
+
+          // LED body - white when on
+          final ledPaint = Paint()
+            ..color = Color.lerp(
+              const Color(0xFF1C1C1C),
+              const Color(0xFFFFFFFF),
+              brightness,
+            )!;
+          canvas.drawCircle(ledCenter, ledRadius, ledPaint);
+        } else {
+          // Off LED (dim gray per spec: #1C1C1C)
+          final offPaint = Paint()..color = const Color(0xFF1C1C1C);
+          canvas.drawCircle(ledCenter, ledRadius, offPaint);
+        }
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_GlyphMatrixPainter oldDelegate) {
+    return oldDelegate.matrix != matrix ||
+        oldDelegate.accentColor != accentColor;
   }
 }
