@@ -485,6 +485,7 @@ class BottomSheetTextField extends StatelessWidget {
       inputFormatters: inputFormatters,
       onChanged: onChanged,
       onSubmitted: onSubmitted,
+      textCapitalization: TextCapitalization.sentences,
       style: TextStyle(
         color: context.textPrimary,
         fontSize: 16,

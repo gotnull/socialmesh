@@ -714,6 +714,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
                   maxLines: 5,
                   maxLength: _maxLength,
                   maxLengthEnforcement: MaxLengthEnforcement.enforced,
+                  textCapitalization: TextCapitalization.sentences,
                   inputFormatters: [
                     LengthLimitingTextInputFormatter(_maxLength),
                   ],

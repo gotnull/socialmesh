@@ -580,6 +580,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
             const SizedBox(height: 16),
             TextField(
               controller: reasonController,
+              textCapitalization: TextCapitalization.sentences,
               decoration: const InputDecoration(
                 hintText: 'Describe the issue...',
                 border: OutlineInputBorder(),

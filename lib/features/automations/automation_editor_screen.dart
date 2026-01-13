@@ -246,6 +246,7 @@ class _AutomationEditorScreenState
               SizedBox(height: 8),
               TextField(
                 controller: _nameController,
+                textCapitalization: TextCapitalization.sentences,
                 decoration: InputDecoration(
                   hintText: 'e.g., Low Battery Alert',
                   filled: true,
@@ -274,6 +275,7 @@ class _AutomationEditorScreenState
               const SizedBox(height: 8),
               TextField(
                 controller: _descriptionController,
+                textCapitalization: TextCapitalization.sentences,
                 decoration: InputDecoration(
                   hintText: 'What does this automation do?',
                   filled: true,

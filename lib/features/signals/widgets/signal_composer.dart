@@ -79,6 +79,7 @@ class _SignalComposerState extends ConsumerState<SignalComposer> {
               controller: _controller,
               enabled: !_isSubmitting,
               style: TextStyle(color: context.textPrimary),
+              textCapitalization: TextCapitalization.sentences,
               decoration: InputDecoration(
                 hintText: 'Send a signal...',
                 hintStyle: TextStyle(color: context.textTertiary),
@@ -133,6 +134,7 @@ class _SignalComposerState extends ConsumerState<SignalComposer> {
             maxLines: 3,
             maxLength: 280,
             maxLengthEnforcement: MaxLengthEnforcement.enforced,
+            textCapitalization: TextCapitalization.sentences,
             inputFormatters: [LengthLimitingTextInputFormatter(280)],
             style: TextStyle(color: context.textPrimary),
             decoration: InputDecoration(

@@ -1602,6 +1602,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           controller: _messageController,
                           focusNode: _messageFocusNode,
                           style: TextStyle(color: context.textPrimary),
+                          textCapitalization: TextCapitalization.sentences,
                           decoration: InputDecoration(
                             hintText: 'Message...',
                             hintStyle: TextStyle(color: context.textTertiary),
