@@ -28,6 +28,7 @@ import '../widgets/signal_map_view.dart';
 import '../widgets/signal_skeleton.dart';
 import '../widgets/signals_empty_state.dart';
 import '../widgets/swipeable_signal_item.dart';
+import '../widgets/snappable_signal_wrapper.dart';
 import '../widgets/active_signals_banner.dart';
 import 'create_signal_screen.dart';
 import 'signal_detail_screen.dart';
@@ -813,6 +814,9 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                   signal.commentCount > 0 &&
                   DateTime.now().difference(signal.createdAt).inMinutes < 10;
 
+              // Use snap effect for regular hide, but not for restore
+              final useSnapEffect = _activeFilter != SignalFilter.hidden;
+
               return AnimatedSignalItem(
                 key: ValueKey('animated_${signal.id}'),
                 signalId: signal.id,
@@ -825,86 +829,135 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                     right: 16,
                     bottom: index == signals.length - 1 ? 100 : 12,
                   ),
-                  child: SwipeableSignalItem(
-                    isBookmarked: isBookmarked,
-                    leftActionIcon: _activeFilter == SignalFilter.hidden
-                        ? Icons.visibility_rounded
-                        : Icons.visibility_off_rounded,
-                    leftActionLabel: _activeFilter == SignalFilter.hidden
-                        ? 'Restore'
-                        : 'Hide',
-                    hintKey: _activeFilter == SignalFilter.hidden
-                        ? 'signal_swipe_restore_hint_seen'
-                        : 'signal_swipe_hint_seen',
-                    onSwipeRight: () {
-                      ref
-                          .read(signalBookmarksProvider.notifier)
-                          .toggleBookmark(signal.id);
-                      showSuccessSnackBar(
-                        context,
-                        isBookmarked ? 'Removed from saved' : 'Signal saved',
-                      );
-                    },
-                    onSwipeLeft: () async {
-                      if (_activeFilter == SignalFilter.hidden) {
-                        // Check if this is the last hidden signal BEFORE unhiding
-                        final currentHidden = ref.read(hiddenSignalsProvider);
-                        final isLastHidden = currentHidden.length == 1;
+                  child: useSnapEffect
+                      ? SnapSwipeableSignalItem(
+                          signalId: signal.id,
+                          isBookmarked: isBookmarked,
+                          leftActionIcon: Icons.visibility_off_rounded,
+                          leftActionLabel: 'Hide',
+                          hintKey: 'signal_swipe_hint_seen',
+                          expiresAt: signal.expiresAt,
+                          snapOnExpiry: true,
+                          onSwipeRight: () {
+                            ref
+                                .read(signalBookmarksProvider.notifier)
+                                .toggleBookmark(signal.id);
+                            showSuccessSnackBar(
+                              context,
+                              isBookmarked
+                                  ? 'Removed from saved'
+                                  : 'Signal saved',
+                            );
+                          },
+                          onSwipeLeft: () async {
+                            await ref
+                                .read(hiddenSignalsProvider.notifier)
+                                .hideSignal(signal.id);
 
-                        AppLogging.signals(
-                          'Unhiding signal, was last hidden: $isLastHidden (count: ${currentHidden.length})',
-                        );
+                            if (!mounted) return;
 
-                        await ref
-                            .read(hiddenSignalsProvider.notifier)
-                            .unhideSignal(signal.id);
+                            // ignore: use_build_context_synchronously
+                            showSuccessSnackBar(context, 'Signal hidden');
+                          },
+                          onExpired: () async {
+                            // Auto-hide when TTL expires
+                            await ref
+                                .read(hiddenSignalsProvider.notifier)
+                                .hideSignal(signal.id);
+                          },
+                          child: DoubleTapLikeWrapper(
+                            onDoubleTap: () {
+                              HapticFeedback.mediumImpact();
+                              ref
+                                  .read(signalBookmarksProvider.notifier)
+                                  .addBookmark(signal.id);
+                              showSuccessSnackBar(context, 'Signal saved');
+                            },
+                            child: SignalCard(
+                              key: ValueKey('card_${signal.id}'),
+                              signal: signal,
+                              isBookmarked: isBookmarked,
+                              isLive: hasRecentActivity,
+                              onTap: () => _openSignalDetail(signal),
+                              onComment: () => _openSignalDetail(signal),
+                              onDelete: isOwnSignal
+                                  ? () => _deleteSignal(signal)
+                                  : null,
+                              onReport: canReport
+                                  ? () => _reportSignal(signal)
+                                  : null,
+                            ),
+                          ),
+                        )
+                      : SwipeableSignalItem(
+                          isBookmarked: isBookmarked,
+                          leftActionIcon: Icons.visibility_rounded,
+                          leftActionLabel: 'Restore',
+                          hintKey: 'signal_swipe_restore_hint_seen',
+                          onSwipeRight: () {
+                            ref
+                                .read(signalBookmarksProvider.notifier)
+                                .toggleBookmark(signal.id);
+                            showSuccessSnackBar(
+                              context,
+                              isBookmarked
+                                  ? 'Removed from saved'
+                                  : 'Signal saved',
+                            );
+                          },
+                          onSwipeLeft: () async {
+                            final currentHidden = ref.read(
+                              hiddenSignalsProvider,
+                            );
+                            final isLastHidden = currentHidden.length == 1;
 
-                        if (!mounted) return;
+                            AppLogging.signals(
+                              'Unhiding signal, was last hidden: $isLastHidden (count: ${currentHidden.length})',
+                            );
 
-                        // ignore: use_build_context_synchronously
-                        showSuccessSnackBar(context, 'Signal restored');
+                            await ref
+                                .read(hiddenSignalsProvider.notifier)
+                                .unhideSignal(signal.id);
 
-                        // Switch back to All if this was the last hidden signal
-                        if (isLastHidden) {
-                          AppLogging.signals('Switching filter back to All');
-                          setState(() => _activeFilter = SignalFilter.all);
-                          AppLogging.signals('Filter is now: $_activeFilter');
-                        }
-                      } else {
-                        await ref
-                            .read(hiddenSignalsProvider.notifier)
-                            .hideSignal(signal.id);
+                            if (!mounted) return;
 
-                        if (!mounted) return;
+                            // ignore: use_build_context_synchronously
+                            showSuccessSnackBar(context, 'Signal restored');
 
-                        // ignore: use_build_context_synchronously
-                        showSuccessSnackBar(context, 'Signal hidden');
-                      }
-                    },
-                    child: DoubleTapLikeWrapper(
-                      onDoubleTap: () {
-                        HapticFeedback.mediumImpact();
-                        ref
-                            .read(signalBookmarksProvider.notifier)
-                            .addBookmark(signal.id);
-                        showSuccessSnackBar(context, 'Signal saved');
-                      },
-                      child: SignalCard(
-                        key: ValueKey('card_${signal.id}'),
-                        signal: signal,
-                        isBookmarked: isBookmarked,
-                        isLive: hasRecentActivity,
-                        onTap: () => _openSignalDetail(signal),
-                        onComment: () => _openSignalDetail(signal),
-                        onDelete: isOwnSignal
-                            ? () => _deleteSignal(signal)
-                            : null,
-                        onReport: canReport
-                            ? () => _reportSignal(signal)
-                            : null,
-                      ),
-                    ),
-                  ),
+                            if (isLastHidden) {
+                              AppLogging.signals(
+                                'Switching filter back to All',
+                              );
+                              setState(() => _activeFilter = SignalFilter.all);
+                              AppLogging.signals(
+                                'Filter is now: $_activeFilter',
+                              );
+                            }
+                          },
+                          child: DoubleTapLikeWrapper(
+                            onDoubleTap: () {
+                              HapticFeedback.mediumImpact();
+                              ref
+                                  .read(signalBookmarksProvider.notifier)
+                                  .addBookmark(signal.id);
+                              showSuccessSnackBar(context, 'Signal saved');
+                            },
+                            child: SignalCard(
+                              key: ValueKey('card_${signal.id}'),
+                              signal: signal,
+                              isBookmarked: isBookmarked,
+                              isLive: hasRecentActivity,
+                              onTap: () => _openSignalDetail(signal),
+                              onComment: () => _openSignalDetail(signal),
+                              onDelete: isOwnSignal
+                                  ? () => _deleteSignal(signal)
+                                  : null,
+                              onReport: canReport
+                                  ? () => _reportSignal(signal)
+                                  : null,
+                            ),
+                          ),
+                        ),
                 ),
               );
             }, childCount: signals.length),
@@ -951,50 +1004,62 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                   signalId: signal.id,
                   index: index,
                   isRefreshing: _isRefreshing,
-                  child: DoubleTapLikeWrapper(
-                    onDoubleTap: () async {
-                      HapticFeedback.mediumImpact();
-                      if (isOwn) return; // Can't bookmark own signal
-
-                      if (!isBookmarked) {
-                        await ref
-                            .read(signalBookmarksProvider.notifier)
-                            .addBookmark(signal.id);
-                      }
+                  child: SnappableSignalWrapper(
+                    signalId: signal.id,
+                    expiresAt: signal.expiresAt,
+                    snapOnExpiry: true,
+                    snapOffset: const Offset(60, -30),
+                    onSnapped: () async {
+                      // Auto-hide when TTL expires
+                      await ref
+                          .read(hiddenSignalsProvider.notifier)
+                          .hideSignal(signal.id);
                     },
-                    child: Stack(
-                      children: [
-                        SignalGridCard(
-                          key: ValueKey('grid_${signal.id}'),
-                          signal: signal,
-                          onTap: () => _openSignalDetail(signal),
-                        ),
-                        // Bookmark indicator - top left with matching badge style
-                        if (isBookmarked)
-                          Positioned(
-                            top: 8,
-                            left: 8,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 5,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withValues(alpha: 0.5),
-                                borderRadius: BorderRadius.circular(4),
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.1),
-                                  width: 0.5,
+                    child: DoubleTapLikeWrapper(
+                      onDoubleTap: () async {
+                        HapticFeedback.mediumImpact();
+                        if (isOwn) return; // Can't bookmark own signal
+
+                        if (!isBookmarked) {
+                          await ref
+                              .read(signalBookmarksProvider.notifier)
+                              .addBookmark(signal.id);
+                        }
+                      },
+                      child: Stack(
+                        children: [
+                          SignalGridCard(
+                            key: ValueKey('grid_${signal.id}'),
+                            signal: signal,
+                            onTap: () => _openSignalDetail(signal),
+                          ),
+                          // Bookmark indicator - top left with matching badge style
+                          if (isBookmarked)
+                            Positioned(
+                              top: 8,
+                              left: 8,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 5,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withValues(alpha: 0.5),
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.1),
+                                    width: 0.5,
+                                  ),
+                                ),
+                                child: Icon(
+                                  Icons.bookmark_rounded,
+                                  size: 12,
+                                  color: AccentColors.yellow,
                                 ),
                               ),
-                              child: Icon(
-                                Icons.bookmark_rounded,
-                                size: 12,
-                                color: AccentColors.yellow,
-                              ),
                             ),
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 );

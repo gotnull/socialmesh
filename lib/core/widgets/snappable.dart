@@ -1,13 +1,16 @@
+// Snappable library - Thanos snap effect in Flutter
+// Ported from https://github.com/MarcinusX/snappable (pub.dev/packages/snappable)
+// Copyright 2019 Fidev Marcin Szalek - BSD 2-Clause License
+// Updated for Dart 3 and image package 4.x
+
 import 'dart:math' as math;
-import 'dart:ui' as ui;
+import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:image/image.dart' as img;
+import 'package:image/image.dart' as image;
 
-/// Thanos snap effect widget - disintegrates any child widget into dust
-/// Based on the approach from https://fidev.io/thanos-snap-effect-in-flutter/
 class Snappable extends StatefulWidget {
   /// Widget to be snapped
   final Widget child;
@@ -105,9 +108,7 @@ class SnappableState extends State<Snappable>
           AnimatedBuilder(
             animation: _animationController,
             builder: (context, child) {
-              return _animationController.isDismissed
-                  ? child!
-                  : const SizedBox.shrink();
+              return _animationController.isDismissed ? child! : Container();
             },
             child: RepaintBoundary(key: _globalKey, child: widget.child),
           ),
@@ -123,16 +124,16 @@ class SnappableState extends State<Snappable>
     if (fullImage == null) return;
 
     // Create an image for every bucket
-    final images = List<img.Image>.generate(
+    List<image.Image> images = List<image.Image>.generate(
       widget.numberOfBuckets,
-      (i) => img.Image(width: fullImage.width, height: fullImage.height),
+      (i) => image.Image(width: fullImage.width, height: fullImage.height),
     );
 
     // For every line of pixels
     for (int y = 0; y < fullImage.height; y++) {
       // Generate weight list of probabilities determining
       // to which bucket should given pixels go
-      final weights = List<int>.generate(
+      List<int> weights = List.generate(
         widget.numberOfBuckets,
         (bucket) =>
             _gauss(y / fullImage.height, bucket / widget.numberOfBuckets),
@@ -141,16 +142,16 @@ class SnappableState extends State<Snappable>
 
       // For every pixel in a line
       for (int x = 0; x < fullImage.width; x++) {
-        // Get the pixel from fullImage
+        // Get the pixel from fullImage (image 4.x returns Pixel object)
         final pixel = fullImage.getPixel(x, y);
         // Choose a bucket for a pixel
         int imageIndex = _pickABucket(weights, sumOfWeights);
-        // Set the pixel from chosen bucket
+        // Set the pixel from chosen bucket (image 4.x takes Pixel object)
         images[imageIndex].setPixel(x, y, pixel);
       }
     }
 
-    _layers = await compute<List<img.Image>, List<Uint8List>>(
+    _layers = await compute<List<image.Image>, List<Uint8List>>(
       _encodeImages,
       images,
     );
@@ -233,19 +234,19 @@ class SnappableState extends State<Snappable>
   }
 
   /// Gets an Image from a [child] and caches [size] for later use
-  Future<img.Image?> _getImageFromWidget() async {
+  Future<image.Image?> _getImageFromWidget() async {
     final boundary =
         _globalKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
     if (boundary == null) return null;
 
-    // Cache image size for later
+    // Cache image for later
     size = boundary.size;
-    final image = await boundary.toImage();
-    final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+    var img = await boundary.toImage();
+    var byteData = await img.toByteData(format: ImageByteFormat.png);
     if (byteData == null) return null;
+    var pngBytes = byteData.buffer.asUint8List();
 
-    final pngBytes = byteData.buffer.asUint8List();
-    return img.decodeImage(pngBytes);
+    return image.decodeImage(pngBytes);
   }
 
   int _gauss(double center, double value) =>
@@ -253,6 +254,6 @@ class SnappableState extends State<Snappable>
 }
 
 /// This is slow! Run it in separate isolate
-List<Uint8List> _encodeImages(List<img.Image> images) {
-  return images.map((i) => Uint8List.fromList(img.encodePng(i))).toList();
+List<Uint8List> _encodeImages(List<image.Image> images) {
+  return images.map((img) => Uint8List.fromList(image.encodePng(img))).toList();
 }

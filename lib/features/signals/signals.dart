@@ -18,4 +18,4 @@ export 'widgets/signal_grid_card.dart';
 export 'widgets/signal_gallery_view.dart';
 export 'widgets/signal_composer.dart';
 export 'widgets/ttl_selector.dart';
-export 'widgets/dust_dissolve_signal_card.dart';
+export 'widgets/snappable_signal_wrapper.dart';
