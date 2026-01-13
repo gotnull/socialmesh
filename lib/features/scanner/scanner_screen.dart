@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 
 import '../../core/logging.dart';
 import '../../providers/connection_providers.dart' as conn;
@@ -248,19 +249,94 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     });
 
     try {
-      // Clean up any stale BLE state before starting scan
-      // This fixes issues where scanner gets stuck after app was backgrounded
-      AppLogging.connection('📡 SCANNER: Stopping any existing scan...');
+      // Aggressive BLE cleanup to handle devices that were just disconnected
+      // from another app (like Meshtastic). iOS/Android cache BLE state and
+      // may not immediately see newly-available devices.
+      AppLogging.connection('📡 SCANNER: Aggressive BLE cleanup starting...');
+
+      // 1. Stop any existing scan
       try {
         await FlutterBluePlus.stopScan();
+        AppLogging.connection('📡 SCANNER: Stopped existing scan');
       } catch (e) {
         AppLogging.connection('📡 SCANNER: stopScan error (ignoring): $e');
       }
 
-      // Add a small delay to let BLE subsystem settle after disconnect
-      // This helps ensure clean scan results
-      AppLogging.connection('📡 SCANNER: Waiting 500ms for BLE to settle...');
-      await Future.delayed(const Duration(milliseconds: 500));
+      // 2. Try to disconnect any stale connections to our saved device
+      // This helps when the device was connected to another app
+      if (savedDeviceId != null) {
+        try {
+          // Check system devices (works on both iOS and Android)
+          final systemDevices = await FlutterBluePlus.systemDevices([]);
+          for (final device in systemDevices) {
+            if (device.remoteId.toString() == savedDeviceId) {
+              AppLogging.connection(
+                '📡 SCANNER: Found saved device in system devices, forcing cleanup...',
+              );
+              try {
+                // On Android, clear the GATT cache to force fresh discovery
+                if (Platform.isAndroid) {
+                  await device.clearGattCache();
+                  AppLogging.connection(
+                    '📡 SCANNER: Cleared GATT cache (Android)',
+                  );
+                }
+                await device.disconnect();
+                AppLogging.connection(
+                  '📡 SCANNER: Disconnected stale connection to saved device',
+                );
+              } catch (e) {
+                AppLogging.connection(
+                  '📡 SCANNER: Cleanup error (ignoring): $e',
+                );
+              }
+            }
+          }
+
+          // Android: Also check bonded devices for stale connections
+          if (Platform.isAndroid) {
+            try {
+              final bondedDevices = await FlutterBluePlus.bondedDevices;
+              for (final device in bondedDevices) {
+                if (device.remoteId.toString() == savedDeviceId) {
+                  AppLogging.connection(
+                    '📡 SCANNER: Found saved device in bonded devices, cleaning up...',
+                  );
+                  try {
+                    await device.clearGattCache();
+                    if (device.isConnected) {
+                      await device.disconnect();
+                    }
+                    AppLogging.connection(
+                      '📡 SCANNER: Cleaned up bonded device',
+                    );
+                  } catch (e) {
+                    AppLogging.connection(
+                      '📡 SCANNER: Bonded device cleanup error (ignoring): $e',
+                    );
+                  }
+                }
+              }
+            } catch (e) {
+              AppLogging.connection(
+                '📡 SCANNER: bondedDevices error (ignoring): $e',
+              );
+            }
+          }
+        } catch (e) {
+          AppLogging.connection(
+            '📡 SCANNER: systemDevices error (ignoring): $e',
+          );
+        }
+      }
+
+      // 3. Wait for BLE subsystem to fully reset
+      // Android needs a bit longer due to GATT cache clearing
+      final resetDelay = Platform.isAndroid ? 1500 : 1000;
+      AppLogging.connection(
+        '📡 SCANNER: Waiting ${resetDelay}ms for BLE to fully reset...',
+      );
+      await Future.delayed(Duration(milliseconds: resetDelay));
 
       if (!mounted) {
         AppLogging.connection('📡 SCANNER: Widget unmounted during delay');
