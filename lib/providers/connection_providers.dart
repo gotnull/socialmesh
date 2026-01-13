@@ -141,6 +141,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
   Timer? _scanTimer;
   bool _isInitialized = false;
   bool _userDisconnected = false; // Track if user manually disconnected
+  bool _backgroundScanInProgress = false; // Guard against concurrent scans
 
   @override
   DeviceConnectionState2 build() {
@@ -344,6 +345,14 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       return;
     }
 
+    // Guard against concurrent scans - only one background scan at a time
+    if (_backgroundScanInProgress) {
+      AppLogging.connection(
+        '🔌 startBackgroundConnection: BLOCKED - scan already in progress',
+      );
+      return;
+    }
+
     final settings = await ref.read(settingsServiceProvider.future);
     final lastDeviceId = settings.lastDeviceId;
     final lastDeviceName = settings.lastDeviceName;
@@ -366,6 +375,9 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       );
       return;
     }
+
+    // Mark scan as in progress
+    _backgroundScanInProgress = true;
 
     AppLogging.connection(
       '🔌 startBackgroundConnection: Starting scan for: $lastDeviceId',
@@ -515,6 +527,8 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       ref
           .read(autoReconnectStateProvider.notifier)
           .setState(AutoReconnectState.failed);
+    } finally {
+      _backgroundScanInProgress = false;
     }
   }
 
@@ -652,12 +666,20 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
 
     // Mark that user intentionally disconnected - prevents any auto-reconnect
     _userDisconnected = true;
+    _backgroundScanInProgress = false; // Clear scan guard to allow future scans
     AppLogging.connection('🔌 disconnect(): Set _userDisconnected=true');
 
     // Also sync with the global userDisconnectedProvider
     ref.read(userDisconnectedProvider.notifier).setUserDisconnected(true);
 
     _scanTimer?.cancel();
+
+    // Stop any active scans before disconnecting
+    try {
+      await FlutterBluePlus.stopScan();
+    } catch (e) {
+      // Ignore
+    }
 
     final transport = ref.read(transportProvider);
     AppLogging.connection('🔌 disconnect(): Calling transport.disconnect()...');

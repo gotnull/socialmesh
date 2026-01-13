@@ -23,13 +23,21 @@ void showDeviceSheet(BuildContext context) {
 }
 
 /// Device information and controls sheet content
-class _DeviceSheetContent extends ConsumerWidget {
+class _DeviceSheetContent extends ConsumerStatefulWidget {
   final ScrollController scrollController;
 
   const _DeviceSheetContent({required this.scrollController});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_DeviceSheetContent> createState() =>
+      _DeviceSheetContentState();
+}
+
+class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent> {
+  bool _disconnecting = false;
+
+  @override
+  Widget build(BuildContext context) {
     final connectionStateAsync = ref.watch(connectionStateProvider);
     final connectedDevice = ref.watch(connectedDeviceProvider);
     final autoReconnectState = ref.watch(autoReconnectStateProvider);
@@ -50,6 +58,9 @@ class _DeviceSheetContent extends ConsumerWidget {
     final isReconnecting =
         autoReconnectState == AutoReconnectState.scanning ||
         autoReconnectState == AutoReconnectState.connecting;
+
+    // Disable connection-required actions when disconnecting
+    final actionsEnabled = !_disconnecting;
 
     // Use node's long name if available, otherwise fall back to device name
     final displayName =
@@ -135,7 +146,7 @@ class _DeviceSheetContent extends ConsumerWidget {
         // Content
         Expanded(
           child: ListView(
-            controller: scrollController,
+            controller: widget.scrollController,
             padding: const EdgeInsets.all(20),
             children: [
               // Connection Details
@@ -156,6 +167,7 @@ class _DeviceSheetContent extends ConsumerWidget {
                 icon: Icons.tune_outlined,
                 title: 'Device Config',
                 subtitle: 'Configure device role and settings',
+                enabled: actionsEnabled && isConnected,
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.of(context).pushNamed('/device-config');
@@ -165,6 +177,7 @@ class _DeviceSheetContent extends ConsumerWidget {
                 icon: Icons.wifi_tethering_outlined,
                 title: 'Channels',
                 subtitle: 'Manage communication channels',
+                enabled: actionsEnabled && isConnected,
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.of(context).pushNamed('/channels');
@@ -174,6 +187,7 @@ class _DeviceSheetContent extends ConsumerWidget {
                 icon: Icons.qr_code_scanner,
                 title: 'Scan Channel QR',
                 subtitle: 'Import channel from QR code',
+                enabled: actionsEnabled && isConnected,
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.of(context).pushNamed('/channel-qr-scanner');
@@ -193,7 +207,8 @@ class _DeviceSheetContent extends ConsumerWidget {
                   icon: Icons.delete_sweep_outlined,
                   title: 'Reset Node Database',
                   subtitle: 'Clear all learned nodes from device',
-                  onTap: () => _showResetNodeDbDialog(context, ref),
+                  enabled: actionsEnabled,
+                  onTap: () => _showResetNodeDbDialog(context),
                 ),
               const SizedBox(height: 24),
 
@@ -201,7 +216,7 @@ class _DeviceSheetContent extends ConsumerWidget {
               if (isConnected) ...[
                 _buildSectionTitle(context, 'Connection'),
                 const SizedBox(height: 12),
-                _buildDisconnectButton(context, ref),
+                _buildDisconnectButton(context),
               ] else if (!isReconnecting) ...[
                 _buildSectionTitle(context, 'Connection'),
                 const SizedBox(height: 12),
@@ -252,17 +267,30 @@ class _DeviceSheetContent extends ConsumerWidget {
     }
   }
 
-  Widget _buildDisconnectButton(BuildContext context, WidgetRef ref) {
+  Widget _buildDisconnectButton(BuildContext context) {
     return SizedBox(
       width: double.infinity,
       height: 52,
       child: OutlinedButton.icon(
-        onPressed: () => _disconnect(context, ref),
-        icon: const Icon(Icons.link_off, size: 20),
-        label: const Text('Disconnect'),
+        onPressed: _disconnecting ? null : () => _disconnect(context),
+        icon: _disconnecting
+            ? SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppTheme.errorRed,
+                ),
+              )
+            : const Icon(Icons.link_off, size: 20),
+        label: Text(_disconnecting ? 'Disconnecting...' : 'Disconnect'),
         style: OutlinedButton.styleFrom(
           foregroundColor: AppTheme.errorRed,
-          side: const BorderSide(color: AppTheme.errorRed),
+          side: BorderSide(
+            color: _disconnecting
+                ? AppTheme.errorRed.withValues(alpha: 0.5)
+                : AppTheme.errorRed,
+          ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -293,7 +321,7 @@ class _DeviceSheetContent extends ConsumerWidget {
     );
   }
 
-  Future<void> _disconnect(BuildContext context, WidgetRef ref) async {
+  Future<void> _disconnect(BuildContext context) async {
     AppLogging.connection('🔌 DISCONNECT: User tapped disconnect button');
 
     // Capture providers BEFORE any async operations to avoid disposed ref access
@@ -337,6 +365,9 @@ class _DeviceSheetContent extends ConsumerWidget {
     if (confirmed == true && context.mounted) {
       AppLogging.connection('🔌 DISCONNECT: Starting disconnect sequence...');
 
+      // Immediately disable UI and show disconnecting state
+      setState(() => _disconnecting = true);
+
       // CRITICAL: Set userDisconnected flag FIRST to prevent ALL auto-reconnect logic
       AppLogging.connection('🔌 DISCONNECT: Setting userDisconnected=true');
       userDisconnectedNotifier.setUserDisconnected(true);
@@ -347,6 +378,14 @@ class _DeviceSheetContent extends ConsumerWidget {
       );
       autoReconnectNotifier.setState(AutoReconnectState.idle);
 
+      // Close sheet immediately to prevent further interaction
+      // The disconnect will complete in the background
+      AppLogging.connection('🔌 DISCONNECT: Closing sheet immediately');
+      if (context.mounted) {
+        Navigator.pop(context);
+      }
+
+      // Now perform the actual disconnect in the background
       // Use DeviceConnectionNotifier for proper disconnect handling
       // This sets the proper disconnect reason and prevents auto-reconnect
       AppLogging.connection(
@@ -359,15 +398,6 @@ class _DeviceSheetContent extends ConsumerWidget {
       protocol.stop();
 
       AppLogging.connection('🔌 DISCONNECT: Disconnect sequence complete');
-
-      if (context.mounted) {
-        AppLogging.connection('🔌 DISCONNECT: Closing sheet');
-        // Just close the sheet - the ConnectionRequiredWrapper on the
-        // underlying screen will show the disconnected state with a
-        // "Scan for Devices" button. This avoids complex navigation
-        // timing issues and duplicate scanner instances.
-        Navigator.pop(context);
-      }
     } else {
       AppLogging.connection(
         '🔌 DISCONNECT: Dialog dismissed or context not mounted',
@@ -375,10 +405,7 @@ class _DeviceSheetContent extends ConsumerWidget {
     }
   }
 
-  Future<void> _showResetNodeDbDialog(
-    BuildContext context,
-    WidgetRef ref,
-  ) async {
+  Future<void> _showResetNodeDbDialog(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -561,72 +588,80 @@ class _ActionTile extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+  final bool enabled;
 
   const _ActionTile({
     required this.icon,
     required this.title,
     required this.subtitle,
     required this.onTap,
+    this.enabled = true,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: context.background,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: context.border),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
+    final isEnabled = enabled && onTap != null;
+    final opacity = isEnabled ? 1.0 : 0.5;
+
+    return Opacity(
+      opacity: opacity,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        decoration: BoxDecoration(
+          color: context.background,
           borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: context.card,
-                    borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: context.border),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: isEnabled ? onTap : null,
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: context.card,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(icon, color: context.accentColor, size: 22),
                   ),
-                  child: Icon(icon, color: context.accentColor, size: 22),
-                ),
-                SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: context.textPrimary,
+                  SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: context.textPrimary,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: context.textSecondary,
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: context.textSecondary,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                Icon(
-                  Icons.chevron_right,
-                  color: context.textTertiary,
-                  size: 20,
-                ),
-              ],
+                  Icon(
+                    Icons.chevron_right,
+                    color: context.textTertiary,
+                    size: 20,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
