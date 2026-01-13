@@ -17,6 +17,7 @@ import '../../providers/splash_mesh_provider.dart';
 import '../../providers/subscription_providers.dart';
 import '../../providers/signal_bookmark_provider.dart';
 import '../../providers/signal_providers.dart';
+import '../../providers/glyph_provider.dart';
 import '../../models/subscription_models.dart';
 import '../../services/storage/storage_service.dart';
 import '../../services/notifications/push_notification_service.dart';

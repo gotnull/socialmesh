@@ -65,10 +65,10 @@ class AutomationEngine {
     GlyphService? glyphService,
     this.onSendMessage,
     this.onSendToChannel,
-  })  : _repository = repository,
-        _iftttService = iftttService,
-        _notifications = notifications,
-        _glyphService = glyphService;
+  }) : _repository = repository,
+       _iftttService = iftttService,
+       _notifications = notifications,
+       _glyphService = glyphService;
 
   /// Start the automation engine
   void start() {
@@ -789,7 +789,7 @@ class AutomationEngine {
           }
 
           final pattern = action.config['pattern'] as String? ?? 'pulse';
-          
+
           try {
             switch (pattern) {
               case 'connected':
@@ -820,7 +820,7 @@ class AutomationEngine {
               default:
                 await _glyphService.showAutomationTriggered();
             }
-            
+
             return ActionResult(actionName: actionName, success: true);
           } catch (e) {
             return ActionResult(

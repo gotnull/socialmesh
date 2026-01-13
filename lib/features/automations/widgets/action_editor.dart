@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
+import '../../../providers/glyph_provider.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/node_selector_sheet.dart';
@@ -14,7 +16,7 @@ import 'variable_text_field.dart';
 import '../../../core/widgets/loading_indicator.dart';
 
 /// Widget for editing an action
-class ActionEditor extends StatefulWidget {
+class ActionEditor extends ConsumerStatefulWidget {
   final AutomationAction action;
   final void Function(AutomationAction action) onChanged;
   final VoidCallback? onDelete;
@@ -39,10 +41,10 @@ class ActionEditor extends StatefulWidget {
   });
 
   @override
-  State<ActionEditor> createState() => _ActionEditorState();
+  ConsumerState<ActionEditor> createState() => _ActionEditorState();
 }
 
-class _ActionEditorState extends State<ActionEditor> {
+class _ActionEditorState extends ConsumerState<ActionEditor> {
   late TextEditingController _webhookEventController;
   late TextEditingController _shortcutNameController;
 
@@ -1175,69 +1177,78 @@ class _ActionEditorState extends State<ActionEditor> {
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: ActionType.values.map((type) {
-                final isSelected = type == widget.action.type;
-                return BouncyTap(
-                  onTap: () {
-                    Navigator.pop(context);
-                    if (type != widget.action.type) {
-                      _webhookEventController.text = '';
-                      _shortcutNameController.text = '';
-                      // Pre-populate message text for sendMessage/sendToChannel
-                      final config = <String, dynamic>{};
-                      if ((type == ActionType.sendMessage ||
-                              type == ActionType.sendToChannel) &&
-                          widget.triggerType != null) {
-                        config['messageText'] =
-                            widget.triggerType!.defaultMessageText;
-                      }
-                      widget.onChanged(
-                        AutomationAction(type: type, config: config),
-                      );
+              children: ActionType.values
+                  .where((type) {
+                    // Hide glyphPattern on non-Nothing phones
+                    if (type == ActionType.glyphPattern) {
+                      return ref.watch(glyphServiceProvider).isSupported;
                     }
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? Theme.of(
-                              context,
-                            ).colorScheme.primary.withValues(alpha: 0.2)
-                          : context.card,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isSelected
-                            ? Theme.of(context).colorScheme.primary
-                            : context.border,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          type.icon,
-                          size: 20,
-                          color: isSelected
-                              ? Theme.of(context).colorScheme.primary
-                              : null,
+                    return true;
+                  })
+                  .map((type) {
+                    final isSelected = type == widget.action.type;
+                    return BouncyTap(
+                      onTap: () {
+                        Navigator.pop(context);
+                        if (type != widget.action.type) {
+                          _webhookEventController.text = '';
+                          _shortcutNameController.text = '';
+                          // Pre-populate message text for sendMessage/sendToChannel
+                          final config = <String, dynamic>{};
+                          if ((type == ActionType.sendMessage ||
+                                  type == ActionType.sendToChannel) &&
+                              widget.triggerType != null) {
+                            config['messageText'] =
+                                widget.triggerType!.defaultMessageText;
+                          }
+                          widget.onChanged(
+                            AutomationAction(type: type, config: config),
+                          );
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          type.displayName,
-                          style: TextStyle(
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? Theme.of(
+                                  context,
+                                ).colorScheme.primary.withValues(alpha: 0.2)
+                              : context.card,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
                             color: isSelected
                                 ? Theme.of(context).colorScheme.primary
-                                : null,
+                                : context.border,
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                );
-              }).toList(),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              type.icon,
+                              size: 20,
+                              color: isSelected
+                                  ? Theme.of(context).colorScheme.primary
+                                  : null,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              type.displayName,
+                              style: TextStyle(
+                                color: isSelected
+                                    ? Theme.of(context).colorScheme.primary
+                                    : null,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  })
+                  .toList(),
             ),
             SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
           ],
