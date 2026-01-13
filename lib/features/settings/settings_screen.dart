@@ -849,18 +849,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             MaterialPageRoute(builder: (_) => const AppLogScreen()),
           ),
         ),
-        // Glyph Test - show for all Android devices, screen handles unsupported case
-        _SearchableSettingItem(
-          icon: Icons.lightbulb,
-          title: 'Glyph Matrix Test',
-          subtitle: 'Nothing Phone 3 LED patterns',
-          keywords: ['glyph', 'nothing', 'led', 'test', 'light', 'matrix'],
-          section: 'TOOLS',
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const GlyphTestScreen()),
+        // Glyph Test - only show on Nothing Phone 3
+        if (ref.watch(glyphServiceProvider).deviceModel.contains('Phone (3)'))
+          _SearchableSettingItem(
+            icon: Icons.lightbulb,
+            title: 'Glyph Matrix Test',
+            subtitle: 'Nothing Phone 3 LED patterns',
+            keywords: ['glyph', 'nothing', 'led', 'test', 'light', 'matrix'],
+            section: 'TOOLS',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const GlyphTestScreen()),
+            ),
           ),
-        ),
 
         // About
         _SearchableSettingItem(
@@ -2704,6 +2705,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                     builder: (_) => const AppLogScreen(),
                                   ),
                                 ),
+                              ),
+                              // Glyph Matrix Test - only show on Nothing Phone 3
+                              Consumer(
+                                builder: (context, ref, child) {
+                                  final glyphService = ref.watch(glyphServiceProvider);
+                                  // Only show on Nothing Phone 3
+                                  if (!glyphService.deviceModel.contains('Phone (3)')) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  return _SettingsTile(
+                                    icon: Icons.lightbulb,
+                                    title: 'Glyph Matrix Test',
+                                    subtitle: 'Nothing Phone 3 LED patterns',
+                                    onTap: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => const GlyphTestScreen(),
+                                      ),
+                                    ),
+                                  );
+                                },
                               ),
 
                               const SizedBox(height: 16),
