@@ -603,55 +603,66 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
             padding: const EdgeInsets.only(right: 12),
             child: Tooltip(
               message: _submitBlockedReason ?? '',
-              child: BouncyTap(
-                onTap: _canSubmit ? _submitSignal : null,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    gradient: _canSubmit
-                        ? AppTheme.brandGradientHorizontal
-                        : null,
-                    color: _canSubmit
-                        ? null
-                        : context.border.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: _isSubmitting
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.sensors,
-                              size: 18,
-                              color: _canSubmit
-                                  ? Colors.white
-                                  : context.textTertiary,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              'Send signal',
-                              style: TextStyle(
-                                color: _canSubmit
-                                    ? Colors.white
-                                    : context.textTertiary,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 14,
+              child: Builder(
+                builder: (context) {
+                  final gradientColors = AccentColors.gradientFor(
+                    context.accentColor,
+                  );
+                  return BouncyTap(
+                    onTap: _canSubmit ? _submitSignal : null,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: _canSubmit
+                            ? LinearGradient(
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                                colors: [gradientColors[0], gradientColors[1]],
+                              )
+                            : null,
+                        color: _canSubmit
+                            ? null
+                            : context.border.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: _isSubmitting
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
                               ),
+                            )
+                          : Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.sensors,
+                                  size: 18,
+                                  color: _canSubmit
+                                      ? Colors.white
+                                      : context.textTertiary,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Send signal',
+                                  style: TextStyle(
+                                    color: _canSubmit
+                                        ? Colors.white
+                                        : context.textTertiary,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                ),
+                    ),
+                  );
+                },
               ),
             ),
           ),

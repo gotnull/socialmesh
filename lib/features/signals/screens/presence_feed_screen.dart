@@ -274,7 +274,8 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
       return remaining.inMinutes < 5 && !remaining.isNegative;
     }).length;
     final hiddenIds = ref.watch(hiddenSignalsProvider);
-    final hiddenCount = hiddenIds.length;
+    // Only count hidden signals that actually exist in the feed
+    final hiddenCount = signals.where((s) => hiddenIds.contains(s.id)).length;
 
     // Apply filter, sort, and search
     signals = _applyFilter(signals);
