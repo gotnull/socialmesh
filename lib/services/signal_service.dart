@@ -969,6 +969,8 @@ class SignalService {
 
     // For new-format signals, attempt deterministic cloud lookup
     String? cloudImageUrl;
+    PostAuthorSnapshot? cloudAuthorSnapshot;
+    String? cloudAuthorId;
     if (!isLegacySignal && _currentUserId != null) {
       final cloudSignal = await _lookupCloudSignal(effectiveSignalId);
       if (cloudSignal != null) {
@@ -976,6 +978,15 @@ class SignalService {
         if (cloudSignal.mediaUrls.isNotEmpty) {
           cloudImageUrl = cloudSignal.mediaUrls.first;
           AppLogging.signals('Cloud signal has image: $cloudImageUrl');
+        }
+        // Extract author info from cloud document
+        if (cloudSignal.authorSnapshot != null) {
+          cloudAuthorSnapshot = cloudSignal.authorSnapshot;
+          cloudAuthorId = cloudSignal.authorId;
+          AppLogging.signals(
+            'Cloud signal has author: ${cloudAuthorSnapshot?.displayName} '
+            '($cloudAuthorId)',
+          );
         }
       } else {
         AppLogging.signals(
@@ -985,9 +996,15 @@ class SignalService {
       }
     }
 
+    // Use cloud author ID if available, otherwise fall back to mesh node ID
+    // Keep 'mesh_' prefix to indicate signal was received via mesh
+    final effectiveAuthorId = cloudAuthorId != null
+        ? 'mesh_$cloudAuthorId'
+        : 'mesh_${senderNodeId.toRadixString(16)}';
+
     final signal = Post(
       id: effectiveSignalId,
-      authorId: 'mesh_${senderNodeId.toRadixString(16)}',
+      authorId: effectiveAuthorId,
       content: content,
       mediaUrls: cloudImageUrl != null ? [cloudImageUrl] : const [],
       location: location,
@@ -999,6 +1016,7 @@ class SignalService {
       meshNodeId: senderNodeId,
       hopCount: hopCount,
       imageState: cloudImageUrl != null ? ImageState.cloud : ImageState.none,
+      authorSnapshot: cloudAuthorSnapshot,
     );
 
     final contentPreview = content.length > 30
