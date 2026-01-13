@@ -13,6 +13,7 @@ import '../../core/widgets/legal_document_sheet.dart';
 import '../../models/subscription_models.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/auth_providers.dart';
+import '../../providers/connection_providers.dart';
 import '../../providers/profile_providers.dart';
 import '../../providers/signal_providers.dart';
 import '../../providers/social_providers.dart';
@@ -885,19 +886,24 @@ class _MainShellState extends ConsumerState<MainShell> {
         autoReconnectState == AutoReconnectState.connecting;
 
     // Check if we need to show the "Connect Device" screen
-    // Show it when:
-    // 1. Not connected AND not reconnecting AND auto-reconnect is disabled, OR
-    // 2. Auto-reconnect has failed (device not found after scan)
+    // ONLY show scanner on first launch (never paired before) AND auto-reconnect disabled
+    // For subsequent disconnections, show a non-intrusive banner instead
     final autoReconnectEnabled =
         settingsAsync.whenOrNull(data: (settings) => settings.autoReconnect) ??
         true;
-    final autoReconnectFailed = autoReconnectState == AutoReconnectState.failed;
+    final hasEverPaired =
+        settingsAsync.whenOrNull(
+          data: (settings) => settings.lastDeviceId != null,
+        ) ??
+        false;
 
-    // Only gate on auto-reconnect if we're genuinely disconnected
-    // If connected (even with auto-reconnect disabled), show the main app
-    // Also show scanner if auto-reconnect failed - user needs to see why and take action
+    // Only block the UI with ScannerScreen if:
+    // 1. Never paired before AND not reconnecting AND auto-reconnect disabled
+    // This ensures first-time users go through the scanner flow
     if (!isConnected &&
-        ((!isReconnecting && !autoReconnectEnabled) || autoReconnectFailed)) {
+        !hasEverPaired &&
+        !isReconnecting &&
+        !autoReconnectEnabled) {
       return const ScannerScreen(isInline: true);
     }
 
@@ -913,30 +919,56 @@ class _MainShellState extends ConsumerState<MainShell> {
     }
 
     // Build the main scaffold with Drawer
+    // Determine if we should show the reconnection banner
+    final showReconnectionBanner = !isConnected && hasEverPaired;
+
     return Scaffold(
       key: _scaffoldKey,
       drawer: _buildDrawer(context),
       drawerEdgeDragWidth: 40, // Edge area for swipe gesture
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 200),
-        switchInCurve: Curves.easeOutCubic,
-        switchOutCurve: Curves.easeInCubic,
-        transitionBuilder: (child, animation) {
-          return FadeTransition(
-            opacity: animation,
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0, 0.02),
-                end: Offset.zero,
-              ).animate(animation),
-              child: child,
+      body: Column(
+        children: [
+          // Reconnection status banner - shown when disconnected after having paired before
+          if (showReconnectionBanner)
+            _ReconnectionBanner(
+              autoReconnectState: autoReconnectState,
+              autoReconnectEnabled: autoReconnectEnabled,
+              onRetry: () {
+                ref
+                    .read(deviceConnectionProvider.notifier)
+                    .startBackgroundConnection();
+              },
+              onGoToScanner: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const ScannerScreen()),
+                );
+              },
             ),
-          );
-        },
-        child: KeyedSubtree(
-          key: ValueKey('main_$_currentIndex'),
-          child: _buildScreen(_currentIndex),
-        ),
+          // Main content
+          Expanded(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeInCubic,
+              transitionBuilder: (child, animation) {
+                return FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, 0.02),
+                      end: Offset.zero,
+                    ).animate(animation),
+                    child: child,
+                  ),
+                );
+              },
+              child: KeyedSubtree(
+                key: ValueKey('main_$_currentIndex'),
+                child: _buildScreen(_currentIndex),
+              ),
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -1809,5 +1841,162 @@ class _DrawerStickyHeaderDelegate extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(covariant _DrawerStickyHeaderDelegate oldDelegate) {
     return title != oldDelegate.title;
+  }
+}
+
+/// Non-intrusive reconnection status banner shown below the app bar
+/// when the device is disconnected but has been paired before
+class _ReconnectionBanner extends StatelessWidget {
+  final AutoReconnectState autoReconnectState;
+  final bool autoReconnectEnabled;
+  final VoidCallback onRetry;
+  final VoidCallback onGoToScanner;
+
+  const _ReconnectionBanner({
+    required this.autoReconnectState,
+    required this.autoReconnectEnabled,
+    required this.onRetry,
+    required this.onGoToScanner,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    // Determine banner state
+    final isScanning = autoReconnectState == AutoReconnectState.scanning;
+    final isConnecting = autoReconnectState == AutoReconnectState.connecting;
+    final isFailed = autoReconnectState == AutoReconnectState.failed;
+    final isReconnecting = isScanning || isConnecting;
+
+    // Banner colors
+    final Color backgroundColor;
+    final Color foregroundColor;
+    final IconData icon;
+    final String message;
+
+    if (isReconnecting) {
+      backgroundColor = isDark
+          ? context.accentColor.withValues(alpha: 0.15)
+          : context.accentColor.withValues(alpha: 0.1);
+      foregroundColor = context.accentColor;
+      icon = Icons.bluetooth_searching_rounded;
+      message = isScanning ? 'Searching for device...' : 'Connecting...';
+    } else if (isFailed) {
+      backgroundColor = isDark
+          ? AppTheme.errorRed.withValues(alpha: 0.15)
+          : AppTheme.errorRed.withValues(alpha: 0.1);
+      foregroundColor = AppTheme.errorRed;
+      icon = Icons.bluetooth_disabled_rounded;
+      message = 'Device not found';
+    } else {
+      // Idle/disconnected
+      backgroundColor = isDark
+          ? Colors.orange.withValues(alpha: 0.15)
+          : Colors.orange.withValues(alpha: 0.1);
+      foregroundColor = Colors.orange;
+      icon = Icons.bluetooth_disabled_rounded;
+      message = 'Disconnected';
+    }
+
+    return Material(
+      color: backgroundColor,
+      child: SafeArea(
+        bottom: false,
+        child: InkWell(
+          onTap: isFailed || (!isReconnecting && !autoReconnectEnabled)
+              ? onGoToScanner
+              : null,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Row(
+              children: [
+                // Icon with spinner overlay for reconnecting states
+                SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Icon(icon, size: 18, color: foregroundColor),
+                      if (isReconnecting)
+                        SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation(foregroundColor),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Message
+                Expanded(
+                  child: Text(
+                    message,
+                    style: TextStyle(
+                      color: foregroundColor,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                // Action button
+                if (isFailed) ...[
+                  TextButton.icon(
+                    onPressed: onRetry,
+                    icon: Icon(
+                      Icons.refresh_rounded,
+                      size: 16,
+                      color: foregroundColor,
+                    ),
+                    label: Text(
+                      'Retry',
+                      style: TextStyle(
+                        color: foregroundColor,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 18,
+                    color: foregroundColor.withValues(alpha: 0.7),
+                  ),
+                ] else if (!isReconnecting && !autoReconnectEnabled) ...[
+                  Text(
+                    'Connect',
+                    style: TextStyle(
+                      color: foregroundColor,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 18,
+                    color: foregroundColor.withValues(alpha: 0.7),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
