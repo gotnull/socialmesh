@@ -46,6 +46,27 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     AppLogging.connection(
       '📡 SCANNER: initState - isOnboarding=${widget.isOnboarding}, isInline=${widget.isInline}, hashCode=$hashCode',
     );
+
+    // Check if we're being shown because auto-reconnect failed
+    // In that case, we should immediately show the "device not found" banner
+    final autoReconnectState = ref.read(autoReconnectStateProvider);
+    final deviceState = ref.read(conn.deviceConnectionProvider);
+    if (autoReconnectState == AutoReconnectState.failed &&
+        deviceState.reason == conn.DisconnectReason.deviceNotFound) {
+      AppLogging.connection(
+        '📡 SCANNER: Shown after auto-reconnect failed with deviceNotFound',
+      );
+      // Get saved device name to show in banner
+      ref.read(settingsServiceProvider.future).then((settings) {
+        if (mounted) {
+          setState(() {
+            _savedDeviceNotFoundName =
+                settings.lastDeviceName ?? 'Your saved device';
+          });
+        }
+      });
+    }
+
     // Skip auto-reconnect during onboarding or inline - user needs to select device
     if (widget.isOnboarding || widget.isInline) {
       AppLogging.connection(

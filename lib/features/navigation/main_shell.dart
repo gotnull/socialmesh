@@ -885,15 +885,19 @@ class _MainShellState extends ConsumerState<MainShell> {
         autoReconnectState == AutoReconnectState.connecting;
 
     // Check if we need to show the "Connect Device" screen
-    // Show it when: not connected AND not reconnecting AND auto-reconnect is disabled
-    // This forces manual connection when the user has opted out of auto-reconnect
+    // Show it when:
+    // 1. Not connected AND not reconnecting AND auto-reconnect is disabled, OR
+    // 2. Auto-reconnect has failed (device not found after scan)
     final autoReconnectEnabled =
         settingsAsync.whenOrNull(data: (settings) => settings.autoReconnect) ??
         true;
+    final autoReconnectFailed = autoReconnectState == AutoReconnectState.failed;
 
     // Only gate on auto-reconnect if we're genuinely disconnected
     // If connected (even with auto-reconnect disabled), show the main app
-    if (!isConnected && !isReconnecting && !autoReconnectEnabled) {
+    // Also show scanner if auto-reconnect failed - user needs to see why and take action
+    if (!isConnected &&
+        ((!isReconnecting && !autoReconnectEnabled) || autoReconnectFailed)) {
       return const ScannerScreen(isInline: true);
     }
 
