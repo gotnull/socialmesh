@@ -2709,9 +2709,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               // Glyph Matrix Test - only show on Nothing Phone 3
                               Consumer(
                                 builder: (context, ref, child) {
-                                  final glyphService = ref.watch(glyphServiceProvider);
+                                  final glyphService = ref.watch(
+                                    glyphServiceProvider,
+                                  );
                                   // Only show on Nothing Phone 3
-                                  if (!glyphService.deviceModel.contains('Phone (3)')) {
+                                  if (!glyphService.deviceModel.contains(
+                                    'Phone (3)',
+                                  )) {
                                     return const SizedBox.shrink();
                                   }
                                   return _SettingsTile(
