@@ -29,16 +29,22 @@ final signalServiceProvider = Provider<SignalService>((ref) {
 class SignalFeedState {
   /// Internal map keyed by signalId - the single source of truth.
   final Map<String, Post> _signalMap;
+
+  /// Signal IDs that are currently fading out (expired but animating).
+  final Set<String> fadingSignalIds;
+
   final bool isLoading;
   final String? error;
   final DateTime? lastRefresh;
 
   SignalFeedState({
     Map<String, Post>? signalMap,
+    Set<String>? fadingSignalIds,
     this.isLoading = false,
     this.error,
     this.lastRefresh,
-  }) : _signalMap = signalMap ?? {};
+  }) : _signalMap = signalMap ?? {},
+       fadingSignalIds = fadingSignalIds ?? {};
 
   /// Get signals as sorted list (computed from map).
   List<Post> get signals => List<Post>.from(_signalMap.values);
@@ -51,12 +57,14 @@ class SignalFeedState {
 
   SignalFeedState copyWith({
     Map<String, Post>? signalMap,
+    Set<String>? fadingSignalIds,
     bool? isLoading,
     String? error,
     DateTime? lastRefresh,
   }) {
     return SignalFeedState(
       signalMap: signalMap ?? Map.from(_signalMap),
+      fadingSignalIds: fadingSignalIds ?? Set.from(this.fadingSignalIds),
       isLoading: isLoading ?? this.isLoading,
       error: error,
       lastRefresh: lastRefresh ?? this.lastRefresh,
@@ -311,33 +319,57 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
     });
   }
 
+  /// Duration for fade-out animation when signals expire.
+  static const _fadeOutDuration = Duration(milliseconds: 800);
+
   /// Called every second to update countdown display and remove expired signals.
   void _tickCountdown() {
     final now = DateTime.now();
     final currentSignals = state.signals;
+    final currentFading = state.fadingSignalIds;
 
-    // Check if any signals have expired
-    final expiredIds = <String>[];
+    // Check if any signals have expired that aren't already fading
+    final newlyExpiredIds = <String>[];
     for (final signal in currentSignals) {
-      if (signal.expiresAt != null && signal.expiresAt!.isBefore(now)) {
-        expiredIds.add(signal.id);
+      if (signal.expiresAt != null &&
+          signal.expiresAt!.isBefore(now) &&
+          !currentFading.contains(signal.id)) {
+        newlyExpiredIds.add(signal.id);
       }
     }
 
-    // Remove expired signals from state using map-based removal
-    var newState = state;
-    if (expiredIds.isNotEmpty) {
-      for (final id in expiredIds) {
-        newState = newState.withoutSignal(id);
-      }
+    // Start fade-out animation for newly expired signals
+    if (newlyExpiredIds.isNotEmpty) {
+      final newFading = Set<String>.from(currentFading)
+        ..addAll(newlyExpiredIds);
+      state = state.copyWith(fadingSignalIds: newFading, lastRefresh: now);
+
       AppLogging.signals(
-        'Countdown tick: removed ${expiredIds.length} expired signals',
+        'Countdown tick: starting fade-out for ${newlyExpiredIds.length} expired signals',
       );
-    }
 
-    // Force UI rebuild for countdown updates
-    // This triggers widget rebuilds to recompute remaining time from expiresAt
-    state = newState.copyWith(lastRefresh: now);
+      // Schedule actual removal after animation completes
+      for (final id in newlyExpiredIds) {
+        Future.delayed(_fadeOutDuration, () {
+          _completeSignalFadeOut(id);
+        });
+      }
+    } else {
+      // Just update the timestamp to trigger countdown display updates
+      state = state.copyWith(lastRefresh: now);
+    }
+  }
+
+  /// Complete the fade-out animation and remove the signal from state.
+  void _completeSignalFadeOut(String signalId) {
+    if (!state.hasSignal(signalId)) return; // Already removed
+
+    final newFading = Set<String>.from(state.fadingSignalIds)..remove(signalId);
+    var newState = state.copyWith(fadingSignalIds: newFading);
+    newState = newState.withoutSignal(signalId);
+    state = newState;
+
+    AppLogging.signals('Fade-out complete: removed signal $signalId');
   }
 
   /// Refresh the signal feed from local storage.
@@ -576,6 +608,12 @@ final signalFeedProvider =
 // =============================================================================
 // HELPER PROVIDERS
 // =============================================================================
+
+/// Provider to check if a signal is currently fading out.
+final isSignalFadingProvider = Provider.family<bool, String>((ref, signalId) {
+  final feedState = ref.watch(signalFeedProvider);
+  return feedState.fadingSignalIds.contains(signalId);
+});
 
 /// Provider for active (non-expired) signal count.
 final activeSignalCountProvider = Provider<int>((ref) {
