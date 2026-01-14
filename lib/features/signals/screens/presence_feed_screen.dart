@@ -40,6 +40,7 @@ enum SignalFilter {
   nearby, // hop count 0-1
   meshOnly, // from mesh (authorId starts with mesh_)
   withMedia, // has images
+  withLocation, // has GPS coordinates
   withComments, // has comments/replies
   expiringSoon, // < 5 minutes TTL remaining
   hidden, // manually hidden signals
@@ -195,6 +196,8 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
         return signals
             .where((s) => s.mediaUrls.isNotEmpty || s.imageLocalPath != null)
             .toList();
+      case SignalFilter.withLocation:
+        return signals.where((s) => s.location != null).toList();
       case SignalFilter.withComments:
         return signals.where((s) => s.commentCount > 0).toList();
       case SignalFilter.expiringSoon:
@@ -303,6 +306,9 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
         .length;
     final mediaCount = signalsForCounts
         .where((s) => s.mediaUrls.isNotEmpty || s.imageLocalPath != null)
+        .length;
+    final withLocationCount = signalsForCounts
+        .where((s) => s.location != null)
         .length;
     final withCommentsCount = signalsForCounts
         .where((s) => s.commentCount > 0)
@@ -498,6 +504,18 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                               icon: Icons.image,
                               onTap: () => setState(
                                 () => _activeFilter = SignalFilter.withMedia,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            _FilterChip(
+                              label: 'Location',
+                              count: withLocationCount,
+                              isSelected:
+                                  _activeFilter == SignalFilter.withLocation,
+                              color: AccentColors.green,
+                              icon: Icons.location_on,
+                              onTap: () => setState(
+                                () => _activeFilter = SignalFilter.withLocation,
                               ),
                             ),
                             const SizedBox(width: 8),
