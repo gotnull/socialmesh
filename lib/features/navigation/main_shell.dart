@@ -306,15 +306,6 @@ class _MainShellState extends ConsumerState<MainShell> {
       requiresConnection: true,
     ),
 
-    // Tools - don't require connection
-    _DrawerMenuItem(
-      icon: Icons.store,
-      label: 'Device Shop',
-      screen: const DeviceShopScreen(),
-      sectionHeader: 'TOOLS',
-      iconColor: Colors.amber.shade600,
-    ),
-
     // Premium Features - mixed requirements
     _DrawerMenuItem(
       icon: Icons.palette_outlined,
@@ -833,13 +824,16 @@ class _MainShellState extends ConsumerState<MainShell> {
             // Settings button
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-              child: _SettingsButton(
-                onTap: () {
-                  Navigator.of(context).pop();
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                  );
-                },
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: _SettingsButton(
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                    );
+                  },
+                ),
               ),
             ),
           ],
@@ -1695,6 +1689,18 @@ class _DrawerAdminSection extends ConsumerWidget {
                     onTap: () {
                       ref.haptics.tabChange();
                       onNavigate(const ShopAdminDashboard());
+                    },
+                  ),
+
+                  // Device Shop
+                  _DrawerMenuTile(
+                    icon: Icons.store,
+                    label: 'Device Shop',
+                    isSelected: false,
+                    iconColor: Colors.amber.shade600,
+                    onTap: () {
+                      ref.haptics.tabChange();
+                      onNavigate(const DeviceShopScreen());
                     },
                   ),
 
