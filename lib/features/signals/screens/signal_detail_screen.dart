@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -18,6 +17,7 @@ import '../../../providers/social_providers.dart';
 import '../../../services/notifications/push_notification_service.dart';
 import '../../../services/signal_service.dart';
 import '../widgets/signal_card.dart';
+import '../widgets/signal_thumbnail.dart';
 
 /// Detail screen for a signal with replies.
 class SignalDetailScreen extends ConsumerStatefulWidget {
@@ -1456,9 +1456,6 @@ class _StickySignalHeaderState extends State<_StickySignalHeader>
   @override
   Widget build(BuildContext context) {
     final signal = widget.signal;
-    final hasRemoteImage = signal.mediaUrls.isNotEmpty;
-    final hasLocalImage = signal.imageLocalPath != null;
-    final hasImage = hasRemoteImage || hasLocalImage;
 
     return IgnorePointer(
       ignoring: !widget.isVisible,
@@ -1494,11 +1491,11 @@ class _StickySignalHeaderState extends State<_StickySignalHeader>
                   child: Row(
                     children: [
                       // Thumbnail
-                      _buildThumbnail(
-                        context,
-                        hasImage,
-                        hasRemoteImage ? signal.mediaUrls.first : null,
-                        hasLocalImage ? signal.imageLocalPath : null,
+                      SignalThumbnail(
+                        signal: signal,
+                        size: 40,
+                        borderRadius: 8,
+                        fallbackIcon: Icons.signal_cellular_alt_rounded,
                       ),
 
                       const SizedBox(width: 12),
@@ -1592,94 +1589,6 @@ class _StickySignalHeaderState extends State<_StickySignalHeader>
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildThumbnail(
-    BuildContext context,
-    bool hasImage,
-    String? imageUrl,
-    String? localPath,
-  ) {
-    if (hasImage) {
-      Widget imageWidget;
-
-      if (localPath != null) {
-        // Local file image
-        imageWidget = Image.file(
-          File(localPath),
-          fit: BoxFit.cover,
-          errorBuilder: (_, _, _) => Container(
-            color: context.accentColor.withValues(alpha: 0.1),
-            child: Icon(
-              Icons.image_outlined,
-              size: 18,
-              color: context.accentColor,
-            ),
-          ),
-        );
-      } else if (imageUrl != null) {
-        // Remote URL image
-        imageWidget = Image.network(
-          imageUrl,
-          fit: BoxFit.cover,
-          errorBuilder: (_, _, _) => Container(
-            color: context.accentColor.withValues(alpha: 0.1),
-            child: Icon(
-              Icons.image_outlined,
-              size: 18,
-              color: context.accentColor,
-            ),
-          ),
-        );
-      } else {
-        // Fallback - shouldn't reach here if hasImage is true
-        return _buildPlaceholderThumbnail(context);
-      }
-
-      return Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: context.accentColor.withValues(alpha: 0.3),
-            width: 1,
-          ),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(7),
-          child: imageWidget,
-        ),
-      );
-    }
-    return _buildPlaceholderThumbnail(context);
-  }
-
-  Widget _buildPlaceholderThumbnail(BuildContext context) {
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            context.accentColor.withValues(alpha: 0.3),
-            context.accentColor.withValues(alpha: 0.1),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: context.accentColor.withValues(alpha: 0.3),
-          width: 1,
-        ),
-      ),
-      child: Icon(
-        Icons.signal_cellular_alt_rounded,
-        size: 18,
-        color: context.accentColor,
       ),
     );
   }

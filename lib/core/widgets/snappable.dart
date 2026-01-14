@@ -133,6 +133,9 @@ class SnappableState extends State<Snappable>
     final fullImage = await _getImageFromWidget();
     if (fullImage == null) return;
 
+    // Check if still mounted after async operation
+    if (!mounted) return;
+
     // Do ALL heavy work in isolate: pixel distribution + PNG encoding
     final result = await compute<_SnapParams, _SnapResult>(
       _processAndEncodeImages,
@@ -143,6 +146,9 @@ class SnappableState extends State<Snappable>
         numberOfBuckets: widget.numberOfBuckets,
       ),
     );
+
+    // Check if still mounted after compute
+    if (!mounted) return;
 
     // Set state and start animation immediately
     setState(() {
@@ -162,6 +168,7 @@ class SnappableState extends State<Snappable>
 
   /// I am... IRON MAN   ~Tony Stark
   void reset() {
+    if (!mounted) return;
     setState(() {
       _layers = null;
       _randomOffsets = null;

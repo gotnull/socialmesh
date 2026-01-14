@@ -4,6 +4,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../../../core/theme.dart';
 import '../../../models/social.dart';
+import 'signal_thumbnail.dart';
 
 /// A map view showing signals with GPS locations
 class SignalMapView extends StatefulWidget {
@@ -48,20 +49,6 @@ class _SignalMapViewState extends State<SignalMapView> {
       totalLat / withLocation.length,
       totalLng / withLocation.length,
     );
-  }
-
-  Color _getMarkerColor(Post signal) {
-    // Color based on signal type or recency
-    final age = DateTime.now().difference(signal.createdAt);
-    if (age.inMinutes < 5) {
-      return Colors.green;
-    } else if (age.inMinutes < 30) {
-      return Colors.amber;
-    } else if (age.inHours < 2) {
-      return Colors.orange;
-    } else {
-      return Colors.red.shade300;
-    }
   }
 
   @override
@@ -115,43 +102,25 @@ class _SignalMapViewState extends State<SignalMapView> {
             MarkerLayer(
               markers: _signalsWithLocation.map((signal) {
                 final isSelected = _selectedSignal?.id == signal.id;
+                final markerSize = isSelected ? 48.0 : 36.0;
+
                 return Marker(
                   point: LatLng(
                     signal.location!.latitude,
                     signal.location!.longitude,
                   ),
-                  width: isSelected ? 48 : 36,
-                  height: isSelected ? 48 : 36,
+                  width: markerSize,
+                  height: markerSize,
                   child: GestureDetector(
                     onTap: () {
                       setState(() {
                         _selectedSignal = signal;
                       });
                     },
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      decoration: BoxDecoration(
-                        color: _getMarkerColor(signal),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: isSelected ? Colors.white : Colors.white54,
-                          width: isSelected ? 3 : 2,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: _getMarkerColor(
-                              signal,
-                            ).withValues(alpha: 0.5),
-                            blurRadius: isSelected ? 12 : 6,
-                            spreadRadius: isSelected ? 3 : 1,
-                          ),
-                        ],
-                      ),
-                      child: Icon(
-                        Icons.sensors,
-                        color: Colors.white,
-                        size: isSelected ? 24 : 18,
-                      ),
+                    child: SignalMapMarker(
+                      signal: signal,
+                      size: markerSize,
+                      isSelected: isSelected,
                     ),
                   ),
                 );
@@ -293,19 +262,8 @@ class _SignalPreviewCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // Signal icon
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: AccentColors.cyan.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: AccentColors.cyan.withValues(alpha: 0.5),
-                ),
-              ),
-              child: Icon(Icons.sensors, color: AccentColors.cyan, size: 24),
-            ),
+            // Signal thumbnail
+            SignalThumbnail(signal: signal),
             const SizedBox(width: 12),
             // Signal info
             Expanded(
