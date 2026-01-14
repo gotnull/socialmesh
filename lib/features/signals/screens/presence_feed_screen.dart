@@ -40,6 +40,7 @@ enum SignalFilter {
   nearby, // hop count 0-1
   meshOnly, // from mesh (authorId starts with mesh_)
   withMedia, // has images
+  withComments, // has comments/replies
   expiringSoon, // < 5 minutes TTL remaining
   hidden, // manually hidden signals
 }
@@ -194,6 +195,8 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
         return signals
             .where((s) => s.mediaUrls.isNotEmpty || s.imageLocalPath != null)
             .toList();
+      case SignalFilter.withComments:
+        return signals.where((s) => s.commentCount > 0).toList();
       case SignalFilter.expiringSoon:
         return signals.where((s) {
           if (s.expiresAt == null) return false;
@@ -300,6 +303,9 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
         .length;
     final mediaCount = signalsForCounts
         .where((s) => s.mediaUrls.isNotEmpty || s.imageLocalPath != null)
+        .length;
+    final withCommentsCount = signalsForCounts
+        .where((s) => s.commentCount > 0)
         .length;
     final expiringSoonCount = signalsForCounts.where((s) {
       if (s.expiresAt == null) return false;
@@ -492,6 +498,18 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                               icon: Icons.image,
                               onTap: () => setState(
                                 () => _activeFilter = SignalFilter.withMedia,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            _FilterChip(
+                              label: 'Replies',
+                              count: withCommentsCount,
+                              isSelected:
+                                  _activeFilter == SignalFilter.withComments,
+                              color: AccentColors.blue,
+                              icon: Icons.chat_bubble_outline,
+                              onTap: () => setState(
+                                () => _activeFilter = SignalFilter.withComments,
                               ),
                             ),
                             const SizedBox(width: 8),

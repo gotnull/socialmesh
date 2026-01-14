@@ -718,26 +718,29 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
                     color: context.border.withValues(alpha: 0.5),
                   ),
                 ),
-                child: TextField(
-                  controller: _contentController,
-                  focusNode: _contentFocusNode,
-                  enabled: !_isSubmitting,
-                  maxLines: 5,
-                  maxLength: _maxLength,
-                  maxLengthEnforcement: MaxLengthEnforcement.enforced,
-                  textCapitalization: TextCapitalization.sentences,
-                  inputFormatters: [
-                    LengthLimitingTextInputFormatter(_maxLength),
-                  ],
-                  style: TextStyle(color: context.textPrimary, fontSize: 16),
-                  decoration: InputDecoration(
-                    hintText: 'What are you signaling?',
-                    hintStyle: TextStyle(color: context.textTertiary),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.all(16),
-                    counterText: '',
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(11),
+                  child: TextField(
+                    controller: _contentController,
+                    focusNode: _contentFocusNode,
+                    enabled: !_isSubmitting,
+                    maxLines: 5,
+                    maxLength: _maxLength,
+                    maxLengthEnforcement: MaxLengthEnforcement.enforced,
+                    textCapitalization: TextCapitalization.sentences,
+                    inputFormatters: [
+                      LengthLimitingTextInputFormatter(_maxLength),
+                    ],
+                    style: TextStyle(color: context.textPrimary, fontSize: 16),
+                    decoration: InputDecoration(
+                      hintText: 'What are you signaling?',
+                      hintStyle: TextStyle(color: context.textTertiary),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.all(16),
+                      counterText: '',
+                    ),
+                    onChanged: (_) => setState(() {}),
                   ),
-                  onChanged: (_) => setState(() {}),
                 ),
               ),
 
