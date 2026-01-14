@@ -1,7 +1,7 @@
 # Terms of Service
 
 **Socialmesh**  
-**Last Updated: December 9, 2025**
+**Last Updated: January 14, 2026**
 
 ## Agreement to Terms
 

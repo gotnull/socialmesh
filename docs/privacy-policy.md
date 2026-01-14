@@ -1,7 +1,7 @@
 # Privacy Policy
 
 **Socialmesh**  
-**Last Updated: December 9, 2025**
+**Last Updated: January 14, 2026**
 
 ## Overview
 
@@ -88,4 +88,4 @@ If you have any questions about this Privacy Policy, please contact us at:
 
 ---
 
-© 2025 Socialmesh. All rights reserved.
+© 2026 Socialmesh. All rights reserved.
