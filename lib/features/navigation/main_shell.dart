@@ -7,7 +7,6 @@ import '../../core/transport.dart';
 import '../../core/widgets/node_avatar.dart';
 import '../../core/widgets/connection_required_wrapper.dart';
 import '../../core/widgets/user_avatar.dart';
-import '../../models/user_profile.dart' show UserPreferences;
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/legal_document_sheet.dart';
 import '../../models/subscription_models.dart';
@@ -48,7 +47,6 @@ import '../social/screens/reported_content_screen.dart';
 import '../settings/admin_follow_requests_screen.dart';
 import '../signals/signals.dart';
 import '../profile/profile_screen.dart';
-import '../showcase/snap_effect_screen.dart';
 
 /// Combined admin notification count provider
 /// Uses FutureProvider to properly handle the async stream states
@@ -315,12 +313,6 @@ class _MainShellState extends ConsumerState<MainShell> {
       screen: const DeviceShopScreen(),
       sectionHeader: 'TOOLS',
       iconColor: Colors.amber.shade600,
-    ),
-    _DrawerMenuItem(
-      icon: Icons.auto_awesome,
-      label: 'Snap Effect',
-      screen: const SnapEffectScreen(),
-      iconColor: Colors.deepPurple.shade300,
     ),
 
     // Premium Features - mixed requirements
@@ -838,24 +830,16 @@ class _MainShellState extends ConsumerState<MainShell> {
               ),
             ),
 
-            // Theme toggle & Settings
+            // Settings button
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-              child: Row(
-                children: [
-                  const _ThemeToggleButton(),
-                  const Spacer(),
-                  _SettingsButton(
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const SettingsScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                ],
+              child: _SettingsButton(
+                onTap: () {
+                  Navigator.of(context).pop();
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                  );
+                },
               ),
             ),
           ],
@@ -1614,53 +1598,6 @@ class _PulsingDotState extends State<_PulsingDot>
           ),
         );
       },
-    );
-  }
-}
-
-class _ThemeToggleButton extends ConsumerWidget {
-  const _ThemeToggleButton();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final currentMode = ref.watch(themeModeProvider);
-    final isDark =
-        currentMode == ThemeMode.dark ||
-        (currentMode == ThemeMode.system &&
-            MediaQuery.platformBrightnessOf(context) == Brightness.dark);
-
-    return GestureDetector(
-      onTap: () async {
-        HapticFeedback.selectionClick();
-        final newMode = isDark ? ThemeMode.light : ThemeMode.dark;
-        ref.read(themeModeProvider.notifier).setThemeMode(newMode);
-
-        // Save to storage
-        final settings = await ref.read(settingsServiceProvider.future);
-        await settings.setThemeMode(newMode.index);
-
-        // Sync to cloud profile
-        ref
-            .read(userProfileProvider.notifier)
-            .updatePreferences(UserPreferences(themeModeIndex: newMode.index));
-      },
-      child: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: theme.dividerColor.withValues(alpha: 0.3),
-            width: 1,
-          ),
-        ),
-        child: Icon(
-          isDark ? Icons.dark_mode_outlined : Icons.light_mode_outlined,
-          size: 22,
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
-        ),
-      ),
     );
   }
 }

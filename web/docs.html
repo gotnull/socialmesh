@@ -194,11 +194,14 @@
         <li><a href="#getting-started">Getting Started</a></li>
         <li><a href="#connecting">Connecting Your Device</a></li>
         <li><a href="#messaging">Messaging</a></li>
+        <li><a href="#signals">Signals (Presence)</a></li>
         <li><a href="#channels">Channels & Encryption</a></li>
         <li><a href="#nodes">Node Management</a></li>
         <li><a href="#map">Map & Location</a></li>
+        <li><a href="#globe">3D Globe & World Mesh</a></li>
         <li><a href="#automations">Automations</a></li>
         <li><a href="#widgets">Dashboard Widgets</a></li>
+        <li><a href="#themes">Themes & Ringtones</a></li>
         <li><a href="#device-config">Device Configuration</a></li>
         <li><a href="#troubleshooting">Troubleshooting</a></li>
       </ul>
@@ -261,6 +264,15 @@
     <h3>Channel Messages</h3>
     <p>Broadcast messages to all nodes listening on a channel. Great for group communication.</p>
 
+    <h3>Message Features</h3>
+    <ul>
+      <li><strong>Quick Responses</strong> — Tap to send preset replies</li>
+      <li><strong>Message Reactions</strong> — React with emoji to messages</li>
+      <li><strong>Read Receipts</strong> — See when messages are delivered</li>
+      <li><strong>Media Support</strong> — Share images over the mesh</li>
+      <li><strong>Voice Messages</strong> — Record and send audio clips</li>
+    </ul>
+
     <h3>Message Delivery</h3>
     <p>Socialmesh tracks message delivery status:</p>
     <ul>
@@ -269,6 +281,35 @@
       <li><strong>Delivered</strong> — Acknowledged by recipient</li>
       <li><strong>Failed</strong> — Delivery failed after retries</li>
     </ul>
+
+    <h2 id="signals">Signals (Presence)</h2>
+    <p>Signals are ephemeral messages that let you share your presence with nearby mesh users. Unlike regular messages,
+      signals automatically expire after a set time.</p>
+
+    <div class="feature-card">
+      <h3>Creating Signals</h3>
+      <ul>
+        <li><strong>Text Content</strong> — Share what you're doing or where you are</li>
+        <li><strong>Images</strong> — Attach photos to your signal</li>
+        <li><strong>Location</strong> — Tag your current GPS position</li>
+        <li><strong>TTL (Time-to-Live)</strong> — Set how long your signal stays active (15 minutes to 24 hours)</li>
+      </ul>
+    </div>
+
+    <h3>Signal Features</h3>
+    <ul>
+      <li><strong>Signal Map</strong> — View all signals with GPS on an interactive map</li>
+      <li><strong>Filters</strong> — Filter by saved, nearby, with media, with location, with replies, or expiring soon
+      </li>
+      <li><strong>Comments</strong> — Reply to signals and have conversations</li>
+      <li><strong>Save Signals</strong> — Bookmark signals before they expire</li>
+      <li><strong>Hide Signals</strong> — Swipe to hide signals you don't want to see</li>
+    </ul>
+
+    <div class="info-box">
+      <strong>Privacy:</strong> Signals are stored locally and broadcast over the mesh network. They are never uploaded
+      to any server unless you sign in and attach an image (which is stored temporarily for mesh sharing).
+    </div>
 
     <h2 id="channels">Channels & Encryption</h2>
 
@@ -324,6 +365,26 @@
     <h3>Traceroute</h3>
     <p>Discover the path messages take through the mesh network to reach distant nodes.</p>
 
+    <h2 id="globe">3D Globe & World Mesh</h2>
+
+    <h3>3D Globe View</h3>
+    <p>Visualize your entire mesh network on an interactive 3D globe. Perfect for understanding the global reach of your
+      mesh network.</p>
+    <ul>
+      <li><strong>Rotate & Zoom</strong> — Explore the globe from any angle</li>
+      <li><strong>Node Markers</strong> — See all nodes plotted on the globe</li>
+      <li><strong>Connection Lines</strong> — Visualize mesh connections between nodes</li>
+    </ul>
+
+    <h3>World Mesh Map</h3>
+    <p>The World Mesh shows Meshtastic nodes from around the world, collected via MQTT from public networks. See the
+      global Meshtastic community in real-time.</p>
+    <ul>
+      <li><strong>Live Data</strong> — Updated in real-time from MQTT feeds</li>
+      <li><strong>Thousands of Nodes</strong> — Explore the worldwide mesh network</li>
+      <li><strong>Node Details</strong> — Tap any node to see its information</li>
+    </ul>
+
     <h2 id="automations">Automations</h2>
     <p>Create automated actions triggered by mesh events.</p>
 
@@ -363,6 +424,23 @@
 
     <h3>Widget Marketplace</h3>
     <p>Download community-created widgets or share your own creations.</p>
+
+    <h2 id="themes">Themes & Ringtones</h2>
+
+    <h3>Theme Pack</h3>
+    <p>Customize the look of your app with premium themes. Choose from a variety of color schemes and visual styles to
+      match your preferences.</p>
+
+    <h3>Ringtone Pack</h3>
+    <p>Access over 5,300 notification sounds organized by category:</p>
+    <ul>
+      <li><strong>Classic Ringtones</strong> — Traditional phone sounds</li>
+      <li><strong>Nature Sounds</strong> — Birds, water, wind</li>
+      <li><strong>Sci-Fi</strong> — Futuristic alerts and beeps</li>
+      <li><strong>Musical</strong> — Short melodies and tunes</li>
+      <li><strong>Retro Gaming</strong> — 8-bit and arcade sounds</li>
+    </ul>
+    <p>Set different ringtones for different nodes or channels to know who's messaging without looking.</p>
 
     <h2 id="device-config">Device Configuration</h2>
     <p>Configure all aspects of your Meshtastic device directly from the app.</p>

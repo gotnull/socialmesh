@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
-import '../../models/user_profile.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/profile_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
@@ -51,12 +50,6 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
             _buildThemePreview(context, currentColor),
             const SizedBox(height: 24),
 
-            // Theme Mode Section
-            _buildSectionHeader('APPEARANCE'),
-            const SizedBox(height: 12),
-            _buildThemeModeSelector(context, ref, settingsService),
-            const SizedBox(height: 24),
-
             // Accent Color Section
             _buildSectionHeader('ACCENT COLOR'),
             const SizedBox(height: 12),
@@ -68,112 +61,6 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
             const SizedBox(height: 12),
             _buildPreviewElements(context, currentColor),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildThemeModeSelector(
-    BuildContext context,
-    WidgetRef ref,
-    SettingsService settingsService,
-  ) {
-    final theme = Theme.of(context);
-    final currentMode = ref.watch(themeModeProvider);
-
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.dividerColor),
-      ),
-      child: Row(
-        children: [
-          _buildModeOption(
-            context,
-            ref,
-            settingsService,
-            icon: Icons.dark_mode_rounded,
-            label: 'Dark',
-            mode: ThemeMode.dark,
-            isSelected: currentMode == ThemeMode.dark,
-          ),
-          _buildModeOption(
-            context,
-            ref,
-            settingsService,
-            icon: Icons.light_mode_rounded,
-            label: 'Light',
-            mode: ThemeMode.light,
-            isSelected: currentMode == ThemeMode.light,
-          ),
-          _buildModeOption(
-            context,
-            ref,
-            settingsService,
-            icon: Icons.phone_android_rounded,
-            label: 'System',
-            mode: ThemeMode.system,
-            isSelected: currentMode == ThemeMode.system,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildModeOption(
-    BuildContext context,
-    WidgetRef ref,
-    SettingsService settingsService, {
-    required IconData icon,
-    required String label,
-    required ThemeMode mode,
-    required bool isSelected,
-  }) {
-    final theme = Theme.of(context);
-    final accentColor = theme.colorScheme.primary;
-
-    return Expanded(
-      child: GestureDetector(
-        onTap: () async {
-          HapticFeedback.selectionClick();
-          ref.read(themeModeProvider.notifier).setThemeMode(mode);
-          await settingsService.setThemeMode(mode.index);
-          // Sync to cloud profile
-          ref
-              .read(userProfileProvider.notifier)
-              .updatePreferences(UserPreferences(themeModeIndex: mode.index));
-        },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: isSelected ? accentColor.withValues(alpha: 0.15) : null,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Column(
-            children: [
-              Icon(
-                icon,
-                color: isSelected
-                    ? accentColor
-                    : theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                size: 24,
-              ),
-              const SizedBox(height: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                  color: isSelected
-                      ? accentColor
-                      : theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );
