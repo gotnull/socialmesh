@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -39,6 +40,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
   bool _isLoadingComments = true;
   StreamSubscription<ContentRefreshEvent>? _refreshSubscription;
   StreamSubscription<String>? _commentUpdateSubscription;
+  Timer? _expiryTimer;
 
   // Reply-to state
   String? _replyingToId;
@@ -105,8 +107,36 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
     // Start entry animation
     _entryController.forward();
 
+    // Setup expiry timer to pop when signal expires
+    _setupExpiryTimer();
+
     // Ensure the Firestore comments listener is active for this signal
     ref.read(signalServiceProvider).ensureCommentsListener(widget.signal.id);
+  }
+
+  void _setupExpiryTimer() {
+    _expiryTimer?.cancel();
+    final expiresAt = widget.signal.expiresAt;
+    if (expiresAt == null) return;
+
+    final remaining = expiresAt.difference(DateTime.now());
+    if (remaining.isNegative) {
+      // Already expired - pop immediately
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          showInfoSnackBar(context, 'This signal has faded');
+          Navigator.of(context).pop();
+        }
+      });
+    } else {
+      // Schedule pop for when it expires
+      _expiryTimer = Timer(remaining, () {
+        if (mounted) {
+          showInfoSnackBar(context, 'This signal has faded');
+          Navigator.of(context).pop();
+        }
+      });
+    }
   }
 
   void _onScroll() {
@@ -219,6 +249,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
 
   @override
   void dispose() {
+    _expiryTimer?.cancel();
     _refreshSubscription?.cancel();
     _commentUpdateSubscription?.cancel();
     _scrollController.removeListener(_onScroll);
@@ -1425,8 +1456,9 @@ class _StickySignalHeaderState extends State<_StickySignalHeader>
   @override
   Widget build(BuildContext context) {
     final signal = widget.signal;
-    final hasImage = signal.mediaUrls.isNotEmpty;
-    final imageUrl = hasImage ? signal.mediaUrls.first : null;
+    final hasRemoteImage = signal.mediaUrls.isNotEmpty;
+    final hasLocalImage = signal.imageLocalPath != null;
+    final hasImage = hasRemoteImage || hasLocalImage;
 
     return IgnorePointer(
       ignoring: !widget.isVisible,
@@ -1462,7 +1494,12 @@ class _StickySignalHeaderState extends State<_StickySignalHeader>
                   child: Row(
                     children: [
                       // Thumbnail
-                      _buildThumbnail(context, hasImage, imageUrl),
+                      _buildThumbnail(
+                        context,
+                        hasImage,
+                        hasRemoteImage ? signal.mediaUrls.first : null,
+                        hasLocalImage ? signal.imageLocalPath : null,
+                      ),
 
                       const SizedBox(width: 12),
 
@@ -1563,8 +1600,44 @@ class _StickySignalHeaderState extends State<_StickySignalHeader>
     BuildContext context,
     bool hasImage,
     String? imageUrl,
+    String? localPath,
   ) {
-    if (hasImage && imageUrl != null) {
+    if (hasImage) {
+      Widget imageWidget;
+
+      if (localPath != null) {
+        // Local file image
+        imageWidget = Image.file(
+          File(localPath),
+          fit: BoxFit.cover,
+          errorBuilder: (_, _, _) => Container(
+            color: context.accentColor.withValues(alpha: 0.1),
+            child: Icon(
+              Icons.image_outlined,
+              size: 18,
+              color: context.accentColor,
+            ),
+          ),
+        );
+      } else if (imageUrl != null) {
+        // Remote URL image
+        imageWidget = Image.network(
+          imageUrl,
+          fit: BoxFit.cover,
+          errorBuilder: (_, _, _) => Container(
+            color: context.accentColor.withValues(alpha: 0.1),
+            child: Icon(
+              Icons.image_outlined,
+              size: 18,
+              color: context.accentColor,
+            ),
+          ),
+        );
+      } else {
+        // Fallback - shouldn't reach here if hasImage is true
+        return _buildPlaceholderThumbnail(context);
+      }
+
       return Container(
         width: 40,
         height: 40,
@@ -1577,21 +1650,14 @@ class _StickySignalHeaderState extends State<_StickySignalHeader>
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(7),
-          child: Image.network(
-            imageUrl,
-            fit: BoxFit.cover,
-            errorBuilder: (_, _, _) => Container(
-              color: context.accentColor.withValues(alpha: 0.1),
-              child: Icon(
-                Icons.image_outlined,
-                size: 18,
-                color: context.accentColor,
-              ),
-            ),
-          ),
+          child: imageWidget,
         ),
       );
     }
+    return _buildPlaceholderThumbnail(context);
+  }
+
+  Widget _buildPlaceholderThumbnail(BuildContext context) {
     return Container(
       width: 40,
       height: 40,

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -78,6 +79,7 @@ class _SignalGalleryViewState extends ConsumerState<SignalGalleryView>
   late AnimationController _overlayController;
   late Animation<Offset> _overlaySlideAnimation;
   late Animation<double> _overlayFadeAnimation;
+  Timer? _expiryTimer;
 
   @override
   void initState() {
@@ -108,12 +110,36 @@ class _SignalGalleryViewState extends ConsumerState<SignalGalleryView>
       if (mounted) _overlayController.forward();
     });
 
+    // Setup expiry timer for current signal
+    _setupExpiryTimer();
+
     // Set immersive mode
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   }
 
+  void _setupExpiryTimer() {
+    _expiryTimer?.cancel();
+    final signal = widget.signals[_currentIndex];
+    final expiresAt = signal.expiresAt;
+    if (expiresAt == null) return;
+
+    final remaining = expiresAt.difference(DateTime.now());
+    if (remaining.isNegative) {
+      // Already expired - pop immediately
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) Navigator.of(context).pop();
+      });
+    } else {
+      // Schedule pop for when it expires
+      _expiryTimer = Timer(remaining, () {
+        if (mounted) Navigator.of(context).pop();
+      });
+    }
+  }
+
   @override
   void dispose() {
+    _expiryTimer?.cancel();
     _pageController.dispose();
     _overlayController.dispose();
     // Restore system UI
@@ -129,6 +155,7 @@ class _SignalGalleryViewState extends ConsumerState<SignalGalleryView>
     _overlayController.reverse().then((_) {
       if (mounted) {
         setState(() => _currentIndex = index);
+        _setupExpiryTimer(); // Reset timer for new signal
         _overlayController.forward();
       }
     });

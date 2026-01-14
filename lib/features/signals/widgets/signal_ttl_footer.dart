@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -27,11 +29,24 @@ class _SignalTTLFooterState extends ConsumerState<SignalTTLFooter>
     with SingleTickerProviderStateMixin {
   AnimationController? _pulseController;
   Animation<double>? _pulseAnimation;
+  Timer? _countdownTimer;
 
   @override
   void initState() {
     super.initState();
     _setupPulseIfNeeded();
+    _startCountdownTimer();
+  }
+
+  void _startCountdownTimer() {
+    _countdownTimer?.cancel();
+    // Update every second to show live countdown
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) {
+        setState(() {});
+        _setupPulseIfNeeded();
+      }
+    });
   }
 
   @override
@@ -95,6 +110,7 @@ class _SignalTTLFooterState extends ConsumerState<SignalTTLFooter>
 
   @override
   void dispose() {
+    _countdownTimer?.cancel();
     _pulseController?.dispose();
     super.dispose();
   }
