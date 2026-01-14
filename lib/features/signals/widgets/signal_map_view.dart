@@ -1,10 +1,66 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../../core/theme.dart';
 import '../../../models/social.dart';
 import 'signal_thumbnail.dart';
+
+// =============================================================================
+// Signal Time Utilities
+// =============================================================================
+
+/// Get age-based color for a signal
+Color getSignalAgeColor(DateTime createdAt) {
+  final age = DateTime.now().difference(createdAt);
+  if (age.inMinutes < 5) {
+    return Colors.green;
+  } else if (age.inMinutes < 30) {
+    return Colors.amber;
+  } else if (age.inHours < 2) {
+    return Colors.orange;
+  } else {
+    return Colors.red.shade300;
+  }
+}
+
+/// Format relative time (e.g., "5m ago")
+String formatTimeAgo(DateTime time) {
+  final diff = DateTime.now().difference(time);
+  if (diff.inMinutes < 1) {
+    return 'Just now';
+  } else if (diff.inMinutes < 60) {
+    return '${diff.inMinutes}m ago';
+  } else if (diff.inHours < 24) {
+    return '${diff.inHours}h ago';
+  } else {
+    return '${diff.inDays}d ago';
+  }
+}
+
+/// Format TTL remaining (e.g., "5m left" or "5m" for compact)
+String formatTtlRemaining(DateTime? expiresAt, {bool compact = false}) {
+  if (expiresAt == null) return '';
+  final remaining = expiresAt.difference(DateTime.now());
+  if (remaining.isNegative) return 'Expired';
+  final suffix = compact ? '' : ' left';
+  if (remaining.inMinutes < 60) return '${remaining.inMinutes}m$suffix';
+  if (remaining.inHours < 24) return '${remaining.inHours}h$suffix';
+  return '${remaining.inDays}d$suffix';
+}
+
+/// Get TTL color based on remaining time
+Color getTtlColor(DateTime? expiresAt) {
+  if (expiresAt == null) return Colors.white38;
+  final remaining = expiresAt.difference(DateTime.now());
+  if (remaining.isNegative) return Colors.red.shade300;
+  if (remaining.inMinutes < 30) return Colors.red.shade300;
+  if (remaining.inHours < 2) return Colors.orange;
+  return Colors.white38;
+}
+
+// =============================================================================
 
 /// A map view showing signals with GPS locations
 class SignalMapView extends StatefulWidget {
@@ -28,6 +84,7 @@ class SignalMapView extends StatefulWidget {
 class _SignalMapViewState extends State<SignalMapView> {
   final MapController _mapController = MapController();
   Post? _selectedSignal;
+  bool _showSignalList = false;
 
   List<Post> get _signalsWithLocation =>
       widget.signals.where((s) => s.location != null).toList();
@@ -85,9 +142,13 @@ class _SignalMapViewState extends State<SignalMapView> {
             initialZoom: widget.initialZoom,
             minZoom: 3,
             maxZoom: 18,
+            interactionOptions: const InteractionOptions(
+              flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+            ),
             onTap: (_, _) {
               setState(() {
                 _selectedSignal = null;
+                _showSignalList = false;
               });
             },
             backgroundColor: const Color(0xFF1a1a2e),
@@ -154,33 +215,93 @@ class _SignalMapViewState extends State<SignalMapView> {
             ),
           ),
         ),
-        // Signal count badge
+        // Fit all button (below legend)
+        Positioned(
+          top:
+              16 +
+              12 +
+              (4 * 16) +
+              (3 * 4) +
+              12 +
+              8, // legend top + padding + 4 items + 3 gaps + padding + spacing
+          right: 16,
+          child: _MapControlButton(
+            icon: Icons.fit_screen,
+            tooltip: 'Fit all signals',
+            onTap: _fitAllSignals,
+          ),
+        ),
+        // Signal list panel (slides in from left)
+        AnimatedPositioned(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOutCubic,
+          left: _showSignalList ? 0 : -300,
+          top: 0,
+          bottom: 0,
+          width: 300,
+          child: _SignalListPanel(
+            signals: _signalsWithLocation,
+            selectedSignal: _selectedSignal,
+            onSignalSelected: (signal) {
+              setState(() {
+                _selectedSignal = signal;
+                _showSignalList = false;
+              });
+              // Center map on selected signal
+              _mapController.move(
+                LatLng(signal.location!.latitude, signal.location!.longitude),
+                14.0,
+              );
+            },
+            onClose: () => setState(() => _showSignalList = false),
+          ),
+        ),
+        // Signal count badge (tappable to open list)
         Positioned(
           top: 16,
           left: 16,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.black87,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: AccentColors.cyan.withValues(alpha: 0.5),
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.sensors, color: AccentColors.cyan, size: 16),
-                const SizedBox(width: 6),
-                Text(
-                  '${_signalsWithLocation.length} on map',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+          child: IgnorePointer(
+            ignoring: _showSignalList,
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 200),
+              opacity: _showSignalList ? 0.0 : 1.0,
+              child: GestureDetector(
+                onTap: () => setState(() => _showSignalList = true),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black87,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: AccentColors.cyan.withValues(alpha: 0.5),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.sensors, color: AccentColors.cyan, size: 16),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${_signalsWithLocation.length} on map',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.chevron_right,
+                        size: 16,
+                        color: Colors.white54,
+                      ),
+                    ],
                   ),
                 ),
-              ],
+              ),
             ),
           ),
         ),
@@ -201,6 +322,75 @@ class _SignalMapViewState extends State<SignalMapView> {
             ),
           ),
       ],
+    );
+  }
+
+  void _fitAllSignals() {
+    final signals = _signalsWithLocation;
+    if (signals.isEmpty) return;
+
+    double minLat = signals.first.location!.latitude;
+    double maxLat = signals.first.location!.latitude;
+    double minLng = signals.first.location!.longitude;
+    double maxLng = signals.first.location!.longitude;
+
+    for (final s in signals) {
+      final lat = s.location!.latitude;
+      final lng = s.location!.longitude;
+      if (lat < minLat) minLat = lat;
+      if (lat > maxLat) maxLat = lat;
+      if (lng < minLng) minLng = lng;
+      if (lng > maxLng) maxLng = lng;
+    }
+
+    final latPadding = (maxLat - minLat) * 0.15;
+    final lngPadding = (maxLng - minLng) * 0.15;
+
+    final bounds = LatLngBounds(
+      LatLng(minLat - latPadding, minLng - lngPadding),
+      LatLng(maxLat + latPadding, maxLng + lngPadding),
+    );
+
+    final cameraFit = CameraFit.bounds(
+      bounds: bounds,
+      padding: const EdgeInsets.all(50),
+    );
+
+    final camera = cameraFit.fit(_mapController.camera);
+    _mapController.move(camera.center, camera.zoom.clamp(4.0, 16.0));
+    HapticFeedback.lightImpact();
+  }
+}
+
+/// Map control button widget
+class _MapControlButton extends StatelessWidget {
+  const _MapControlButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: Colors.black87,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.white10),
+          ),
+          child: Icon(icon, color: Colors.white70, size: 22),
+        ),
+      ),
     );
   }
 }
@@ -244,6 +434,8 @@ class _SignalPreviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ageColor = getSignalAgeColor(signal.createdAt);
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -251,7 +443,7 @@ class _SignalPreviewCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: const Color(0xFF1a1a2e),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AccentColors.cyan.withValues(alpha: 0.3)),
+          border: Border.all(color: ageColor.withValues(alpha: 0.5)),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.5),
@@ -260,88 +452,464 @@ class _SignalPreviewCard extends StatelessWidget {
             ),
           ],
         ),
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Signal thumbnail
-            SignalThumbnail(signal: signal),
-            const SizedBox(width: 12),
-            // Signal info
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (signal.content.isNotEmpty)
-                    Text(
-                      signal.content,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  const SizedBox(height: 4),
-                  Row(
+            // Header row with thumbnail and close
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Signal thumbnail
+                SignalThumbnail(
+                  signal: signal,
+                  size: 56,
+                  borderRadius: 12,
+                  borderColor: ageColor.withValues(alpha: 0.5),
+                ),
+                const SizedBox(width: 12),
+                // Signal content
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (signal.hopCount != null) ...[
-                        Icon(
-                          Icons.route,
-                          color: Colors.grey.shade500,
-                          size: 14,
-                        ),
-                        const SizedBox(width: 4),
+                      if (signal.content.isNotEmpty)
                         Text(
-                          '${signal.hopCount} hops',
+                          signal.content,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        )
+                      else
+                        Text(
+                          '📡 Signal',
                           style: TextStyle(
-                            color: Colors.grey.shade500,
-                            fontSize: 12,
+                            color: Colors.grey.shade400,
+                            fontSize: 14,
+                            fontStyle: FontStyle.italic,
                           ),
                         ),
-                        const SizedBox(width: 12),
-                      ],
+                      const SizedBox(height: 4),
+                      // Location name if available
+                      if (signal.location?.name != null &&
+                          signal.location!.name!.isNotEmpty)
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.location_on,
+                              color: AccentColors.cyan,
+                              size: 14,
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                signal.location!.name!,
+                                style: TextStyle(
+                                  color: AccentColors.cyan,
+                                  fontSize: 12,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+                ),
+                // Close button
+                IconButton(
+                  onPressed: onClose,
+                  icon: const Icon(Icons.close),
+                  color: Colors.grey.shade500,
+                  iconSize: 20,
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            // Stats row
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  // Hop count
+                  if (signal.hopCount != null) ...[
+                    _StatChip(
+                      icon: Icons.route,
+                      label:
+                          '${signal.hopCount} ${signal.hopCount == 1 ? 'hop' : 'hops'}',
+                      color: signal.hopCount == 0
+                          ? Colors.green
+                          : signal.hopCount! <= 2
+                          ? Colors.amber
+                          : Colors.orange,
+                    ),
+                    const SizedBox(width: 12),
+                  ],
+                  // Time ago
+                  _StatChip(
+                    icon: Icons.access_time,
+                    label: formatTimeAgo(signal.createdAt),
+                    color: ageColor,
+                  ),
+                  const Spacer(),
+                  // TTL remaining
+                  if (signal.expiresAt != null) ...[
+                    _StatChip(
+                      icon: Icons.timer_outlined,
+                      label: formatTtlRemaining(signal.expiresAt),
+                      color: getTtlColor(signal.expiresAt),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            // Footer row with additional info
+            Row(
+              children: [
+                // Origin badge
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: signal.origin == SignalOrigin.mesh
+                        ? AccentColors.cyan.withValues(alpha: 0.2)
+                        : Colors.purple.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
                       Icon(
-                        Icons.access_time,
-                        color: Colors.grey.shade500,
-                        size: 14,
+                        signal.origin == SignalOrigin.mesh
+                            ? Icons.sensors
+                            : Icons.cloud,
+                        size: 12,
+                        color: signal.origin == SignalOrigin.mesh
+                            ? AccentColors.cyan
+                            : Colors.purple.shade300,
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        _formatTime(signal.createdAt),
+                        signal.origin == SignalOrigin.mesh ? 'Mesh' : 'Cloud',
                         style: TextStyle(
-                          color: Colors.grey.shade500,
-                          fontSize: 12,
+                          fontSize: 11,
+                          color: signal.origin == SignalOrigin.mesh
+                              ? AccentColors.cyan
+                              : Colors.purple.shade300,
                         ),
                       ),
                     ],
                   ),
-                ],
-              ),
-            ),
-            // Close button
-            IconButton(
-              onPressed: onClose,
-              icon: const Icon(Icons.close),
-              color: Colors.grey.shade500,
-              iconSize: 20,
+                ),
+                const SizedBox(width: 8),
+                // Mesh node ID if available
+                if (signal.meshNodeId != null)
+                  Text(
+                    '!${signal.meshNodeId!.toRadixString(16).padLeft(8, '0')}',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontFamily: 'monospace',
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                const Spacer(),
+                // Tap to view hint
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Tap to view',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      size: 10,
+                      color: Colors.grey.shade600,
+                    ),
+                  ],
+                ),
+              ],
             ),
           ],
         ),
       ),
     );
   }
+}
 
-  String _formatTime(DateTime time) {
-    final diff = DateTime.now().difference(time);
-    if (diff.inMinutes < 1) {
-      return 'Just now';
-    } else if (diff.inMinutes < 60) {
-      return '${diff.inMinutes}m ago';
-    } else if (diff.inHours < 24) {
-      return '${diff.inHours}h ago';
-    } else {
-      return '${diff.inDays}d ago';
-    }
+/// Small stat chip with icon and label
+class _StatChip extends StatelessWidget {
+  const _StatChip({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: color),
+        const SizedBox(width: 4),
+        Text(label, style: TextStyle(fontSize: 12, color: color)),
+      ],
+    );
+  }
+}
+
+/// Panel showing list of signals on the map
+class _SignalListPanel extends StatelessWidget {
+  const _SignalListPanel({
+    required this.signals,
+    required this.selectedSignal,
+    required this.onSignalSelected,
+    required this.onClose,
+  });
+
+  final List<Post> signals;
+  final Post? selectedSignal;
+  final void Function(Post) onSignalSelected;
+  final VoidCallback onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    // Sort by most recent first
+    final sortedSignals = List<Post>.from(signals)
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF1a1a2e),
+        border: const Border(right: BorderSide(color: Colors.white10)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.3),
+            blurRadius: 16,
+            offset: const Offset(4, 0),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+            decoration: const BoxDecoration(
+              border: Border(bottom: BorderSide(color: Colors.white10)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.list, size: 20, color: AccentColors.cyan),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    'Signals',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                Text(
+                  '${sortedSignals.length}',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white54,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, size: 20),
+                  color: Colors.white54,
+                  onPressed: onClose,
+                  visualDensity: VisualDensity.compact,
+                ),
+              ],
+            ),
+          ),
+          // Signal list
+          Expanded(
+            child: sortedSignals.isEmpty
+                ? const Center(
+                    child: Text(
+                      'No signals',
+                      style: TextStyle(color: Colors.white54),
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    itemCount: sortedSignals.length,
+                    itemBuilder: (context, index) {
+                      final signal = sortedSignals[index];
+                      final isSelected = selectedSignal?.id == signal.id;
+
+                      return _SignalListItem(
+                        signal: signal,
+                        isSelected: isSelected,
+                        onTap: () => onSignalSelected(signal),
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Individual signal item in the list
+class _SignalListItem extends StatelessWidget {
+  const _SignalListItem({
+    required this.signal,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final Post signal;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final ageColor = getSignalAgeColor(signal.createdAt);
+
+    return Material(
+      color: isSelected
+          ? AccentColors.cyan.withValues(alpha: 0.15)
+          : Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            border: Border(
+              left: BorderSide(
+                color: isSelected ? AccentColors.cyan : Colors.transparent,
+                width: 3,
+              ),
+            ),
+          ),
+          child: Row(
+            children: [
+              // Age indicator dot
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: ageColor,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 10),
+              // Thumbnail
+              SignalThumbnail(
+                signal: signal,
+                size: 40,
+                borderRadius: 8,
+                borderColor: ageColor.withValues(alpha: 0.5),
+              ),
+              const SizedBox(width: 10),
+              // Signal info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      signal.content.isNotEmpty ? signal.content : '📡 Signal',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: isSelected ? Colors.white : Colors.white70,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        if (signal.hopCount != null) ...[
+                          Icon(Icons.route, size: 12, color: Colors.white38),
+                          const SizedBox(width: 3),
+                          Text(
+                            '${signal.hopCount}',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: Colors.white38,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                        ],
+                        Icon(
+                          Icons.access_time,
+                          size: 12,
+                          color: Colors.white38,
+                        ),
+                        const SizedBox(width: 3),
+                        Text(
+                          formatTimeAgo(signal.createdAt),
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: Colors.white38,
+                          ),
+                        ),
+                        if (signal.expiresAt != null) ...[
+                          const SizedBox(width: 8),
+                          Icon(
+                            Icons.timer_outlined,
+                            size: 12,
+                            color: getTtlColor(signal.expiresAt),
+                          ),
+                          const SizedBox(width: 3),
+                          Text(
+                            formatTtlRemaining(signal.expiresAt, compact: true),
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: getTtlColor(signal.expiresAt),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              // Chevron
+              Icon(
+                Icons.chevron_right,
+                size: 18,
+                color: isSelected ? AccentColors.cyan : Colors.white24,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
