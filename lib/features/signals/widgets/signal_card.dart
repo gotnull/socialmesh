@@ -5,13 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
-import '../../../core/widgets/fullscreen_gallery.dart';
 import '../../../core/widgets/user_avatar.dart';
 import '../../../models/social.dart';
 import '../../../providers/app_providers.dart';
 import '../../map/map_screen.dart';
 import '../utils/signal_utils.dart';
 import 'proximity_indicator.dart';
+import 'signal_gallery_view.dart';
 import 'signal_ttl_footer.dart';
 
 /// Card widget for displaying a signal.
@@ -304,25 +304,10 @@ class _SignalImage extends StatelessWidget {
     final hasCloudImage = signal.mediaUrls.isNotEmpty;
     final hasLocalImage = signal.imageLocalPath != null;
 
-    if (hasCloudImage) {
-      // Use standard fullscreen gallery for network images
-      FullscreenGallery.show(
-        context,
-        images: signal.mediaUrls,
-        initialIndex: 0,
-      );
-    } else if (hasLocalImage) {
-      // Show fullscreen local image
-      _showLocalImageFullscreen(context, signal.imageLocalPath!);
+    if (hasCloudImage || hasLocalImage) {
+      // Use SignalGalleryView to show the same info as the gallery view
+      SignalGalleryView.show(context, signals: [signal], initialIndex: 0);
     }
-  }
-
-  void _showLocalImageFullscreen(BuildContext context, String localPath) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => _LocalImageFullscreen(imagePath: localPath),
-      ),
-    );
   }
 
   @override
@@ -423,47 +408,6 @@ class _SignalImage extends StatelessWidget {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Fullscreen viewer for local image files
-class _LocalImageFullscreen extends StatelessWidget {
-  const _LocalImageFullscreen({required this.imagePath});
-
-  final String imagePath;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.white),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ),
-      extendBodyBehindAppBar: true,
-      body: GestureDetector(
-        onTap: () => Navigator.of(context).pop(),
-        child: InteractiveViewer(
-          minScale: 0.5,
-          maxScale: 4.0,
-          child: Center(
-            child: Image.file(
-              File(imagePath),
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) => const Icon(
-                Icons.broken_image,
-                color: Colors.white54,
-                size: 64,
-              ),
-            ),
-          ),
         ),
       ),
     );

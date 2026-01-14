@@ -109,7 +109,21 @@ class HamburgerMenuButton extends ConsumerWidget {
             HapticFeedback.lightImpact();
             // Open the drawer using the provider-stored scaffold key
             // This key is from MainShell which has the drawer
-            scaffoldKey?.currentState?.openDrawer();
+            final scaffoldState = scaffoldKey?.currentState;
+            if (scaffoldState != null) {
+              scaffoldState.openDrawer();
+            } else {
+              // Fallback: if the provider key didn't work, try to find a Scaffold ancestor
+              // This handles edge cases where the key reference is stale or not yet set
+              try {
+                Scaffold.of(context).openDrawer();
+              } catch (e) {
+                // If no Scaffold ancestor found, log the issue
+                AppLogging.app(
+                  '⚠️ HamburgerMenuButton: Could not open drawer - no scaffold key or ancestor found',
+                );
+              }
+            }
           },
           tooltip: 'Menu',
         ),
@@ -240,12 +254,23 @@ class _MainShellState extends ConsumerState<MainShell> {
   @override
   void initState() {
     super.initState();
-    // Set the scaffold key provider so screens can access the drawer
-    // Use Future.microtask to ensure it runs after the widget tree is built
-    // but before the first frame renders
-    Future.microtask(() {
-      ref.read(mainShellScaffoldKeyProvider.notifier).setKey(_scaffoldKey);
+    // Set the scaffold key provider immediately so screens can access the drawer
+    // The key is already created at field initialization, so it's safe to set it now
+    // Use addPostFrameCallback to ensure the widget tree is fully built
+    // This is more reliable than Future.microtask for widget lifecycle
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(mainShellScaffoldKeyProvider.notifier).setKey(_scaffoldKey);
+      }
     });
+  }
+
+  @override
+  void dispose() {
+    // Clear the scaffold key from the provider when MainShell is disposed
+    // This prevents stale key references if MainShell is recreated
+    ref.read(mainShellScaffoldKeyProvider.notifier).setKey(null);
+    super.dispose();
   }
 
   /// Drawer menu items for quick access screens not in bottom nav
