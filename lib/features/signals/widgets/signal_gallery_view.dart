@@ -11,6 +11,7 @@ import '../../../models/social.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/signal_bookmark_provider.dart';
 import '../screens/signal_detail_screen.dart';
+import '../utils/signal_utils.dart';
 import 'double_tap_heart.dart';
 
 /// A fullscreen gallery view for signal images with metadata overlays.
@@ -503,7 +504,7 @@ class _BottomInfoOverlay extends ConsumerWidget {
                           children: [
                             // Time ago
                             Text(
-                              _formatTimeAgo(signal.createdAt),
+                              formatTimeAgo(signal.createdAt),
                               style: TextStyle(
                                 color: Colors.white.withValues(alpha: 0.7),
                                 fontSize: 12,
@@ -600,7 +601,7 @@ class _BottomInfoOverlay extends ConsumerWidget {
                       label: signal.hopCount == 0
                           ? 'Local'
                           : '${signal.hopCount} hop${signal.hopCount! > 1 ? 's' : ''}',
-                      color: _getHopColor(signal.hopCount!),
+                      color: getHopCountColor(signal.hopCount),
                     ),
 
                   // Location badge
@@ -658,21 +659,6 @@ class _BottomInfoOverlay extends ConsumerWidget {
     }
 
     return _InfoBadge(icon: Icons.schedule, label: label, color: color);
-  }
-
-  Color _getHopColor(int hopCount) {
-    if (hopCount == 0) return AccentColors.green;
-    if (hopCount == 1) return AccentColors.cyan;
-    if (hopCount <= 3) return AccentColors.yellow;
-    return AccentColors.orange;
-  }
-
-  String _formatTimeAgo(DateTime time) {
-    final diff = DateTime.now().difference(time);
-    if (diff.inMinutes < 1) return 'Just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    return '${diff.inDays}d ago';
   }
 
   String _getInitials(String name) {

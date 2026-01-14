@@ -8,6 +8,7 @@ import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/user_avatar.dart';
 import '../../../models/social.dart';
 import '../../../providers/app_providers.dart';
+import '../utils/signal_utils.dart';
 
 /// Compact grid card for signals - used in grid view mode.
 ///
@@ -123,7 +124,7 @@ class SignalGridCard extends ConsumerWidget {
                       if (signal.hopCount != null)
                         _BadgePill(
                           icon: _getHopIcon(signal.hopCount!),
-                          iconColor: _getHopColor(signal.hopCount!),
+                          iconColor: getHopCountColor(signal.hopCount!),
                           text: '${signal.hopCount}h',
                         )
                       else
@@ -260,12 +261,6 @@ class SignalGridCard extends ConsumerWidget {
     if (hopCount == 0) return Icons.signal_cellular_4_bar;
     if (hopCount == 1) return Icons.signal_cellular_alt;
     return Icons.signal_cellular_alt_1_bar;
-  }
-
-  Color _getHopColor(int hopCount) {
-    if (hopCount == 0) return AccentColors.green;
-    if (hopCount == 1) return AccentColors.cyan;
-    return AppTheme.warningYellow;
   }
 
   Widget _buildImageBackground() {

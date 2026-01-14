@@ -4,12 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
-import '../../map/map_screen.dart';
 import '../../../core/widgets/animations.dart';
-import '../../../core/widgets/user_avatar.dart';
 import '../../../core/widgets/fullscreen_gallery.dart';
+import '../../../core/widgets/user_avatar.dart';
 import '../../../models/social.dart';
 import '../../../providers/app_providers.dart';
+import '../../map/map_screen.dart';
+import '../utils/signal_utils.dart';
 import 'proximity_indicator.dart';
 import 'signal_ttl_footer.dart';
 
@@ -209,7 +210,7 @@ class _SignalHeader extends ConsumerWidget {
                       ),
                     ],
                     Text(
-                      _timeAgo(signal.createdAt),
+                      formatActiveTime(signal.createdAt),
                       style: TextStyle(
                         color: context.textTertiary,
                         fontSize: 12,
@@ -291,15 +292,6 @@ class _SignalHeader extends ConsumerWidget {
         ],
       ),
     );
-  }
-
-  String _timeAgo(DateTime dateTime) {
-    final diff = DateTime.now().difference(dateTime);
-
-    if (diff.inMinutes < 1) return 'Active now';
-    if (diff.inMinutes < 60) return 'Active ${diff.inMinutes}m';
-    if (diff.inHours < 24) return 'Active ${diff.inHours}h';
-    return 'Active ${diff.inDays}d';
   }
 }
 

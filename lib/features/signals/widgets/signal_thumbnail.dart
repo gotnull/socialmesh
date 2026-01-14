@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme.dart';
 import '../../../models/social.dart';
+import '../utils/signal_utils.dart';
 
 /// Reusable thumbnail widget for displaying signal images.
 ///
@@ -138,26 +139,13 @@ class SignalMapMarker extends StatelessWidget {
   final double size;
   final bool isSelected;
 
-  Color _getMarkerColor() {
-    final age = DateTime.now().difference(signal.createdAt);
-    if (age.inMinutes < 5) {
-      return Colors.green;
-    } else if (age.inMinutes < 30) {
-      return Colors.amber;
-    } else if (age.inHours < 2) {
-      return Colors.orange;
-    } else {
-      return Colors.red.shade300;
-    }
-  }
-
   bool get _hasImage =>
       signal.mediaUrls.isNotEmpty ||
       (signal.imageLocalPath != null && signal.imageLocalPath!.isNotEmpty);
 
   @override
   Widget build(BuildContext context) {
-    final markerColor = _getMarkerColor();
+    final markerColor = getSignalAgeColor(signal.createdAt);
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),

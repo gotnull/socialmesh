@@ -5,62 +5,8 @@ import 'package:latlong2/latlong.dart';
 
 import '../../../core/theme.dart';
 import '../../../models/social.dart';
+import '../utils/signal_utils.dart';
 import 'signal_thumbnail.dart';
-
-// =============================================================================
-// Signal Time Utilities
-// =============================================================================
-
-/// Get age-based color for a signal
-Color getSignalAgeColor(DateTime createdAt) {
-  final age = DateTime.now().difference(createdAt);
-  if (age.inMinutes < 5) {
-    return Colors.green;
-  } else if (age.inMinutes < 30) {
-    return Colors.amber;
-  } else if (age.inHours < 2) {
-    return Colors.orange;
-  } else {
-    return Colors.red.shade300;
-  }
-}
-
-/// Format relative time (e.g., "5m ago")
-String formatTimeAgo(DateTime time) {
-  final diff = DateTime.now().difference(time);
-  if (diff.inMinutes < 1) {
-    return 'Just now';
-  } else if (diff.inMinutes < 60) {
-    return '${diff.inMinutes}m ago';
-  } else if (diff.inHours < 24) {
-    return '${diff.inHours}h ago';
-  } else {
-    return '${diff.inDays}d ago';
-  }
-}
-
-/// Format TTL remaining (e.g., "5m left" or "5m" for compact)
-String formatTtlRemaining(DateTime? expiresAt, {bool compact = false}) {
-  if (expiresAt == null) return '';
-  final remaining = expiresAt.difference(DateTime.now());
-  if (remaining.isNegative) return 'Expired';
-  final suffix = compact ? '' : ' left';
-  if (remaining.inMinutes < 60) return '${remaining.inMinutes}m$suffix';
-  if (remaining.inHours < 24) return '${remaining.inHours}h$suffix';
-  return '${remaining.inDays}d$suffix';
-}
-
-/// Get TTL color based on remaining time
-Color getTtlColor(DateTime? expiresAt) {
-  if (expiresAt == null) return Colors.white38;
-  final remaining = expiresAt.difference(DateTime.now());
-  if (remaining.isNegative) return Colors.red.shade300;
-  if (remaining.inMinutes < 30) return Colors.red.shade300;
-  if (remaining.inHours < 2) return Colors.orange;
-  return Colors.white38;
-}
-
-// =============================================================================
 
 /// A map view showing signals with GPS locations
 class SignalMapView extends StatefulWidget {

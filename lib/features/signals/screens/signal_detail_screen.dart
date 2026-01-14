@@ -8,7 +8,6 @@ import '../../../core/logging.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/content_moderation_warning.dart';
-import '../../../utils/snackbar.dart';
 import '../../../models/social.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/profile_providers.dart';
@@ -16,6 +15,8 @@ import '../../../providers/signal_providers.dart';
 import '../../../providers/social_providers.dart';
 import '../../../services/notifications/push_notification_service.dart';
 import '../../../services/signal_service.dart';
+import '../../../utils/snackbar.dart';
+import '../utils/signal_utils.dart';
 import '../widgets/signal_card.dart';
 import '../widgets/signal_thumbnail.dart';
 
@@ -1251,7 +1252,7 @@ class _ResponseTile extends StatelessWidget {
                       ],
                       const SizedBox(width: 4),
                       Text(
-                        '· ${_timeAgo(response.createdAt)}',
+                        '· ${formatTimeAgo(response.createdAt)}',
                         style: TextStyle(
                           color: context.textTertiary,
                           fontSize: 12,
@@ -1347,16 +1348,6 @@ class _ResponseTile extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _timeAgo(DateTime dateTime) {
-    final diff = DateTime.now().difference(dateTime);
-
-    if (diff.inMinutes < 1) return 'just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    if (diff.inDays < 7) return '${diff.inDays}d ago';
-    return '${(diff.inDays / 7).floor()}w ago';
   }
 }
 
@@ -1519,7 +1510,7 @@ class _StickySignalHeaderState extends State<_StickySignalHeader>
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
-                                  '· ${_timeAgo(signal.createdAt)}',
+                                  '· ${formatTimeAgo(signal.createdAt, compact: true)}',
                                   style: TextStyle(
                                     color: context.textTertiary,
                                     fontSize: 12,
@@ -1591,15 +1582,6 @@ class _StickySignalHeaderState extends State<_StickySignalHeader>
         ),
       ),
     );
-  }
-
-  String _timeAgo(DateTime dateTime) {
-    final diff = DateTime.now().difference(dateTime);
-
-    if (diff.inMinutes < 1) return 'now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m';
-    if (diff.inHours < 24) return '${diff.inHours}h';
-    return '${diff.inDays}d';
   }
 }
 
