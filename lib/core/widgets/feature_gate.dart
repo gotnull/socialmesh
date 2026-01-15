@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/connection_providers.dart';
+import '../../utils/snackbar.dart';
 import '../command/commands.dart';
 
 /// A widget that gates access to features based on their requirements.
@@ -93,26 +94,13 @@ class FeatureGate extends ConsumerWidget {
         ref.read(featureUnavailabilityReasonProvider(feature)) ??
         'This feature is currently unavailable';
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.info_outline, color: Colors.white, size: 18),
-            const SizedBox(width: 8),
-            Expanded(child: Text(reason)),
-          ],
-        ),
-        backgroundColor: Colors.orange.shade700,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-        action: SnackBarAction(
-          label: 'Connect',
-          textColor: Colors.white,
-          onPressed: () {
-            Navigator.of(context).pushNamed('/scanner');
-          },
-        ),
-      ),
+    showActionSnackBar(
+      context,
+      reason,
+      actionLabel: 'Connect',
+      onAction: () => Navigator.of(context).pushNamed('/scanner'),
+      type: SnackBarType.warning,
+      duration: const Duration(seconds: 2),
     );
   }
 }
@@ -256,43 +244,18 @@ class CommandButton extends ConsumerWidget {
         // Command succeeded - UI can handle success state
       },
       onFailure: (error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.error_outline, color: Colors.white, size: 18),
-                const SizedBox(width: 8),
-                Expanded(child: Text(error.userMessage ?? error.message)),
-              ],
-            ),
-            backgroundColor: Colors.red.shade700,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        showErrorSnackBar(context, error.userMessage ?? error.message);
       },
     );
   }
 
   void _showDisconnectedMessage(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Row(
-          children: [
-            Icon(Icons.bluetooth_disabled, color: Colors.white, size: 18),
-            SizedBox(width: 8),
-            Text('Connect device to use this feature'),
-          ],
-        ),
-        backgroundColor: Colors.orange.shade700,
-        behavior: SnackBarBehavior.floating,
-        action: SnackBarAction(
-          label: 'Connect',
-          textColor: Colors.white,
-          onPressed: () {
-            Navigator.of(context).pushNamed('/scanner');
-          },
-        ),
-      ),
+    showActionSnackBar(
+      context,
+      'Connect device to use this feature',
+      actionLabel: 'Connect',
+      onAction: () => Navigator.of(context).pushNamed('/scanner'),
+      type: SnackBarType.warning,
     );
   }
 }
@@ -332,31 +295,13 @@ class CommandIconButton extends ConsumerWidget {
     result.fold(
       onSuccess: (_) {},
       onFailure: (error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(error.userMessage ?? error.message),
-            backgroundColor: Colors.red.shade700,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        showErrorSnackBar(context, error.userMessage ?? error.message);
       },
     );
   }
 
   void _showDisconnectedMessage(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Row(
-          children: [
-            Icon(Icons.bluetooth_disabled, color: Colors.white, size: 18),
-            SizedBox(width: 8),
-            Text('Connect device to use this feature'),
-          ],
-        ),
-        backgroundColor: Colors.orange.shade700,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    showInfoSnackBar(context, 'Connect device to use this feature');
   }
 }
 
@@ -381,13 +326,7 @@ Future<T?> executeCommand<T>(
       if (onError != null) {
         onError(error);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(error.userMessage ?? error.message),
-            backgroundColor: Colors.red.shade700,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        showErrorSnackBar(context, error.userMessage ?? error.message);
       }
       return null;
     },

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../theme.dart';
 import 'app_bottom_sheet.dart';
+import '../../utils/snackbar.dart';
 
 /// Action taken by user in content moderation dialog
 enum ContentModerationAction { edit, cancel, proceed }
@@ -337,47 +337,19 @@ class _ContentModerationWarningContent extends StatelessWidget {
 /// Shows a snackbar notification when content was auto-rejected.
 class ContentRejectionNotification {
   static void show(BuildContext context, {String? reason}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: Colors.red.withAlpha(50),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.block, color: Colors.red, size: 18),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Content Removed',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    reason ?? 'Your content violated our Community Guidelines.',
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: context.card,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 5),
-        action: SnackBarAction(
-          label: 'Learn More',
-          onPressed: () {
-            // Could navigate to community guidelines
-          },
-        ),
-      ),
+    final message = reason != null
+        ? 'Content removed — $reason'
+        : 'Content removed — your content violated our Community Guidelines.';
+
+    showActionSnackBar(
+      context,
+      message,
+      actionLabel: 'Learn More',
+      onAction: () {
+        // Could navigate to community guidelines
+      },
+      type: SnackBarType.error,
+      duration: const Duration(seconds: 5),
     );
   }
 }

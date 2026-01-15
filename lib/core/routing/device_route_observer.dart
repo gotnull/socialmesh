@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/connection_providers.dart';
+import '../../utils/snackbar.dart';
 import 'route_guard.dart';
 
 /// Navigation observer that enforces route requirements.
@@ -50,30 +51,14 @@ class DeviceRouteObserver extends NavigatorObserver {
     final context = navigator?.context;
     if (context == null) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.bluetooth_disabled, color: Colors.white, size: 18),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                metadata?.blockedMessage ??
-                    'Connect device to access this screen',
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: Colors.orange.shade700,
-        behavior: SnackBarBehavior.floating,
-        action: SnackBarAction(
-          label: 'Connect',
-          textColor: Colors.white,
-          onPressed: () {
-            navigator?.pushNamed('/scanner');
-          },
-        ),
-      ),
+    showActionSnackBar(
+      context,
+      metadata?.blockedMessage ?? 'Connect device to access this screen',
+      actionLabel: 'Connect',
+      onAction: () {
+        navigator?.pushNamed('/scanner');
+      },
+      type: SnackBarType.warning,
     );
   }
 }

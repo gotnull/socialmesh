@@ -48,10 +48,7 @@ class _ActiveSignalsBannerState extends State<ActiveSignalsBanner>
       decoration: BoxDecoration(
         color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: accentColor.withValues(alpha: 0.3),
-          width: 1,
-        ),
+        border: Border.all(color: accentColor.withValues(alpha: 0.3), width: 1),
       ),
       child: Row(
         children: [
@@ -67,7 +64,9 @@ class _ActiveSignalsBannerState extends State<ActiveSignalsBanner>
                   color: accentColor,
                   boxShadow: [
                     BoxShadow(
-                      color: accentColor.withValues(alpha: _pulseAnimation.value * 0.6),
+                      color: accentColor.withValues(
+                        alpha: _pulseAnimation.value * 0.6,
+                      ),
                       blurRadius: 8 * _pulseAnimation.value,
                       spreadRadius: 2 * _pulseAnimation.value,
                     ),

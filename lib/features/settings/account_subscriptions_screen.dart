@@ -17,6 +17,7 @@ import '../../providers/profile_providers.dart';
 import '../../providers/subscription_providers.dart';
 import '../../services/subscription/cloud_sync_entitlement_service.dart';
 import '../../utils/snackbar.dart';
+import '../settings/widgets/restore_purchases_button.dart';
 import '../profile/profile_screen.dart';
 import 'subscription_screen.dart';
 
@@ -697,7 +698,28 @@ class _AccountSubscriptionsScreenState
             icon: Icons.restore,
             title: 'Restore Purchases',
             subtitle: 'Restore previously purchased items',
-            onTap: _restorePurchases,
+            onTap: () async {
+              // Use canonical restore flow (includes RevenueCat + Firebase sync)
+              AppLogging.subscriptions(
+                '🔄 User tapped restore from Manage Card',
+              );
+              final success = await restorePurchases(ref);
+
+              // Refresh cloud entitlement service
+              final cloudService = ref.read(
+                cloudSyncEntitlementServiceProvider,
+              );
+              await cloudService.refreshEntitlement();
+              ref.invalidate(cloudSyncEntitlementProvider);
+
+              if (mounted) {
+                if (success) {
+                  showSuccessSnackBar(context, 'Purchases restored');
+                } else {
+                  showInfoSnackBar(context, 'No purchases found to restore');
+                }
+              }
+            },
             isFirst: true,
           ),
           Divider(height: 1, color: context.border),
@@ -1040,88 +1062,6 @@ class _AccountSubscriptionsScreenState
             : 'Go to Play Store > Payments & Subscriptions to manage',
         duration: const Duration(seconds: 4),
       );
-    }
-  }
-
-  Future<void> _restorePurchases() async {
-    AppLogging.subscriptions(
-      '═══════════════════════════════════════════════════════════',
-    );
-    AppLogging.subscriptions('🔄 [RESTORE] Starting restore purchases flow...');
-    AppLogging.subscriptions(
-      '═══════════════════════════════════════════════════════════',
-    );
-
-    try {
-      // Use the same provider function as SubscriptionScreen
-      // This handles: Firebase UID sync, RevenueCat restore, Riverpod state refresh
-      AppLogging.subscriptions(
-        '🔄 [RESTORE] Calling restorePurchases(ref) provider...',
-      );
-      final success = await restorePurchases(ref);
-      AppLogging.subscriptions('🔄 [RESTORE] Provider returned: $success');
-
-      // Also refresh cloud sync entitlement service for cloud sync status
-      AppLogging.subscriptions(
-        '🔄 [RESTORE] Refreshing CloudSyncEntitlementService...',
-      );
-      final cloudService = ref.read(cloudSyncEntitlementServiceProvider);
-      await cloudService.refreshEntitlement();
-      AppLogging.subscriptions(
-        '✅ [RESTORE] CloudSyncEntitlementService refreshed',
-      );
-
-      // Invalidate the stream provider to force UI rebuild with latest state
-      // This ensures the UI picks up the refreshed entitlement immediately
-      ref.invalidate(cloudSyncEntitlementProvider);
-      AppLogging.subscriptions(
-        '✅ [RESTORE] Invalidated cloudSyncEntitlementProvider',
-      );
-
-      // Log final state
-      final purchaseState = ref.read(purchaseStateProvider);
-      AppLogging.subscriptions(
-        '📊 [RESTORE] Final purchasedProductIds: ${purchaseState.purchasedProductIds}',
-      );
-
-      final cloudEntitlement = cloudService.currentEntitlement;
-      AppLogging.subscriptions(
-        '📊 [RESTORE] Final cloud sync state: ${cloudEntitlement.state}',
-      );
-      AppLogging.subscriptions(
-        '📊 [RESTORE] Final cloud sync hasFullAccess: ${cloudEntitlement.hasFullAccess}',
-      );
-
-      AppLogging.subscriptions(
-        '═══════════════════════════════════════════════════════════',
-      );
-      AppLogging.subscriptions('✅ [RESTORE] Restore purchases flow completed!');
-      AppLogging.subscriptions(
-        '═══════════════════════════════════════════════════════════',
-      );
-
-      if (mounted) {
-        if (success) {
-          showSuccessSnackBar(context, 'Purchases restored successfully');
-        } else {
-          showInfoSnackBar(context, 'No active purchases found to restore');
-        }
-      }
-    } catch (e, stack) {
-      AppLogging.subscriptions('');
-      AppLogging.subscriptions(
-        '═══════════════════════════════════════════════════════════',
-      );
-      AppLogging.subscriptions('❌ [RESTORE] ERROR during restore purchases!');
-      AppLogging.subscriptions('❌ [RESTORE] Error: $e');
-      AppLogging.subscriptions('❌ [RESTORE] Stack: $stack');
-      AppLogging.subscriptions(
-        '═══════════════════════════════════════════════════════════',
-      );
-
-      if (mounted) {
-        showErrorSnackBar(context, 'Could not restore purchases: $e');
-      }
     }
   }
 }
@@ -1805,10 +1745,7 @@ class _CloudSyncPaywallSheetState
           const SizedBox(height: 16),
 
           // Restore
-          TextButton(
-            onPressed: () => _restorePurchases(),
-            child: Text('Restore Purchases'),
-          ),
+          const RestorePurchasesButton(),
 
           const SizedBox(height: 8),
 
@@ -1825,21 +1762,8 @@ class _CloudSyncPaywallSheetState
     );
   }
 
-  Future<void> _restorePurchases() async {
-    try {
-      await Purchases.restorePurchases();
-      final service = ref.read(cloudSyncEntitlementServiceProvider);
-      await service.refreshEntitlement();
-      if (service.currentEntitlement.hasFullAccess && mounted) {
-        Navigator.pop(context);
-        showSuccessSnackBar(context, 'Subscription restored!');
-      }
-    } catch (e) {
-      if (mounted) {
-        showErrorSnackBar(context, 'Restore failed');
-      }
-    }
-  }
+  // Local restore handler removed in favor of the canonical restore flow.
+  // Use RestorePurchasesButton or call `restorePurchases(ref)` directly.
 
   Widget _buildProductButton(StoreProduct product) {
     final isYearly = product.identifier.contains('yearly');

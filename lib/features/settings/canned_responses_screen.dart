@@ -183,9 +183,7 @@ class _CannedResponsesScreenState extends ConsumerState<CannedResponsesScreen> {
           ),
           Expanded(
             child: _isLoading
-                ? Center(
-                    child: LoadingIndicator(size: 48),
-                  )
+                ? Center(child: LoadingIndicator(size: 48))
                 : _isReordering
                 ? ReorderableListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 16),

@@ -124,20 +124,24 @@ class _XenomorphPainter extends CustomPainter {
         Offset(nodeX, nodeY),
         nodeSize * nodePulse,
         Paint()
-          ..shader = RadialGradient(
-            colors: [
-              const Color(0xFF202030).withValues(alpha: 0.4),
-              const Color(0xFF151520).withValues(alpha: 0.2),
-              Colors.transparent,
-            ],
-          ).createShader(Rect.fromCircle(center: Offset(nodeX, nodeY), radius: nodeSize)),
+          ..shader =
+              RadialGradient(
+                colors: [
+                  const Color(0xFF202030).withValues(alpha: 0.4),
+                  const Color(0xFF151520).withValues(alpha: 0.2),
+                  Colors.transparent,
+                ],
+              ).createShader(
+                Rect.fromCircle(center: Offset(nodeX, nodeY), radius: nodeSize),
+              ),
       );
 
       // Core
       canvas.drawCircle(
         Offset(nodeX, nodeY),
         nodeSize * 0.3 * nodePulse,
-        Paint()..color = const Color(0xFF404050).withValues(alpha: 0.5 * nodePulse),
+        Paint()
+          ..color = const Color(0xFF404050).withValues(alpha: 0.5 * nodePulse),
       );
     }
 
@@ -224,12 +228,15 @@ class _XenomorphPainter extends CustomPainter {
         Offset(mistX, mistY),
         100,
         Paint()
-          ..shader = RadialGradient(
-            colors: [
-              const Color(0xFF203030).withValues(alpha: 0.08),
-              Colors.transparent,
-            ],
-          ).createShader(Rect.fromCircle(center: Offset(mistX, mistY), radius: 100)),
+          ..shader =
+              RadialGradient(
+                colors: [
+                  const Color(0xFF203030).withValues(alpha: 0.08),
+                  Colors.transparent,
+                ],
+              ).createShader(
+                Rect.fromCircle(center: Offset(mistX, mistY), radius: 100),
+              ),
       );
     }
   }

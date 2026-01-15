@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/connection_providers.dart';
+import '../../utils/snackbar.dart';
 
 /// Route requirement types
 enum RouteRequirement {
@@ -161,28 +162,17 @@ class RouteGuard {
     }
 
     if (showBlockedMessage && result.reason != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.warning_amber, color: Colors.white),
-              const SizedBox(width: 8),
-              Expanded(child: Text(result.reason!)),
-            ],
-          ),
-          backgroundColor: Colors.orange.shade700,
-          behavior: SnackBarBehavior.floating,
-          action: result.fallbackRoute != null
-              ? SnackBarAction(
-                  label: 'Connect',
-                  textColor: Colors.white,
-                  onPressed: () {
-                    Navigator.of(context).pushNamed('/scanner');
-                  },
-                )
-              : null,
-        ),
-      );
+      if (result.fallbackRoute != null) {
+        showActionSnackBar(
+          context,
+          result.reason!,
+          actionLabel: 'Connect',
+          onAction: () => Navigator.of(context).pushNamed('/scanner'),
+          type: SnackBarType.warning,
+        );
+      } else {
+        showInfoSnackBar(context, result.reason!);
+      }
     }
 
     return false;

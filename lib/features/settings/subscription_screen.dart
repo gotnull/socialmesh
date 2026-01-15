@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
 import '../../config/revenuecat_config.dart';
-import '../../core/logging.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/legal_document_sheet.dart';
 import '../../models/subscription_models.dart';
@@ -11,6 +10,7 @@ import '../../services/audio/rtttl_library_service.dart';
 import '../../services/haptic_service.dart';
 import '../../services/subscription/subscription_service.dart';
 import '../../utils/snackbar.dart';
+import 'widgets/restore_purchases_button.dart';
 
 class SubscriptionScreen extends ConsumerStatefulWidget {
   const SubscriptionScreen({super.key});
@@ -49,7 +49,6 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isLoading = ref.watch(subscriptionLoadingProvider);
     final error = ref.watch(subscriptionErrorProvider);
     final purchaseState = ref.watch(purchaseStateProvider);
 
@@ -76,23 +75,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
             _buildBundleCard(),
 
             // Restore Purchases button
-            const SizedBox(height: 16),
-            Center(
-              child: TextButton.icon(
-                onPressed: isLoading ? null : _restorePurchases,
-                icon: isLoading
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.refresh, size: 18),
-                label: const Text('Restore Purchases'),
-                style: TextButton.styleFrom(
-                  foregroundColor: context.accentColor,
-                ),
-              ),
-            ),
+            const RestorePurchasesButton(),
 
             // Show individual packs section
             if (!allUnlocked) ...[
@@ -156,23 +139,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
             ],
 
             // Restore Purchases button
-            const SizedBox(height: 16),
-            Center(
-              child: TextButton.icon(
-                onPressed: isLoading ? null : _restorePurchases,
-                icon: isLoading
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.refresh, size: 18),
-                label: const Text('Restore Purchases'),
-                style: TextButton.styleFrom(
-                  foregroundColor: context.accentColor,
-                ),
-              ),
-            ),
+            const RestorePurchasesButton(),
 
             // Terms & Privacy
             const SizedBox(height: 16),
@@ -576,6 +543,27 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
   Future<void> _purchaseBundle() async {
     ref.haptics.buttonTap();
+
+    // If already owned, short-circuit and celebrate
+    final purchaseState = ref.read(purchaseStateProvider);
+    final bundleId = RevenueCatConfig.completePackProductId;
+    if (purchaseState.hasPurchased(bundleId)) {
+      ref.haptics.success();
+      _showAllUnlockedCelebration();
+      return;
+    }
+
+    // Try restoring first to detect cross-account ownership without prompting the store
+    final restored = await restorePurchases(ref);
+    if (restored) {
+      final refreshedState = ref.read(purchaseStateProvider);
+      if (refreshedState.hasPurchased(bundleId)) {
+        ref.haptics.success();
+        _showAllUnlockedCelebration();
+        return;
+      }
+    }
+
     final result = await purchaseProduct(
       ref,
       RevenueCatConfig.completePackProductId,
@@ -852,93 +840,5 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
         ),
       ),
     );
-  }
-
-  Future<void> _restorePurchases() async {
-    AppLogging.subscriptions(
-      '💳 [SubscriptionScreen] ═══════════════════════════════════════════════',
-    );
-    AppLogging.subscriptions(
-      '💳 [SubscriptionScreen] _restorePurchases() called',
-    );
-    AppLogging.subscriptions('💳 [SubscriptionScreen] mounted: $mounted');
-
-    ref.haptics.buttonTap();
-
-    // Log current state before restore
-    final stateBefore = ref.read(purchaseStateProvider);
-    AppLogging.subscriptions('💳 [SubscriptionScreen] State BEFORE restore:');
-    AppLogging.subscriptions(
-      '💳 [SubscriptionScreen]   purchasedProductIds: ${stateBefore.purchasedProductIds}',
-    );
-    AppLogging.subscriptions(
-      '💳 [SubscriptionScreen]   customerId: ${stateBefore.customerId}',
-    );
-
-    AppLogging.subscriptions(
-      '💳 [SubscriptionScreen] Calling restorePurchases(ref)...',
-    );
-    final stopwatch = Stopwatch()..start();
-    final success = await restorePurchases(ref);
-    stopwatch.stop();
-
-    AppLogging.subscriptions(
-      '💳 [SubscriptionScreen] restorePurchases returned: $success',
-    );
-    AppLogging.subscriptions(
-      '💳 [SubscriptionScreen] Duration: ${stopwatch.elapsedMilliseconds}ms',
-    );
-
-    // Log state after restore
-    final stateAfter = ref.read(purchaseStateProvider);
-    AppLogging.subscriptions('💳 [SubscriptionScreen] State AFTER restore:');
-    AppLogging.subscriptions(
-      '💳 [SubscriptionScreen]   purchasedProductIds: ${stateAfter.purchasedProductIds}',
-    );
-    AppLogging.subscriptions(
-      '💳 [SubscriptionScreen]   customerId: ${stateAfter.customerId}',
-    );
-
-    // Check each feature
-    AppLogging.subscriptions(
-      '💳 [SubscriptionScreen] Feature status after restore:',
-    );
-    AppLogging.subscriptions(
-      '💳 [SubscriptionScreen]   premiumThemes: ${stateAfter.hasFeature(PremiumFeature.premiumThemes)}',
-    );
-    AppLogging.subscriptions(
-      '💳 [SubscriptionScreen]   customRingtones: ${stateAfter.hasFeature(PremiumFeature.customRingtones)}',
-    );
-    AppLogging.subscriptions(
-      '💳 [SubscriptionScreen]   homeWidgets: ${stateAfter.hasFeature(PremiumFeature.homeWidgets)}',
-    );
-    AppLogging.subscriptions(
-      '💳 [SubscriptionScreen]   automations: ${stateAfter.hasFeature(PremiumFeature.automations)}',
-    );
-    AppLogging.subscriptions(
-      '💳 [SubscriptionScreen]   iftttIntegration: ${stateAfter.hasFeature(PremiumFeature.iftttIntegration)}',
-    );
-    AppLogging.subscriptions(
-      '💳 [SubscriptionScreen] ═══════════════════════════════════════════════',
-    );
-
-    if (mounted) {
-      if (success) {
-        AppLogging.subscriptions(
-          '💳 [SubscriptionScreen] Showing success snackbar',
-        );
-        ref.haptics.success();
-        showSuccessSnackBar(context, 'Purchases restored successfully');
-      } else {
-        AppLogging.subscriptions(
-          '💳 [SubscriptionScreen] Showing info snackbar (no purchases)',
-        );
-        showInfoSnackBar(context, 'No purchases to restore');
-      }
-    } else {
-      AppLogging.subscriptions(
-        '💳 [SubscriptionScreen] Widget not mounted, skipping snackbar',
-      );
-    }
   }
 }

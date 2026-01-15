@@ -37,7 +37,8 @@ class PremiumFeatureGate extends ConsumerWidget {
 
     return _LockedFeatureCard(
       featureName: purchase?.name ?? feature.name,
-      featureDescription: purchase?.description ?? 'This feature requires a purchase',
+      featureDescription:
+          purchase?.description ?? 'This feature requires a purchase',
       price: purchase?.price ?? 0,
       showUpgradeButton: showUpgradeButton,
     );
@@ -77,7 +78,11 @@ class _LockedFeatureCard extends StatelessWidget {
               color: context.accentColor.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.lock_outline, color: context.accentColor, size: 32),
+            child: Icon(
+              Icons.lock_outline,
+              color: context.accentColor,
+              size: 32,
+            ),
           ),
           SizedBox(height: 16),
           Text(
@@ -104,7 +109,11 @@ class _LockedFeatureCard extends StatelessWidget {
                 );
               },
               icon: const Icon(Icons.shopping_bag_outlined, size: 18),
-              label: Text(price > 0 ? 'Unlock for \$${price.toStringAsFixed(2)}' : 'View Upgrades'),
+              label: Text(
+                price > 0
+                    ? 'Unlock for \$${price.toStringAsFixed(2)}'
+                    : 'View Upgrades',
+              ),
             ),
           ],
         ],
@@ -178,11 +187,7 @@ class PremiumFeatureRow extends ConsumerWidget {
           Expanded(child: child),
           if (!hasFeature && showLockIfLocked) ...[
             SizedBox(width: 8),
-            Icon(
-              Icons.lock_outline,
-              size: 16,
-              color: context.accentColor,
-            ),
+            Icon(Icons.lock_outline, size: 16, color: context.accentColor),
           ],
         ],
       ),
@@ -231,7 +236,11 @@ Future<bool> checkFeatureOrShowUpgrade(
               MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
             );
           },
-          child: Text(purchase != null ? 'Unlock \$${purchase.price.toStringAsFixed(2)}' : 'View Upgrades'),
+          child: Text(
+            purchase != null
+                ? 'Unlock \$${purchase.price.toStringAsFixed(2)}'
+                : 'View Upgrades',
+          ),
         ),
       ],
     ),

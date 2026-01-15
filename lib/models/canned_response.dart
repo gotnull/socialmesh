@@ -54,12 +54,42 @@ class CannedResponse {
 class DefaultCannedResponses {
   static List<CannedResponse> get all => [
     CannedResponse(id: 'default_ok', text: 'OK', sortOrder: 0, isDefault: true),
-    CannedResponse(id: 'default_yes', text: 'Yes', sortOrder: 1, isDefault: true),
+    CannedResponse(
+      id: 'default_yes',
+      text: 'Yes',
+      sortOrder: 1,
+      isDefault: true,
+    ),
     CannedResponse(id: 'default_no', text: 'No', sortOrder: 2, isDefault: true),
-    CannedResponse(id: 'default_omw', text: 'On my way', sortOrder: 3, isDefault: true),
-    CannedResponse(id: 'default_help', text: 'Need help', sortOrder: 4, isDefault: true),
-    CannedResponse(id: 'default_safe', text: "I'm safe", sortOrder: 5, isDefault: true),
-    CannedResponse(id: 'default_wait', text: 'Wait for me', sortOrder: 6, isDefault: true),
-    CannedResponse(id: 'default_thanks', text: 'Thanks!', sortOrder: 7, isDefault: true),
+    CannedResponse(
+      id: 'default_omw',
+      text: 'On my way',
+      sortOrder: 3,
+      isDefault: true,
+    ),
+    CannedResponse(
+      id: 'default_help',
+      text: 'Need help',
+      sortOrder: 4,
+      isDefault: true,
+    ),
+    CannedResponse(
+      id: 'default_safe',
+      text: "I'm safe",
+      sortOrder: 5,
+      isDefault: true,
+    ),
+    CannedResponse(
+      id: 'default_wait',
+      text: 'Wait for me',
+      sortOrder: 6,
+      isDefault: true,
+    ),
+    CannedResponse(
+      id: 'default_thanks',
+      text: 'Thanks!',
+      sortOrder: 7,
+      isDefault: true,
+    ),
   ];
 }

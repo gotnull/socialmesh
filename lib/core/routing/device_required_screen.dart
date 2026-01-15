@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/connection_providers.dart';
+import '../../utils/snackbar.dart';
 
 /// Mixin for screens that require device connection.
 /// Automatically shows a blocking overlay when device is disconnected.
@@ -173,20 +174,7 @@ class DeviceRequiredInteraction extends ConsumerWidget {
 
   void _showBlockedMessage(BuildContext context) {
     final message = blockedMessage ?? 'Connect device to use this feature';
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.bluetooth_disabled, color: Colors.white, size: 18),
-            const SizedBox(width: 8),
-            Expanded(child: Text(message)),
-          ],
-        ),
-        backgroundColor: Colors.orange.shade700,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    showInfoSnackBar(context, message, duration: const Duration(seconds: 2));
   }
 }
 
@@ -239,20 +227,7 @@ class DeviceRequiredButton extends ConsumerWidget {
 
   void _showBlockedMessage(BuildContext context) {
     final message = blockedMessage ?? 'Connect device to use this feature';
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.bluetooth_disabled, color: Colors.white, size: 18),
-            const SizedBox(width: 8),
-            Expanded(child: Text(message)),
-          ],
-        ),
-        backgroundColor: Colors.orange.shade700,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    showInfoSnackBar(context, message, duration: const Duration(seconds: 2));
   }
 }
 
@@ -290,19 +265,6 @@ class DeviceRequiredIconButton extends ConsumerWidget {
 
   void _showBlockedMessage(BuildContext context) {
     final message = blockedMessage ?? 'Connect device to use this feature';
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.bluetooth_disabled, color: Colors.white, size: 18),
-            const SizedBox(width: 8),
-            Expanded(child: Text(message)),
-          ],
-        ),
-        backgroundColor: Colors.orange.shade700,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    showInfoSnackBar(context, message, duration: const Duration(seconds: 2));
   }
 }

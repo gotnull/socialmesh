@@ -385,9 +385,7 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
           if (_isProcessing)
             Container(
               color: Colors.black54,
-              child: Center(
-                child: LoadingIndicator(size: 48),
-              ),
+              child: Center(child: LoadingIndicator(size: 48)),
             ),
           Positioned(
             bottom: 0,

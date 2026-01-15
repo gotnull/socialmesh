@@ -569,9 +569,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
       decoration: BoxDecoration(
         color: context.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: value != null ? accentColor : context.border,
-        ),
+        border: Border.all(color: value != null ? accentColor : context.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -667,13 +665,9 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected
-              ? accentColor.withAlpha(30)
-              : context.background,
+          color: isSelected ? accentColor.withAlpha(30) : context.background,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: isSelected ? accentColor : context.border,
-          ),
+          border: Border.all(color: isSelected ? accentColor : context.border),
         ),
         child: Center(
           child: Text(

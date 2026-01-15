@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socialmesh/core/logging.dart';
 
-
 import '../features/world_mesh/services/node_favorites_service.dart';
 import '../models/world_mesh_node.dart';
 

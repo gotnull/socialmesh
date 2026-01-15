@@ -7,6 +7,7 @@ import '../../../core/logging.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../providers/social_providers.dart';
+import '../../../utils/snackbar.dart';
 
 /// Full-screen blocking overlay for suspended users.
 /// Prevents any interaction with social features until suspension is lifted.
@@ -375,12 +376,7 @@ class _SuspensionNotice extends StatelessWidget {
                       Clipboard.setData(
                         const ClipboardData(text: 'support@socialmesh.app'),
                       );
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Email copied to clipboard'),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
+                      showSuccessSnackBar(context, 'Email copied to clipboard');
                     },
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,

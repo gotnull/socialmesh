@@ -38,6 +38,7 @@ import 'models/mesh_models.dart';
 import 'models/social.dart';
 import 'services/app_intents/app_intents_service.dart';
 import 'services/deep_link_service.dart';
+import 'utils/snackbar.dart';
 import 'services/profile/profile_cloud_sync_service.dart';
 import 'services/notifications/push_notification_service.dart';
 import 'services/content_moderation/profanity_checker.dart';
@@ -556,40 +557,16 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
         navigator.popUntil((route) => route.isFirst);
       }
 
-      // Show notification
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.check_circle, color: Colors.white),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Node "${link.longName ?? 'Unknown'}" added',
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ),
-            ],
-          ),
-          backgroundColor: context.accentColor,
-          behavior: SnackBarBehavior.floating,
-          action: SnackBarAction(
-            label: 'View',
-            textColor: Colors.white,
-            onPressed: () {
-              Navigator.of(context).pushNamed('/nodes');
-            },
-          ),
-        ),
+      // Show notification using shared snackbar helper with action
+      showActionSnackBar(
+        context,
+        'Node "${link.longName ?? 'Unknown'}" added',
+        actionLabel: 'View',
+        onAction: () => Navigator.of(context).pushNamed('/nodes'),
+        type: SnackBarType.success,
       );
     } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to add node from link'),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      showErrorSnackBar(context, 'Failed to add node from link');
     }
   }
 

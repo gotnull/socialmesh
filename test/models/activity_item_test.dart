@@ -9,10 +9,14 @@ void main() {
       expect(SocialActivityType.values, contains(SocialActivityType.follow));
       expect(SocialActivityType.values, contains(SocialActivityType.postLike));
       expect(
-          SocialActivityType.values, contains(SocialActivityType.postComment));
+        SocialActivityType.values,
+        contains(SocialActivityType.postComment),
+      );
       expect(SocialActivityType.values, contains(SocialActivityType.mention));
       expect(
-          SocialActivityType.values, contains(SocialActivityType.commentReply));
+        SocialActivityType.values,
+        contains(SocialActivityType.commentReply),
+      );
     });
   });
 
@@ -278,10 +282,7 @@ void main() {
 
     test('copyWith creates modified copy', () {
       const state = ActivityFeedState();
-      final updated = state.copyWith(
-        isLoading: true,
-        unreadCount: 5,
-      );
+      final updated = state.copyWith(isLoading: true, unreadCount: 5);
 
       expect(updated.isLoading, true);
       expect(updated.unreadCount, 5);

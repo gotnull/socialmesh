@@ -259,6 +259,10 @@ class _DrawerMenuItem {
 // screen to focus a specific signal without pushing additional routes.
 final GlobalKey presenceFeedScreenKey = GlobalKey();
 
+/// Global key for the bottom navigation bar so utilities (e.g., snackbars)
+/// can measure its runtime height instead of hardcoding offsets.
+final GlobalKey mainShellBottomNavKey = GlobalKey();
+
 class MainShell extends ConsumerStatefulWidget {
   const MainShell({super.key});
 
@@ -999,6 +1003,7 @@ class _MainShellState extends ConsumerState<MainShell> {
         ],
       ),
       bottomNavigationBar: Container(
+        key: mainShellBottomNavKey,
         decoration: BoxDecoration(
           color: theme.scaffoldBackgroundColor,
           border: Border(

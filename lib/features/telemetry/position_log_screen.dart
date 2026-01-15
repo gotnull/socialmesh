@@ -493,10 +493,7 @@ class _PositionMapViewState extends State<_PositionMapView> {
                       value: _selectedNodeNum,
                       hint: const Text('All nodes'),
                       items: [
-                        DropdownMenuItem(
-                          value: null,
-                          child: Text('All nodes'),
-                        ),
+                        DropdownMenuItem(value: null, child: Text('All nodes')),
                         ..._nodeNums.map((n) {
                           final name =
                               widget.nodes[n]?.displayName ??

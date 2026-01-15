@@ -68,7 +68,9 @@ class NotificationSoundService {
     // Check if already exists
     final file = File(path);
     if (await file.exists()) {
-      AppLogging.audio('NotificationSoundService: Sound already cached: $filename');
+      AppLogging.audio(
+        'NotificationSoundService: Sound already cached: $filename',
+      );
       return filename;
     }
 
@@ -357,7 +359,9 @@ class NotificationSoundService {
     for (final file in toDelete) {
       try {
         await file.delete();
-        AppLogging.audio('NotificationSoundService: Deleted old sound: ${file.path}');
+        AppLogging.audio(
+          'NotificationSoundService: Deleted old sound: ${file.path}',
+        );
       } catch (e) {
         AppLogging.audio('NotificationSoundService: Failed to delete: $e');
       }

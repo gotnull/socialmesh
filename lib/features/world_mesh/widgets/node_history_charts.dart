@@ -59,10 +59,7 @@ class _NodeHistoryChartsState extends State<NodeHistoryCharts> {
             SizedBox(height: 4),
             Text(
               '${widget.history.length}/2 data points',
-              style: TextStyle(
-                fontSize: 12,
-                color: context.textTertiary,
-              ),
+              style: TextStyle(fontSize: 12, color: context.textTertiary),
             ),
           ],
         ),
@@ -177,10 +174,7 @@ class _NodeHistoryChartsState extends State<NodeHistoryCharts> {
             SizedBox(height: 8),
             Text(
               'No ${_selectedMetric.label.toLowerCase()} data',
-              style: TextStyle(
-                fontSize: 12,
-                color: context.textTertiary,
-              ),
+              style: TextStyle(fontSize: 12, color: context.textTertiary),
             ),
           ],
         ),
@@ -254,10 +248,7 @@ class _NodeHistoryChartsState extends State<NodeHistoryCharts> {
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(
                     DateFormat('HH:mm').format(entry.timestamp),
-                    style: TextStyle(
-                      fontSize: 9,
-                      color: context.textTertiary,
-                    ),
+                    style: TextStyle(fontSize: 9, color: context.textTertiary),
                   ),
                 );
               },
@@ -271,10 +262,7 @@ class _NodeHistoryChartsState extends State<NodeHistoryCharts> {
               getTitlesWidget: (value, meta) {
                 return Text(
                   '${value.toStringAsFixed(0)}${_selectedMetric.unit}',
-                  style: TextStyle(
-                    fontSize: 9,
-                    color: context.textTertiary,
-                  ),
+                  style: TextStyle(fontSize: 9, color: context.textTertiary),
                 );
               },
             ),

@@ -187,12 +187,16 @@ class OfflineQueueService {
         _queue.removeAt(0);
         _queueController.add(List.unmodifiable(_queue));
 
-        AppLogging.messages('📤 Queued message sent successfully: ${message.id}');
+        AppLogging.messages(
+          '📤 Queued message sent successfully: ${message.id}',
+        );
 
         // Small delay between messages to avoid overwhelming the device
         await Future.delayed(const Duration(milliseconds: 100));
       } catch (e) {
-        AppLogging.messages('📤 Failed to send queued message: ${message.id} - $e');
+        AppLogging.messages(
+          '📤 Failed to send queued message: ${message.id} - $e',
+        );
         message.retryCount++;
 
         if (message.retryCount >= 3) {
@@ -217,7 +221,9 @@ class OfflineQueueService {
     }
 
     _isProcessing = false;
-    AppLogging.messages('📤 Queue processing complete, ${_queue.length} remaining');
+    AppLogging.messages(
+      '📤 Queue processing complete, ${_queue.length} remaining',
+    );
   }
 
   /// Dispose resources

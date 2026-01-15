@@ -1128,9 +1128,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
         onTap: () => FocusScope.of(context).unfocus(),
         behavior: HitTestBehavior.opaque,
         child: _loading
-            ? Center(
-                child: LoadingIndicator(size: 48),
-              )
+            ? Center(child: LoadingIndicator(size: 48))
             : ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
@@ -2290,9 +2288,7 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent> {
           // Results list
           Expanded(
             child: _loadingSuggestions && !hasSearch
-                ? Center(
-                    child: LoadingIndicator(size: 48),
-                  )
+                ? Center(child: LoadingIndicator(size: 48))
                 : displayList.isEmpty
                 ? Center(
                     child: Column(

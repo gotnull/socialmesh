@@ -617,7 +617,7 @@ class AppTheme {
           fontWeight: FontWeight.w500,
           fontFamily: fontFamily,
         ),
-        behavior: SnackBarBehavior.floating,
+        behavior: SnackBarBehavior.fixed,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
 
@@ -956,7 +956,7 @@ class AppTheme {
           fontWeight: FontWeight.w500,
           fontFamily: fontFamily,
         ),
-        behavior: SnackBarBehavior.floating,
+        behavior: SnackBarBehavior.fixed,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
 

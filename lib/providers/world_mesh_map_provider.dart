@@ -93,10 +93,10 @@ class WorldMeshMapNotifier extends Notifier<AsyncValue<WorldMeshMapState>> {
 
     try {
       final nodes = await service.fetchNodes();
-      
+
       // Cache the fetched nodes for offline use
       await cacheService.cacheNodes(nodes.values.toList());
-      
+
       state = AsyncValue.data(
         WorldMeshMapState(
           nodes: nodes,
@@ -108,12 +108,12 @@ class WorldMeshMapNotifier extends Notifier<AsyncValue<WorldMeshMapState>> {
     } catch (e, st) {
       final currentData = state.whenOrNull(data: (d) => d);
       final currentNodes = currentData?.nodes ?? {};
-      
+
       if (currentNodes.isEmpty) {
         // Try to load from cache
         final cachedNodes = await cacheService.getCachedNodes();
         final cacheTimestamp = await cacheService.getCacheTimestamp();
-        
+
         if (cachedNodes != null && cachedNodes.isNotEmpty) {
           final nodesMap = {for (final n in cachedNodes) n.nodeNum: n};
           state = AsyncValue.data(
