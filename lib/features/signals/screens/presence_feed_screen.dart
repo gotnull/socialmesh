@@ -1900,7 +1900,7 @@ class _AuthorInfo {
   }
 }
 
-/// Instagram-style sticky header with overlapping author avatars
+/// Sticky header with overlapping author avatars
 class _ActiveAuthorsHeader extends StatefulWidget {
   const _ActiveAuthorsHeader({
     required this.authors,
@@ -2003,7 +2003,7 @@ class _ActiveAuthorsHeaderState extends State<_ActiveAuthorsHeader>
                   ),
                   child: Row(
                     children: [
-                      // Overlapping avatars (Instagram-style)
+                      // Overlapping avatars
                       SizedBox(
                         height: 36,
                         width: 36.0 + (displayAuthors.length - 1) * 20.0,
