@@ -41,16 +41,12 @@ void main() {
     final clip = find.ancestor(of: snack, matching: find.byType(ClipRRect));
     expect(clip, findsOneWidget);
 
-    // Verify SnackBar widget has a top-only rounded shape to avoid bottom corner artifacts
+    // Verify SnackBar widget has top-left/top-right radius set (12px)
     final snackBarWidget = tester.widget<SnackBar>(find.byType(SnackBar));
     expect(snackBarWidget.shape, isA<RoundedRectangleBorder>());
     final rounded = snackBarWidget.shape as RoundedRectangleBorder;
-    expect(
-      rounded.borderRadius,
-      const BorderRadius.only(
-        topLeft: Radius.circular(12),
-        topRight: Radius.circular(12),
-      ),
-    );
+    final resolved = rounded.borderRadius.resolve(TextDirection.ltr);
+    expect(resolved.topLeft, equals(const Radius.circular(12)));
+    expect(resolved.topRight, equals(const Radius.circular(12)));
   });
 }

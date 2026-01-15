@@ -127,7 +127,10 @@ void _showStyledSnackBar(
     elevation: 0,
     // Ensure the SnackBar overlay matches our top-only rounding to avoid bottom corner artifacts
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.all(Radius.circular(12)),
+      borderRadius: BorderRadius.only(
+        topLeft: Radius.circular(12),
+        topRight: Radius.circular(12),
+      ),
     ),
     duration: duration,
     margin: const EdgeInsets.all(16),
@@ -135,10 +138,10 @@ void _showStyledSnackBar(
     content: ClipRRect(
       borderRadius: const BorderRadius.all(Radius.circular(12)),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
         child: Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).cardColor.withValues(alpha: 0.7),
+            color: Theme.of(context).cardColor.withValues(alpha: 0.35),
             borderRadius: const BorderRadius.all(Radius.circular(12)),
             border: Border.all(
               color: type.iconColor.withValues(alpha: 0.3),
@@ -232,10 +235,10 @@ void showActionSnackBar(
     content: ClipRRect(
       borderRadius: const BorderRadius.all(Radius.circular(12)),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
         child: Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).cardColor.withValues(alpha: 0.7),
+            color: Theme.of(context).cardColor.withValues(alpha: 0.35),
             borderRadius: const BorderRadius.all(Radius.circular(12)),
             border: Border.all(
               color: type.iconColor.withValues(alpha: 0.3),
@@ -322,10 +325,10 @@ void _showLoadingSnackBar(
     content: ClipRRect(
       borderRadius: const BorderRadius.all(Radius.circular(12)),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
         child: Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).cardColor.withValues(alpha: 0.7),
+            color: Theme.of(context).cardColor.withValues(alpha: 0.35),
             borderRadius: const BorderRadius.all(Radius.circular(12)),
             border: Border.all(
               color: SnackBarType.info.iconColor.withValues(alpha: 0.3),
