@@ -51,94 +51,6 @@
       position: relative;
     }
 
-    /* Ambient background particles */
-    .particles {
-      position: fixed;
-      inset: 0;
-      overflow: hidden;
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    .particle {
-      position: absolute;
-      width: 1vmin;
-      height: 1vmin;
-      border-radius: 50%;
-      opacity: 0;
-      animation: particleFade 8s ease-in-out infinite;
-    }
-
-    .particle:nth-child(1) {
-      left: 10%;
-      top: 20%;
-      background: var(--accent-magenta);
-      animation-delay: 0s;
-    }
-
-    .particle:nth-child(2) {
-      left: 20%;
-      top: 80%;
-      background: var(--accent-purple);
-      animation-delay: 1s;
-    }
-
-    .particle:nth-child(3) {
-      left: 80%;
-      top: 30%;
-      background: var(--accent-blue);
-      animation-delay: 2s;
-    }
-
-    .particle:nth-child(4) {
-      left: 70%;
-      top: 70%;
-      background: var(--accent-magenta);
-      animation-delay: 3s;
-    }
-
-    .particle:nth-child(5) {
-      left: 30%;
-      top: 50%;
-      background: var(--accent-purple);
-      animation-delay: 4s;
-    }
-
-    .particle:nth-child(6) {
-      left: 90%;
-      top: 60%;
-      background: var(--accent-blue);
-      animation-delay: 5s;
-    }
-
-    .particle:nth-child(7) {
-      left: 5%;
-      top: 40%;
-      background: var(--accent-purple);
-      animation-delay: 6s;
-    }
-
-    .particle:nth-child(8) {
-      left: 60%;
-      top: 10%;
-      background: var(--accent-magenta);
-      animation-delay: 7s;
-    }
-
-    @keyframes particleFade {
-
-      0%,
-      100% {
-        opacity: 0;
-        transform: translateY(0) scale(1);
-      }
-
-      50% {
-        opacity: 0.6;
-        transform: translateY(-4vmin) scale(1.5);
-      }
-    }
-
     /* Main container */
     .container {
       display: flex;
@@ -373,18 +285,6 @@
 </head>
 
 <body>
-  <!-- Ambient particles -->
-  <div class="particles">
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-  </div>
-
   <div class="container">
     <!-- App Icon -->
     <div class="icon-container">
