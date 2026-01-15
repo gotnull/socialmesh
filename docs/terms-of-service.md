@@ -123,4 +123,4 @@ If you have any questions about these Terms, please contact us at:
 
 ---
 
-© 2025 Socialmesh. All rights reserved.
+© 2026 Socialmesh. All rights reserved.

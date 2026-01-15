@@ -1323,7 +1323,7 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '© 2025 Socialmesh. All rights reserved.',
+                    '© 2026 Socialmesh. All rights reserved.',
                     style: TextStyle(
                       fontSize: 11,
                       color: context.textTertiary.withValues(alpha: 0.7),

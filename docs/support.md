@@ -178,4 +178,4 @@ Have an idea for a new feature? We'd love to hear it!
 
 **Website**: https://socialmesh.app
 
-© 2025 Socialmesh. All rights reserved.
+© 2026 Socialmesh. All rights reserved.
