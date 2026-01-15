@@ -273,25 +273,24 @@ class MainShell extends ConsumerStatefulWidget {
 class _MainShellState extends ConsumerState<MainShell> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
+  late final MainShellScaffoldKeyNotifier _scaffoldKeyNotifier;
+
   @override
   void initState() {
     super.initState();
-    // Set the scaffold key provider immediately so screens can access the drawer
-    // The key is already created at field initialization, so it's safe to set it now
-    // Use addPostFrameCallback to ensure the widget tree is fully built
-    // This is more reliable than Future.microtask for widget lifecycle
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         ref.read(mainShellScaffoldKeyProvider.notifier).setKey(_scaffoldKey);
       }
     });
+    _scaffoldKeyNotifier = ref.read(mainShellScaffoldKeyProvider.notifier);
   }
 
   @override
   void dispose() {
     // Clear the scaffold key from the provider when MainShell is disposed
     // This prevents stale key references if MainShell is recreated
-    ref.read(mainShellScaffoldKeyProvider.notifier).setKey(null);
+    _scaffoldKeyNotifier.setKey(null);
     super.dispose();
   }
 
