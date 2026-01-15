@@ -1899,10 +1899,9 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
 
       // 1b. Check display name uniqueness
       if (currentUser != null) {
-        final isTaken = await profileCloudSyncService.isDisplayNameTaken(
-          displayName,
-          currentUser.uid,
-        );
+        final isTaken = await ref
+            .read(profileCloudSyncServiceProvider)
+            .isDisplayNameTaken(displayName, currentUser.uid);
         if (isTaken) {
           if (!mounted) return;
           showErrorSnackBar(
@@ -2422,8 +2421,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
                                                 : UserAvatar(
                                                     imageUrl:
                                                         profile?.avatarUrl,
-                                                    initials:
-                                                        profile?.initials,
+                                                    initials: profile?.initials,
                                                     size: 100,
                                                     borderWidth: 2,
                                                     borderColor: accentColor,
