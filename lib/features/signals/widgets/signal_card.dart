@@ -8,7 +8,8 @@ import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/user_avatar.dart';
 import '../../../models/social.dart';
 import '../../../providers/app_providers.dart';
-import '../../map/map_screen.dart';
+import '../../../providers/signal_bookmark_provider.dart';
+import '../screens/presence_feed_screen.dart';
 import '../utils/signal_utils.dart';
 import 'proximity_indicator.dart';
 import 'signal_gallery_view.dart';
@@ -424,12 +425,7 @@ class _SignalLocation extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => MapScreen(
-          initialLatitude: location.latitude,
-          initialLongitude: location.longitude,
-          initialLocationLabel: location.name ?? 'Signal Location',
-          locationOnlyMode: true,
-        ),
+        builder: (_) => PresenceFeedScreen(initialViewMode: SignalViewMode.map),
       ),
     );
   }

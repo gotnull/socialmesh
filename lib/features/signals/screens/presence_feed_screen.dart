@@ -61,7 +61,12 @@ enum SignalSortOrder {
 /// - Updated in real-time as signals expire
 /// - Viewable in list or compact grid mode
 class PresenceFeedScreen extends ConsumerStatefulWidget {
-  const PresenceFeedScreen({super.key});
+  const PresenceFeedScreen({
+    super.key,
+    this.initialViewMode = SignalViewMode.list,
+  });
+
+  final SignalViewMode initialViewMode;
 
   @override
   ConsumerState<PresenceFeedScreen> createState() => _PresenceFeedScreenState();
@@ -84,6 +89,8 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    // Set initial view mode
+    ref.read(signalViewModeProvider.notifier).setMode(widget.initialViewMode);
     // Clean up hidden signals on init
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _cleanupHiddenSignals();
