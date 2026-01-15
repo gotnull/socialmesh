@@ -155,12 +155,22 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
               ),
             ],
 
-            // Restore purchases
-            const SizedBox(height: 24),
+            // Restore Purchases button
+            const SizedBox(height: 16),
             Center(
-              child: TextButton(
+              child: TextButton.icon(
                 onPressed: isLoading ? null : _restorePurchases,
-                child: Text('Restore Purchases'),
+                icon: isLoading
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.refresh, size: 18),
+                label: const Text('Restore Purchases'),
+                style: TextButton.styleFrom(
+                  foregroundColor: context.accentColor,
+                ),
               ),
             ),
 

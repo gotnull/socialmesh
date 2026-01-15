@@ -2,12 +2,15 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../../core/theme.dart';
+import '../../../core/logging.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/user_avatar.dart';
 import '../../../models/social.dart';
 import '../../../providers/app_providers.dart';
+import '../../navigation/main_shell.dart';
 import '../../../providers/signal_bookmark_provider.dart';
 import '../screens/presence_feed_screen.dart';
 import '../utils/signal_utils.dart';
@@ -88,8 +91,7 @@ class SignalCard extends StatelessWidget {
               _SignalImage(signal: signal),
 
             // Location - tappable to open in maps
-            if (signal.location != null)
-              _SignalLocation(location: signal.location!),
+            if (signal.location != null) _SignalLocation(signal: signal),
 
             // Footer with TTL
             SignalTTLFooter(signal: signal, onComment: onComment),
@@ -417,17 +419,66 @@ class _SignalImage extends StatelessWidget {
 
 /// Tappable location row that opens in-app map
 class _SignalLocation extends StatelessWidget {
-  const _SignalLocation({required this.location});
+  const _SignalLocation({required this.signal});
 
-  final PostLocation location;
+  final Post signal;
 
   void _openMap(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => PresenceFeedScreen(initialViewMode: SignalViewMode.map),
-      ),
-    );
+    // If we're already inside a PresenceFeedScreen, update it in-place instead
+    // of pushing a new screen to avoid stacking multiple presence screens.
+    final presenceState = context
+        .findAncestorStateOfType<State<PresenceFeedScreen>>();
+    if (presenceState != null) {
+      try {
+        (presenceState as dynamic).showSignalOnMap(signal);
+        return;
+      } catch (e) {
+        AppLogging.signals('showSignalOnMap failed, falling back to push: $e');
+      }
+    }
+
+    // If not in-place, navigate back to the app root (MainShell), switch to the
+    // Signals tab, then focus the signal on the existing PresenceFeedScreen.
+    // This avoids pushing duplicate PresenceFeedScreen instances and keeps the
+    // hamburger menu/drawer behavior intact.
+    Navigator.of(context).popUntil((route) => route.isFirst);
+
+    // Switch main shell to Signals tab
+    try {
+      // Use provider container to switch tab
+      final container = ProviderScope.containerOf(context);
+      container.read(mainShellIndexProvider.notifier).setIndex(2);
+    } catch (e) {
+      AppLogging.signals('Failed to set main shell index: $e');
+    }
+
+    // After the frame, focus the signal on the in-place PresenceFeedScreen
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final presenceState = presenceFeedScreenKey.currentState;
+      if (presenceState != null) {
+        try {
+          (presenceState as dynamic).showSignalOnMap(signal);
+          return;
+        } catch (e) {
+          AppLogging.signals('Failed to focus presence feed on signal: $e');
+        }
+      }
+
+      // As a last resort, push a new PresenceFeedScreen focused on this signal
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PresenceFeedScreen(
+            initialViewMode: SignalViewMode.map,
+            initialCenter: LatLng(
+              signal.location!.latitude,
+              signal.location!.longitude,
+            ),
+            initialSelectedSignalId: signal.id,
+          ),
+        ),
+      );
+    });
   }
 
   @override
@@ -452,7 +503,7 @@ class _SignalLocation extends StatelessWidget {
               const SizedBox(width: 6),
               Flexible(
                 child: Text(
-                  location.name ?? 'View Location',
+                  signal.location!.name ?? 'View Location',
                   style: TextStyle(
                     color: context.accentColor,
                     fontSize: 12,

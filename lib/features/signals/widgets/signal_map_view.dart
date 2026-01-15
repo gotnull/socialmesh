@@ -15,6 +15,7 @@ class SignalMapView extends StatefulWidget {
     required this.onSignalTap,
     this.initialCenter,
     this.initialZoom = 10.0,
+    this.initialSelectedSignalId,
     super.key,
   });
 
@@ -22,6 +23,7 @@ class SignalMapView extends StatefulWidget {
   final void Function(Post signal) onSignalTap;
   final LatLng? initialCenter;
   final double initialZoom;
+  final String? initialSelectedSignalId;
 
   @override
   State<SignalMapView> createState() => _SignalMapViewState();
@@ -31,6 +33,23 @@ class _SignalMapViewState extends State<SignalMapView> {
   final MapController _mapController = MapController();
   Post? _selectedSignal;
   bool _showSignalList = false;
+
+  /// Programmatically focus on a specific signal: select the preview card
+  /// and center/zoom the map to its location.
+  void focusOnSignal(Post signal, {double zoom = 15.0}) {
+    if (signal.location == null) return;
+
+    setState(() {
+      _selectedSignal = signal;
+      _showSignalList = false;
+    });
+
+    // Animate/map move to the location
+    _mapController.move(
+      LatLng(signal.location!.latitude, signal.location!.longitude),
+      zoom,
+    );
+  }
 
   List<Post> get _signalsWithLocation =>
       widget.signals.where((s) => s.location != null).toList();
@@ -52,6 +71,20 @@ class _SignalMapViewState extends State<SignalMapView> {
       totalLat / withLocation.length,
       totalLng / withLocation.length,
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialSelectedSignalId != null) {
+      try {
+        _selectedSignal = widget.signals.firstWhere(
+          (s) => s.id == widget.initialSelectedSignalId,
+        );
+      } catch (_) {
+        _selectedSignal = null;
+      }
+    }
   }
 
   @override

@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../../core/logging.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
@@ -64,9 +65,13 @@ class PresenceFeedScreen extends ConsumerStatefulWidget {
   const PresenceFeedScreen({
     super.key,
     this.initialViewMode = SignalViewMode.list,
+    this.initialCenter,
+    this.initialSelectedSignalId,
   });
 
   final SignalViewMode initialViewMode;
+  final LatLng? initialCenter;
+  final String? initialSelectedSignalId;
 
   @override
   ConsumerState<PresenceFeedScreen> createState() => _PresenceFeedScreenState();
@@ -75,6 +80,10 @@ class PresenceFeedScreen extends ConsumerStatefulWidget {
 class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
+
+  // Key to access the SignalMapView state so we can programmatically focus
+  // on a given signal when tapping a location link inside the feed.
+  final GlobalKey _mapKey = GlobalKey();
 
   bool _isRefreshing = false;
   String _searchQuery = '';
@@ -1120,7 +1129,14 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
   }
 
   Widget _buildSignalMap(List<Post> signals) {
-    return SignalMapView(signals: signals, onSignalTap: _openSignalDetail);
+    return SignalMapView(
+      key: _mapKey,
+      signals: signals,
+      onSignalTap: _openSignalDetail,
+      initialCenter: widget.initialCenter,
+      initialZoom: widget.initialCenter != null ? 15.0 : 10.0,
+      initialSelectedSignalId: widget.initialSelectedSignalId,
+    );
   }
 
   void _openSignalDetail(Post signal) {
@@ -1135,6 +1151,25 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
         builder: (context) => SignalDetailScreen(signal: signal),
       ),
     );
+  }
+
+  /// Programmatic helper to show a specific signal on the map without
+  /// pushing a new PresenceFeedScreen if we're already on it.
+  void showSignalOnMap(Post signal) {
+    // Set view mode to map first so the map is visible
+    ref.read(signalViewModeProvider.notifier).setMode(SignalViewMode.map);
+
+    // Ensure the map widget is built, then call focus on it
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final mapState = _mapKey.currentState;
+      if (mapState != null) {
+        try {
+          (mapState as dynamic).focusOnSignal(signal);
+        } catch (e) {
+          AppLogging.signals('Failed to focus map on signal: $e');
+        }
+      }
+    });
   }
 
   Future<void> _deleteSignal(Post signal) async {

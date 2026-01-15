@@ -86,6 +86,20 @@ final mainShellScaffoldKeyProvider =
       MainShellScaffoldKeyNotifier.new,
     );
 
+/// Provider for controlling the currently selected bottom tab in MainShell
+class MainShellIndexNotifier extends Notifier<int> {
+  @override
+  int build() => 3; // start on Nodes tab
+
+  void setIndex(int idx) {
+    state = idx;
+  }
+}
+
+final mainShellIndexProvider = NotifierProvider<MainShellIndexNotifier, int>(
+  MainShellIndexNotifier.new,
+);
+
 /// Widget to create a hamburger menu button for app bars
 /// Automatically shows a back button if the screen was pushed onto the navigation stack
 class HamburgerMenuButton extends ConsumerWidget {
@@ -240,6 +254,11 @@ class _DrawerMenuItem {
 }
 
 /// Main navigation shell with bottom navigation bar
+// Global key to reference the existing PresenceFeedScreen instance when it's
+// part of the MainShell. This allows other widgets to instruct the presence
+// screen to focus a specific signal without pushing additional routes.
+final GlobalKey presenceFeedScreenKey = GlobalKey();
+
 class MainShell extends ConsumerStatefulWidget {
   const MainShell({super.key});
 
@@ -248,7 +267,6 @@ class MainShell extends ConsumerStatefulWidget {
 }
 
 class _MainShellState extends ConsumerState<MainShell> {
-  int _currentIndex = 3; // Start on Nodes tab
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
@@ -411,9 +429,9 @@ class _MainShellState extends ConsumerState<MainShell> {
           child: MapScreen(),
         );
       case 2:
-        return const ConnectionRequiredWrapper(
+        return ConnectionRequiredWrapper(
           screenTitle: 'Signals',
-          child: PresenceFeedScreen(),
+          child: PresenceFeedScreen(key: presenceFeedScreenKey),
         );
       case 3:
         return const ConnectionRequiredWrapper(
@@ -973,8 +991,8 @@ class _MainShellState extends ConsumerState<MainShell> {
                 );
               },
               child: KeyedSubtree(
-                key: ValueKey('main_$_currentIndex'),
-                child: _buildScreen(_currentIndex),
+                key: ValueKey('main_${ref.watch(mainShellIndexProvider)}'),
+                child: _buildScreen(ref.watch(mainShellIndexProvider)),
               ),
             ),
           ),
@@ -1005,7 +1023,7 @@ class _MainShellState extends ConsumerState<MainShell> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: List.generate(_navItems.length, (index) {
                 final item = _navItems[index];
-                final isSelected = _currentIndex == index;
+                final isSelected = ref.watch(mainShellIndexProvider) == index;
 
                 // Show badge on Nodes tab (index 3) when new nodes discovered
                 final showNodesBadge = index == 3 && _hasNewNodes(ref);
@@ -1028,9 +1046,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                     if (index == 3) {
                       ref.read(newNodesCountProvider.notifier).reset();
                     }
-                    setState(() {
-                      _currentIndex = index;
-                    });
+                    ref.read(mainShellIndexProvider.notifier).setIndex(index);
                   },
                 );
               }),
