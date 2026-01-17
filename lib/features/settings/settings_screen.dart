@@ -12,7 +12,7 @@ import '../../models/user_profile.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/profile_providers.dart';
-import '../../providers/social_providers.dart';
+// import '../../providers/social_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../providers/subscription_providers.dart';
 import '../../providers/signal_bookmark_provider.dart';
@@ -80,7 +80,7 @@ import '../routes/routes_screen.dart';
 import '../widget_builder/widget_builder_screen.dart';
 import 'debug_settings_screen.dart';
 import 'screens/help_center_screen.dart';
-import '../social/screens/follow_requests_screen.dart';
+// import '../social/screens/follow_requests_screen.dart';
 import '../../core/widgets/loading_indicator.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -1918,12 +1918,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   ),
                                 ),
                               ),
-                              _PrivacySettingTile(),
-                              _FollowRequestsTile(),
+
+                              // _PrivacySettingTile(),
+                              // _FollowRequestsTile(),
 
                               // Social Notifications Section (only for signed-in users)
-                              const _SocialNotificationsSection(),
-
+                              // const _SocialNotificationsSection(),
                               const SizedBox(height: 16),
 
                               // Connection Section
@@ -3639,99 +3639,99 @@ class _ProfileTile extends ConsumerWidget {
 }
 
 /// Privacy setting tile for controlling private/public account
-class _PrivacySettingTile extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final currentUser = ref.watch(currentUserProvider);
-    if (currentUser == null) return const SizedBox.shrink();
+// class _PrivacySettingTile extends ConsumerWidget {
+//   @override
+//   Widget build(BuildContext context, WidgetRef ref) {
+//     final currentUser = ref.watch(currentUserProvider);
+//     if (currentUser == null) return const SizedBox.shrink();
 
-    final profileAsync = ref.watch(publicProfileProvider(currentUser.uid));
+//     final profileAsync = ref.watch(publicProfileProvider(currentUser.uid));
 
-    return profileAsync.when(
-      data: (profile) {
-        if (profile == null) return const SizedBox.shrink();
+//     return profileAsync.when(
+//       data: (profile) {
+//         if (profile == null) return const SizedBox.shrink();
 
-        return _SettingsTile(
-          icon: profile.isPrivate ? Icons.lock : Icons.lock_open,
-          title: 'Private account',
-          subtitle: profile.isPrivate
-              ? 'Only approved followers can see your posts'
-              : 'Anyone can follow you and see your posts',
-          trailing: ThemedSwitch(
-            value: profile.isPrivate,
-            onChanged: (value) async {
-              await setAccountPrivacy(ref, value);
-              if (context.mounted) {
-                showSuccessSnackBar(
-                  context,
-                  value ? 'Account is now private' : 'Account is now public',
-                );
-              }
-            },
-          ),
-        );
-      },
-      loading: () => _SettingsTile(
-        icon: Icons.lock,
-        title: 'Private account',
-        subtitle: 'Loading...',
-        trailing: const SizedBox(
-          width: 24,
-          height: 24,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
-      ),
-      error: (_, _) => const SizedBox.shrink(),
-    );
-  }
-}
+//         return _SettingsTile(
+//           icon: profile.isPrivate ? Icons.lock : Icons.lock_open,
+//           title: 'Private account',
+//           subtitle: profile.isPrivate
+//               ? 'Only approved followers can see your posts'
+//               : 'Anyone can follow you and see your posts',
+//           trailing: ThemedSwitch(
+//             value: profile.isPrivate,
+//             onChanged: (value) async {
+//               await setAccountPrivacy(ref, value);
+//               if (context.mounted) {
+//                 showSuccessSnackBar(
+//                   context,
+//                   value ? 'Account is now private' : 'Account is now public',
+//                 );
+//               }
+//             },
+//           ),
+//         );
+//       },
+//       loading: () => _SettingsTile(
+//         icon: Icons.lock,
+//         title: 'Private account',
+//         subtitle: 'Loading...',
+//         trailing: const SizedBox(
+//           width: 24,
+//           height: 24,
+//           child: CircularProgressIndicator(strokeWidth: 2),
+//         ),
+//       ),
+//       error: (_, _) => const SizedBox.shrink(),
+//     );
+//   }
+// }
 
 /// Follow requests tile with badge showing pending count
-class _FollowRequestsTile extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final currentUser = ref.watch(currentUserProvider);
-    if (currentUser == null) return const SizedBox.shrink();
+// class _FollowRequestsTile extends ConsumerWidget {
+//   @override
+//   Widget build(BuildContext context, WidgetRef ref) {
+//     final currentUser = ref.watch(currentUserProvider);
+//     if (currentUser == null) return const SizedBox.shrink();
 
-    final countAsync = ref.watch(pendingFollowRequestsCountProvider);
+//     final countAsync = ref.watch(pendingFollowRequestsCountProvider);
 
-    return countAsync.when(
-      data: (count) {
-        return _SettingsTile(
-          icon: Icons.person_add,
-          title: 'Follow requests',
-          subtitle: count == 0
-              ? 'No pending requests'
-              : '$count pending request${count == 1 ? '' : 's'}',
-          trailing: count > 0
-              ? Badge(
-                  label: Text(count > 99 ? '99+' : count.toString()),
-                  child: Icon(Icons.chevron_right, color: context.textTertiary),
-                )
-              : Icon(Icons.chevron_right, color: context.textTertiary),
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const FollowRequestsScreen()),
-          ),
-        );
-      },
-      loading: () => _SettingsTile(
-        icon: Icons.person_add,
-        title: 'Follow requests',
-        subtitle: 'Loading...',
-      ),
-      error: (_, _) => _SettingsTile(
-        icon: Icons.person_add,
-        title: 'Follow requests',
-        subtitle: 'Tap to view',
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const FollowRequestsScreen()),
-        ),
-      ),
-    );
-  }
-}
+//     return countAsync.when(
+//       data: (count) {
+//         return _SettingsTile(
+//           icon: Icons.person_add,
+//           title: 'Follow requests',
+//           subtitle: count == 0
+//               ? 'No pending requests'
+//               : '$count pending request${count == 1 ? '' : 's'}',
+//           trailing: count > 0
+//               ? Badge(
+//                   label: Text(count > 99 ? '99+' : count.toString()),
+//                   child: Icon(Icons.chevron_right, color: context.textTertiary),
+//                 )
+//               : Icon(Icons.chevron_right, color: context.textTertiary),
+//           onTap: () => Navigator.push(
+//             context,
+//             MaterialPageRoute(builder: (_) => const FollowRequestsScreen()),
+//           ),
+//         );
+//       },
+//       loading: () => _SettingsTile(
+//         icon: Icons.person_add,
+//         title: 'Follow requests',
+//         subtitle: 'Loading...',
+//       ),
+//       error: (_, _) => _SettingsTile(
+//         icon: Icons.person_add,
+//         title: 'Follow requests',
+//         subtitle: 'Tap to view',
+//         onTap: () => Navigator.push(
+//           context,
+//           MaterialPageRoute(builder: (_) => const FollowRequestsScreen()),
+//         ),
+//       ),
+//     );
+//   }
+// }
 
 /// Meshtastic Powered footer with link to meshtastic.org
 class _MeshtasticPoweredFooter extends StatelessWidget {

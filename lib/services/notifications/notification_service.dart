@@ -517,7 +517,7 @@ class NotificationService {
       // All from one person
       final sender = dms.first;
       title = '$messageCount messages from ${sender.senderName}';
-      body = dms.map((m) => m.message).take(3).join(' • ');
+      body = dms.map((m) => m.message).take(3).join(', ');
       if (messageCount > 3) body += ' ...';
     } else {
       // Multiple senders
