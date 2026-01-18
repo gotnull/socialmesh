@@ -242,9 +242,15 @@ class _SignalHeader extends ConsumerWidget {
           ),
 
           // Subscribe button for cloud authors (show even if profile service is disabled)
-          if (!isMeshSignal) ...[
-            SubscribeButton(authorId: signal.authorId, compact: true),
-            const SizedBox(width: 8),
+          if (!isMeshSignal || signal.authorSnapshot != null) ...[
+            SubscribeButton(
+              authorId:
+                  signal.authorId.startsWith('mesh_') &&
+                      signal.authorSnapshot != null
+                  ? signal.authorId.replaceFirst('mesh_', '')
+                  : signal.authorId,
+              compact: true,
+            ),
           ],
 
           // More options menu

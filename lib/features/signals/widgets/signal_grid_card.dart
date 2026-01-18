@@ -251,10 +251,14 @@ class SignalGridCard extends ConsumerWidget {
                             ),
                           ),
                           // Subscribe button for cloud authors (compact)
-                          if (!isMeshSignal) ...[
-                            const SizedBox(width: 8),
+                          if (!isMeshSignal ||
+                              signal.authorSnapshot != null) ...[
                             SubscribeButton(
-                              authorId: signal.authorId,
+                              authorId:
+                                  signal.authorId.startsWith('mesh_') &&
+                                      signal.authorSnapshot != null
+                                  ? signal.authorId.replaceFirst('mesh_', '')
+                                  : signal.authorId,
                               compact: true,
                             ),
                           ],

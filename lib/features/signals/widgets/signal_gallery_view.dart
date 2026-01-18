@@ -564,12 +564,6 @@ class _BottomInfoOverlay extends ConsumerWidget {
                     ),
                   ),
 
-                  // Subscribe button (for cloud authors; show even if profile service is disabled)
-                  if (!signal.authorId.startsWith('mesh_')) ...[
-                    SubscribeButton(authorId: signal.authorId, compact: true),
-                    const SizedBox(width: 8),
-                  ],
-
                   // View details button
                   TextButton(
                     onPressed: onViewDetails,
@@ -589,6 +583,19 @@ class _BottomInfoOverlay extends ConsumerWidget {
                       ],
                     ),
                   ),
+
+                  // Subscribe button (for cloud authors; show even if profile service is disabled)
+                  if (!signal.authorId.startsWith('mesh_') ||
+                      signal.authorSnapshot != null) ...[
+                    SubscribeButton(
+                      authorId:
+                          signal.authorId.startsWith('mesh_') &&
+                              signal.authorSnapshot != null
+                          ? signal.authorId.replaceFirst('mesh_', '')
+                          : signal.authorId,
+                      compact: true,
+                    ),
+                  ],
                 ],
               ),
 

@@ -44,17 +44,29 @@ class _SubscribeButtonState extends ConsumerState<SubscribeButton> {
 
     return subscribedAsync.when(
       data: (isSubscribed) => _buildButton(isSubscribed),
-      loading: () => SizedBox(
-        width: widget.compact ? 90 : 110,
-        height: widget.compact ? 32 : 40,
-        child: const Center(
-          child: SizedBox(
-            width: 16,
-            height: 16,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-        ),
-      ),
+      loading: () => widget.compact
+          ? SizedBox(
+              width: 36,
+              height: 36,
+              child: const Center(
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            )
+          : SizedBox(
+              width: 110,
+              height: 40,
+              child: const Center(
+                child: SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            ),
       error: (e, s) => TextButton(
         onPressed: () =>
             ref.invalidate(signalSubscriptionProvider(widget.authorId)),
@@ -65,33 +77,50 @@ class _SubscribeButtonState extends ConsumerState<SubscribeButton> {
 
   Widget _buildButton(bool isSubscribed) {
     if (_isLoading) {
-      return SizedBox(
-        width: widget.compact ? 90 : 110,
-        height: widget.compact ? 32 : 40,
-        child: const Center(
-          child: SizedBox(
-            width: 16,
-            height: 16,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-        ),
-      );
+      return widget.compact
+          ? SizedBox(
+              width: 36,
+              height: 36,
+              child: const Center(
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            )
+          : SizedBox(
+              width: 110,
+              height: 40,
+              child: const Center(
+                child: SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            );
     }
 
     if (widget.compact) {
+      // Compact mode shows a small icon-only button with no internal padding
       return SizedBox(
-        width: 90,
-        height: 32,
+        width: 36,
+        height: 36,
         child: isSubscribed
-            ? OutlinedButton.icon(
+            ? IconButton(
                 onPressed: _handleToggle,
-                icon: const Icon(Icons.check, size: 16),
-                label: const Text('Subscribed'),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                icon: const Icon(Icons.check, size: 18),
+                tooltip: 'Subscribed',
               )
-            : FilledButton.icon(
+            : IconButton(
                 onPressed: _handleToggle,
-                icon: const Icon(Icons.notifications_active, size: 16),
-                label: const Text('Subscribe'),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                icon: const Icon(Icons.notifications_active, size: 18),
+                tooltip: 'Subscribe',
               ),
       );
     }
