@@ -148,11 +148,11 @@ class _SubscribeButtonState extends ConsumerState<SubscribeButton> {
       if (isSubscribed) {
         await service.unsubscribeFromAuthorSignals(widget.authorId);
         if (!mounted) return;
-        showInfoSnackBar(context, 'Unsubscribed from ${widget.authorId}');
+        showInfoSnackBar(context, 'Unsubscribed');
       } else {
         await service.subscribeToAuthorSignals(widget.authorId);
         if (!mounted) return;
-        showInfoSnackBar(context, 'Subscribed to ${widget.authorId}');
+        showInfoSnackBar(context, 'Subscribed');
       }
       // invalidate provider to refresh state
       if (!mounted) return;
