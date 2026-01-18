@@ -44,7 +44,9 @@ class TopStatusBanner extends ConsumerWidget {
         : (isFailed ? 'Device not found' : 'Disconnected');
 
     final topPadding = MediaQuery.of(context).padding.top;
-    final bannerHeight = topPadding + 36;
+    // Use kToolbarHeight as a single source of truth for common top bar sizes
+    const double _kTopStatusContentHeight = kToolbarHeight - 12; // -> 44
+    final bannerHeight = topPadding + _kTopStatusContentHeight;
 
     return SizedBox(
       height: bannerHeight,
@@ -85,10 +87,10 @@ class TopStatusBanner extends ConsumerWidget {
                     left: 12,
                     right: 12,
                     top: topPadding,
-                    bottom: 8,
+                    bottom: 12,
                   ),
                   child: SizedBox(
-                    height: 36,
+                    height: 44,
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
