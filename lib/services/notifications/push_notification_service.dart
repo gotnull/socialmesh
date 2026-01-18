@@ -300,6 +300,15 @@ class PushNotificationService {
           '🔔 Emitted post_comment refresh for post: $targetId',
         );
         break;
+      case 'signal_like':
+        // When someone likes a signal
+        _contentRefreshController.add(
+          ContentRefreshEvent(contentType: 'signal_like', targetId: targetId),
+        );
+        AppLogging.notifications(
+          '🔔 Emitted signal_like refresh for signal: $targetId',
+        );
+        break;
       case 'new_like':
         // When someone likes a post
         _contentRefreshController.add(
@@ -436,6 +445,7 @@ class PushNotificationService {
     bool? followNotifications,
     bool? likeNotifications,
     bool? commentNotifications,
+    bool? signalNotifications,
   }) async {
     final user = _auth.currentUser;
     if (user == null) return;
@@ -450,6 +460,9 @@ class PushNotificationService {
       }
       if (commentNotifications != null) {
         updates['notificationSettings.comments'] = commentNotifications;
+      }
+      if (signalNotifications != null) {
+        updates['notificationSettings.signals'] = signalNotifications;
       }
 
       if (updates.isNotEmpty) {
@@ -471,7 +484,12 @@ class PushNotificationService {
     try {
       final doc = await _firestore.collection('users').doc(user.uid).get();
       if (!doc.exists) {
-        return {'follows': true, 'likes': true, 'comments': true};
+        return {
+          'follows': true,
+          'likes': true,
+          'comments': true,
+          'signals': true,
+        };
       }
 
       final data = doc.data();
@@ -481,10 +499,16 @@ class PushNotificationService {
         'follows': settings?['follows'] ?? true,
         'likes': settings?['likes'] ?? true,
         'comments': settings?['comments'] ?? true,
+        'signals': settings?['signals'] ?? true,
       };
     } catch (e) {
       AppLogging.notifications('🔔 Error getting notification settings: $e');
-      return {'follows': true, 'likes': true, 'comments': true};
+      return {
+        'follows': true,
+        'likes': true,
+        'comments': true,
+        'signals': true,
+      };
     }
   }
 

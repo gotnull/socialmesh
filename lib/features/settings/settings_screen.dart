@@ -3956,6 +3956,7 @@ class _SocialNotificationsSectionState
   bool _followsEnabled = true;
   bool _likesEnabled = true;
   bool _commentsEnabled = true;
+  bool _signalsEnabled = true;
 
   @override
   void initState() {
@@ -3972,6 +3973,7 @@ class _SocialNotificationsSectionState
           _followsEnabled = settings['follows'] ?? true;
           _likesEnabled = settings['likes'] ?? true;
           _commentsEnabled = settings['comments'] ?? true;
+          _signalsEnabled = settings['signals'] ?? true;
           _isLoading = false;
         });
       }
@@ -3996,6 +3998,9 @@ class _SocialNotificationsSectionState
         case 'comments':
           _commentsEnabled = value;
           break;
+        case 'signals':
+          _signalsEnabled = value;
+          break;
       }
     });
 
@@ -4003,6 +4008,7 @@ class _SocialNotificationsSectionState
       followNotifications: type == 'follows' ? value : null,
       likeNotifications: type == 'likes' ? value : null,
       commentNotifications: type == 'comments' ? value : null,
+      signalNotifications: type == 'signals' ? value : null,
     );
   }
 
@@ -4060,6 +4066,15 @@ class _SocialNotificationsSectionState
           trailing: ThemedSwitch(
             value: _commentsEnabled,
             onChanged: (value) => _updateSetting('comments', value),
+          ),
+        ),
+        _SettingsTile(
+          icon: Icons.wifi_tethering_outlined,
+          title: 'Signals',
+          subtitle: 'Notify when someone posts a signal',
+          trailing: ThemedSwitch(
+            value: _signalsEnabled,
+            onChanged: (value) => _updateSetting('signals', value),
           ),
         ),
       ],

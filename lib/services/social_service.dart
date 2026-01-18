@@ -1217,11 +1217,22 @@ class SocialService {
             firestore: _firestore,
             auth: _auth,
           );
-          await activityService.createPostLikeActivity(
-            postId: postId,
-            postOwnerId: postOwnerId,
-            postThumbnailUrl: thumbnailUrl,
-          );
+
+          // If this post is a signal, create a signal-like activity so it maps correctly
+          final postMode = postData['postMode'] as String?;
+          if (postMode == 'signal') {
+            await activityService.createSignalLikeActivity(
+              signalId: postId,
+              signalOwnerId: postOwnerId,
+              signalThumbnailUrl: thumbnailUrl,
+            );
+          } else {
+            await activityService.createPostLikeActivity(
+              postId: postId,
+              postOwnerId: postOwnerId,
+              postThumbnailUrl: thumbnailUrl,
+            );
+          }
         }
       }
     } catch (e) {

@@ -33,6 +33,7 @@ interface UserData {
     follows?: boolean;
     likes?: boolean;
     comments?: boolean;
+    signals?: boolean;
   };
 }
 
@@ -63,7 +64,7 @@ async function getFcmTokens(userId: string): Promise<string[]> {
  */
 async function isNotificationEnabled(
   userId: string,
-  type: 'follows' | 'likes' | 'comments'
+  type: 'follows' | 'likes' | 'comments' | 'signals'
 ): Promise<boolean> {
   const doc = await db.collection('users').doc(userId).get();
   if (!doc.exists) return true; // Default to enabled
@@ -326,8 +327,8 @@ export const onSignalCreatedNotification = onDocumentCreated(
       const followerData = doc.data();
       const followerId = followerData.followerId as string;
 
-      // Check if follower has signal notifications enabled (uses follows setting)
-      if (!await isNotificationEnabled(followerId, 'follows')) {
+      // Check if follower has signal notifications enabled (new 'signals' setting)
+      if (!await isNotificationEnabled(followerId, 'signals')) {
         console.log(`Signal notifications disabled for user ${followerId}`);
         return;
       }
@@ -424,16 +425,31 @@ export const onLikeCreatedNotification = onDocumentCreated(
     const likerProfile = await getProfile(likerId);
     const likerName = likerProfile?.displayName || 'Someone';
 
-    await sendPushNotification(
-      authorId,
-      'New Like',
-      `${likerName} liked your post`,
-      {
-        type: 'new_like',
-        targetId: postId,
-      },
-      likerProfile?.avatarUrl
-    );
+    // If the post is a signal, send a signal-specific payload and label
+    const postMode = postData.postMode as string | undefined;
+    if (postMode === 'signal') {
+      await sendPushNotification(
+        authorId,
+        'New Like',
+        `${likerName} liked your signal`,
+        {
+          type: 'signal_like',
+          targetId: postId,
+        },
+        likerProfile?.avatarUrl
+      );
+    } else {
+      await sendPushNotification(
+        authorId,
+        'New Like',
+        `${likerName} liked your post`,
+        {
+          type: 'new_like',
+          targetId: postId,
+        },
+        likerProfile?.avatarUrl
+      );
+    }
   }
 );
 

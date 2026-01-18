@@ -10,8 +10,8 @@ import '../../../core/widgets/user_avatar.dart';
 import '../../../models/social.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/signal_bookmark_provider.dart';
-import '../../../services/social_activity_service.dart';
 import '../../../core/logging.dart';
+import '../../../providers/social_providers.dart';
 import '../screens/signal_detail_screen.dart';
 import '../utils/signal_utils.dart';
 import 'double_tap_heart.dart';
@@ -186,31 +186,26 @@ class _SignalGalleryViewState extends ConsumerState<SignalGalleryView>
                       .read(signalBookmarksProvider.notifier)
                       .addBookmark(signal.id);
 
-                  // Create an activity to notify the signal owner (like a comment does)
+                  // Bookmark as before
                   try {
-                    // Skip notification for mesh-origin signals (no user account)
+                    ref
+                        .read(signalBookmarksProvider.notifier)
+                        .addBookmark(signal.id);
+
+                    // If signal originates from the mesh (mesh_ author), skip cloud-like behavior
                     if (signal.authorId.startsWith('mesh_')) {
                       AppLogging.social(
-                        'Skipping activity for mesh signal ${signal.id}',
+                        'Skipping like for mesh-origin signal ${signal.id}',
                       );
                     } else {
-                      final activityService = SocialActivityService();
-                      final thumbnail = signal.mediaUrls.isNotEmpty
-                          ? signal.mediaUrls.first
-                          : null;
-                      await activityService.createSignalLikeActivity(
-                        signalId: signal.id,
-                        signalOwnerId: signal.authorId,
-                        signalThumbnailUrl: thumbnail,
-                      );
+                      final socialService = ref.read(socialServiceProvider);
+                      await socialService.likePost(signal.id);
                       AppLogging.social(
-                        '📬 Signal like activity created for signal ${signal.id}',
+                        '📬 Like recorded for signal ${signal.id}',
                       );
                     }
                   } catch (e) {
-                    AppLogging.social(
-                      'Failed to create signal like activity: $e',
-                    );
+                    AppLogging.social('Failed to like signal ${signal.id}: $e');
                   }
                 },
                 child: _AnimatedImagePage(
