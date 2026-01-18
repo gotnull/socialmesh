@@ -1941,7 +1941,8 @@ class _ReconnectionBanner extends StatelessWidget {
               ? onGoToScanner
               : null,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            height: 36,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Row(
               children: [
                 // Icon with spinner overlay for reconnecting states

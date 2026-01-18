@@ -32,19 +32,25 @@ class ConnectionRequiredWrapper extends ConsumerWidget {
   final Widget child;
 
   /// The title to show in the AppBar when disconnected.
-  /// If null, shows "Disconnected".
+  /// If null, shows "Disconnected". (Kept for backward compatibility but
+  /// we no longer replace the entire screen.)
   final String? screenTitle;
 
   /// Optional custom message to display when disconnected.
   final String? disconnectedMessage;
 
   /// Whether to show a reconnecting state animation.
-  /// Defaults to true.
+  /// Defaults to true. (Used for banner message when enabled.)
   final bool showReconnectingState;
 
   /// Optional callback when user taps "Scan for Devices".
   /// If null, navigates to /scanner.
   final VoidCallback? onScanPressed;
+
+  /// When true the wrapper will render a small, non-modal inline status banner
+  /// instead of replacing the entire screen. Keep default false so MainShell's
+  /// global banner is used by default.
+  final bool showInlineBanner;
 
   const ConnectionRequiredWrapper({
     super.key,
@@ -53,6 +59,7 @@ class ConnectionRequiredWrapper extends ConsumerWidget {
     this.disconnectedMessage,
     this.showReconnectingState = true,
     this.onScanPressed,
+    this.showInlineBanner = false,
   });
 
   @override
@@ -66,24 +73,24 @@ class ConnectionRequiredWrapper extends ConsumerWidget {
       error: (_, _) => false,
     );
 
-    final isReconnecting =
-        autoReconnectState == AutoReconnectState.scanning ||
-        autoReconnectState == AutoReconnectState.connecting;
+    // Always show the underlying content so the UI remains interactive.
+    // Optionally overlay a thin inline banner when disconnected (for screens
+    // used outside of MainShell) so the connection status is still visible.
+    if (isConnected) return child;
 
-    // If connected, show the child content
-    if (isConnected) {
-      return child;
+    if (showInlineBanner) {
+      return _wrapWithInlineBanner(context, ref, child, autoReconnectState);
     }
 
-    // If reconnecting and we want to show that state
-    if (isReconnecting && showReconnectingState) {
-      return _buildReconnectingScreen(context, ref, autoReconnectState);
-    }
-
-    // Otherwise show disconnected state with full screen replacement
-    return _buildDisconnectedScreen(context, ref, autoReconnectState);
+    // If not showing an inline banner, simply return the child unmodified.
+    // This avoids any blocking full-screen UI and keeps the app interactive
+    // during reconnect attempts. Any global banner (e.g., in MainShell)
+    // will continue to indicate status.
+    return child;
   }
 
+  // Kept for backward-compatibility (previously returned full-screen disconnected UI)
+  // ignore: unused_element
   Widget _buildDisconnectedScreen(
     BuildContext context,
     WidgetRef ref,
@@ -229,6 +236,8 @@ class ConnectionRequiredWrapper extends ConsumerWidget {
     );
   }
 
+  // Kept for backward-compatibility (previously returned full-screen reconnecting UI)
+  // ignore: unused_element
   Widget _buildReconnectingScreen(
     BuildContext context,
     WidgetRef ref,
@@ -369,6 +378,157 @@ class ConnectionRequiredWrapper extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _wrapWithInlineBanner(
+    BuildContext context,
+    WidgetRef ref,
+    Widget child,
+    AutoReconnectState autoReconnectState,
+  ) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final isScanning = autoReconnectState == AutoReconnectState.scanning;
+    final isConnecting = autoReconnectState == AutoReconnectState.connecting;
+    final isReconnecting = isScanning || isConnecting;
+    final isFailed = autoReconnectState == AutoReconnectState.failed;
+
+    final backgroundColor = isReconnecting
+        ? (isDark
+              ? context.accentColor.withValues(alpha: 0.15)
+              : context.accentColor.withValues(alpha: 0.1))
+        : (isFailed
+              ? (isDark
+                    ? AppTheme.errorRed.withValues(alpha: 0.15)
+                    : AppTheme.errorRed.withValues(alpha: 0.1))
+              : (isDark
+                    ? Colors.orange.withValues(alpha: 0.15)
+                    : Colors.orange.withValues(alpha: 0.1)));
+
+    final foregroundColor = isReconnecting
+        ? context.accentColor
+        : (isFailed ? AppTheme.errorRed : Colors.orange);
+
+    final icon = isReconnecting
+        ? Icons.bluetooth_searching_rounded
+        : Icons.bluetooth_disabled_rounded;
+
+    final message = isReconnecting
+        ? (isScanning ? 'Searching for device...' : 'Reconnecting...')
+        : (isFailed ? 'Device not found' : 'Disconnected');
+
+    return Stack(
+      children: [
+        child,
+        Positioned(
+          top: MediaQuery.of(context).padding.top,
+          left: 0,
+          right: 0,
+          child: Material(
+            color: backgroundColor,
+            child: InkWell(
+              onTap: isFailed
+                  ? () {
+                      Navigator.of(context).pushNamed('/scanner');
+                    }
+                  : null,
+              child: Container(
+                height: 36,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Icon(icon, size: 18, color: foregroundColor),
+                          if (isReconnecting)
+                            SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation(
+                                  foregroundColor,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        message,
+                        style: TextStyle(
+                          color: foregroundColor,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    if (isFailed) ...[
+                      TextButton.icon(
+                        onPressed: () {
+                          ref
+                              .read(conn.deviceConnectionProvider.notifier)
+                              .startBackgroundConnection();
+                        },
+                        icon: Icon(
+                          Icons.refresh_rounded,
+                          size: 16,
+                          color: foregroundColor,
+                        ),
+                        label: Text(
+                          'Retry',
+                          style: TextStyle(
+                            color: foregroundColor,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 4,
+                          ),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        size: 18,
+                        color: foregroundColor.withValues(alpha: 0.7),
+                      ),
+                    ] else if (!isReconnecting) ...[
+                      Text(
+                        'Connect',
+                        style: TextStyle(
+                          color: foregroundColor,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        size: 18,
+                        color: foregroundColor.withValues(alpha: 0.7),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

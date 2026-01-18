@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io' show Platform;
 
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+
 import '../../core/logging.dart';
 import '../../providers/connection_providers.dart' as conn;
 
@@ -680,8 +682,13 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
       // Success - don't reset _connecting, let navigation handle the transition
       return;
-    } catch (e) {
+    } catch (e, stack) {
       if (!mounted) return;
+
+      // Log error to Crashlytics for stack trace visibility
+      try {
+        await FirebaseCrashlytics.instance.recordError(e, stack);
+      } catch (_) {}
 
       // Force cleanup on error to ensure clean state for retry
       try {

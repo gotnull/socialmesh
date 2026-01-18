@@ -203,9 +203,9 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
         if (widget.isInitialSetup) {
           // Set app state to initialized - this will trigger router to show MainShell
           ref.read(appInitProvider.notifier).setInitialized();
-        } else {
-          Navigator.of(context).pop(true);
         }
+        // Always dismiss after saving
+        Navigator.of(context).pop(true);
       }
     } catch (e) {
       if (mounted) {

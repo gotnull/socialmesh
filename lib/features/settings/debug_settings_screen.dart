@@ -15,6 +15,7 @@ import '../../core/widgets/animated_mesh_node.dart';
 import '../../core/widgets/animations.dart';
 import '../../models/user_profile.dart';
 import '../../providers/profile_providers.dart';
+import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../services/config/mesh_firestore_config_service.dart';
 import '../../services/notifications/notification_service.dart';
@@ -1586,6 +1587,24 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
           icon: Icons.info_outline_rounded,
           label: 'Test Info Snackbar',
           onTap: () => showInfoSnackBar(context, 'This is a test info!'),
+        ),
+        const SizedBox(height: 8),
+        _buildQuickTestButton(
+          icon: Icons.refresh_rounded,
+          label: 'Rehydrate messages from storage',
+          onTap: () async {
+            final result = await ref
+                .read(messagesProvider.notifier)
+                .forceRehydrateAllFromStorage();
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Rehydrated ${result['total'] ?? 0} messages (${result['inserted'] ?? 0} inserted) from storage',
+                ),
+              ),
+            );
+          },
         ),
         const SizedBox(height: 8),
         _buildQuickTestButton(

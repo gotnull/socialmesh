@@ -99,6 +99,11 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
     _longNameController = TextEditingController();
     _shortNameController = TextEditingController();
     _loadCurrentConfig();
+
+    // Listen for device changes and force rebuild
+    ref.listen(connectedDeviceProvider, (_, _) {
+      if (mounted) setState(() {});
+    });
   }
 
   @override

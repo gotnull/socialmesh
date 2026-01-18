@@ -634,8 +634,14 @@ class MessageStorageService {
       if (existingIndex >= 0) {
         // Update existing message instead of adding duplicate
         messages[existingIndex] = message;
+        AppLogging.storage(
+          'Saved message (updated): ${message.id}, from=${message.from}, to=${message.to}',
+        );
       } else {
         messages.add(message);
+        AppLogging.storage(
+          'Saved message (new): ${message.id}, from=${message.from}, to=${message.to}',
+        );
       }
 
       // Trim to max messages
@@ -687,6 +693,35 @@ class MessageStorageService {
       AppLogging.storage('⚠️ Error loading messages: $e');
       return [];
     }
+  }
+
+  /// Count messages for a given node (either from or to the node)
+  Future<int> countMessagesForNode(int nodeNum, {int? sinceMillis}) async {
+    final messages = await loadMessages();
+    final cutoff = sinceMillis != null
+        ? DateTime.fromMillisecondsSinceEpoch(sinceMillis)
+        : null;
+    return messages.where((m) {
+      final inScope = m.from == nodeNum || m.to == nodeNum;
+      final after = cutoff == null ? true : m.timestamp.isAfter(cutoff);
+      return inScope && after;
+    }).length;
+  }
+
+  /// Load messages for a given node (from or to the node), optionally since a timestamp
+  Future<List<Message>> loadMessagesForNode(
+    int nodeNum, {
+    int? sinceMillis,
+  }) async {
+    final messages = await loadMessages();
+    final cutoff = sinceMillis != null
+        ? DateTime.fromMillisecondsSinceEpoch(sinceMillis)
+        : null;
+    return messages.where((m) {
+      final inScope = m.from == nodeNum || m.to == nodeNum;
+      final after = cutoff == null ? true : m.timestamp.isAfter(cutoff);
+      return inScope && after;
+    }).toList();
   }
 
   /// Delete a specific message by ID

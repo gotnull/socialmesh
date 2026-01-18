@@ -14,6 +14,8 @@ import '../services/messaging/offline_queue_service.dart';
 import '../services/location/location_service.dart';
 import '../services/live_activity/live_activity_service.dart';
 import '../services/ifttt/ifttt_service.dart';
+import '../services/notifications/push_notification_service.dart';
+import '../services/messaging/message_utils.dart';
 import '../features/automations/automation_providers.dart';
 import '../features/automations/automation_engine.dart';
 import '../models/mesh_models.dart';
@@ -961,6 +963,13 @@ final currentChannelUtilProvider = StreamProvider<double>((ref) async* {
   }
 });
 
+// Push notification service provider (wraps existing singleton)
+final pushNotificationServiceProvider = Provider<PushNotificationService>((
+  ref,
+) {
+  return PushNotificationService();
+});
+
 // Protocol service - singleton instance that persists across rebuilds
 final protocolServiceProvider = Provider<ProtocolService>((ref) {
   final transport = ref.watch(transportProvider);
@@ -1266,6 +1275,9 @@ class MessagesNotifier extends Notifier<List<Message>> {
   StreamSubscription<Message>? _messageSubscription;
   StreamSubscription<MessageDeliveryUpdate>? _deliverySubscription;
 
+  // Reconciliation guard per-node for this app session
+  final Set<int> _reconciledNodesThisSession = {};
+
   @override
   List<Message> build() {
     final protocol = ref.watch(protocolServiceProvider);
@@ -1310,7 +1322,7 @@ class MessagesNotifier extends Notifier<List<Message>> {
       // Debug: Log incoming message details
       AppLogging.messages(
         '📨 New message: from=${message.from}, to=${message.to.toRadixString(16)}, '
-        'channel=${message.channel}, isBroadcast=${message.isBroadcast}, sent=${message.sent}',
+        'channel=${message.channel}, isBroadcast=${message.isBroadcast}, sent=${message.sent}, id=${message.id}',
       );
       // For sent messages, check if they're already in state (from optimistic UI)
       // If not (e.g., from automations, app intents, reactions), we need to add them
@@ -1328,6 +1340,9 @@ class MessagesNotifier extends Notifier<List<Message>> {
         }).firstOrNull;
         if (existingMessage != null) {
           // Already tracked via optimistic UI, skip to avoid duplicates
+          AppLogging.messages(
+            '📨 Skipping duplicate sent message id=${message.id}',
+          );
           return;
         }
         // Not tracked - this is from automation or other background send
@@ -1342,6 +1357,16 @@ class MessagesNotifier extends Notifier<List<Message>> {
         }
         return;
       }
+
+      // Deduplicate incoming device messages by ID to avoid double-insert when
+      // a push-saved message is later received from the device
+      if (message.id.isNotEmpty && state.any((m) => m.id == message.id)) {
+        AppLogging.messages(
+          '📨 Duplicate incoming message ignored: id=${message.id}',
+        );
+        return;
+      }
+
       state = [...state, message];
       // Persist the new message
       _storage?.saveMessage(message);
@@ -1350,11 +1375,46 @@ class MessagesNotifier extends Notifier<List<Message>> {
       _notifyNewMessage(message);
     });
 
+    // Listen for message push events from PushNotificationService and persist them
+    final push = ref.watch(pushNotificationServiceProvider);
+    final pushSub = push.onContentRefresh.listen((event) {
+      if (!ref.mounted) return;
+      final type = event.contentType;
+      final payload = event.payload;
+      if (payload == null) return;
+
+      if (type == 'direct_message' || type == 'channel_message') {
+        AppLogging.messages(
+          '📨 Handling push message event: type=$type, keys=${payload.keys.toList()}',
+        );
+        final parsed = parsePushMessagePayload(payload);
+        if (parsed == null) {
+          AppLogging.messages('📨 Could not parse push payload into Message');
+          return;
+        }
+
+        // Add to state using canonical addMessage (will dedupe by id)
+        addMessage(parsed);
+        AppLogging.messages(
+          '📨 Push message persisted locally: id=${parsed.id}, from=${parsed.from}, to=${parsed.to}',
+        );
+      }
+    });
+
+    ref.onDispose(() {
+      _messageSubscription?.cancel();
+      _deliverySubscription?.cancel();
+      pushSub.cancel();
+    });
+
     // Listen for delivery status updates
     _deliverySubscription = protocol.deliveryStream.listen((update) {
       if (!ref.mounted) return;
       _handleDeliveryUpdate(update);
     });
+
+    // Ensure we can be explicitly asked to rehydrate from storage (for debug or reconnect canary)
+    // Adds two helper functions on the notifier: reconcileFromStorageForNode and forceRehydrateAllFromStorage
   }
 
   void _notifyNewMessage(Message message) {
@@ -1565,8 +1625,25 @@ class MessagesNotifier extends Notifier<List<Message>> {
   void addMessage(Message message) {
     // Check for duplicate by ID to prevent optimistic UI + stream double-add
     if (state.any((m) => m.id == message.id)) {
+      AppLogging.messages('📨 Duplicate message ignored: id=${message.id}');
       return;
     }
+
+    // Compute conversationKey for instrumentation
+    String convKey;
+    if (message.channel != null && message.channel! > 0) {
+      convKey = 'channel:${message.channel}';
+    } else {
+      final other = message.from == ref.read(myNodeNumProvider)
+          ? message.to
+          : message.from;
+      convKey = 'dm:$other';
+    }
+
+    AppLogging.messages(
+      '📨 addMessage: id=${message.id}, from=${message.from}, to=${message.to}, channel=${message.channel}, convKey=$convKey',
+    );
+
     state = [...state, message];
     _storage?.saveMessage(message);
   }
@@ -1588,6 +1665,83 @@ class MessagesNotifier extends Notifier<List<Message>> {
 
   List<Message> getMessagesForNode(int nodeNum) {
     return state.where((m) => m.from == nodeNum || m.to == nodeNum).toList();
+  }
+
+  /// Rehydrate UI state for a given node from local storage if needed.
+  /// If there are persisted messages for that node in the past [windowDays]
+  /// days but the in-memory state has zero, this will load and insert them.
+  Future<void> reconcileFromStorageForNode(
+    int nodeNum, {
+    int windowDays = 7,
+  }) async {
+    if (_storage == null) return;
+    if (_reconciledNodesThisSession.contains(nodeNum)) {
+      AppLogging.messages(
+        '📨 Reconciliation already performed for node $nodeNum this session',
+      );
+      return;
+    }
+
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final since = now - windowDays * 24 * 60 * 60 * 1000;
+
+    final localCount = await _storage!.countMessagesForNode(
+      nodeNum,
+      sinceMillis: since,
+    );
+    final uiCount = state
+        .where(
+          (m) =>
+              (m.from == nodeNum || m.to == nodeNum) &&
+              m.timestamp.millisecondsSinceEpoch >= since,
+        )
+        .length;
+
+    if (localCount > 0 && uiCount == 0) {
+      AppLogging.messages(
+        '⚠️ Reconnect canary: conversationKey=dm:$nodeNum or node-scoped, localCount=$localCount, uiCount=$uiCount, nodeIdentity=$nodeNum, since=$since, now=$now, source="reconnect_canary"',
+      );
+
+      final messages = await _storage!.loadMessagesForNode(
+        nodeNum,
+        sinceMillis: since,
+      );
+      var added = 0;
+      for (final m in messages) {
+        if (!state.any((s) => s.id == m.id)) {
+          state = [...state, m];
+          added++;
+        }
+      }
+      if (added > 0) {
+        AppLogging.messages(
+          '✅ Rehydrate: Added $added messages for node $nodeNum',
+        );
+      } else {
+        AppLogging.messages(
+          'ℹ️ Rehydrate: No messages added for node $nodeNum (deduped)',
+        );
+      }
+    }
+
+    _reconciledNodesThisSession.add(nodeNum);
+  }
+
+  /// Force rehydrate all messages from storage into memory (debug helper).
+  /// Returns a map with counts: { 'total': X, 'inserted': Y }
+  Future<Map<String, int>> forceRehydrateAllFromStorage() async {
+    if (_storage == null) return {'total': 0, 'inserted': 0};
+    final all = await _storage!.loadMessages();
+    final total = all.length;
+    var inserted = 0;
+    for (final m in all) {
+      if (!state.any((s) => s.id == m.id)) {
+        state = [...state, m];
+        inserted++;
+      }
+    }
+    AppLogging.messages('🔧 Force rehydrate: total=$total, inserted=$inserted');
+    return {'total': total, 'inserted': inserted};
   }
 }
 

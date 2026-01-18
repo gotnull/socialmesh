@@ -723,6 +723,8 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
   }
 
   /// Mark as paired after first successful connection from scanner
+  bool _reconciledThisSession = false;
+
   void markAsPaired(DeviceInfo device, int? myNodeNum) {
     state = DeviceConnectionState2(
       state: DevicePairingState.connected,
@@ -730,6 +732,22 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       lastConnectedAt: DateTime.now(),
       myNodeNum: myNodeNum,
     );
+
+    // Run one-shot reconciliation for this node on connect
+    if (!_reconciledThisSession && myNodeNum != null) {
+      _reconciledThisSession = true;
+      AppLogging.connection('🔌 Running reconnect canary for node $myNodeNum');
+      // Fire-and-forget reconcile
+      Future.microtask(() async {
+        try {
+          await ref
+              .read(messagesProvider.notifier)
+              .reconcileFromStorageForNode(myNodeNum);
+        } catch (e) {
+          AppLogging.connection('🔌 Reconnect canary error: $e');
+        }
+      });
+    }
   }
 }
 

@@ -4,18 +4,43 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart'
+    hide Message;
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 
 import '../../core/logging.dart';
 
+import '../storage/storage_service.dart';
+import '../messaging/message_utils.dart';
+
 /// Background message handler - must be a top-level function
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   AppLogging.notifications('🔔 Background message: ${message.messageId}');
-  // Background messages are handled automatically by the system
-  // We don't need to show a notification manually - FCM does it
+
+  // If this contains a mesh message payload, try to persist it directly so
+  // messages received while the app is backgrounded are not lost.
+  final data = message.data;
+  if (data.containsKey('type') &&
+      (data['type'] == 'direct_message' || data['type'] == 'channel_message')) {
+    try {
+      // Initialize storage service and save the message
+      final storage = MessageStorageService();
+      await storage.init();
+
+      final parsed = parsePushMessagePayload(data.cast<String, dynamic>());
+      if (parsed != null) {
+        await storage.saveMessage(parsed);
+        AppLogging.messages('🔔 Background persisted message id=${parsed.id}');
+      }
+    } catch (e) {
+      AppLogging.notifications('🔔 Error persisting background message: $e');
+    }
+  }
+
+  // Background messages are handled automatically by the system, but we try
+  // to persist message payloads locally when possible.
 }
 
 /// Service for handling Firebase Cloud Messaging (FCM) push notifications.
@@ -162,6 +187,16 @@ class PushNotificationService {
     // Emit content refresh event for screens currently visible
     _emitContentRefreshEvent(message);
 
+    // If push contains message payload for mesh DM/channel, log and persist via event
+    final data = message.data;
+    if (data.containsKey('type') &&
+        (data['type'] == 'direct_message' ||
+            data['type'] == 'channel_message')) {
+      AppLogging.messages(
+        '🔔 Push message received: type=${data['type']}, keys=${data.keys.toList()}',
+      );
+    }
+
     final notification = message.notification;
     if (notification == null) return;
 
@@ -271,11 +306,25 @@ class PushNotificationService {
           ContentRefreshEvent(contentType: 'post_like', targetId: targetId),
         );
         break;
+      case 'direct_message':
+      case 'channel_message':
+        // Forward message payloads to the app so they can be persisted and shown
+        _contentRefreshController.add(
+          ContentRefreshEvent(
+            contentType: type,
+            targetId: targetId,
+            payload: message.data.cast<String, dynamic>(),
+          ),
+        );
+        AppLogging.notifications(
+          '🔔 Emitted $type refresh with payload keys: ${message.data.keys.toList()}',
+        );
+        break;
     }
   }
 
   /// Handle notification tap when app is opened from background
-  void _onMessageOpenedApp(RemoteMessage message) {
+  Future<void> _onMessageOpenedApp(RemoteMessage message) async {
     AppLogging.notifications('🔔 Notification opened app: ${message.data}');
 
     final type = message.data['type'] as String?;
@@ -284,6 +333,36 @@ class PushNotificationService {
     // Navigate based on notification type
     // This will be handled by the app's navigation system
     if (type != null) {
+      // If this is a message payload, try to persist it locally so the UI
+      // can show it after navigation.
+      if ((type == 'direct_message' || type == 'channel_message') &&
+          message.data.isNotEmpty) {
+        try {
+          final payload = message.data.cast<String, dynamic>();
+          final parsed = parsePushMessagePayload(payload);
+          if (parsed != null) {
+            final storage = MessageStorageService();
+            await storage.init();
+            await storage.saveMessage(parsed);
+            AppLogging.notifications(
+              '🔔 Persisted message from notification open: id=${parsed.id}',
+            );
+            // Also emit content refresh event so UI refreshes
+            _contentRefreshController.add(
+              ContentRefreshEvent(
+                contentType: type,
+                targetId: targetId,
+                payload: payload,
+              ),
+            );
+          }
+        } catch (e) {
+          AppLogging.notifications(
+            '🔔 Error persisting notification-open message: $e',
+          );
+        }
+      }
+
       _handleNotificationNavigation(type, targetId);
     }
   }
@@ -435,5 +514,12 @@ class ContentRefreshEvent {
   /// ID of the content that was updated (e.g., signal ID, post ID)
   final String? targetId;
 
-  const ContentRefreshEvent({required this.contentType, this.targetId});
+  /// Optional payload (for example, message fields coming from FCM)
+  final Map<String, dynamic>? payload;
+
+  const ContentRefreshEvent({
+    required this.contentType,
+    this.targetId,
+    this.payload,
+  });
 }
