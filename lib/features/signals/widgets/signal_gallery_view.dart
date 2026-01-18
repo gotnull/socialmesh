@@ -15,6 +15,7 @@ import '../../../providers/social_providers.dart';
 import '../screens/signal_detail_screen.dart';
 import '../utils/signal_utils.dart';
 import 'double_tap_heart.dart';
+import '../../social/widgets/subscribe_button.dart';
 
 /// A fullscreen gallery view for signal images with metadata overlays.
 ///
@@ -562,6 +563,12 @@ class _BottomInfoOverlay extends ConsumerWidget {
                       ],
                     ),
                   ),
+
+                  // Subscribe button (for cloud authors; show even if profile service is disabled)
+                  if (!signal.authorId.startsWith('mesh_')) ...[
+                    SubscribeButton(authorId: signal.authorId, compact: true),
+                    const SizedBox(width: 8),
+                  ],
 
                   // View details button
                   TextButton(

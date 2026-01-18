@@ -138,6 +138,23 @@ service cloud.firestore {
         // No updates needed - just add/remove
         allow update: if false;
       }
+
+      // Signal subscriptions - per-user subscriptions to authors' signals
+      match /signalSubscriptions/{authorId} {
+        // Owner can read their own subscriptions
+        allow read: if isOwner(userId);
+
+        // Create: only owner can create a subscription for themselves
+        allow create: if isOwner(userId) &&
+          request.resource.data.authorId == authorId &&
+          isValidSize();
+
+        // Delete: owner can unsubscribe
+        allow delete: if isOwner(userId);
+
+        // No updates - delete and recreate
+        allow update: if false;
+      }
     }
     
     // User presence - public read, owner write
@@ -340,7 +357,7 @@ service cloud.firestore {
     // Document ID format: {followerId}_{followeeId} for idempotent operations
     match /follows/{followId} {
       allow read: if true; // Public - anyone can see follow relationships
-      
+
       // Create: authenticated, valid ID format, cannot self-follow
       // Either: 1) following as yourself (direct follow)
       //     or: 2) you're the followee accepting a follow request
@@ -355,6 +372,22 @@ service cloud.firestore {
         resource.data.followerId == request.auth.uid);
       
       // No updates allowed - delete and recreate
+      allow update: if false;
+    }
+
+    // Signal subscribers index - per-author subscribers for fast notifications
+    // Documents located at: /signal_subscribers/{authorId}/subscribers/{subscriberId}
+    match /signal_subscribers/{authorId}/subscribers/{subscriberId} {
+      // Public read is allowed (non-sensitive), but writes/deletes must be performed by the subscriber only
+      allow read: if true;
+
+      // Create only allowed by the authenticated subscriber and must include matching subscriberId and optional authorId
+      allow create: if isAuthenticated() && request.auth.uid == subscriberId && request.resource.data.subscriberId == subscriberId;
+
+      // Delete only allowed by the subscriber (unsubscribe)
+      allow delete: if isAuthenticated() && request.auth.uid == subscriberId;
+
+      // No updates allowed
       allow update: if false;
     }
 

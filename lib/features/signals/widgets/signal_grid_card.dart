@@ -6,7 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/user_avatar.dart';
+import '../../../core/logging.dart';
 import '../../../models/social.dart';
+import '../../social/widgets/subscribe_button.dart';
 import '../../../providers/app_providers.dart';
 import '../utils/signal_utils.dart';
 
@@ -33,6 +35,10 @@ class SignalGridCard extends ConsumerWidget {
     final hasImage =
         signal.mediaUrls.isNotEmpty || signal.imageLocalPath != null;
     final hasLocation = signal.location != null;
+
+    AppLogging.signals(
+      'SignalGridCard: id=${signal.id}, authorId=${signal.authorId}, isMeshSignal=$isMeshSignal, hasAuthorSnapshot=${signal.authorSnapshot != null}',
+    );
 
     // Get author info
     String authorName = 'Anon';
@@ -244,6 +250,14 @@ class SignalGridCard extends ConsumerWidget {
                               ],
                             ),
                           ),
+                          // Subscribe button for cloud authors (compact)
+                          if (!isMeshSignal) ...[
+                            const SizedBox(width: 8),
+                            SubscribeButton(
+                              authorId: signal.authorId,
+                              compact: true,
+                            ),
+                          ],
                         ],
                       ),
                     ],

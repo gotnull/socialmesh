@@ -453,6 +453,96 @@ class SocialService {
     return results;
   }
 
+  /// Subscribe current user to an author's signals
+  Future<void> subscribeToAuthorSignals(String authorId) async {
+    final currentUserId = _currentUserId;
+    if (currentUserId == null) {
+      throw StateError('Must be signed in to subscribe');
+    }
+
+    final docRef = _firestore
+        .collection('users')
+        .doc(currentUserId)
+        .collection('signalSubscriptions')
+        .doc(authorId);
+
+    final batch = _firestore.batch();
+    batch.set(docRef, {
+      'authorId': authorId,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    // Also write mirror doc for fast lookup by author
+    final mirrorRef = _firestore
+        .collection('signal_subscribers')
+        .doc(authorId)
+        .collection('subscribers')
+        .doc(currentUserId);
+
+    batch.set(mirrorRef, {
+      'subscriberId': currentUserId,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    await batch.commit();
+  }
+
+  /// Unsubscribe current user from an author's signals
+  Future<void> unsubscribeFromAuthorSignals(String authorId) async {
+    final currentUserId = _currentUserId;
+    if (currentUserId == null) {
+      throw StateError('Must be signed in to unsubscribe');
+    }
+
+    final batch = _firestore.batch();
+    batch.delete(
+      _firestore
+          .collection('users')
+          .doc(currentUserId)
+          .collection('signalSubscriptions')
+          .doc(authorId),
+    );
+
+    batch.delete(
+      _firestore
+          .collection('signal_subscribers')
+          .doc(authorId)
+          .collection('subscribers')
+          .doc(currentUserId),
+    );
+
+    await batch.commit();
+  }
+
+  /// Check if current user is subscribed to an author's signals
+  Future<bool> isSubscribedToAuthorSignals(String authorId) async {
+    final currentUserId = _currentUserId;
+    if (currentUserId == null) return false;
+
+    final doc = await _firestore
+        .collection('users')
+        .doc(currentUserId)
+        .collection('signalSubscriptions')
+        .doc(authorId)
+        .get();
+
+    return doc.exists;
+  }
+
+  /// Watch subscription status for the current user to an author
+  Stream<bool> watchSignalSubscription(String authorId) {
+    final currentUserId = _currentUserId;
+    if (currentUserId == null) return Stream.value(false);
+
+    return _firestore
+        .collection('users')
+        .doc(currentUserId)
+        .collection('signalSubscriptions')
+        .doc(authorId)
+        .snapshots()
+        .map((doc) => doc.exists);
+  }
+
   /// Get paginated list of followers for a user.
   Future<PaginatedResult<FollowWithProfile>> getFollowers(
     String userId, {

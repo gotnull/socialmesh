@@ -37,6 +37,7 @@ import '../../profile/profile_screen.dart';
 import '../../settings/linked_devices_screen.dart';
 import '../../settings/settings_screen.dart';
 import '../widgets/follow_button.dart';
+import '../widgets/subscribe_button.dart';
 import '../widgets/moderation_status_banner.dart';
 import '../widgets/story_bar.dart';
 import 'activity_timeline_screen.dart';
@@ -972,7 +973,13 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
               delay: const Duration(milliseconds: 150),
               duration: const Duration(milliseconds: 300),
               beginOffset: const Offset(0, 0.3),
-              child: FollowButton(targetUserId: widget.userId),
+              child: Row(
+                children: [
+                  FollowButton(targetUserId: widget.userId),
+                  const SizedBox(width: 8),
+                  SubscribeButton(authorId: widget.userId),
+                ],
+              ),
             ),
         ],
       ),

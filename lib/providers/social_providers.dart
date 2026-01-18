@@ -197,6 +197,13 @@ final followStateProvider = FutureProvider.autoDispose
       );
     });
 
+/// Provider to watch whether current user is subscribed to an author's signals
+final signalSubscriptionProvider = StreamProvider.autoDispose
+    .family<bool, String>((ref, authorId) {
+      final service = ref.watch(socialServiceProvider);
+      return service.watchSignalSubscription(authorId);
+    });
+
 /// Notifier to cache batch-loaded follow states for efficiency.
 /// Used by lists to avoid N+1 queries when displaying follow buttons.
 class BatchFollowStatesNotifier extends Notifier<Map<String, FollowState>> {

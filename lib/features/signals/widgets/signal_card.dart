@@ -17,6 +17,7 @@ import '../utils/signal_utils.dart';
 import 'proximity_indicator.dart';
 import 'signal_gallery_view.dart';
 import 'signal_ttl_footer.dart';
+import '../../social/widgets/subscribe_button.dart';
 
 /// Card widget for displaying a signal.
 ///
@@ -121,6 +122,10 @@ class _SignalHeader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final nodes = ref.watch(nodesProvider);
     final isMeshSignal = signal.authorId.startsWith('mesh_');
+
+    AppLogging.signals(
+      'SignalHeader: id=${signal.id}, authorId=${signal.authorId}, isMeshSignal=$isMeshSignal, hasAuthorSnapshot=${signal.authorSnapshot != null}',
+    );
 
     // Get author info
     String authorName = 'Anonymous';
@@ -235,6 +240,12 @@ class _SignalHeader extends ConsumerWidget {
               ],
             ),
           ),
+
+          // Subscribe button for cloud authors (show even if profile service is disabled)
+          if (!isMeshSignal) ...[
+            SubscribeButton(authorId: signal.authorId, compact: true),
+            const SizedBox(width: 8),
+          ],
 
           // More options menu
           if (onDelete != null || onReport != null)

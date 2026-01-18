@@ -310,31 +310,32 @@ export const onSignalCreatedNotification = onDocumentCreated(
     const authorProfile = await getProfile(authorId);
     const authorName = authorProfile?.displayName || 'Someone';
 
-    // Get all followers of this user
-    const followersSnapshot = await db.collection('follows')
-      .where('followeeId', '==', authorId)
+    // Find subscribers for this author's signals via the fast 'signal_subscribers' index
+    const subsSnapshot = await db.collection('signal_subscribers')
+      .doc(authorId)
+      .collection('subscribers')
       .get();
 
-    if (followersSnapshot.empty) {
-      console.log(`No followers to notify for signal by ${authorId}`);
+    if (subsSnapshot.empty) {
+      console.log(`No subscribers to notify for signal by ${authorId}`);
       return;
     }
 
-    console.log(`Notifying ${followersSnapshot.size} followers of new signal by ${authorName}`);
+    console.log(`Notifying ${subsSnapshot.size} subscribers of new signal by ${authorName}`);
 
-    // Send notification to each follower
-    const notificationPromises = followersSnapshot.docs.map(async (doc) => {
-      const followerData = doc.data();
-      const followerId = followerData.followerId as string;
+    // Send notification to each subscriber
+    const notificationPromises = subsSnapshot.docs.map(async (doc) => {
+      const subscriberData = doc.data();
+      const subscriberId = subscriberData.subscriberId as string;
 
-      // Check if follower has signal notifications enabled (new 'signals' setting)
-      if (!await isNotificationEnabled(followerId, 'signals')) {
-        console.log(`Signal notifications disabled for user ${followerId}`);
+      // Check if subscriber has signal notifications enabled
+      if (!await isNotificationEnabled(subscriberId, 'signals')) {
+        console.log(`Signal notifications disabled for user ${subscriberId}`);
         return;
       }
 
       return sendPushNotification(
-        followerId,
+        subscriberId,
         `${authorName} is active 📡`,
         truncatedContent,
         {
