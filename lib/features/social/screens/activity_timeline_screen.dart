@@ -8,6 +8,8 @@ import '../../../models/social_activity.dart';
 import '../../../providers/activity_providers.dart';
 import 'post_detail_screen.dart';
 import 'profile_social_screen.dart';
+import '../../signals/screens/signal_detail_screen.dart';
+import '../../../providers/signal_providers.dart';
 
 /// Activity timeline screen showing social interactions.
 ///
@@ -269,18 +271,50 @@ class _ActivityTimelineScreenState
         );
         break;
       case SocialActivityType.postLike:
+      case SocialActivityType.signalLike:
       case SocialActivityType.postComment:
       case SocialActivityType.mention:
       case SocialActivityType.commentReply:
       case SocialActivityType.commentLike:
-        // Post-related activities - navigate to post if content ID exists
+        // Content-related activities - navigate to content if content ID exists
         if (activity.contentId != null) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => PostDetailScreen(postId: activity.contentId!),
-            ),
-          );
+          // Route to Post or Signal detail depending on the type
+          if (activity.type == SocialActivityType.signalLike) {
+            // Load the signal first, then navigate to the detail screen
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => FutureBuilder(
+                  future: ref
+                      .read(signalServiceProvider)
+                      .getSignalById(activity.contentId!),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState != ConnectionState.done) {
+                      return Scaffold(
+                        appBar: AppBar(title: const Text('Loading Signal')),
+                        body: const Center(child: CircularProgressIndicator()),
+                      );
+                    }
+                    final signal = snapshot.data;
+                    if (signal == null) {
+                      return Scaffold(
+                        appBar: AppBar(title: const Text('Signal not found')),
+                        body: const Center(child: Text('Signal not found')),
+                      );
+                    }
+                    return SignalDetailScreen(signal: signal);
+                  },
+                ),
+              ),
+            );
+          } else {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => PostDetailScreen(postId: activity.contentId!),
+              ),
+            );
+          }
         } else {
           // Fallback to profile if no content ID
           Navigator.push(
@@ -531,6 +565,7 @@ class _ActivityTile extends StatelessWidget {
     switch (type) {
       case SocialActivityType.storyLike:
       case SocialActivityType.postLike:
+      case SocialActivityType.signalLike:
       case SocialActivityType.commentLike:
         return Icons.favorite;
       case SocialActivityType.storyView:
@@ -550,6 +585,7 @@ class _ActivityTile extends StatelessWidget {
     switch (type) {
       case SocialActivityType.storyLike:
       case SocialActivityType.postLike:
+      case SocialActivityType.signalLike:
       case SocialActivityType.commentLike:
         return Colors.redAccent;
       case SocialActivityType.storyView:
@@ -577,6 +613,8 @@ class _ActivityTile extends StatelessWidget {
         return 'requested to follow you';
       case SocialActivityType.postLike:
         return 'liked your post';
+      case SocialActivityType.signalLike:
+        return 'liked your signal';
       case SocialActivityType.postComment:
         return 'commented on your post';
       case SocialActivityType.mention:

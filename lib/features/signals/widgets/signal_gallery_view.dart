@@ -10,6 +10,8 @@ import '../../../core/widgets/user_avatar.dart';
 import '../../../models/social.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/signal_bookmark_provider.dart';
+import '../../../services/social_activity_service.dart';
+import '../../../core/logging.dart';
 import '../screens/signal_detail_screen.dart';
 import '../utils/signal_utils.dart';
 import 'double_tap_heart.dart';
@@ -178,11 +180,38 @@ class _SignalGalleryViewState extends ConsumerState<SignalGalleryView>
             itemBuilder: (context, index) {
               final signal = widget.signals[index];
               return DoubleTapLikeWrapper(
-                onDoubleTap: () {
+                onDoubleTap: () async {
                   HapticFeedback.mediumImpact();
                   ref
                       .read(signalBookmarksProvider.notifier)
                       .addBookmark(signal.id);
+
+                  // Create an activity to notify the signal owner (like a comment does)
+                  try {
+                    // Skip notification for mesh-origin signals (no user account)
+                    if (signal.authorId.startsWith('mesh_')) {
+                      AppLogging.social(
+                        'Skipping activity for mesh signal ${signal.id}',
+                      );
+                    } else {
+                      final activityService = SocialActivityService();
+                      final thumbnail = signal.mediaUrls.isNotEmpty
+                          ? signal.mediaUrls.first
+                          : null;
+                      await activityService.createSignalLikeActivity(
+                        signalId: signal.id,
+                        signalOwnerId: signal.authorId,
+                        signalThumbnailUrl: thumbnail,
+                      );
+                      AppLogging.social(
+                        '📬 Signal like activity created for signal ${signal.id}',
+                      );
+                    }
+                  } catch (e) {
+                    AppLogging.social(
+                      'Failed to create signal like activity: $e',
+                    );
+                  }
                 },
                 child: _AnimatedImagePage(
                   signal: signal,

@@ -19,6 +19,9 @@ enum SocialActivityType {
   /// Someone liked your post
   postLike,
 
+  /// Someone liked your signal
+  signalLike,
+
   /// Someone commented on your post
   postComment,
 
@@ -93,6 +96,8 @@ class SocialActivity {
         return '$actorName requested to follow you';
       case SocialActivityType.postLike:
         return '$actorName liked your post';
+      case SocialActivityType.signalLike:
+        return '$actorName liked your signal';
       case SocialActivityType.postComment:
         return '$actorName commented on your post';
       case SocialActivityType.mention:
@@ -109,6 +114,7 @@ class SocialActivity {
     switch (type) {
       case SocialActivityType.storyLike:
       case SocialActivityType.postLike:
+      case SocialActivityType.signalLike:
       case SocialActivityType.commentLike:
         return 'favorite';
       case SocialActivityType.storyView:

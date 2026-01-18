@@ -111,6 +111,20 @@ class SocialActivityService {
     );
   }
 
+  /// Create a signal like activity
+  Future<void> createSignalLikeActivity({
+    required String signalId,
+    required String signalOwnerId,
+    String? signalThumbnailUrl,
+  }) async {
+    await createActivity(
+      type: SocialActivityType.signalLike,
+      targetUserId: signalOwnerId,
+      contentId: signalId,
+      previewImageUrl: signalThumbnailUrl,
+    );
+  }
+
   /// Create a comment activity
   Future<void> createCommentActivity({
     required String postId,
