@@ -958,26 +958,10 @@ class _MainShellState extends ConsumerState<MainShell> {
       key: _scaffoldKey,
       drawer: _buildDrawer(context),
       drawerEdgeDragWidth: 40, // Edge area for swipe gesture
-      body: Column(
+      body: Stack(
         children: [
-          // Reconnection status banner - shown when disconnected after having paired before
-          if (showReconnectionBanner)
-            TopStatusBanner(
-              autoReconnectState: autoReconnectState,
-              autoReconnectEnabled: autoReconnectEnabled,
-              onRetry: () {
-                ref
-                    .read(deviceConnectionProvider.notifier)
-                    .startBackgroundConnection();
-              },
-              onGoToScanner: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const ScannerScreen()),
-                );
-              },
-            ),
-          // Main content
-          Expanded(
+          // Main content (fills available space)
+          Positioned.fill(
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
               switchInCurve: Curves.easeOutCubic,
@@ -1000,6 +984,28 @@ class _MainShellState extends ConsumerState<MainShell> {
               ),
             ),
           ),
+
+          // Reconnection status banner - overlays content when disconnected after having paired before
+          if (showReconnectionBanner)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: TopStatusBanner(
+                autoReconnectState: autoReconnectState,
+                autoReconnectEnabled: autoReconnectEnabled,
+                onRetry: () {
+                  ref
+                      .read(deviceConnectionProvider.notifier)
+                      .startBackgroundConnection();
+                },
+                onGoToScanner: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const ScannerScreen()),
+                  );
+                },
+              ),
+            ),
         ],
       ),
       bottomNavigationBar: Container(
