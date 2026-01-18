@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'top_status_banner.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/navigation/main_shell.dart';
@@ -387,147 +388,33 @@ class ConnectionRequiredWrapper extends ConsumerWidget {
     Widget child,
     AutoReconnectState autoReconnectState,
   ) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    // Inline reconnection state variables replaced by `TopStatusBanner`.
 
-    final isScanning = autoReconnectState == AutoReconnectState.scanning;
-    final isConnecting = autoReconnectState == AutoReconnectState.connecting;
-    final isReconnecting = isScanning || isConnecting;
-    final isFailed = autoReconnectState == AutoReconnectState.failed;
-
-    final backgroundColor = isReconnecting
-        ? (isDark
-              ? context.accentColor.withValues(alpha: 0.15)
-              : context.accentColor.withValues(alpha: 0.1))
-        : (isFailed
-              ? (isDark
-                    ? AppTheme.errorRed.withValues(alpha: 0.15)
-                    : AppTheme.errorRed.withValues(alpha: 0.1))
-              : (isDark
-                    ? Colors.orange.withValues(alpha: 0.15)
-                    : Colors.orange.withValues(alpha: 0.1)));
-
-    final foregroundColor = isReconnecting
-        ? context.accentColor
-        : (isFailed ? AppTheme.errorRed : Colors.orange);
-
-    final icon = isReconnecting
-        ? Icons.bluetooth_searching_rounded
-        : Icons.bluetooth_disabled_rounded;
-
-    final message = isReconnecting
-        ? (isScanning ? 'Searching for device...' : 'Reconnecting...')
-        : (isFailed ? 'Device not found' : 'Disconnected');
+    // Inline banner variables replaced by `TopStatusBanner`.
 
     return Stack(
       children: [
-        child,
+        MediaQuery.removePadding(
+          context: context,
+          removeTop: true,
+          child: child,
+        ),
         Positioned(
-          top: MediaQuery.of(context).padding.top,
+          top: 0,
           left: 0,
           right: 0,
-          child: Material(
-            color: backgroundColor,
-            child: InkWell(
-              onTap: isFailed
-                  ? () {
-                      Navigator.of(context).pushNamed('/scanner');
-                    }
-                  : null,
-              child: Container(
-                height: 36,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Row(
-                  children: [
-                    SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Icon(icon, size: 18, color: foregroundColor),
-                          if (isReconnecting)
-                            SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation(
-                                  foregroundColor,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        message,
-                        style: TextStyle(
-                          color: foregroundColor,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                    if (isFailed) ...[
-                      TextButton.icon(
-                        onPressed: () {
-                          ref
-                              .read(conn.deviceConnectionProvider.notifier)
-                              .startBackgroundConnection();
-                        },
-                        icon: Icon(
-                          Icons.refresh_rounded,
-                          size: 16,
-                          color: foregroundColor,
-                        ),
-                        label: Text(
-                          'Retry',
-                          style: TextStyle(
-                            color: foregroundColor,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 4,
-                          ),
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(
-                        Icons.chevron_right_rounded,
-                        size: 18,
-                        color: foregroundColor.withValues(alpha: 0.7),
-                      ),
-                    ] else if (!isReconnecting) ...[
-                      Text(
-                        'Connect',
-                        style: TextStyle(
-                          color: foregroundColor,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(
-                        Icons.chevron_right_rounded,
-                        size: 18,
-                        color: foregroundColor.withValues(alpha: 0.7),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
+          child: TopStatusBanner(
+            autoReconnectState: autoReconnectState,
+            autoReconnectEnabled: true,
+            onRetry: () {
+              ref
+                  .read(conn.deviceConnectionProvider.notifier)
+                  .startBackgroundConnection();
+            },
+            onGoToScanner: () => Navigator.of(context).pushNamed('/scanner'),
           ),
         ),
+        // (replaced inline banner by TopStatusBanner)
       ],
     );
   }

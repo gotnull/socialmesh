@@ -6,6 +6,7 @@ import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/node_avatar.dart';
 import '../../core/widgets/connection_required_wrapper.dart';
+import '../../core/widgets/top_status_banner.dart';
 import '../../core/widgets/user_avatar.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/legal_document_sheet.dart';
@@ -961,7 +962,7 @@ class _MainShellState extends ConsumerState<MainShell> {
         children: [
           // Reconnection status banner - shown when disconnected after having paired before
           if (showReconnectionBanner)
-            _ReconnectionBanner(
+            TopStatusBanner(
               autoReconnectState: autoReconnectState,
               autoReconnectEnabled: autoReconnectEnabled,
               onRetry: () {
@@ -1876,160 +1877,5 @@ class _DrawerStickyHeaderDelegate extends SliverPersistentHeaderDelegate {
   }
 }
 
-/// Non-intrusive reconnection status banner shown below the app bar
-/// when the device is disconnected but has been paired before
-class _ReconnectionBanner extends StatelessWidget {
-  final AutoReconnectState autoReconnectState;
-  final bool autoReconnectEnabled;
-  final VoidCallback onRetry;
-  final VoidCallback onGoToScanner;
-
-  const _ReconnectionBanner({
-    required this.autoReconnectState,
-    required this.autoReconnectEnabled,
-    required this.onRetry,
-    required this.onGoToScanner,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    // Determine banner state
-    final isScanning = autoReconnectState == AutoReconnectState.scanning;
-    final isConnecting = autoReconnectState == AutoReconnectState.connecting;
-    final isFailed = autoReconnectState == AutoReconnectState.failed;
-    final isReconnecting = isScanning || isConnecting;
-
-    // Banner colors
-    final Color backgroundColor;
-    final Color foregroundColor;
-    final IconData icon;
-    final String message;
-
-    if (isReconnecting) {
-      backgroundColor = isDark
-          ? context.accentColor.withValues(alpha: 0.15)
-          : context.accentColor.withValues(alpha: 0.1);
-      foregroundColor = context.accentColor;
-      icon = Icons.bluetooth_searching_rounded;
-      message = isScanning ? 'Searching for device...' : 'Connecting...';
-    } else if (isFailed) {
-      backgroundColor = isDark
-          ? AppTheme.errorRed.withValues(alpha: 0.15)
-          : AppTheme.errorRed.withValues(alpha: 0.1);
-      foregroundColor = AppTheme.errorRed;
-      icon = Icons.bluetooth_disabled_rounded;
-      message = 'Device not found';
-    } else {
-      // Idle/disconnected
-      backgroundColor = isDark
-          ? Colors.orange.withValues(alpha: 0.15)
-          : Colors.orange.withValues(alpha: 0.1);
-      foregroundColor = Colors.orange;
-      icon = Icons.bluetooth_disabled_rounded;
-      message = 'Disconnected';
-    }
-
-    return Material(
-      color: backgroundColor,
-      child: SafeArea(
-        bottom: false,
-        child: InkWell(
-          onTap: isFailed || (!isReconnecting && !autoReconnectEnabled)
-              ? onGoToScanner
-              : null,
-          child: Container(
-            height: 36,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Row(
-              children: [
-                // Icon with spinner overlay for reconnecting states
-                SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Icon(icon, size: 18, color: foregroundColor),
-                      if (isReconnecting)
-                        SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation(foregroundColor),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                // Message
-                Expanded(
-                  child: Text(
-                    message,
-                    style: TextStyle(
-                      color: foregroundColor,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                // Action button
-                if (isFailed) ...[
-                  TextButton.icon(
-                    onPressed: onRetry,
-                    icon: Icon(
-                      Icons.refresh_rounded,
-                      size: 16,
-                      color: foregroundColor,
-                    ),
-                    label: Text(
-                      'Retry',
-                      style: TextStyle(
-                        color: foregroundColor,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 4,
-                      ),
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    size: 18,
-                    color: foregroundColor.withValues(alpha: 0.7),
-                  ),
-                ] else if (!isReconnecting && !autoReconnectEnabled) ...[
-                  Text(
-                    'Connect',
-                    style: TextStyle(
-                      color: foregroundColor,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    size: 18,
-                    color: foregroundColor.withValues(alpha: 0.7),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
+// Replaced by `TopStatusBanner` in `lib/core/widgets/top_status_banner.dart`.
+// The global banner is now centralized; this legacy class was removed to avoid duplication.
