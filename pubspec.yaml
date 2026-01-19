@@ -2,7 +2,7 @@ name: socialmesh
 description: "Flutter Meshtastic companion app with BLE and USB serial support."
 publish_to: 'none'
 
-version: 1.0.3+51
+version: 1.0.4+52
 
 environment:
   sdk: ^3.10.0
