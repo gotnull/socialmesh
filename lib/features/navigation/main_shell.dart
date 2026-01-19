@@ -932,6 +932,8 @@ class _MainShellState extends ConsumerState<MainShell> {
     // Only block the UI with ScannerScreen if:
     // 1. Never paired before AND not reconnecting AND auto-reconnect disabled
     // This ensures first-time users go through the scanner flow
+    // CRITICAL: Only show ScannerScreen (full scan wrapper) on first launch (never paired, auto-reconnect disabled)
+    // or after a MANUAL disconnect (handled by device_sheet.dart). Never show on signal loss/out-of-range.
     if (!isConnected &&
         !hasEverPaired &&
         !isReconnecting &&
@@ -951,7 +953,7 @@ class _MainShellState extends ConsumerState<MainShell> {
     }
 
     // Build the main scaffold with Drawer
-    // Determine if we should show the reconnection banner
+    // Determine if we should show the reconnection banner (only as a banner, never replaces screen)
     final showReconnectionBanner = !isConnected && hasEverPaired;
 
     return Scaffold(
@@ -999,11 +1001,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                       .read(deviceConnectionProvider.notifier)
                       .startBackgroundConnection();
                 },
-                onGoToScanner: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const ScannerScreen()),
-                  );
-                },
+                // Remove onGoToScanner: Only allow scan wrapper after manual disconnect
               ),
             ),
         ],

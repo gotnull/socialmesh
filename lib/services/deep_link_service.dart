@@ -82,7 +82,9 @@ class LocationDeepLink extends DeepLinkData {
 /// Deep link handling service using app_links package
 class DeepLinkService {
   final AppLinks _appLinks = AppLinks();
-  final FirebaseFirestore _firestore;
+  // Firestore reference is optional and only obtained when needed so that
+  // this service can be constructed before Firebase initialization completes.
+  final FirebaseFirestore? _firestore;
   final Ref _ref;
 
   StreamSubscription<Uri>? _linkSubscription;
@@ -289,7 +291,29 @@ class DeepLinkService {
   /// Fetch node data from Firestore for web share links
   Future<NodeDeepLink?> fetchSharedNodeData(String docId) async {
     try {
-      final doc = await _firestore.collection('shared_nodes').doc(docId).get();
+      // If a Firestore instance was injected, use it; otherwise obtain one
+      // lazily. Accessing `FirebaseFirestore.instance` can throw if Firebase
+      // hasn't been initialized yet, so guard that and return `null` instead
+      // of throwing.
+      final firestore =
+          _firestore ??
+          (() {
+            try {
+              return FirebaseFirestore.instance;
+            } catch (e) {
+              AppLogging.debug('🔗 Firebase not available yet: $e');
+              return null;
+            }
+          }());
+
+      if (firestore == null) {
+        AppLogging.debug(
+          '🔗 Skipping shared node fetch - Firestore unavailable',
+        );
+        return null;
+      }
+
+      final doc = await firestore.collection('shared_nodes').doc(docId).get();
       if (!doc.exists) {
         AppLogging.debug('🔗 Shared node document not found: $docId');
         return null;

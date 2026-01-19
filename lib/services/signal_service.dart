@@ -300,6 +300,12 @@ class _PendingImageUpdate {
 /// - Support image unlock rules (auth OR sustained proximity)
 class SignalService {
   static const _dbName = 'signals.db';
+
+  /// Optional injectable cloud lookup function for testing / override.
+  /// Signature: (signalId) => Future<Post?>
+  final Future<Post?> Function(String signalId)? cloudLookupOverride;
+
+  SignalService({this.cloudLookupOverride});
   static const _tableName = 'signals';
   static const _seenPacketsTable = 'seen_packets';
   static const _proximityTable = 'node_proximity';
@@ -535,7 +541,14 @@ class SignalService {
   }
 
   /// Get current user ID or null if not authenticated.
-  String? get _currentUserId => _auth.currentUser?.uid;
+  String? get _currentUserId {
+    try {
+      return _auth.currentUser?.uid;
+    } catch (e) {
+      // Firebase not initialized or other error - treat as unauthenticated
+      return null;
+    }
+  }
 
   /// Check if user is authenticated.
   bool get isAuthenticated => _currentUserId != null;
@@ -840,22 +853,11 @@ class SignalService {
     // Store locally first (mesh-first)
     await _saveSignalToDb(signal);
 
-    // If authenticated and not already expired, also save to Firebase
-    if (_currentUserId != null && !signal.isExpired) {
-      try {
-        await _saveSignalToFirebase(signal);
-        await _markSignalSynced(signal.id);
-        AppLogging.signals('Signal ${signal.id} synced to Firebase');
-      } catch (e) {
-        AppLogging.signals('Failed to sync signal to Firebase: $e');
-        // Continue - local storage is primary
-      }
-    }
-
-    // Broadcast over mesh if callback is configured
-    // Include signalId for deterministic cloud matching
+    // Broadcast over mesh immediately (mesh-first). Include signalId
+    // for deterministic cloud matching. This must NOT be blocked by cloud sync.
     if (onBroadcastSignal != null) {
       try {
+        AppLogging.signals('SEND: broadcast started for ${signal.id}');
         final packetId = await onBroadcastSignal!(
           id, // signalId for deterministic matching
           content,
@@ -864,25 +866,46 @@ class SignalService {
           location?.longitude,
         );
         if (packetId != null) {
-          AppLogging.signals('Signal broadcast over mesh: packetId=$packetId');
+          AppLogging.signals(
+            'SEND: broadcast completed packetId=$packetId for ${signal.id}',
+          );
         } else {
-          AppLogging.signals('Signal not broadcast: mesh not connected');
+          AppLogging.signals(
+            'SEND: broadcast skipped (mesh not connected) for ${signal.id}',
+          );
         }
-      } catch (e) {
-        AppLogging.signals('Failed to broadcast signal over mesh: $e');
-        // Continue - local storage is primary
+      } catch (e, st) {
+        AppLogging.signals('SEND: broadcast failed for ${signal.id}: $e\n$st');
       }
     }
 
-    // Auto-upload image if authenticated and has local image
+    // Cloud sync should happen asynchronously and must not block user-facing success.
+    if (_currentUserId != null && !signal.isExpired) {
+      AppLogging.signals('SEND: cloud sync queued for ${signal.id}');
+      // Fire-and-forget: schedule cloud save and mark synced on success
+      Future(() async {
+        try {
+          await _saveSignalToFirebase(signal);
+          await _markSignalSynced(signal.id);
+          AppLogging.signals('SEND: cloud sync success for ${signal.id}');
+        } catch (e, st) {
+          AppLogging.signals(
+            'SEND: cloud sync error for ${signal.id}: $e\n$st',
+          );
+        }
+      });
+    }
+
+    // Auto-upload image if authenticated and has local image (background)
     if (_currentUserId != null &&
         persistentImagePath != null &&
         imageState == ImageState.local) {
+      AppLogging.signals('SEND: image upload queued for ${signal.id}');
       // Don't await - let upload happen in background
       _autoUploadImage(signal.id, persistentImagePath);
     }
 
-    // Start listening for cloud comments on this signal
+    // Start listening for cloud comments on this signal (non-blocking)
     _startCommentsListener(signal.id);
 
     return signal;
@@ -971,46 +994,19 @@ class SignalService {
       );
     }
 
-    // For new-format signals, attempt deterministic cloud lookup
-    String? cloudImageUrl;
-    PostAuthorSnapshot? cloudAuthorSnapshot;
-    String? cloudAuthorId;
-    if (!isLegacySignal && _currentUserId != null) {
-      final cloudSignal = await _lookupCloudSignal(effectiveSignalId);
-      if (cloudSignal != null) {
-        AppLogging.signals('Cloud doc found for signal $effectiveSignalId');
-        if (cloudSignal.mediaUrls.isNotEmpty) {
-          cloudImageUrl = cloudSignal.mediaUrls.first;
-          AppLogging.signals('Cloud signal has image: $cloudImageUrl');
-        }
-        // Extract author info from cloud document
-        if (cloudSignal.authorSnapshot != null) {
-          cloudAuthorSnapshot = cloudSignal.authorSnapshot;
-          cloudAuthorId = cloudSignal.authorId;
-          AppLogging.signals(
-            'Cloud signal has author: ${cloudAuthorSnapshot?.displayName} '
-            '($cloudAuthorId)',
-          );
-        }
-      } else {
-        AppLogging.signals(
-          'Cloud doc NOT found for signal $effectiveSignalId - '
-          'treating as text-only',
-        );
-      }
-    }
+    // TRACE: parsed packet
+    AppLogging.signals(
+      'RECV: mesh packet parsed signalId=${signalId ?? effectiveSignalId} sender=${senderNodeId.toRadixString(16)}',
+    );
 
-    // Use cloud author ID if available, otherwise fall back to mesh node ID
-    // Keep 'mesh_' prefix to indicate signal was received via mesh
-    final effectiveAuthorId = cloudAuthorId != null
-        ? 'mesh_$cloudAuthorId'
-        : 'mesh_${senderNodeId.toRadixString(16)}';
-
+    // Immediately create a local signal and persist to DB (offline-first).
+    // Cloud lookup and enrichment happen asynchronously afterwards and MUST NOT
+    // block the receive path.
     final signal = Post(
       id: effectiveSignalId,
-      authorId: effectiveAuthorId,
+      authorId: 'mesh_${senderNodeId.toRadixString(16)}',
       content: content,
-      mediaUrls: cloudImageUrl != null ? [cloudImageUrl] : const [],
+      mediaUrls: const [],
       location: location,
       nodeId: senderNodeId.toRadixString(16),
       createdAt: now,
@@ -1019,27 +1015,69 @@ class SignalService {
       expiresAt: expiresAt,
       meshNodeId: senderNodeId,
       hopCount: hopCount,
-      imageState: cloudImageUrl != null ? ImageState.cloud : ImageState.none,
-      authorSnapshot: cloudAuthorSnapshot,
+      imageState: ImageState.none,
     );
 
-    final contentPreview = content.length > 30
-        ? '${content.substring(0, 30)}...'
-        : content;
-
-    AppLogging.signals(
-      'Created local signal: id=${signal.id}, '
-      'from=!${senderNodeId.toRadixString(16)}, '
-      'ttl=${ttlMinutes}m, content="$contentPreview", '
-      'legacy=$isLegacySignal, hasCloudImage=${cloudImageUrl != null}',
-    );
+    AppLogging.signals('RECV: local signal inserted signalId=${signal.id}');
 
     await _saveSignalToDb(signal);
 
-    // If we have a cloud image, download and cache it locally
-    if (cloudImageUrl != null && isImageUnlocked(signal)) {
-      _downloadAndCacheImage(signal.id, cloudImageUrl);
-    }
+    // Attach comments/post listeners and perform an async enrichment step
+    // in the background. Do not await - fire-and-forget.
+    Future(() async {
+      try {
+        AppLogging.signals('RECV: starting post listener posts/${signal.id}');
+        _startPostListener(signal.id);
+        AppLogging.signals(
+          'RECV: starting comments listener posts/${signal.id}/comments',
+        );
+        _startCommentsListener(signal.id);
+
+        // Optionally perform a one-off cloud lookup to patch local signal
+        // immediately if the cloud doc already exists. Use override if set
+        // (for testing) to simulate cloud responses.
+        final lookup = cloudLookupOverride != null
+            ? cloudLookupOverride!(signal.id)
+            : _lookupCloudSignal(signal.id);
+
+        final cloudSignal = await lookup;
+        AppLogging.signals(
+          'RECV: post listener snapshot exists=${cloudSignal != null} mediaUrls=${cloudSignal?.mediaUrls.length ?? 0}',
+        );
+
+        if (cloudSignal != null) {
+          // If cloud has image, update local and download if unlocked
+          if (cloudSignal.mediaUrls.isNotEmpty) {
+            final cloudImageUrl = cloudSignal.mediaUrls.first;
+            final existing = await getSignalById(signal.id);
+            if (existing != null) {
+              final updated = existing.copyWith(
+                mediaUrls: [cloudImageUrl],
+                imageState: ImageState.cloud,
+                commentCount: cloudSignal.commentCount,
+              );
+              await updateSignal(updated);
+              AppLogging.signals(
+                'RECV: post listener updated local signal with cloud image for ${signal.id}',
+              );
+
+              if (isImageUnlocked(existing)) {
+                AppLogging.signals(
+                  'RECV: post listener downloading image for ${signal.id}',
+                );
+                _downloadAndCacheImage(signal.id, cloudImageUrl);
+              }
+            }
+          }
+
+          // Attach comments listener was already called above; comment count will update
+        }
+      } catch (e, st) {
+        AppLogging.signals(
+          'RECV: post listener error for ${signal.id}: $e\n$st',
+        );
+      }
+    });
 
     // Start listening for cloud comments (only for non-legacy authenticated users)
     if (!isLegacySignal && _currentUserId != null) {

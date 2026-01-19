@@ -565,8 +565,9 @@ class ProtocolService {
         },
       );
       AppLogging.debug('✅ Protocol: Configuration was received');
-    } catch (e) {
+    } catch (e, st) {
       AppLogging.debug('❌ Protocol: Configuration failed: $e');
+      AppLogging.debug('❌ Protocol: Stacktrace: $st');
       // Convert FlutterBluePlus auth errors to user-friendly message
       final errorStr = e.toString().toLowerCase();
       if (errorStr.contains('authentication') ||
@@ -576,7 +577,10 @@ class ProtocolService {
           'Connection failed - please try again and enter the PIN when prompted',
         );
       }
-      rethrow;
+
+      // Wrap all other errors into an Exception to avoid bubbling Error types
+      // (e.g., FlutterError) which are surfaced as non-fatal FlutterErrors in Crashlytics.
+      throw Exception('Protocol configuration failed: $e');
     }
 
     // Start RSSI polling timer (every 2 seconds)

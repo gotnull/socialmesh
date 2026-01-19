@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import '../../core/logging.dart';
 import '../../core/transport.dart';
 
@@ -396,7 +398,19 @@ class BleTransport implements DeviceTransport {
     try {
       AppLogging.ble('Discovering services...');
 
-      final services = await _device!.discoverServices();
+      List<BluetoothService> services;
+      try {
+        services = await _device!.discoverServices();
+      } on PlatformException catch (e) {
+        AppLogging.ble('⚠️ PlatformException during discoverServices: $e');
+        throw Exception('Bluetooth discovery failed: ${e.message ?? e}');
+      } on FlutterError catch (e) {
+        AppLogging.ble('⚠️ FlutterError during discoverServices: $e');
+        throw Exception('Bluetooth discovery failed: $e');
+      } catch (e) {
+        AppLogging.ble('⚠️ Unknown error during discoverServices: $e');
+        throw Exception('Bluetooth discovery failed: $e');
+      }
 
       // Log all discovered services and characteristics
       AppLogging.ble('Found ${services.length} services');

@@ -12,14 +12,14 @@ class TopStatusBanner extends ConsumerWidget {
   final AutoReconnectState autoReconnectState;
   final bool autoReconnectEnabled;
   final VoidCallback onRetry;
-  final VoidCallback onGoToScanner;
+  final VoidCallback? onGoToScanner;
 
   const TopStatusBanner({
     super.key,
     required this.autoReconnectState,
     required this.autoReconnectEnabled,
     required this.onRetry,
-    required this.onGoToScanner,
+    this.onGoToScanner,
   });
 
   @override
@@ -79,7 +79,9 @@ class TopStatusBanner extends ConsumerWidget {
             child: Material(
               color: Colors.transparent,
               child: InkWell(
-                onTap: isFailed || (!isReconnecting && !autoReconnectEnabled)
+                onTap:
+                    (isFailed || (!isReconnecting && !autoReconnectEnabled)) &&
+                        onGoToScanner != null
                     ? onGoToScanner
                     : null,
                 child: Padding(

@@ -67,6 +67,8 @@ class ConnectionRequiredWrapper extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final connectionStateAsync = ref.watch(connectionStateProvider);
     final autoReconnectState = ref.watch(autoReconnectStateProvider);
+    final userDisconnected = ref.watch(userDisconnectedProvider);
+    final settingsAsync = ref.watch(settingsServiceProvider);
 
     final isConnected = connectionStateAsync.when(
       data: (state) => state == DeviceConnectionState.connected,
@@ -75,18 +77,30 @@ class ConnectionRequiredWrapper extends ConsumerWidget {
     );
 
     // Always show the underlying content so the UI remains interactive.
-    // Optionally overlay a thin inline banner when disconnected (for screens
-    // used outside of MainShell) so the connection status is still visible.
     if (isConnected) return child;
 
+    // Only show the full-screen scan wrapper if the user manually disconnected
+    // or if it's the first launch (never paired, auto-reconnect disabled)
+    final hasEverPaired =
+        settingsAsync.whenOrNull(
+          data: (settings) => settings.lastDeviceId != null,
+        ) ??
+        false;
+    final autoReconnectEnabled =
+        settingsAsync.whenOrNull(data: (settings) => settings.autoReconnect) ??
+        true;
+
+    final isFirstLaunch = !hasEverPaired && !autoReconnectEnabled;
+
+    if (userDisconnected || isFirstLaunch) {
+      return _buildDisconnectedScreen(context, ref, autoReconnectState);
+    }
+
+    // Otherwise, show only the reconnection banner and keep main content visible
     if (showInlineBanner) {
       return _wrapWithInlineBanner(context, ref, child, autoReconnectState);
     }
-
-    // If not showing an inline banner, simply return the child unmodified.
-    // This avoids any blocking full-screen UI and keeps the app interactive
-    // during reconnect attempts. Any global banner (e.g., in MainShell)
-    // will continue to indicate status.
+    // Default: show main content (with banner handled by MainShell)
     return child;
   }
 

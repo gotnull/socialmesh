@@ -9,6 +9,7 @@ import '../../core/widgets/auto_scroll_text.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/connection_providers.dart';
 import '../../utils/snackbar.dart';
+import 'package:socialmesh/main.dart';
 
 /// Shows the device sheet as a modal bottom sheet
 void showDeviceSheet(BuildContext context) {
@@ -398,6 +399,23 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent> {
       protocol.stop();
 
       AppLogging.connection('🔌 DISCONNECT: Disconnect sequence complete');
+
+      // After a manual disconnect, navigate to the Scanner screen so the user
+      // can immediately scan/connect to another device. This preserves the
+      // previous behavior where manual disconnects showed the full scan
+      // overlay, while automatic/out-of-range disconnects continue to show
+      // only the inline banner.
+      // Use the global navigatorKey so navigation succeeds even after the
+      // sheet context has been popped.
+      AppLogging.connection(
+        '🔌 DISCONNECT: Navigating to Scanner (manual disconnect) - clearing back stack',
+      );
+      // Make Scanner the only route so the user cannot navigate back to prior
+      // device-required screens after a manual disconnect.
+      navigatorKey.currentState?.pushNamedAndRemoveUntil(
+        '/scanner',
+        (route) => false,
+      );
     } else {
       AppLogging.connection(
         '🔌 DISCONNECT: Dialog dismissed or context not mounted',
