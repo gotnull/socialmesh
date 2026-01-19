@@ -302,7 +302,7 @@ class SignalService {
   static const _dbName = 'signals.db';
 
   /// Optional injectable cloud lookup function for testing / override.
-  /// Signature: (signalId) => Future<Post?>
+  /// Signature: `Future<Post?> Function(String signalId)?`
   final Future<Post?> Function(String signalId)? cloudLookupOverride;
 
   SignalService({this.cloudLookupOverride});
@@ -944,9 +944,12 @@ class SignalService {
 
     try {
       // Preconditions
-      if (signal.mediaUrls.isEmpty) return;
-      if (signal.imageLocalPath != null && signal.imageLocalPath!.isNotEmpty)
+      if (signal.mediaUrls.isEmpty) {
         return;
+      }
+      if (signal.imageLocalPath != null && signal.imageLocalPath!.isNotEmpty) {
+        return;
+      }
       if (_imageResolveInProgress.contains(signal.id)) {
         AppLogging.signals(
           'RESOLVE_IMAGE: already in progress for ${signal.id}',
