@@ -306,6 +306,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
     _refreshTimer?.cancel();
     // Auto-refresh every 30 seconds
     _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      AppLogging.signals('PERIODIC_REFRESH triggered');
       refresh(silent: true);
     });
   }
@@ -390,10 +391,40 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
 
       AppLogging.signals('Feed refreshed: ${sorted.length} active signals');
 
+      // Diagnostic: log DB vs in-memory counts and any removals
+      final inMemoryCount = state.signals.length;
+      AppLogging.signals(
+        'Feed diagnostics: dbCount=${sorted.length} inMemoryCount=$inMemoryCount',
+      );
+      // Detect signals present in memory but missing in DB
+      final missingInDb = state.signals
+          .map((s) => s.id)
+          .where((id) => !sorted.any((sig) => sig.id == id))
+          .toList();
+      if (missingInDb.isNotEmpty) {
+        for (final id in missingInDb) {
+          AppLogging.signals('REFRESH_REMOVE signalId=$id reason=not_in_db');
+        }
+      }
+
       // Use withSignals to build map - handles deduplication
       state = state
           .withSignals(sorted)
           .copyWith(isLoading: false, lastRefresh: DateTime.now());
+
+      AppLogging.signals(
+        'Feed refresh complete: inMemory=${state.signals.length}',
+      );
+
+      // Trigger resolver for any signals that may now be resolvable (idempotent)
+      final sigService = ref.read(signalServiceProvider);
+      for (final sig in sorted) {
+        if (sig.mediaUrls.isNotEmpty &&
+            (sig.imageLocalPath == null || sig.imageLocalPath!.isEmpty)) {
+          // Fire-and-forget - safe to call repeatedly
+          Future.microtask(() => sigService.resolveSignalImageIfNeeded(sig));
+        }
+      }
     } catch (e) {
       AppLogging.signals('Feed refresh error: $e');
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -547,6 +578,9 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
       state = state.withSignal(signal, source: 'mesh');
 
       AppLogging.signals('Mesh signal added to feed: ${signal.id}');
+      AppLogging.signals(
+        'FEED_ADD_OK signalId=${signal.id} feedCount=${state.signals.length}',
+      );
     } catch (e) {
       AppLogging.signals('Failed to add mesh signal: $e');
     }

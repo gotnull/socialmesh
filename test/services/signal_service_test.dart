@@ -107,5 +107,33 @@ void main() {
         expect(updated.mediaUrls.first, 'https://example.com/image.jpg');
       },
     );
+
+    test('second mesh signal does not remove first', () async {
+      final service = SignalService();
+
+      final first = await service.createSignalFromMesh(
+        content: 'First',
+        senderNodeId: 10,
+        signalId: 'sig-1',
+        ttlMinutes: 15,
+      );
+      expect(first, isNotNull);
+
+      final second = await service.createSignalFromMesh(
+        content: 'Second',
+        senderNodeId: 11,
+        signalId: 'sig-2',
+        ttlMinutes: 15,
+      );
+      expect(second, isNotNull);
+
+      // Ensure both present in DB
+      final all = await service.getActiveSignals();
+      final ids = all.map((s) => s.id).toSet();
+      expect(ids.contains('sig-1'), isTrue);
+      expect(ids.contains('sig-2'), isTrue);
+    });
+
+
   });
 }

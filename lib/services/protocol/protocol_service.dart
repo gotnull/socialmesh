@@ -517,6 +517,7 @@ class ProtocolService {
         AppLogging.protocol('Transport error: $error');
       },
     );
+    AppLogging.protocol('DATA_SUBSCRIBED to transport');
 
     // Listen for transport disconnection to fail fast
     _transportStateSubscription = _transport.stateStream.listen((state) {
@@ -633,8 +634,11 @@ class ProtocolService {
       _configCompleter!.completeError('Service stopped');
     }
     _configCompleter = null;
-    _dataSubscription?.cancel();
-    _dataSubscription = null;
+    if (_dataSubscription != null) {
+      _dataSubscription?.cancel();
+      AppLogging.protocol('DATA_SUBSCRIPTION_CANCELLED');
+      _dataSubscription = null;
+    }
     _framer.clear();
     _configurationComplete = false;
   }
@@ -648,11 +652,13 @@ class ProtocolService {
       final packets = _framer.addData(data);
 
       for (final packet in packets) {
+        AppLogging.protocol('MESH_FRAME_OK len=${packet.length}');
         _processPacket(packet);
       }
     } else {
       // BLE: Data is already a complete raw protobuf
       if (data.isNotEmpty) {
+        AppLogging.protocol('MESH_FRAME_OK len=${data.length}');
         _processPacket(data);
       }
     }
@@ -837,6 +843,10 @@ class ProtocolService {
         packet.from,
         data.payload,
         hopCount: hopCount,
+      );
+
+      AppLogging.signals(
+        'SIGNAL_PARSE_OK signalId=${signalPacket.signalId ?? 'legacy'} sender=${packet.from.toRadixString(16)} ttl=${signalPacket.ttlMinutes}',
       );
 
       AppLogging.signals(

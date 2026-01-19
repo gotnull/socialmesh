@@ -10,6 +10,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:vector_math/vector_math_64.dart' show Vector3;
 import 'package:socialmesh/features/scanner/widgets/connecting_animation.dart';
 import 'firebase_options.dart';
@@ -136,6 +137,37 @@ Future<void> _initializeFirebaseInBackground() async {
     // Firebase failed to initialize (no internet, timeout, etc.)
     // App continues working fully offline - this is expected behavior
     AppLogging.debug('Firebase unavailable: $e - app running in offline mode');
+  }
+
+  // Listen for connectivity changes and attempt to resolve pending images
+  try {
+    final connectivity = Connectivity();
+    connectivity.onConnectivityChanged.listen((result) {
+      AppLogging.signals('CONNECTIVITY_CHANGE: $result');
+      if (result != ConnectivityResult.none) {
+        // Try resolving any pending images now that connectivity may be restored
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          try {
+            final ctx = navigatorKey.currentContext;
+            if (ctx == null) {
+              AppLogging.signals(
+                'CONNECTIVITY_CHANGE: navigator context not ready',
+              );
+              return;
+            }
+            final container = ProviderScope.containerOf(ctx, listen: false);
+            final sigService = container.read(signalServiceProvider);
+            sigService.attemptResolveAllPendingImages();
+          } catch (e) {
+            AppLogging.signals(
+              'CONNECTIVITY_CHANGE: resolver invocation failed: $e',
+            );
+          }
+        });
+      }
+    });
+  } catch (e) {
+    AppLogging.signals('Connectivity listener not available: $e');
     firebaseReadyCompleter.complete(false);
   }
 }

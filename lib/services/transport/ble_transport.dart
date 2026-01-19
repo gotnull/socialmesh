@@ -558,6 +558,7 @@ class BleTransport implements DeviceTransport {
       }
 
       await _fromNumCharacteristic!.setNotifyValue(true);
+      AppLogging.ble('BLE_NOTIFY_SUBSCRIBED fromNum');
 
       _fromNumSubscription = _fromNumCharacteristic!.lastValueStream.listen(
         (value) async {
@@ -569,6 +570,9 @@ class BleTransport implements DeviceTransport {
               while (true) {
                 final data = await _rxCharacteristic!.read();
                 if (data.isEmpty) break;
+                AppLogging.ble(
+                  'BLE_RX_RAW len=${data.length} ts=${DateTime.now().toIso8601String()}',
+                );
                 AppLogging.ble('Read ${data.length} bytes from fromRadio');
                 _dataController.add(data);
               }
@@ -680,7 +684,10 @@ class BleTransport implements DeviceTransport {
       _pollingTimer?.cancel();
       _pollingTimer = null;
       await _characteristicSubscription?.cancel();
-      await _fromNumSubscription?.cancel();
+      if (_fromNumSubscription != null) {
+        await _fromNumSubscription?.cancel();
+        AppLogging.ble('BLE_NOTIFY_UNSUBSCRIBED fromNum');
+      }
       await _deviceStateSubscription?.cancel();
 
       if (_device != null) {

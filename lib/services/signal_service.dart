@@ -330,6 +330,13 @@ class SignalService {
   /// Used to receive real-time updates when cloud doc appears/changes (e.g. image upload completes).
   final Map<String, StreamSubscription<DocumentSnapshot>> _postListeners = {};
 
+  /// Tracks whether we've observed a posts/{signalId} document exist at least once.
+  /// This prevents aggressively deleting local signals when the cloud doc simply
+  /// hasn't been created yet (e.g., sender will upload later). Only delete
+  /// locally if we previously saw the document exist and then receive an
+  /// explicit deletion (exists -> false).
+  final Map<String, bool> _postDocumentSeen = {};
+
   /// Active Firestore vote listeners keyed by signalId.
   /// Used to receive real-time myVote updates from posts/{signalId}/comments/*/votes/{uid}.
   final Map<String, StreamSubscription<QuerySnapshot>> _voteListeners = {};
@@ -924,7 +931,88 @@ class SignalService {
     }
   }
 
-  /// Create a signal from a received mesh packet.
+  // ===========================================================================
+  // IMAGE RESOLUTION (idempotent resolver triggered by events)
+  // ===========================================================================
+
+  final Set<String> _imageResolveInProgress = {};
+
+  /// Resolve (download & cache) the signal image if needed.
+  /// Safe to call repeatedly. No-op if already resolved or in progress.
+  Future<void> resolveSignalImageIfNeeded(Post signal) async {
+    await init(); // ensure DB is ready
+
+    try {
+      // Preconditions
+      if (signal.mediaUrls.isEmpty) return;
+      if (signal.imageLocalPath != null && signal.imageLocalPath!.isNotEmpty)
+        return;
+      if (_imageResolveInProgress.contains(signal.id)) {
+        AppLogging.signals(
+          'RESOLVE_IMAGE: already in progress for ${signal.id}',
+        );
+        return;
+      }
+
+      _imageResolveInProgress.add(signal.id);
+      AppLogging.signals('RESOLVE_IMAGE_START signalId=${signal.id}');
+
+      // Refresh latest local signal state
+      final latest = await getSignalById(signal.id);
+      if (latest == null) {
+        AppLogging.signals(
+          'RESOLVE_IMAGE: signal ${signal.id} not found locally',
+        );
+        return;
+      }
+
+      // If already downloaded by another actor in the meantime
+      if (latest.imageLocalPath != null && latest.imageLocalPath!.isNotEmpty) {
+        AppLogging.signals(
+          'RESOLVE_IMAGE_OK signalId=${signal.id} (already present)',
+        );
+        return;
+      }
+
+      // If not unlocked yet, persist cloud metadata and wait for unlock
+      final unlocked = isImageUnlocked(latest);
+      final url = latest.mediaUrls.isNotEmpty ? latest.mediaUrls.first : null;
+      if (url == null) {
+        AppLogging.signals('RESOLVE_IMAGE: no mediaUrl for ${signal.id}');
+        return;
+      }
+
+      if (!unlocked) {
+        // Save cloud state so other triggers can pick it up
+        final updated = latest.copyWith(
+          mediaUrls: latest.mediaUrls,
+          imageState: ImageState.cloud,
+        );
+        await updateSignal(updated);
+        AppLogging.signals(
+          'RESOLVE_IMAGE_PENDING_UNLOCK signalId=${signal.id}',
+        );
+        return;
+      }
+
+      // Perform download (this will update DB and notify UI via updateSignal)
+      AppLogging.signals(
+        'RESOLVE_IMAGE_DOWNLOAD_START signalId=${signal.id} url=$url',
+      );
+      try {
+        await _downloadAndCacheImage(signal.id, url);
+        AppLogging.signals('RESOLVE_IMAGE_OK signalId=${signal.id}');
+      } catch (e, st) {
+        AppLogging.signals(
+          'RESOLVE_IMAGE_ERROR signalId=${signal.id} error=$e\n$st',
+        );
+      }
+    } finally {
+      _imageResolveInProgress.remove(signal.id);
+    }
+  }
+
+  /// Create a signal from a received mesh packet."
   ///
   /// If signalId is provided (new format), uses deterministic cloud lookup.
   /// If signalId is null (legacy format), treats as local-only signal.
@@ -950,9 +1038,7 @@ class SignalService {
     if (!isLegacySignal) {
       // Non-legacy: dedupe strictly by signalId
       if (await _hasSignalById(signalId)) {
-        AppLogging.signals(
-          '📋 Dedup: signalId $signalId already exists in DB -> ignore',
-        );
+        AppLogging.signals('DEDUP_DROP signalId=$signalId reason=exists_in_db');
         return null;
       }
       AppLogging.signals('📋 Dedup: accepting new signalId $signalId');
@@ -961,7 +1047,7 @@ class SignalService {
       final packetHash = _generatePacketHash(senderNodeId, content, ttlMinutes);
       if (await _hasSeenPacket(packetHash)) {
         AppLogging.signals(
-          '📋 Dedup: legacy hash $packetHash already seen -> ignore',
+          'DEDUP_DROP legacy packetHash=$packetHash reason=seen_packet',
         );
         return null;
       }
@@ -1018,9 +1104,9 @@ class SignalService {
       imageState: ImageState.none,
     );
 
-    AppLogging.signals('RECV: local signal inserted signalId=${signal.id}');
-
+    AppLogging.signals('SIGNAL_DB_INSERT_START signalId=${signal.id}');
     await _saveSignalToDb(signal);
+    AppLogging.signals('SIGNAL_DB_INSERT_OK signalId=${signal.id}');
 
     // Attach comments/post listeners and perform an async enrichment step
     // in the background. Do not await - fire-and-forget.
@@ -1478,6 +1564,7 @@ class SignalService {
       final imagePath = row['imageLocalPath'] as String?;
 
       AppLogging.signals('Signal expired: id=$id, expiredAt=$expiresAt');
+      AppLogging.signals('CLEANUP_DELETE signalId=$id reason=expired');
       await _deleteSignalImage(imagePath);
 
       // Delete from Firebase Storage if authenticated
@@ -1520,8 +1607,11 @@ class SignalService {
       whereArgs: [now],
     );
 
+    final remaining = Sqflite.firstIntValue(
+      await _db!.rawQuery('SELECT COUNT(*) FROM $_tableName'),
+    );
     AppLogging.signals(
-      'Cleanup complete: removed $deletedCount expired signals',
+      'Cleanup complete: removed $deletedCount expired signals, remaining=${remaining ?? 0}',
     );
 
     // Also cleanup old seen packets, proximity data, and comments
@@ -1643,9 +1733,13 @@ class SignalService {
           await updateSignal(updated);
           updatedCount++;
 
-          // Download if unlocked
-          if (isImageUnlocked(signal)) {
-            _downloadAndCacheImage(signal.id, cloudImageUrl);
+          // Attempt idempotent resolver (downloads if unlocked)
+          try {
+            resolveSignalImageIfNeeded(updated);
+          } catch (e) {
+            AppLogging.signals(
+              '📡 Cloud retry: resolver error for ${signal.id}: $e',
+            );
           }
         }
 
@@ -1653,6 +1747,18 @@ class SignalService {
         _startPostListener(signal.id);
         if (!_commentsListeners.containsKey(signal.id)) {
           _startCommentsListener(signal.id);
+        }
+
+        // Also attempt to resolve any pending images for this signal
+        if (signal.mediaUrls.isNotEmpty &&
+            (signal.imageLocalPath == null || signal.imageLocalPath!.isEmpty)) {
+          try {
+            resolveSignalImageIfNeeded(signal);
+          } catch (e) {
+            AppLogging.signals(
+              '📡 Cloud retry: resolver error for ${signal.id}: $e',
+            );
+          }
         }
       } catch (e) {
         AppLogging.signals('📡 Cloud retry: failed for ${signal.id}: $e');
@@ -1666,6 +1772,28 @@ class SignalService {
     }
 
     return updatedCount;
+  }
+
+  /// Attempt to resolve all pending images (download/cache) for signals
+  /// that have cloud media URLs but no local cached file. Safe to call
+  /// repeatedly; idempotent.
+  Future<void> attemptResolveAllPendingImages() async {
+    await init();
+
+    final rows = await _db!.query(
+      _tableName,
+      where:
+          'mediaUrls IS NOT NULL AND (imageLocalPath IS NULL OR imageLocalPath = "")',
+    );
+
+    for (final row in rows) {
+      final signal = _postFromDbMap(row);
+      if (signal.mediaUrls.isNotEmpty) {
+        AppLogging.signals('RESOLVE_BATCH signalId=${signal.id}');
+        // Fire-and-forget (resolver handles in-progress guard)
+        Future.microtask(() => resolveSignalImageIfNeeded(signal));
+      }
+    }
   }
 
   // ===========================================================================
@@ -2153,7 +2281,7 @@ class SignalService {
   /// On every snapshot:
   /// - If doc does not exist → wait (sender may still be uploading)
   /// - If doc exists → update local signal with cloud data
-  /// - If mediaUrls transitions from empty → non-empty → download image
+  /// - If mediaUrls transitions from empty → non-empty → start resolver
   /// - Update commentCount from cloud
   void _startPostListener(String signalId) {
     // Skip if not authenticated or already listening
@@ -2182,13 +2310,27 @@ class SignalService {
             );
 
             if (!snapshot.exists) {
+              // If we have previously observed that this posts/$signalId doc
+              // existed and now it does not, treat as a deletion by the author
+              // and remove the local signal. However, if we've never seen the
+              // doc exist yet, it may simply not have been uploaded yet (common
+              // when receiving signals offline). In that case, do NOT delete;
+              // wait for the doc to appear.
+              final hadExisted = _postDocumentSeen[signalId] == true;
+
               // Check if we have this signal locally
               final localSignal = await getSignalById(signalId);
-              if (localSignal != null) {
-                // Signal exists locally but not in cloud - author deleted it
+
+              if (!hadExisted) {
                 AppLogging.signals(
-                  '📡 Post listener: doc posts/$signalId DELETED by author - '
-                  'removing locally',
+                  '📡 Post listener: doc posts/$signalId does NOT exist yet - waiting (no prior presence)',
+                );
+                return;
+              }
+
+              if (localSignal != null) {
+                AppLogging.signals(
+                  '📡 Post listener: doc posts/$signalId DELETED by author - removing locally',
                 );
 
                 // Delete locally (without trying to delete from Firestore again)
@@ -2202,9 +2344,10 @@ class SignalService {
                 _stopCommentsListener(signalId);
               } else {
                 AppLogging.signals(
-                  '📡 Post listener: doc posts/$signalId does NOT exist yet - waiting',
+                  '📡 Post listener: doc posts/$signalId does NOT exist yet - waiting (no local signal)',
                 );
               }
+
               return;
             }
 
@@ -2232,6 +2375,10 @@ class SignalService {
               'hasCloudImage=${cloudImageUrl != null}, '
               'commentCount=$cloudCommentCount',
             );
+
+            // Record that the cloud post document exists. This allows us to
+            // detect later transitions to not-exist as deletions by the author.
+            _postDocumentSeen[signalId] = true;
 
             // Get current local signal state
             final signal = await getSignalById(signalId);
@@ -2269,26 +2416,20 @@ class SignalService {
                 '📡 Post listener: cloud image detected, local missing',
               );
 
-              // Update signal with cloud URL
+              // Update signal with cloud URL + mark as cloud (persist)
               updatedSignal = updatedSignal.copyWith(
                 mediaUrls: [cloudImageUrl],
                 imageState: ImageState.cloud,
               );
               needsUpdate = true;
 
-              // Download if unlocked
-              if (isImageUnlocked(signal)) {
+              // Schedule resolver to perform download if allowed
+              // This is idempotent and safe to call repeatedly.
+              try {
+                resolveSignalImageIfNeeded(updatedSignal);
+              } catch (e) {
                 AppLogging.signals(
-                  '📡 Post listener: downloading cloud image for $signalId',
-                );
-                // Save updated state first, then download
-                await updateSignal(updatedSignal);
-                needsUpdate = false; // Already saved
-                await _downloadAndCacheImage(signalId, cloudImageUrl);
-              } else {
-                AppLogging.signals(
-                  '📡 Post listener: cloud image URL saved, '
-                  'waiting for proximity unlock',
+                  '📡 Post listener: resolver error for $signalId: $e',
                 );
               }
             }
@@ -2318,6 +2459,8 @@ class SignalService {
   /// Stop listening for cloud signal document updates.
   void _stopPostListener(String signalId) {
     final subscription = _postListeners.remove(signalId);
+    // Also clear any seen-state tracking
+    _postDocumentSeen.remove(signalId);
     if (subscription != null) {
       subscription.cancel();
       AppLogging.signals('📡 Stopped post listener for signal $signalId');
@@ -2331,6 +2474,7 @@ class SignalService {
       AppLogging.signals('📡 Stopped post listener for signal ${entry.key}');
     }
     _postListeners.clear();
+    _postDocumentSeen.clear();
   }
 
   // ===========================================================================
