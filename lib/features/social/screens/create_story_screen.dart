@@ -146,11 +146,24 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
 
     setState(() => _hasPermission = true);
 
-    // Load all albums for the "All Albums" option
-    final allAlbums = await PhotoManager.getAssetPathList(
-      type: RequestType.common,
+    // Load all albums for the "All Albums" option - prefer images only on Android
+    AppLogging.social('Loading photo albums (preferred: images)');
+    var allAlbums = await PhotoManager.getAssetPathList(
+      type: RequestType.image,
       hasAll: true,
     );
+
+    // Fallback to common if no albums found (some devices may treat types differently)
+    if (allAlbums.isEmpty) {
+      AppLogging.social(
+        'No image albums found, falling back to common request',
+      );
+      allAlbums = await PhotoManager.getAssetPathList(
+        type: RequestType.common,
+        hasAll: true,
+      );
+    }
+
     _allAlbums = allAlbums;
 
     // Load assets based on filter type
@@ -164,11 +177,19 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
 
     switch (filter) {
       case AlbumFilterType.recents:
-        // Get "Recent" or "All" album (first album is usually all/recents)
-        final albums = await PhotoManager.getAssetPathList(
-          type: RequestType.common,
+        // Get "Recent" or "All" album (prefer images)
+        var albums = await PhotoManager.getAssetPathList(
+          type: RequestType.image,
           hasAll: true,
         );
+        // Fallback to common on devices where image list may be empty
+        if (albums.isEmpty) {
+          AppLogging.social('Recents: no image albums, falling back to common');
+          albums = await PhotoManager.getAssetPathList(
+            type: RequestType.common,
+            hasAll: true,
+          );
+        }
         if (albums.isNotEmpty) {
           assets = await albums.first.getAssetListRange(start: 0, end: 100);
         }
