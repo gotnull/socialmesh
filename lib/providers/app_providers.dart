@@ -195,6 +195,15 @@ final animations3DEnabledProvider = Provider<bool>((ref) {
   );
 });
 
+/// Debug setting: mesh-only mode for signals (disable cloud features).
+final meshOnlyDebugModeProvider = Provider<bool>((ref) {
+  final settingsAsync = ref.watch(settingsServiceProvider);
+  return settingsAsync.maybeWhen(
+    data: (settings) => settings.meshOnlyDebugMode,
+    orElse: () => false,
+  );
+});
+
 // Message storage service
 final messageStorageProvider = FutureProvider<MessageStorageService>((
   ref,

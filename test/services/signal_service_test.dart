@@ -51,6 +51,7 @@ void main() {
           content: 'Hello from mesh',
           senderNodeId: 123,
           signalId: 'test-offline-1',
+          packetId: 101,
           ttlMinutes: 15,
         );
 
@@ -87,6 +88,7 @@ void main() {
           content: 'Hello with image',
           senderNodeId: 123,
           signalId: 'test-enrich-1',
+          packetId: 102,
           ttlMinutes: 15,
         );
 
@@ -115,6 +117,7 @@ void main() {
         content: 'First',
         senderNodeId: 10,
         signalId: 'sig-1',
+        packetId: 201,
         ttlMinutes: 15,
       );
       expect(first, isNotNull);
@@ -123,6 +126,7 @@ void main() {
         content: 'Second',
         senderNodeId: 11,
         signalId: 'sig-2',
+        packetId: 202,
         ttlMinutes: 15,
       );
       expect(second, isNotNull);
@@ -134,6 +138,36 @@ void main() {
       expect(ids.contains('sig-2'), isTrue);
     });
 
+    test(
+      'two mesh packets with same content create two distinct signals',
+      () async {
+        final service = SignalService();
+
+        final first = await service.createSignalFromMesh(
+          content: 'Same content',
+          senderNodeId: 10,
+          signalId: 'sig-a',
+          packetId: 501,
+          ttlMinutes: 15,
+        );
+        expect(first, isNotNull);
+
+        final second = await service.createSignalFromMesh(
+          content: 'Same content',
+          senderNodeId: 10,
+          signalId: 'sig-b',
+          packetId: 502,
+          ttlMinutes: 15,
+        );
+        expect(second, isNotNull);
+
+        final all = await service.getActiveSignals();
+        final ids = all.map((s) => s.id).toSet();
+        expect(ids.contains('sig-a'), isTrue);
+        expect(ids.contains('sig-b'), isTrue);
+      },
+    );
+
     test('cloud comment injection hydrates getComments and emits updates', () async {
       final service = SignalService();
 
@@ -141,6 +175,7 @@ void main() {
         content: 'Signal for comments',
         senderNodeId: 10,
         signalId: 'sig-comments',
+        packetId: 301,
         ttlMinutes: 15,
       );
 
@@ -173,6 +208,7 @@ void main() {
         content: 'Missing id',
         senderNodeId: 42,
         signalId: null,
+        packetId: 401,
         ttlMinutes: 15,
       );
 

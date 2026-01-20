@@ -196,6 +196,14 @@ class SettingsService {
   bool get notificationSoundEnabled =>
       _preferences.getBool('notification_sound_enabled') ?? true;
 
+  // Debug: Mesh-only mode for signals (no cloud features)
+  Future<void> setMeshOnlyDebugMode(bool enabled) async {
+    await _preferences.setBool('mesh_only_debug_mode', enabled);
+  }
+
+  bool get meshOnlyDebugMode =>
+      _preferences.getBool('mesh_only_debug_mode') ?? false;
+
   // Notification: Vibration
   Future<void> setNotificationVibrationEnabled(bool enabled) async {
     await _preferences.setBool('notification_vibration_enabled', enabled);

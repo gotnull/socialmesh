@@ -34,6 +34,7 @@ import 'packet_framer.dart';
 ///
 class MeshSignalPacket {
   final int senderNodeId;
+  final int packetId;
   final String? signalId;
   final String content;
   final int ttlMinutes;
@@ -44,6 +45,7 @@ class MeshSignalPacket {
 
   const MeshSignalPacket({
     required this.senderNodeId,
+    required this.packetId,
     this.signalId,
     required this.content,
     required this.ttlMinutes,
@@ -59,6 +61,7 @@ class MeshSignalPacket {
     int senderNodeId,
     List<int> payload, {
     int? hopCount,
+    int? packetId,
   }) {
     final jsonStr = utf8.decode(payload);
     final json = jsonDecode(jsonStr) as Map<String, dynamic>;
@@ -73,6 +76,7 @@ class MeshSignalPacket {
 
     return MeshSignalPacket(
       senderNodeId: senderNodeId,
+      packetId: packetId ?? 0,
       signalId: json['id'] as String?,
       content: content,
       ttlMinutes: ttl,
@@ -179,6 +183,7 @@ class ProtocolService {
   StreamSubscription<DeviceConnectionState>? _transportStateSubscription;
   Completer<void>? _configCompleter;
   Timer? _rssiTimer;
+  bool _pollingConfig = false;
 
   int? _myNodeNum;
   int _lastRssi = -90;
@@ -599,18 +604,28 @@ class ProtocolService {
 
   /// Poll for configuration data in background (non-blocking)
   void _pollForConfigurationAsync() {
+    if (_pollingConfig) {
+      AppLogging.protocol('Config poll already running, skipping');
+      return;
+    }
+    _pollingConfig = true;
     int pollCount = 0;
     const maxPolls = 100;
 
     Future.doWhile(() async {
       if (_configurationComplete || pollCount >= maxPolls) {
+        _pollingConfig = false;
         return false; // Stop polling
+      }
+      if (!_transport.isConnected) {
+        _pollingConfig = false;
+        return false;
       }
 
       try {
         await _transport.pollOnce();
         pollCount++;
-        await Future.delayed(const Duration(milliseconds: 100));
+        await Future.delayed(const Duration(milliseconds: 250));
       } catch (e) {
         AppLogging.protocol('Poll error: $e');
       }
@@ -820,6 +835,11 @@ class ProtocolService {
   /// Handle incoming signal packets (PRIVATE_APP portnum)
   void _handleSignalMessage(pb.MeshPacket packet, pb.Data data) {
     try {
+      AppLogging.signals(
+        'RX_SIGNAL_RAW packetId=${packet.id} from=${packet.from.toRadixString(16)} '
+        'to=${packet.to.toRadixString(16)} bytes=${data.payload.length}',
+      );
+
       // Ignore our own signals echoed back
       if (packet.from == _myNodeNum) {
         AppLogging.signals('Ignoring own signal echo');
@@ -838,10 +858,13 @@ class ProtocolService {
         packet.from,
         data.payload,
         hopCount: hopCount,
+        packetId: packet.id,
       );
 
       AppLogging.signals(
-        'SIGNAL_PARSE_OK signalId=${signalPacket.signalId ?? "none"} sender=${packet.from.toRadixString(16)} ttl=${signalPacket.ttlMinutes}',
+        'SIGNAL_PARSE_OK packetId=${signalPacket.packetId} '
+        'signalId=${signalPacket.signalId ?? "none"} '
+        'sender=${packet.from.toRadixString(16)} ttl=${signalPacket.ttlMinutes}',
       );
 
       AppLogging.signals(
@@ -2412,6 +2435,7 @@ class ProtocolService {
     try {
       final signalPacket = MeshSignalPacket(
         senderNodeId: _myNodeNum!,
+        packetId: 0,
         signalId: signalId,
         content: content,
         ttlMinutes: ttlMinutes,

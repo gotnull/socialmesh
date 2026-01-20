@@ -272,7 +272,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
   Future<void> _handleIncomingMeshSignal(MeshSignalPacket packet) async {
     AppLogging.signals(
       'Processing incoming mesh signal from !${packet.senderNodeId.toRadixString(16)}'
-      ' (id=${packet.signalId ?? "none"})',
+      ' (id=${packet.signalId ?? "none"}, packetId=${packet.packetId})',
     );
 
     PostLocation? location;
@@ -287,6 +287,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
       content: packet.content,
       senderNodeId: packet.senderNodeId,
       signalId: packet.signalId,
+      packetId: packet.packetId,
       ttlMinutes: packet.ttlMinutes,
       location: location,
       hopCount: packet.hopCount,
@@ -431,6 +432,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
     try {
       final service = ref.read(signalServiceProvider);
       await service.init();
+      final allSignals = await service.getAllLocalSignals();
       final signals = await service.getActiveSignals();
 
       // Sort signals
@@ -452,6 +454,19 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
         for (final id in missingInDb) {
           AppLogging.signals('REFRESH_REMOVE signalId=$id reason=not_in_db');
         }
+      }
+
+      final activeIds = sorted.map((sig) => sig.id).toSet();
+      for (final signal in allSignals) {
+        if (activeIds.contains(signal.id)) continue;
+        final reason = signal.isExpired
+            ? 'expired'
+            : (signal.postMode != PostMode.signal)
+                ? 'post_mode=${signal.postMode.name}'
+                : 'filtered';
+        AppLogging.signals(
+          'REFRESH_EXCLUDE signalId=${signal.id} reason=$reason',
+        );
       }
 
       // Use withSignals to build map - handles deduplication
@@ -516,11 +531,14 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
     final detectedCanUseCloud = ref
         .read(signalConnectivityProvider)
         .canUseCloud;
-    final canUseCloud = useCloud ?? detectedCanUseCloud;
+    final meshOnlyDebug = ref.read(meshOnlyDebugModeProvider);
+    final canUseCloud =
+        (useCloud ?? detectedCanUseCloud) && !meshOnlyDebug;
 
     AppLogging.signals(
       'Creating new signal: ttl=${ttlMinutes}m, hasLocation=${location != null}, '
-      'hasImage=${imageLocalPath != null}, canUseCloud=$canUseCloud',
+      'hasImage=${imageLocalPath != null}, canUseCloud=$canUseCloud '
+      'meshOnlyDebug=$meshOnlyDebug',
     );
 
     try {
@@ -556,6 +574,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
     required String content,
     required int senderNodeId,
     String? signalId,
+    int? packetId,
     int ttlMinutes = SignalTTL.defaultTTL,
     PostLocation? location,
     int? hopCount,
@@ -572,7 +591,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
 
     AppLogging.signals(
       'Processing mesh signal from node !${senderNodeId.toRadixString(16)}'
-      ' (id=${signalId ?? "none"})',
+      ' (id=${signalId ?? "none"}, packetId=${packetId ?? "none"})',
     );
 
     try {
@@ -580,9 +599,11 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
         content: content,
         senderNodeId: senderNodeId,
         signalId: signalId,
+        packetId: packetId,
         ttlMinutes: ttlMinutes,
         location: location,
         hopCount: hopCount,
+        allowCloud: !ref.read(meshOnlyDebugModeProvider),
       );
 
       // If null, it was ignored or a duplicate in DB

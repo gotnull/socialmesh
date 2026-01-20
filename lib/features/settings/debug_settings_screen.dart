@@ -42,6 +42,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
   bool _notificationExpanded = false;
   bool _quickTestsExpanded = false;
   bool _adminToolsExpanded = false;
+  bool _meshOnlyDebugMode = false;
 
   // Mesh node playground state - defaults match user requirements
   MeshNodeAnimationType _animationType = MeshNodeAnimationType.tumble;
@@ -135,6 +136,7 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
       _enablePullToStretch = _settingsService!.splashMeshEnablePullToStretch;
       _touchIntensity = _settingsService!.splashMeshTouchIntensity;
       _stretchIntensity = _settingsService!.splashMeshStretchIntensity;
+      _meshOnlyDebugMode = _settingsService!.meshOnlyDebugMode;
       _hasUnsavedChanges = false;
     });
   }
@@ -1560,6 +1562,22 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
           height: 1,
           color: context.border.withAlpha(60),
         ),
+        SwitchListTile.adaptive(
+          value: _meshOnlyDebugMode,
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Mesh-only signals (debug)'),
+          subtitle: const Text(
+            'Skip moderation, Firestore, Storage, and cloud queues',
+          ),
+          onChanged: (value) async {
+            if (_settingsService == null) return;
+            await _settingsService!.setMeshOnlyDebugMode(value);
+            ref.read(settingsRefreshProvider.notifier).refresh();
+            if (!mounted) return;
+            setState(() => _meshOnlyDebugMode = value);
+          },
+        ),
+        const SizedBox(height: 12),
         _buildQuickTestButton(
           icon: Icons.bug_report_rounded,
           label: 'Log Debug Info',

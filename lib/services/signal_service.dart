@@ -311,7 +311,9 @@ class SignalService {
   static const _tableName = 'signals';
   static const _proximityTable = 'node_proximity';
   static const _commentsTable = 'comments';
+  static const _meshPacketsTable = 'mesh_packets';
   static const _maxLocalSignals = 200;
+  static const _meshPacketTTLMinutes = 30;
 
   // Firebase instances are accessed lazily to avoid crashes when
   // Firebase isn't initialized yet (offline-first architecture)
@@ -455,6 +457,7 @@ class SignalService {
         await _createTables(db);
       },
     );
+    await _recreateMeshPacketsTable(_db!);
 
     _startAuthListener();
 
@@ -534,7 +537,25 @@ class SignalService {
     );
 
     await _createProximityTable(db);
+    await _recreateMeshPacketsTable(db);
     await _createCommentsTable(db);
+  }
+
+  Future<void> _recreateMeshPacketsTable(Database db) async {
+    await db.execute('DROP TABLE IF EXISTS $_meshPacketsTable');
+    await db.execute('''
+      CREATE TABLE $_meshPacketsTable (
+        senderNodeId INTEGER NOT NULL,
+        packetId INTEGER NOT NULL,
+        receivedAt INTEGER NOT NULL,
+        PRIMARY KEY (senderNodeId, packetId)
+      )
+    ''');
+
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_mesh_packets_receivedAt '
+      'ON $_meshPacketsTable(receivedAt)',
+    );
   }
 
   Future<void> _createProximityTable(Database db) async {
@@ -679,6 +700,62 @@ class SignalService {
     );
 
     return result.isNotEmpty;
+  }
+
+  Future<bool> _hasSeenMeshPacket({
+    required int senderNodeId,
+    required int packetId,
+  }) async {
+    await init();
+
+    final cutoff = DateTime.now()
+        .subtract(Duration(minutes: _meshPacketTTLMinutes))
+        .millisecondsSinceEpoch;
+
+    final result = await _db!.query(
+      _meshPacketsTable,
+      columns: ['senderNodeId'],
+      where: 'senderNodeId = ? AND packetId = ? AND receivedAt > ?',
+      whereArgs: [senderNodeId, packetId, cutoff],
+      limit: 1,
+    );
+
+    return result.isNotEmpty;
+  }
+
+  Future<void> _markMeshPacketSeen({
+    required int senderNodeId,
+    required int packetId,
+  }) async {
+    await init();
+
+    await _db!.insert(
+      _meshPacketsTable,
+      {
+        'senderNodeId': senderNodeId,
+        'packetId': packetId,
+        'receivedAt': DateTime.now().millisecondsSinceEpoch,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<void> _cleanupMeshPackets() async {
+    await init();
+
+    final cutoff = DateTime.now()
+        .subtract(Duration(minutes: _meshPacketTTLMinutes))
+        .millisecondsSinceEpoch;
+
+    final deleted = await _db!.delete(
+      _meshPacketsTable,
+      where: 'receivedAt < ?',
+      whereArgs: [cutoff],
+    );
+
+    if (deleted > 0) {
+      AppLogging.signals('Cleaned up $deleted old mesh packet entries');
+    }
   }
 
   // ===========================================================================
@@ -1001,7 +1078,13 @@ class SignalService {
     }
 
     // Start listening for cloud comments on this signal (non-blocking)
-    _startCommentsListener(signal.id);
+    if (useCloud) {
+      _startCommentsListener(signal.id);
+    } else {
+      AppLogging.signals(
+        'SEND: cloud listeners skipped for ${signal.id} (mesh-only)',
+      );
+    }
 
     return signal;
   }
@@ -1113,16 +1196,18 @@ class SignalService {
     required String content,
     required int senderNodeId,
     String? signalId,
+    int? packetId,
     int ttlMinutes = SignalTTL.defaultTTL,
     PostLocation? location,
     int? hopCount,
+    bool allowCloud = true,
   }) async {
     await init();
 
     if (signalId == null || signalId.isEmpty) {
       AppLogging.signals(
-        '📡 Signals: Ignoring mesh signal without signalId from '
-        '${senderNodeId.toRadixString(16)}',
+        'RX_DROP missing_signalId packetId=${packetId ?? "none"} '
+        'sender=${senderNodeId.toRadixString(16)}',
       );
       return null;
     }
@@ -1133,7 +1218,24 @@ class SignalService {
       AppLogging.signals('DEDUP_DROP signalId=$signalId reason=exists_in_db');
       return null;
     }
-    AppLogging.signals('📋 Dedup: accepting new signalId $signalId');
+    if (packetId != null) {
+      if (await _hasSeenMeshPacket(
+        senderNodeId: senderNodeId,
+        packetId: packetId,
+      )) {
+        AppLogging.signals(
+          'DEDUP_DROP signalId=$signalId packetId=$packetId reason=packet_seen',
+        );
+        return null;
+      }
+      await _markMeshPacketSeen(
+        senderNodeId: senderNodeId,
+        packetId: packetId,
+      );
+    }
+    AppLogging.signals(
+      'DEDUP_ACCEPT signalId=$signalId packetId=${packetId ?? "none"}',
+    );
 
     // Record node proximity
     await recordNodeProximity(senderNodeId);
@@ -1147,7 +1249,8 @@ class SignalService {
 
     // TRACE: parsed packet
     AppLogging.signals(
-      'RECV: mesh packet parsed signalId=$signalId sender=${senderNodeId.toRadixString(16)}',
+      'RECV: mesh packet parsed signalId=$signalId '
+      'packetId=${packetId ?? "none"} sender=${senderNodeId.toRadixString(16)}',
     );
 
     // Immediately create a local signal and persist to DB (offline-first).
@@ -1171,64 +1274,25 @@ class SignalService {
 
     AppLogging.signals('SIGNAL_DB_INSERT_START signalId=${signal.id}');
     await _saveSignalToDb(signal);
-    AppLogging.signals('SIGNAL_DB_INSERT_OK signalId=${signal.id}');
+    AppLogging.signals(
+      'SIGNAL_DB_INSERT_OK signalId=${signal.id} '
+      'packetId=${packetId ?? "none"}',
+    );
 
     // Attach comments/post listeners and perform an async enrichment step
     // in the background. Do not await - fire-and-forget.
-    Future(() async {
-      try {
-        AppLogging.signals('RECV: starting post listener posts/${signal.id}');
-        _startPostListener(signal.id);
-        AppLogging.signals(
-          'RECV: starting comments listener posts/${signal.id}/comments',
-        );
-        _startCommentsListener(signal.id);
-
-        // Optionally perform a one-off cloud lookup to patch local signal
-        // immediately if the cloud doc already exists. Use override if set
-        // (for testing) to simulate cloud responses.
-        final lookup = cloudLookupOverride != null
-            ? cloudLookupOverride!(signal.id)
-            : _lookupCloudSignal(signal.id);
-
-        final cloudSignal = await lookup;
-        AppLogging.signals(
-          'RECV: post listener snapshot exists=${cloudSignal != null} mediaUrls=${cloudSignal?.mediaUrls.length ?? 0}',
-        );
-
-        if (cloudSignal != null) {
-          // If cloud has image, update local and download if unlocked
-          if (cloudSignal.mediaUrls.isNotEmpty) {
-            final cloudImageUrl = cloudSignal.mediaUrls.first;
-            final existing = await getSignalById(signal.id);
-            if (existing != null) {
-              final updated = existing.copyWith(
-                mediaUrls: [cloudImageUrl],
-                imageState: ImageState.cloud,
-                commentCount: cloudSignal.commentCount,
-              );
-              await updateSignal(updated);
-              AppLogging.signals(
-                'RECV: post listener updated local signal with cloud image for ${signal.id}',
-              );
-
-              if (isImageUnlocked(existing)) {
-                AppLogging.signals(
-                  'RECV: post listener downloading image for ${signal.id}',
-                );
-                _downloadAndCacheImage(signal.id, cloudImageUrl);
-              }
-            }
-          }
-
-          // Attach comments listener was already called above; comment count will update
-        }
-      } catch (e, st) {
-        AppLogging.signals(
-          'RECV: post listener error for ${signal.id}: $e\n$st',
-        );
-      }
-    });
+    if (allowCloud) {
+      AppLogging.signals('RECV: starting post listener posts/${signal.id}');
+      _startPostListener(signal.id);
+      AppLogging.signals(
+        'RECV: starting comments listener posts/${signal.id}/comments',
+      );
+      _startCommentsListener(signal.id);
+    } else {
+      AppLogging.signals(
+        'RECV: cloud listeners skipped for ${signal.id} (mesh-only debug)',
+      );
+    }
 
     return signal;
   }
@@ -1672,7 +1736,8 @@ class SignalService {
       'Cleanup complete: removed $deletedCount expired signals, remaining=${remaining ?? 0}',
     );
 
-    // Also cleanup old proximity data and comments
+    // Also cleanup old mesh packet entries, proximity data, and comments
+    await _cleanupMeshPackets();
     await _cleanupOldProximityData();
     await _cleanupExpiredComments();
 

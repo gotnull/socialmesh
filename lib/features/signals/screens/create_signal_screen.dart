@@ -128,6 +128,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
 
   Future<void> _submitSignal() async {
     final connectivity = ref.read(signalConnectivityProvider);
+    final meshOnlyDebug = ref.read(meshOnlyDebugModeProvider);
     // Connection gating check
     if (!connectivity.isBleConnected) {
       AppLogging.signals('🚫 Send blocked: device not connected');
@@ -137,7 +138,8 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
 
     // If an image is still attached but cloud features are not available,
     // remove the image and refuse to send with only an image.
-    if (_imageLocalPath != null && !connectivity.canUseCloud) {
+    if (_imageLocalPath != null &&
+        (!connectivity.canUseCloud || meshOnlyDebug)) {
       setState(() => _imageLocalPath = null);
       showErrorSnackBar(context, 'Images require internet. Image removed.');
       return;
@@ -152,7 +154,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
     final content = _contentController.text.trim();
 
     // Pre-submission content moderation check - only when cloud features available
-    final canUseCloudNow = connectivity.canUseCloud;
+    final canUseCloudNow = connectivity.canUseCloud && !meshOnlyDebug;
     if (content.isNotEmpty && canUseCloudNow) {
       final moderationService = ref.read(contentModerationServiceProvider);
       final checkResult = await moderationService.checkText(
@@ -210,11 +212,12 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
         }
       }
     } else if (!canUseCloudNow) {
-      AppLogging.signals('SEND: offline - skipping server moderation');
+      AppLogging.signals('SEND: mesh-only - skipping server moderation');
     }
 
     try {
-      final canUseCloudNow = ref.read(signalConnectivityProvider).canUseCloud;
+      final canUseCloudNow = ref.read(signalConnectivityProvider).canUseCloud &&
+          !ref.read(meshOnlyDebugModeProvider);
 
       // If location is being fetched, wait briefly (2s) for it to finish
       if (_isLoadingLocation) {
@@ -278,10 +281,13 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
 
     // Image selection requires cloud features (auth + internet)
     final connectivity = ref.read(signalConnectivityProvider);
-    if (!connectivity.canUseCloud) {
+    final meshOnlyDebug = ref.read(meshOnlyDebugModeProvider);
+    if (!connectivity.canUseCloud || meshOnlyDebug) {
       showErrorSnackBar(
         context,
-        connectivity.cloudDisabledReason ?? 'Cloud features unavailable.',
+        meshOnlyDebug
+            ? 'Mesh-only debug mode enabled. Cloud features disabled.'
+            : (connectivity.cloudDisabledReason ?? 'Cloud features unavailable.'),
       );
       return;
     }
@@ -582,7 +588,8 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
   Widget build(BuildContext context) {
     final myNodeNum = ref.watch(myNodeNumProvider);
     final connectivity = ref.watch(signalConnectivityProvider);
-    final canUseCloud = connectivity.canUseCloud;
+    final meshOnlyDebug = ref.watch(meshOnlyDebugModeProvider);
+    final canUseCloud = connectivity.canUseCloud && !meshOnlyDebug;
     final isDeviceConnected = connectivity.isBleConnected;
     final canSubmit =
         _hasValidContent && isDeviceConnected && !_isValidatingImage;
@@ -593,8 +600,8 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
       previous,
       next,
     ) {
-      if ((previous?.canUseCloud ?? true) &&
-          !next.canUseCloud &&
+      if (((previous?.canUseCloud ?? true) && !next.canUseCloud ||
+              meshOnlyDebug) &&
           _imageLocalPath != null) {
         // Auto-remove the image and explain to the user
         setState(() => _imageLocalPath = null);
@@ -1032,9 +1039,11 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            connectivity.hasInternet
-                                ? 'Sign in to enable images and cloud features. Text and location still broadcast over mesh.'
-                                : 'Offline: images and cloud features are unavailable. Text and location still broadcast over mesh.',
+                            meshOnlyDebug
+                                ? 'Mesh-only debug mode enabled. Signals use local DB + mesh only.'
+                                : connectivity.hasInternet
+                                    ? 'Sign in to enable images and cloud features. Text and location still broadcast over mesh.'
+                                    : 'Offline: images and cloud features are unavailable. Text and location still broadcast over mesh.',
                             style: TextStyle(
                               color: context.textTertiary,
                               fontSize: 12,
