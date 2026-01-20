@@ -23,7 +23,6 @@ import '../../../providers/auth_providers.dart';
 import '../../../providers/social_providers.dart';
 import '../../../providers/story_providers.dart';
 import '../../../utils/snackbar.dart';
-import '../../../utils/permissions.dart';
 
 /// Album filter type for story media picker
 enum AlbumFilterType { recents, videos, favorites, allAlbums }
@@ -268,15 +267,6 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
   }
 
   Future<void> _openCamera() async {
-    // Ensure camera permission is granted before invoking camera
-    final helper = PermissionHelper();
-    final granted = await helper.requestCameraPermission();
-    if (!granted) {
-      // Use global snackbar to avoid using BuildContext across async gaps
-      showGlobalErrorSnackBar('Camera permission is required to take photos.');
-      return;
-    }
-
     final pickedFile = await _imagePicker.pickImage(
       source: ImageSource.camera,
       maxWidth: 1920,

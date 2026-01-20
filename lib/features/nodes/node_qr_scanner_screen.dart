@@ -6,7 +6,6 @@ import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../core/theme.dart';
 import '../../utils/snackbar.dart';
-import '../../utils/permissions.dart';
 import '../../core/widgets/loading_indicator.dart';
 
 class NodeQrScannerScreen extends ConsumerStatefulWidget {
@@ -20,23 +19,6 @@ class NodeQrScannerScreen extends ConsumerStatefulWidget {
 class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
   final MobileScannerController _controller = MobileScannerController();
   bool _isProcessing = false;
-
-  @override
-  void initState() {
-    super.initState();
-    // Ensure camera permission is requested when opening the scanner
-    Future.microtask(() async {
-      final helper = PermissionHelper();
-      final granted = await helper.requestCameraPermission();
-      if (!granted && mounted) {
-        showErrorSnackBar(
-          context,
-          'Camera permission is required to scan QR codes.',
-        );
-        Navigator.of(context).pop();
-      }
-    });
-  }
 
   @override
   void dispose() {

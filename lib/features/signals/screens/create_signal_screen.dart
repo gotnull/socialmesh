@@ -25,7 +25,6 @@ import '../../../providers/connectivity_providers.dart';
 
 import '../../../services/signal_service.dart';
 import '../../../utils/snackbar.dart';
-import '../../../utils/permissions.dart';
 import '../widgets/ttl_selector.dart';
 
 /// Screen for creating a new signal.
@@ -373,16 +372,6 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
       if (result.isCamera) {
         // Use camera
         if (!mounted) return;
-
-        // Ensure camera permission is granted before invoking camera
-        final permGranted = await PermissionHelper().requestCameraPermission();
-        if (!permGranted) {
-          // Use global snackbar to avoid using BuildContext across async gaps
-          showGlobalErrorSnackBar(
-            'Camera permission is required to take photos.',
-          );
-          return;
-        }
 
         final pickedFile = await _imagePicker.pickImage(
           source: ImageSource.camera,
