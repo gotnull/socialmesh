@@ -909,8 +909,7 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
 
                             if (!mounted) return;
 
-                            // ignore: use_build_context_synchronously
-                            showSuccessSnackBar(context, 'Signal hidden');
+                            showGlobalSuccessSnackBar('Signal hidden');
                           },
                           onExpired: () async {
                             // Auto-hide when TTL expires
@@ -974,8 +973,7 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
 
                             if (!mounted) return;
 
-                            // ignore: use_build_context_synchronously
-                            showSuccessSnackBar(context, 'Signal restored');
+                            showGlobalSuccessSnackBar('Signal restored');
 
                             if (isLastHidden) {
                               AppLogging.signals(

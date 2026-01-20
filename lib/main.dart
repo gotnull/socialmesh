@@ -33,6 +33,7 @@ import 'providers/subscription_providers.dart';
 import 'providers/cloud_sync_entitlement_providers.dart';
 import 'providers/analytics_providers.dart';
 import 'providers/signal_providers.dart';
+import 'providers/connectivity_providers.dart';
 import 'providers/glyph_provider.dart';
 import 'features/automations/automation_providers.dart';
 import 'models/mesh_models.dart';
@@ -68,6 +69,7 @@ import 'features/signals/screens/signal_detail_screen.dart';
 import 'services/user_presence_service.dart';
 // import 'features/intro/intro_screen.dart';
 import 'models/route.dart' as route_model;
+import 'core/navigation.dart';
 
 /// Global completer to signal when Firebase is ready
 /// Used by providers that need Firestore
@@ -75,9 +77,6 @@ final Completer<bool> firebaseReadyCompleter = Completer<bool>();
 
 /// Future that completes when Firebase is initialized (or fails)
 Future<bool> get firebaseReady => firebaseReadyCompleter.future;
-
-/// Global navigator key for push notification navigation
-final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -282,6 +281,13 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
         '📱 APP RESUMED: User manually disconnected (reason), NOT triggering reconnect',
       );
       return;
+    }
+
+    // Refresh connectivity on resume (airplane mode toggles may require a recheck)
+    try {
+      ref.read(connectivityStatusProvider.notifier).checkNow();
+    } catch (e) {
+      AppLogging.connection('📱 APP RESUMED: Connectivity refresh failed: $e');
     }
 
     // If disconnected and we have a saved device, try to reconnect

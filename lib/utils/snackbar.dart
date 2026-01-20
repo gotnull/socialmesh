@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 
 import '../core/widgets/loading_indicator.dart';
+import '../core/navigation.dart';
 
 /// Snackbar types with associated styling
 enum SnackBarType {
@@ -110,6 +111,35 @@ void showAppSnackBar(
   Duration duration = const Duration(seconds: 3),
 }) {
   showSuccessSnackBar(context, message, duration: duration);
+}
+
+/// Global variants: use the app's global navigator key to show snackbars from
+/// asynchronous contexts where a BuildContext might not be available.
+void showGlobalSuccessSnackBar(
+  String message, {
+  Duration duration = const Duration(seconds: 3),
+}) {
+  final ctx = navigatorKey.currentContext;
+  if (ctx == null) return;
+  showSuccessSnackBar(ctx, message, duration: duration);
+}
+
+void showGlobalErrorSnackBar(
+  String message, {
+  Duration duration = const Duration(seconds: 4),
+}) {
+  final ctx = navigatorKey.currentContext;
+  if (ctx == null) return;
+  showErrorSnackBar(ctx, message, duration: duration);
+}
+
+void showGlobalInfoSnackBar(
+  String message, {
+  Duration duration = const Duration(seconds: 3),
+}) {
+  final ctx = navigatorKey.currentContext;
+  if (ctx == null) return;
+  showInfoSnackBar(ctx, message, duration: duration);
 }
 
 void _showStyledSnackBar(

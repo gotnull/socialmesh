@@ -12,6 +12,7 @@ include: package:flutter_lints/flutter.yaml
 analyzer:
   exclude:
     - lib/generated/**
+    - lib/firebase_options.dart
     - "**/*.g.dart"
     - "**/*.freezed.dart"
     - "**/*.pb.dart"

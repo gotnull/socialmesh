@@ -808,6 +808,9 @@ class SignalService {
     int? meshNodeId,
     String? imageLocalPath,
     PostAuthorSnapshot? authorSnapshot,
+    // When false, do not attempt any cloud work (no Firestore/Storage calls)
+    // Only broadcast over mesh and store locally.
+    bool useCloud = true,
   }) async {
     await init();
 
@@ -865,20 +868,45 @@ class SignalService {
     if (onBroadcastSignal != null) {
       try {
         AppLogging.signals('SEND: broadcast started for ${signal.id}');
-        final packetId = await onBroadcastSignal!(
-          id, // signalId for deterministic matching
-          content,
-          ttlMinutes,
-          location?.latitude,
-          location?.longitude,
-        );
+        // If this is mesh-only send (useCloud==false) then use a short timeout
+        // so UI doesn't feel stuck waiting for ACKs.
+        int? packetId;
+        if (!useCloud) {
+          try {
+            packetId =
+                await onBroadcastSignal!(
+                  id,
+                  content,
+                  ttlMinutes,
+                  location?.latitude,
+                  location?.longitude,
+                ).timeout(
+                  const Duration(milliseconds: 1500),
+                  onTimeout: () => null,
+                );
+          } catch (e) {
+            AppLogging.signals(
+              'SEND: broadcast timeout/failed for ${signal.id}: $e',
+            );
+            packetId = null;
+          }
+        } else {
+          packetId = await onBroadcastSignal!(
+            id,
+            content,
+            ttlMinutes,
+            location?.latitude,
+            location?.longitude,
+          );
+        }
+
         if (packetId != null) {
           AppLogging.signals(
             'SEND: broadcast completed packetId=$packetId for ${signal.id}',
           );
         } else {
           AppLogging.signals(
-            'SEND: broadcast skipped (mesh not connected) for ${signal.id}',
+            'SEND: broadcast skipped (mesh not connected or timed out) for ${signal.id}',
           );
         }
       } catch (e, st) {
@@ -886,8 +914,8 @@ class SignalService {
       }
     }
 
-    // Cloud sync should happen asynchronously and must not block user-facing success.
-    if (_currentUserId != null && !signal.isExpired) {
+    // Cloud sync should only happen if useCloud==true AND we have an auth'ed user.
+    if (useCloud && _currentUserId != null && !signal.isExpired) {
       AppLogging.signals('SEND: cloud sync queued for ${signal.id}');
       // Fire-and-forget: schedule cloud save and mark synced on success
       Future(() async {
@@ -901,15 +929,26 @@ class SignalService {
           );
         }
       });
+    } else if (!useCloud) {
+      AppLogging.signals(
+        'SEND: cloud sync skipped (offline/unauth) for ${signal.id}',
+      );
     }
 
-    // Auto-upload image if authenticated and has local image (background)
-    if (_currentUserId != null &&
+    // Auto-upload image if useCloud allowed AND authenticated and has local image (background)
+    if (useCloud &&
+        _currentUserId != null &&
         persistentImagePath != null &&
         imageState == ImageState.local) {
       AppLogging.signals('SEND: image upload queued for ${signal.id}');
       // Don't await - let upload happen in background
       _autoUploadImage(signal.id, persistentImagePath);
+    } else if (persistentImagePath != null && !useCloud) {
+      AppLogging.signals(
+        'SEND: image suppressed for ${signal.id} (cloud unavailable)',
+      );
+      // If images are suppressed, make sure we don't attempt uploads or set imageState to local-only
+      // imageState remains ImageState.local but we don't upload it.
     }
 
     // Start listening for cloud comments on this signal (non-blocking)

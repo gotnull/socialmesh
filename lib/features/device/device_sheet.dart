@@ -9,7 +9,7 @@ import '../../core/widgets/auto_scroll_text.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/connection_providers.dart';
 import '../../utils/snackbar.dart';
-import 'package:socialmesh/main.dart';
+import 'package:socialmesh/core/navigation.dart';
 
 /// Shows the device sheet as a modal bottom sheet
 void showDeviceSheet(BuildContext context) {

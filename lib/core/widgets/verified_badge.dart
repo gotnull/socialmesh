@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -99,7 +100,7 @@ class _GoldGradientBadge extends StatelessWidget {
       child: Icon(
         Icons.verified,
         size: size,
-        color: Colors.white, // Gets replaced by shader
+        color: kGoldBadgeColor, // Color property set to gold for tests
       ),
     );
   }
@@ -125,6 +126,10 @@ class _AnimatedGoldBadgeState extends State<_AnimatedGoldBadge>
 
   final Random _random = Random();
   bool _isSpinning = false;
+
+  // Timers for scheduled spins and sparkles so tests can cancel them
+  Timer? _spinTimer;
+  Timer? _sparkleTimer;
 
   // Sparkle positions and states
   final List<_Sparkle> _sparkles = [];
@@ -152,6 +157,10 @@ class _AnimatedGoldBadgeState extends State<_AnimatedGoldBadge>
       CurvedAnimation(parent: _shimmerController, curve: Curves.easeInOut),
     );
 
+    // Initialize timers as null (scheduled tasks use Timer so we can cancel them)
+    _spinTimer = null;
+    _sparkleTimer = null;
+
     // Sparkle animation controller
     _sparkleController = AnimationController(
       duration: const Duration(milliseconds: 800),
@@ -165,6 +174,8 @@ class _AnimatedGoldBadgeState extends State<_AnimatedGoldBadge>
 
   @override
   void dispose() {
+    _spinTimer?.cancel();
+    _sparkleTimer?.cancel();
     _spinController.removeStatusListener(_onSpinComplete);
     _spinController.dispose();
     _shimmerController.dispose();
@@ -183,7 +194,8 @@ class _AnimatedGoldBadgeState extends State<_AnimatedGoldBadge>
   void _scheduleNextSpin() {
     // Random delay between 3-8 seconds
     final delay = Duration(milliseconds: 3000 + _random.nextInt(5000));
-    Future.delayed(delay, () {
+    _spinTimer?.cancel();
+    _spinTimer = Timer(delay, () {
       if (mounted && !_isSpinning) {
         _isSpinning = true;
         _spinController.forward();
@@ -194,7 +206,8 @@ class _AnimatedGoldBadgeState extends State<_AnimatedGoldBadge>
   void _scheduleNextSparkle() {
     // Random delay between 2-5 seconds
     final delay = Duration(milliseconds: 2000 + _random.nextInt(3000));
-    Future.delayed(delay, () {
+    _sparkleTimer?.cancel();
+    _sparkleTimer = Timer(delay, () {
       if (mounted) {
         _triggerSparkles();
         _scheduleNextSparkle();
@@ -276,7 +289,11 @@ class _AnimatedGoldBadgeState extends State<_AnimatedGoldBadge>
             ).createShader(bounds);
           },
           blendMode: BlendMode.srcIn,
-          child: Icon(Icons.verified, size: widget.size, color: Colors.white),
+          child: Icon(
+            Icons.verified,
+            size: widget.size,
+            color: kGoldBadgeColor,
+          ),
         );
       },
     );

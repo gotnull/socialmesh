@@ -85,6 +85,9 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
   StoryVisibility _visibility = StoryVisibility.public;
   TextOverlay? _textOverlay;
 
+  // Multi-select mode
+  bool _isMultiSelectMode = false;
+
   // Text editing - enhanced with drag/pinch support
   bool _isEditingText = false;
   bool _isTextInputMode = false; // Whether keyboard is open for input
@@ -120,6 +123,15 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
     _textController.dispose();
     _textFocusNode.dispose();
     super.dispose();
+  }
+
+  void _openSettings() {
+    // Navigate to settings screen
+    Navigator.of(context).pushNamed('/settings');
+  }
+
+  void _toggleMultiSelect() {
+    setState(() => _isMultiSelectMode = !_isMultiSelectMode);
   }
 
   Future<void> _loadRecentAssets() async {
@@ -634,7 +646,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
               // Settings icon
               IconButton(
                 icon: const Icon(Icons.settings_outlined, color: Colors.white),
-                onPressed: () {},
+                onPressed: _openSettings,
               ),
             ],
           ),
@@ -648,15 +660,19 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
               children: [
                 _buildAlbumDropdown(),
                 const Spacer(),
-                // Multi-select button (future feature placeholder)
+                // Multi-select toggle
                 IconButton(
-                  icon: const Icon(
-                    Icons.library_add_check_outlined,
+                  icon: Icon(
+                    _isMultiSelectMode
+                        ? Icons.check_box
+                        : Icons.library_add_check_outlined,
                     color: Colors.white70,
                     size: 22,
                   ),
-                  onPressed: () {},
-                  tooltip: 'Select multiple',
+                  onPressed: _toggleMultiSelect,
+                  tooltip: _isMultiSelectMode
+                      ? 'Exit multi-select'
+                      : 'Select multiple',
                 ),
               ],
             ),

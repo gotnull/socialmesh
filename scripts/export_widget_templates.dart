@@ -1,4 +1,3 @@
-// ignore_for_file: avoid_print
 import 'dart:convert';
 import 'dart:io';
 
@@ -26,8 +25,8 @@ void main() async {
     final json = encoder.convert(widget.toJson());
     final file = File('${outputDir.path}/$filename');
     await file.writeAsString(json);
-    print('Exported: $filename');
+    stdout.writeln('Exported: $filename');
   }
 
-  print('\nAll widget templates exported to assets/widget_templates/');
+  stdout.writeln('\nAll widget templates exported to assets/widget_templates/');
 }

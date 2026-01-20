@@ -134,6 +134,32 @@ void main() {
       expect(ids.contains('sig-2'), isTrue);
     });
 
+    test('mesh-only broadcast uses short timeout', () async {
+      final service = SignalService();
 
+      // Simulate a slow onBroadcastSignal (5s) to ensure createSignal returns quickly
+      service.onBroadcastSignal =
+          (
+            String id,
+            String content,
+            int ttlMinutes,
+            double? lat,
+            double? lon,
+          ) async {
+            await Future.delayed(const Duration(seconds: 5));
+            return 1;
+          };
+
+      final sw = Stopwatch()..start();
+      final signal = await service.createSignal(
+        content: 'fast-send-test',
+        useCloud: false,
+      );
+      sw.stop();
+
+      expect(signal, isNotNull);
+      // Ensure it returned quickly (timeout set to ~1500ms in implementation)
+      expect(sw.elapsedMilliseconds, lessThan(2000));
+    });
   });
 }

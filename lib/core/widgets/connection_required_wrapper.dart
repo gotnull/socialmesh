@@ -7,7 +7,6 @@ import '../../providers/app_providers.dart';
 import '../../providers/connection_providers.dart' as conn;
 import '../theme.dart';
 import '../transport.dart';
-import 'loading_indicator.dart';
 
 /// A wrapper widget that shows a "No Device Connected" screen when disconnected.
 ///
@@ -105,7 +104,6 @@ class ConnectionRequiredWrapper extends ConsumerWidget {
   }
 
   // Kept for backward-compatibility (previously returned full-screen disconnected UI)
-  // ignore: unused_element
   Widget _buildDisconnectedScreen(
     BuildContext context,
     WidgetRef ref,
@@ -246,151 +244,6 @@ class ConnectionRequiredWrapper extends ConsumerWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  // Kept for backward-compatibility (previously returned full-screen reconnecting UI)
-  // ignore: unused_element
-  Widget _buildReconnectingScreen(
-    BuildContext context,
-    WidgetRef ref,
-    AutoReconnectState autoReconnectState,
-  ) {
-    // Get saved device name to show in info banner
-    final settingsAsync = ref.watch(settingsServiceProvider);
-    final savedDeviceName =
-        settingsAsync.whenOrNull(data: (settings) => settings.lastDeviceName) ??
-        'Your saved device';
-
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.background,
-        leading: const HamburgerMenuButton(),
-        centerTitle: true,
-        title: Text(
-          screenTitle ?? 'Reconnecting...',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: context.textPrimary,
-          ),
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            // Info banner about device possibly being connected elsewhere
-            Container(
-              padding: const EdgeInsets.all(16),
-              margin: const EdgeInsets.only(bottom: 24),
-              decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.orange.withValues(alpha: 0.4)),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    Icons.info_outline,
-                    color: Colors.orange.shade700,
-                    size: 22,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Looking for $savedDeviceName',
-                          style: TextStyle(
-                            color: Colors.orange.shade800,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'If another app is connected to this device, please disconnect from it first. Only one app can use Bluetooth at a time.',
-                          style: TextStyle(
-                            color: Colors.orange.shade700,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // Center content
-            Expanded(
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const LoadingIndicator(size: 48),
-                    const SizedBox(height: 24),
-                    Text(
-                      autoReconnectState == AutoReconnectState.scanning
-                          ? 'Scanning for device...'
-                          : 'Connecting...',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: context.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Please wait...',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: context.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    // Cancel button to stop auto-reconnect and scan for other devices
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        // Cancel the auto-reconnect
-                        ref
-                            .read(autoReconnectStateProvider.notifier)
-                            .setState(AutoReconnectState.idle);
-                        // Mark as user disconnected to prevent further auto-reconnect
-                        ref
-                            .read(userDisconnectedProvider.notifier)
-                            .setUserDisconnected(true);
-                        // Navigate to scanner
-                        if (onScanPressed != null) {
-                          onScanPressed!();
-                        } else {
-                          Navigator.of(context).pushNamed('/scanner');
-                        }
-                      },
-                      icon: const Icon(Icons.bluetooth_searching, size: 20),
-                      label: const Text('Scan for Devices'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: context.accentColor,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 28,
-                          vertical: 16,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );

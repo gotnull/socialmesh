@@ -18,10 +18,11 @@ import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/content_moderation_warning.dart';
 import '../../../models/social.dart';
 import '../../../providers/app_providers.dart';
-import '../../../providers/auth_providers.dart';
 import '../../../providers/connection_providers.dart';
 import '../../../providers/signal_providers.dart';
 import '../../../providers/social_providers.dart';
+import '../../../providers/connectivity_providers.dart';
+
 import '../../../services/signal_service.dart';
 import '../../../utils/snackbar.dart';
 import '../widgets/ttl_selector.dart';
@@ -78,19 +79,17 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
   /// Check if device is connected to mesh
   bool get _isDeviceConnected => ref.read(isDeviceConnectedProvider);
 
-  /// Check if user is authenticated
-  bool get _isAuthenticated => ref.read(isSignedInProvider);
+  /// Check cloud availability (online + auth) — reactive for UI
+  bool get _canUseCloud => ref.watch(canUseCloudFeaturesProvider);
 
   /// Combined check for whether signal can be submitted
+  /// Note: Sending over mesh should be allowed even when offline as long
+  /// as the device is connected. Image attachments require cloud.
   bool get _canSubmit =>
-      _hasValidContent &&
-      _isDeviceConnected &&
-      _isAuthenticated &&
-      !_isValidatingImage;
+      _hasValidContent && _isDeviceConnected && !_isValidatingImage;
 
   /// Get the reason why submission is blocked (for UI feedback)
   String? get _submitBlockedReason {
-    if (!_isAuthenticated) return 'Sign in required';
     if (!_isDeviceConnected) return 'Device not connected';
     if (_isValidatingImage) return 'Processing image...';
     return null;
@@ -141,17 +140,18 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
   }
 
   Future<void> _submitSignal() async {
-    // Auth gating check
-    if (!_isAuthenticated) {
-      AppLogging.signals('🔒 Send blocked: user not authenticated');
-      showErrorSnackBar(context, 'Sign in required to send signals');
-      return;
-    }
-
     // Connection gating check
     if (!_isDeviceConnected) {
       AppLogging.signals('🚫 Send blocked: device not connected');
       showErrorSnackBar(context, 'Connect to a device to send signals');
+      return;
+    }
+
+    // If an image is still attached but cloud features are not available,
+    // remove the image and refuse to send with only an image.
+    if (_imageLocalPath != null && !ref.read(canUseCloudFeaturesProvider)) {
+      setState(() => _imageLocalPath = null);
+      showErrorSnackBar(context, 'Images require internet. Image removed.');
       return;
     }
 
@@ -163,8 +163,9 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
 
     final content = _contentController.text.trim();
 
-    // Pre-submission content moderation check
-    if (content.isNotEmpty) {
+    // Pre-submission content moderation check - only when cloud features available
+    final canUseCloudNow = ref.read(canUseCloudFeaturesProvider);
+    if (content.isNotEmpty && canUseCloudNow) {
       final moderationService = ref.read(contentModerationServiceProvider);
       final checkResult = await moderationService.checkText(
         content,
@@ -220,9 +221,40 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
           // If action is proceed, continue with submission
         }
       }
+    } else if (!canUseCloudNow) {
+      AppLogging.signals('SEND: offline - skipping server moderation');
     }
 
     try {
+      final canUseCloudNow = ref.read(canUseCloudFeaturesProvider);
+
+      // If location is being fetched, wait briefly (2s) for it to finish
+      if (_isLoadingLocation) {
+        final start = DateTime.now();
+        final timeout = Duration(seconds: 2);
+        while (_isLoadingLocation &&
+            DateTime.now().difference(start) < timeout) {
+          await Future.delayed(const Duration(milliseconds: 100));
+        }
+        if (_isLoadingLocation) {
+          // Timed out - show a global snackbar (uses navigatorKey internally)
+          showGlobalErrorSnackBar(
+            'Location unavailable, sent without location.',
+          );
+        }
+      }
+
+      final sw = Stopwatch()..start();
+      AppLogging.signals(
+        'SEND_PATH: start validation -> location -> db -> broadcast',
+      );
+
+      // Inform user that broadcast is in progress for mesh sends
+      showGlobalInfoSnackBar(
+        !canUseCloudNow ? 'Broadcasting over mesh...' : 'Sending...',
+        duration: const Duration(seconds: 2),
+      );
+
       final signal = await ref
           .read(signalFeedProvider.notifier)
           .createSignal(
@@ -230,7 +262,13 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
             ttlMinutes: _ttlMinutes,
             location: _location,
             imageLocalPath: _imageLocalPath,
+            // decide cloud usage at time of send
+            // note: if offline this will be false
+            useCloud: canUseCloudNow,
           );
+
+      sw.stop();
+      AppLogging.signals('SEND_PATH: completed in ${sw.elapsedMilliseconds}ms');
 
       if (signal != null && mounted) {
         showSuccessSnackBar(context, 'Signal sent');
@@ -249,6 +287,15 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
 
   Future<void> _pickImage() async {
     _dismissKeyboard();
+
+    // Image selection requires cloud features (auth + internet)
+    if (!ref.read(canUseCloudFeaturesProvider)) {
+      showErrorSnackBar(
+        context,
+        'Offline: images and cloud features are unavailable.',
+      );
+      return;
+    }
 
     // Request photo library permission
     final permission = await PhotoManager.requestPermissionExtend();
@@ -579,6 +626,18 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
   @override
   Widget build(BuildContext context) {
     final myNodeNum = ref.watch(myNodeNumProvider);
+    final canUseCloud = ref.watch(canUseCloudFeaturesProvider);
+
+    // Listen for cloud availability changes and remove image if needed.
+    ref.listen<bool>(canUseCloudFeaturesProvider, (previous, next) {
+      if (previous == true && next == false && _imageLocalPath != null) {
+        // Auto-remove the image and explain to the user
+        setState(() => _imageLocalPath = null);
+        if (mounted) {
+          showErrorSnackBar(context, 'Images require internet. Image removed.');
+        }
+      }
+    });
 
     return Scaffold(
       backgroundColor: context.background,
@@ -922,7 +981,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
                   _ActionButton(
                     icon: Icons.image_outlined,
                     label: 'Image',
-                    onTap: _isSubmitting || _isValidatingImage
+                    onTap: _isSubmitting || _isValidatingImage || !canUseCloud
                         ? null
                         : _pickImage,
                     isSelected: _imageLocalPath != null,
@@ -942,6 +1001,42 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
               ),
 
               const SizedBox(height: 24),
+
+              // Offline banner for image/cloud limitations
+              if (!_canUseCloud)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: context.card,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: context.border.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.cloud_off,
+                          size: 18,
+                          color: context.textTertiary,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Offline: images and cloud features are unavailable. Text and location still broadcast over mesh.',
+                            style: TextStyle(
+                              color: context.textTertiary,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
 
               // Info banner
               Container(

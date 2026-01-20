@@ -10,6 +10,7 @@ import '../services/signal_service.dart';
 import 'app_providers.dart';
 import 'auth_providers.dart';
 import 'profile_providers.dart';
+import 'connectivity_providers.dart';
 
 // =============================================================================
 // SERVICE PROVIDER
@@ -494,14 +495,17 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
     int ttlMinutes = SignalTTL.defaultTTL,
     PostLocation? location,
     String? imageLocalPath,
+    bool? useCloud,
   }) async {
     final service = ref.read(signalServiceProvider);
     final myNodeNum = ref.read(myNodeNumProvider);
     final profile = ref.read(userProfileProvider).value;
+    final detectedCanUseCloud = ref.read(canUseCloudFeaturesProvider);
+    final canUseCloud = useCloud ?? detectedCanUseCloud;
 
     AppLogging.signals(
       'Creating new signal: ttl=${ttlMinutes}m, hasLocation=${location != null}, '
-      'hasImage=${imageLocalPath != null}',
+      'hasImage=${imageLocalPath != null}, canUseCloud=$canUseCloud',
     );
 
     try {
@@ -518,6 +522,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
                 isVerified: profile.isVerified,
               )
             : null,
+        useCloud: canUseCloud,
       );
 
       // Add to state using map-based upsert (handles duplicates)
