@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:socialmesh/utils/snackbar.dart';
 
 import '../../../core/theme.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
@@ -353,9 +354,7 @@ class _StrikeWarningDialogState extends ConsumerState<StrikeWarningDialog> {
     } catch (e) {
       if (mounted) {
         setState(() => _isAcknowledging = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        showErrorSnackBar(context, 'Error: $e');
       }
     }
   }

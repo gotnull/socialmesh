@@ -728,9 +728,7 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet> {
   Future<void> _submit() async {
     final user = ref.read(currentUserProvider);
     if (user == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please sign in to report')));
+      showInfoSnackBar(context, 'Please sign in to report');
       return;
     }
 

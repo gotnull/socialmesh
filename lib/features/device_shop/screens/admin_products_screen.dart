@@ -186,9 +186,7 @@ class _AdminProductsScreenState extends ConsumerState<AdminProductsScreen> {
       ref.invalidate(adminAllProductsProvider);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        showErrorSnackBar(context, 'Error: $e');
       }
     }
   }
@@ -222,15 +220,11 @@ class _AdminProductsScreenState extends ConsumerState<AdminProductsScreen> {
         await service.deleteProductPermanently(product.id);
         ref.invalidate(adminAllProductsProvider);
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Product deleted')));
+          showSuccessSnackBar(context, 'Product deleted');
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Error: $e')));
+          showErrorSnackBar(context, 'Error: $e');
         }
       }
     }
@@ -1225,15 +1219,11 @@ class _AdminProductEditScreenState
         ref.invalidate(adminAllProductsProvider);
         if (mounted) {
           Navigator.pop(context);
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Product deleted')));
+          showSuccessSnackBar(context, 'Product deleted');
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Error: $e')));
+          showErrorSnackBar(context, 'Error: $e');
         }
       }
     }

@@ -272,10 +272,8 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
     final helper = PermissionHelper();
     final granted = await helper.requestCameraPermission();
     if (!granted) {
-      showErrorSnackBar(
-        context,
-        'Camera permission is required to take photos.',
-      );
+      // Use global snackbar to avoid using BuildContext across async gaps
+      showGlobalErrorSnackBar('Camera permission is required to take photos.');
       return;
     }
 

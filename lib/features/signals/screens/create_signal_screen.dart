@@ -377,8 +377,8 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
         // Ensure camera permission is granted before invoking camera
         final permGranted = await PermissionHelper().requestCameraPermission();
         if (!permGranted) {
-          showErrorSnackBar(
-            context,
+          // Use global snackbar to avoid using BuildContext across async gaps
+          showGlobalErrorSnackBar(
             'Camera permission is required to take photos.',
           );
           return;

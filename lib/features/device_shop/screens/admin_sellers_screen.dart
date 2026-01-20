@@ -148,9 +148,7 @@ class _AdminSellersScreenState extends ConsumerState<AdminSellersScreen> {
       ref.invalidate(adminAllSellersProvider);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        showErrorSnackBar(context, 'Error: $e');
       }
     }
   }
@@ -654,9 +652,7 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen> {
     } catch (e) {
       setState(() => _isUploadingLogo = false);
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to upload logo: $e')));
+        showErrorSnackBar(context, 'Failed to upload logo: $e');
       }
     }
   }

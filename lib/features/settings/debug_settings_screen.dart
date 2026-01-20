@@ -1597,12 +1597,9 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
                 .read(messagesProvider.notifier)
                 .forceRehydrateAllFromStorage();
             if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Rehydrated ${result['total'] ?? 0} messages (${result['inserted'] ?? 0} inserted) from storage',
-                ),
-              ),
+            showInfoSnackBar(
+              context,
+              'Rehydrated ${result['total'] ?? 0} messages (${result['inserted'] ?? 0} inserted) from storage',
             );
           },
         ),
