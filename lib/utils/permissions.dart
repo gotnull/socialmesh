@@ -89,8 +89,8 @@ class PermissionHelper {
     }
   }
 
-  /// Open app settings
-  Future<void> openAppSettings() async {
+  /// Open app settings (platform)
+  Future<void> goToAppSettings() async {
     await openAppSettings();
   }
 }

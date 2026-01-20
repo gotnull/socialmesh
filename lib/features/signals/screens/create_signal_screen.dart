@@ -1156,6 +1156,7 @@ class _MediaPickerSheet extends StatefulWidget {
 class _MediaPickerSheetState extends State<_MediaPickerSheet> {
   List<AssetEntity> _recentAssets = [];
   bool _isLoadingAssets = true;
+  bool _hasPermission = true;
   _AlbumFilterType _selectedFilter = _AlbumFilterType.recents;
   List<AssetPathEntity> _allAlbums = [];
   AssetPathEntity? _selectedAlbum;
@@ -1167,13 +1168,37 @@ class _MediaPickerSheetState extends State<_MediaPickerSheet> {
   }
 
   Future<void> _loadAssets() async {
-    setState(() => _isLoadingAssets = true);
+    setState(() {
+      _isLoadingAssets = true;
+      _hasPermission = true;
+    });
 
-    // Load all albums
-    final allAlbums = await PhotoManager.getAssetPathList(
-      type: RequestType.image, // Images only for signals
+    // Request photo/media permission (handles Android/iOS differences)
+    final permission = await PhotoManager.requestPermissionExtend();
+    if (!permission.isAuth) {
+      // Permission denied - show prompt in UI
+      setState(() {
+        _isLoadingAssets = false;
+        _hasPermission = false;
+      });
+      return;
+    }
+
+    setState(() => _hasPermission = true);
+
+    // Load all albums (prefer images)
+    var allAlbums = await PhotoManager.getAssetPathList(
+      type: RequestType.image,
       hasAll: true,
     );
+
+    // Fallback to common if no albums found (some devices treat types differently)
+    if (allAlbums.isEmpty) {
+      allAlbums = await PhotoManager.getAssetPathList(
+        type: RequestType.common,
+        hasAll: true,
+      );
+    }
     _allAlbums = allAlbums;
 
     // Load assets based on filter
@@ -1289,6 +1314,25 @@ class _MediaPickerSheetState extends State<_MediaPickerSheet> {
               child: _isLoadingAssets
                   ? const Center(
                       child: CircularProgressIndicator(color: Colors.white),
+                    )
+                  : !_hasPermission
+                  ? Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Photo access is required to select images.',
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.8),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          ElevatedButton(
+                            onPressed: () => PhotoManager.openSetting(),
+                            child: const Text('Open settings'),
+                          ),
+                        ],
+                      ),
                     )
                   : _selectedFilter == _AlbumFilterType.allAlbums &&
                         _selectedAlbum == null
