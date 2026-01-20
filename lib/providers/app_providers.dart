@@ -9,6 +9,7 @@ import '../services/transport/ble_transport.dart';
 import '../services/transport/usb_transport.dart';
 import '../services/protocol/protocol_service.dart';
 import '../services/storage/storage_service.dart';
+import '../services/mesh_packet_dedupe_store.dart';
 import '../services/notifications/notification_service.dart';
 import '../services/messaging/offline_queue_service.dart';
 import '../services/location/location_service.dart';
@@ -979,10 +980,24 @@ final pushNotificationServiceProvider = Provider<PushNotificationService>((
   return PushNotificationService();
 });
 
+final meshPacketDedupeStoreProvider =
+    Provider<MeshPacketDedupeStore>((ref) {
+  final store = MeshPacketDedupeStore();
+  unawaited(store.init());
+  ref.onDispose(() {
+    store.dispose();
+  });
+  return store;
+});
+
 // Protocol service - singleton instance that persists across rebuilds
 final protocolServiceProvider = Provider<ProtocolService>((ref) {
   final transport = ref.watch(transportProvider);
-  final service = ProtocolService(transport);
+  final dedupeStore = ref.watch(meshPacketDedupeStoreProvider);
+  final service = ProtocolService(
+    transport,
+    dedupeStore: dedupeStore,
+  );
 
   AppLogging.debug(
     '🟢 ProtocolService provider created - instance: ${service.hashCode}',

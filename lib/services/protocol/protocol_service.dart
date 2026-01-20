@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
+
 import 'package:flutter/foundation.dart';
 import '../../core/logging.dart';
 import '../../core/transport.dart';
@@ -17,6 +18,7 @@ import '../../generated/meshtastic/channel.pbenum.dart' as channel_pbenum;
 import '../../generated/meshtastic/portnums.pbenum.dart' as pn;
 import '../../generated/meshtastic/telemetry.pb.dart' as telemetry;
 import 'packet_framer.dart';
+import '../mesh_packet_dedupe_store.dart';
 
 /// Mesh signal packet received from PRIVATE_APP portnum.
 ///
@@ -213,6 +215,9 @@ class ProtocolService {
   final List<ChannelConfig> _channels = [];
   final Random _random = Random();
   bool _configurationComplete = false;
+  final MeshPacketDedupeStore _dedupeStore;
+
+  static const Duration _messagePacketTtl = Duration(minutes: 120);
 
   // Track pending messages by packet ID for delivery status updates
   final Map<int, String> _pendingMessages = {}; // packetId -> messageId
@@ -220,7 +225,7 @@ class ProtocolService {
   // BLE device name for hardware model inference
   String? _deviceName;
 
-  ProtocolService(this._transport)
+  ProtocolService(this._transport, {MeshPacketDedupeStore? dedupeStore})
     : _framer = PacketFramer(),
       _messageController = StreamController<Message>.broadcast(),
       _nodeController = StreamController<MeshNode>.broadcast(),
@@ -281,7 +286,8 @@ class ProtocolService {
       _cannedMessageConfigController =
           StreamController<
             module_pb.ModuleConfig_CannedMessageConfig
-          >.broadcast();
+          >.broadcast(),
+      _dedupeStore = dedupeStore ?? MeshPacketDedupeStore();
 
   /// Set the BLE device name for hardware model inference
   void setDeviceName(String? name) {
@@ -655,27 +661,39 @@ class ProtocolService {
 
   /// Handle incoming data from transport
   void _handleData(List<int> data) {
-    AppLogging.protocol('Received ${data.length} bytes');
+    unawaited(_handleDataAsync(data));
+  }
 
-    if (_transport.requiresFraming) {
-      // Serial/USB: Extract packets using framer
-      final packets = _framer.addData(data);
+  Future<void> _handleDataAsync(List<int> data) async {
+    try {
+      AppLogging.protocol('Received ${data.length} bytes');
 
-      for (final packet in packets) {
-        AppLogging.protocol('MESH_FRAME_OK len=${packet.length}');
-        _processPacket(packet);
+      if (_transport.requiresFraming) {
+        // Serial/USB: Extract packets using framer
+        final packets = _framer.addData(data);
+
+        for (final packet in packets) {
+          AppLogging.protocol('MESH_FRAME_OK len=${packet.length}');
+          await _processPacket(packet);
+        }
+      } else {
+        // BLE: Data is already a complete raw protobuf
+        if (data.isNotEmpty) {
+          AppLogging.protocol('MESH_FRAME_OK len=${data.length}');
+          await _processPacket(data);
+        }
       }
-    } else {
-      // BLE: Data is already a complete raw protobuf
-      if (data.isNotEmpty) {
-        AppLogging.protocol('MESH_FRAME_OK len=${data.length}');
-        _processPacket(data);
-      }
+    } catch (e, stack) {
+      AppLogging.protocol('Transport packet error: $e\n$stack');
     }
   }
 
+  @visibleForTesting
+  Future<void> handleIncomingPacket(List<int> packet) =>
+      _handleDataAsync(packet);
+
   /// Process a complete packet
-  void _processPacket(List<int> packet) {
+  Future<void> _processPacket(List<int> packet) async {
     try {
       AppLogging.protocol('Processing packet: ${packet.length} bytes');
 
@@ -686,7 +704,7 @@ class ProtocolService {
       AppLogging.protocol('FromRadio payload variant: $variant');
 
       if (fromRadio.hasPacket()) {
-        _handleMeshPacket(fromRadio.packet);
+        await _handleMeshPacket(fromRadio.packet);
       } else if (fromRadio.hasMyInfo()) {
         _handleMyNodeInfo(fromRadio.myInfo);
       } else if (fromRadio.hasNodeInfo()) {
@@ -781,7 +799,7 @@ class ProtocolService {
   }
 
   /// Handle incoming mesh packet
-  void _handleMeshPacket(pb.MeshPacket packet) {
+  Future<void> _handleMeshPacket(pb.MeshPacket packet) async {
     AppLogging.protocol(
       'Handling mesh packet from ${packet.from} to ${packet.to}',
     );
@@ -801,6 +819,26 @@ class ProtocolService {
 
     if (packet.hasDecoded()) {
       final data = packet.decoded;
+
+      if (data.portnum == pn.PortNum.TEXT_MESSAGE_APP) {
+        final key = MeshPacketKey(
+          packetType: 'channel_message',
+          senderNodeId: packet.from,
+          packetId: packet.id,
+          channelIndex: packet.channel,
+        );
+
+        final seen = await _dedupeStore.hasSeen(key, ttl: _messagePacketTtl);
+        if (seen) {
+          AppLogging.messages(
+            '📨 Duplicate message packet ignored: packetId=${packet.id}, '
+            'from=${packet.from.toRadixString(16)}, channel=${packet.channel}',
+          );
+          return;
+        }
+
+        await _dedupeStore.markSeen(key, ttl: _messagePacketTtl);
+      }
 
       switch (data.portnum) {
         case pn.PortNum.TEXT_MESSAGE_APP:

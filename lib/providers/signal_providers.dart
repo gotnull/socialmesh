@@ -18,7 +18,8 @@ import 'connectivity_providers.dart';
 
 /// Provider for the SignalService singleton.
 final signalServiceProvider = Provider<SignalService>((ref) {
-  return SignalService();
+  final dedupeStore = ref.watch(meshPacketDedupeStoreProvider);
+  return SignalService(dedupeStore: dedupeStore);
 });
 
 // =============================================================================

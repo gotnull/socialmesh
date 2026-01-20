@@ -16,6 +16,7 @@ import 'package:uuid/uuid.dart';
 
 import '../core/logging.dart';
 import '../models/social.dart';
+import 'mesh_packet_dedupe_store.dart';
 
 /// Default signal TTL options in minutes.
 class SignalTTL {
@@ -307,13 +308,18 @@ class SignalService {
   /// Signature: `Future<Post?> Function(String signalId)?`
   final Future<Post?> Function(String signalId)? cloudLookupOverride;
 
-  SignalService({this.cloudLookupOverride});
+  SignalService({
+    this.cloudLookupOverride,
+    MeshPacketDedupeStore? dedupeStore,
+  }) : _dedupeStore = dedupeStore ?? MeshPacketDedupeStore();
+
   static const _tableName = 'signals';
   static const _proximityTable = 'node_proximity';
   static const _commentsTable = 'comments';
-  static const _meshPacketsTable = 'mesh_packets';
   static const _maxLocalSignals = 200;
   static const _meshPacketTTLMinutes = 30;
+
+  final MeshPacketDedupeStore _dedupeStore;
 
   // Firebase instances are accessed lazily to avoid crashes when
   // Firebase isn't initialized yet (offline-first architecture)
@@ -457,7 +463,7 @@ class SignalService {
         await _createTables(db);
       },
     );
-    await _recreateMeshPacketsTable(_db!);
+    await _dedupeStore.init();
 
     _startAuthListener();
 
@@ -537,25 +543,7 @@ class SignalService {
     );
 
     await _createProximityTable(db);
-    await _recreateMeshPacketsTable(db);
     await _createCommentsTable(db);
-  }
-
-  Future<void> _recreateMeshPacketsTable(Database db) async {
-    await db.execute('DROP TABLE IF EXISTS $_meshPacketsTable');
-    await db.execute('''
-      CREATE TABLE $_meshPacketsTable (
-        senderNodeId INTEGER NOT NULL,
-        packetId INTEGER NOT NULL,
-        receivedAt INTEGER NOT NULL,
-        PRIMARY KEY (senderNodeId, packetId)
-      )
-    ''');
-
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_mesh_packets_receivedAt '
-      'ON $_meshPacketsTable(receivedAt)',
-    );
   }
 
   Future<void> _createProximityTable(Database db) async {
@@ -680,82 +668,6 @@ class SignalService {
     final key = '$kind:$signalId';
     _listenerRetryCounts.remove(key);
     _listenerRetryTimers.remove(key)?.cancel();
-  }
-
-  // ===========================================================================
-  // DUPLICATE PACKET HANDLING
-  // ===========================================================================
-
-  /// Check if a signal with the given ID already exists in the signals table.
-  /// Used for signal deduplication (by signalId).
-  Future<bool> _hasSignalById(String signalId) async {
-    await init();
-
-    final result = await _db!.query(
-      _tableName,
-      columns: ['id'],
-      where: 'id = ?',
-      whereArgs: [signalId],
-      limit: 1,
-    );
-
-    return result.isNotEmpty;
-  }
-
-  Future<bool> _hasSeenMeshPacket({
-    required int senderNodeId,
-    required int packetId,
-  }) async {
-    await init();
-
-    final cutoff = DateTime.now()
-        .subtract(Duration(minutes: _meshPacketTTLMinutes))
-        .millisecondsSinceEpoch;
-
-    final result = await _db!.query(
-      _meshPacketsTable,
-      columns: ['senderNodeId'],
-      where: 'senderNodeId = ? AND packetId = ? AND receivedAt > ?',
-      whereArgs: [senderNodeId, packetId, cutoff],
-      limit: 1,
-    );
-
-    return result.isNotEmpty;
-  }
-
-  Future<void> _markMeshPacketSeen({
-    required int senderNodeId,
-    required int packetId,
-  }) async {
-    await init();
-
-    await _db!.insert(
-      _meshPacketsTable,
-      {
-        'senderNodeId': senderNodeId,
-        'packetId': packetId,
-        'receivedAt': DateTime.now().millisecondsSinceEpoch,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-  }
-
-  Future<void> _cleanupMeshPackets() async {
-    await init();
-
-    final cutoff = DateTime.now()
-        .subtract(Duration(minutes: _meshPacketTTLMinutes))
-        .millisecondsSinceEpoch;
-
-    final deleted = await _db!.delete(
-      _meshPacketsTable,
-      where: 'receivedAt < ?',
-      whereArgs: [cutoff],
-    );
-
-    if (deleted > 0) {
-      AppLogging.signals('Cleaned up $deleted old mesh packet entries');
-    }
   }
 
   // ===========================================================================
@@ -1212,26 +1124,36 @@ class SignalService {
       return null;
     }
 
+    if (packetId != null) {
+      final key = MeshPacketKey(
+        packetType: 'signal',
+        senderNodeId: senderNodeId,
+        packetId: packetId,
+      );
+
+      final seen = await _dedupeStore.hasSeen(
+        key,
+        ttl: Duration(minutes: _meshPacketTTLMinutes),
+      );
+
+      if (seen) {
+        AppLogging.signals(
+          'DEDUP_DROP signalId=$signalId packetId=$packetId reason=metadata',
+        );
+        return null;
+      }
+
+      await _dedupeStore.markSeen(
+        key,
+        ttl: Duration(minutes: _meshPacketTTLMinutes),
+      );
+    }
+
     // DEDUPLICATION LOGIC:
     // Dedupe strictly by signalId in signals table
     if (await _hasSignalById(signalId)) {
       AppLogging.signals('DEDUP_DROP signalId=$signalId reason=exists_in_db');
       return null;
-    }
-    if (packetId != null) {
-      if (await _hasSeenMeshPacket(
-        senderNodeId: senderNodeId,
-        packetId: packetId,
-      )) {
-        AppLogging.signals(
-          'DEDUP_DROP signalId=$signalId packetId=$packetId reason=packet_seen',
-        );
-        return null;
-      }
-      await _markMeshPacketSeen(
-        senderNodeId: senderNodeId,
-        packetId: packetId,
-      );
     }
     AppLogging.signals(
       'DEDUP_ACCEPT signalId=$signalId packetId=${packetId ?? "none"}',
@@ -1458,6 +1380,24 @@ class SignalService {
     } catch (e) {
       AppLogging.signals('📷 Failed to download/cache image: $e');
     }
+  }
+
+  // ===========================================================================
+  // DUPLICATE SIGNAL DETECTION
+  // ===========================================================================
+
+  Future<bool> _hasSignalById(String signalId) async {
+    await init();
+
+    final result = await _db!.query(
+      _tableName,
+      columns: ['id'],
+      where: 'id = ?',
+      whereArgs: [signalId],
+      limit: 1,
+    );
+
+    return result.isNotEmpty;
   }
 
   // ===========================================================================
@@ -1766,7 +1706,9 @@ class SignalService {
     );
 
     // Also cleanup old mesh packet entries, proximity data, and comments
-    await _cleanupMeshPackets();
+    await _dedupeStore.cleanup(
+      ttl: Duration(minutes: _meshPacketTTLMinutes),
+    );
     await _cleanupOldProximityData();
     await _cleanupExpiredComments();
 
