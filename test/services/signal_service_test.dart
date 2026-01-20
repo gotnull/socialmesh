@@ -217,6 +217,35 @@ void main() {
       expect(after.length, equals(before.length));
     });
 
+    test(
+      'same signalId received twice does not create duplicates',
+      () async {
+        final service = SignalService();
+
+        final first = await service.createSignalFromMesh(
+          content: 'Duplicate id',
+          senderNodeId: 10,
+          signalId: 'sig-dup',
+          packetId: 601,
+          ttlMinutes: 15,
+        );
+        expect(first, isNotNull);
+
+        final second = await service.createSignalFromMesh(
+          content: 'Duplicate id',
+          senderNodeId: 10,
+          signalId: 'sig-dup',
+          packetId: 602,
+          ttlMinutes: 15,
+        );
+        expect(second, isNull);
+
+        final all = await service.getActiveSignals();
+        final ids = all.map((s) => s.id).toList();
+        expect(ids.where((id) => id == 'sig-dup').length, 1);
+      },
+    );
+
     test('mesh-only broadcast uses short timeout', () async {
       final service = SignalService();
 

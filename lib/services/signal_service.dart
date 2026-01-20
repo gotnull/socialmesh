@@ -1288,6 +1288,35 @@ class SignalService {
         'RECV: starting comments listener posts/${signal.id}/comments',
       );
       _startCommentsListener(signal.id);
+      if (cloudLookupOverride != null) {
+        Future(() async {
+          try {
+            final cloudSignal = await cloudLookupOverride!(signal.id);
+            AppLogging.signals(
+              'RECV: override lookup exists=${cloudSignal != null} mediaUrls=${cloudSignal?.mediaUrls.length ?? 0}',
+            );
+            if (cloudSignal != null && cloudSignal.mediaUrls.isNotEmpty) {
+              final cloudImageUrl = cloudSignal.mediaUrls.first;
+              final existing = await getSignalById(signal.id);
+              if (existing != null) {
+                final updated = existing.copyWith(
+                  mediaUrls: [cloudImageUrl],
+                  imageState: ImageState.cloud,
+                  commentCount: cloudSignal.commentCount,
+                );
+                await updateSignal(updated);
+                AppLogging.signals(
+                  'RECV: override lookup updated local signal with cloud image for ${signal.id}',
+                );
+              }
+            }
+          } catch (e, st) {
+            AppLogging.signals(
+              'RECV: override lookup error for ${signal.id}: $e\n$st',
+            );
+          }
+        });
+      }
     } else {
       AppLogging.signals(
         'RECV: cloud listeners skipped for ${signal.id} (mesh-only debug)',

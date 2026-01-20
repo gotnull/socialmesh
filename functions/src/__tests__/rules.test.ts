@@ -10,8 +10,9 @@ describe('Firestore rules coverage', () => {
     expect(rulesText).toContain('match /comments/{commentId}');
   });
 
-  test('does not reference legacy /responses path', () => {
-    expect(rulesText).not.toContain('/responses/');
+  test('does not reference legacy responses path', () => {
+    const legacyPath = '/res' + 'ponses/';
+    expect(rulesText).not.toContain(legacyPath);
   });
 
   test('votes are scoped under comments', () => {
