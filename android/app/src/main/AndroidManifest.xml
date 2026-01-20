@@ -53,7 +53,6 @@
     <!-- Photo/Media access for Stories and profile pictures -->
     <!-- Android 13+ (API 33+) granular media permissions -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
     <!-- Android 14+ (API 34+) partial media access -->
     <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
     <!-- Legacy storage permission for Android 12 and below -->
