@@ -11,8 +11,12 @@
  */
 
 import * as admin from 'firebase-admin';
-import { onDocumentCreated } from 'firebase-functions/v2/firestore';
+import { onDocumentCreated, onDocumentUpdated, onDocumentWritten } from 'firebase-functions/v2/firestore';
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
+
+if (admin.apps.length === 0) {
+  admin.initializeApp();
+}
 
 const db = admin.firestore();
 const messaging = admin.messaging();
@@ -34,6 +38,7 @@ interface UserData {
     likes?: boolean;
     comments?: boolean;
     signals?: boolean;
+    votes?: boolean;
   };
 }
 
@@ -64,7 +69,7 @@ async function getFcmTokens(userId: string): Promise<string[]> {
  */
 async function isNotificationEnabled(
   userId: string,
-  type: 'follows' | 'likes' | 'comments' | 'signals'
+  type: 'follows' | 'likes' | 'comments' | 'signals' | 'votes'
 ): Promise<boolean> {
   const doc = await db.collection('users').doc(userId).get();
   if (!doc.exists) return true; // Default to enabled
@@ -73,6 +78,13 @@ async function isNotificationEnabled(
   if (!data.notificationSettings) return true; // Default to enabled
 
   return data.notificationSettings[type] !== false;
+}
+
+export function shouldNotifySignalVote(
+  beforeValue?: number,
+  afterValue?: number
+): boolean {
+  return afterValue === 1 && beforeValue !== 1;
 }
 
 /**
@@ -161,6 +173,27 @@ async function sendPushNotification(
   }
 }
 
+/**
+ * Reserve a notification key to dedupe retries.
+ * Returns true if notification should be sent, false if already sent.
+ */
+export function sanitizeNotificationKey(key: string): string {
+  return key.replace(/[^a-zA-Z0-9_-]/g, '_');
+}
+
+async function reserveNotificationKey(key: string): Promise<boolean> {
+  const safeKey = sanitizeNotificationKey(key);
+  try {
+    await db.collection('notification_dedupe').doc(safeKey).create({
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    return true;
+  } catch {
+    console.log(`[Push] Dedupe hit for key ${safeKey}, skipping`);
+    return false;
+  }
+}
+
 // =============================================================================
 // FOLLOW NOTIFICATIONS
 // =============================================================================
@@ -240,8 +273,6 @@ export const onFollowRequestCreatedNotification = onDocumentCreated(
  * Send notification when a follow request is accepted
  * Listens for status changes from 'pending' to 'accepted'
  */
-import { onDocumentUpdated } from 'firebase-functions/v2/firestore';
-
 export const onFollowRequestAcceptedNotification = onDocumentUpdated(
   'follow_requests/{requestId}',
   async (event) => {
@@ -328,9 +359,18 @@ export const onSignalCreatedNotification = onDocumentCreated(
       const subscriberData = doc.data();
       const subscriberId = subscriberData.subscriberId as string;
 
+      if (subscriberId === authorId) {
+        return;
+      }
+
       // Check if subscriber has signal notifications enabled
       if (!await isNotificationEnabled(subscriberId, 'signals')) {
         console.log(`Signal notifications disabled for user ${subscriberId}`);
+        return;
+      }
+
+      const dedupeKey = `signal_created:${subscriberId}:${postId}`;
+      if (!await reserveNotificationKey(dedupeKey)) {
         return;
       }
 
@@ -653,7 +693,7 @@ export const onSignalCommentNotification = onDocumentCreated(
 
     const postId = event.params.postId;
     const commentId = event.params.commentId;
-    const { authorId: commenterId, content, signalId } = data;
+    const { authorId: commenterId, content, signalId, parentId } = data;
 
     // Verify this is a signal comment
     if (signalId !== postId) {
@@ -671,12 +711,6 @@ export const onSignalCommentNotification = onDocumentCreated(
     const postData = postDoc.data()!;
     const postAuthorId = postData.authorId;
 
-    // Don't notify the comment author
-    if (postAuthorId === commenterId) {
-      console.log('Signal author commented on own signal, skipping notification');
-      return;
-    }
-
     // Truncate content for notification
     const truncatedContent = content.length > 50
       ? `${content.substring(0, 50)}...`
@@ -686,25 +720,128 @@ export const onSignalCommentNotification = onDocumentCreated(
     const commenterProfile = await getProfile(commenterId);
     const commenterName = commenterProfile?.displayName || 'Someone';
 
-    // Check if signal author has comment notifications enabled
-    if (!await isNotificationEnabled(postAuthorId, 'comments')) {
-      console.log(`Signal comment notifications disabled for user ${postAuthorId}`);
+    const notifiedUsers = new Set<string>();
+    notifiedUsers.add(commenterId);
+
+    // Reply: notify parent comment author
+    if (parentId) {
+      const parentDoc = await db.collection('posts')
+        .doc(postId)
+        .collection('comments')
+        .doc(parentId)
+        .get();
+
+      if (parentDoc.exists) {
+        const parentAuthorId = parentDoc.data()!.authorId as string;
+        if (!notifiedUsers.has(parentAuthorId)) {
+          notifiedUsers.add(parentAuthorId);
+          if (await isNotificationEnabled(parentAuthorId, 'comments')) {
+            const dedupeKey = `signal_reply:${parentAuthorId}:${commentId}`;
+            if (await reserveNotificationKey(dedupeKey)) {
+              await sendPushNotification(
+                parentAuthorId,
+                'New reply on your signal',
+                `${commenterName}: ${truncatedContent}`,
+                {
+                  type: 'signal_reply',
+                  targetId: postId,
+                  commentId: commentId,
+                  parentId: parentId,
+                },
+                commenterProfile?.avatarUrl
+              );
+            }
+          }
+        }
+      }
+    }
+
+    // Notify signal author
+    if (!notifiedUsers.has(postAuthorId)) {
+      if (!await isNotificationEnabled(postAuthorId, 'comments')) {
+        console.log(`Signal comment notifications disabled for user ${postAuthorId}`);
+        return;
+      }
+
+      console.log(`Notifying signal author ${postAuthorId} of new comment by ${commenterName}`);
+      const dedupeKey = `signal_comment:${postAuthorId}:${commentId}`;
+      if (!await reserveNotificationKey(dedupeKey)) {
+        return;
+      }
+
+      await sendPushNotification(
+        postAuthorId,
+        'New comment on your signal',
+        `${commenterName}: ${truncatedContent}`,
+        {
+          type: 'signal_comment',
+          targetId: postId,
+          commentId: commentId,
+        },
+        commenterProfile?.avatarUrl
+      );
+    }
+  }
+);
+
+/**
+ * Send notification when someone votes on a signal comment.
+ */
+export const onSignalVoteNotification = onDocumentWritten(
+  'posts/{postId}/comments/{commentId}/votes/{voterId}',
+  async (event) => {
+    const { postId, commentId, voterId } = event.params;
+    const beforeData = event.data?.before.data();
+    const afterData = event.data?.after.data();
+
+    const beforeValue = beforeData?.value as number | undefined;
+    const afterValue = afterData?.value as number | undefined;
+
+    // Only notify on new upvotes (or changes to upvote)
+    if (!shouldNotifySignalVote(beforeValue, afterValue)) {
+      return;
+    }
+    if (afterValue != 1) {
       return;
     }
 
-    console.log(`Notifying signal author ${postAuthorId} of new comment by ${commenterName}`);
+    const commentDoc = await db.collection('posts')
+      .doc(postId)
+      .collection('comments')
+      .doc(commentId)
+      .get();
+    if (!commentDoc.exists) return;
 
-    // Send notification to signal author
+    const commentData = commentDoc.data()!;
+    if (commentData.signalId !== postId) return;
+
+    const commentAuthorId = commentData.authorId as string;
+    if (commentAuthorId === voterId) return;
+
+    if (!await isNotificationEnabled(commentAuthorId, 'votes')) {
+      console.log(`Signal vote notifications disabled for user ${commentAuthorId}`);
+      return;
+    }
+
+    const voterProfile = await getProfile(voterId);
+    const voterName = voterProfile?.displayName || 'Someone';
+
+    const dedupeKey = `signal_vote:${commentAuthorId}:${commentId}:${voterId}:up`;
+    if (!await reserveNotificationKey(dedupeKey)) {
+      return;
+    }
+
     await sendPushNotification(
-      postAuthorId,
-      'New comment on your signal',
-      `${commenterName}: ${truncatedContent}`,
+      commentAuthorId,
+      'New vote on your comment',
+      `${voterName} upvoted your comment`,
       {
-        type: 'signal_comment',
+        type: 'signal_vote',
         targetId: postId,
         commentId: commentId,
+        value: afterValue.toString(),
       },
-      commenterProfile?.avatarUrl
+      voterProfile?.avatarUrl
     );
   }
 );
@@ -766,6 +903,11 @@ export const sendTestPushNotification = onCall(async (request) => {
       title = 'Debug User is active 📡';
       body = 'This is a test signal notification!';
       data = { type: 'new_signal', targetId: 'debug_signal', authorId: 'debug_user' };
+      break;
+    case 'vote':
+      title = 'New vote on your comment';
+      body = 'Debug User upvoted your comment';
+      data = { type: 'signal_vote', targetId: 'debug_signal', commentId: 'debug_comment', value: '1' };
       break;
     default:
       title = 'Test Notification';

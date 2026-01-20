@@ -280,6 +280,8 @@ class PushNotificationService {
 
     switch (type) {
       case 'signal_comment':
+      case 'signal_reply':
+      case 'signal_vote':
         // When someone comments on a signal
         _contentRefreshController.add(
           ContentRefreshEvent(
@@ -446,6 +448,7 @@ class PushNotificationService {
     bool? likeNotifications,
     bool? commentNotifications,
     bool? signalNotifications,
+    bool? voteNotifications,
   }) async {
     final user = _auth.currentUser;
     if (user == null) return;
@@ -464,6 +467,9 @@ class PushNotificationService {
       if (signalNotifications != null) {
         updates['notificationSettings.signals'] = signalNotifications;
       }
+      if (voteNotifications != null) {
+        updates['notificationSettings.votes'] = voteNotifications;
+      }
 
       if (updates.isNotEmpty) {
         await _firestore.collection('users').doc(user.uid).update(updates);
@@ -478,7 +484,13 @@ class PushNotificationService {
   Future<Map<String, bool>> getNotificationSettings() async {
     final user = _auth.currentUser;
     if (user == null) {
-      return {'follows': true, 'likes': true, 'comments': true};
+      return {
+        'follows': true,
+        'likes': true,
+        'comments': true,
+        'signals': true,
+        'votes': true,
+      };
     }
 
     try {
@@ -489,6 +501,7 @@ class PushNotificationService {
           'likes': true,
           'comments': true,
           'signals': true,
+          'votes': true,
         };
       }
 
@@ -500,6 +513,7 @@ class PushNotificationService {
         'likes': settings?['likes'] ?? true,
         'comments': settings?['comments'] ?? true,
         'signals': settings?['signals'] ?? true,
+        'votes': settings?['votes'] ?? true,
       };
     } catch (e) {
       AppLogging.notifications('🔔 Error getting notification settings: $e');
@@ -508,6 +522,7 @@ class PushNotificationService {
         'likes': true,
         'comments': true,
         'signals': true,
+        'votes': true,
       };
     }
   }

@@ -1,3 +1,6 @@
+import { computeReplyDepth, computeVoteDeltas } from '../social';
+import { shouldNotifySignalVote } from '../push_notifications';
+
 /**
  * Comprehensive Firebase Cloud Functions Tests
  * 
@@ -844,6 +847,47 @@ describe('CORS and Headers', () => {
 // =============================================================================
 
 describe('Firestore Rules Validation', () => {
+  describe('Post document rules', () => {
+    it('should validate post create rules for signals', () => {
+      const now = 1_000_000;
+      const maxTtlMs = 86400 * 1000;
+
+      const canCreatePost = (
+        auth: { uid: string } | null,
+        data: { authorId: string; content?: string; postMode?: string; expiresAt?: number }
+      ) => {
+        if (!auth) return false;
+        if (data.authorId !== auth.uid) return false;
+        if (!data.content || data.content.length === 0 || data.content.length > 2000) return false;
+        if (data.postMode === 'signal') {
+          if (!data.expiresAt) return false;
+          if (data.expiresAt <= now) return false;
+          if (data.expiresAt > now + maxTtlMs) return false;
+        }
+        return true;
+      };
+
+      expect(canCreatePost(
+        { uid: 'user1' },
+        { authorId: 'user1', content: 'hello', postMode: 'signal', expiresAt: now + 1000 }
+      )).toBe(true);
+
+      expect(canCreatePost(
+        { uid: 'user1' },
+        { authorId: 'user2', content: 'hello', postMode: 'signal', expiresAt: now + 1000 }
+      )).toBe(false);
+
+      expect(canCreatePost(
+        { uid: 'user1' },
+        { authorId: 'user1', content: 'hello', postMode: 'signal', expiresAt: now - 1 }
+      )).toBe(false);
+
+      expect(canCreatePost(
+        { uid: 'user1' },
+        { authorId: 'user1', content: 'hello', postMode: 'signal', expiresAt: now + maxTtlMs + 1 }
+      )).toBe(false);
+    });
+  });
   describe('Vote document rules', () => {
     it('should require authenticated user', () => {
       const isAuthenticated = (auth: { uid: string } | null) => auth !== null;
@@ -1030,6 +1074,53 @@ describe('Firestore Rules Validation', () => {
         'user1',
         { isDeleted: true, content: 'modified content' }
       )).toBe(false);
+    });
+  });
+});
+
+// =============================================================================
+// SIGNAL COMMENT UTILITIES
+// =============================================================================
+
+describe('Signal Comment Utilities', () => {
+  describe('computeVoteDeltas', () => {
+    it('should compute deltas for new votes', () => {
+      expect(computeVoteDeltas(undefined, 1)).toEqual({ upDelta: 1, downDelta: 0 });
+      expect(computeVoteDeltas(undefined, -1)).toEqual({ upDelta: 0, downDelta: 1 });
+    });
+
+    it('should compute deltas for deleted votes', () => {
+      expect(computeVoteDeltas(1, undefined)).toEqual({ upDelta: -1, downDelta: 0 });
+      expect(computeVoteDeltas(-1, undefined)).toEqual({ upDelta: 0, downDelta: -1 });
+    });
+
+    it('should compute deltas for changed votes', () => {
+      expect(computeVoteDeltas(1, -1)).toEqual({ upDelta: -1, downDelta: 1 });
+      expect(computeVoteDeltas(-1, 1)).toEqual({ upDelta: 1, downDelta: -1 });
+    });
+
+    it('should return null when no effective change', () => {
+      expect(computeVoteDeltas(1, 1)).toBeNull();
+      expect(computeVoteDeltas(-1, -1)).toBeNull();
+      expect(computeVoteDeltas(undefined, undefined)).toBeNull();
+    });
+  });
+
+  describe('computeReplyDepth', () => {
+    it('should clamp reply depth at max', () => {
+      expect(computeReplyDepth(0, 8)).toBe(1);
+      expect(computeReplyDepth(7, 8)).toBe(8);
+      expect(computeReplyDepth(8, 8)).toBe(8);
+    });
+  });
+
+  describe('shouldNotifySignalVote', () => {
+    it('should notify only on new upvotes', () => {
+      expect(shouldNotifySignalVote(undefined, 1)).toBe(true);
+      expect(shouldNotifySignalVote(-1, 1)).toBe(true);
+      expect(shouldNotifySignalVote(1, 1)).toBe(false);
+      expect(shouldNotifySignalVote(1, -1)).toBe(false);
+      expect(shouldNotifySignalVote(undefined, -1)).toBe(false);
     });
   });
 });

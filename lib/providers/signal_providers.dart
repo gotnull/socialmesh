@@ -111,6 +111,44 @@ class SignalFeedState {
   }
 }
 
+/// Sort signals for the presence feed.
+List<Post> sortSignalsForFeed(List<Post> signals, int? myNodeNum) {
+  return List<Post>.from(signals)..sort((a, b) {
+    // 1. Same node = highest priority
+    if (myNodeNum != null && a.meshNodeId != null && b.meshNodeId != null) {
+      final aIsMe = a.meshNodeId == myNodeNum;
+      final bIsMe = b.meshNodeId == myNodeNum;
+      if (aIsMe && !bIsMe) return -1;
+      if (!aIsMe && bIsMe) return 1;
+    }
+
+    // 2. hopCount sort (lower = closer, null = lowest priority)
+    final aHop = a.hopCount;
+    final bHop = b.hopCount;
+    if (aHop != null && bHop != null) {
+      if (aHop != bHop) {
+        AppLogging.signals(
+          '📡 Signals: Sorting by hopCount (a=$aHop, b=$bHop)',
+        );
+        return aHop.compareTo(bHop); // ascending
+      }
+    } else if (aHop != null) {
+      return -1; // non-null beats null
+    } else if (bHop != null) {
+      return 1; // non-null beats null
+    }
+
+    // 3. Expiry sort (expiring soon first)
+    if (a.expiresAt != null && b.expiresAt != null) {
+      final expiryCompare = a.expiresAt!.compareTo(b.expiresAt!);
+      if (expiryCompare != 0) return expiryCompare;
+    }
+
+    // 4. Creation time (newest first)
+    return b.createdAt.compareTo(a.createdAt);
+  });
+}
+
 // =============================================================================
 // SIGNAL FEED NOTIFIER
 // =============================================================================
@@ -157,6 +195,19 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
       await refresh();
       // After initial load, check for signals that need cloud data
       await _retryCloudLookups();
+    });
+
+    // Re-attach listeners on auth changes to avoid silent stalls
+    ref.listen<bool>(isSignedInProvider, (previous, next) {
+      final service = ref.read(signalServiceProvider);
+      Future.microtask(() => service.handleAuthChanged());
+    });
+
+    // Retry cloud lookups when connectivity returns
+    ref.listen<bool>(isOnlineProvider, (previous, next) {
+      if (next == true) {
+        Future.microtask(() => _retryCloudLookups());
+      }
     });
 
     return SignalFeedState(isLoading: true);
@@ -214,20 +265,6 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
       },
     );
 
-    // Subscribe to remote deletions (signal deleted by author on another device)
-    _remoteDeleteSubscription?.cancel();
-    _remoteDeleteSubscription = service.onRemoteDelete.listen(
-      (signalId) {
-        AppLogging.signals(
-          'Remote deletion received for signal: $signalId - removing from feed',
-        );
-        state = state.withoutSignal(signalId);
-      },
-      onError: (e) {
-        AppLogging.signals('Remote delete stream error: $e');
-      },
-    );
-
     AppLogging.signals('Mesh integration wired');
   }
 
@@ -235,7 +272,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
   Future<void> _handleIncomingMeshSignal(MeshSignalPacket packet) async {
     AppLogging.signals(
       'Processing incoming mesh signal from !${packet.senderNodeId.toRadixString(16)}'
-      '${packet.isLegacy ? ' (LEGACY - no id)' : ' (id=${packet.signalId})'}',
+      ' (id=${packet.signalId ?? "none"})',
     );
 
     PostLocation? location;
@@ -249,7 +286,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
     await addMeshSignal(
       content: packet.content,
       senderNodeId: packet.senderNodeId,
-      signalId: packet.signalId, // null for legacy packets
+      signalId: packet.signalId,
       ttlMinutes: packet.ttlMinutes,
       location: location,
       hopCount: packet.hopCount,
@@ -327,8 +364,8 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
   static const _fadeOutDuration = Duration(milliseconds: 3000);
 
   /// Called every second to update countdown display and remove expired signals.
-  void _tickCountdown() {
-    final now = DateTime.now();
+  void _tickCountdown({DateTime? nowOverride}) {
+    final now = nowOverride ?? DateTime.now();
     final currentSignals = state.signals;
     final currentFading = state.fadingSignalIds;
 
@@ -364,9 +401,18 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
     }
   }
 
+  @visibleForTesting
+  void tickCountdownForTest(DateTime now) {
+    _tickCountdown(nowOverride: now);
+  }
+
   /// Complete the fade-out animation and remove the signal from state.
   void _completeSignalFadeOut(String signalId) {
     if (!state.hasSignal(signalId)) return; // Already removed
+
+    // Ensure expired signals are removed from local DB and listeners
+    final service = ref.read(signalServiceProvider);
+    Future.microtask(() => service.cleanupExpiredSignals());
 
     final newFading = Set<String>.from(state.fadingSignalIds)..remove(signalId);
     var newState = state.copyWith(fadingSignalIds: newFading);
@@ -442,40 +488,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
     // Get current node position for proximity sorting
     final myNodeNum = ref.read(myNodeNumProvider);
 
-    return List<Post>.from(signals)..sort((a, b) {
-      // 1. Same node = highest priority
-      if (myNodeNum != null && a.meshNodeId != null && b.meshNodeId != null) {
-        final aIsMe = a.meshNodeId == myNodeNum;
-        final bIsMe = b.meshNodeId == myNodeNum;
-        if (aIsMe && !bIsMe) return -1;
-        if (!aIsMe && bIsMe) return 1;
-      }
-
-      // 2. hopCount sort (lower = closer, null = lowest priority)
-      final aHop = a.hopCount;
-      final bHop = b.hopCount;
-      if (aHop != null && bHop != null) {
-        if (aHop != bHop) {
-          AppLogging.signals(
-            '📡 Signals: Sorting by hopCount (a=$aHop, b=$bHop)',
-          );
-          return aHop.compareTo(bHop); // ascending
-        }
-      } else if (aHop != null) {
-        return -1; // non-null beats null
-      } else if (bHop != null) {
-        return 1; // non-null beats null
-      }
-
-      // 3. Expiry sort (expiring soon first)
-      if (a.expiresAt != null && b.expiresAt != null) {
-        final expiryCompare = a.expiresAt!.compareTo(b.expiresAt!);
-        if (expiryCompare != 0) return expiryCompare;
-      }
-
-      // 4. Creation time (newest first)
-      return b.createdAt.compareTo(a.createdAt);
-    });
+    return sortSignalsForFeed(signals, myNodeNum);
   }
 
   /// Remove expired signals from state.
@@ -500,7 +513,9 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
     final service = ref.read(signalServiceProvider);
     final myNodeNum = ref.read(myNodeNumProvider);
     final profile = ref.read(userProfileProvider).value;
-    final detectedCanUseCloud = ref.read(canUseCloudFeaturesProvider);
+    final detectedCanUseCloud = ref
+        .read(signalConnectivityProvider)
+        .canUseCloud;
     final canUseCloud = useCloud ?? detectedCanUseCloud;
 
     AppLogging.signals(
@@ -537,7 +552,6 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
   }
 
   /// Add a signal received from mesh.
-  /// signalId is null for legacy packets (pre-deterministic-matching).
   Future<void> addMeshSignal({
     required String content,
     required int senderNodeId,
@@ -558,7 +572,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
 
     AppLogging.signals(
       'Processing mesh signal from node !${senderNodeId.toRadixString(16)}'
-      '${signalId != null ? ' (id=$signalId)' : ' (legacy)'}',
+      ' (id=${signalId ?? "none"})',
     );
 
     try {
@@ -571,11 +585,13 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
         hopCount: hopCount,
       );
 
-      // If null, it was a duplicate in DB
+      // If null, it was ignored or a duplicate in DB
       if (signal == null) {
-        AppLogging.signals(
-          '📡 Signals: ⚠️ Duplicate insert prevented for ${signalId ?? "legacy"} (source=db)',
-        );
+        if (signalId != null && signalId.isNotEmpty) {
+          AppLogging.signals(
+            '📡 Signals: ⚠️ Duplicate insert prevented for $signalId (source=db)',
+          );
+        }
         return;
       }
 

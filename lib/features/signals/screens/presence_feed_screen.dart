@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -15,6 +16,7 @@ import '../../../core/widgets/animations.dart';
 import '../../../models/social.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/connection_providers.dart';
+import '../../../providers/connectivity_providers.dart';
 import '../../../providers/signal_bookmark_provider.dart';
 import '../../../providers/signal_providers.dart';
 import '../../../providers/social_providers.dart';
@@ -163,12 +165,11 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
   }
 
   void _openCreateSignal() {
-    // Auth gating check - use authStateProvider.value directly
     final authState = ref.read(authStateProvider);
     if (authState.value == null) {
-      AppLogging.signals('🔒 Go Active blocked: user not authenticated');
-      showErrorSnackBar(context, 'Sign in required to go active');
-      return;
+      AppLogging.signals(
+        'ℹ️ Go Active: unauthenticated session (mesh-only)',
+      );
     }
 
     // Connection gating check
@@ -292,8 +293,9 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
     // Watch auth state directly to properly handle async loading
     final authState = ref.watch(authStateProvider);
     final isSignedIn = authState.value != null;
-    final isConnected = ref.watch(isDeviceConnectedProvider);
-    final canGoActive = isSignedIn && isConnected;
+    final connectivity = ref.watch(signalConnectivityProvider);
+    final isConnected = connectivity.isBleConnected;
+    final canGoActive = isConnected;
 
     // Watch bookmarks for saved count
     final bookmarkedIds = ref.watch(signalBookmarksProvider).value ?? {};
@@ -453,6 +455,43 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                   ),
                 ),
               ),
+
+              if (Platform.isIOS &&
+                  !connectivity.hasInternet &&
+                  connectivity.isBleConnected)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: context.card,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: context.border.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.airplanemode_active,
+                          size: 18,
+                          color: context.textTertiary,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'iOS Airplane Mode can pause BLE mesh traffic even when connected. If signals stop, turn off Airplane Mode or toggle Bluetooth.',
+                            style: TextStyle(
+                              color: context.textTertiary,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
 
               // Filter chips row with view toggle at end
               SizedBox(
@@ -708,10 +747,10 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
     bool isConnected,
   ) {
     String? blockedReason;
-    if (!isSignedIn) {
-      blockedReason = 'Sign in required';
-    } else if (!isConnected) {
+    if (!isConnected) {
       blockedReason = 'Device not connected';
+    } else if (!isSignedIn) {
+      blockedReason = 'Sign in for images and comments';
     }
 
     final gradientColors = AccentColors.gradientFor(context.accentColor);
@@ -750,13 +789,13 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
     final authState = ref.watch(authStateProvider);
     final isSignedIn = authState.value != null;
     final isConnected = ref.watch(isDeviceConnectedProvider);
-    final canGoActive = isSignedIn && isConnected;
+    final canGoActive = isConnected;
 
     String? blockedReason;
-    if (!isSignedIn) {
-      blockedReason = 'Sign in required';
-    } else if (!isConnected) {
+    if (!isConnected) {
       blockedReason = 'Device not connected';
+    } else if (!isSignedIn) {
+      blockedReason = 'Sign in for images and comments';
     }
 
     // Show different empty state if filtering

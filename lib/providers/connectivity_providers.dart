@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 import 'auth_providers.dart';
+import 'connection_providers.dart';
 import '../core/logging.dart';
 
 /// Connectivity state summarizing platform connection and reachability
@@ -28,10 +29,12 @@ class ConnectivityNotifier extends Notifier<ConnectivityStatus> {
     // Initial state
     _connectivity = Connectivity();
     _sub = _connectivity.onConnectivityChanged.listen(_onPlatformChanged);
+    _periodicTimer = Timer.periodic(_periodicCheckInterval, (_) => checkNow());
 
     // Register cleanup
     ref.onDispose(() {
       _sub?.cancel();
+      _periodicTimer?.cancel();
     });
 
     // Initial check (fire-and-forget)
@@ -46,9 +49,11 @@ class ConnectivityNotifier extends Notifier<ConnectivityStatus> {
 
   final Duration _reachabilityTimeout = const Duration(seconds: 2);
   final Duration _cacheDuration = const Duration(seconds: 3);
+  final Duration _periodicCheckInterval = const Duration(seconds: 10);
 
   late final Connectivity _connectivity;
   StreamSubscription<ConnectivityResult>? _sub;
+  Timer? _periodicTimer;
 
   DateTime? _lastReachabilityCheck;
   bool? _lastReachable;
@@ -164,4 +169,42 @@ final canUseCloudFeaturesProvider = Provider<bool>((ref) {
   final online = ref.watch(isOnlineProvider);
   final signedIn = ref.watch(isSignedInProvider);
   return online && signedIn;
+});
+
+/// Aggregated connectivity state for signals (mesh + cloud).
+class SignalConnectivityState {
+  final bool hasInternet;
+  final bool isAuthenticated;
+  final bool isBleConnected;
+
+  const SignalConnectivityState({
+    required this.hasInternet,
+    required this.isAuthenticated,
+    required this.isBleConnected,
+  });
+
+  bool get canUseCloud => hasInternet && isAuthenticated;
+  bool get canUseMesh => isBleConnected;
+
+  String? get cloudDisabledReason {
+    if (!hasInternet) return 'No internet connection';
+    if (!isAuthenticated) return 'Sign in required for cloud features';
+    return null;
+  }
+
+  String? get meshDisabledReason {
+    if (!isBleConnected) return 'Device not connected';
+    return null;
+  }
+}
+
+final signalConnectivityProvider = Provider<SignalConnectivityState>((ref) {
+  final online = ref.watch(isOnlineProvider);
+  final signedIn = ref.watch(isSignedInProvider);
+  final bleConnected = ref.watch(isDeviceConnectedProvider);
+  return SignalConnectivityState(
+    hasInternet: online,
+    isAuthenticated: signedIn,
+    isBleConnected: bleConnected,
+  );
 });

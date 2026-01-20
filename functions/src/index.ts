@@ -2222,6 +2222,7 @@ export {
   onCommentCreatedNotification,
   onSignalCreatedNotification,
   onSignalCommentNotification,
+  onSignalVoteNotification,
   sendTestPushNotification,
 } from './push_notifications';
 

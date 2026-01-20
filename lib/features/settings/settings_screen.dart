@@ -3957,6 +3957,7 @@ class _SocialNotificationsSectionState
   bool _likesEnabled = true;
   bool _commentsEnabled = true;
   bool _signalsEnabled = true;
+  bool _votesEnabled = true;
 
   @override
   void initState() {
@@ -3974,6 +3975,7 @@ class _SocialNotificationsSectionState
           _likesEnabled = settings['likes'] ?? true;
           _commentsEnabled = settings['comments'] ?? true;
           _signalsEnabled = settings['signals'] ?? true;
+          _votesEnabled = settings['votes'] ?? true;
           _isLoading = false;
         });
       }
@@ -4001,6 +4003,9 @@ class _SocialNotificationsSectionState
         case 'signals':
           _signalsEnabled = value;
           break;
+        case 'votes':
+          _votesEnabled = value;
+          break;
       }
     });
 
@@ -4009,6 +4014,7 @@ class _SocialNotificationsSectionState
       likeNotifications: type == 'likes' ? value : null,
       commentNotifications: type == 'comments' ? value : null,
       signalNotifications: type == 'signals' ? value : null,
+      voteNotifications: type == 'votes' ? value : null,
     );
   }
 
@@ -4066,6 +4072,15 @@ class _SocialNotificationsSectionState
           trailing: ThemedSwitch(
             value: _commentsEnabled,
             onChanged: (value) => _updateSetting('comments', value),
+          ),
+        ),
+        _SettingsTile(
+          icon: Icons.arrow_upward,
+          title: 'Votes',
+          subtitle: 'When someone upvotes your signal comments',
+          trailing: ThemedSwitch(
+            value: _votesEnabled,
+            onChanged: (value) => _updateSetting('votes', value),
           ),
         ),
         _SettingsTile(

@@ -1,11 +1,11 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
 import '../../../models/social.dart';
 import '../../../providers/signal_bookmark_provider.dart';
+import '../../../providers/signal_providers.dart';
+import '../utils/signal_utils.dart';
 
 /// Footer widget for signal cards showing TTL countdown with urgency animation.
 ///
@@ -29,24 +29,11 @@ class _SignalTTLFooterState extends ConsumerState<SignalTTLFooter>
     with SingleTickerProviderStateMixin {
   AnimationController? _pulseController;
   Animation<double>? _pulseAnimation;
-  Timer? _countdownTimer;
 
   @override
   void initState() {
     super.initState();
     _setupPulseIfNeeded();
-    _startCountdownTimer();
-  }
-
-  void _startCountdownTimer() {
-    _countdownTimer?.cancel();
-    // Update every second to show live countdown
-    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) {
-        setState(() {});
-        _setupPulseIfNeeded();
-      }
-    });
   }
 
   @override
@@ -99,24 +86,20 @@ class _SignalTTLFooterState extends ConsumerState<SignalTTLFooter>
   }
 
   String get _expiresInText {
-    final remaining = _remainingDuration;
-    if (remaining == null) return '';
-    if (remaining.isNegative) return 'Faded';
-    if (remaining.inSeconds < 60) return 'Fades in ${remaining.inSeconds}s';
-    if (remaining.inMinutes < 60) return 'Fades in ${remaining.inMinutes}m';
-    if (remaining.inHours < 24) return 'Fades in ${remaining.inHours}h';
-    return 'Fades in ${remaining.inDays}d';
+    return formatSignalTtlCountdown(_remainingDuration);
   }
 
   @override
   void dispose() {
-    _countdownTimer?.cancel();
     _pulseController?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    // Trigger rebuilds on the global countdown tick.
+    ref.watch(signalFeedProvider.select((state) => state.lastRefresh));
+    _setupPulseIfNeeded();
     final urgencyColor = _isExpiringVerySoon
         ? Colors.red
         : _isExpiringSoon

@@ -5,7 +5,9 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -307,11 +309,9 @@ class SignalService {
 
   SignalService({this.cloudLookupOverride});
   static const _tableName = 'signals';
-  static const _seenPacketsTable = 'seen_packets';
   static const _proximityTable = 'node_proximity';
   static const _commentsTable = 'comments';
   static const _maxLocalSignals = 200;
-  static const _seenPacketTTLMinutes = 30;
 
   // Firebase instances are accessed lazily to avoid crashes when
   // Firebase isn't initialized yet (offline-first architecture)
@@ -341,12 +341,20 @@ class SignalService {
   /// Used to receive real-time myVote updates from posts/{signalId}/comments/*/votes/{uid}.
   final Map<String, StreamSubscription<QuerySnapshot>> _voteListeners = {};
 
+  /// Listener retry state (used when listeners error or disconnect).
+  final Map<String, int> _listenerRetryCounts = {};
+  final Map<String, Timer> _listenerRetryTimers = {};
+
   /// In-memory cache of user's votes keyed by signalId -> commentId -> value.
   final Map<String, Map<String, int>> _myVotesCache = {};
 
   /// Pending Firestore image updates that failed and need retry.
   /// Key: signalId, Value: (url, attemptCount, nextRetryTime)
   final Map<String, _PendingImageUpdate> _pendingImageUpdates = {};
+
+  /// Auth token listener to reattach Firestore listeners on refresh.
+  StreamSubscription<User?>? _authSubscription;
+  String? _lastAuthUid;
 
   /// Timer for retrying pending image updates.
   Timer? _imageRetryTimer;
@@ -359,6 +367,49 @@ class SignalService {
 
   /// Stream of comment updates. Emits the signalId when its comments are updated.
   Stream<String> get onCommentUpdate => _commentUpdateController.stream;
+
+  @visibleForTesting
+  void injectCloudCommentsForTest(
+    String signalId,
+    List<SignalResponse> comments,
+  ) {
+    _cloudComments[signalId] = comments;
+    _commentUpdateController.add(signalId);
+  }
+
+  @visibleForTesting
+  void setCloudCommentsForTesting(
+    String signalId,
+    List<SignalResponse> comments,
+  ) {
+    _cloudComments[signalId] = comments;
+  }
+
+  @visibleForTesting
+  void setMyVotesForTesting(String signalId, Map<String, int> votes) {
+    _myVotesCache[signalId] = Map<String, int>.from(votes);
+  }
+
+  @visibleForTesting
+  Future<void> insertLocalCommentForTesting(SignalResponse response) async {
+    await init();
+    await _db!.insert(_commentsTable, {
+      'id': response.id,
+      'signalId': response.signalId,
+      'content': response.content,
+      'authorId': response.authorId,
+      'authorName': response.authorName,
+      'parentId': response.parentId,
+      'depth': response.depth,
+      'createdAt': response.createdAt.millisecondsSinceEpoch,
+      'expiresAt': response.expiresAt.millisecondsSinceEpoch,
+      'score': response.score,
+      'upvoteCount': response.upvoteCount,
+      'downvoteCount': response.downvoteCount,
+      'replyCount': response.replyCount,
+      'isDeleted': response.isDeleted ? 1 : 0,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
 
   /// Stream controller for remote signal deletions.
   /// Emits signalId when a signal is deleted remotely (by the author on another device).
@@ -405,6 +456,8 @@ class SignalService {
       },
     );
 
+    _startAuthListener();
+
     // Load proximity history from disk
     await _loadProximityHistory();
 
@@ -416,6 +469,31 @@ class SignalService {
     );
 
     AppLogging.signals('SignalService initialized');
+  }
+
+  void _startAuthListener() {
+    if (_authSubscription != null) return;
+    if (Firebase.apps.isEmpty) {
+      AppLogging.signals('📡 Auth listener skipped: Firebase not initialized');
+      return;
+    }
+
+    _authSubscription = _auth.idTokenChanges().listen(
+      (user) {
+        final uid = user?.uid;
+        final uidChanged = uid != _lastAuthUid;
+        _lastAuthUid = uid;
+        if (uidChanged || user != null) {
+          AppLogging.signals(
+            '📡 Auth token change detected (uid=${uid ?? "none"}), reattaching listeners',
+          );
+        }
+        Future.microtask(() => handleAuthChanged());
+      },
+      onError: (e) {
+        AppLogging.signals('📡 Auth token listener error: $e');
+      },
+    );
   }
 
   Future<void> _createTables(Database db) async {
@@ -455,24 +533,8 @@ class SignalService {
       'CREATE INDEX idx_signals_meshNodeId ON $_tableName(meshNodeId)',
     );
 
-    await _createSeenPacketsTable(db);
     await _createProximityTable(db);
     await _createCommentsTable(db);
-  }
-
-  Future<void> _createSeenPacketsTable(Database db) async {
-    // Seen packets table for deduplication
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS $_seenPacketsTable (
-        packetHash TEXT PRIMARY KEY,
-        receivedAt INTEGER NOT NULL
-      )
-    ''');
-
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_seen_receivedAt '
-      'ON $_seenPacketsTable(receivedAt)',
-    );
   }
 
   Future<void> _createProximityTable(Database db) async {
@@ -560,12 +622,51 @@ class SignalService {
   /// Check if user is authenticated.
   bool get isAuthenticated => _currentUserId != null;
 
+  void _scheduleListenerRetry(String signalId, String kind) {
+    if (_currentUserId == null) return;
+    final key = '$kind:$signalId';
+    final attempt = (_listenerRetryCounts[key] ?? 0) + 1;
+    _listenerRetryCounts[key] = attempt;
+
+    final delaySeconds = (2 * (1 << (attempt - 1))).clamp(2, 60);
+    _listenerRetryTimers[key]?.cancel();
+    _listenerRetryTimers[key] = Timer(Duration(seconds: delaySeconds), () {
+      _listenerRetryTimers.remove(key);
+      if (_currentUserId == null) return;
+      AppLogging.signals(
+        '📡 Listener retry: kind=$kind signalId=$signalId attempt=$attempt',
+      );
+      switch (kind) {
+        case 'comments':
+          _startCommentsListener(signalId);
+          break;
+        case 'post':
+          _startPostListener(signalId);
+          break;
+        case 'votes':
+          startVoteListener(signalId);
+          break;
+      }
+    });
+
+    AppLogging.signals(
+      '📡 Listener retry scheduled: kind=$kind signalId=$signalId '
+      'attempt=$attempt delay=${delaySeconds}s',
+    );
+  }
+
+  void _clearListenerRetry(String signalId, String kind) {
+    final key = '$kind:$signalId';
+    _listenerRetryCounts.remove(key);
+    _listenerRetryTimers.remove(key)?.cancel();
+  }
+
   // ===========================================================================
   // DUPLICATE PACKET HANDLING
   // ===========================================================================
 
   /// Check if a signal with the given ID already exists in the signals table.
-  /// Used for non-legacy signal deduplication (by signalId).
+  /// Used for signal deduplication (by signalId).
   Future<bool> _hasSignalById(String signalId) async {
     await init();
 
@@ -578,60 +679,6 @@ class SignalService {
     );
 
     return result.isNotEmpty;
-  }
-
-  /// Generate a hash for deduplication of LEGACY mesh packets (no signalId).
-  String _generatePacketHash(int senderNodeId, String content, int ttlMinutes) {
-    // Hash based on sender, content, and TTL to detect duplicates
-    final data = '$senderNodeId:$content:$ttlMinutes';
-    return data.hashCode.toRadixString(16);
-  }
-
-  /// Check if we've already seen this LEGACY packet (within TTL window).
-  /// Only used for legacy signals that have no signalId.
-  Future<bool> _hasSeenPacket(String packetHash) async {
-    await init();
-
-    final cutoff = DateTime.now()
-        .subtract(Duration(minutes: _seenPacketTTLMinutes))
-        .millisecondsSinceEpoch;
-
-    final result = await _db!.query(
-      _seenPacketsTable,
-      where: 'packetHash = ? AND receivedAt > ?',
-      whereArgs: [packetHash, cutoff],
-    );
-
-    return result.isNotEmpty;
-  }
-
-  /// Mark a packet as seen.
-  Future<void> _markPacketSeen(String packetHash) async {
-    await init();
-
-    await _db!.insert(_seenPacketsTable, {
-      'packetHash': packetHash,
-      'receivedAt': DateTime.now().millisecondsSinceEpoch,
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
-  }
-
-  /// Clean up old seen packet entries.
-  Future<void> _cleanupSeenPackets() async {
-    await init();
-
-    final cutoff = DateTime.now()
-        .subtract(Duration(minutes: _seenPacketTTLMinutes))
-        .millisecondsSinceEpoch;
-
-    final deleted = await _db!.delete(
-      _seenPacketsTable,
-      where: 'receivedAt < ?',
-      whereArgs: [cutoff],
-    );
-
-    if (deleted > 0) {
-      AppLogging.signals('Cleaned up $deleted old seen packet entries');
-    }
   }
 
   // ===========================================================================
@@ -873,17 +920,19 @@ class SignalService {
         int? packetId;
         if (!useCloud) {
           try {
-            packetId =
-                await onBroadcastSignal!(
-                  id,
-                  content,
-                  ttlMinutes,
-                  location?.latitude,
-                  location?.longitude,
-                ).timeout(
-                  const Duration(milliseconds: 1500),
-                  onTimeout: () => null,
-                );
+            final broadcastFuture = Future<int?>.sync(() async {
+              return await onBroadcastSignal!(
+                id,
+                content,
+                ttlMinutes,
+                location?.latitude,
+                location?.longitude,
+              );
+            });
+            packetId = await broadcastFuture.timeout(
+              const Duration(milliseconds: 1500),
+              onTimeout: () => null,
+            );
           } catch (e) {
             AppLogging.signals(
               'SEND: broadcast timeout/failed for ${signal.id}: $e',
@@ -1056,49 +1105,35 @@ class SignalService {
 
   /// Create a signal from a received mesh packet."
   ///
-  /// If signalId is provided (new format), uses deterministic cloud lookup.
-  /// If signalId is null (legacy format), treats as local-only signal.
+  /// signalId is required for creating a signal.
   ///
   /// Includes duplicate detection to prevent processing the same packet twice.
-  /// - Non-legacy (signalId provided): dedupe by signalId in signals table
-  /// - Legacy (signalId null): dedupe by content hash in seen_packets table
+  /// - Dedupe by signalId in signals table
   Future<Post?> createSignalFromMesh({
     required String content,
     required int senderNodeId,
-    String? signalId, // null for legacy packets
+    String? signalId,
     int ttlMinutes = SignalTTL.defaultTTL,
     PostLocation? location,
     int? hopCount,
   }) async {
     await init();
 
-    final isLegacySignal = signalId == null;
+    if (signalId == null || signalId.isEmpty) {
+      AppLogging.signals(
+        '📡 Signals: Ignoring mesh signal without signalId from '
+        '${senderNodeId.toRadixString(16)}',
+      );
+      return null;
+    }
 
     // DEDUPLICATION LOGIC:
-    // Non-legacy: check if signalId already exists in signals table
-    // Legacy: check content hash in seen_packets table
-    if (!isLegacySignal) {
-      // Non-legacy: dedupe strictly by signalId
-      if (await _hasSignalById(signalId)) {
-        AppLogging.signals('DEDUP_DROP signalId=$signalId reason=exists_in_db');
-        return null;
-      }
-      AppLogging.signals('📋 Dedup: accepting new signalId $signalId');
-    } else {
-      // Legacy: dedupe by content hash
-      final packetHash = _generatePacketHash(senderNodeId, content, ttlMinutes);
-      if (await _hasSeenPacket(packetHash)) {
-        AppLogging.signals(
-          'DEDUP_DROP legacy packetHash=$packetHash reason=seen_packet',
-        );
-        return null;
-      }
-      // Mark legacy packet as seen
-      await _markPacketSeen(packetHash);
-      AppLogging.signals(
-        '📋 Dedup: accepting legacy signal (hash: $packetHash)',
-      );
+    // Dedupe strictly by signalId in signals table
+    if (await _hasSignalById(signalId)) {
+      AppLogging.signals('DEDUP_DROP signalId=$signalId reason=exists_in_db');
+      return null;
     }
+    AppLogging.signals('📋 Dedup: accepting new signalId $signalId');
 
     // Record node proximity
     await recordNodeProximity(senderNodeId);
@@ -1106,32 +1141,20 @@ class SignalService {
     final now = DateTime.now();
     final expiresAt = now.add(Duration(minutes: ttlMinutes));
 
-    // Determine signal ID:
-    // - If signalId provided (new format): use it for cloud lookup
-    // - If signalId null (legacy): generate local-only ID
-    final effectiveSignalId = signalId ?? _uuid.v4();
-
-    if (isLegacySignal) {
-      AppLogging.signals(
-        'Received LEGACY mesh signal (no id) from node $senderNodeId - '
-        'treating as local-only',
-      );
-    } else {
-      AppLogging.signals(
-        'Received mesh signal with id=$signalId from node $senderNodeId',
-      );
-    }
+    AppLogging.signals(
+      'Received mesh signal with id=$signalId from node $senderNodeId',
+    );
 
     // TRACE: parsed packet
     AppLogging.signals(
-      'RECV: mesh packet parsed signalId=${signalId ?? effectiveSignalId} sender=${senderNodeId.toRadixString(16)}',
+      'RECV: mesh packet parsed signalId=$signalId sender=${senderNodeId.toRadixString(16)}',
     );
 
     // Immediately create a local signal and persist to DB (offline-first).
     // Cloud lookup and enrichment happen asynchronously afterwards and MUST NOT
     // block the receive path.
     final signal = Post(
-      id: effectiveSignalId,
+      id: signalId,
       authorId: 'mesh_${senderNodeId.toRadixString(16)}',
       content: content,
       mediaUrls: const [],
@@ -1207,13 +1230,6 @@ class SignalService {
       }
     });
 
-    // Start listening for cloud comments (only for non-legacy authenticated users)
-    if (!isLegacySignal && _currentUserId != null) {
-      _startCommentsListener(signal.id);
-      // Also listen for post doc updates (e.g. image upload completing)
-      _startPostListener(signal.id);
-    }
-
     return signal;
   }
 
@@ -1239,7 +1255,7 @@ class SignalService {
       final imageState = data['imageState'] as String?;
       final mediaUrls = data['mediaUrls'] as List<dynamic>?;
       final imageUrl = data['imageUrl'] as String?;
-      final mediaUrl = data['mediaUrl'] as String?; // legacy single field
+      final mediaUrl = data['mediaUrl'] as String?;
 
       AppLogging.signals('📷 Cloud doc keys: $docKeys');
       AppLogging.signals(
@@ -1263,7 +1279,7 @@ class SignalService {
       }
 
       // Determine the best available cloud image URL
-      // Priority: mediaUrls[0] > imageUrl > mediaUrl (legacy)
+      // Priority: mediaUrls[0] > imageUrl > mediaUrl (fallback)
       String? cloudImageUrl;
       String usedField = 'none';
 
@@ -1275,7 +1291,7 @@ class SignalService {
         usedField = 'imageUrl';
       } else if (mediaUrl != null && mediaUrl.isNotEmpty) {
         cloudImageUrl = mediaUrl;
-        usedField = 'mediaUrl (legacy)';
+        usedField = 'mediaUrl (fallback)';
       }
 
       if (cloudImageUrl != null) {
@@ -1656,8 +1672,7 @@ class SignalService {
       'Cleanup complete: removed $deletedCount expired signals, remaining=${remaining ?? 0}',
     );
 
-    // Also cleanup old seen packets, proximity data, and comments
-    await _cleanupSeenPackets();
+    // Also cleanup old proximity data and comments
     await _cleanupOldProximityData();
     await _cleanupExpiredComments();
 
@@ -1705,11 +1720,33 @@ class SignalService {
   // CLOUD SYNC RETRY
   // ===========================================================================
 
+  /// Handle auth changes by restarting listeners and retrying cloud lookups.
+  /// Call this when auth state changes to avoid silent listener stalls.
+  Future<void> handleAuthChanged() async {
+    if (_currentUserId == null) {
+      _stopAllCommentsListeners();
+      _stopAllPostListeners();
+      _stopAllVoteListeners();
+      _cloudComments.clear();
+      _myVotesCache.clear();
+      _postDocumentSeen.clear();
+      return;
+    }
+
+    await init();
+    final signals = await getActiveSignals();
+    for (final signal in signals) {
+      _startCommentsListener(signal.id);
+      _startPostListener(signal.id);
+      startVoteListener(signal.id);
+    }
+    await retryCloudLookups();
+  }
+
   /// Retry cloud lookups for signals that may have been received while offline.
   ///
   /// Scans active signals that:
   /// - Have no image (imageState == none)
-  /// - Are not legacy (have a proper signalId format for cloud lookup)
   /// - Might have cloud data we couldn't fetch when offline
   ///
   /// For each, attempts to lookup cloud document and attach listeners.
@@ -1749,7 +1786,6 @@ class SignalService {
 
     for (final row in rows) {
       final signal = _postFromDbMap(row);
-
       // Skip if already has a post listener
       if (_postListeners.containsKey(signal.id)) {
         continue;
@@ -2278,10 +2314,13 @@ class SignalService {
               'UserId: $_currentUserId\n'
               'Path: posts/$signalId/comments',
             );
+            _commentsListeners.remove(signalId)?.cancel();
+            _scheduleListenerRetry(signalId, 'comments');
           },
         );
 
     _commentsListeners[signalId] = subscription;
+    _clearListenerRetry(signalId, 'comments');
     AppLogging.signals(
       '📡 Comments listener: subscription stored for $signalId '
       '(total active: ${_commentsListeners.length})',
@@ -2296,6 +2335,7 @@ class SignalService {
       subscription.cancel();
       AppLogging.signals('📡 Stopped comments listener for signal $signalId');
     }
+    _clearListenerRetry(signalId, 'comments');
     // Also stop vote listener for this signal
     stopVoteListener(signalId);
   }
@@ -2304,6 +2344,7 @@ class SignalService {
   void _stopAllCommentsListeners() {
     for (final entry in _commentsListeners.entries) {
       entry.value.cancel();
+      _clearListenerRetry(entry.key, 'comments');
       AppLogging.signals(
         '📡 Stopped comments listener for signal ${entry.key}',
       );
@@ -2488,10 +2529,13 @@ class SignalService {
             AppLogging.signals(
               '📡 Post listener ERROR for $signalId: $error\n$stackTrace',
             );
+            _postListeners.remove(signalId)?.cancel();
+            _scheduleListenerRetry(signalId, 'post');
           },
         );
 
     _postListeners[signalId] = subscription;
+    _clearListenerRetry(signalId, 'post');
     AppLogging.signals(
       '📡 Post listener: subscription stored for $signalId '
       '(total active: ${_postListeners.length})',
@@ -2507,12 +2551,14 @@ class SignalService {
       subscription.cancel();
       AppLogging.signals('📡 Stopped post listener for signal $signalId');
     }
+    _clearListenerRetry(signalId, 'post');
   }
 
   /// Stop all post listeners (for cleanup on dispose).
   void _stopAllPostListeners() {
     for (final entry in _postListeners.entries) {
       entry.value.cancel();
+      _clearListenerRetry(entry.key, 'post');
       AppLogging.signals('📡 Stopped post listener for signal ${entry.key}');
     }
     _postListeners.clear();
@@ -2538,6 +2584,11 @@ class SignalService {
       '📝 createResponse: signalId=$signalId, parentId=$parentId',
     );
 
+    if (_currentUserId == null) {
+      AppLogging.signals('Cannot create response: user not authenticated');
+      return null;
+    }
+
     // Get parent signal to inherit expiresAt
     final signal = await getSignalById(signalId);
     if (signal == null) {
@@ -2556,7 +2607,7 @@ class SignalService {
       id: id,
       signalId: signalId,
       content: content,
-      authorId: _currentUserId ?? 'anonymous',
+      authorId: _currentUserId!,
       authorName: authorName,
       parentId: parentId,
       createdAt: now,
@@ -2891,10 +2942,13 @@ class SignalService {
           },
           onError: (e) {
             AppLogging.signals('📊 Vote listener error for $signalId: $e');
+            _voteListeners.remove(signalId)?.cancel();
+            _scheduleListenerRetry(signalId, 'votes');
           },
         );
 
     _voteListeners[signalId] = subscription;
+    _clearListenerRetry(signalId, 'votes');
   }
 
   /// Stop listening for votes on a signal.
@@ -2902,6 +2956,7 @@ class SignalService {
     _voteListeners[signalId]?.cancel();
     _voteListeners.remove(signalId);
     _myVotesCache.remove(signalId);
+    _clearListenerRetry(signalId, 'votes');
     AppLogging.signals('📊 Stopped vote listener for $signalId');
   }
 
@@ -2909,6 +2964,9 @@ class SignalService {
   void _stopAllVoteListeners() {
     for (final subscription in _voteListeners.values) {
       subscription.cancel();
+    }
+    for (final signalId in _voteListeners.keys) {
+      _clearListenerRetry(signalId, 'votes');
     }
     _voteListeners.clear();
     _myVotesCache.clear();
@@ -3010,12 +3068,19 @@ class SignalService {
 
   /// Close the database connection and clean up listeners.
   Future<void> close() async {
+    _authSubscription?.cancel();
+    _authSubscription = null;
     _imageRetryTimer?.cancel();
     _imageRetryTimer = null;
     _pendingImageUpdates.clear();
     _stopAllCommentsListeners();
     _stopAllPostListeners();
     _stopAllVoteListeners();
+    for (final timer in _listenerRetryTimers.values) {
+      timer.cancel();
+    }
+    _listenerRetryTimers.clear();
+    _listenerRetryCounts.clear();
     await _db?.close();
     _db = null;
     AppLogging.signals('SignalService database closed');

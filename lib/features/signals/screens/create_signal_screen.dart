@@ -18,7 +18,6 @@ import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/content_moderation_warning.dart';
 import '../../../models/social.dart';
 import '../../../providers/app_providers.dart';
-import '../../../providers/connection_providers.dart';
 import '../../../providers/signal_providers.dart';
 import '../../../providers/social_providers.dart';
 import '../../../providers/connectivity_providers.dart';
@@ -76,21 +75,9 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
       _contentController.text.length <= _maxLength &&
       !_isSubmitting;
 
-  /// Check if device is connected to mesh
-  bool get _isDeviceConnected => ref.read(isDeviceConnectedProvider);
-
-  /// Check cloud availability (online + auth) — reactive for UI
-  bool get _canUseCloud => ref.watch(canUseCloudFeaturesProvider);
-
-  /// Combined check for whether signal can be submitted
-  /// Note: Sending over mesh should be allowed even when offline as long
-  /// as the device is connected. Image attachments require cloud.
-  bool get _canSubmit =>
-      _hasValidContent && _isDeviceConnected && !_isValidatingImage;
-
   /// Get the reason why submission is blocked (for UI feedback)
-  String? get _submitBlockedReason {
-    if (!_isDeviceConnected) return 'Device not connected';
+  String? _submitBlockedReason(bool isDeviceConnected) {
+    if (!isDeviceConnected) return 'Device not connected';
     if (_isValidatingImage) return 'Processing image...';
     return null;
   }
@@ -140,8 +127,9 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
   }
 
   Future<void> _submitSignal() async {
+    final connectivity = ref.read(signalConnectivityProvider);
     // Connection gating check
-    if (!_isDeviceConnected) {
+    if (!connectivity.isBleConnected) {
       AppLogging.signals('🚫 Send blocked: device not connected');
       showErrorSnackBar(context, 'Connect to a device to send signals');
       return;
@@ -149,7 +137,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
 
     // If an image is still attached but cloud features are not available,
     // remove the image and refuse to send with only an image.
-    if (_imageLocalPath != null && !ref.read(canUseCloudFeaturesProvider)) {
+    if (_imageLocalPath != null && !connectivity.canUseCloud) {
       setState(() => _imageLocalPath = null);
       showErrorSnackBar(context, 'Images require internet. Image removed.');
       return;
@@ -164,7 +152,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
     final content = _contentController.text.trim();
 
     // Pre-submission content moderation check - only when cloud features available
-    final canUseCloudNow = ref.read(canUseCloudFeaturesProvider);
+    final canUseCloudNow = connectivity.canUseCloud;
     if (content.isNotEmpty && canUseCloudNow) {
       final moderationService = ref.read(contentModerationServiceProvider);
       final checkResult = await moderationService.checkText(
@@ -226,7 +214,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
     }
 
     try {
-      final canUseCloudNow = ref.read(canUseCloudFeaturesProvider);
+      final canUseCloudNow = ref.read(signalConnectivityProvider).canUseCloud;
 
       // If location is being fetched, wait briefly (2s) for it to finish
       if (_isLoadingLocation) {
@@ -289,10 +277,11 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
     _dismissKeyboard();
 
     // Image selection requires cloud features (auth + internet)
-    if (!ref.read(canUseCloudFeaturesProvider)) {
+    final connectivity = ref.read(signalConnectivityProvider);
+    if (!connectivity.canUseCloud) {
       showErrorSnackBar(
         context,
-        'Offline: images and cloud features are unavailable.',
+        connectivity.cloudDisabledReason ?? 'Cloud features unavailable.',
       );
       return;
     }
@@ -592,15 +581,28 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
   @override
   Widget build(BuildContext context) {
     final myNodeNum = ref.watch(myNodeNumProvider);
-    final canUseCloud = ref.watch(canUseCloudFeaturesProvider);
+    final connectivity = ref.watch(signalConnectivityProvider);
+    final canUseCloud = connectivity.canUseCloud;
+    final isDeviceConnected = connectivity.isBleConnected;
+    final canSubmit =
+        _hasValidContent && isDeviceConnected && !_isValidatingImage;
+    final submitBlockedReason = _submitBlockedReason(isDeviceConnected);
 
     // Listen for cloud availability changes and remove image if needed.
-    ref.listen<bool>(canUseCloudFeaturesProvider, (previous, next) {
-      if (previous == true && next == false && _imageLocalPath != null) {
+    ref.listen<SignalConnectivityState>(signalConnectivityProvider, (
+      previous,
+      next,
+    ) {
+      if ((previous?.canUseCloud ?? true) &&
+          !next.canUseCloud &&
+          _imageLocalPath != null) {
         // Auto-remove the image and explain to the user
         setState(() => _imageLocalPath = null);
         if (mounted) {
-          showErrorSnackBar(context, 'Images require internet. Image removed.');
+          showErrorSnackBar(
+            context,
+            'Images require internet. Image removed.',
+          );
         }
       }
     });
@@ -627,28 +629,28 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: Tooltip(
-              message: _submitBlockedReason ?? '',
+              message: submitBlockedReason ?? '',
               child: Builder(
                 builder: (context) {
                   final gradientColors = AccentColors.gradientFor(
                     context.accentColor,
                   );
                   return BouncyTap(
-                    onTap: _canSubmit ? _submitSignal : null,
+                    onTap: canSubmit ? _submitSignal : null,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 20,
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        gradient: _canSubmit
+                        gradient: canSubmit
                             ? LinearGradient(
                                 begin: Alignment.centerLeft,
                                 end: Alignment.centerRight,
                                 colors: [gradientColors[0], gradientColors[1]],
                               )
                             : null,
-                        color: _canSubmit
+                        color: canSubmit
                             ? null
                             : context.border.withValues(alpha: 0.5),
                         borderRadius: BorderRadius.circular(20),
@@ -668,7 +670,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
                                 Icon(
                                   Icons.sensors,
                                   size: 18,
-                                  color: _canSubmit
+                                  color: canSubmit
                                       ? Colors.white
                                       : context.textTertiary,
                                 ),
@@ -676,7 +678,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
                                 Text(
                                   'Send signal',
                                   style: TextStyle(
-                                    color: _canSubmit
+                                    color: canSubmit
                                         ? Colors.white
                                         : context.textTertiary,
                                     fontWeight: FontWeight.w600,
@@ -726,6 +728,44 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
                           color: context.accentColor,
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+              if (myNodeNum == null &&
+                  connectivity.isBleConnected &&
+                  Platform.isIOS) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: context.card,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: context.border.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.warning_amber_rounded,
+                        size: 18,
+                        color: context.textTertiary,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Connected to BLE but no mesh traffic detected. On iOS, Airplane Mode can block BLE traffic even when connected. Turn off Airplane Mode or toggle Bluetooth.',
+                          style: TextStyle(
+                            color: context.textTertiary,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
                     ],
@@ -968,8 +1008,8 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
 
               const SizedBox(height: 24),
 
-              // Offline banner for image/cloud limitations
-              if (!_canUseCloud)
+              // Cloud availability banner
+              if (!canUseCloud)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Container(
@@ -992,7 +1032,46 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'Offline: images and cloud features are unavailable. Text and location still broadcast over mesh.',
+                            connectivity.hasInternet
+                                ? 'Sign in to enable images and cloud features. Text and location still broadcast over mesh.'
+                                : 'Offline: images and cloud features are unavailable. Text and location still broadcast over mesh.',
+                            style: TextStyle(
+                              color: context.textTertiary,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+              if (Platform.isIOS &&
+                  !connectivity.hasInternet &&
+                  connectivity.isBleConnected)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: context.card,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: context.border.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.airplanemode_active,
+                          size: 18,
+                          color: context.textTertiary,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'iOS Airplane Mode can pause BLE mesh traffic even when connected. If signals stop, turn off Airplane Mode or toggle Bluetooth.',
                             style: TextStyle(
                               color: context.textTertiary,
                               fontSize: 12,

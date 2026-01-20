@@ -12,6 +12,10 @@ import * as admin from 'firebase-admin';
 import { onRequest, onCall, HttpsError } from 'firebase-functions/v2/https';
 import { onDocumentCreated, onDocumentDeleted, onDocumentWritten } from 'firebase-functions/v2/firestore';
 
+if (admin.apps.length === 0) {
+  admin.initializeApp();
+}
+
 const db = admin.firestore();
 const storage = admin.storage();
 const FieldValue = admin.firestore.FieldValue;
@@ -1059,6 +1063,43 @@ export const recalculateAllCounts = onCall(async (_request) => {
 
 const MAX_COMMENT_DEPTH = 8;
 
+export function computeReplyDepth(parentDepth: number, maxDepth: number) {
+  return Math.min(parentDepth + 1, maxDepth);
+}
+
+export function computeVoteDeltas(
+  beforeValue?: number,
+  afterValue?: number
+): { upDelta: number; downDelta: number } | null {
+  // Calculate deltas
+  let upDelta = 0;
+  let downDelta = 0;
+
+  if (beforeValue === undefined && afterValue !== undefined) {
+    // New vote
+    if (afterValue === 1) upDelta = 1;
+    if (afterValue === -1) downDelta = 1;
+  } else if (beforeValue !== undefined && afterValue === undefined) {
+    // Deleted vote
+    if (beforeValue === 1) upDelta = -1;
+    if (beforeValue === -1) downDelta = -1;
+  } else if (beforeValue !== undefined && afterValue !== undefined && beforeValue !== afterValue) {
+    // Changed vote
+    if (beforeValue === 1 && afterValue === -1) {
+      upDelta = -1;
+      downDelta = 1;
+    } else if (beforeValue === -1 && afterValue === 1) {
+      upDelta = 1;
+      downDelta = -1;
+    }
+  } else {
+    // No effective change
+    return null;
+  }
+
+  return { upDelta, downDelta };
+}
+
 /**
  * Triggered when a vote is created, updated, or deleted on a signal comment.
  * Updates vote aggregates (upvoteCount, downvoteCount, score) on the comment.
@@ -1075,31 +1116,10 @@ export const onCommentVoteWrite = onDocumentWritten(
     const beforeValue = beforeData?.value as number | undefined;
     const afterValue = afterData?.value as number | undefined;
 
-    // Calculate deltas
-    let upDelta = 0;
-    let downDelta = 0;
+    const deltas = computeVoteDeltas(beforeValue, afterValue);
+    if (!deltas) return;
 
-    if (beforeValue === undefined && afterValue !== undefined) {
-      // New vote
-      if (afterValue === 1) upDelta = 1;
-      if (afterValue === -1) downDelta = 1;
-    } else if (beforeValue !== undefined && afterValue === undefined) {
-      // Deleted vote
-      if (beforeValue === 1) upDelta = -1;
-      if (beforeValue === -1) downDelta = -1;
-    } else if (beforeValue !== undefined && afterValue !== undefined && beforeValue !== afterValue) {
-      // Changed vote
-      if (beforeValue === 1 && afterValue === -1) {
-        upDelta = -1;
-        downDelta = 1;
-      } else if (beforeValue === -1 && afterValue === 1) {
-        upDelta = 1;
-        downDelta = -1;
-      }
-    } else {
-      // No effective change
-      return;
-    }
+    const { upDelta, downDelta } = deltas;
 
     // Update comment aggregates
     const commentRef = db.collection('posts').doc(postId)
@@ -1169,7 +1189,7 @@ export const onSignalCommentCreated = onDocumentCreated(
       const parentDepth = parentData.depth || 0;
       // Clamp depth at MAX_COMMENT_DEPTH - do NOT change parentId
       // UI should handle visual clamping for deeply nested threads
-      const newDepth = Math.min(parentDepth + 1, MAX_COMMENT_DEPTH);
+      const newDepth = computeReplyDepth(parentDepth, MAX_COMMENT_DEPTH);
 
       // Update depth only - preserve original parentId for correct threading
       transaction.update(commentRef, { depth: newDepth });

@@ -22,7 +22,7 @@ import 'packet_framer.dart';
 ///
 /// This is the over-the-air format for Signals (ephemeral posts).
 /// Format: JSON with fields:
-/// - id: Signal ID (UUID) - required for cloud sync, null for legacy signals
+/// - id: Signal ID (UUID) - required for cloud sync
 /// - c: Signal text content (compressed key)
 /// - t: Time-to-live in minutes (compressed key)
 /// - la/ln: Optional location coordinates (compressed keys)
@@ -32,19 +32,15 @@ import 'packet_framer.dart';
 /// - Storage path: signals/{userId}/{id}.jpg
 /// - Comments: posts/{id}/comments/{commentId}
 ///
-/// Legacy signals (without id) are treated as local-only.
 class MeshSignalPacket {
   final int senderNodeId;
-  final String? signalId; // null for legacy signals
+  final String? signalId;
   final String content;
   final int ttlMinutes;
   final double? latitude;
   final double? longitude;
   final int? hopCount; // null = unknown, 0 = local, 1+ = hops away
   final DateTime receivedAt;
-
-  /// Whether this is a legacy signal (no id field in packet).
-  bool get isLegacy => signalId == null;
 
   const MeshSignalPacket({
     required this.senderNodeId,
@@ -58,7 +54,6 @@ class MeshSignalPacket {
   });
 
   /// Parse from mesh packet payload (JSON).
-  /// Supports both new format (with 'id') and legacy format (without).
   /// Compressed keys: id, c (content), t (ttl), la (lat), ln (lng)
   factory MeshSignalPacket.fromPayload(
     int senderNodeId,
@@ -68,7 +63,7 @@ class MeshSignalPacket {
     final jsonStr = utf8.decode(payload);
     final json = jsonDecode(jsonStr) as Map<String, dynamic>;
 
-    // Support both compressed and legacy keys
+    // Support both compressed and full keys
     final content = json['c'] as String? ?? json['content'] as String? ?? '';
     final ttl = json['t'] as int? ?? json['ttl'] as int? ?? 60;
     final lat =
@@ -78,7 +73,7 @@ class MeshSignalPacket {
 
     return MeshSignalPacket(
       senderNodeId: senderNodeId,
-      signalId: json['id'] as String?, // null for legacy packets
+      signalId: json['id'] as String?,
       content: content,
       ttlMinutes: ttl,
       latitude: lat,
@@ -95,11 +90,11 @@ class MeshSignalPacket {
   /// - t: ttl
   /// - la/ln: latitude/longitude
   List<int> toPayload() {
-    final json = <String, dynamic>{'c': content, 't': ttlMinutes};
-    // signalId is required for new signals
-    if (signalId != null) {
-      json['id'] = signalId;
+    if (signalId == null || signalId!.isEmpty) {
+      throw StateError('MeshSignalPacket requires signalId for send');
     }
+    final json = <String, dynamic>{'c': content, 't': ttlMinutes};
+    json['id'] = signalId;
     if (latitude != null && longitude != null) {
       json['la'] = latitude;
       json['ln'] = longitude;
@@ -846,7 +841,7 @@ class ProtocolService {
       );
 
       AppLogging.signals(
-        'SIGNAL_PARSE_OK signalId=${signalPacket.signalId ?? 'legacy'} sender=${packet.from.toRadixString(16)} ttl=${signalPacket.ttlMinutes}',
+        'SIGNAL_PARSE_OK signalId=${signalPacket.signalId ?? "none"} sender=${packet.from.toRadixString(16)} ttl=${signalPacket.ttlMinutes}',
       );
 
       AppLogging.signals(

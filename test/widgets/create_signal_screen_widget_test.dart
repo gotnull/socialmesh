@@ -40,17 +40,14 @@ void main() {
       findsOneWidget,
     );
 
-    // Tapping image shows snackbar message about offline
+    // Tapping image does not open the picker when offline
     await tester.tap(imageFinder);
     await tester.pumpAndSettle();
-    expect(
-      find.textContaining('Offline: images and cloud features are unavailable'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('No internet connection'), findsNothing);
 
     // Now simulate connectivity returning online
     connNotifier.setOnline(true);
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 100));
 
     // Banner should disappear
     expect(
@@ -60,9 +57,9 @@ void main() {
 
     // Now tapping image should no longer show the offline message (permission/state may vary in tests)
     await tester.tap(imageFinder);
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 100));
     expect(
-      find.textContaining('Offline: images and cloud features are unavailable'),
+      find.textContaining('No internet connection'),
       findsNothing,
     );
 

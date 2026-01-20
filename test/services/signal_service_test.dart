@@ -134,6 +134,53 @@ void main() {
       expect(ids.contains('sig-2'), isTrue);
     });
 
+    test('cloud comment injection hydrates getComments and emits updates', () async {
+      final service = SignalService();
+
+      await service.createSignalFromMesh(
+        content: 'Signal for comments',
+        senderNodeId: 10,
+        signalId: 'sig-comments',
+        ttlMinutes: 15,
+      );
+
+      final now = DateTime.now();
+      final comment = SignalResponse(
+        id: 'comment-1',
+        signalId: 'sig-comments',
+        content: 'Hello from cloud',
+        authorId: 'user-2',
+        createdAt: now,
+        expiresAt: now.add(const Duration(hours: 1)),
+        isLocal: false,
+      );
+
+      final updateFuture =
+          expectLater(service.onCommentUpdate, emits('sig-comments'));
+      service.injectCloudCommentsForTest('sig-comments', [comment]);
+      await updateFuture;
+
+      final comments = await service.getComments('sig-comments');
+      expect(comments.any((c) => c.id == 'comment-1'), isTrue);
+    });
+
+    test('mesh signals without signalId are ignored', () async {
+      final service = SignalService();
+
+      final before = await service.getActiveSignals();
+
+      final result = await service.createSignalFromMesh(
+        content: 'Missing id',
+        senderNodeId: 42,
+        signalId: null,
+        ttlMinutes: 15,
+      );
+
+      expect(result, isNull);
+      final after = await service.getActiveSignals();
+      expect(after.length, equals(before.length));
+    });
+
     test('mesh-only broadcast uses short timeout', () async {
       final service = SignalService();
 

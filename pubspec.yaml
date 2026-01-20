@@ -108,6 +108,7 @@ dev_dependencies:
     sdk: flutter
   sqflite_common_ffi: ^2.4.0+2
   flutter_lints: ^6.0.0
+  fake_async: ^1.3.2
   
   # Launcher icons generator
   flutter_launcher_icons: ^0.14.3
