@@ -298,38 +298,65 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
     }
 
     // Request photo library permission
-    final permission = await PhotoManager.requestPermissionExtend();
+    var permission = await PhotoManager.requestPermissionExtend();
     if (!permission.isAuth) {
-      if (mounted) {
-        final openSettings = await showDialog<bool>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            backgroundColor: context.card,
-            title: Text(
-              'Photo Access Required',
-              style: TextStyle(color: context.textPrimary),
-            ),
-            content: Text(
-              'To select photos, we need access to your photo library.',
-              style: TextStyle(color: context.textSecondary),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Cancel'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: const Text('Open Settings'),
-              ),
-            ],
+      if (!mounted) return;
+
+      AppLogging.signals(
+        'Photo permission not granted (state=$permission) - showing rationale',
+      );
+
+      // Offer the user the option to trigger a fresh system permission request
+      // (which will show the OS permission dialog on first request), or open Settings
+      final action = await showDialog<String?>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: context.card,
+          title: Text(
+            'Photo Access Required',
+            style: TextStyle(color: context.textPrimary),
           ),
-        );
-        if (openSettings == true) {
-          await PhotoManager.openSetting();
+          content: Text(
+            'To select photos, we need access to your photo library.',
+            style: TextStyle(color: context.textSecondary),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, 'cancel'),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, 'request'),
+              child: const Text('Request Permission'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, 'settings'),
+              child: const Text('Open Settings'),
+            ),
+          ],
+        ),
+      );
+
+      if (action == 'request') {
+        // Try requesting again - on first run this should show the OS dialog
+        permission = await PhotoManager.requestPermissionExtend();
+        if (!permission.isAuth) {
+          // Still not granted - guide user to settings
+          if (mounted) {
+            showErrorSnackBar(
+              context,
+              'Permission denied. You can enable photo access in Settings.',
+            );
+          }
+          return;
         }
+      } else if (action == 'settings') {
+        await PhotoManager.openSetting();
+        return;
+      } else {
+        // Cancelled
+        return;
       }
-      return;
     }
 
     // Show media picker bottom sheet
