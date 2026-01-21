@@ -180,15 +180,14 @@ class _DeviceManagementScreenState
                   icon: Icons.settings_backup_restore,
                   iconColor: Colors.deepOrange,
                   title: 'Factory Reset Config',
-                  subtitle: 'Reset all settings to defaults (keeps node DB)',
+                  subtitle: 'Reset everything except the node database',
                   enabled: isConnected,
                   onTap: () => _executeAction(
                     'Factory Reset Config',
                     () => protocol.factoryResetConfig(),
                     warningMessage:
-                        'This will reset all configuration to factory defaults. '
-                        'Your channels, region, and all settings will be erased. '
-                        'Node database will be preserved.',
+                        'This is the closest thing we offer to a full factory reset: '
+                        'it wipes channels, region, and all settings but preserves the node database.',
                   ),
                 ),
                 const SizedBox(height: 8),
