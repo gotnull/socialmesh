@@ -1415,8 +1415,6 @@ PODS:
   - flutter_blue_plus_darwin (0.0.2):
     - Flutter
     - FlutterMacOS
-  - flutter_compass (0.0.1):
-    - Flutter
   - flutter_inappwebview_ios (0.0.1):
     - Flutter
     - flutter_inappwebview_ios/Core (= 0.0.1)
@@ -1681,7 +1679,6 @@ DEPENDENCIES:
   - flutter_angle (from `.symlinks/plugins/flutter_angle/darwin`)
   - flutter_app_group_directory (from `.symlinks/plugins/flutter_app_group_directory/ios`)
   - flutter_blue_plus_darwin (from `.symlinks/plugins/flutter_blue_plus_darwin/darwin`)
-  - flutter_compass (from `.symlinks/plugins/flutter_compass/ios`)
   - flutter_inappwebview_ios (from `.symlinks/plugins/flutter_inappwebview_ios/ios`)
   - flutter_local_notifications (from `.symlinks/plugins/flutter_local_notifications/ios`)
   - flutter_secure_storage (from `.symlinks/plugins/flutter_secure_storage/ios`)
@@ -1790,8 +1787,6 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/flutter_app_group_directory/ios"
   flutter_blue_plus_darwin:
     :path: ".symlinks/plugins/flutter_blue_plus_darwin/darwin"
-  flutter_compass:
-    :path: ".symlinks/plugins/flutter_compass/ios"
   flutter_inappwebview_ios:
     :path: ".symlinks/plugins/flutter_inappwebview_ios/ios"
   flutter_local_notifications:
@@ -1882,7 +1877,6 @@ SPEC CHECKSUMS:
   flutter_angle: 7b1a2b3e733221bf2e0325e42fc3edf95b5d44c4
   flutter_app_group_directory: 55b5362007d1c0cb45dc1dd1e94f67d615f45a6b
   flutter_blue_plus_darwin: 20a08bfeaa0f7804d524858d3d8744bcc1b6dbc3
-  flutter_compass: b236ab69b61545cce89fd58527f401a7587d5cc1
   flutter_inappwebview_ios: b89ba3482b96fb25e00c967aae065701b66e9b99
   flutter_local_notifications: a5a732f069baa862e728d839dd2ebb904737effb
   flutter_secure_storage: 1ed9476fba7e7a782b22888f956cce43e2c62f13
