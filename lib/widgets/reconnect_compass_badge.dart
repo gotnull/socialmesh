@@ -110,6 +110,8 @@ class _Needle extends StatelessWidget {
   }
 }
 
+const _compassAnimationDuration = Duration(milliseconds: 350);
+
 class _CurrentHeadingMarker extends StatelessWidget {
   const _CurrentHeadingMarker({required this.state, required this.color});
 
@@ -119,8 +121,10 @@ class _CurrentHeadingMarker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final turns = ((state.currentHeadingDeg ?? 0) % 360) / 360;
-    return Transform.rotate(
-      angle: turns * 2 * math.pi,
+    return AnimatedRotation(
+      duration: _compassAnimationDuration,
+      curve: Curves.easeOutCubic,
+      turns: turns,
       child: Align(
         alignment: Alignment.topCenter,
         child: Container(
