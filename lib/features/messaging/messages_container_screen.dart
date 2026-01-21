@@ -5,7 +5,7 @@ import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
 import '../../utils/snackbar.dart';
 import '../navigation/main_shell.dart';
-import '../channels/channel_form_screen.dart';
+import '../channels/channel_wizard_screen.dart';
 import '../channels/channels_screen.dart';
 import 'messaging_screen.dart';
 
@@ -30,9 +30,21 @@ class _MessagesContainerScreenState
       return;
     }
 
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const ChannelFormScreen()));
+    final channels = ref.read(channelsProvider);
+    final usedIndices = channels.map((c) => c.index).toSet();
+    int nextIndex = 1;
+    for (int i = 1; i <= 7; i++) {
+      if (!usedIndices.contains(i)) {
+        nextIndex = i;
+        break;
+      }
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ChannelWizardScreen(channelIndex: nextIndex),
+      ),
+    );
   }
 
   void _openChannelScanner(bool isConnected) {

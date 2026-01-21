@@ -95,6 +95,7 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
   // Sticky header state
   bool _showStickyHeader = false;
   static const double _stickyThreshold = 100.0;
+  bool _goActiveWasEnabled = false;
 
   @override
   void initState() {
@@ -746,6 +747,14 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
     bool isSignedIn,
     bool isConnected,
   ) {
+    if (canGoActive && !_goActiveWasEnabled) {
+      AppLogging.signals(
+        'Go Active became enabled (connected=$isConnected, signedIn=$isSignedIn)',
+      );
+      _goActiveWasEnabled = true;
+    } else if (!canGoActive) {
+      _goActiveWasEnabled = false;
+    }
     String? blockedReason;
     if (!isConnected) {
       blockedReason = 'Device not connected';

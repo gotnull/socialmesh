@@ -358,6 +358,9 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       );
 
       // Update state to connected
+      AppLogging.connection(
+        '🔌 _initializeProtocolAfterAutoReconnect: Marking DevicePairingState.connected',
+      );
       state = state.copyWith(
         state: DevicePairingState.connected,
         lastConnectedAt: DateTime.now(),
@@ -723,11 +726,8 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
 
       AppLogging.connection('Connected! myNodeNum: ${protocol.myNodeNum}');
 
-      // Start location updates
-      final locationService = ref.read(locationServiceProvider);
-      await locationService.startLocationUpdates();
-
-      // Update state
+      // Update state immediately so consumers know we're connected
+      AppLogging.connection('Device fully connected – allowing Go Active to enable');
       state = state.copyWith(
         state: DevicePairingState.connected,
         device: device,
@@ -743,6 +743,10 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
           .read(autoReconnectStateProvider.notifier)
           .setState(AutoReconnectState.success);
       _resetInvalidationTracking();
+
+      // Start location updates after signalling connection
+      final locationService = ref.read(locationServiceProvider);
+      await locationService.startLocationUpdates();
 
       // Mark region as configured (reconnecting to known device)
       final settings = await ref.read(settingsServiceProvider.future);
@@ -1123,7 +1127,16 @@ final featureAvailabilityProvider =
 
 /// Simple boolean for checking if device is connected
 final isDeviceConnectedProvider = Provider<bool>((ref) {
-  return ref.watch(deviceConnectionProvider).isConnected;
+  final deviceState = ref.watch(deviceConnectionProvider);
+  // Consider the device connected as soon as the state passes through connection
+  // or configuration phases so UI can react immediately while background work
+  // (location updates, feed refresh, etc.) continues.
+  if (deviceState.isConnected) return true;
+  if (deviceState.state == DevicePairingState.connecting ||
+      deviceState.state == DevicePairingState.configuring) {
+    return true;
+  }
+  return false;
 });
 
 /// Check if a specific feature is available
