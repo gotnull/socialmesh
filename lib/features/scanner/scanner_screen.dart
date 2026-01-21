@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../../core/transport.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/connecting_content.dart';
@@ -42,6 +43,10 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
   bool _autoReconnecting = false;
   String? _errorMessage;
   String? _savedDeviceNotFoundName;
+  bool _showPairingInvalidationHint = false;
+  String? _savedDeviceId;
+  String? _savedDeviceName;
+  TransportType? _savedDeviceTransportType;
 
   @override
   void initState() {
@@ -147,6 +152,12 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     final lastDeviceType = settingsService.lastDeviceType;
     final lastDeviceName = settingsService.lastDeviceName;
 
+    _updateSavedDeviceMeta(
+      savedDeviceId: lastDeviceId,
+      savedDeviceName: lastDeviceName,
+      savedDeviceType: _transportTypeFromString(lastDeviceType),
+    );
+
     if (lastDeviceId == null || lastDeviceType == null) {
       AppLogging.connection('📡 SCANNER: No saved device, starting scan');
       _startScan();
@@ -239,12 +250,15 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     );
 
     // Get saved device info before scan to check if it was found afterward
-    String? savedDeviceId;
-    String? savedDeviceName;
     try {
       final settingsService = await ref.read(settingsServiceProvider.future);
-      savedDeviceId = settingsService.lastDeviceId;
-      savedDeviceName = settingsService.lastDeviceName;
+      _updateSavedDeviceMeta(
+        savedDeviceId: settingsService.lastDeviceId,
+        savedDeviceName: settingsService.lastDeviceName,
+        savedDeviceType: _transportTypeFromString(
+          settingsService.lastDeviceType,
+        ),
+      );
     } catch (e) {
       AppLogging.connection('📡 SCANNER: Failed to load saved device info: $e');
     }
@@ -253,6 +267,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       _scanning = true;
       _devices.clear();
       _errorMessage = null;
+      _showPairingInvalidationHint = false;
     });
 
     try {
@@ -336,12 +351,12 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
       // 4. Try to disconnect any stale connections to our saved device
       // This helps when the device was connected to another app
-      if (savedDeviceId != null) {
+      if (_savedDeviceId != null) {
         try {
           // Check system devices (works on both iOS and Android)
           final systemDevices = await FlutterBluePlus.systemDevices([]);
           for (final device in systemDevices) {
-            if (device.remoteId.toString() == savedDeviceId) {
+            if (device.remoteId.toString() == _savedDeviceId) {
               AppLogging.connection(
                 '📡 SCANNER: Found saved device in system devices, forcing cleanup...',
               );
@@ -370,7 +385,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
             try {
               final bondedDevices = await FlutterBluePlus.bondedDevices;
               for (final device in bondedDevices) {
-                if (device.remoteId.toString() == savedDeviceId) {
+                if (device.remoteId.toString() == _savedDeviceId) {
                   AppLogging.connection(
                     '📡 SCANNER: Found saved device in bonded devices, cleaning up...',
                   );
@@ -452,15 +467,15 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
       // After scan completes, check if saved device was found
       // If not, show info banner that it may be connected elsewhere
-      if (mounted && savedDeviceId != null) {
-        final savedDeviceFound = _devices.any((d) => d.id == savedDeviceId);
+      if (mounted && _savedDeviceId != null) {
+        final savedDeviceFound = _devices.any((d) => d.id == _savedDeviceId);
         if (!savedDeviceFound && _devices.isNotEmpty) {
           // Found other devices but not the saved one - likely connected elsewhere
           AppLogging.connection(
-            '📡 SCANNER: Saved device $savedDeviceId not found, may be connected elsewhere',
+            '📡 SCANNER: Saved device $_savedDeviceId not found, may be connected elsewhere',
           );
           setState(() {
-            _savedDeviceNotFoundName = savedDeviceName ?? 'Your saved device';
+            _savedDeviceNotFoundName = _savedDeviceName ?? 'Your saved device';
           });
         }
       }
@@ -470,6 +485,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
         final message = e.toString().replaceFirst('Exception: ', '');
         setState(() {
           _errorMessage = message;
+          _showPairingInvalidationHint = false;
         });
       }
     } finally {
@@ -480,6 +496,54 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
         });
       }
     }
+  }
+
+  Future<void> _openAppSettings() async {
+    final opened = await openAppSettings();
+    if (!mounted) return;
+    if (!opened) {
+      showErrorSnackBar(
+        context,
+        'Could not open Settings. Please open Bluetooth settings manually.',
+      );
+    }
+  }
+
+  void _updateSavedDeviceMeta({
+    String? savedDeviceId,
+    String? savedDeviceName,
+    TransportType? savedDeviceType,
+  }) {
+    _savedDeviceId = savedDeviceId;
+    _savedDeviceName = savedDeviceName;
+    _savedDeviceTransportType = savedDeviceType;
+  }
+
+  TransportType _transportTypeFromString(String? type) {
+    if (type == 'usb') {
+      return TransportType.usb;
+    }
+    return TransportType.ble;
+  }
+
+  List<DeviceInfo> _buildDisplayDevices() {
+    final devices = [..._devices];
+    if ((_scanning || _autoReconnecting) &&
+        _savedDeviceId != null &&
+        devices.every((d) => d.id != _savedDeviceId)) {
+      final placeholder = _savedDevicePlaceholder();
+      if (placeholder != null) {
+        devices.insert(0, placeholder);
+      }
+    }
+    return devices;
+  }
+
+  DeviceInfo? _savedDevicePlaceholder() {
+    if (_savedDeviceId == null) return null;
+    final name = _savedDeviceName ?? 'Saved Device';
+    final type = _savedDeviceTransportType ?? TransportType.ble;
+    return DeviceInfo(id: _savedDeviceId!, name: name, type: type);
   }
 
   Future<void> _connect(DeviceInfo device) async {
@@ -512,6 +576,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     setState(() {
       _connecting = true;
       _autoReconnecting = isAutoReconnect;
+      _showPairingInvalidationHint = false;
     });
 
     try {
@@ -707,16 +772,24 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
       if (!mounted) return;
 
-      final message = e.toString().replaceFirst('Exception: ', '');
+      final sanitizedMessage = e.toString().replaceFirst('Exception: ', '');
+      final pairingInvalidation = conn.isPairingInvalidationError(e);
+      final pairingMessage =
+          'Your phone removed the stored pairing info for this device. Return to Settings > Bluetooth, forget “Meshtastic”, and try again.';
+      final displayMessage = pairingInvalidation
+          ? pairingMessage
+          : sanitizedMessage;
 
       if (!isAutoReconnect) {
-        showErrorSnackBar(context, message);
+        showErrorSnackBar(context, displayMessage);
       }
 
       // Only reset connecting state on error
       setState(() {
         _connecting = false;
         _autoReconnecting = false;
+        _errorMessage = displayMessage;
+        _showPairingInvalidationHint = pairingInvalidation;
       });
 
       // If auto-reconnect failed, start regular scan
@@ -747,6 +820,8 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final displayDevices = _buildDisplayDevices();
+
     // When connecting, use EXACT same structure as onboarding
     if (_connecting) {
       return Scaffold(
@@ -919,8 +994,91 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                     ),
                     IconButton(
                       icon: Icon(Icons.close, color: AppTheme.errorRed),
-                      onPressed: () => setState(() => _errorMessage = null),
+                      onPressed: () => setState(() {
+                        _errorMessage = null;
+                        _showPairingInvalidationHint = false;
+                      }),
                       iconSize: 20,
+                    ),
+                  ],
+                ),
+              ),
+
+            if (_showPairingInvalidationHint)
+              Container(
+                padding: const EdgeInsets.all(12),
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: context.accentColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: context.accentColor.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Bluetooth pairing was removed. Forget “Meshtastic” in Settings > Bluetooth and reconnect to continue.',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: context.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        TextButton.icon(
+                          onPressed: _openAppSettings,
+                          icon: Icon(
+                            Icons.settings_rounded,
+                            size: 16,
+                            color: context.textPrimary,
+                          ),
+                          label: Text(
+                            'Open Settings',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: context.textPrimary,
+                            ),
+                          ),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 6,
+                              horizontal: 10,
+                            ),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        TextButton(
+                          onPressed: () {
+                            setState(() {
+                              _errorMessage = null;
+                              _showPairingInvalidationHint = false;
+                            });
+                            _startScan();
+                          },
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 6,
+                              horizontal: 10,
+                            ),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: Text(
+                            'Retry Scan',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: context.textPrimary,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -973,7 +1131,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                 ),
               ),
 
-            if (_devices.isNotEmpty)
+            if (displayDevices.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Row(
@@ -999,7 +1157,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        '${_devices.length}',
+                        '${displayDevices.length}',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -1049,7 +1207,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                 ),
               )
             else
-              ..._devices.map(
+              ...displayDevices.map(
                 (device) => Column(
                   children: [
                     _DeviceCard(device: device, onTap: () => _connect(device)),

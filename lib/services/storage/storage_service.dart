@@ -112,6 +112,13 @@ class SettingsService {
     }
   }
 
+  /// Remove all saved device identifiers so we forget the pairing.
+  Future<void> clearLastDevice() async {
+    await _preferences.remove('last_device_id');
+    await _preferences.remove('last_device_type');
+    await _preferences.remove('last_device_name');
+  }
+
   String? get lastDeviceId => _preferences.getString('last_device_id');
   String? get lastDeviceType => _preferences.getString('last_device_type');
   String? get lastDeviceName => _preferences.getString('last_device_name');

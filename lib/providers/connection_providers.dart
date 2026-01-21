@@ -48,6 +48,45 @@ enum DevicePairingState {
 
   /// Connection error (BT disabled, device unavailable, auth failed)
   error,
+
+  /// Saved device pairing is permanently invalid (device reset/forget)
+  pairedDeviceInvalidated,
+}
+
+/// Reasons the saved pairing was invalidated.
+enum PairingInvalidationReason {
+  /// Device reset or pairing info removed on the hardware.
+  peerReset('peer_removed_pairing'),
+
+  /// Device could not be found after repeated scans.
+  missingDevice('device_not_found');
+
+  final String logValue;
+  const PairingInvalidationReason(this.logValue);
+}
+
+/// Detect whether the given exception signals the device removed pairing state.
+bool isPairingInvalidationError(Object error) {
+  if (error is FlutterBluePlusException) {
+    final isApplePeerReset =
+        error.platform == ErrorPlatform.apple && error.code == 14;
+    final hasPeerResetMessage =
+        (error.description ?? '').contains('Peer removed pairing information');
+    if (isApplePeerReset || hasPeerResetMessage) {
+      return true;
+    }
+  }
+  final message = error.toString();
+  return message.contains('Peer removed pairing information');
+}
+
+/// Extract the apple-specific error code when available.
+int? pairingInvalidationAppleCode(Object error) {
+  if (error is FlutterBluePlusException &&
+      error.platform == ErrorPlatform.apple) {
+    return error.code;
+  }
+  return null;
 }
 
 /// Reason for disconnection or error
@@ -103,6 +142,8 @@ class DeviceConnectionState2 {
       state == DevicePairingState.configuring;
   bool get isScanning => state == DevicePairingState.scanning;
   bool get hasError => state == DevicePairingState.error;
+  bool get isTerminalInvalidated =>
+      state == DevicePairingState.pairedDeviceInvalidated;
   bool get wasPreviouslyPaired => state != DevicePairingState.neverPaired;
 
   DeviceConnectionState2 copyWith({
@@ -142,6 +183,10 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
   bool _isInitialized = false;
   bool _userDisconnected = false; // Track if user manually disconnected
   bool _backgroundScanInProgress = false; // Guard against concurrent scans
+  int _missingDeviceAttempts = 0;
+  DateTime? _firstMissingAttemptAt;
+  static const int _maxInvalidationAttempts = 3;
+  static const Duration _invalidationWindow = Duration(seconds: 120);
 
   @override
   DeviceConnectionState2 build() {
@@ -353,6 +398,13 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       return;
     }
 
+    if (state.state == DevicePairingState.pairedDeviceInvalidated) {
+      AppLogging.connection(
+        '🔌 startBackgroundConnection: Saved device invalidated, skipping reconnect',
+      );
+      return;
+    }
+
     final settings = await ref.read(settingsServiceProvider.future);
     final lastDeviceId = settings.lastDeviceId;
     final lastDeviceName = settings.lastDeviceName;
@@ -488,13 +540,12 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
         AppLogging.connection(
           '🔌 startBackgroundConnection: Device not found in scan',
         );
-        state = state.copyWith(
-          state: DevicePairingState.disconnected,
-          reason: DisconnectReason.deviceNotFound,
-        );
-        ref
-            .read(autoReconnectStateProvider.notifier)
-            .setState(AutoReconnectState.failed);
+        final invalidated = await reportMissingSavedDevice();
+        if (!invalidated) {
+          ref
+              .read(autoReconnectStateProvider.notifier)
+              .setState(AutoReconnectState.failed);
+        }
         return;
       }
 
@@ -518,6 +569,10 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
 
       await _connectToDevice(foundDevice);
     } catch (e) {
+      if (state.state == DevicePairingState.pairedDeviceInvalidated) {
+        return;
+      }
+
       AppLogging.connection('🔌 startBackgroundConnection: Error: $e');
       state = state.copyWith(
         state: DevicePairingState.disconnected,
@@ -530,6 +585,92 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     } finally {
       _backgroundScanInProgress = false;
     }
+  }
+
+  Future<bool> reportMissingSavedDevice() async {
+    if (state.state == DevicePairingState.pairedDeviceInvalidated) {
+      return true;
+    }
+
+    final now = DateTime.now();
+    if (_firstMissingAttemptAt == null ||
+        now.difference(_firstMissingAttemptAt!) > _invalidationWindow) {
+      _firstMissingAttemptAt = now;
+      _missingDeviceAttempts = 0;
+    }
+
+    _missingDeviceAttempts++;
+
+    if (_missingDeviceAttempts >= _maxInvalidationAttempts) {
+      await handlePairingInvalidation(PairingInvalidationReason.missingDevice);
+      return true;
+    }
+
+    state = state.copyWith(
+      state: DevicePairingState.disconnected,
+      reason: DisconnectReason.deviceNotFound,
+      errorMessage: 'Device not found',
+    );
+
+    return false;
+  }
+
+  void _resetInvalidationTracking() {
+    _missingDeviceAttempts = 0;
+    _firstMissingAttemptAt = null;
+  }
+
+  /// Public helper so other providers can force an invalidation.
+  Future<void> handlePairingInvalidation(
+    PairingInvalidationReason reason, {
+    int? appleCode,
+  }) async {
+    await _handlePairingInvalidated(reason: reason, appleCode: appleCode);
+  }
+
+  Future<void> _handlePairingInvalidated({
+    required PairingInvalidationReason reason,
+    int? appleCode,
+  }) async {
+    if (state.state == DevicePairingState.pairedDeviceInvalidated) {
+      return;
+    }
+
+    final settings = await ref.read(settingsServiceProvider.future);
+    final savedDeviceId =
+        state.device?.id ?? settings.lastDeviceId ?? 'unknown';
+    final appleCodeLabel = appleCode?.toString() ?? 'n/a';
+
+    AppLogging.connection(
+      'PAIRING_INVALIDATED deviceId=$savedDeviceId reason=${reason.logValue} appleCode=$appleCodeLabel',
+    );
+
+    _resetInvalidationTracking();
+    _backgroundScanInProgress = false;
+    _scanTimer?.cancel();
+    _userDisconnected = false;
+
+    final transport = ref.read(transportProvider);
+    try {
+      await transport.disconnect();
+    } catch (_) {
+      // Ignore disconnect errors during invalidation.
+    }
+
+    await clearDeviceDataBeforeConnectRef(ref);
+    await settings.clearLastDevice();
+    clearSavedDeviceId(ref);
+    ref.read(connectedDeviceProvider.notifier).setState(null);
+    ref.read(userDisconnectedProvider.notifier).setUserDisconnected(false);
+    ref
+        .read(autoReconnectStateProvider.notifier)
+        .setState(AutoReconnectState.failed);
+
+    state = const DeviceConnectionState2(
+      state: DevicePairingState.pairedDeviceInvalidated,
+      reason: DisconnectReason.deviceNotFound,
+      errorMessage: 'Device was reset or replaced. Set it up again.',
+    );
   }
 
   /// Connect to a specific device
@@ -601,6 +742,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       ref
           .read(autoReconnectStateProvider.notifier)
           .setState(AutoReconnectState.success);
+      _resetInvalidationTracking();
 
       // Mark region as configured (reconnecting to known device)
       final settings = await ref.read(settingsServiceProvider.future);
@@ -608,6 +750,14 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
         await settings.setRegionConfigured(true);
       }
     } catch (e) {
+      if (isPairingInvalidationError(e)) {
+        await handlePairingInvalidation(
+          PairingInvalidationReason.peerReset,
+          appleCode: pairingInvalidationAppleCode(e),
+        );
+        rethrow;
+      }
+
       AppLogging.connection('Connection failed: $e');
 
       final reason = e.toString().contains('Authentication')
@@ -636,6 +786,13 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     AppLogging.connection(
       '🔌 _handleDisconnect: reason=$reason, currentState=${state.state}',
     );
+
+    if (state.state == DevicePairingState.pairedDeviceInvalidated) {
+      AppLogging.connection(
+        '🔌 _handleDisconnect: Saved device invalidated, ignoring',
+      );
+      return;
+    }
 
     if (state.state == DevicePairingState.neverPaired) {
       AppLogging.connection('🔌 _handleDisconnect: Never paired, ignoring');
@@ -732,6 +889,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       lastConnectedAt: DateTime.now(),
       myNodeNum: myNodeNum,
     );
+    _resetInvalidationTracking();
 
     // Run one-shot reconciliation for this node on connect
     if (!_reconciledThisSession && myNodeNum != null) {

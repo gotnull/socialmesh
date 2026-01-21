@@ -118,6 +118,7 @@ class ConnectionRequiredWrapper extends ConsumerWidget {
     final savedDeviceName =
         settingsAsync.whenOrNull(data: (settings) => settings.lastDeviceName) ??
         'Your saved device';
+    final isInvalidated = deviceState.isTerminalInvalidated;
 
     return Scaffold(
       backgroundColor: context.background,
@@ -196,17 +197,21 @@ class ConnectionRequiredWrapper extends ConsumerWidget {
                 ),
               ] else ...[
                 Icon(
-                  autoReconnectState == AutoReconnectState.failed
-                      ? Icons.wifi_off
-                      : Icons.bluetooth_disabled,
+                  isInvalidated
+                      ? Icons.error_outline
+                      : autoReconnectState == AutoReconnectState.failed
+                          ? Icons.wifi_off
+                          : Icons.bluetooth_disabled,
                   size: 64,
                   color: context.textTertiary,
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  autoReconnectState == AutoReconnectState.failed
-                      ? 'Connection Failed'
-                      : 'No Device Connected',
+                  isInvalidated
+                      ? 'Device Reset'
+                      : autoReconnectState == AutoReconnectState.failed
+                          ? 'Connection Failed'
+                          : 'No Device Connected',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w600,
@@ -216,9 +221,11 @@ class ConnectionRequiredWrapper extends ConsumerWidget {
                 const SizedBox(height: 8),
                 Text(
                   disconnectedMessage ??
-                      (autoReconnectState == AutoReconnectState.failed
-                          ? 'Could not find saved device'
-                          : 'Connect to a Meshtastic device to get started'),
+                      (isInvalidated
+                          ? 'Device was reset or replaced. Set it up again.'
+                          : (autoReconnectState == AutoReconnectState.failed
+                              ? 'Could not find saved device'
+                              : 'Connect to a Meshtastic device to get started')),
                   style: TextStyle(fontSize: 14, color: context.textSecondary),
                   textAlign: TextAlign.center,
                 ),
@@ -259,6 +266,8 @@ class ConnectionRequiredWrapper extends ConsumerWidget {
 
     // Inline banner variables replaced by `TopStatusBanner`.
 
+    final deviceState = ref.watch(conn.deviceConnectionProvider);
+
     return Stack(
       children: [
         MediaQuery.removePadding(
@@ -279,6 +288,7 @@ class ConnectionRequiredWrapper extends ConsumerWidget {
                   .startBackgroundConnection();
             },
             onGoToScanner: () => Navigator.of(context).pushNamed('/scanner'),
+            deviceState: deviceState,
           ),
         ),
         // (replaced inline banner by TopStatusBanner)

@@ -895,6 +895,7 @@ class _MainShellState extends ConsumerState<MainShell> {
     final connectionStateAsync = ref.watch(connectionStateProvider);
     final autoReconnectState = ref.watch(autoReconnectStateProvider);
     final settingsAsync = ref.watch(settingsServiceProvider);
+    final deviceState = ref.watch(deviceConnectionProvider);
 
     // Auto-reconnect and live activity managers are now watched at app level in main.dart
 
@@ -1001,7 +1002,8 @@ class _MainShellState extends ConsumerState<MainShell> {
                       .read(deviceConnectionProvider.notifier)
                       .startBackgroundConnection();
                 },
-                // Remove onGoToScanner: Only allow scan wrapper after manual disconnect
+                onGoToScanner: () => Navigator.of(context).pushNamed('/scanner'),
+                deviceState: deviceState,
               ),
             ),
         ],

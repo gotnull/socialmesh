@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:collection';
 
+import 'package:collection/collection.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -387,6 +389,11 @@ final _lastConnectedDeviceIdProvider =
       LastConnectedDeviceIdNotifier.new,
     );
 
+/// Helper to clear the last connected device ID when the pairing is invalid.
+void clearSavedDeviceId(Ref ref) {
+  ref.read(_lastConnectedDeviceIdProvider.notifier).setId(null);
+}
+
 /// Bluetooth adapter state provider - tracks Bluetooth on/off
 /// This is exposed so UI can react to Bluetooth state changes
 final bluetoothStateProvider = StreamProvider<BluetoothAdapterState>((ref) {
@@ -693,6 +700,14 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
         return;
       }
 
+      if (ref.read(deviceConnectionProvider).state ==
+          DevicePairingState.pairedDeviceInvalidated) {
+        AppLogging.connection(
+          '_performReconnect ABORTED: Saved device invalidated',
+        );
+        return;
+      }
+
       AppLogging.connection(
         'Scan attempt $attempt/$maxRetries for device: $deviceId',
       );
@@ -901,6 +916,16 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
             }
           }
         } catch (e) {
+          if (isPairingInvalidationError(e)) {
+            await ref
+                .read(deviceConnectionProvider.notifier)
+                .handlePairingInvalidation(
+                  PairingInvalidationReason.peerReset,
+                  appleCode: pairingInvalidationAppleCode(e),
+                );
+            return;
+          }
+
           AppLogging.connection('❌ Connect error: $e');
           // Check if we should abort (connection restored via another path)
           if (ref.read(autoReconnectStateProvider) == AutoReconnectState.idle) {
@@ -921,6 +946,12 @@ Future<void> _performReconnect(Ref ref, String deviceId) async {
         AppLogging.connection(
           'Device not found in attempt $attempt, waiting 5s...',
         );
+        final invalidated = await ref
+            .read(deviceConnectionProvider.notifier)
+            .reportMissingSavedDevice();
+        if (invalidated) {
+          return;
+        }
         if (attempt < maxRetries) {
           // Wait longer before next retry - device may still be rebooting
           await Future.delayed(const Duration(seconds: 5));
@@ -980,8 +1011,7 @@ final pushNotificationServiceProvider = Provider<PushNotificationService>((
   return PushNotificationService();
 });
 
-final meshPacketDedupeStoreProvider =
-    Provider<MeshPacketDedupeStore>((ref) {
+final meshPacketDedupeStoreProvider = Provider<MeshPacketDedupeStore>((ref) {
   final store = MeshPacketDedupeStore();
   unawaited(store.init());
   ref.onDispose(() {
@@ -994,10 +1024,7 @@ final meshPacketDedupeStoreProvider =
 final protocolServiceProvider = Provider<ProtocolService>((ref) {
   final transport = ref.watch(transportProvider);
   final dedupeStore = ref.watch(meshPacketDedupeStoreProvider);
-  final service = ProtocolService(
-    transport,
-    dedupeStore: dedupeStore,
-  );
+  final service = ProtocolService(transport, dedupeStore: dedupeStore);
 
   AppLogging.debug(
     '🟢 ProtocolService provider created - instance: ${service.hashCode}',
@@ -1295,6 +1322,9 @@ final liveActivityManagerProvider =
 // Messages with persistence
 class MessagesNotifier extends Notifier<List<Message>> {
   final Map<int, String> _packetToMessageId = {};
+  final LinkedHashMap<String, DateTime> _recentMessageSignatures =
+      LinkedHashMap();
+  static const Duration _duplicateSignatureWindow = Duration(seconds: 5);
   MessageStorageService? _storage;
   StreamSubscription<Message>? _messageSubscription;
   StreamSubscription<MessageDeliveryUpdate>? _deliverySubscription;
@@ -1330,6 +1360,9 @@ class MessagesNotifier extends Notifier<List<Message>> {
         AppLogging.messages(
           'Loaded ${savedMessages.length} messages from storage',
         );
+        for (final msg in savedMessages) {
+          _recordMessageSignature(msg);
+        }
         // Debug: Log channel messages details
         for (final m in savedMessages.where((m) => m.isBroadcast)) {
           AppLogging.messages(
@@ -1343,17 +1376,13 @@ class MessagesNotifier extends Notifier<List<Message>> {
     // Listen for new messages
     _messageSubscription = protocol.messageStream.listen((message) {
       if (!ref.mounted) return;
-      // Debug: Log incoming message details
       AppLogging.messages(
         '📨 New message: from=${message.from}, to=${message.to.toRadixString(16)}, '
         'channel=${message.channel}, isBroadcast=${message.isBroadcast}, sent=${message.sent}, id=${message.id}',
       );
-      // For sent messages, check if they're already in state (from optimistic UI)
-      // If not (e.g., from automations, app intents, reactions), we need to add them
+
       if (message.sent) {
-        // Check if this message is already tracked (from optimistic UI in messaging_screen)
-        // Match by id, or by packetId if both are non-null
-        final existingMessage = state.where((m) {
+        final existingMessage = state.firstWhereOrNull((m) {
           if (m.id == message.id) return true;
           if (m.packetId != null &&
               message.packetId != null &&
@@ -1361,41 +1390,35 @@ class MessagesNotifier extends Notifier<List<Message>> {
             return true;
           }
           return false;
-        }).firstOrNull;
+        });
         if (existingMessage != null) {
-          // Already tracked via optimistic UI, skip to avoid duplicates
           AppLogging.messages(
             '📨 Skipping duplicate sent message id=${message.id}',
           );
           return;
         }
-        // Not tracked - this is from automation or other background send
-        // Add it to state and persist
-        state = [...state, message];
-        _storage?.saveMessage(message);
+        if (_isDuplicateMessage(message)) {
+          AppLogging.messages(
+            '📨 Deduped sent message by signature: id=${message.id}',
+          );
+          return;
+        }
+        _addMessageToState(message);
 
-        // Track the packet for delivery updates if it has a packetId and messageId
-        // This ensures background-sent messages (Siri, automations, etc.) get delivery status updates
         if (message.packetId != null && message.id.isNotEmpty) {
           trackPacket(message.packetId!, message.id);
         }
         return;
       }
 
-      // Deduplicate incoming device messages by ID to avoid double-insert when
-      // a push-saved message is later received from the device
-      if (message.id.isNotEmpty && state.any((m) => m.id == message.id)) {
+      if (_isDuplicateMessage(message)) {
         AppLogging.messages(
           '📨 Duplicate incoming message ignored: id=${message.id}',
         );
         return;
       }
 
-      state = [...state, message];
-      // Persist the new message
-      _storage?.saveMessage(message);
-
-      // Trigger notification for received messages
+      _addMessageToState(message);
       _notifyNewMessage(message);
     });
 
@@ -1647,13 +1670,11 @@ class MessagesNotifier extends Notifier<List<Message>> {
   }
 
   void addMessage(Message message) {
-    // Check for duplicate by ID to prevent optimistic UI + stream double-add
-    if (state.any((m) => m.id == message.id)) {
+    if (_isDuplicateMessage(message)) {
       AppLogging.messages('📨 Duplicate message ignored: id=${message.id}');
       return;
     }
 
-    // Compute conversationKey for instrumentation
     String convKey;
     if (message.channel != null && message.channel! > 0) {
       convKey = 'channel:${message.channel}';
@@ -1668,8 +1689,45 @@ class MessagesNotifier extends Notifier<List<Message>> {
       '📨 addMessage: id=${message.id}, from=${message.from}, to=${message.to}, channel=${message.channel}, convKey=$convKey',
     );
 
+    _addMessageToState(message);
+  }
+
+  bool _isDuplicateMessage(Message message) {
+    if (message.id.isNotEmpty && state.any((m) => m.id == message.id)) {
+      return true;
+    }
+    if (message.packetId != null &&
+        state.any((m) => m.packetId == message.packetId)) {
+      return true;
+    }
+    final signature = _messageSignature(message);
+    if (_recentMessageSignatures.containsKey(signature)) {
+      return true;
+    }
+    return false;
+  }
+
+  void _addMessageToState(Message message) {
     state = [...state, message];
     _storage?.saveMessage(message);
+    _recordMessageSignature(message);
+  }
+
+  String _messageSignature(Message message) {
+    final target = message.channel != null && message.channel! > 0
+        ? 'channel:${message.channel}'
+        : 'dm:${message.from == ref.read(myNodeNumProvider) ? message.to : message.from}';
+    return '$target|${message.text}|${message.timestamp.millisecondsSinceEpoch}';
+  }
+
+  void _recordMessageSignature(Message message) {
+    final signature = _messageSignature(message);
+    final now = DateTime.now();
+    _recentMessageSignatures[signature] = now;
+    final cutoff = now.subtract(_duplicateSignatureWindow);
+    _recentMessageSignatures.removeWhere(
+      (_, timestamp) => timestamp.isBefore(cutoff),
+    );
   }
 
   void updateMessage(String messageId, Message updatedMessage) {

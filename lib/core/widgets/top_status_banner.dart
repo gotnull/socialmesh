@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/connection_providers.dart';
 
 /// A small, reusable top-of-screen connection status banner that matches
 /// the blurred snack-bar styling and can be used in multiple places.
@@ -13,6 +14,7 @@ class TopStatusBanner extends ConsumerWidget {
   final bool autoReconnectEnabled;
   final VoidCallback onRetry;
   final VoidCallback? onGoToScanner;
+  final DeviceConnectionState2 deviceState;
 
   const TopStatusBanner({
     super.key,
@@ -20,6 +22,7 @@ class TopStatusBanner extends ConsumerWidget {
     required this.autoReconnectEnabled,
     required this.onRetry,
     this.onGoToScanner,
+    required this.deviceState,
   });
 
   @override
@@ -30,18 +33,28 @@ class TopStatusBanner extends ConsumerWidget {
     final isConnecting = autoReconnectState == AutoReconnectState.connecting;
     final isReconnecting = isScanning || isConnecting;
     final isFailed = autoReconnectState == AutoReconnectState.failed;
+    final isTerminalInvalidated = deviceState.isTerminalInvalidated;
 
-    final foregroundColor = isReconnecting
-        ? context.accentColor
-        : (isFailed ? AppTheme.errorRed : Colors.orange);
+    final foregroundColor = isTerminalInvalidated
+        ? AppTheme.errorRed
+        : isReconnecting
+            ? context.accentColor
+            : (isFailed ? AppTheme.errorRed : Colors.orange);
 
-    final icon = isReconnecting
-        ? Icons.bluetooth_searching_rounded
-        : Icons.bluetooth_disabled_rounded;
+    final icon = isTerminalInvalidated
+        ? Icons.error_outline_rounded
+        : isReconnecting
+            ? Icons.bluetooth_searching_rounded
+            : Icons.bluetooth_disabled_rounded;
 
-    final message = isReconnecting
-        ? (isScanning ? 'Searching for device...' : 'Reconnecting...')
-        : (isFailed ? 'Device not found' : 'Disconnected');
+    final invalidatedMessage =
+        'Device was reset or replaced. Forget it from Bluetooth settings and set it up again.';
+    final message = isTerminalInvalidated
+        ? invalidatedMessage
+        : isReconnecting
+            ? (isScanning ? 'Searching for device...' : 'Reconnecting...')
+            : (isFailed ? 'Device not found' : 'Disconnected');
+    final showRetryButton = isFailed && !isTerminalInvalidated;
 
     final topPadding = MediaQuery.of(context).padding.top;
     // Use kToolbarHeight as a single source of truth for common top bar sizes
@@ -79,11 +92,12 @@ class TopStatusBanner extends ConsumerWidget {
             child: Material(
               color: Colors.transparent,
               child: InkWell(
-                onTap:
-                    (isFailed || (!isReconnecting && !autoReconnectEnabled)) &&
-                        onGoToScanner != null
-                    ? onGoToScanner
-                    : null,
+                onTap: ((isTerminalInvalidated ||
+                                isFailed ||
+                                (!isReconnecting && !autoReconnectEnabled)) &&
+                            onGoToScanner != null)
+                        ? onGoToScanner
+                        : null,
                 child: Padding(
                   padding: EdgeInsets.only(
                     left: 12,
@@ -128,7 +142,7 @@ class TopStatusBanner extends ConsumerWidget {
                             ),
                           ),
                         ),
-                        if (isFailed) ...[
+                        if (showRetryButton) ...[
                           TextButton.icon(
                             onPressed: onRetry,
                             icon: Icon(
@@ -151,6 +165,21 @@ class TopStatusBanner extends ConsumerWidget {
                               ),
                               minimumSize: Size.zero,
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(
+                            Icons.chevron_right_rounded,
+                            size: 18,
+                            color: foregroundColor.withValues(alpha: 0.7),
+                          ),
+                        ] else if (isTerminalInvalidated) ...[
+                          Text(
+                            'Scan for Devices',
+                            style: TextStyle(
+                              color: foregroundColor,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                           const SizedBox(width: 4),
