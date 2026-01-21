@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:socialmesh/core/transport.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
+import '../../utils/snackbar.dart';
 import '../navigation/main_shell.dart';
+import '../channels/channel_form_screen.dart';
 import '../channels/channels_screen.dart';
 import 'messaging_screen.dart';
 
@@ -20,6 +23,26 @@ class _MessagesContainerScreenState
     extends ConsumerState<MessagesContainerScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+
+  void _showAddChannelScreen(bool isConnected) {
+    if (!isConnected) {
+      showErrorSnackBar(context, 'Connect to a device to add channels');
+      return;
+    }
+
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const ChannelFormScreen()));
+  }
+
+  void _openChannelScanner(bool isConnected) {
+    if (!isConnected) {
+      showErrorSnackBar(context, 'Connect to a device to scan channels');
+      return;
+    }
+
+    Navigator.of(context).pushNamed('/channel-qr-scanner');
+  }
 
   @override
   void initState() {
@@ -39,6 +62,14 @@ class _MessagesContainerScreenState
     final nodes = ref.watch(nodesProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
     final hasUnread = ref.watch(hasUnreadMessagesProvider);
+    final connectionStateAsync = ref.watch(connectionStateProvider);
+    final currentConnectionState = connectionStateAsync.when(
+      data: (state) => state,
+      loading: () => DeviceConnectionState.connecting,
+      error: (error, stack) => DeviceConnectionState.error,
+    );
+    final isConnected =
+        currentConnectionState == DeviceConnectionState.connected;
 
     // Count contacts (nodes minus self)
     final contactsCount = nodes.values
@@ -59,7 +90,14 @@ class _MessagesContainerScreenState
             color: context.textPrimary,
           ),
         ),
-        actions: const [DeviceStatusButton()],
+        actions: [
+          const DeviceStatusButton(),
+          MessagingPopupMenu(
+            isConnected: isConnected,
+            onAddChannel: () => _showAddChannelScreen(isConnected),
+            onScanChannel: () => _openChannelScanner(isConnected),
+          ),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(48),
           child: Container(

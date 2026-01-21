@@ -424,7 +424,10 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
                 color: context.textPrimary,
               ),
             ),
-            actions: [const DeviceStatusButton(), const _MessagingPopupMenu()],
+            actions: const [
+              DeviceStatusButton(),
+              MessagingPopupMenu(),
+            ],
           ),
           body: bodyContent,
         ),
@@ -2371,8 +2374,17 @@ class _EncryptionKeyContentState extends State<_EncryptionKeyContent> {
 }
 
 /// Popup menu for messaging screen with settings and help
-class _MessagingPopupMenu extends ConsumerWidget {
-  const _MessagingPopupMenu();
+class MessagingPopupMenu extends ConsumerWidget {
+  const MessagingPopupMenu({
+    super.key,
+    this.onAddChannel,
+    this.onScanChannel,
+    this.isConnected = false,
+  });
+
+  final VoidCallback? onAddChannel;
+  final VoidCallback? onScanChannel;
+  final bool isConnected;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -2387,38 +2399,78 @@ class _MessagingPopupMenu extends ConsumerWidget {
       ),
       onSelected: (value) {
         switch (value) {
+          case 'add_channel':
+            if (onAddChannel != null) onAddChannel!();
+            break;
+          case 'scan_channel':
+            if (onScanChannel != null) onScanChannel!();
+            break;
           case 'settings':
             Navigator.pushNamed(context, '/settings');
+            break;
           case 'help':
             ref.read(helpProvider.notifier).startTour('message_routing');
+            break;
         }
       },
-      itemBuilder: (context) => [
-        PopupMenuItem(
-          value: 'help',
-          child: Row(
-            children: [
-              Icon(Icons.help_outline, color: context.textSecondary, size: 20),
-              const SizedBox(width: 12),
-              Text('Help', style: TextStyle(color: context.textPrimary)),
-            ],
-          ),
-        ),
-        PopupMenuItem(
-          value: 'settings',
-          child: Row(
-            children: [
-              Icon(
-                Icons.settings_outlined,
-                color: context.textSecondary,
-                size: 20,
+        itemBuilder: (context) {
+          final items = <PopupMenuEntry<String>>[];
+          if (onAddChannel != null) {
+            items.add(
+              PopupMenuItem(
+                value: 'add_channel',
+                child: Row(
+                  children: [
+                    Icon(Icons.add, color: context.textSecondary, size: 20),
+                    const SizedBox(width: 12),
+                    Text('Add channel', style: TextStyle(color: context.textPrimary)),
+                  ],
+                ),
               ),
-              const SizedBox(width: 12),
-              Text('Settings', style: TextStyle(color: context.textPrimary)),
-            ],
-          ),
-        ),
-      ],
+            );
+          }
+          if (onScanChannel != null) {
+            items.add(
+              PopupMenuItem(
+                value: 'scan_channel',
+                child: Row(
+                  children: [
+                    Icon(Icons.qr_code_scanner, color: context.textSecondary, size: 20),
+                    const SizedBox(width: 12),
+                    Text('Scan channel QR', style: TextStyle(color: context.textPrimary)),
+                  ],
+                ),
+              ),
+            );
+          }
+          items.addAll([
+            PopupMenuItem(
+              value: 'help',
+              child: Row(
+                children: [
+                  Icon(Icons.help_outline, color: context.textSecondary, size: 20),
+                  const SizedBox(width: 12),
+                  Text('Help', style: TextStyle(color: context.textPrimary)),
+                ],
+              ),
+            ),
+            PopupMenuItem(
+              value: 'settings',
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.settings_outlined,
+                    color: context.textSecondary,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Text('Settings', style: TextStyle(color: context.textPrimary)),
+                ],
+              ),
+            ),
+          ]);
+          return items;
+        },
     );
   }
 }
