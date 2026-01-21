@@ -20,6 +20,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/logging.dart';
 import '../core/transport.dart';
 import 'app_providers.dart';
+import 'reconnect_compass_providers.dart';
 
 // =============================================================================
 // DEVICE PAIRING STATE
@@ -70,8 +71,9 @@ bool isPairingInvalidationError(Object error) {
   if (error is FlutterBluePlusException) {
     final isApplePeerReset =
         error.platform == ErrorPlatform.apple && error.code == 14;
-    final hasPeerResetMessage =
-        (error.description ?? '').contains('Peer removed pairing information');
+    final hasPeerResetMessage = (error.description ?? '').contains(
+      'Peer removed pairing information',
+    );
     if (isApplePeerReset || hasPeerResetMessage) {
       return true;
     }
@@ -187,6 +189,10 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
   DateTime? _firstMissingAttemptAt;
   static const int _maxInvalidationAttempts = 3;
   static const Duration _invalidationWindow = Duration(seconds: 120);
+  static const Duration _compassSampleWindow = Duration(milliseconds: 800);
+  static const int _compassSampleGoal = 3;
+  StreamSubscription<double?>? _headingSubscription;
+  double? _latestHeading;
 
   @override
   DeviceConnectionState2 build() {
@@ -195,7 +201,20 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       AppLogging.connection('🔌 DeviceConnectionNotifier: Disposing...');
       _connectionSubscription?.cancel();
       _scanTimer?.cancel();
+      _headingSubscription?.cancel();
     });
+
+    _headingSubscription ??= ref
+        .read(headingServiceProvider)
+        .headingDegrees
+        .listen(
+          (heading) {
+            _latestHeading = heading;
+          },
+          onError: (_) {
+            _latestHeading = null;
+          },
+        );
 
     return const DeviceConnectionState2(state: DevicePairingState.neverPaired);
   }
@@ -434,6 +453,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     AppLogging.connection(
       '🔌 startBackgroundConnection: Starting scan for: $lastDeviceId',
     );
+    ref.read(reconnectDirectionEstimatorProvider.notifier).reset();
     state = state.copyWith(state: DevicePairingState.scanning);
 
     // Also update legacy auto-reconnect state for compatibility
@@ -510,10 +530,15 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       );
       await Future.delayed(Duration(milliseconds: resetDelay));
 
-      // Scan for 5 seconds
+      // Scan for 5 seconds, collecting RSSI samples while waiting for target
       AppLogging.connection(
         '🔌 startBackgroundConnection: Starting 5s scan...',
       );
+      final estimatorNotifier = ref.read(
+        reconnectDirectionEstimatorProvider.notifier,
+      );
+      int targetSampleCount = 0;
+      DateTime? targetFirstSeenAt;
       await for (final device in transport.scan(
         timeout: const Duration(seconds: 5),
       )) {
@@ -524,15 +549,36 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
           );
           return;
         }
-        AppLogging.connection(
-          '🔌 startBackgroundConnection: Found device ${device.id} (looking for $lastDeviceId)',
-        );
         if (device.id == lastDeviceId) {
-          foundDevice = device;
-          AppLogging.connection(
-            '🔌 startBackgroundConnection: Target device found!',
-          );
-          break;
+          final now = DateTime.now();
+          final rssi = device.rssi;
+          if (rssi != null) {
+            estimatorNotifier.addSample(rssi: rssi, headingDeg: _latestHeading);
+          }
+
+          if (foundDevice == null) {
+            foundDevice = device;
+            targetFirstSeenAt = now;
+            targetSampleCount = 1;
+            AppLogging.connection(
+              '🔌 startBackgroundConnection: Target device found!',
+            );
+          } else {
+            targetSampleCount++;
+            foundDevice = device;
+          }
+
+          final hasEnoughSamples = targetSampleCount >= _compassSampleGoal;
+          final firstSeen = targetFirstSeenAt;
+          final windowElapsed =
+              firstSeen != null &&
+              now.difference(firstSeen) >= _compassSampleWindow;
+          if (hasEnoughSamples || windowElapsed) {
+            AppLogging.connection(
+              '🔌 startBackgroundConnection: Collected $targetSampleCount RSSI samples from target',
+            );
+            break;
+          }
         }
       }
 
@@ -736,6 +782,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
         reason: DisconnectReason.none,
         reconnectAttempts: 0,
       );
+      ref.read(reconnectDirectionEstimatorProvider.notifier).reset();
 
       // Update legacy providers for compatibility
       ref.read(connectedDeviceProvider.notifier).setState(device);
@@ -823,6 +870,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
 
     // Mark that user intentionally disconnected - prevents any auto-reconnect
     _userDisconnected = true;
+    ref.read(reconnectDirectionEstimatorProvider.notifier).reset();
     _backgroundScanInProgress = false; // Clear scan guard to allow future scans
     AppLogging.connection('🔌 disconnect(): Set _userDisconnected=true');
 

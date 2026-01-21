@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/connection_providers.dart';
+import '../../providers/reconnect_compass_providers.dart';
+import '../../widgets/reconnect_compass_badge.dart';
 
 /// A small, reusable top-of-screen connection status banner that matches
 /// the blurred snack-bar styling and can be used in multiple places.
@@ -34,26 +36,27 @@ class TopStatusBanner extends ConsumerWidget {
     final isReconnecting = isScanning || isConnecting;
     final isFailed = autoReconnectState == AutoReconnectState.failed;
     final isTerminalInvalidated = deviceState.isTerminalInvalidated;
+    final compassState = ref.watch(reconnectCompassStateProvider);
 
     final foregroundColor = isTerminalInvalidated
         ? AppTheme.errorRed
         : isReconnecting
-            ? context.accentColor
-            : (isFailed ? AppTheme.errorRed : Colors.orange);
+        ? context.accentColor
+        : (isFailed ? AppTheme.errorRed : Colors.orange);
 
     final icon = isTerminalInvalidated
         ? Icons.error_outline_rounded
         : isReconnecting
-            ? Icons.bluetooth_searching_rounded
-            : Icons.bluetooth_disabled_rounded;
+        ? Icons.bluetooth_searching_rounded
+        : Icons.bluetooth_disabled_rounded;
 
     final invalidatedMessage =
         'Device was reset or replaced. Forget it from Bluetooth settings and set it up again.';
     final message = isTerminalInvalidated
         ? invalidatedMessage
         : isReconnecting
-            ? (isScanning ? 'Searching for device...' : 'Reconnecting...')
-            : (isFailed ? 'Device not found' : 'Disconnected');
+        ? (isScanning ? 'Searching for device...' : 'Reconnecting...')
+        : (isFailed ? 'Device not found' : 'Disconnected');
     final showRetryButton = isFailed && !isTerminalInvalidated;
 
     final topPadding = MediaQuery.of(context).padding.top;
@@ -92,12 +95,13 @@ class TopStatusBanner extends ConsumerWidget {
             child: Material(
               color: Colors.transparent,
               child: InkWell(
-                onTap: ((isTerminalInvalidated ||
-                                isFailed ||
-                                (!isReconnecting && !autoReconnectEnabled)) &&
-                            onGoToScanner != null)
-                        ? onGoToScanner
-                        : null,
+                onTap:
+                    ((isTerminalInvalidated ||
+                            isFailed ||
+                            (!isReconnecting && !autoReconnectEnabled)) &&
+                        onGoToScanner != null)
+                    ? onGoToScanner
+                    : null,
                 child: Padding(
                   padding: EdgeInsets.only(
                     left: 12,
@@ -142,6 +146,13 @@ class TopStatusBanner extends ConsumerWidget {
                             ),
                           ),
                         ),
+                        if (isReconnecting) ...[
+                          ReconnectCompassBadge(
+                            state: compassState,
+                            color: foregroundColor,
+                          ),
+                          const SizedBox(width: 8),
+                        ],
                         if (showRetryButton) ...[
                           TextButton.icon(
                             onPressed: onRetry,
