@@ -79,22 +79,27 @@ class ThreadLikeRefreshIndicatorState extends State<ThreadLikeRefreshIndicator>
   }
 
   void _updateLooping() {
-    final shouldLoop = _refreshing || _pullDistance > 0;
+    // Only run the repeating loop while a refresh is active. While the user
+    // is pulling we calculate a pull-driven phase and *do not* enable the
+    // continuous repeating animation — this keeps the motion deterministic
+    // and prevents the "repeating over and over" behavior.
+    final shouldLoop = _refreshing;
     if (shouldLoop) {
       if (!_loopController.isAnimating) {
-        // Reset phase so the animation always begins from a stable, known
-        // position (top-middle) when it starts looping. This makes the
-        // visual orientation consistent when the user pulls.
         _loopController.value = 0.0;
         _loopController.repeat();
       }
     } else {
       if (_loopController.isAnimating) {
         _loopController.stop();
-        _loopController.value = 0.0;
       }
+      _loopController.value = 0.0;
     }
   }
+
+  // Visible for tests: whether the internal loop animation is active.
+  @visibleForTesting
+  bool debugIsLoopingForTest() => _loopController.isAnimating;
 
   // Visible for tests: allow tests to simulate pulling and triggering refresh
   // without relying on platform-specific scroll behavior.
@@ -266,11 +271,17 @@ class _ThreadLikeRefreshPainter extends CustomPainter {
     final double scaleX = size.width / _githubBaseBounds.width;
     final double scaleY = size.height / _githubBaseBounds.height;
     final double scale = min(scaleX, scaleY) * 0.85;
-    final matrix = Matrix4.identity()
-      ..translate(size.width / 2, size.height / 2)
-      ..scale(scale, scale)
-      ..translate(-_githubBaseBounds.center.dx, -_githubBaseBounds.center.dy);
+    // First scale the base path to match the available indicator size.
+    final matrix = Matrix4.identity()..scale(scale, scale);
     final Path scaledPath = _githubBasePath.transform(matrix.storage);
+    // Align the scaled path so its top aligns with the top of the paint
+    // area and it is centered horizontally. This guarantees the path's
+    // top-middle (the original start point at y=0) is at canvas y=0 and
+    // x=center, making the animation start predictable.
+    final bounds = scaledPath.getBounds();
+    final double dx = (size.width / 2) - bounds.center.dx;
+    final double dy = -bounds.top + (paint.strokeWidth / 2) + 4.0; // padding
+    final Path alignedPath = scaledPath.shift(Offset(dx, dy));
 
     final Color startColor = indicatorColor.withOpacity(0.6 + progress * 0.3);
     final Color peakColor = indicatorColor.withOpacity(0.95);
@@ -316,7 +327,7 @@ class _ThreadLikeRefreshPainter extends CustomPainter {
     paint.strokeWidth = 2.0 + (3.0 * progress);
 
     final dashedPath = _createDashedPath(
-      scaledPath,
+      alignedPath,
       dashLength,
       gapLength,
       offsetPx,
@@ -324,21 +335,32 @@ class _ThreadLikeRefreshPainter extends CustomPainter {
 
     canvas.drawPath(dashedPath, paint);
 
-    // Draw a small moving head dot along the first metric to emphasize motion.
-    // Use a brighter color to stand out. Ensure the dot offset is normalized
-    // into the metric length so negative offsets behave correctly.
-    final metrics = scaledPath.computeMetrics().toList(growable: false);
+    // Draw a small moving head dot along the whole path so it follows the
+    // continuous dash motion across segment boundaries. Compute the total
+    // path length and place the head using the global offset normalized
+    // into that length.
+    final metrics = alignedPath.computeMetrics().toList(growable: false);
     if (metrics.isNotEmpty) {
-      final metric = metrics.first;
-      final double metricLen = metric.length;
-      // Normalize negative offsets correctly to the 0..metricLen range.
-      final double raw = offsetPx % metricLen;
-      final double dotOffset = (raw < 0) ? raw + metricLen : raw;
-      final tangent = metric.getTangentForOffset(dotOffset);
-      if (tangent != null) {
-        final headPaint = Paint()..color = peakColor.withOpacity(0.95);
-        final headRadius = 2.5 + (2.5 * progress);
-        canvas.drawCircle(tangent.position, headRadius, headPaint);
+      final double totalLen = metrics.fold<double>(0.0, (s, m) => s + m.length);
+      if (totalLen > 0) {
+        double t = offsetPx % totalLen;
+        if (t < 0) t += totalLen;
+        double accum = 0.0;
+        for (final metric in metrics) {
+          if (t <= accum + metric.length) {
+            final localOffset = t - accum;
+            final tangent = metric.getTangentForOffset(
+              localOffset.clamp(0.0, metric.length),
+            );
+            if (tangent != null) {
+              final headPaint = Paint()..color = peakColor.withOpacity(0.95);
+              final headRadius = 2.5 + (2.5 * progress);
+              canvas.drawCircle(tangent.position, headRadius, headPaint);
+            }
+            break;
+          }
+          accum += metric.length;
+        }
       }
     }
   }
@@ -394,26 +416,29 @@ Path _createDashedPath(
   }
 
   final cycle = dashLength + gapLength;
-  if (cycle <= 0) {
-    return source;
-  }
+  if (cycle <= 0) return source;
 
   final dashed = Path();
   final normalizedOffset = offset % cycle;
 
+  // Maintain a global 'pos' and 'draw' state across metrics so dashes do
+  // not reset at metric boundaries, producing a continuous, smooth pattern.
+  bool draw = true;
+  double pos = -normalizedOffset;
+
   for (final metric in source.computeMetrics()) {
-    double distance = -normalizedOffset;
-    bool draw = true;
-    while (distance < metric.length) {
+    while (pos < metric.length) {
       final segmentLength = draw ? dashLength : gapLength;
-      final start = distance.clamp(0.0, metric.length);
-      final end = (distance + segmentLength).clamp(0.0, metric.length);
+      final start = pos.clamp(0.0, metric.length);
+      final end = (pos + segmentLength).clamp(0.0, metric.length);
       if (draw && end > start) {
         dashed.addPath(metric.extractPath(start, end), Offset.zero);
       }
-      distance += segmentLength;
+      pos += segmentLength;
       draw = !draw;
     }
+    // Advance pos into the next metric by subtracting the consumed length.
+    pos -= metric.length;
   }
 
   return dashed;
