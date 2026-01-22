@@ -33,6 +33,7 @@ import '../widgets/signals_empty_state.dart';
 import '../widgets/swipeable_signal_item.dart';
 import '../widgets/snappable_signal_wrapper.dart';
 import '../widgets/active_signals_banner.dart';
+import '../widgets/thread_like_refresh_indicator.dart';
 import 'create_signal_screen.dart';
 import 'signal_detail_screen.dart';
 
@@ -857,12 +858,14 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
   }
 
   Widget _buildSignalList(List<Post> signals) {
-    return RefreshIndicator(
+    return ThreadLikeRefreshIndicator(
       onRefresh: _handleRefresh,
-      color: context.accentColor,
+      indicatorColor: context.accentColor,
       child: CustomScrollView(
         controller: _scrollController,
-        physics: const AlwaysScrollableScrollPhysics(),
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
         slivers: [
           // Active count badge header
           if (signals.isNotEmpty)
@@ -1070,9 +1073,9 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
     final user = ref.watch(currentUserProvider);
     final bookmarkedIds = ref.watch(signalBookmarksProvider).value ?? {};
 
-    return RefreshIndicator(
+    return ThreadLikeRefreshIndicator(
       onRefresh: _handleRefresh,
-      color: context.accentColor,
+      indicatorColor: context.accentColor,
       child: CustomScrollView(
         controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
