@@ -41,7 +41,7 @@ class ThreadLikeRefreshIndicatorState extends State<ThreadLikeRefreshIndicator>
     _loopController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
-    )..repeat();
+    );
   }
 
   @override
@@ -56,12 +56,16 @@ class ThreadLikeRefreshIndicatorState extends State<ThreadLikeRefreshIndicator>
       _pullDistance = _triggerDistance;
       _refreshing = true;
     });
+    // Ensure the looping animation runs while refreshing
+    _updateLooping();
+
     widget.onRefresh().whenComplete(() {
       if (mounted) {
         setState(() {
           _refreshing = false;
           _pullDistance = 0;
         });
+        _updateLooping();
       }
     });
   }
@@ -70,7 +74,42 @@ class ThreadLikeRefreshIndicatorState extends State<ThreadLikeRefreshIndicator>
     if (_refreshing) return;
     if (_pullDistance > 0) {
       setState(() => _pullDistance = 0);
+      _updateLooping();
     }
+  }
+
+  void _updateLooping() {
+    final shouldLoop = _refreshing || _pullDistance > 0;
+    if (shouldLoop) {
+      if (!_loopController.isAnimating) {
+        // Reset phase so the animation always begins from a stable, known
+        // position (top-middle) when it starts looping. This makes the
+        // visual orientation consistent when the user pulls.
+        _loopController.value = 0.0;
+        _loopController.repeat();
+      }
+    } else {
+      if (_loopController.isAnimating) {
+        _loopController.stop();
+        _loopController.value = 0.0;
+      }
+    }
+  }
+
+  // Visible for tests: allow tests to simulate pulling and triggering refresh
+  // without relying on platform-specific scroll behavior.
+  // NOTE: Only use in tests.
+  @visibleForTesting
+  void debugSetPullDistanceForTest(double distance) {
+    setState(() {
+      _pullDistance = distance.clamp(0, _triggerDistance * 1.5);
+    });
+    _updateLooping();
+  }
+
+  @visibleForTesting
+  void debugTriggerRefreshForTest() {
+    _startRefresh();
   }
 
   void _maybeVibrate(double velocity, DateTime now) {
@@ -117,6 +156,7 @@ class ThreadLikeRefreshIndicatorState extends State<ThreadLikeRefreshIndicator>
           _triggerDistance * 1.5,
         );
       });
+      _updateLooping();
 
       // Some platforms deliver ScrollUpdateNotification with negative scrollDelta
       // when pulling down at the top instead of OverscrollNotification. Handle
@@ -141,6 +181,7 @@ class ThreadLikeRefreshIndicatorState extends State<ThreadLikeRefreshIndicator>
           _triggerDistance * 1.5,
         );
       });
+      _updateLooping();
     } else if (notification is ScrollEndNotification ||
         (notification is ScrollUpdateNotification &&
             notification.metrics.pixels >
@@ -177,6 +218,7 @@ class ThreadLikeRefreshIndicatorState extends State<ThreadLikeRefreshIndicator>
                 right: 0,
                 height: indicatorHeight,
                 child: Opacity(
+                  key: const Key('thread_like_indicator_opacity'),
                   opacity: indicatorHeight > 0 ? 1 : 0,
                   child: CustomPaint(
                     painter: _ThreadLikeRefreshPainter(
@@ -245,14 +287,60 @@ class _ThreadLikeRefreshPainter extends CustomPainter {
       stops: const [0.0, 0.5, 1.0],
     ).createShader(clipRect);
 
+    // Vary dash/gap sizes and animation speed with pull progress to mimic
+    // the original "thread" animation: dashes grow as you pull, gaps shrink
+    // slightly, and the speed increases.
+    final double minDash = size.width * 0.06; // compact dashes
+    final double maxDash = size.width * 0.38; // stretched dashes when pulled
+    final double dashLength = minDash + (maxDash - minDash) * progress;
+    final double gapLength = dashLength * (0.45 - (progress * 0.25));
+    final double speedFactor = 0.6 + (progress * 1.4);
+
+    // Cycle length for dash+gap. We'll bias the base offset by the current
+    // pull progress so that as the user pulls the visible dashes grow from
+    // the top-middle and sweep in an anti-clockwise direction. Then add a
+    // small looping animation on top of that for subtle motion.
+    final double cycle = dashLength + gapLength;
+
+    // Pull-influenced phase (makes the path appear to sweep as you pull).
+    final double pullPhase = progress * cycle * 1.3;
+    // Small looping phase driven by the repeating controller.
+    final double animPhase = animationValue * cycle * speedFactor * 0.9;
+
+    // Use a negative sign to make the motion go anti-clockwise along the
+    // original path direction. The final offset is in pixels along the
+    // path metric.
+    final double offsetPx = -(pullPhase + animPhase);
+
+    // Slightly increase stroke when pulled for better visibility
+    paint.strokeWidth = 2.0 + (3.0 * progress);
+
     final dashedPath = _createDashedPath(
       scaledPath,
-      size.width * 0.4,
-      size.width * 0.2,
-      animationValue * size.width * 0.8,
+      dashLength,
+      gapLength,
+      offsetPx,
     );
 
     canvas.drawPath(dashedPath, paint);
+
+    // Draw a small moving head dot along the first metric to emphasize motion.
+    // Use a brighter color to stand out. Ensure the dot offset is normalized
+    // into the metric length so negative offsets behave correctly.
+    final metrics = scaledPath.computeMetrics().toList(growable: false);
+    if (metrics.isNotEmpty) {
+      final metric = metrics.first;
+      final double metricLen = metric.length;
+      // Normalize negative offsets correctly to the 0..metricLen range.
+      final double raw = offsetPx % metricLen;
+      final double dotOffset = (raw < 0) ? raw + metricLen : raw;
+      final tangent = metric.getTangentForOffset(dotOffset);
+      if (tangent != null) {
+        final headPaint = Paint()..color = peakColor.withOpacity(0.95);
+        final headRadius = 2.5 + (2.5 * progress);
+        canvas.drawCircle(tangent.position, headRadius, headPaint);
+      }
+    }
   }
 
   @override
