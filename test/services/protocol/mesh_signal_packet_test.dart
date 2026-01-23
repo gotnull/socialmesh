@@ -18,6 +18,7 @@ void main() {
       longitude: 4.56,
       hopCount: 2,
       receivedAt: DateTime.now(),
+      hasImage: true,
     );
 
     final payload = packet.toPayload();
@@ -27,6 +28,7 @@ void main() {
     expect(decoded['id'], equals('signal-uuid'));
     expect(decoded['la'], equals(1.23));
     expect(decoded['ln'], equals(4.56));
+    expect(decoded['i'], equals(true));
 
     final parsed = MeshSignalPacket.fromPayload(
       packet.senderNodeId,
@@ -42,6 +44,7 @@ void main() {
     expect(parsed.signalId, equals(packet.signalId));
     expect(parsed.packetId, equals(packet.packetId));
     expect(parsed.hopCount, equals(packet.hopCount));
+    expect(parsed.hasImage, equals(true));
   });
 
   test('MeshSignalPacket.toPayload throws when signalId missing', () {

@@ -33,7 +33,6 @@ import '../widgets/signals_empty_state.dart';
 import '../widgets/swipeable_signal_item.dart';
 import '../widgets/snappable_signal_wrapper.dart';
 import '../widgets/active_signals_banner.dart';
-import '../widgets/thread_like_refresh_indicator.dart';
 import 'create_signal_screen.dart';
 import 'signal_detail_screen.dart';
 
@@ -102,10 +101,11 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    // Set initial view mode
-    ref.read(signalViewModeProvider.notifier).setMode(widget.initialViewMode);
-    // Clean up hidden signals on init
+    // Defer provider writes until after first frame.
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref
+          .read(signalViewModeProvider.notifier)
+          .setMode(widget.initialViewMode);
       _cleanupHiddenSignals();
     });
   }
@@ -858,9 +858,8 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
   }
 
   Widget _buildSignalList(List<Post> signals) {
-    return ThreadLikeRefreshIndicator(
+    return RefreshIndicator.adaptive(
       onRefresh: _handleRefresh,
-      indicatorColor: context.accentColor,
       child: CustomScrollView(
         controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(
@@ -1073,9 +1072,8 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
     final user = ref.watch(currentUserProvider);
     final bookmarkedIds = ref.watch(signalBookmarksProvider).value ?? {};
 
-    return ThreadLikeRefreshIndicator(
+    return RefreshIndicator.adaptive(
       onRefresh: _handleRefresh,
-      indicatorColor: context.accentColor,
       child: CustomScrollView(
         controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(),

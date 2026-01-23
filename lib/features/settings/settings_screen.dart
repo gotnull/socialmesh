@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/logging.dart';
-import '../../config/admin_config.dart';
 import '../../config/revenuecat_config.dart';
 import '../../core/transport.dart' show DeviceConnectionState;
 import '../../models/user_profile.dart';
@@ -2794,27 +2793,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   ),
                                 ),
                               ),
-
-                              // Debug Section (Admin only)
-                              if (AdminConfig.isEnabled) ...[
-                                const SizedBox(height: 16),
-                                _SectionHeader(title: 'DEBUG'),
-                                _SettingsTile(
-                                  icon: Icons.bug_report,
-                                  iconColor: AppTheme.warningYellow,
-                                  title: 'Debug Settings',
-                                  subtitle:
-                                      'Mesh node playground, test notifications',
-                                  onTap: () => Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) =>
-                                          const DebugSettingsScreen(),
-                                    ),
-                                  ),
-                                ),
-                              ],
-
                               const SizedBox(height: 24),
 
                               // Meshtastic Powered footer

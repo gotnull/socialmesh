@@ -439,6 +439,7 @@ class SignalService {
     int ttlMinutes,
     double? latitude,
     double? longitude,
+    bool hasImage,
   )?
   onBroadcastSignal;
 
@@ -528,6 +529,7 @@ class SignalService {
         hopCount INTEGER,
         imageState TEXT NOT NULL,
         imageLocalPath TEXT,
+        hasPendingCloudImage INTEGER DEFAULT 0,
         syncedToCloud INTEGER DEFAULT 0
       )
     ''');
@@ -889,6 +891,7 @@ class SignalService {
       meshNodeId: meshNodeId,
       imageState: imageState,
       imageLocalPath: persistentImagePath,
+      hasPendingCloudImage: persistentImagePath != null,
     );
 
     AppLogging.signals(
@@ -906,6 +909,7 @@ class SignalService {
         AppLogging.signals('SEND: broadcast started for ${signal.id}');
         // If this is mesh-only send (useCloud==false) then use a short timeout
         // so UI doesn't feel stuck waiting for ACKs.
+        final hasImage = persistentImagePath != null;
         int? packetId;
         if (!useCloud) {
           try {
@@ -916,6 +920,7 @@ class SignalService {
                 ttlMinutes,
                 location?.latitude,
                 location?.longitude,
+                hasImage,
               );
             });
             packetId = await broadcastFuture.timeout(
@@ -935,6 +940,7 @@ class SignalService {
             ttlMinutes,
             location?.latitude,
             location?.longitude,
+            hasImage,
           );
         }
 
@@ -1113,6 +1119,7 @@ class SignalService {
     PostLocation? location,
     int? hopCount,
     bool allowCloud = true,
+    bool hasPendingCloudImage = false,
   }) async {
     await init();
 
@@ -1192,6 +1199,7 @@ class SignalService {
       meshNodeId: senderNodeId,
       hopCount: hopCount,
       imageState: ImageState.none,
+      hasPendingCloudImage: hasPendingCloudImage,
     );
 
     AppLogging.signals('SIGNAL_DB_INSERT_START signalId=${signal.id}');
@@ -1225,6 +1233,7 @@ class SignalService {
                   mediaUrls: [cloudImageUrl],
                   imageState: ImageState.cloud,
                   commentCount: cloudSignal.commentCount,
+                  hasPendingCloudImage: false,
                 );
                 await updateSignal(updated);
                 AppLogging.signals(
@@ -1317,6 +1326,7 @@ class SignalService {
         return signal.copyWith(
           mediaUrls: [cloudImageUrl],
           imageState: ImageState.cloud,
+          hasPendingCloudImage: false,
         );
       }
 
@@ -1365,6 +1375,7 @@ class SignalService {
           imageLocalPath: localPath,
           mediaUrls: [imageUrl],
           imageState: ImageState.cloud,
+          hasPendingCloudImage: false,
         );
         await updateSignal(updated);
         AppLogging.signals(
@@ -1843,6 +1854,7 @@ class SignalService {
             mediaUrls: [cloudImageUrl],
             imageState: ImageState.cloud,
             commentCount: cloudSignal.commentCount,
+            hasPendingCloudImage: false,
           );
           await updateSignal(updated);
           updatedCount++;
@@ -2049,6 +2061,7 @@ class SignalService {
           final updated = signal.copyWith(
             mediaUrls: [url],
             imageState: ImageState.cloud,
+            hasPendingCloudImage: false,
           );
           await updateSignal(updated);
           AppLogging.signals(
@@ -2194,6 +2207,7 @@ class SignalService {
         final updated = signal.copyWith(
           mediaUrls: [pending.url],
           imageState: ImageState.cloud,
+          hasPendingCloudImage: false,
         );
         await updateSignal(updated);
         AppLogging.signals(
@@ -2539,6 +2553,7 @@ class SignalService {
               updatedSignal = updatedSignal.copyWith(
                 mediaUrls: [cloudImageUrl],
                 imageState: ImageState.cloud,
+                hasPendingCloudImage: false,
               );
               needsUpdate = true;
 
@@ -3039,6 +3054,7 @@ class SignalService {
       'hopCount': post.hopCount,
       'imageState': post.imageState.name,
       'imageLocalPath': post.imageLocalPath,
+      'hasPendingCloudImage': post.hasPendingCloudImage ? 1 : 0,
     };
   }
 
@@ -3099,6 +3115,8 @@ class SignalService {
         orElse: () => ImageState.none,
       ),
       imageLocalPath: map['imageLocalPath'] as String?,
+      hasPendingCloudImage:
+          (map['hasPendingCloudImage'] as int?) == 1 ? true : false,
     );
   }
 

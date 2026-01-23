@@ -257,6 +257,7 @@ void main() {
             int ttlMinutes,
             double? lat,
             double? lon,
+            bool hasImage,
           ) async {
             await Future.delayed(const Duration(seconds: 5));
             return 1;

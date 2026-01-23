@@ -227,6 +227,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
           int ttlMinutes,
           double? latitude,
           double? longitude,
+          bool hasImage,
         ) async {
           try {
             final packetId = await protocol.sendSignal(
@@ -235,6 +236,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
               ttlMinutes: ttlMinutes,
               latitude: latitude,
               longitude: longitude,
+              hasImage: hasImage,
             );
             return packetId;
           } catch (e) {
@@ -292,6 +294,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
       ttlMinutes: packet.ttlMinutes,
       location: location,
       hopCount: packet.hopCount,
+      hasPendingCloudImage: packet.hasImage,
     );
   }
 
@@ -579,6 +582,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
     int ttlMinutes = SignalTTL.defaultTTL,
     PostLocation? location,
     int? hopCount,
+    bool hasPendingCloudImage = false,
   }) async {
     final service = ref.read(signalServiceProvider);
 
@@ -605,6 +609,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
         location: location,
         hopCount: hopCount,
         allowCloud: !ref.read(meshOnlyDebugModeProvider),
+        hasPendingCloudImage: hasPendingCloudImage,
       );
 
       // If null, it was ignored or a duplicate in DB

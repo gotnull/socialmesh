@@ -329,6 +329,9 @@ class Post {
   /// Local path to image file (before cloud upload).
   final String? imageLocalPath;
 
+  /// Signals that have an image pending in Firebase but not yet downloaded locally.
+  final bool hasPendingCloudImage;
+
   /// Convenience getter for image URLs (alias for mediaUrls)
   List<String> get imageUrls => mediaUrls;
 
@@ -357,6 +360,7 @@ class Post {
     this.hopCount,
     this.imageState = ImageState.none,
     this.imageLocalPath,
+    this.hasPendingCloudImage = false,
   });
 
   factory Post.fromFirestore(DocumentSnapshot doc) {
@@ -400,6 +404,7 @@ class Post {
         orElse: () => ImageState.none,
       ),
       imageLocalPath: data['imageLocalPath'] as String?,
+      hasPendingCloudImage: false,
     );
   }
 
@@ -445,6 +450,7 @@ class Post {
     int? hopCount,
     ImageState? imageState,
     String? imageLocalPath,
+    bool? hasPendingCloudImage,
   }) {
     return Post(
       id: id ?? this.id,
@@ -464,6 +470,8 @@ class Post {
       hopCount: hopCount ?? this.hopCount,
       imageState: imageState ?? this.imageState,
       imageLocalPath: imageLocalPath ?? this.imageLocalPath,
+      hasPendingCloudImage:
+          hasPendingCloudImage ?? this.hasPendingCloudImage,
     );
   }
 

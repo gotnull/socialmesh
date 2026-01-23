@@ -16,6 +16,8 @@ import '../../core/widgets/animations.dart';
 import '../../models/user_profile.dart';
 import '../../providers/profile_providers.dart';
 import '../../providers/app_providers.dart';
+import '../../config/admin_config.dart';
+import 'admin_posts_screen.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../services/config/mesh_firestore_config_service.dart';
 import '../../services/notifications/notification_service.dart';
@@ -1706,6 +1708,137 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
             ),
           ),
         ),
+
+        // Debug section (Admin-only)
+        if (AdminConfig.isEnabled) ...[
+          const SizedBox(height: 16),
+          _buildSectionLabel('DEBUG'),
+          const SizedBox(height: 12),
+
+          // Debug Settings (mesh playground + test notifications)
+          BouncyTap(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const DebugSettingsScreen()),
+            ),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: context.background,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppTheme.warningYellow.withAlpha(60)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppTheme.warningYellow.withAlpha(20),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.bug_report,
+                      color: AppTheme.warningYellow,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Debug Settings',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: context.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Mesh node playground, test notifications',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: context.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: context.textSecondary,
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          // Admin: Firebase posts
+          BouncyTap(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AdminPostsScreen()),
+            ),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: context.background,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: context.border.withAlpha(60)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: context.background,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.cloud,
+                      color: context.textPrimary,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Admin: Firebase posts',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: context.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'See every document in posts/ and clean stale data',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: context.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: context.textSecondary,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }

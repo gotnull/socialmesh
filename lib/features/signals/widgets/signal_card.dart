@@ -90,7 +90,9 @@ class SignalCard extends StatelessWidget {
               ),
 
             // Image
-            if (signal.mediaUrls.isNotEmpty || signal.imageLocalPath != null)
+            if (signal.mediaUrls.isNotEmpty ||
+                signal.imageLocalPath != null ||
+                signal.hasPendingCloudImage)
               _SignalImage(signal: signal),
 
             // Location - tappable to open in maps
@@ -341,13 +343,17 @@ class _SignalImage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final hasCloudImage = signal.mediaUrls.isNotEmpty;
     final hasLocalImage = signal.imageLocalPath != null;
-    if (!hasCloudImage && !hasLocalImage) return const SizedBox.shrink();
+    final hasPendingImage = signal.hasPendingCloudImage;
+    if (!hasCloudImage && !hasLocalImage && !hasPendingImage) {
+      return const SizedBox.shrink();
+    }
 
     final isSignedIn = ref.watch(authStateProvider).maybeWhen(
           data: (user) => user != null,
           orElse: () => false,
         );
-    final showSignInPlaceholder = hasCloudImage && !isSignedIn;
+    final showSignInPlaceholder = !isSignedIn &&
+        (hasCloudImage || hasPendingImage);
     final onTap = showSignInPlaceholder
         ? () => _openAccountScreen(context)
         : () => _showFullscreenImage(context);
@@ -378,7 +384,10 @@ class _SignalImage extends ConsumerWidget {
                 onPressed: () => _openAccountScreen(context),
                 style: TextButton.styleFrom(
                   foregroundColor: context.accentColor,
-                  textStyle: const TextStyle(fontWeight: FontWeight.w600),
+                  textStyle: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
                 ),
                 child: const Text('Sign in'),
               ),
@@ -416,7 +425,7 @@ class _SignalImage extends ConsumerWidget {
           ),
         ),
       );
-    } else {
+    } else if (hasLocalImage) {
       imageContent = Image.file(
         File(signal.imageLocalPath!),
         width: double.infinity,
@@ -429,6 +438,30 @@ class _SignalImage extends ConsumerWidget {
           child: Icon(
             Icons.broken_image,
             color: context.textTertiary,
+          ),
+        ),
+      );
+    } else {
+      imageContent = Container(
+        width: double.infinity,
+        height: 200,
+        color: context.card,
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.cloud_upload, size: 32, color: context.accentColor),
+              const SizedBox(height: 8),
+              Text(
+                'Image syncing',
+                style: TextStyle(
+                  color: context.textSecondary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
         ),
       );

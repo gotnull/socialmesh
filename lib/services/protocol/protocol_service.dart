@@ -44,6 +44,7 @@ class MeshSignalPacket {
   final double? longitude;
   final int? hopCount; // null = unknown, 0 = local, 1+ = hops away
   final DateTime receivedAt;
+  final bool hasImage;
 
   const MeshSignalPacket({
     required this.senderNodeId,
@@ -55,6 +56,7 @@ class MeshSignalPacket {
     this.longitude,
     this.hopCount,
     required this.receivedAt,
+    this.hasImage = false,
   });
 
   /// Parse from mesh packet payload (JSON).
@@ -86,7 +88,21 @@ class MeshSignalPacket {
       longitude: lng,
       hopCount: hopCount,
       receivedAt: DateTime.now(),
+      hasImage: _extractBool(json['i']) ||
+          _extractBool(json['hasImage']) ||
+          _extractBool(json['has_image']),
     );
+  }
+
+  static bool _extractBool(dynamic value) {
+    if (value == null) return false;
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+    if (value is String) {
+      final lower = value.toLowerCase();
+      return lower == 'true' || lower == '1';
+    }
+    return false;
   }
 
   /// Serialize to mesh packet payload (JSON).
@@ -104,6 +120,9 @@ class MeshSignalPacket {
     if (latitude != null && longitude != null) {
       json['la'] = latitude;
       json['ln'] = longitude;
+    }
+    if (hasImage) {
+      json['i'] = true;
     }
     return utf8.encode(jsonEncode(json));
   }
@@ -2462,6 +2481,7 @@ class ProtocolService {
     required int ttlMinutes,
     double? latitude,
     double? longitude,
+    bool hasImage = false,
   }) async {
     if (_myNodeNum == null) {
       throw StateError('Cannot send signal: device not ready (no node number)');
@@ -2480,6 +2500,7 @@ class ProtocolService {
         latitude: latitude,
         longitude: longitude,
         receivedAt: DateTime.now(),
+        hasImage: hasImage,
       );
 
       final payload = signalPacket.toPayload();
