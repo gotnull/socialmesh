@@ -11,7 +11,6 @@ import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/ico_help_system.dart';
 import '../../../core/widgets/edge_fade.dart';
-import '../../../core/widgets/animated_gradient_mask.dart';
 import '../../../core/widgets/animated_gradient_background.dart';
 import '../../../providers/help_providers.dart';
 import '../../../core/theme.dart';
