@@ -83,6 +83,8 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
     // Generate random floating nodes
     final random = Random();
     _floatingNodes = List.generate(9, (index) {
+      final gradient = AccentColors.gradients[
+          random.nextInt(AccentColors.gradients.length)];
       return _FloatingNode(
         angle: random.nextDouble() * 2 * pi,
         radius: 60 + random.nextDouble() * 40,
@@ -92,6 +94,7 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
         wobble: 0.08 + random.nextDouble() * 0.12,
         wobbleSpeed: 0.4 + random.nextDouble() * 0.6,
         sweep: 0.6 + random.nextDouble() * 0.6,
+        color: gradient[random.nextInt(gradient.length)],
       );
     });
   }
@@ -218,10 +221,10 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
                           height: node.size,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: accentColor.withValues(alpha: node.opacity),
+                            color: node.color.withValues(alpha: node.opacity),
                             boxShadow: [
                               BoxShadow(
-                                color: accentColor.withValues(
+                                color: node.color.withValues(
                                   alpha: node.opacity * 0.5,
                                 ),
                                 blurRadius: node.size,
@@ -280,6 +283,7 @@ class _FloatingNode {
   final double wobble;
   final double wobbleSpeed;
   final double sweep;
+  final Color color;
 
   _FloatingNode({
     required this.angle,
@@ -290,6 +294,7 @@ class _FloatingNode {
     required this.wobble,
     required this.wobbleSpeed,
     required this.sweep,
+    required this.color,
   });
 }
 
