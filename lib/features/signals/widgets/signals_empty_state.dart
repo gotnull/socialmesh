@@ -9,7 +9,6 @@ import 'package:sensors_plus/sensors_plus.dart';
 
 import '../../../core/theme.dart';
 import '../../../core/widgets/animated_tagline.dart';
-import '../../../core/widgets/snappable.dart';
 
 /// Animated empty state for the signals screen.
 /// Shows radar pulse rings and floating mesh icons.
@@ -52,7 +51,6 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
   late AnimationController _pulseController;
   late AnimationController _convergeController;
   late Ticker _floatTicker;
-  final GlobalKey<SnappableState> _iconSnapKey = GlobalKey<SnappableState>();
   double _floatTime = 0.0;
   late List<_FloatingNode> _floatingNodes;
   StreamSubscription<AccelerometerEvent>? _accelerometerSub;
@@ -61,20 +59,13 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
   Offset _tiltOffset = Offset.zero;
   Offset _gyroOffset = Offset.zero;
   int _tiltStabilizationFrames = 0;
-  bool _iconSnapping = false;
-  Timer? _iconTimer;
-  int _iconIndex = 0;
-  int _nextIconIndex = 0;
-  static final Duration _iconSnapDelay =
-      AnimatedTagline.displayDuration + AnimatedTagline.animationDuration;
-  static final Duration _iconCycleDuration =
-      AnimatedTagline.displayDuration + (AnimatedTagline.animationDuration * 2);
   static const int _tiltStabilizationDelay = 30;
   static const double _tiltSmoothing = 0.9;
   static const double _tiltAmplitude = 14.0;
   static const double _gyroSensitivity = 2.0;
   static const double _gyroFriction = 0.94;
   static const double _gyroMax = 12.0;
+  static const double _iconSize = 48.0;
 
   @override
   void initState() {
@@ -117,8 +108,6 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
           _updateGyro(event.x, event.y);
         });
 
-    _scheduleNextIconSnap(initial: true);
-
     // Generate random floating nodes
     final random = Random();
     final palette = AccentColors.gradients
@@ -157,42 +146,16 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
     _floatTicker.dispose();
     _accelerometerSub?.cancel();
     _gyroscopeSub?.cancel();
-    _iconTimer?.cancel();
     super.dispose();
   }
 
-  void _scheduleNextIconSnap({bool initial = false}) {
-    _iconTimer?.cancel();
-    final delay = initial ? _iconSnapDelay : _iconCycleDuration;
-    _iconTimer = Timer(delay, () {
-      if (!mounted) return;
-      _startIconSnap();
-    });
-  }
-
-  void _startIconSnap() {
-    if (_iconSnapping) return;
-    _iconSnapping = true;
-    _nextIconIndex = (_iconIndex + 1) % _signalEmptyIcons.length;
-    _iconSnapKey.currentState?.snap();
-  }
-
-  void _handleIconSnapped() {
-    if (!mounted) return;
-    setState(() {
-      _iconIndex = _nextIconIndex;
-    });
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (!mounted) return;
-      await WidgetsBinding.instance.endOfFrame;
-      await Future<void>.delayed(const Duration(milliseconds: 24));
-      final snapState = _iconSnapKey.currentState;
-      if (snapState != null) {
-        await snapState.dustIn();
-      }
-      _iconSnapping = false;
-      _scheduleNextIconSnap();
-    });
+  Widget _buildGradientIcon(BuildContext context, IconData icon) {
+    return ShaderMask(
+      shaderCallback: (rect) => LinearGradient(
+        colors: AccentColors.gradientFor(context.accentColor),
+      ).createShader(rect),
+      child: Icon(icon, size: _iconSize, color: Colors.white),
+    );
   }
 
   void _updateTilt(double accelX, double accelY) {
@@ -313,27 +276,9 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
                         ),
                       ],
                     ),
-                    child: Snappable(
-                      key: _iconSnapKey,
-                      duration: const Duration(milliseconds: 1200),
-                      offset: const Offset(32, -16),
-                      randomDislocationOffset: const Offset(16, 12),
-                      numberOfBuckets: 14,
-                      hideOriginalDelay: const Duration(milliseconds: 24),
-                      onSnapped: _handleIconSnapped,
-                      child: ShaderMask(
-                        shaderCallback: (rect) => LinearGradient(
-                          colors: AccentColors.gradientFor(
-                            context.accentColor,
-                          ),
-                        ).createShader(rect),
-                        child: Icon(
-                          _signalEmptyIcons[_iconIndex],
-                          key: ValueKey(_signalEmptyIcons[_iconIndex]),
-                          size: 48,
-                          color: Colors.white,
-                        ),
-                      ),
+                    child: _AnimatedIconCycle(
+                      icons: _signalEmptyIcons,
+                      builder: (icon) => _buildGradientIcon(context, icon),
                     ),
                   ),
 
@@ -505,6 +450,91 @@ class _FloatingNode {
     required this.phaseOffset,
     required this.blurSigma,
   });
+}
+
+class _AnimatedIconCycle extends StatefulWidget {
+  const _AnimatedIconCycle({
+    required this.icons,
+    required this.builder,
+  });
+
+  final List<IconData> icons;
+  final Widget Function(IconData icon) builder;
+
+  @override
+  State<_AnimatedIconCycle> createState() => _AnimatedIconCycleState();
+}
+
+class _AnimatedIconCycleState extends State<_AnimatedIconCycle>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+  int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: AnimatedTagline.animationDuration,
+      vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+    );
+
+    _controller.forward();
+    _startCycling();
+  }
+
+  void _startCycling() {
+    Future.delayed(AnimatedTagline.displayDuration, () {
+      if (!mounted) return;
+      _cycleToNext();
+    });
+  }
+
+  Future<void> _cycleToNext() async {
+    await _controller.reverse();
+    if (!mounted) return;
+
+    setState(() {
+      _currentIndex = (_currentIndex + 1) % widget.icons.length;
+    });
+
+    await _controller.forward();
+    if (!mounted) return;
+
+    _startCycling();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: SlideTransition(
+        position: _slideAnimation,
+        child: widget.builder(widget.icons[_currentIndex]),
+      ),
+    );
+  }
 }
 
 /// Animated "Go Active" button with gradient and pulse effect

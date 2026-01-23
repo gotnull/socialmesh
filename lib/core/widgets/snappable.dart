@@ -186,6 +186,9 @@ class SnappableState extends State<Snappable>
 
   /// Assemble from particles back into the widget (reverse snap)
   Future<void> dustIn() async {
+    // Ensure the widget has painted the latest frame before capture
+    await WidgetsBinding.instance.endOfFrame;
+
     // Get image from child
     final fullImage = await _getImageFromWidget();
     if (fullImage == null) return;
