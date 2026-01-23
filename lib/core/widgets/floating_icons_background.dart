@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import '../theme.dart';
 
 /// Shared animated background with floating mesh/radio icons.
@@ -24,8 +25,9 @@ class FloatingIconsBackground extends StatefulWidget {
 
 class _FloatingIconsBackgroundState extends State<FloatingIconsBackground>
     with TickerProviderStateMixin {
-  late final AnimationController _floatController;
   late final AnimationController _pulseController;
+  late final Ticker _floatTicker;
+  double _floatTime = 0.0;
 
   static const List<_FloatingIconData> _icons = [
     _FloatingIconData(
@@ -160,11 +162,13 @@ class _FloatingIconsBackgroundState extends State<FloatingIconsBackground>
   @override
   void initState() {
     super.initState();
-
-    _floatController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 20),
-    )..repeat();
+    _floatTicker = createTicker((elapsed) {
+      _floatTime = elapsed.inMilliseconds / 1000.0;
+      if (mounted) {
+        setState(() {});
+      }
+    })
+      ..start();
 
     _pulseController = AnimationController(
       vsync: this,
@@ -174,7 +178,7 @@ class _FloatingIconsBackgroundState extends State<FloatingIconsBackground>
 
   @override
   void dispose() {
-    _floatController.dispose();
+    _floatTicker.dispose();
     _pulseController.dispose();
     super.dispose();
   }
@@ -223,48 +227,28 @@ class _FloatingIconsBackgroundState extends State<FloatingIconsBackground>
 
   Widget _buildFloatingIcon(_FloatingIconData iconData, Size screenSize) {
     return AnimatedBuilder(
-      animation: Listenable.merge([_floatController, _pulseController]),
+      animation: _pulseController,
       builder: (context, child) {
         // Get top padding to adjust for status bar offset
         final topPadding = MediaQuery.paddingOf(context).top;
         final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-        // Calculate continuous parallax drift (no reset, wraps around)
-        final time = _floatController.value;
-
-        // Each icon drifts slowly in its own direction based on parallaxFactor
-        // Use different speeds and directions for variety
-        final driftSpeedX = iconData.floatSpeed * 0.5 * iconData.parallaxFactor;
-        final driftSpeedY =
-            iconData.floatSpeed * 0.3 * (1.5 - iconData.parallaxFactor);
-
-        // Calculate drift with wrapping (continuous loop)
-        final totalDriftX = time * screenSize.width * driftSpeedX * 0.15;
-        final totalDriftY = time * screenSize.height * driftSpeedY * 0.1;
-
-        // Wrap position so icons loop seamlessly
-        final wrapWidth = screenSize.width + iconData.size * 2;
-        final wrapHeight = screenSize.height + iconData.size * 2;
-
-        var wrappedX =
-            (iconData.startX * screenSize.width + totalDriftX) % wrapWidth;
-        var wrappedY =
-            (iconData.startY * screenSize.height + totalDriftY) % wrapHeight;
-
-        // Adjust for negative wrapping
-        if (wrappedX < -iconData.size) wrappedX += wrapWidth;
-        if (wrappedY < -iconData.size) wrappedY += wrapHeight;
-
-        // Add gentle bobbing motion on top of drift
-        final bobTime = time * 2 * math.pi * iconData.floatSpeed;
-        final bobX = math.sin(bobTime) * iconData.floatAmplitude * 0.3;
-        final bobY = math.cos(bobTime * 0.7) * iconData.floatAmplitude * 0.3;
+        final time = _floatTime;
+        final phase =
+            (iconData.startX + iconData.startY) * math.pi * 2.0;
+        final driftTime = time * iconData.floatSpeed;
+        final driftX = math.sin(driftTime * 0.6 + phase) *
+            iconData.floatAmplitude *
+            (0.6 + iconData.parallaxFactor * 0.4);
+        final driftY = math.cos(driftTime * 0.8 + phase) *
+            iconData.floatAmplitude *
+            (0.5 + (1.5 - iconData.parallaxFactor) * 0.3);
 
         // Add page-based parallax movement
         final pageParallaxX = widget.pageOffset * 30 * iconData.parallaxFactor;
 
         // Subtle rotation that slowly changes
-        final rotation = math.sin(bobTime * 0.5) * 0.1;
+        final rotation = math.sin(driftTime * 0.4 + phase) * 0.1;
 
         // Opacity pulse - higher opacity in light mode for visibility
         final baseOpacity = isDarkMode ? 0.3 : 0.5;
@@ -284,10 +268,12 @@ class _FloatingIconsBackgroundState extends State<FloatingIconsBackground>
 
         final colorWithAlpha = baseColor.withValues(alpha: effectiveAlpha);
 
-        // Final position with wrapping drift + bob + parallax
+        // Final position with continuous drift + parallax
+        final baseX = iconData.startX * screenSize.width;
+        final baseY = iconData.startY * screenSize.height;
         return Positioned(
-          left: wrappedX + bobX - pageParallaxX - iconData.size / 2,
-          top: wrappedY + bobY - iconData.size / 2 - topPadding,
+          left: baseX + driftX - pageParallaxX - iconData.size / 2,
+          top: baseY + driftY - iconData.size / 2 - topPadding,
           child: Transform.rotate(
             angle: rotation,
             child: Icon(

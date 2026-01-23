@@ -211,18 +211,11 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
                           _tiltOffset + (_gyroOffset * 1.1);
                       final x = cos(angle) * radius + parallax.dx * depthScale;
                       final y = sin(angle) * radius + parallax.dy * depthScale;
-                      final wobbleBoost =
-                          (parallax.distance / _gyroMax).clamp(0.0, 1.0);
-                      final sizePulse =
-                          1 + (sin(_floatTime * 2 * pi + node.angle) * 0.06);
-                      final sizeScale = sizePulse * (1 + (wobbleBoost * 0.18));
-                      final size = node.size * sizeScale;
-
                       return Transform.translate(
                         offset: Offset(x, y),
                         child: Container(
-                          width: size,
-                          height: size,
+                          width: node.size,
+                          height: node.size,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: accentColor.withValues(alpha: node.opacity),
