@@ -53,6 +53,8 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
         speed: 0.3 + random.nextDouble() * 0.4,
         size: 8 + random.nextDouble() * 8,
         opacity: 0.2 + random.nextDouble() * 0.3,
+        wobble: 0.08 + random.nextDouble() * 0.12,
+        wobbleSpeed: 0.4 + random.nextDouble() * 0.6,
       );
     });
   }
@@ -120,8 +122,15 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
                           final angle =
                               node.angle +
                               (_floatController.value * 2 * pi * node.speed);
-                          final x = cos(angle) * node.radius;
-                          final y = sin(angle) * node.radius;
+                          final wobblePhase = _floatController.value *
+                              2 *
+                              pi *
+                              node.wobbleSpeed;
+                          final radius =
+                              node.radius *
+                              (1 + sin(wobblePhase + node.angle) * node.wobble);
+                          final x = cos(angle) * radius;
+                          final y = sin(angle) * radius;
 
                           return Transform.translate(
                             offset: Offset(x, y),
@@ -214,6 +223,8 @@ class _FloatingNode {
   final double speed;
   final double size;
   final double opacity;
+  final double wobble;
+  final double wobbleSpeed;
 
   _FloatingNode({
     required this.angle,
@@ -221,6 +232,8 @@ class _FloatingNode {
     required this.speed,
     required this.size,
     required this.opacity,
+    required this.wobble,
+    required this.wobbleSpeed,
   });
 }
 

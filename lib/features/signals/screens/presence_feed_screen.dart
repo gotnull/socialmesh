@@ -854,13 +854,12 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
   }
 
   Widget _buildSignalList(List<Post> signals) {
-    return RefreshIndicator.adaptive(
+    return RefreshIndicator(
       onRefresh: _handleRefresh,
+      color: context.accentColor,
       child: CustomScrollView(
         controller: _scrollController,
-        physics: const AlwaysScrollableScrollPhysics(
-          parent: BouncingScrollPhysics(),
-        ),
+        physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
           // Active count badge header
           if (signals.isNotEmpty)
@@ -1068,8 +1067,9 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
     final user = ref.watch(currentUserProvider);
     final bookmarkedIds = ref.watch(signalBookmarksProvider).value ?? {};
 
-    return RefreshIndicator.adaptive(
+    return RefreshIndicator(
       onRefresh: _handleRefresh,
+      color: context.accentColor,
       child: CustomScrollView(
         controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
