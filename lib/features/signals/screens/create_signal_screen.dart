@@ -991,16 +991,18 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
               // Action buttons
               Row(
                 children: [
-                  _ActionButton(
-                    icon: Icons.image_outlined,
-                    label: 'Image',
-                    onTap: _isSubmitting || _isValidatingImage || !canUseCloud
-                        ? null
-                        : _pickImage,
-                    isSelected: _imageLocalPath != null,
-                    isLoading: _isValidatingImage,
-                  ),
-                  const SizedBox(width: 12),
+                  if (canUseCloud) ...[
+                    _ActionButton(
+                      icon: Icons.image_outlined,
+                      label: 'Image',
+                      onTap: _isSubmitting || _isValidatingImage
+                          ? null
+                          : _pickImage,
+                      isSelected: _imageLocalPath != null,
+                      isLoading: _isValidatingImage,
+                    ),
+                    const SizedBox(width: 12),
+                  ],
                   _ActionButton(
                     icon: Icons.location_on_outlined,
                     label: 'Location',
