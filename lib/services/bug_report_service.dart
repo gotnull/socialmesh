@@ -108,8 +108,31 @@ class BugReportService {
       return;
     }
 
-    await showModalBottomSheet<void>(
+    final rootContext = context;
+    final proceed = await showModalBottomSheet<bool>(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return ReportBugPromptSheet(
+          onToggleShake: setEnabled,
+          isShakeEnabled: _enabled,
+        );
+      },
+    );
+
+    if (proceed != true) {
+      _isShowing = false;
+      return;
+    }
+
+    if (!rootContext.mounted) {
+      _isShowing = false;
+      return;
+    }
+
+    await showModalBottomSheet<void>(
+      context: rootContext,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) {
