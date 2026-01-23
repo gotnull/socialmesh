@@ -19,6 +19,7 @@ admin.initializeApp();
 
 const db = admin.firestore();
 
+
 // =============================================================================
 // ENVIRONMENT CONFIG - Replaces functions.config()
 // =============================================================================
@@ -56,6 +57,17 @@ const DuplicateCheckSchema = z.object({
 
 const RatingSchema = z.object({
   rating: z.number().int().min(1).max(5),
+});
+
+const BugReportSchema = z.object({
+  description: z.string().min(1).max(2000),
+  screenshotUrl: z.string().url().optional().nullable(),
+  appVersion: z.string().optional(),
+  buildNumber: z.string().optional(),
+  platform: z.string().optional(),
+  platformVersion: z.string().optional(),
+  uid: z.string().optional().nullable(),
+  email: z.string().email().optional().nullable(),
 });
 
 // =============================================================================
@@ -2164,6 +2176,68 @@ export const banUser = onCall({ cors: true }, async (request) => {
     console.error('[banUser] Error stack:', (error as Error).stack);
     throw new HttpsError('internal', `Failed to ban user: ${(error as Error).message}`);
   }
+});
+
+// =============================================================================
+// BUG REPORTS
+// =============================================================================
+
+export const reportBug = onCall({ cors: true }, async (request) => {
+  const parsed = BugReportSchema.safeParse(request.data);
+  if (!parsed.success) {
+    throw new HttpsError('invalid-argument', 'Invalid bug report payload');
+  }
+
+  const {
+    description,
+    screenshotUrl,
+    appVersion,
+    buildNumber,
+    platform,
+    platformVersion,
+    uid,
+    email,
+  } = parsed.data;
+
+  const authEmail = request.auth?.token?.email;
+  const authUid = request.auth?.uid;
+
+  const reportDoc = await db.collection('bugReports').add({
+    description,
+    screenshotUrl: screenshotUrl || null,
+    appVersion: appVersion || null,
+    buildNumber: buildNumber || null,
+    platform: platform || null,
+    platformVersion: platformVersion || null,
+    uid: authUid || uid || null,
+    email: authEmail || email || null,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+
+  const subject = 'Socialmesh bug report';
+  const bodyLines = [
+    `Report ID: ${reportDoc.id}`,
+    `User: ${authEmail || email || 'anonymous'}`,
+    `UID: ${authUid || uid || 'anonymous'}`,
+    `App Version: ${appVersion || 'unknown'} (${buildNumber || 'unknown'})`,
+    `Platform: ${platform || 'unknown'} ${platformVersion || ''}`.trim(),
+    `Screenshot: ${screenshotUrl || 'none'}`,
+    '',
+    'Description:',
+    description,
+  ];
+  const text = bodyLines.join('\n');
+
+  await db.collection('mail').add({
+    to: 'support@socialmesh.app',
+    message: {
+      subject,
+      text,
+      html: text.replace(/\n/g, '<br>'),
+    },
+  });
+
+  return { success: true, reportId: reportDoc.id, emailSent: true };
 });
 
 // =============================================================================

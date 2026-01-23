@@ -19,6 +19,7 @@ import '../services/live_activity/live_activity_service.dart';
 import '../services/ifttt/ifttt_service.dart';
 import '../services/notifications/push_notification_service.dart';
 import '../services/messaging/message_utils.dart';
+import '../services/bug_report_service.dart';
 import '../features/automations/automation_providers.dart';
 import '../features/automations/automation_engine.dart';
 import '../models/mesh_models.dart';
@@ -177,6 +178,12 @@ final settingsServiceProvider = FutureProvider<SettingsService>((ref) async {
   final service = SettingsService();
   await service.init();
   _cachedSettingsService = service;
+  return service;
+});
+
+final bugReportServiceProvider = Provider<BugReportService>((ref) {
+  final service = BugReportService(ref);
+  ref.onDispose(service.dispose);
   return service;
 });
 

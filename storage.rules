@@ -142,5 +142,14 @@ service firebase.storage {
       // Owner can delete their signal images
       allow delete: if isOwner(userId);
     }
+
+    // =============================================================================
+    // BUG REPORT SCREENSHOTS
+    // =============================================================================
+    match /bug_reports/{userId}/{fileName} {
+      allow read: if isAdmin();
+      allow write: if isOwner(userId) && isValidImage();
+      allow delete: if isOwner(userId) || isAdmin();
+    }
   }
 }

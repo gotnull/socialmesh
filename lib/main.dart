@@ -186,14 +186,16 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(appInitProvider.notifier).initialize();
-      // Load accent color from settings
-      _loadAccentColor();
-      // Set user online presence
-      _initializePresence();
-      // Setup App Intents for iOS Shortcuts integration
-      ref.read(appIntentsServiceProvider).setup();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(appInitProvider.notifier).initialize();
+        // Load accent color from settings
+        _loadAccentColor();
+        // Set user online presence
+        _initializePresence();
+        // Initialize shake-to-report bug listener
+        ref.read(bugReportServiceProvider).initialize();
+        // Setup App Intents for iOS Shortcuts integration
+        ref.read(appIntentsServiceProvider).setup();
       // Initialize RevenueCat for purchases
       _initializePurchases();
       // Initialize deep link handling
@@ -928,47 +930,49 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
     // scanner). Instead, we use a stable delegating observer that will
     // pick up the real analytics observer when Firebase initializes.
 
-    return MaterialApp(
-      title: 'Socialmesh',
-      debugShowCheckedModeBanner: false,
-      navigatorKey: navigatorKey,
-      theme: AppTheme.lightTheme(accentColor),
-      darkTheme: AppTheme.darkTheme(accentColor),
-      themeMode: themeMode,
-      navigatorObservers: [
-        _KeyboardDismissObserver(),
-        _DelegatingAnalyticsObserver(ref),
-      ],
-      home: const _AppRouter(),
-      routes: {
-        '/scanner': (context) => const ScannerScreen(),
-        '/messages': (context) => const MessagingScreen(),
-        '/channels': (context) => const ChannelsScreen(),
-        '/nodes': (context) => const NodesScreen(),
-        '/node-qr-scanner': (context) => const NodeQrScannerScreen(),
-        '/map': (context) => const MapScreen(),
-        '/globe': (context) => const GlobeScreen(),
-        '/settings': (context) => const SettingsScreen(),
-        '/qr-import': (context) => const QrImportScreen(),
-        '/channel-qr-scanner': (context) => const QrImportScreen(),
-        '/device-config': (context) => _buildProtectedRoute(
-          context,
-          '/device-config',
-          const DeviceConfigScreen(),
-        ),
-        '/region-setup': (context) => _buildProtectedRoute(
-          context,
-          '/region-setup',
-          const RegionSelectionScreen(isInitialSetup: true),
-        ),
-        '/main': (context) => const MainShell(),
-        '/onboarding': (context) => const OnboardingScreen(),
-        '/emotion-test': (context) => const MeshBrainEmotionTestScreen(),
-        '/timeline': (context) => const TimelineScreen(),
-        '/presence': (context) => const PresenceScreen(),
-        '/reachability': (context) => const MeshReachabilityScreen(),
-      },
-      onGenerateRoute: (settings) {
+    return RepaintBoundary(
+      key: appRepaintBoundaryKey,
+      child: MaterialApp(
+        title: 'Socialmesh',
+        debugShowCheckedModeBanner: false,
+        navigatorKey: navigatorKey,
+        theme: AppTheme.lightTheme(accentColor),
+        darkTheme: AppTheme.darkTheme(accentColor),
+        themeMode: themeMode,
+        navigatorObservers: [
+          _KeyboardDismissObserver(),
+          _DelegatingAnalyticsObserver(ref),
+        ],
+        home: const _AppRouter(),
+        routes: {
+          '/scanner': (context) => const ScannerScreen(),
+          '/messages': (context) => const MessagingScreen(),
+          '/channels': (context) => const ChannelsScreen(),
+          '/nodes': (context) => const NodesScreen(),
+          '/node-qr-scanner': (context) => const NodeQrScannerScreen(),
+          '/map': (context) => const MapScreen(),
+          '/globe': (context) => const GlobeScreen(),
+          '/settings': (context) => const SettingsScreen(),
+          '/qr-import': (context) => const QrImportScreen(),
+          '/channel-qr-scanner': (context) => const QrImportScreen(),
+          '/device-config': (context) => _buildProtectedRoute(
+            context,
+            '/device-config',
+            const DeviceConfigScreen(),
+          ),
+          '/region-setup': (context) => _buildProtectedRoute(
+            context,
+            '/region-setup',
+            const RegionSelectionScreen(isInitialSetup: true),
+          ),
+          '/main': (context) => const MainShell(),
+          '/onboarding': (context) => const OnboardingScreen(),
+          '/emotion-test': (context) => const MeshBrainEmotionTestScreen(),
+          '/timeline': (context) => const TimelineScreen(),
+          '/presence': (context) => const PresenceScreen(),
+          '/reachability': (context) => const MeshReachabilityScreen(),
+        },
+        onGenerateRoute: (settings) {
         // Check route requirements before building
         if (RouteRegistry.isDeviceRequired(settings.name)) {
           // This route requires device - it will be checked by the builder
@@ -1019,7 +1023,8 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
           }
         }
         return null;
-      },
+        },
+      ),
     );
   }
 

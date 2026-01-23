@@ -171,6 +171,14 @@ class SettingsService {
   bool get notificationsEnabled =>
       _preferences.getBool('notifications_enabled') ?? true;
 
+  // Shake to report bug
+  Future<void> setShakeToReportEnabled(bool enabled) async {
+    await _preferences.setBool('shake_to_report_enabled', enabled);
+  }
+
+  bool get shakeToReportEnabled =>
+      _preferences.getBool('shake_to_report_enabled') ?? true;
+
   // Notification: New Nodes
   Future<void> setNewNodeNotificationsEnabled(bool enabled) async {
     await _preferences.setBool('new_node_notifications_enabled', enabled);
