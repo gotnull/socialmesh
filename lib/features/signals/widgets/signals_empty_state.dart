@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
 import '../../../core/theme.dart';
+import '../../../core/widgets/animated_tagline.dart';
 
 /// Animated empty state for the signals screen.
 /// Shows radar pulse rings and floating mesh icons.
@@ -26,6 +27,13 @@ class SignalsEmptyState extends StatefulWidget {
   @override
   State<SignalsEmptyState> createState() => _SignalsEmptyStateState();
 }
+
+const _signalEmptyTaglines = [
+  'Nothing active here right now.\nSignals appear when someone nearby goes active.',
+  'Signals are mesh-first and ephemeral.\nThey dissolve when their timer ends.',
+  'Share a quick status or photo.\nNearby nodes will see it in real time.',
+  'Go active to broadcast your presence.\nOff-grid, device to device.',
+];
 
 class _SignalsEmptyStateState extends State<SignalsEmptyState>
     with TickerProviderStateMixin {
@@ -367,10 +375,15 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
 
             const SizedBox(height: 8),
 
-            Text(
-              'Nothing active here right now.\nWhen someone nearby goes active, it will appear here.',
-              style: TextStyle(color: context.textSecondary, fontSize: 14),
-              textAlign: TextAlign.center,
+            SizedBox(
+              height: 80,
+              child: Center(
+                child: AnimatedTagline(
+                  taglines: _signalEmptyTaglines,
+                  textStyle: TextStyle(color: context.textSecondary, fontSize: 14),
+                  textAlign: TextAlign.center,
+                ),
+              ),
             ),
 
             const SizedBox(height: 32),

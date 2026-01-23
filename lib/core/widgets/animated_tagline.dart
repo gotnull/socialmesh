@@ -4,8 +4,15 @@ import '../theme.dart';
 /// Animated tagline that cycles through different phrases with fade+slide
 class AnimatedTagline extends StatefulWidget {
   final List<String> taglines;
+  final TextStyle? textStyle;
+  final TextAlign? textAlign;
 
-  const AnimatedTagline({super.key, required this.taglines});
+  const AnimatedTagline({
+    super.key,
+    required this.taglines,
+    this.textStyle,
+    this.textAlign,
+  });
 
   /// Duration each tagline is displayed
   static const displayDuration = Duration(seconds: 3);
@@ -82,13 +89,17 @@ class _AnimatedTaglineState extends State<AnimatedTagline>
 
   @override
   Widget build(BuildContext context) {
+    final style =
+        widget.textStyle ??
+        TextStyle(fontSize: 16, color: context.textSecondary);
     return FadeTransition(
       opacity: _fadeAnimation,
       child: SlideTransition(
         position: _slideAnimation,
         child: Text(
           widget.taglines[_currentIndex],
-          style: TextStyle(fontSize: 16, color: context.textSecondary),
+          style: style,
+          textAlign: widget.textAlign,
         ),
       ),
     );
