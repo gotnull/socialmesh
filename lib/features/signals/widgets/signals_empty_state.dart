@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 
 import '../../../core/theme.dart';
 
@@ -25,7 +26,8 @@ class SignalsEmptyState extends StatefulWidget {
 class _SignalsEmptyStateState extends State<SignalsEmptyState>
     with TickerProviderStateMixin {
   late AnimationController _pulseController;
-  late AnimationController _floatController;
+  late Ticker _floatTicker;
+  double _floatTime = 0.0;
   late List<_FloatingNode> _floatingNodes;
 
   @override
@@ -39,10 +41,13 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
     )..repeat();
 
     // Floating nodes animation
-    _floatController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 20),
-    )..repeat();
+    _floatTicker = createTicker((elapsed) {
+      _floatTime = elapsed.inMilliseconds / 1000.0;
+      if (mounted) {
+        setState(() {});
+      }
+    })
+      ..start();
 
     // Generate random floating nodes
     final random = Random();
@@ -50,11 +55,12 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
       return _FloatingNode(
         angle: random.nextDouble() * 2 * pi,
         radius: 60 + random.nextDouble() * 40,
-        speed: 0.3 + random.nextDouble() * 0.4,
+        speed: 0.25 + random.nextDouble() * 0.35,
         size: 8 + random.nextDouble() * 8,
         opacity: 0.2 + random.nextDouble() * 0.3,
         wobble: 0.08 + random.nextDouble() * 0.12,
         wobbleSpeed: 0.4 + random.nextDouble() * 0.6,
+        sweep: 0.6 + random.nextDouble() * 0.6,
       );
     });
   }
@@ -62,7 +68,7 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
   @override
   void dispose() {
     _pulseController.dispose();
-    _floatController.dispose();
+    _floatTicker.dispose();
     super.dispose();
   }
 
@@ -113,50 +119,43 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
                   }),
 
                   // Floating nodes
-                  AnimatedBuilder(
-                    animation: _floatController,
-                    builder: (context, child) {
-                      return Stack(
-                        alignment: Alignment.center,
-                        children: _floatingNodes.map((node) {
-                          final angle =
-                              node.angle +
-                              (_floatController.value * 2 * pi * node.speed);
-                          final wobblePhase = _floatController.value *
-                              2 *
-                              pi *
-                              node.wobbleSpeed;
-                          final radius =
-                              node.radius *
-                              (1 + sin(wobblePhase + node.angle) * node.wobble);
-                          final x = cos(angle) * radius;
-                          final y = sin(angle) * radius;
+                  Stack(
+                    alignment: Alignment.center,
+                    children: _floatingNodes.map((node) {
+                      final oscillation =
+                          sin(_floatTime * 2 * pi * node.speed);
+                      final angle =
+                          node.angle + (oscillation * node.sweep);
+                      final wobblePhase =
+                          _floatTime * 2 * pi * node.wobbleSpeed;
+                      final radius = node.radius *
+                          (1 + sin(wobblePhase + node.angle) * node.wobble);
+                      final x = cos(angle) * radius;
+                      final y = sin(angle) * radius;
 
-                          return Transform.translate(
-                            offset: Offset(x, y),
-                            child: Container(
-                              width: node.size,
-                              height: node.size,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: accentColor.withValues(
-                                  alpha: node.opacity,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: accentColor.withValues(
-                                      alpha: node.opacity * 0.5,
-                                    ),
-                                    blurRadius: node.size,
-                                    spreadRadius: 2,
-                                  ),
-                                ],
-                              ),
+                      return Transform.translate(
+                        offset: Offset(x, y),
+                        child: Container(
+                          width: node.size,
+                          height: node.size,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: accentColor.withValues(
+                              alpha: node.opacity,
                             ),
-                          );
-                        }).toList(),
+                            boxShadow: [
+                              BoxShadow(
+                                color: accentColor.withValues(
+                                  alpha: node.opacity * 0.5,
+                                ),
+                                blurRadius: node.size,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
+                        ),
                       );
-                    },
+                    }).toList(),
                   ),
 
                   // Center icon
@@ -225,6 +224,7 @@ class _FloatingNode {
   final double opacity;
   final double wobble;
   final double wobbleSpeed;
+  final double sweep;
 
   _FloatingNode({
     required this.angle,
@@ -234,6 +234,7 @@ class _FloatingNode {
     required this.opacity,
     required this.wobble,
     required this.wobbleSpeed,
+    required this.sweep,
   });
 }
 
