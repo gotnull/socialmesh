@@ -10,6 +10,7 @@ import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/user_avatar.dart';
 import '../../../models/social.dart';
 import '../../../providers/app_providers.dart';
+import '../../../providers/auth_providers.dart';
 import '../../navigation/main_shell.dart';
 import '../../../providers/signal_bookmark_provider.dart';
 import '../screens/presence_feed_screen.dart';
@@ -17,6 +18,7 @@ import '../utils/signal_utils.dart';
 import 'proximity_indicator.dart';
 import 'signal_gallery_view.dart';
 import 'signal_ttl_footer.dart';
+import '../../settings/account_subscriptions_screen.dart';
 import '../../social/widgets/subscribe_button.dart';
 
 /// Card widget for displaying a signal.
@@ -315,7 +317,7 @@ class _SignalHeader extends ConsumerWidget {
   }
 }
 
-class _SignalImage extends StatelessWidget {
+class _SignalImage extends ConsumerWidget {
   const _SignalImage({required this.signal});
 
   final Post signal;
@@ -325,102 +327,147 @@ class _SignalImage extends StatelessWidget {
     final hasLocalImage = signal.imageLocalPath != null;
 
     if (hasCloudImage || hasLocalImage) {
-      // Use SignalGalleryView to show the same info as the gallery view
       SignalGalleryView.show(context, signals: [signal], initialIndex: 0);
     }
   }
 
+  void _openAccountScreen(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const AccountSubscriptionsScreen()),
+    );
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final hasCloudImage = signal.mediaUrls.isNotEmpty;
     final hasLocalImage = signal.imageLocalPath != null;
-
     if (!hasCloudImage && !hasLocalImage) return const SizedBox.shrink();
+
+    final isSignedIn = ref.watch(authStateProvider).maybeWhen(
+          data: (user) => user != null,
+          orElse: () => false,
+        );
+    final showSignInPlaceholder = hasCloudImage && !isSignedIn;
+    final onTap = showSignInPlaceholder
+        ? () => _openAccountScreen(context)
+        : () => _showFullscreenImage(context);
+
+    Widget imageContent;
+    if (showSignInPlaceholder) {
+      imageContent = Container(
+        width: double.infinity,
+        height: 200,
+        color: context.card,
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.image, size: 32, color: context.accentColor),
+              const SizedBox(height: 8),
+              Text(
+                'Sign in to view attached media',
+                style: TextStyle(
+                  color: context.textSecondary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => _openAccountScreen(context),
+                style: TextButton.styleFrom(
+                  foregroundColor: context.accentColor,
+                  textStyle: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                child: const Text('Sign in'),
+              ),
+            ],
+          ),
+        ),
+      );
+    } else if (hasCloudImage) {
+      imageContent = Image.network(
+        signal.mediaUrls.first,
+        width: double.infinity,
+        height: 200,
+        fit: BoxFit.cover,
+        loadingBuilder: (ctx, child, progress) {
+          if (progress == null) return child;
+          return Container(
+            width: double.infinity,
+            height: 200,
+            color: context.card,
+            child: Center(
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: context.accentColor,
+              ),
+            ),
+          );
+        },
+        errorBuilder: (ctx, error, stack) => Container(
+          width: double.infinity,
+          height: 200,
+          color: context.card,
+          child: Icon(
+            Icons.broken_image,
+            color: context.textTertiary,
+          ),
+        ),
+      );
+    } else {
+      imageContent = Image.file(
+        File(signal.imageLocalPath!),
+        width: double.infinity,
+        height: 200,
+        fit: BoxFit.cover,
+        errorBuilder: (ctx, error, stack) => Container(
+          width: double.infinity,
+          height: 200,
+          color: context.card,
+          child: Icon(
+            Icons.broken_image,
+            color: context.textTertiary,
+          ),
+        ),
+      );
+    }
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       child: GestureDetector(
-        onTap: () => _showFullscreenImage(context),
+        onTap: onTap,
         child: Stack(
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: hasCloudImage
-                  ? Image.network(
-                      signal.mediaUrls.first,
-                      width: double.infinity,
-                      height: 200,
-                      fit: BoxFit.cover,
-                      loadingBuilder: (ctx, child, progress) {
-                        if (progress == null) return child;
-                        return Container(
-                          width: double.infinity,
-                          height: 200,
-                          color: context.card,
-                          child: Center(
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: context.accentColor,
-                            ),
-                          ),
-                        );
-                      },
-                      errorBuilder: (ctx, error, stack) => Container(
-                        width: double.infinity,
-                        height: 200,
-                        color: context.card,
-                        child: Icon(
-                          Icons.broken_image,
-                          color: context.textTertiary,
-                        ),
-                      ),
-                    )
-                  : Image.file(
-                      File(signal.imageLocalPath!),
-                      width: double.infinity,
-                      height: 200,
-                      fit: BoxFit.cover,
-                      errorBuilder: (ctx, error, stack) => Container(
-                        width: double.infinity,
-                        height: 200,
-                        color: context.card,
-                        child: Icon(
-                          Icons.broken_image,
-                          color: context.textTertiary,
-                        ),
-                      ),
-                    ),
+              child: imageContent,
             ),
 
-            // Image state indicator
             Positioned(
               bottom: 8,
               left: 8,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.6),
-                  borderRadius: BorderRadius.circular(4),
+                  color: context.card.withValues(alpha: 0.9),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
-                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      signal.imageState == ImageState.cloud
-                          ? Icons.cloud_done
-                          : Icons.phone_android,
-                      color: Colors.white,
+                      hasCloudImage ? Icons.cloud_done_rounded : Icons.sd_card,
                       size: 12,
+                      color: context.textSecondary,
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      signal.imageState == ImageState.cloud
-                          ? 'Image synced'
-                          : 'Image attached locally',
-                      style: const TextStyle(
-                        color: Colors.white,
+                      hasCloudImage ? 'Cloud' : 'Local',
+                      style: TextStyle(
+                        color: context.textSecondary,
                         fontSize: 10,
-                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
