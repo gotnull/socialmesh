@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socialmesh/core/transport.dart';
+import '../../core/widgets/ico_help_system.dart';
 import '../../core/theme.dart';
 import '../../providers/app_providers.dart';
 import '../../utils/snackbar.dart';
@@ -88,84 +89,88 @@ class _MessagesContainerScreenState
         .where((n) => n.nodeNum != myNodeNum)
         .length;
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
+    return HelpTourController(
+      topicId: 'message_routing',
+      stepKeys: const {},
+      child: Scaffold(
         backgroundColor: context.background,
-        leading: const HamburgerMenuButton(),
-        centerTitle: true,
-        title: Text(
-          'Messages',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: context.textPrimary,
-          ),
-        ),
-        actions: [
-          const DeviceStatusButton(),
-          MessagingPopupMenu(
-            isConnected: isConnected,
-            onAddChannel: () => _showAddChannelScreen(isConnected),
-            onScanChannel: () => _openChannelScanner(isConnected),
-          ),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(48),
-          child: Container(
-            decoration: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(
-                  color: context.border.withValues(alpha: 0.3),
-                ),
-              ),
-            ),
-            child: TabBar(
-              controller: _tabController,
-              indicatorColor: context.accentColor,
-              indicatorWeight: 3,
-              labelColor: context.accentColor,
-              unselectedLabelColor: context.textSecondary,
-              labelStyle: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
-              unselectedLabelStyle: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-              tabs: [
-                Tab(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text('Contacts'),
-                      const SizedBox(width: 6),
-                      _TabBadge(count: contactsCount, showDot: hasUnread),
-                    ],
-                  ),
-                ),
-                Tab(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text('Channels'),
-                      const SizedBox(width: 6),
-                      _TabBadge(count: channels.length),
-                    ],
-                  ),
-                ),
-              ],
+        appBar: AppBar(
+          backgroundColor: context.background,
+          leading: const HamburgerMenuButton(),
+          centerTitle: true,
+          title: Text(
+            'Messages',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
             ),
           ),
+          actions: [
+            const DeviceStatusButton(),
+            MessagingPopupMenu(
+              isConnected: isConnected,
+              onAddChannel: () => _showAddChannelScreen(isConnected),
+              onScanChannel: () => _openChannelScanner(isConnected),
+            ),
+          ],
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(48),
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: context.border.withValues(alpha: 0.3),
+                  ),
+                ),
+              ),
+              child: TabBar(
+                controller: _tabController,
+                indicatorColor: context.accentColor,
+                indicatorWeight: 3,
+                labelColor: context.accentColor,
+                unselectedLabelColor: context.textSecondary,
+                labelStyle: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+                unselectedLabelStyle: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+                tabs: [
+                  Tab(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('Contacts'),
+                        const SizedBox(width: 6),
+                        _TabBadge(count: contactsCount, showDot: hasUnread),
+                      ],
+                    ),
+                  ),
+                  Tab(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('Channels'),
+                        const SizedBox(width: 6),
+                        _TabBadge(count: channels.length),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: const [
-          MessagingScreen(embedded: true),
-          ChannelsScreen(embedded: true),
-        ],
+        body: TabBarView(
+          controller: _tabController,
+          children: const [
+            MessagingScreen(embedded: true),
+            ChannelsScreen(embedded: true),
+          ],
+        ),
       ),
     );
   }
