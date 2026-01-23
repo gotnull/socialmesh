@@ -9,6 +9,7 @@ import 'package:sensors_plus/sensors_plus.dart';
 
 import '../../../core/theme.dart';
 import '../../../core/widgets/animated_tagline.dart';
+import '../../../core/widgets/snappable.dart';
 
 /// Animated empty state for the signals screen.
 /// Shows radar pulse rings and floating mesh icons.
@@ -35,11 +36,24 @@ const _signalEmptyTaglines = [
   'Go active to broadcast your presence.\nOff-grid, device to device.',
 ];
 
+const _signalEmptyIcons = [
+  Icons.sensors_off,
+  Icons.near_me,
+  Icons.router,
+  Icons.image,
+  Icons.location_on,
+  Icons.chat_bubble_outline,
+  Icons.schedule,
+  Icons.bookmark_rounded,
+];
+
 class _SignalsEmptyStateState extends State<SignalsEmptyState>
     with TickerProviderStateMixin {
   late AnimationController _pulseController;
   late AnimationController _convergeController;
+  late AnimationController _iconFadeController;
   late Ticker _floatTicker;
+  final GlobalKey<SnappableState> _iconSnapKey = GlobalKey<SnappableState>();
   double _floatTime = 0.0;
   late List<_FloatingNode> _floatingNodes;
   StreamSubscription<AccelerometerEvent>? _accelerometerSub;
@@ -48,6 +62,9 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
   Offset _tiltOffset = Offset.zero;
   Offset _gyroOffset = Offset.zero;
   int _tiltStabilizationFrames = 0;
+  bool _iconSnapping = false;
+  Timer? _iconTimer;
+  int _iconIndex = 0;
   static const int _tiltStabilizationDelay = 30;
   static const double _tiltSmoothing = 0.9;
   static const double _tiltAmplitude = 14.0;
@@ -68,6 +85,12 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
     _convergeController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 550),
+    );
+
+    _iconFadeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 320),
+      value: 1.0,
     );
 
     // Floating nodes animation
@@ -95,6 +118,11 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
           if (!mounted) return;
           _updateGyro(event.x, event.y);
         });
+
+    _iconTimer = Timer.periodic(AnimatedTagline.displayDuration, (_) {
+      if (!mounted) return;
+      _startIconSnap();
+    });
 
     // Generate random floating nodes
     final random = Random();
@@ -131,10 +159,32 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
   void dispose() {
     _pulseController.dispose();
     _convergeController.dispose();
+    _iconFadeController.dispose();
     _floatTicker.dispose();
     _accelerometerSub?.cancel();
     _gyroscopeSub?.cancel();
+    _iconTimer?.cancel();
     super.dispose();
+  }
+
+  void _startIconSnap() {
+    if (_iconSnapping) return;
+    _iconSnapping = true;
+    _iconSnapKey.currentState?.snap();
+  }
+
+  void _handleIconSnapped() {
+    if (!mounted) return;
+    setState(() {
+      _iconIndex = (_iconIndex + 1) % _signalEmptyIcons.length;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _iconSnapKey.currentState?.reset();
+      _iconFadeController.value = 0.0;
+      _iconFadeController.forward();
+      _iconSnapping = false;
+    });
   }
 
   void _updateTilt(double accelX, double accelY) {
@@ -255,10 +305,31 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
                         ),
                       ],
                     ),
-                    child: Icon(
-                      Icons.sensors_off,
-                      size: 48,
-                      color: context.textTertiary,
+                    child: Snappable(
+                      key: _iconSnapKey,
+                      duration: const Duration(milliseconds: 1200),
+                      offset: const Offset(32, -16),
+                      randomDislocationOffset: const Offset(16, 12),
+                      numberOfBuckets: 14,
+                      onSnapped: _handleIconSnapped,
+                      child: FadeTransition(
+                        opacity: _iconFadeController,
+                        child: ScaleTransition(
+                          scale: Tween<double>(begin: 0.96, end: 1.0)
+                              .animate(
+                            CurvedAnimation(
+                              parent: _iconFadeController,
+                              curve: Curves.easeOutCubic,
+                            ),
+                          ),
+                          child: Icon(
+                            _signalEmptyIcons[_iconIndex],
+                            key: ValueKey(_signalEmptyIcons[_iconIndex]),
+                            size: 48,
+                            color: context.textTertiary,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
 
