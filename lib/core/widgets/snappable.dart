@@ -3,6 +3,7 @@
 // Copyright 2019 Fidev Marcin Szalek - BSD 2-Clause License
 // Updated for Dart 3 and image package 4.x
 
+import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui';
 
@@ -36,6 +37,10 @@ class Snappable extends StatefulWidget {
   /// Defaults to false
   final bool snapOnTap;
 
+  /// Delay before hiding the original child after snap starts
+  /// Useful to prevent a 1-frame blink while image layers decode.
+  final Duration hideOriginalDelay;
+
   /// Function that gets called when snap ends
   final VoidCallback? onSnapped;
 
@@ -47,6 +52,7 @@ class Snappable extends StatefulWidget {
     this.randomDislocationOffset = const Offset(64, 32),
     this.numberOfBuckets = 16,
     this.snapOnTap = false,
+    this.hideOriginalDelay = Duration.zero,
     this.onSnapped,
   });
 
@@ -70,6 +76,8 @@ class SnappableState extends State<Snappable>
 
   /// Layers of image
   List<Uint8List>? _layers;
+  bool _hideOriginal = false;
+  Timer? _hideOriginalTimer;
 
   /// Direction particles move (away from erosion origin), normalized
   double _directionX = 1.0;
@@ -99,6 +107,7 @@ class SnappableState extends State<Snappable>
   @override
   void dispose() {
     _animationController.dispose();
+    _hideOriginalTimer?.cancel();
     super.dispose();
   }
 
@@ -116,7 +125,7 @@ class SnappableState extends State<Snappable>
             animation: _animationController,
             builder: (context, child) {
               return Opacity(
-                opacity: _animationController.isDismissed ? 1.0 : 0.0,
+                opacity: _hideOriginal ? 0.0 : 1.0,
                 child: child,
               );
             },
@@ -163,15 +172,71 @@ class SnappableState extends State<Snappable>
     });
 
     // Start the snap!
+    _hideOriginalTimer?.cancel();
+    if (widget.hideOriginalDelay == Duration.zero) {
+      setState(() => _hideOriginal = true);
+    } else {
+      _hideOriginalTimer = Timer(widget.hideOriginalDelay, () {
+        if (!mounted) return;
+        setState(() => _hideOriginal = true);
+      });
+    }
     _animationController.forward();
+  }
+
+  /// Assemble from particles back into the widget (reverse snap)
+  Future<void> dustIn() async {
+    // Get image from child
+    final fullImage = await _getImageFromWidget();
+    if (fullImage == null) return;
+
+    // Check if still mounted after async operation
+    if (!mounted) return;
+
+    // Do ALL heavy work in isolate: pixel distribution + PNG encoding
+    final result = await compute<_SnapParams, _SnapResult>(
+      _processAndEncodeImages,
+      _SnapParams(
+        imageBytes: fullImage.buffer.asUint8List(),
+        width: fullImage.width,
+        height: fullImage.height,
+        numberOfBuckets: widget.numberOfBuckets,
+      ),
+    );
+
+    // Check if still mounted after compute
+    if (!mounted) return;
+
+    // Set state and start reverse animation
+    setState(() {
+      _layers = result.layers;
+      _directionX = result.directionX;
+      _directionY = result.directionY;
+      _randomOffsets = List.generate(
+        widget.numberOfBuckets,
+        (i) => (math.Random().nextDouble() - 0.5) * 0.3,
+      );
+      _hideOriginal = true;
+      _animationController.value = 1.0;
+    });
+
+    await _animationController.reverse();
+    if (!mounted) return;
+    setState(() {
+      _layers = null;
+      _randomOffsets = null;
+      _hideOriginal = false;
+    });
   }
 
   /// I am... IRON MAN   ~Tony Stark
   void reset() {
     if (!mounted) return;
+    _hideOriginalTimer?.cancel();
     setState(() {
       _layers = null;
       _randomOffsets = null;
+      _hideOriginal = false;
       _animationController.reset();
     });
   }

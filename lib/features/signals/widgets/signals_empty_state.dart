@@ -51,7 +51,6 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
     with TickerProviderStateMixin {
   late AnimationController _pulseController;
   late AnimationController _convergeController;
-  late AnimationController _iconFadeController;
   late Ticker _floatTicker;
   final GlobalKey<SnappableState> _iconSnapKey = GlobalKey<SnappableState>();
   double _floatTime = 0.0;
@@ -65,6 +64,11 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
   bool _iconSnapping = false;
   Timer? _iconTimer;
   int _iconIndex = 0;
+  int _nextIconIndex = 0;
+  static final Duration _iconSnapDelay =
+      AnimatedTagline.displayDuration + AnimatedTagline.animationDuration;
+  static final Duration _iconCycleDuration =
+      AnimatedTagline.displayDuration + (AnimatedTagline.animationDuration * 2);
   static const int _tiltStabilizationDelay = 30;
   static const double _tiltSmoothing = 0.9;
   static const double _tiltAmplitude = 14.0;
@@ -85,12 +89,6 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
     _convergeController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 550),
-    );
-
-    _iconFadeController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 320),
-      value: 1.0,
     );
 
     // Floating nodes animation
@@ -119,10 +117,7 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
           _updateGyro(event.x, event.y);
         });
 
-    _iconTimer = Timer.periodic(AnimatedTagline.displayDuration, (_) {
-      if (!mounted) return;
-      _startIconSnap();
-    });
+    _scheduleNextIconSnap(initial: true);
 
     // Generate random floating nodes
     final random = Random();
@@ -159,7 +154,6 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
   void dispose() {
     _pulseController.dispose();
     _convergeController.dispose();
-    _iconFadeController.dispose();
     _floatTicker.dispose();
     _accelerometerSub?.cancel();
     _gyroscopeSub?.cancel();
@@ -167,23 +161,37 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
     super.dispose();
   }
 
+  void _scheduleNextIconSnap({bool initial = false}) {
+    _iconTimer?.cancel();
+    final delay = initial ? _iconSnapDelay : _iconCycleDuration;
+    _iconTimer = Timer(delay, () {
+      if (!mounted) return;
+      _startIconSnap();
+    });
+  }
+
   void _startIconSnap() {
     if (_iconSnapping) return;
     _iconSnapping = true;
+    _nextIconIndex = (_iconIndex + 1) % _signalEmptyIcons.length;
     _iconSnapKey.currentState?.snap();
   }
 
   void _handleIconSnapped() {
     if (!mounted) return;
     setState(() {
-      _iconIndex = (_iconIndex + 1) % _signalEmptyIcons.length;
+      _iconIndex = _nextIconIndex;
     });
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
-      _iconSnapKey.currentState?.reset();
-      _iconFadeController.value = 0.0;
-      _iconFadeController.forward();
+      await WidgetsBinding.instance.endOfFrame;
+      await Future<void>.delayed(const Duration(milliseconds: 24));
+      final snapState = _iconSnapKey.currentState;
+      if (snapState != null) {
+        await snapState.dustIn();
+      }
       _iconSnapping = false;
+      _scheduleNextIconSnap();
     });
   }
 
@@ -311,23 +319,19 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
                       offset: const Offset(32, -16),
                       randomDislocationOffset: const Offset(16, 12),
                       numberOfBuckets: 14,
+                      hideOriginalDelay: const Duration(milliseconds: 24),
                       onSnapped: _handleIconSnapped,
-                      child: FadeTransition(
-                        opacity: _iconFadeController,
-                        child: ScaleTransition(
-                          scale: Tween<double>(begin: 0.96, end: 1.0)
-                              .animate(
-                            CurvedAnimation(
-                              parent: _iconFadeController,
-                              curve: Curves.easeOutCubic,
-                            ),
+                      child: ShaderMask(
+                        shaderCallback: (rect) => LinearGradient(
+                          colors: AccentColors.gradientFor(
+                            context.accentColor,
                           ),
-                          child: Icon(
-                            _signalEmptyIcons[_iconIndex],
-                            key: ValueKey(_signalEmptyIcons[_iconIndex]),
-                            size: 48,
-                            color: context.textTertiary,
-                          ),
+                        ).createShader(rect),
+                        child: Icon(
+                          _signalEmptyIcons[_iconIndex],
+                          key: ValueKey(_signalEmptyIcons[_iconIndex]),
+                          size: 48,
+                          color: Colors.white,
                         ),
                       ),
                     ),
