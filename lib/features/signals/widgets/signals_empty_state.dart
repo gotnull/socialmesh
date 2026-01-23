@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
 import '../../../core/theme.dart';
@@ -28,6 +30,7 @@ class SignalsEmptyState extends StatefulWidget {
 class _SignalsEmptyStateState extends State<SignalsEmptyState>
     with TickerProviderStateMixin {
   late AnimationController _pulseController;
+  late AnimationController _convergeController;
   late Ticker _floatTicker;
   double _floatTime = 0.0;
   late List<_FloatingNode> _floatingNodes;
@@ -53,6 +56,11 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
       vsync: this,
       duration: const Duration(milliseconds: 3000),
     )..repeat();
+
+    _convergeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 550),
+    );
 
     // Floating nodes animation
     _floatTicker = createTicker((elapsed) {
@@ -86,23 +94,35 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
         .map((gradient) => gradient[random.nextInt(gradient.length)])
         .toList();
     _floatingNodes = List.generate(palette.length, (index) {
+      final isSoft = random.nextDouble() < 0.35;
       return _FloatingNode(
         angle: random.nextDouble() * 2 * pi,
         radius: 30 + random.nextDouble() * 80,
         speed: 0.25 + random.nextDouble() * 0.35,
         size: 8 + random.nextDouble() * 8,
-        opacity: 0.2 + random.nextDouble() * 0.3,
+        opacity: isSoft
+            ? 0.14 + random.nextDouble() * 0.16
+            : 0.2 + random.nextDouble() * 0.3,
         wobble: 0.08 + random.nextDouble() * 0.12,
         wobbleSpeed: 0.4 + random.nextDouble() * 0.6,
         sweep: 0.6 + random.nextDouble() * 0.6,
         color: palette[index],
+        phaseOffset: random.nextDouble() * 2 * pi,
+        blurSigma: isSoft ? 6 + random.nextDouble() * 6 : 0,
       );
     });
+
+    if (widget.canGoActive) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        HapticFeedback.selectionClick();
+      });
+    }
   }
 
   @override
   void dispose() {
     _pulseController.dispose();
+    _convergeController.dispose();
     _floatTicker.dispose();
     _accelerometerSub?.cancel();
     _gyroscopeSub?.cancel();
@@ -132,9 +152,19 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
     return Offset(value.dx.clamp(min, max), value.dy.clamp(min, max));
   }
 
+  void _triggerConverge() {
+    if (_convergeController.isAnimating) return;
+    _convergeController.forward(from: 0).then((_) {
+      if (mounted) {
+        _convergeController.reverse();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final accentColor = context.accentColor;
+    final activityFactor = widget.canGoActive ? 1.0 : 0.7;
 
     return Center(
       child: SingleChildScrollView(
@@ -149,6 +179,31 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
               child: Stack(
                 alignment: Alignment.center,
                 children: [
+                  // Breathing field
+                  AnimatedBuilder(
+                    animation: _pulseController,
+                    builder: (context, child) {
+                      final breathe = 0.9 + (_pulseController.value * 0.15);
+                      final alpha = 0.08 + (_pulseController.value * 0.08);
+                      return Transform.scale(
+                        scale: breathe,
+                        child: Container(
+                          width: 200,
+                          height: 200,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: RadialGradient(
+                              colors: [
+                                accentColor.withValues(alpha: alpha),
+                                Colors.transparent,
+                              ],
+                              stops: const [0.0, 0.7],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                   // Pulse rings
                   ...List.generate(3, (index) {
                     return AnimatedBuilder(
@@ -200,42 +255,72 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
                   ),
 
                   // Floating nodes (above center icon)
-                  Stack(
-                    alignment: Alignment.center,
-                    children: _floatingNodes.map((node) {
-                      final oscillation = sin(_floatTime * 2 * pi * node.speed);
-                      final angle = node.angle + (oscillation * node.sweep);
-                      final wobblePhase =
-                          _floatTime * 2 * pi * node.wobbleSpeed;
-                      final radius =
-                          node.radius *
-                          (1 + sin(wobblePhase + node.angle) * node.wobble);
-                      final depthScale = 0.4 + (node.radius / 140);
-                      final parallax =
-                          _tiltOffset + (_gyroOffset * 0.4);
-                      final x = cos(angle) * radius + parallax.dx * depthScale;
-                      final y = sin(angle) * radius + parallax.dy * depthScale;
-                      return Transform.translate(
-                        offset: Offset(x, y),
-                        child: Container(
-                          width: node.size,
-                          height: node.size,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: node.color.withValues(alpha: node.opacity),
-                            boxShadow: [
-                              BoxShadow(
-                                color: node.color.withValues(
-                                  alpha: node.opacity * 0.5,
+                  AnimatedBuilder(
+                    animation: _convergeController,
+                    builder: (context, child) {
+                      final converge =
+                          1 - (_convergeController.value * 0.25);
+                      return Stack(
+                        alignment: Alignment.center,
+                        children: _floatingNodes.map((node) {
+                          final oscillation = sin(
+                            _floatTime * 2 * pi * node.speed * activityFactor +
+                                node.phaseOffset,
+                          );
+                          final angle = node.angle + (oscillation * node.sweep);
+                          final wobblePhase =
+                              _floatTime * 2 * pi * node.wobbleSpeed +
+                              node.phaseOffset;
+                          final radius =
+                              node.radius *
+                              converge *
+                              (1 + sin(wobblePhase + node.angle) * node.wobble);
+                          final depthScale = 0.4 + (node.radius / 140);
+                          final parallax =
+                              (_tiltOffset + (_gyroOffset * 0.4)) *
+                                  activityFactor;
+                          final x =
+                              cos(angle) * radius + parallax.dx * depthScale;
+                          final y =
+                              sin(angle) * radius + parallax.dy * depthScale;
+                          final opacity =
+                              node.opacity * (widget.canGoActive ? 1.0 : 0.6);
+
+                          Widget orb = Container(
+                            width: node.size,
+                            height: node.size,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: node.color.withValues(alpha: opacity),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: node.color.withValues(
+                                    alpha: opacity * 0.5,
+                                  ),
+                                  blurRadius: node.size,
+                                  spreadRadius: 2,
                                 ),
-                                blurRadius: node.size,
-                                spreadRadius: 2,
+                              ],
+                            ),
+                          );
+
+                          if (node.blurSigma > 0) {
+                            orb = ImageFiltered(
+                              imageFilter: ImageFilter.blur(
+                                sigmaX: node.blurSigma,
+                                sigmaY: node.blurSigma,
                               ),
-                            ],
-                          ),
-                        ),
+                              child: orb,
+                            );
+                          }
+
+                          return Transform.translate(
+                            offset: Offset(x, y),
+                            child: orb,
+                          );
+                        }).toList(),
                       );
-                    }).toList(),
+                    },
                   ),
                 ],
               ),
@@ -243,13 +328,41 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
 
             const SizedBox(height: 24),
 
-            Text(
-              'No active signals nearby',
-              style: TextStyle(
-                color: context.textPrimary,
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-              ),
+            Builder(
+              builder: (context) {
+                final baseStyle = TextStyle(
+                  color: context.textPrimary,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                );
+                final gradient = LinearGradient(
+                  colors: AccentColors.gradientFor(context.accentColor),
+                );
+                return RichText(
+                  text: TextSpan(
+                    style: baseStyle,
+                    children: [
+                      const TextSpan(text: 'No active '),
+                      WidgetSpan(
+                        alignment: PlaceholderAlignment.baseline,
+                        baseline: TextBaseline.alphabetic,
+                        child: ShaderMask(
+                          shaderCallback: (rect) =>
+                              gradient.createShader(rect),
+                          child: Text(
+                            'signals',
+                            style: baseStyle.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const TextSpan(text: ' nearby'),
+                    ],
+                  ),
+                );
+              },
             ),
 
             const SizedBox(height: 8),
@@ -266,7 +379,10 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
             _GoActiveButton(
               canGoActive: widget.canGoActive,
               blockedReason: widget.blockedReason,
-              onTap: widget.onGoActive,
+              onTap: () {
+                _triggerConverge();
+                widget.onGoActive();
+              },
             ),
           ],
         ),
@@ -285,6 +401,8 @@ class _FloatingNode {
   final double wobbleSpeed;
   final double sweep;
   final Color color;
+  final double phaseOffset;
+  final double blurSigma;
 
   _FloatingNode({
     required this.angle,
@@ -296,6 +414,8 @@ class _FloatingNode {
     required this.wobbleSpeed,
     required this.sweep,
     required this.color,
+    required this.phaseOffset,
+    required this.blurSigma,
   });
 }
 
