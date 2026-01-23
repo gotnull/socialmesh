@@ -40,9 +40,9 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
   static const int _tiltStabilizationDelay = 30;
   static const double _tiltSmoothing = 0.9;
   static const double _tiltAmplitude = 14.0;
-  static const double _gyroSensitivity = 6.0;
-  static const double _gyroFriction = 0.92;
-  static const double _gyroMax = 32.0;
+  static const double _gyroSensitivity = 2.0;
+  static const double _gyroFriction = 0.94;
+  static const double _gyroMax = 12.0;
 
   @override
   void initState() {
@@ -82,7 +82,7 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
 
     // Generate random floating nodes
     final random = Random();
-    _floatingNodes = List.generate(5, (index) {
+    _floatingNodes = List.generate(9, (index) {
       return _FloatingNode(
         angle: random.nextDouble() * 2 * pi,
         radius: 60 + random.nextDouble() * 40,
@@ -208,7 +208,7 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
                           (1 + sin(wobblePhase + node.angle) * node.wobble);
                       final depthScale = 0.4 + (node.radius / 140);
                       final parallax =
-                          _tiltOffset + (_gyroOffset * 1.1);
+                          _tiltOffset + (_gyroOffset * 0.4);
                       final x = cos(angle) * radius + parallax.dx * depthScale;
                       final y = sin(angle) * radius + parallax.dy * depthScale;
                       return Transform.translate(
