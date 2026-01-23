@@ -8,6 +8,7 @@ import '../../providers/help_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
+import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
@@ -291,8 +292,7 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen> {
             ),
             actions: [
               const DeviceStatusButton(),
-              PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert),
+              AppBarOverflowMenu<String>(
                 onSelected: (value) {
                   switch (value) {
                     case 'add':

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/logging.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/content_moderation_warning.dart';
 import '../../../models/social.dart';
@@ -661,8 +662,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
       return const SizedBox.shrink();
     }
 
-    return PopupMenuButton<String>(
-      icon: Icon(Icons.more_vert, color: context.textPrimary),
+    return AppBarOverflowMenu<String>(
       onSelected: (value) {
         switch (value) {
           case 'delete':

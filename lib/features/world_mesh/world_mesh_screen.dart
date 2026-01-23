@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/map_config.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/map_controls.dart';
@@ -171,8 +172,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                 onPressed: () => _openFavorites(context),
               ),
               // Overflow menu for map style and refresh
-              PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert),
+              AppBarOverflowMenu<String>(
                 onSelected: (value) {
                   switch (value) {
                     case 'dark':

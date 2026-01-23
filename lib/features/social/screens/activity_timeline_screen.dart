@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 import '../../../core/theme.dart';
+import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/verified_badge.dart';
 import '../../../models/social_activity.dart';
 import '../../../providers/activity_providers.dart';
@@ -37,8 +38,7 @@ class _ActivityTimelineScreenState
         title: const Text('Activity'),
         actions: [
           if (feedState.activities.isNotEmpty)
-            PopupMenuButton<String>(
-              icon: Icon(Icons.more_vert, color: context.textSecondary),
+            AppBarOverflowMenu<String>(
               onSelected: (value) {
                 if (value == 'clear') {
                   _showClearConfirmation();

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../services/debug/debug_export_service.dart';
 import '../../utils/share_utils.dart';
 import '../../utils/snackbar.dart';
@@ -321,9 +322,7 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
               setState(() => _autoScroll = !_autoScroll);
             },
           ),
-          PopupMenuButton<String>(
-            icon: Icon(Icons.more_vert, color: context.textPrimary),
-            color: context.card,
+          AppBarOverflowMenu<String>(
             onSelected: (value) {
               switch (value) {
                 case 'filter':

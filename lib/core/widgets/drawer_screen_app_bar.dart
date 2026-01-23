@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../theme.dart';
+import 'app_bar_overflow_menu.dart';
 import 'auto_scroll_text.dart';
 import '../../features/navigation/main_shell.dart';
 
@@ -122,7 +123,7 @@ class DrawerScreenAppBar extends StatelessWidget
     final combinedActions = <Widget>[
       ...?actions,
       if (overflowActions != null && overflowActions!.isNotEmpty)
-        PopupMenuButton<int>(
+        AppBarOverflowMenu<int>(
           icon: Icon(Icons.more_vert, color: context.textSecondary),
           color: context.surface,
           shape: RoundedRectangleBorder(

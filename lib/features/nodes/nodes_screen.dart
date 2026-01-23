@@ -15,6 +15,7 @@ import '../../utils/snackbar.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/info_table.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/node_avatar.dart';
 import '../../core/widgets/edge_fade.dart';
@@ -146,7 +147,54 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
                     Navigator.pushNamed(context, '/node-qr-scanner'),
               ),
               const DeviceStatusButton(),
-              _NodesPopupMenu(),
+              AppBarOverflowMenu<String>(
+                onSelected: (value) {
+                  switch (value) {
+                    case 'settings':
+                      Navigator.pushNamed(context, '/settings');
+                    case 'help':
+                      ref
+                          .read(helpProvider.notifier)
+                          .startTour('nodes_overview');
+                  }
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: 'help',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.help_outline,
+                          color: context.textSecondary,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Help',
+                          style: TextStyle(color: context.textPrimary),
+                        ),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'settings',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.settings_outlined,
+                          color: context.textSecondary,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Settings',
+                          style: TextStyle(color: context.textPrimary),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
           body: Column(
@@ -2953,56 +3001,3 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
 //     );
 //   }
 // }
-
-/// Popup menu for nodes screen with settings and help
-class _NodesPopupMenu extends ConsumerWidget {
-  const _NodesPopupMenu();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return PopupMenuButton<String>(
-      icon: Icon(Icons.more_vert, color: context.textPrimary),
-      tooltip: 'More options',
-      color: context.card,
-      surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: context.border),
-      ),
-      onSelected: (value) {
-        switch (value) {
-          case 'settings':
-            Navigator.pushNamed(context, '/settings');
-          case 'help':
-            ref.read(helpProvider.notifier).startTour('nodes_overview');
-        }
-      },
-      itemBuilder: (context) => [
-        PopupMenuItem(
-          value: 'help',
-          child: Row(
-            children: [
-              Icon(Icons.help_outline, color: context.textSecondary, size: 20),
-              const SizedBox(width: 12),
-              Text('Help', style: TextStyle(color: context.textPrimary)),
-            ],
-          ),
-        ),
-        PopupMenuItem(
-          value: 'settings',
-          child: Row(
-            children: [
-              Icon(
-                Icons.settings_outlined,
-                color: context.textSecondary,
-                size: 20,
-              ),
-              const SizedBox(width: 12),
-              Text('Settings', style: TextStyle(color: context.textPrimary)),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}

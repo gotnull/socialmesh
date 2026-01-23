@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vector_math/vector_math_64.dart' as vector;
 
 import '../../core/theme.dart';
+import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/edge_fade.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../providers/help_providers.dart';
@@ -296,8 +297,7 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
               onPressed: () => _showViewSelector(context),
             ),
             // Overflow menu for additional actions
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert),
+            AppBarOverflowMenu<String>(
               onSelected: (value) {
                 switch (value) {
                   case 'connections':

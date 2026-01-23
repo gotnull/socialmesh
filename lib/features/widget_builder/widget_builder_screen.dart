@@ -11,6 +11,7 @@ import 'marketplace/widget_marketplace_screen.dart';
 import 'marketplace/widget_marketplace_service.dart';
 import 'marketplace/marketplace_providers.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/widget_preview_card.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/profile_providers.dart';
@@ -191,8 +192,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
               },
               tooltip: 'Dashboard',
             ),
-            PopupMenuButton<String>(
-              icon: Icon(Icons.more_vert, color: context.textPrimary),
+            AppBarOverflowMenu<String>(
               onSelected: (value) {
                 switch (value) {
                   case 'marketplace':
@@ -314,8 +314,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
                 ),
               ),
             )
-          : PopupMenuButton<String>(
-              icon: Icon(Icons.more_vert, color: context.textSecondary),
+          : AppBarOverflowMenu<String>(
               color: context.card,
               onSelected: (action) => _handleAction(action, schema),
               itemBuilder: (context) => [

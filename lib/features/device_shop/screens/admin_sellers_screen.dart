@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
+import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../utils/snackbar.dart';
 import '../models/shop_models.dart';
@@ -257,7 +258,7 @@ class _SellerListItem extends StatelessWidget {
               ),
 
               // Actions
-              PopupMenuButton<String>(
+              AppBarOverflowMenu<String>(
                 onSelected: (value) {
                   switch (value) {
                     case 'edit':

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../config/admin_config.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/help_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
@@ -53,8 +54,7 @@ class AutomationsScreen extends ConsumerWidget {
               tooltip: 'New Automation',
               onPressed: () => _showAddAutomation(context, ref),
             ),
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert),
+            AppBarOverflowMenu<String>(
               onSelected: (value) {
                 if (value == 'help') {
                   ref

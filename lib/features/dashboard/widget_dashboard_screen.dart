@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../providers/help_providers.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
@@ -80,8 +81,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
               // Device button
               const DeviceStatusButton(),
               // Settings
-              PopupMenuButton<String>(
-                icon: Icon(Icons.more_vert, color: context.textPrimary),
+              AppBarOverflowMenu<String>(
                 onSelected: (value) {
                   switch (value) {
                     case 'help':

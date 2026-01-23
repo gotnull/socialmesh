@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/ico_help_system.dart';
@@ -442,9 +443,7 @@ class _RouteCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    PopupMenuButton<String>(
-                      icon: Icon(Icons.more_vert, color: context.textTertiary),
-                      color: context.card,
+                    AppBarOverflowMenu<String>(
                       onSelected: (value) {
                         if (value == 'export') onExport();
                         if (value == 'delete') onDelete();

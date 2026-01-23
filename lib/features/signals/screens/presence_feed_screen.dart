@@ -8,6 +8,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../../../core/logging.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
+import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/ico_help_system.dart';
 import '../../../core/widgets/edge_fade.dart';
 import '../../../providers/help_providers.dart';
@@ -103,9 +104,7 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
     _scrollController.addListener(_onScroll);
     // Defer provider writes until after first frame.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref
-          .read(signalViewModeProvider.notifier)
-          .setMode(widget.initialViewMode);
+      ref.read(signalViewModeProvider.notifier).setMode(widget.initialViewMode);
       _cleanupHiddenSignals();
     });
   }
@@ -169,9 +168,7 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
   void _openCreateSignal() {
     final authState = ref.read(authStateProvider);
     if (authState.value == null) {
-      AppLogging.signals(
-        'ℹ️ Go Active: unauthenticated session (mesh-only)',
-      );
+      AppLogging.signals('ℹ️ Go Active: unauthenticated session (mesh-only)');
     }
 
     // Connection gating check
@@ -378,8 +375,7 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                   isConnected,
                 ),
               ),
-              PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert),
+              AppBarOverflowMenu<String>(
                 onSelected: (value) {
                   if (value == 'help') {
                     ref

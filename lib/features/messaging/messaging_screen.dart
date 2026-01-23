@@ -14,6 +14,7 @@ import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/auto_scroll_text.dart';
 import '../../core/widgets/edge_fade.dart';
@@ -424,10 +425,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
                 color: context.textPrimary,
               ),
             ),
-            actions: const [
-              DeviceStatusButton(),
-              MessagingPopupMenu(),
-            ],
+            actions: const [DeviceStatusButton(), MessagingPopupMenu()],
           ),
           body: bodyContent,
         ),
@@ -2388,15 +2386,7 @@ class MessagingPopupMenu extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return PopupMenuButton<String>(
-      icon: Icon(Icons.more_vert, color: context.textPrimary),
-      tooltip: 'More options',
-      color: context.card,
-      surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: context.border),
-      ),
+    return AppBarOverflowMenu<String>(
       onSelected: (value) {
         switch (value) {
           case 'add_channel':
@@ -2413,64 +2403,78 @@ class MessagingPopupMenu extends ConsumerWidget {
             break;
         }
       },
-        itemBuilder: (context) {
-          final items = <PopupMenuEntry<String>>[];
-          if (onAddChannel != null) {
-            items.add(
-              PopupMenuItem(
-                value: 'add_channel',
-                child: Row(
-                  children: [
-                    Icon(Icons.add, color: context.textSecondary, size: 20),
-                    const SizedBox(width: 12),
-                    Text('Add channel', style: TextStyle(color: context.textPrimary)),
-                  ],
-                ),
-              ),
-            );
-          }
-          if (onScanChannel != null) {
-            items.add(
-              PopupMenuItem(
-                value: 'scan_channel',
-                child: Row(
-                  children: [
-                    Icon(Icons.qr_code_scanner, color: context.textSecondary, size: 20),
-                    const SizedBox(width: 12),
-                    Text('Scan channel QR', style: TextStyle(color: context.textPrimary)),
-                  ],
-                ),
-              ),
-            );
-          }
-          items.addAll([
+      itemBuilder: (context) {
+        final items = <PopupMenuEntry<String>>[];
+        if (onAddChannel != null) {
+          items.add(
             PopupMenuItem(
-              value: 'help',
+              value: 'add_channel',
               child: Row(
                 children: [
-                  Icon(Icons.help_outline, color: context.textSecondary, size: 20),
+                  Icon(Icons.add, color: context.textSecondary, size: 20),
                   const SizedBox(width: 12),
-                  Text('Help', style: TextStyle(color: context.textPrimary)),
+                  Text(
+                    'Add channel',
+                    style: TextStyle(color: context.textPrimary),
+                  ),
                 ],
               ),
             ),
+          );
+        }
+        if (onScanChannel != null) {
+          items.add(
             PopupMenuItem(
-              value: 'settings',
+              value: 'scan_channel',
               child: Row(
                 children: [
                   Icon(
-                    Icons.settings_outlined,
+                    Icons.qr_code_scanner,
                     color: context.textSecondary,
                     size: 20,
                   ),
                   const SizedBox(width: 12),
-                  Text('Settings', style: TextStyle(color: context.textPrimary)),
+                  Text(
+                    'Scan channel QR',
+                    style: TextStyle(color: context.textPrimary),
+                  ),
                 ],
               ),
             ),
-          ]);
-          return items;
-        },
+          );
+        }
+        items.addAll([
+          PopupMenuItem(
+            value: 'help',
+            child: Row(
+              children: [
+                Icon(
+                  Icons.help_outline,
+                  color: context.textSecondary,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Text('Help', style: TextStyle(color: context.textPrimary)),
+              ],
+            ),
+          ),
+          PopupMenuItem(
+            value: 'settings',
+            child: Row(
+              children: [
+                Icon(
+                  Icons.settings_outlined,
+                  color: context.textSecondary,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Text('Settings', style: TextStyle(color: context.textPrimary)),
+              ],
+            ),
+          ),
+        ]);
+        return items;
+      },
     );
   }
 }

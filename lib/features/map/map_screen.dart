@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import '../../core/map_config.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/map_controls.dart';
 import '../../core/widgets/node_info_card.dart';
@@ -545,8 +546,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
             // Device status - hide in location only mode
             if (!widget.locationOnlyMode) const DeviceStatusButton(),
             // More options menu
-            PopupMenuButton<String>(
-              icon: Icon(Icons.more_vert, color: context.textSecondary),
+            AppBarOverflowMenu<String>(
               onSelected: (value) {
                 switch (value) {
                   case 'refresh':

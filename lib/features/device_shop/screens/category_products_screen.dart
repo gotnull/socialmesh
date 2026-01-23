@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
+import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
 import '../models/shop_models.dart';
 import '../providers/device_shop_providers.dart';
@@ -46,10 +47,7 @@ class _CategoryProductsScreenState
             onPressed: () => _showFilterSheet(context),
             tooltip: 'Filter',
           ),
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.sort),
-            tooltip: 'Sort',
-            color: context.card,
+          AppBarOverflowMenu<String>(
             onSelected: (value) => setState(() => _sortBy = value),
             itemBuilder: (context) => [
               _sortMenuItem('popular', 'Most Popular'),

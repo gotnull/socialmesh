@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../models/canned_response.dart';
 import '../../models/user_profile.dart';
@@ -147,9 +148,7 @@ class _CannedResponsesScreenState extends ConsumerState<CannedResponsesScreen> {
               setState(() => _isReordering = !_isReordering);
             },
           ),
-          PopupMenuButton<String>(
-            icon: Icon(Icons.more_vert),
-            color: context.card,
+          AppBarOverflowMenu<String>(
             onSelected: (value) {
               if (value == 'reset') {
                 _resetToDefaults();

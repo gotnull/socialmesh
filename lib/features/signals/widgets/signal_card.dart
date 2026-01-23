@@ -7,6 +7,7 @@ import 'package:latlong2/latlong.dart';
 import '../../../core/theme.dart';
 import '../../../core/logging.dart';
 import '../../../core/widgets/animations.dart';
+import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/user_avatar.dart';
 import '../../../models/social.dart';
 import '../../../providers/app_providers.dart';
@@ -259,13 +260,7 @@ class _SignalHeader extends ConsumerWidget {
 
           // More options menu
           if (onDelete != null || onReport != null)
-            PopupMenuButton<String>(
-              icon: Icon(
-                Icons.more_vert,
-                color: context.textTertiary,
-                size: 20,
-              ),
-              padding: EdgeInsets.zero,
+            AppBarOverflowMenu<String>(
               onSelected: (value) {
                 switch (value) {
                   case 'delete':
@@ -348,12 +343,11 @@ class _SignalImage extends ConsumerWidget {
       return const SizedBox.shrink();
     }
 
-    final isSignedIn = ref.watch(authStateProvider).maybeWhen(
-          data: (user) => user != null,
-          orElse: () => false,
-        );
-    final showSignInPlaceholder = !isSignedIn &&
-        (hasCloudImage || hasPendingImage);
+    final isSignedIn = ref
+        .watch(authStateProvider)
+        .maybeWhen(data: (user) => user != null, orElse: () => false);
+    final showSignInPlaceholder =
+        !isSignedIn && (hasCloudImage || hasPendingImage);
     final onTap = showSignInPlaceholder
         ? () => _openAccountScreen(context)
         : () => _showFullscreenImage(context);
@@ -419,10 +413,7 @@ class _SignalImage extends ConsumerWidget {
           width: double.infinity,
           height: 200,
           color: context.card,
-          child: Icon(
-            Icons.broken_image,
-            color: context.textTertiary,
-          ),
+          child: Icon(Icons.broken_image, color: context.textTertiary),
         ),
       );
     } else if (hasLocalImage) {
@@ -435,10 +426,7 @@ class _SignalImage extends ConsumerWidget {
           width: double.infinity,
           height: 200,
           color: context.card,
-          child: Icon(
-            Icons.broken_image,
-            color: context.textTertiary,
-          ),
+          child: Icon(Icons.broken_image, color: context.textTertiary),
         ),
       );
     } else {
@@ -482,8 +470,7 @@ class _SignalImage extends ConsumerWidget {
               bottom: 8,
               left: 8,
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: context.card.withValues(alpha: 0.9),
                   borderRadius: BorderRadius.circular(8),
