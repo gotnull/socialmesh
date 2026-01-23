@@ -50,6 +50,7 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
     with TickerProviderStateMixin {
   late AnimationController _pulseController;
   late AnimationController _convergeController;
+  late AnimationController _gradientController;
   late Ticker _floatTicker;
   double _floatTime = 0.0;
   late List<_FloatingNode> _floatingNodes;
@@ -81,6 +82,11 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
       vsync: this,
       duration: const Duration(milliseconds: 550),
     );
+
+    _gradientController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2500),
+    )..repeat();
 
     // Floating nodes animation
     _floatTicker = createTicker((elapsed) {
@@ -143,6 +149,7 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
   void dispose() {
     _pulseController.dispose();
     _convergeController.dispose();
+    _gradientController.dispose();
     _floatTicker.dispose();
     _accelerometerSub?.cancel();
     _gyroscopeSub?.cancel();
@@ -374,9 +381,25 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
                       WidgetSpan(
                         alignment: PlaceholderAlignment.baseline,
                         baseline: TextBaseline.alphabetic,
-                        child: ShaderMask(
-                          shaderCallback: (rect) =>
-                              gradient.createShader(rect),
+                        child: AnimatedBuilder(
+                          animation: _gradientController,
+                          builder: (context, child) {
+                            final slide =
+                                (_gradientController.value * 2) - 1.0;
+                            return ShaderMask(
+                              shaderCallback: (rect) {
+                                return LinearGradient(
+                                  colors: gradient.colors,
+                                  stops: gradient.stops,
+                                  begin: const Alignment(-1.0, 0),
+                                  end: const Alignment(1.0, 0),
+                                  tileMode: TileMode.mirror,
+                                  transform: _SlideGradientTransform(slide),
+                                ).createShader(rect);
+                              },
+                              child: child,
+                            );
+                          },
                           child: Text(
                             'signals',
                             style: baseStyle.copyWith(
@@ -533,6 +556,21 @@ class _AnimatedIconCycleState extends State<_AnimatedIconCycle>
         position: _slideAnimation,
         child: widget.builder(widget.icons[_currentIndex]),
       ),
+    );
+  }
+}
+
+class _SlideGradientTransform extends GradientTransform {
+  const _SlideGradientTransform(this.slidePercent);
+
+  final double slidePercent;
+
+  @override
+  Matrix4 transform(Rect bounds, {TextDirection? textDirection}) {
+    return Matrix4.translationValues(
+      bounds.width * slidePercent,
+      0,
+      0,
     );
   }
 }
