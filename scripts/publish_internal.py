@@ -176,6 +176,16 @@ def main() -> int:
     )
     parser.add_argument("--notes", default=None, help="Release notes (en-US).")
     parser.add_argument(
+        "--skip-build",
+        action="store_true",
+        help="Skip flutter build and reuse an existing AAB.",
+    )
+    parser.add_argument(
+        "--aab",
+        default=None,
+        help="Path to existing AAB (used with --skip-build).",
+    )
+    parser.add_argument(
         "--allow-debug-signing",
         action="store_true",
         help="Allow missing android/key.properties.",
@@ -193,7 +203,14 @@ def main() -> int:
     update_pubspec_version(pubspec_path, new_version)
 
     ensure_release_keystore(repo_root, args.allow_debug_signing)
-    aab_path = build_appbundle(repo_root)
+    if args.skip_build:
+        if not args.aab:
+            raise ValueError("--skip-build requires --aab")
+        aab_path = Path(args.aab).expanduser().resolve()
+        if not aab_path.exists():
+            raise FileNotFoundError(aab_path)
+    else:
+        aab_path = build_appbundle(repo_root)
 
     upload_to_play(
         package_name=package_name,

@@ -40,9 +40,9 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
   static const int _tiltStabilizationDelay = 30;
   static const double _tiltSmoothing = 0.9;
   static const double _tiltAmplitude = 14.0;
-  static const double _gyroSensitivity = 0.9;
-  static const double _gyroFriction = 0.9;
-  static const double _gyroMax = 18.0;
+  static const double _gyroSensitivity = 6.0;
+  static const double _gyroFriction = 0.92;
+  static const double _gyroMax = 32.0;
 
   @override
   void initState() {
@@ -56,28 +56,29 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
 
     // Floating nodes animation
     _floatTicker = createTicker((elapsed) {
-      _floatTime = elapsed.inMilliseconds / 1000.0;
+      _floatTime = elapsed.inMilliseconds / 3000.0;
       _tiltOffset =
           _tiltOffset * _tiltSmoothing + _tiltTarget * (1 - _tiltSmoothing);
       _gyroOffset = _gyroOffset * _gyroFriction;
       if (mounted) {
         setState(() {});
       }
-    })
-      ..start();
+    })..start();
 
-    _accelerometerSub = accelerometerEventStream(
-      samplingPeriod: const Duration(milliseconds: 16),
-    ).listen((event) {
-      if (!mounted) return;
-      _updateTilt(event.x, event.y);
-    });
-    _gyroscopeSub = gyroscopeEventStream(
-      samplingPeriod: const Duration(milliseconds: 16),
-    ).listen((event) {
-      if (!mounted) return;
-      _updateGyro(event.x, event.y);
-    });
+    _accelerometerSub =
+        accelerometerEventStream(
+          samplingPeriod: const Duration(milliseconds: 16),
+        ).listen((event) {
+          if (!mounted) return;
+          _updateTilt(event.x, event.y);
+        });
+    _gyroscopeSub =
+        gyroscopeEventStream(
+          samplingPeriod: const Duration(milliseconds: 16),
+        ).listen((event) {
+          if (!mounted) return;
+          _updateGyro(event.x, event.y);
+        });
 
     // Generate random floating nodes
     final random = Random();
@@ -124,10 +125,7 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
   }
 
   Offset _clampOffset(Offset value, double min, double max) {
-    return Offset(
-      value.dx.clamp(min, max),
-      value.dy.clamp(min, max),
-    );
+    return Offset(value.dx.clamp(min, max), value.dy.clamp(min, max));
   }
 
   @override
@@ -176,48 +174,6 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
                     );
                   }),
 
-                  // Floating nodes
-                  Stack(
-                    alignment: Alignment.center,
-                    children: _floatingNodes.map((node) {
-                      final oscillation =
-                          sin(_floatTime * 2 * pi * node.speed);
-                      final angle =
-                          node.angle + (oscillation * node.sweep);
-                      final wobblePhase =
-                          _floatTime * 2 * pi * node.wobbleSpeed;
-                      final radius = node.radius *
-                          (1 + sin(wobblePhase + node.angle) * node.wobble);
-                      final depthScale = 0.4 + (node.radius / 140);
-                      final parallax = _tiltOffset + _gyroOffset;
-                      final x = cos(angle) * radius + parallax.dx * depthScale;
-                      final y = sin(angle) * radius + parallax.dy * depthScale;
-
-                      return Transform.translate(
-                        offset: Offset(x, y),
-                        child: Container(
-                          width: node.size,
-                          height: node.size,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: accentColor.withValues(
-                              alpha: node.opacity,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: accentColor.withValues(
-                                  alpha: node.opacity * 0.5,
-                                ),
-                                blurRadius: node.size,
-                                spreadRadius: 2,
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-
                   // Center icon
                   Container(
                     padding: const EdgeInsets.all(24),
@@ -237,6 +193,52 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
                       size: 48,
                       color: context.textTertiary,
                     ),
+                  ),
+
+                  // Floating nodes (above center icon)
+                  Stack(
+                    alignment: Alignment.center,
+                    children: _floatingNodes.map((node) {
+                      final oscillation = sin(_floatTime * 2 * pi * node.speed);
+                      final angle = node.angle + (oscillation * node.sweep);
+                      final wobblePhase =
+                          _floatTime * 2 * pi * node.wobbleSpeed;
+                      final radius =
+                          node.radius *
+                          (1 + sin(wobblePhase + node.angle) * node.wobble);
+                      final depthScale = 0.4 + (node.radius / 140);
+                      final parallax =
+                          _tiltOffset + (_gyroOffset * 1.1);
+                      final x = cos(angle) * radius + parallax.dx * depthScale;
+                      final y = sin(angle) * radius + parallax.dy * depthScale;
+                      final wobbleBoost =
+                          (parallax.distance / _gyroMax).clamp(0.0, 1.0);
+                      final sizePulse =
+                          1 + (sin(_floatTime * 2 * pi + node.angle) * 0.06);
+                      final sizeScale = sizePulse * (1 + (wobbleBoost * 0.18));
+                      final size = node.size * sizeScale;
+
+                      return Transform.translate(
+                        offset: Offset(x, y),
+                        child: Container(
+                          width: size,
+                          height: size,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: accentColor.withValues(alpha: node.opacity),
+                            boxShadow: [
+                              BoxShadow(
+                                color: accentColor.withValues(
+                                  alpha: node.opacity * 0.5,
+                                ),
+                                blurRadius: node.size,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
                   ),
                 ],
               ),

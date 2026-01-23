@@ -22,7 +22,7 @@ meshtastic-ios/
 # Firebase Admin SDK service account keys (NEVER commit these!)
 *-firebase-adminsdk-*.json
 firebase-service-account.json
-social-mesh-app-af6740287954.json
+scripts/social-mesh-app-9e8f26071bf7.json
 
 # IntelliJ related
 *.iml
