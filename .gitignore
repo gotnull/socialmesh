@@ -12,6 +12,7 @@
 .swiftpm/
 migrate_working_dir/
 meshtastic-ios/
+.venv/
 
 # Environment files (keep .env.example)
 .env
@@ -21,6 +22,7 @@ meshtastic-ios/
 # Firebase Admin SDK service account keys (NEVER commit these!)
 *-firebase-adminsdk-*.json
 firebase-service-account.json
+social-mesh-app-af6740287954.json
 
 # IntelliJ related
 *.iml

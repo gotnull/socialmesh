@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 
 import '../../../core/theme.dart';
 
@@ -29,6 +31,18 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
   late Ticker _floatTicker;
   double _floatTime = 0.0;
   late List<_FloatingNode> _floatingNodes;
+  StreamSubscription<AccelerometerEvent>? _accelerometerSub;
+  StreamSubscription<GyroscopeEvent>? _gyroscopeSub;
+  Offset _tiltTarget = Offset.zero;
+  Offset _tiltOffset = Offset.zero;
+  Offset _gyroOffset = Offset.zero;
+  int _tiltStabilizationFrames = 0;
+  static const int _tiltStabilizationDelay = 30;
+  static const double _tiltSmoothing = 0.9;
+  static const double _tiltAmplitude = 14.0;
+  static const double _gyroSensitivity = 0.9;
+  static const double _gyroFriction = 0.9;
+  static const double _gyroMax = 18.0;
 
   @override
   void initState() {
@@ -43,11 +57,27 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
     // Floating nodes animation
     _floatTicker = createTicker((elapsed) {
       _floatTime = elapsed.inMilliseconds / 1000.0;
+      _tiltOffset =
+          _tiltOffset * _tiltSmoothing + _tiltTarget * (1 - _tiltSmoothing);
+      _gyroOffset = _gyroOffset * _gyroFriction;
       if (mounted) {
         setState(() {});
       }
     })
       ..start();
+
+    _accelerometerSub = accelerometerEventStream(
+      samplingPeriod: const Duration(milliseconds: 16),
+    ).listen((event) {
+      if (!mounted) return;
+      _updateTilt(event.x, event.y);
+    });
+    _gyroscopeSub = gyroscopeEventStream(
+      samplingPeriod: const Duration(milliseconds: 16),
+    ).listen((event) {
+      if (!mounted) return;
+      _updateGyro(event.x, event.y);
+    });
 
     // Generate random floating nodes
     final random = Random();
@@ -69,7 +99,35 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
   void dispose() {
     _pulseController.dispose();
     _floatTicker.dispose();
+    _accelerometerSub?.cancel();
+    _gyroscopeSub?.cancel();
     super.dispose();
+  }
+
+  void _updateTilt(double accelX, double accelY) {
+    if (_tiltStabilizationFrames < _tiltStabilizationDelay) {
+      _tiltStabilizationFrames++;
+      return;
+    }
+
+    final normalizedX = (accelX / 10.0).clamp(-1.0, 1.0);
+    final normalizedY = (accelY / 10.0).clamp(-1.0, 1.0);
+    _tiltTarget = Offset(
+      normalizedX * _tiltAmplitude,
+      normalizedY * _tiltAmplitude,
+    );
+  }
+
+  void _updateGyro(double gyroX, double gyroY) {
+    _gyroOffset += Offset(gyroY, gyroX) * _gyroSensitivity;
+    _gyroOffset = _clampOffset(_gyroOffset, -_gyroMax, _gyroMax);
+  }
+
+  Offset _clampOffset(Offset value, double min, double max) {
+    return Offset(
+      value.dx.clamp(min, max),
+      value.dy.clamp(min, max),
+    );
   }
 
   @override
@@ -130,8 +188,10 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
                           _floatTime * 2 * pi * node.wobbleSpeed;
                       final radius = node.radius *
                           (1 + sin(wobblePhase + node.angle) * node.wobble);
-                      final x = cos(angle) * radius;
-                      final y = sin(angle) * radius;
+                      final depthScale = 0.4 + (node.radius / 140);
+                      final parallax = _tiltOffset + _gyroOffset;
+                      final x = cos(angle) * radius + parallax.dx * depthScale;
+                      final y = sin(angle) * radius + parallax.dy * depthScale;
 
                       return Transform.translate(
                         offset: Offset(x, y),
