@@ -42,8 +42,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final authState = ref.watch(authStateProvider);
 
     // If this screen was pushed (can pop), show back button
-    // If it's a root drawer screen, show hamburger menu
-    final canPop = Navigator.canPop(context);
+    // If it's a root drawer screen, show hamburger menu.
+    // Use route.isFirst to avoid drawer local-history entries flipping this.
+    final route = ModalRoute.of(context);
+    final canPop = route != null ? !route.isFirst : Navigator.canPop(context);
 
     return HelpTourController(
       topicId: 'profile_overview',

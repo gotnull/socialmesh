@@ -482,8 +482,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
       }
     }
 
-    // Check if this screen was pushed (can pop) or is a root drawer screen
-    final canPop = Navigator.canPop(context);
+    // Check if this screen was pushed (can pop) or is a root drawer screen.
+    // Use route.isFirst to avoid drawer local-history entries flipping this.
+    final route = ModalRoute.of(context);
+    final canPop = route != null ? !route.isFirst : Navigator.canPop(context);
 
     return HelpTourController(
       topicId: 'map_overview',
