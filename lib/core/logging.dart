@@ -49,6 +49,7 @@ class AppLogging {
   static bool? _permissionsLoggingEnabled;
   static bool? _marketplaceLoggingEnabled;
   static bool? _qrLoggingEnabled;
+  static bool? _bugReportLoggingEnabled;
   static Logger? _bleLogger;
   static Logger? _mapLogger;
   static Logger? _noOpLogger;
@@ -215,6 +216,12 @@ class AppLogging {
     return _qrLoggingEnabled!;
   }
 
+  static bool get bugReportLoggingEnabled {
+    _bugReportLoggingEnabled ??=
+        _safeGetEnv('BUG_REPORT_LOGGING_ENABLED')?.toLowerCase() != 'false';
+    return _bugReportLoggingEnabled!;
+  }
+
   static Logger get bleLogger {
     if (bleLoggingEnabled) {
       _bleLogger ??= Logger(
@@ -347,6 +354,10 @@ class AppLogging {
     if (qrLoggingEnabled) debugPrint('📱 QR: $message');
   }
 
+  static void bugReport(String message) {
+    if (bugReportLoggingEnabled) debugPrint('🐞 BugReport: $message');
+  }
+
   static void reset() {
     _bleLoggingEnabled = null;
     _protocolLoggingEnabled = null;
@@ -374,6 +385,7 @@ class AppLogging {
     _permissionsLoggingEnabled = null;
     _marketplaceLoggingEnabled = null;
     _qrLoggingEnabled = null;
+    _bugReportLoggingEnabled = null;
     _bleLogger = null;
     _noOpLogger = null;
   }

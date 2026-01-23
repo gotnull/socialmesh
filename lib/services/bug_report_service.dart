@@ -37,6 +37,7 @@ class BugReportService {
   Future<void> initialize() async {
     final settings = await ref.read(settingsServiceProvider.future);
     _enabled = settings.shakeToReportEnabled;
+    AppLogging.bugReport('Initialized (enabled=$_enabled)');
     _startListening();
   }
 
@@ -49,6 +50,7 @@ class BugReportService {
     _enabled = enabled;
     final settings = await ref.read(settingsServiceProvider.future);
     await settings.setShakeToReportEnabled(enabled);
+    AppLogging.bugReport('Shake toggle set to $enabled');
     if (enabled) {
       _startListening();
     } else {
@@ -85,6 +87,7 @@ class BugReportService {
 
     if (_shakeCount >= _requiredShakeCount) {
       _shakeCount = 0;
+      AppLogging.bugReport('Shake detected - opening report flow');
       _triggerReport();
     }
   }
@@ -99,6 +102,9 @@ class BugReportService {
       // Wait for frame to settle before capture.
       await SchedulerBinding.instance.endOfFrame;
       screenshotBytes = await _captureScreenshot();
+      AppLogging.bugReport(
+        'Captured screenshot: ${screenshotBytes?.length ?? 0} bytes',
+      );
     } catch (e) {
       AppLogging.app('BugReport: screenshot capture failed: $e');
     }
@@ -122,6 +128,7 @@ class BugReportService {
     );
 
     if (proceed != true) {
+      AppLogging.bugReport('Prompt dismissed');
       _isShowing = false;
       return;
     }
@@ -146,6 +153,7 @@ class BugReportService {
     );
 
     _isShowing = false;
+    AppLogging.bugReport('Report flow closed');
   }
 
   Future<Uint8List?> _captureScreenshot() async {
@@ -165,12 +173,15 @@ class BugReportService {
     final uid = user.uid;
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final refPath = 'bug_reports/$uid/$timestamp.png';
+    AppLogging.bugReport('Uploading screenshot to $refPath');
     final ref = FirebaseStorage.instance.ref(refPath);
     await ref.putData(
       bytes,
       SettableMetadata(contentType: 'image/png'),
     );
-    return ref.getDownloadURL();
+    final url = await ref.getDownloadURL();
+    AppLogging.bugReport('Screenshot uploaded');
+    return url;
   }
 
   Future<void> _submitReport({
@@ -188,6 +199,7 @@ class BugReportService {
     final functions = FirebaseFunctions.instance;
     final callable = functions.httpsCallable('reportBug');
 
+    AppLogging.bugReport('Submitting report (screenshot=$includeScreenshot)');
     await callable.call({
       'description': description,
       'screenshotUrl': screenshotUrl,
@@ -198,5 +210,6 @@ class BugReportService {
       'uid': user?.uid,
       'email': user?.email,
     });
+    AppLogging.bugReport('Report submitted');
   }
 }
