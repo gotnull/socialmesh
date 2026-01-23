@@ -82,19 +82,20 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
 
     // Generate random floating nodes
     final random = Random();
-    _floatingNodes = List.generate(9, (index) {
-      final gradient = AccentColors.gradients[
-          random.nextInt(AccentColors.gradients.length)];
+    final palette = AccentColors.gradients
+        .map((gradient) => gradient[random.nextInt(gradient.length)])
+        .toList();
+    _floatingNodes = List.generate(palette.length, (index) {
       return _FloatingNode(
         angle: random.nextDouble() * 2 * pi,
-        radius: 60 + random.nextDouble() * 40,
+        radius: 30 + random.nextDouble() * 80,
         speed: 0.25 + random.nextDouble() * 0.35,
         size: 8 + random.nextDouble() * 8,
         opacity: 0.2 + random.nextDouble() * 0.3,
         wobble: 0.08 + random.nextDouble() * 0.12,
         wobbleSpeed: 0.4 + random.nextDouble() * 0.6,
         sweep: 0.6 + random.nextDouble() * 0.6,
-        color: gradient[random.nextInt(gradient.length)],
+        color: palette[index],
       );
     });
   }
