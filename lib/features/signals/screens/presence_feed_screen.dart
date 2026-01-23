@@ -11,6 +11,8 @@ import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/ico_help_system.dart';
 import '../../../core/widgets/edge_fade.dart';
+import '../../../core/widgets/animated_gradient_mask.dart';
+import '../../../core/widgets/animated_gradient_background.dart';
 import '../../../providers/help_providers.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
@@ -768,18 +770,23 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
       message: blockedReason ?? 'Broadcast your presence',
       child: BouncyTap(
         onTap: _openCreateSignal,
-        child: Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            gradient: canGoActive ? gradient : null,
-            color: canGoActive ? null : context.border.withValues(alpha: 0.5),
-            borderRadius: BorderRadius.circular(18),
-          ),
-          child: Icon(
-            Icons.sensors,
-            size: 20,
-            color: canGoActive ? Colors.white : context.textTertiary,
+        child: AnimatedGradientBackground(
+          gradient: gradient,
+          animate: canGoActive,
+          enabled: canGoActive,
+          borderRadius: BorderRadius.circular(18),
+          child: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: canGoActive ? null : context.border.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Icon(
+              Icons.sensors,
+              size: 20,
+              color: canGoActive ? Colors.white : context.textTertiary,
+            ),
           ),
         ),
       ),

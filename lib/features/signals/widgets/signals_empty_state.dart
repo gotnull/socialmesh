@@ -9,6 +9,8 @@ import 'package:sensors_plus/sensors_plus.dart';
 
 import '../../../core/theme.dart';
 import '../../../core/widgets/animated_tagline.dart';
+import '../../../core/widgets/animated_gradient_mask.dart';
+import '../../../core/widgets/animated_gradient_background.dart';
 
 /// Animated empty state for the signals screen.
 /// Shows radar pulse rings and floating mesh icons.
@@ -50,7 +52,6 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
     with TickerProviderStateMixin {
   late AnimationController _pulseController;
   late AnimationController _convergeController;
-  late AnimationController _gradientController;
   late Ticker _floatTicker;
   double _floatTime = 0.0;
   late List<_FloatingNode> _floatingNodes;
@@ -83,10 +84,6 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
       duration: const Duration(milliseconds: 550),
     );
 
-    _gradientController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2500),
-    )..repeat();
 
     // Floating nodes animation
     _floatTicker = createTicker((elapsed) {
@@ -149,18 +146,23 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
   void dispose() {
     _pulseController.dispose();
     _convergeController.dispose();
-    _gradientController.dispose();
     _floatTicker.dispose();
     _accelerometerSub?.cancel();
     _gyroscopeSub?.cancel();
     super.dispose();
   }
 
-  Widget _buildGradientIcon(BuildContext context, IconData icon) {
-    return ShaderMask(
-      shaderCallback: (rect) => LinearGradient(
-        colors: AccentColors.gradientFor(context.accentColor),
-      ).createShader(rect),
+  Widget _buildGradientIcon(
+    BuildContext context,
+    IconData icon, {
+    bool animate = true,
+  }) {
+    final gradient = LinearGradient(
+      colors: AccentColors.gradientFor(context.accentColor),
+    );
+    return AnimatedGradientMask(
+      gradient: gradient,
+      animate: animate,
       child: Icon(icon, size: _iconSize, color: Colors.white),
     );
   }
@@ -381,25 +383,9 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
                       WidgetSpan(
                         alignment: PlaceholderAlignment.baseline,
                         baseline: TextBaseline.alphabetic,
-                        child: AnimatedBuilder(
-                          animation: _gradientController,
-                          builder: (context, child) {
-                            final slide =
-                                (_gradientController.value * 2) - 1.0;
-                            return ShaderMask(
-                              shaderCallback: (rect) {
-                                return LinearGradient(
-                                  colors: gradient.colors,
-                                  stops: gradient.stops,
-                                  begin: const Alignment(-1.0, 0),
-                                  end: const Alignment(1.0, 0),
-                                  tileMode: TileMode.mirror,
-                                  transform: _SlideGradientTransform(slide),
-                                ).createShader(rect);
-                              },
-                              child: child,
-                            );
-                          },
+                        child: AnimatedGradientMask(
+                          gradient: gradient,
+                          animate: true,
                           child: Text(
                             'signals',
                             style: baseStyle.copyWith(
@@ -560,21 +546,6 @@ class _AnimatedIconCycleState extends State<_AnimatedIconCycle>
   }
 }
 
-class _SlideGradientTransform extends GradientTransform {
-  const _SlideGradientTransform(this.slidePercent);
-
-  final double slidePercent;
-
-  @override
-  Matrix4 transform(Rect bounds, {TextDirection? textDirection}) {
-    return Matrix4.translationValues(
-      bounds.width * slidePercent,
-      0,
-      0,
-    );
-  }
-}
-
 /// Animated "Go Active" button with gradient and pulse effect
 class _GoActiveButton extends StatefulWidget {
   const _GoActiveButton({
@@ -644,47 +615,52 @@ class _GoActiveButtonState extends State<_GoActiveButton>
                 ? _glowController.value * 0.3
                 : 0.0;
 
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              decoration: BoxDecoration(
-                gradient: widget.canGoActive ? gradient : null,
-                color: widget.canGoActive
-                    ? null
-                    : context.border.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: widget.canGoActive
-                    ? [
-                        BoxShadow(
-                          color: accentColor.withValues(
-                            alpha: 0.3 + glowIntensity,
+            return AnimatedGradientBackground(
+              gradient: gradient,
+              animate: widget.canGoActive,
+              enabled: widget.canGoActive,
+              borderRadius: BorderRadius.circular(24),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                decoration: BoxDecoration(
+                  color: widget.canGoActive
+                      ? null
+                      : context.border.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: widget.canGoActive
+                      ? [
+                          BoxShadow(
+                            color: accentColor.withValues(
+                              alpha: 0.3 + glowIntensity,
+                            ),
+                            blurRadius: 12 + (glowIntensity * 8),
+                            spreadRadius: glowIntensity * 4,
                           ),
-                          blurRadius: 12 + (glowIntensity * 8),
-                          spreadRadius: glowIntensity * 4,
-                        ),
-                      ]
-                    : null,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.sensors,
-                    color: widget.canGoActive
-                        ? Colors.white
-                        : context.textTertiary,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Go Active',
-                    style: TextStyle(
+                        ]
+                      : null,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.sensors,
                       color: widget.canGoActive
                           ? Colors.white
                           : context.textTertiary,
-                      fontWeight: FontWeight.w600,
+                      size: 20,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    Text(
+                      'Go Active',
+                      style: TextStyle(
+                        color: widget.canGoActive
+                            ? Colors.white
+                            : context.textTertiary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           },
