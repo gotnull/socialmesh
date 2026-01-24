@@ -119,6 +119,115 @@ function serializeDoc(data: Record<string, unknown>): Record<string, unknown> {
   return result;
 }
 
+function escapeHtml(input: string) {
+  return input
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function buildBugReportEmailHtml(params: {
+  reportId: string;
+  userEmail: string;
+  userId: string;
+  appVersion: string;
+  buildNumber: string;
+  platform: string;
+  screenshotUrl?: string | null;
+  description: string;
+}) {
+  const {
+    reportId,
+    userEmail,
+    userId,
+    appVersion,
+    buildNumber,
+    platform,
+    screenshotUrl,
+    description,
+  } = params;
+
+  const safeDescription = escapeHtml(description).replace(/\n/g, '<br>');
+  const safeScreenshot = screenshotUrl ? escapeHtml(screenshotUrl) : null;
+
+  return `
+  <div style="margin:0;padding:0;background:#0f1420;color:#e8edf7;font-family:Inter,Arial,sans-serif;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+      <tr>
+        <td align="center" style="padding:32px 16px;">
+          <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;border-collapse:collapse;">
+            <tr>
+              <td style="padding:0 0 16px 0;">
+                <div style="font-size:20px;font-weight:700;letter-spacing:0.2px;">Socialmesh</div>
+                <div style="color:#98a2b3;font-size:13px;margin-top:4px;">Bug report</div>
+              </td>
+            </tr>
+            <tr>
+              <td style="background:#151b2b;border:1px solid #2a3245;border-radius:16px;padding:20px;">
+                <div style="display:inline-block;padding:6px 12px;border-radius:999px;background:linear-gradient(90deg,#ff2d95,#ff6a3d);color:#ffffff;font-size:12px;font-weight:700;letter-spacing:0.4px;text-transform:uppercase;">
+                  Report ${reportId}
+                </div>
+
+                <div style="margin-top:16px;font-size:18px;font-weight:700;">Summary</div>
+                <div style="margin-top:8px;color:#c2c8d6;font-size:14px;line-height:1.5;">
+                  ${safeDescription}
+                </div>
+
+                <div style="margin-top:18px;padding-top:14px;border-top:1px solid #2a3245;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                    <tr>
+                      <td style="color:#8b93a7;font-size:12px;padding:4px 0;">User</td>
+                      <td style="color:#e8edf7;font-size:12px;padding:4px 0;text-align:right;">${escapeHtml(userEmail)}</td>
+                    </tr>
+                    <tr>
+                      <td style="color:#8b93a7;font-size:12px;padding:4px 0;">UID</td>
+                      <td style="color:#e8edf7;font-size:12px;padding:4px 0;text-align:right;">${escapeHtml(userId)}</td>
+                    </tr>
+                    <tr>
+                      <td style="color:#8b93a7;font-size:12px;padding:4px 0;">App Version</td>
+                      <td style="color:#e8edf7;font-size:12px;padding:4px 0;text-align:right;">${escapeHtml(appVersion)} (${escapeHtml(buildNumber)})</td>
+                    </tr>
+                    <tr>
+                      <td style="color:#8b93a7;font-size:12px;padding:4px 0;">Platform</td>
+                      <td style="color:#e8edf7;font-size:12px;padding:4px 0;text-align:right;">${escapeHtml(platform)}</td>
+                    </tr>
+                    <tr>
+                      <td style="color:#8b93a7;font-size:12px;padding:4px 0;">Screenshot</td>
+                      <td style="color:#e8edf7;font-size:12px;padding:4px 0;text-align:right;">${safeScreenshot ? 'Attached' : 'None'}</td>
+                    </tr>
+                  </table>
+                </div>
+
+                ${safeScreenshot
+      ? `
+                <div style="margin-top:16px;">
+                  <a href="${safeScreenshot}" style="display:inline-block;padding:10px 16px;border-radius:10px;background:linear-gradient(90deg,#ff2d95,#ff6a3d);color:#ffffff;text-decoration:none;font-weight:600;font-size:13px;">
+                    View screenshot
+                  </a>
+                </div>
+                <div style="margin-top:12px;">
+                  <img src="${safeScreenshot}" alt="Screenshot" style="width:100%;height:auto;border-radius:12px;border:1px solid #2a3245;display:block;">
+                </div>
+                `
+      : ''
+    }
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:16px 0 0 0;color:#6c7487;font-size:11px;text-align:center;">
+                Socialmesh bug report · support@socialmesh.app
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </div>
+  `;
+}
+
 // =============================================================================
 // WIDGET MARKETPLACE API
 // =============================================================================
@@ -1254,15 +1363,6 @@ export const share = onRequest(async (req, res) => {
   res.send(html);
 });
 
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
-
 // =============================================================================
 // DEVICE SHOP API
 // =============================================================================
@@ -2227,13 +2327,23 @@ export const reportBug = onCall({ cors: true }, async (request) => {
     description,
   ];
   const text = bodyLines.join('\n');
+  const html = buildBugReportEmailHtml({
+    reportId: reportDoc.id,
+    userEmail: authEmail || email || 'anonymous',
+    userId: authUid || uid || 'anonymous',
+    appVersion: appVersion || 'unknown',
+    buildNumber: buildNumber || 'unknown',
+    platform: `${platform || 'unknown'} ${platformVersion || ''}`.trim(),
+    screenshotUrl: screenshotUrl || null,
+    description,
+  });
 
   await db.collection('mail').add({
     to: 'support@socialmesh.app',
     message: {
       subject,
       text,
-      html: text.replace(/\n/g, '<br>'),
+      html,
     },
   });
 
