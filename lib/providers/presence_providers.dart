@@ -1,0 +1,203 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../core/logging.dart';
+import '../models/mesh_models.dart';
+import '../models/presence_confidence.dart';
+import '../providers/app_providers.dart';
+import '../features/automations/automation_providers.dart';
+
+final presenceClockProvider = Provider<DateTime Function()>(
+  (_) => DateTime.now,
+);
+
+@immutable
+class NodePresence {
+  final MeshNode node;
+  final PresenceConfidence confidence;
+  final Duration? timeSinceLastHeard;
+  final double? signalQuality;
+
+  const NodePresence({
+    required this.node,
+    required this.confidence,
+    this.timeSinceLastHeard,
+    this.signalQuality,
+  });
+}
+
+final presenceMapProvider =
+    NotifierProvider<PresenceNotifier, Map<int, NodePresence>>(
+      PresenceNotifier.new,
+    );
+
+final presenceForNodeProvider = Provider.family<NodePresence?, int>((
+  ref,
+  nodeNum,
+) {
+  final map = ref.watch(presenceMapProvider);
+  return map[nodeNum];
+});
+
+final presenceListProvider = Provider<List<NodePresence>>((ref) {
+  final map = ref.watch(presenceMapProvider);
+  final myNodeNum = ref.watch(myNodeNumProvider);
+  final list = map.values
+      .where((presence) => presence.node.nodeNum != myNodeNum)
+      .toList();
+
+  list.sort((a, b) {
+    final statusCompare = a.confidence.index.compareTo(b.confidence.index);
+    if (statusCompare != 0) return statusCompare;
+    final aTime = a.timeSinceLastHeard?.inSeconds ?? 1 << 30;
+    final bTime = b.timeSinceLastHeard?.inSeconds ?? 1 << 30;
+    return aTime.compareTo(bTime);
+  });
+
+  return list;
+});
+
+final presenceSummaryProvider = Provider<Map<PresenceConfidence, int>>((ref) {
+  final presences = ref.watch(presenceListProvider);
+  final counts = <PresenceConfidence, int>{
+    PresenceConfidence.active: 0,
+    PresenceConfidence.fading: 0,
+    PresenceConfidence.stale: 0,
+    PresenceConfidence.unknown: 0,
+  };
+
+  for (final presence in presences) {
+    counts[presence.confidence] = (counts[presence.confidence] ?? 0) + 1;
+  }
+
+  return counts;
+});
+
+PresenceConfidence presenceConfidenceFor(
+  Map<int, NodePresence> presenceMap,
+  MeshNode node,
+) {
+  final presence = presenceMap[node.nodeNum];
+  if (presence != null) return presence.confidence;
+  return PresenceCalculator.fromLastHeard(node.lastHeard, now: DateTime.now());
+}
+
+Duration? lastHeardAgeFor(
+  Map<int, NodePresence> presenceMap,
+  MeshNode node,
+) {
+  final presence = presenceMap[node.nodeNum];
+  if (presence != null) return presence.timeSinceLastHeard;
+  final heard = node.lastHeard;
+  if (heard == null) return null;
+  return DateTime.now().difference(heard);
+}
+
+class PresenceNotifier extends Notifier<Map<int, NodePresence>> {
+  static const Duration _tickInterval = Duration(seconds: 30);
+
+  Timer? _timer;
+  final Map<int, PresenceConfidence> _lastConfidence = {};
+
+  @override
+  Map<int, NodePresence> build() {
+    ref.onDispose(() => _timer?.cancel());
+    _timer ??= Timer.periodic(_tickInterval, (_) => _recompute());
+
+    ref.listen<Map<int, MeshNode>>(
+      nodesProvider,
+      (previous, next) => _recompute(),
+    );
+
+    final initial = _compute(
+      ref.read(nodesProvider),
+      ref.read(presenceClockProvider)(),
+      logTransitions: false,
+    );
+    return initial;
+  }
+
+  void _recompute() {
+    final nodes = ref.read(nodesProvider);
+    state = _compute(
+      nodes,
+      ref.read(presenceClockProvider)(),
+      logTransitions: true,
+    );
+  }
+
+  Map<int, NodePresence> _compute(
+    Map<int, MeshNode> nodes,
+    DateTime now, {
+    required bool logTransitions,
+  }) {
+    final next = <int, NodePresence>{};
+    final seenNodes = <int>{};
+
+    for (final node in nodes.values) {
+      final confidence =
+          PresenceCalculator.fromLastHeard(node.lastHeard, now: now);
+      final age = node.lastHeard != null ? now.difference(node.lastHeard!) : null;
+      final signalQuality = _calculateSignalQuality(node);
+
+      next[node.nodeNum] = NodePresence(
+        node: node,
+        confidence: confidence,
+        timeSinceLastHeard: age,
+        signalQuality: signalQuality,
+      );
+
+      if (logTransitions) {
+        final previous = _lastConfidence[node.nodeNum];
+        if (previous != confidence) {
+          final lastHeardMillis = node.lastHeard?.millisecondsSinceEpoch;
+          AppLogging.nodes(
+            'PRESENCE_UPDATE node=${node.nodeNum} lastHeard=${lastHeardMillis ?? 'null'} state=${confidence.name}',
+          );
+          if (previous != null) {
+            unawaited(_handleTransition(node, previous, confidence));
+          }
+        }
+      }
+
+      _lastConfidence[node.nodeNum] = confidence;
+      seenNodes.add(node.nodeNum);
+    }
+
+    _lastConfidence.removeWhere((nodeNum, _) => !seenNodes.contains(nodeNum));
+
+    return next;
+  }
+
+  @visibleForTesting
+  void recomputeNow() => _recompute();
+
+  Future<void> _handleTransition(
+    MeshNode node,
+    PresenceConfidence previous,
+    PresenceConfidence current,
+  ) async {
+    final ifttt = ref.read(iftttServiceProvider);
+    await ifttt.processPresenceUpdate(
+      node,
+      previous: previous,
+      current: current,
+    );
+
+    final automation = ref.read(automationEngineProvider);
+    await automation.processPresenceUpdate(
+      node,
+      previous: previous,
+      current: current,
+    );
+  }
+
+  double? _calculateSignalQuality(MeshNode node) {
+    final snr = node.snr;
+    if (snr == null) return null;
+    final normalized = (snr + 20) / 30;
+    return normalized.clamp(0.0, 1.0);
+  }
+}

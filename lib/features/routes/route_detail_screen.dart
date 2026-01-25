@@ -12,8 +12,11 @@ import '../../core/theme.dart';
 import '../../core/widgets/map_controls.dart';
 import '../../core/widgets/mesh_map_widget.dart';
 import '../../models/mesh_models.dart';
+import '../../models/presence_confidence.dart';
+import '../../utils/presence_utils.dart';
 import '../../models/route.dart' as route_model;
 import '../../providers/app_providers.dart';
+import '../../providers/presence_providers.dart';
 import '../../providers/telemetry_providers.dart';
 import '../../utils/share_utils.dart';
 import '../../utils/snackbar.dart';
@@ -83,6 +86,7 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
 
   @override
   Widget build(BuildContext context) {
+    final presenceMap = ref.watch(presenceMapProvider);
     final route = widget.route;
     final hasLocations = route.locations.isNotEmpty;
     final center = route.center;
@@ -96,7 +100,12 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
 
     // Convert to marker data for shared widget
     final nodeMarkerData = nodesWithPosition
-        .map((node) => MeshNodeMarkerData.fromNode(node))
+        .map(
+          (node) => MeshNodeMarkerData.fromNode(
+            node,
+            presence: presenceConfidenceFor(presenceMap, node),
+          ),
+        )
         .toList();
 
     return Scaffold(
@@ -304,6 +313,11 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
               child: _NodeInfoCard(
                 node: _selectedNode!,
                 isMyNode: _selectedNode!.nodeNum == myNodeNum,
+                presence: presenceConfidenceFor(
+                  presenceMap,
+                  _selectedNode!,
+                ),
+                lastHeardAge: lastHeardAgeFor(presenceMap, _selectedNode!),
                 onClose: () => setState(() => _selectedNode = null),
                 onCenter: () {
                   if (_selectedNode!.hasPosition) {
@@ -529,12 +543,16 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
 class _NodeInfoCard extends StatelessWidget {
   final MeshNode node;
   final bool isMyNode;
+  final PresenceConfidence presence;
+  final Duration? lastHeardAge;
   final VoidCallback onClose;
   final VoidCallback onCenter;
 
   const _NodeInfoCard({
     required this.node,
     required this.isMyNode,
+    required this.presence,
+    required this.lastHeardAge,
     required this.onClose,
     required this.onCenter,
   });
@@ -553,7 +571,7 @@ class _NodeInfoCard extends StatelessWidget {
               height: 12,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: node.isOnline
+                color: presence.isActive
                     ? AccentColors.green
                     : context.textTertiary,
               ),
@@ -599,11 +617,17 @@ class _NodeInfoCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    node.isOnline ? 'Online' : 'Offline',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: context.textSecondary,
+                  Tooltip(
+                    message: kPresenceInferenceTooltip,
+                    child: Text(
+                      presenceStatusText(
+                        presence,
+                        lastHeardAge,
+                      ),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.textSecondary,
+                      ),
                     ),
                   ),
                 ],

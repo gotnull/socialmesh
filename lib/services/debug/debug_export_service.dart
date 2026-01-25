@@ -9,6 +9,8 @@ import 'package:share_plus/share_plus.dart';
 import '../../features/debug/app_log_screen.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
+import '../../models/presence_confidence.dart';
+import '../../providers/presence_providers.dart';
 import '../../providers/telemetry_providers.dart';
 import '../../utils/share_utils.dart';
 
@@ -98,10 +100,16 @@ class DebugExportService {
     // Nodes
     try {
       final nodes = _ref.read(nodesProvider);
+      final presenceMap = _ref.read(presenceMapProvider);
       export['nodes'] = {
         'count': nodes.length,
-        'onlineCount': nodes.values.where((n) => n.isOnline).length,
-        'list': nodes.values.map((n) => _nodeToDebugMap(n)).toList(),
+        'activeCount': nodes.values
+            .where((n) => presenceConfidenceFor(presenceMap, n).isActive)
+            .length,
+        'list':
+            nodes.values
+                .map((n) => _nodeToDebugMap(n, presenceMap))
+                .toList(),
       };
     } catch (e) {
       export['nodes'] = {'error': e.toString()};
@@ -232,7 +240,12 @@ class DebugExportService {
     return export;
   }
 
-  Map<String, dynamic> _nodeToDebugMap(MeshNode node) {
+  Map<String, dynamic> _nodeToDebugMap(
+    MeshNode node,
+    Map<int, NodePresence> presenceMap,
+  ) {
+    final presence = presenceConfidenceFor(presenceMap, node);
+    final lastHeardAge = lastHeardAgeFor(presenceMap, node);
     return {
       'nodeNum': node.nodeNum,
       'nodeNumHex': '0x${node.nodeNum.toRadixString(16).toUpperCase()}',
@@ -241,7 +254,7 @@ class DebugExportService {
       'shortName': node.shortName,
       'hardwareModel': node.hardwareModel,
       'role': node.role,
-      'isOnline': node.isOnline,
+      'presenceConfidence': presence.name,
       'hasPosition': node.hasPosition,
       'latitude': node.latitude,
       'longitude': node.longitude,
@@ -261,9 +274,7 @@ class DebugExportService {
       'temperature': node.temperature,
       'humidity': node.humidity,
       'lastHeard': node.lastHeard?.toIso8601String(),
-      'lastHeardAgo': node.lastHeard != null
-          ? DateTime.now().difference(node.lastHeard!).inSeconds
-          : null,
+      'lastHeardAgo': lastHeardAge?.inSeconds,
     };
   }
 

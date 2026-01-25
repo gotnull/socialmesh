@@ -8,6 +8,7 @@ import '../../core/widgets/node_selector_sheet.dart';
 import '../../providers/help_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/presence_providers.dart';
 import '../messaging/messaging_screen.dart';
 
 /// Screen showing the 3D mesh globe with node positions
@@ -64,6 +65,7 @@ class _GlobeScreenState extends ConsumerState<GlobeScreen> {
   @override
   Widget build(BuildContext context) {
     final nodes = ref.watch(nodesProvider);
+    final presenceMap = ref.watch(presenceMapProvider);
     final nodesList = nodes.values.where((n) => n.hasPosition).toList();
     final myNodeNum = ref.watch(myNodeNumProvider);
 
@@ -120,6 +122,9 @@ class _GlobeScreenState extends ConsumerState<GlobeScreen> {
               child: MeshGlobe(
                 key: _globeKey,
                 nodes: nodesList,
+                presenceMap: presenceMap.map(
+                  (key, value) => MapEntry(key, value.confidence),
+                ),
                 showConnections: _showConnections,
                 onNodeSelected: _onNodeSelected,
                 autoRotateSpeed: 0.0, // No auto-rotation

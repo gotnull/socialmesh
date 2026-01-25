@@ -1,4 +1,5 @@
 import '../../../models/mesh_models.dart';
+import '../../../models/presence_confidence.dart';
 import '../models/widget_schema.dart';
 
 /// Available data binding categories
@@ -64,11 +65,11 @@ class BindingRegistry {
       valueType: int,
     ),
     BindingDefinition(
-      path: 'node.isOnline',
-      label: 'Online Status',
-      description: 'Whether the node is currently online',
+      path: 'node.presenceConfidence',
+      label: 'Presence Confidence',
+      description: 'Inferred presence: active, fading, stale, unknown',
       category: BindingCategory.node,
-      valueType: bool,
+      valueType: String,
     ),
     BindingDefinition(
       path: 'node.lastHeard',
@@ -492,8 +493,8 @@ class BindingRegistry {
     ),
     BindingDefinition(
       path: 'node.numOnlineNodes',
-      label: 'Online Nodes',
-      description: 'Number of online nodes',
+      label: 'Nodes Heard (2h)',
+      description: 'Meshtastic metric: nodes heard in the last 2 hours',
       category: BindingCategory.network,
       valueType: int,
     ),
@@ -514,9 +515,9 @@ class BindingRegistry {
       valueType: int,
     ),
     BindingDefinition(
-      path: 'network.onlineNodes',
-      label: 'Online Mesh Nodes',
-      description: 'Currently online nodes',
+      path: 'network.activeCount',
+      label: 'Active Mesh Nodes',
+      description: 'Nodes heard recently',
       category: BindingCategory.network,
       valueType: int,
     ),
@@ -736,8 +737,8 @@ class DataBindingEngine {
         return 'Node Name';
       case 'node.nodeNum':
         return 12345678;
-      case 'node.isOnline':
-        return true;
+      case 'node.presenceConfidence':
+        return 'active';
       case 'node.role':
         return 'CLIENT';
       case 'node.hardwareModel':
@@ -832,10 +833,8 @@ class DataBindingEngine {
       case 'network.nodeCount':
       case 'network.totalNodes':
         return 5;
-      case 'network.onlineCount':
+      case 'network.activeCount':
         return 3;
-      case 'network.offlineCount':
-        return 2;
 
       // Messages
       case 'messages.count':
@@ -905,8 +904,10 @@ class DataBindingEngine {
         return node.nodeNum;
       case 'userId':
         return node.userId;
-      case 'isOnline':
-        return node.isOnline;
+      case 'presenceConfidence':
+        return node.presenceConfidence.name;
+      case 'isOnline': // Back-compat for older widgets
+        return node.presenceConfidence.isActive;
       case 'isFavorite':
         return node.isFavorite;
       case 'lastHeard':
@@ -1033,10 +1034,18 @@ class DataBindingEngine {
     switch (field) {
       case 'totalNodes':
         return _allNodes?.length ?? 0;
-      case 'onlineNodes':
+      case 'activeCount':
         final nodes = _allNodes;
         if (nodes == null) return 0;
-        return nodes.values.where((n) => n.isOnline).length;
+        return nodes.values
+            .where((n) => n.presenceConfidence.isActive)
+            .length;
+      case 'onlineNodes': // Back-compat for older widgets
+        final nodes = _allNodes;
+        if (nodes == null) return 0;
+        return nodes.values
+            .where((n) => n.presenceConfidence.isActive)
+            .length;
       case 'unreadMessages':
         // This would need to be tracked elsewhere
         return 0;

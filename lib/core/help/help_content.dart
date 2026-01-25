@@ -195,7 +195,7 @@ class HelpContent {
       HelpStep(
         id: 'routing_store_forward',
         bubbleText:
-            "**Store & Forward** is awesome! If the recipient is offline, I'll hold onto the message and deliver it when they come back online!",
+            "**Store & Forward** is awesome! If the recipient hasn't been heard recently, I'll hold onto the message and deliver it when a packet arrives.",
         icoMood: MeshBrainMood.playful,
       ),
     ],
@@ -223,7 +223,7 @@ class HelpContent {
       HelpStep(
         id: 'nodes_status',
         bubbleText:
-            "**Green dot** means online and ready. **Yellow** means they were here recently. **Gray** means they've been quiet for a while.",
+            "**Green dot** means **Active** (heard very recently). **Yellow** means **Seen recently**. **Gray** means **Inactive**. LoRa has no offline signal—status is inferred.",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
@@ -235,7 +235,7 @@ class HelpContent {
       HelpStep(
         id: 'nodes_filters',
         bubbleText:
-            "Use the **filters** at the top to find specific nodes. You can show only online nodes, favorites, or nodes with GPS.",
+            "Use the **filters** at the top to find specific nodes. You can show only **Active** nodes, favorites, or nodes with GPS.",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
@@ -499,7 +499,7 @@ class HelpContent {
       HelpStep(
         id: 'map_filters',
         bubbleText:
-            "Use **filters** to show only online nodes, or nodes with GPS. Helps when your map gets crowded!",
+            "Use **filters** to show only **Active** nodes, or nodes with GPS. Helps when your map gets crowded!",
         icoMood: MeshBrainMood.playful,
       ),
     ],
@@ -573,7 +573,7 @@ class HelpContent {
       HelpStep(
         id: 'automations_triggers',
         bubbleText:
-            "Every automation starts with a **trigger**. Like when a node goes offline, battery gets low, or you enter an area!",
+            "Every automation starts with a **trigger**. Like when a node becomes inactive, battery gets low, or you enter an area!",
         icoMood: MeshBrainMood.speaking,
       ),
       HelpStep(
@@ -951,7 +951,7 @@ class HelpContent {
       HelpStep(
         id: 'mesh3d_colors',
         bubbleText:
-            "Colors show **node health**. Green = online and strong, yellow = okay, red = weak or offline.",
+            "Colors show **node health**. Green = active, yellow = fading, gray = inactive. Status is inferred from last heard.",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(

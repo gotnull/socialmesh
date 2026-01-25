@@ -5,6 +5,8 @@ import '../../core/theme.dart';
 import '../../core/widgets/auto_scroll_text.dart';
 import '../../models/world_mesh_node.dart';
 import '../../utils/snackbar.dart';
+import '../../models/presence_confidence.dart';
+import '../../utils/presence_utils.dart';
 
 /// Screen for comparing two mesh nodes side by side
 class NodeComparisonScreen extends StatelessWidget {
@@ -102,9 +104,8 @@ class NodeComparisonScreen extends StatelessWidget {
 
   Widget _buildNodeCard(BuildContext context, WorldMeshNode node, Color color) {
     final nodeId = node.nodeNum.toRadixString(16).toUpperCase();
-    final statusColor = node.isOnline
-        ? AccentColors.green
-        : (node.isIdle ? AppTheme.warningYellow : context.textTertiary);
+    final statusColor = _presenceColor(context, node.presenceConfidence);
+    final statusIcon = _presenceIcon(node.presenceConfidence);
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -123,13 +124,7 @@ class NodeComparisonScreen extends StatelessWidget {
               shape: BoxShape.circle,
               border: Border.all(color: statusColor, width: 2),
             ),
-            child: Icon(
-              node.isOnline
-                  ? Icons.wifi
-                  : (node.isIdle ? Icons.wifi_1_bar : Icons.wifi_off),
-              color: statusColor,
-              size: 20,
-            ),
+            child: Icon(statusIcon, color: statusColor, size: 20),
           ),
           const SizedBox(height: 8),
           AutoScrollText(
@@ -177,12 +172,14 @@ class NodeComparisonScreen extends StatelessWidget {
       rows: [
         _ComparisonRow(
           label: 'Status',
-          valueA: nodeA.isOnline
-              ? 'Online'
-              : (nodeA.isIdle ? 'Idle' : 'Offline'),
-          valueB: nodeB.isOnline
-              ? 'Online'
-              : (nodeB.isIdle ? 'Idle' : 'Offline'),
+          valueA: presenceStatusText(
+            nodeA.presenceConfidence,
+            _lastSeenAge(nodeA),
+          ),
+          valueB: presenceStatusText(
+            nodeB.presenceConfidence,
+            _lastSeenAge(nodeB),
+          ),
           colorA: _getStatusColor(context, nodeA),
           colorB: _getStatusColor(context, nodeB),
         ),
@@ -302,9 +299,39 @@ class NodeComparisonScreen extends StatelessWidget {
   }
 
   Color _getStatusColor(BuildContext context, WorldMeshNode node) {
-    return node.isOnline
-        ? AccentColors.green
-        : (node.isIdle ? AppTheme.warningYellow : context.textTertiary);
+    return _presenceColor(context, node.presenceConfidence);
+  }
+
+  Color _presenceColor(BuildContext context, PresenceConfidence confidence) {
+    switch (confidence) {
+      case PresenceConfidence.active:
+        return AccentColors.green;
+      case PresenceConfidence.fading:
+        return AppTheme.warningYellow;
+      case PresenceConfidence.stale:
+        return context.textSecondary;
+      case PresenceConfidence.unknown:
+        return context.textTertiary;
+    }
+  }
+
+  IconData _presenceIcon(PresenceConfidence confidence) {
+    switch (confidence) {
+      case PresenceConfidence.active:
+        return Icons.wifi;
+      case PresenceConfidence.fading:
+        return Icons.wifi_1_bar;
+      case PresenceConfidence.stale:
+        return Icons.wifi_off;
+      case PresenceConfidence.unknown:
+        return Icons.help_outline;
+    }
+  }
+
+  Duration? _lastSeenAge(WorldMeshNode node) {
+    final lastSeen = node.lastSeen;
+    if (lastSeen == null) return null;
+    return DateTime.now().difference(lastSeen);
   }
 
   String _formatBattery(int? level) {

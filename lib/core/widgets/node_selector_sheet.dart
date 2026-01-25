@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme.dart';
 import '../../models/mesh_models.dart';
+import '../../models/presence_confidence.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/presence_providers.dart';
+import '../../utils/presence_utils.dart';
 import 'animations.dart';
 import 'app_bottom_sheet.dart';
 
@@ -72,11 +75,14 @@ class _NodeSelectorSheetState extends ConsumerState<NodeSelectorSheet> {
   List<MeshNode> get _filteredNodes {
     final nodes = ref.watch(nodesProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
+    final presenceMap = ref.watch(presenceMapProvider);
 
     var nodeList = nodes.values.where((n) => n.nodeNum != myNodeNum).toList()
       ..sort((a, b) {
-        // Online nodes first, then by name
-        if (a.isOnline != b.isOnline) return a.isOnline ? -1 : 1;
+        // Active nodes first, then by name
+        final aActive = presenceConfidenceFor(presenceMap, a).isActive;
+        final bActive = presenceConfidenceFor(presenceMap, b).isActive;
+        if (aActive != bActive) return aActive ? -1 : 1;
         final aName = a.longName ?? a.shortName ?? '';
         final bName = b.longName ?? b.shortName ?? '';
         return aName.compareTo(bName);
@@ -97,6 +103,7 @@ class _NodeSelectorSheetState extends ConsumerState<NodeSelectorSheet> {
   @override
   Widget build(BuildContext context) {
     final nodes = _filteredNodes;
+    final presenceMap = ref.watch(presenceMapProvider);
     final isBroadcastSelected =
         widget.allowBroadcast && _selectedNodeNum == null;
 
@@ -182,6 +189,8 @@ class _NodeSelectorSheetState extends ConsumerState<NodeSelectorSheet> {
               title: widget.broadcastLabel ?? 'All Nodes',
               subtitle: widget.broadcastSubtitle ?? 'Broadcast to everyone',
               isSelected: isBroadcastSelected,
+              presence: PresenceConfidence.unknown,
+              lastHeardAge: null,
               onTap: () {
                 setState(() => _selectedNodeNum = null);
                 Navigator.pop(context, const NodeSelection.broadcast());
@@ -232,13 +241,15 @@ class _NodeSelectorSheetState extends ConsumerState<NodeSelectorSheet> {
                         enabled: animationsEnabled,
                         child: _NodeTile(
                           icon: Icons.person,
-                          iconColor: node.isOnline
+                          iconColor:
+                              presenceConfidenceFor(presenceMap, node).isActive
                               ? context.accentColor
                               : context.textTertiary,
                           title: displayName,
                           subtitle: node.shortName ?? 'Unknown',
                           isSelected: _selectedNodeNum == node.nodeNum,
-                          isOnline: node.isOnline,
+                          presence: presenceConfidenceFor(presenceMap, node),
+                          lastHeardAge: lastHeardAgeFor(presenceMap, node),
                           onTap: () {
                             setState(() => _selectedNodeNum = node.nodeNum);
                             Navigator.pop(
@@ -284,7 +295,8 @@ class _NodeTile extends StatelessWidget {
   final String title;
   final String subtitle;
   final bool isSelected;
-  final bool isOnline;
+  final PresenceConfidence presence;
+  final Duration? lastHeardAge;
   final VoidCallback onTap;
 
   const _NodeTile({
@@ -293,7 +305,8 @@ class _NodeTile extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.isSelected,
-    this.isOnline = false,
+    required this.presence,
+    required this.lastHeardAge,
     required this.onTap,
   });
 
@@ -320,7 +333,7 @@ class _NodeTile extends StatelessWidget {
                 child: Stack(
                   children: [
                     Center(child: Icon(icon, color: iconColor, size: 22)),
-                    if (isOnline)
+                    if (presence.isActive)
                       Positioned(
                         right: 2,
                         bottom: 2,
@@ -363,6 +376,14 @@ class _NodeTile extends StatelessWidget {
                       ),
                     ),
                   ],
+                ),
+              ),
+              Text(
+                presenceStatusText(presence, lastHeardAge),
+                style: TextStyle(
+                  color:
+                      presence.isActive ? context.accentColor : context.textTertiary,
+                  fontSize: 11,
                 ),
               ),
               if (isSelected)

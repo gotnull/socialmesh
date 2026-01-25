@@ -9,6 +9,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/logging.dart';
+import '../../models/presence_confidence.dart';
 import '../../models/mesh_models.dart' show MeshNode;
 import '../../services/ifttt/ifttt_service.dart';
 import '../../services/audio/rtttl_player.dart';
@@ -41,7 +42,7 @@ class AutomationEngine {
   onSendToChannel;
 
   // Track node states for change detection
-  final Map<int, bool> _nodeOnlineStatus = {};
+  final Map<int, PresenceConfidence> _nodePresence = {};
   final Map<int, int> _nodeBatteryLevels = {};
   final Map<int, DateTime> _nodeLastHeard = {};
   final Map<int, String> _nodeNames = {};
@@ -106,32 +107,6 @@ class AutomationEngine {
         .where((a) => a.enabled)
         .toList();
     if (automations.isEmpty) return;
-
-    // Check online/offline transitions
-    final wasOnline = _nodeOnlineStatus[node.nodeNum];
-    final isOnline = node.isOnline;
-    _nodeOnlineStatus[node.nodeNum] = isOnline;
-
-    if (wasOnline == false && isOnline) {
-      await _processEvent(
-        AutomationEvent(
-          type: TriggerType.nodeOnline,
-          nodeNum: node.nodeNum,
-          nodeName: node.displayName,
-          batteryLevel: node.batteryLevel,
-          latitude: node.latitude,
-          longitude: node.longitude,
-        ),
-      );
-    } else if (wasOnline == true && !isOnline) {
-      await _processEvent(
-        AutomationEvent(
-          type: TriggerType.nodeOffline,
-          nodeNum: node.nodeNum,
-          nodeName: node.displayName,
-        ),
-      );
-    }
 
     // Check battery changes
     final previousBattery = _nodeBatteryLevels[node.nodeNum];
@@ -237,6 +212,44 @@ class AutomationEngine {
     // Update last heard for silent node detection
     if (node.lastHeard != null) {
       _nodeLastHeard[node.nodeNum] = node.lastHeard!;
+    }
+  }
+
+  /// Process presence transition events (active/inactive)
+  Future<void> processPresenceUpdate(
+    MeshNode node, {
+    required PresenceConfidence previous,
+    required PresenceConfidence current,
+  }) async {
+    final automations = _repository.automations
+        .where((a) => a.enabled)
+        .toList();
+    if (automations.isEmpty) return;
+
+    _nodePresence[node.nodeNum] = current;
+
+    if (current.isActive && !previous.isActive) {
+      await _processEvent(
+        AutomationEvent(
+          type: TriggerType.nodeOnline,
+          nodeNum: node.nodeNum,
+          nodeName: node.displayName,
+          batteryLevel: node.batteryLevel,
+          latitude: node.latitude,
+          longitude: node.longitude,
+        ),
+      );
+      return;
+    }
+
+    if (current.isInactive && !previous.isInactive) {
+      await _processEvent(
+        AutomationEvent(
+          type: TriggerType.nodeOffline,
+          nodeNum: node.nodeNum,
+          nodeName: node.displayName,
+        ),
+      );
     }
   }
 
@@ -420,11 +433,11 @@ class AutomationEngine {
 
       case ConditionType.nodeOnline:
         if (condition.nodeNum == null) return true;
-        return _nodeOnlineStatus[condition.nodeNum] == true;
+        return _nodePresence[condition.nodeNum]?.isActive == true;
 
       case ConditionType.nodeOffline:
         if (condition.nodeNum == null) return true;
-        return _nodeOnlineStatus[condition.nodeNum] != true;
+        return _nodePresence[condition.nodeNum]?.isInactive != false;
 
       case ConditionType.withinGeofence:
       case ConditionType.outsideGeofence:

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../models/world_mesh_node.dart';
+import '../../../models/presence_confidence.dart';
 
 /// Service for persisting historical node data snapshots.
 /// Stores time-series data to track node behavior over time.
@@ -66,9 +67,11 @@ class NodeHistoryService {
     }
 
     // Calculate uptime stats
-    final onlineCount = history.where((e) => e.isOnline).length;
+    final activeCount = history
+        .where((e) => e.presenceConfidence.isActive)
+        .length;
     final uptimePercent = history.isNotEmpty
-        ? (onlineCount / history.length) * 100
+        ? (activeCount / history.length) * 100
         : 0.0;
 
     // Calculate average channel utilization
@@ -118,7 +121,7 @@ class NodeHistoryEntry {
   final double? voltage;
   final double? channelUtil;
   final double? airUtilTx;
-  final bool isOnline;
+  final PresenceConfidence presenceConfidence;
   final int neighborCount;
   final int gatewayCount;
   final double? latitude;
@@ -130,7 +133,7 @@ class NodeHistoryEntry {
     this.voltage,
     this.channelUtil,
     this.airUtilTx,
-    required this.isOnline,
+    required this.presenceConfidence,
     required this.neighborCount,
     required this.gatewayCount,
     this.latitude,
@@ -145,7 +148,7 @@ class NodeHistoryEntry {
       voltage: node.voltage,
       channelUtil: node.chUtil,
       airUtilTx: node.airUtilTx,
-      isOnline: node.isOnline,
+      presenceConfidence: node.presenceConfidence,
       neighborCount: node.neighbors?.length ?? 0,
       gatewayCount: node.seenBy.length,
       latitude: node.latitudeDecimal,
@@ -154,13 +157,22 @@ class NodeHistoryEntry {
   }
 
   factory NodeHistoryEntry.fromJson(Map<String, dynamic> json) {
+    final confidenceRaw = json['presenceConfidence'] as String?;
+    final fallbackOnline = json['isOnline'] as bool?;
+    final parsedConfidence = PresenceConfidence.values.firstWhere(
+      (value) => value.name == confidenceRaw,
+      orElse: () =>
+          (fallbackOnline == true
+              ? PresenceConfidence.active
+              : PresenceConfidence.unknown),
+    );
     return NodeHistoryEntry(
       timestamp: DateTime.parse(json['timestamp'] as String),
       batteryLevel: json['batteryLevel'] as int?,
       voltage: (json['voltage'] as num?)?.toDouble(),
       channelUtil: (json['channelUtil'] as num?)?.toDouble(),
       airUtilTx: (json['airUtilTx'] as num?)?.toDouble(),
-      isOnline: json['isOnline'] as bool? ?? false,
+      presenceConfidence: parsedConfidence,
       neighborCount: json['neighborCount'] as int? ?? 0,
       gatewayCount: json['gatewayCount'] as int? ?? 0,
       latitude: (json['latitude'] as num?)?.toDouble(),
@@ -174,7 +186,7 @@ class NodeHistoryEntry {
     'voltage': voltage,
     'channelUtil': channelUtil,
     'airUtilTx': airUtilTx,
-    'isOnline': isOnline,
+    'presenceConfidence': presenceConfidence.name,
     'neighborCount': neighborCount,
     'gatewayCount': gatewayCount,
     'latitude': latitude,

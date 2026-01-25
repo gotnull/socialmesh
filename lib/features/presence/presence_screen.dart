@@ -1,138 +1,11 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
 import '../../models/mesh_models.dart';
-import '../../providers/app_providers.dart';
-
-/// Presence status based on recent radio activity
-enum PresenceStatus { active, idle, offline }
-
-extension PresenceStatusExt on PresenceStatus {
-  String get label {
-    switch (this) {
-      case PresenceStatus.active:
-        return 'Active';
-      case PresenceStatus.idle:
-        return 'Idle';
-      case PresenceStatus.offline:
-        return 'Offline';
-    }
-  }
-
-  String get description {
-    switch (this) {
-      case PresenceStatus.active:
-        return 'Heard within 2 minutes';
-      case PresenceStatus.idle:
-        return 'Heard within 15 minutes';
-      case PresenceStatus.offline:
-        return 'Not heard recently';
-    }
-  }
-
-  Color getColor(BuildContext context) {
-    switch (this) {
-      case PresenceStatus.active:
-        return AppTheme.successGreen;
-      case PresenceStatus.idle:
-        return AppTheme.warningYellow;
-      case PresenceStatus.offline:
-        return context.textTertiary;
-    }
-  }
-
-  IconData get icon {
-    switch (this) {
-      case PresenceStatus.active:
-        return Icons.circle;
-      case PresenceStatus.idle:
-        return Icons.circle_outlined;
-      case PresenceStatus.offline:
-        return Icons.radio_button_unchecked;
-    }
-  }
-}
-
-/// Node with presence information
-class NodePresence {
-  final MeshNode node;
-  final PresenceStatus status;
-  final Duration? timeSinceLastHeard;
-  final double? signalQuality; // 0.0 to 1.0
-
-  NodePresence({
-    required this.node,
-    required this.status,
-    this.timeSinceLastHeard,
-    this.signalQuality,
-  });
-
-  static PresenceStatus calculateStatus(DateTime? lastHeard) {
-    if (lastHeard == null) return PresenceStatus.offline;
-
-    final diff = DateTime.now().difference(lastHeard);
-    if (diff.inMinutes < 2) return PresenceStatus.active;
-    if (diff.inMinutes < 15) return PresenceStatus.idle;
-    return PresenceStatus.offline;
-  }
-
-  static double? calculateSignalQuality(MeshNode node) {
-    final snr = node.snr;
-    if (snr == null) return null;
-
-    // SNR ranges from about -20 to +10 dB for LoRa
-    // Map to 0.0-1.0 scale
-    final normalized = (snr + 20) / 30;
-    return normalized.clamp(0.0, 1.0);
-  }
-}
-
-/// Provider for node presence data
-final nodePresenceProvider = Provider<List<NodePresence>>((ref) {
-  final nodes = ref.watch(nodesProvider);
-  final myNodeNum = ref.watch(myNodeNumProvider);
-
-  return nodes.values.where((node) => node.nodeNum != myNodeNum).map((node) {
-    final status = NodePresence.calculateStatus(node.lastHeard);
-    final timeSince = node.lastHeard != null
-        ? DateTime.now().difference(node.lastHeard!)
-        : null;
-    final signalQuality = NodePresence.calculateSignalQuality(node);
-
-    return NodePresence(
-      node: node,
-      status: status,
-      timeSinceLastHeard: timeSince,
-      signalQuality: signalQuality,
-    );
-  }).toList()..sort((a, b) {
-    // Sort by status (active first), then by time since last heard
-    final statusCompare = a.status.index.compareTo(b.status.index);
-    if (statusCompare != 0) return statusCompare;
-
-    final aTime = a.timeSinceLastHeard?.inSeconds ?? double.maxFinite.toInt();
-    final bTime = b.timeSinceLastHeard?.inSeconds ?? double.maxFinite.toInt();
-    return aTime.compareTo(bTime);
-  });
-});
-
-/// Summary counts for presence
-final presenceSummaryProvider = Provider<Map<PresenceStatus, int>>((ref) {
-  final presences = ref.watch(nodePresenceProvider);
-  final counts = <PresenceStatus, int>{
-    PresenceStatus.active: 0,
-    PresenceStatus.idle: 0,
-    PresenceStatus.offline: 0,
-  };
-
-  for (final presence in presences) {
-    counts[presence.status] = (counts[presence.status] ?? 0) + 1;
-  }
-
-  return counts;
-});
+import '../../models/presence_confidence.dart';
+import '../../providers/presence_providers.dart';
+import '../../utils/presence_utils.dart';
 
 class PresenceScreen extends ConsumerStatefulWidget {
   const PresenceScreen({super.key});
@@ -142,27 +15,10 @@ class PresenceScreen extends ConsumerStatefulWidget {
 }
 
 class _PresenceScreenState extends ConsumerState<PresenceScreen> {
-  Timer? _refreshTimer;
-
-  @override
-  void initState() {
-    super.initState();
-    // Refresh every 30 seconds to update presence states
-    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
-      if (mounted) setState(() {});
-    });
-  }
-
-  @override
-  void dispose() {
-    _refreshTimer?.cancel();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final presences = ref.watch(nodePresenceProvider);
+    final presences = ref.watch(presenceListProvider);
     final summary = ref.watch(presenceSummaryProvider);
 
     return Scaffold(
@@ -251,34 +107,35 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
   Widget _buildSummarySection(
     BuildContext context,
     ThemeData theme,
-    Map<PresenceStatus, int> summary,
+    Map<PresenceConfidence, int> summary,
   ) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Row(
-        children: PresenceStatus.values.map((status) {
+        children: PresenceConfidence.values.map((status) {
           final count = summary[status] ?? 0;
+          final color = _statusColor(status);
           return Expanded(
             child: Container(
               margin: EdgeInsets.only(
-                right: status != PresenceStatus.offline ? 12 : 0,
+                right: status != PresenceConfidence.unknown ? 12 : 0,
               ),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: status.getColor(context).withAlpha(26),
+                color: color.withAlpha(26),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: status.getColor(context).withAlpha(77),
+                  color: color.withAlpha(77),
                 ),
               ),
               child: Column(
                 children: [
-                  Icon(status.icon, color: status.getColor(context), size: 24),
+                  Icon(_statusIcon(status), color: color, size: 24),
                   const SizedBox(height: 8),
                   Text(
                     count.toString(),
                     style: theme.textTheme.headlineMedium?.copyWith(
-                      color: status.getColor(context),
+                      color: color,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -286,7 +143,7 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
                   Text(
                     status.label,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: status.getColor(context),
+                      color: color,
                     ),
                   ),
                 ],
@@ -301,7 +158,7 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
   Widget _buildActivityChart(ThemeData theme, List<NodePresence> presences) {
     // Build a simple activity visualization
     final activePresences = presences
-        .where((p) => p.status != PresenceStatus.offline)
+        .where((p) => p.confidence != PresenceConfidence.unknown)
         .toList();
 
     if (activePresences.isEmpty) {
@@ -344,7 +201,7 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
               children: [
                 _LegendItem(color: AppTheme.successGreen, label: '< 2 min'),
                 const SizedBox(width: 24),
-                _LegendItem(color: AppTheme.warningYellow, label: '2-15 min'),
+                _LegendItem(color: AppTheme.warningYellow, label: '2-10 min'),
               ],
             ),
           ],
@@ -383,7 +240,7 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
                 width: 14,
                 height: 14,
                 decoration: BoxDecoration(
-                  color: presence.status.getColor(context),
+                  color: _statusColor(presence.confidence),
                   shape: BoxShape.circle,
                   border: Border.all(color: context.surface, width: 2),
                 ),
@@ -405,15 +262,21 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
             Row(
               children: [
                 Icon(
-                  presence.status.icon,
+                  _statusIcon(presence.confidence),
                   size: 12,
-                  color: presence.status.getColor(context),
+                  color: _statusColor(presence.confidence),
                 ),
                 const SizedBox(width: 4),
-                Text(
-                  presence.status.label,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: presence.status.getColor(context),
+                Tooltip(
+                  message: kPresenceInferenceTooltip,
+                  child: Text(
+                    presenceStatusText(
+                      presence.confidence,
+                      presence.timeSinceLastHeard,
+                    ),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: _statusColor(presence.confidence),
+                    ),
                   ),
                 ),
                 if (presence.timeSinceLastHeard != null) ...[
@@ -481,6 +344,32 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
     if (duration.inMinutes < 60) return '${duration.inMinutes}m ago';
     if (duration.inHours < 24) return '${duration.inHours}h ago';
     return '${duration.inDays}d ago';
+  }
+
+  Color _statusColor(PresenceConfidence confidence) {
+    switch (confidence) {
+      case PresenceConfidence.active:
+        return AppTheme.successGreen;
+      case PresenceConfidence.fading:
+        return AppTheme.warningYellow;
+      case PresenceConfidence.stale:
+        return context.textSecondary;
+      case PresenceConfidence.unknown:
+        return context.textTertiary;
+    }
+  }
+
+  IconData _statusIcon(PresenceConfidence confidence) {
+    switch (confidence) {
+      case PresenceConfidence.active:
+        return Icons.circle;
+      case PresenceConfidence.fading:
+        return Icons.circle_outlined;
+      case PresenceConfidence.stale:
+        return Icons.radio_button_unchecked;
+      case PresenceConfidence.unknown:
+        return Icons.help_outline;
+    }
   }
 }
 

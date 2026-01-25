@@ -1,9 +1,4 @@
-/// Node status based on last seen time
-enum NodeStatus {
-  online, // < 1 hour
-  idle, // 1-24 hours
-  offline, // > 24 hours or never seen
-}
+import 'presence_confidence.dart';
 
 /// Model for nodes from mesh-observer's nodes.json API
 /// Represents Meshtastic nodes from the global MQTT network
@@ -175,40 +170,8 @@ class WorldMeshNode {
     return DateTime.fromMillisecondsSinceEpoch(maxTimestamp * 1000);
   }
 
-  /// Check if node was seen recently (within 24 hours)
-  bool get isRecentlySeen {
-    final seen = lastSeen;
-    if (seen == null) return false;
-    return DateTime.now().difference(seen).inHours < 24;
-  }
-
-  /// Check if node is online (seen within 1 hour)
-  bool get isOnline {
-    final seen = lastSeen;
-    if (seen == null) return false;
-    return DateTime.now().difference(seen).inMinutes < 60;
-  }
-
-  /// Check if node was seen recently but not online (1-24 hours)
-  bool get isIdle {
-    final seen = lastSeen;
-    if (seen == null) return false;
-    final diff = DateTime.now().difference(seen);
-    return diff.inMinutes >= 60 && diff.inHours < 24;
-  }
-
-  /// Check if node is offline (>24 hours or never seen)
-  bool get isOffline {
-    final seen = lastSeen;
-    if (seen == null) return true;
-    return DateTime.now().difference(seen).inHours >= 24;
-  }
-
-  /// Get node status based on last seen time
-  NodeStatus get status {
-    if (isOnline) return NodeStatus.online;
-    if (isIdle) return NodeStatus.idle;
-    return NodeStatus.offline;
+  PresenceConfidence get presenceConfidence {
+    return PresenceCalculator.fromLastHeard(lastSeen, now: DateTime.now());
   }
 
   /// Get time since last seen as human readable string
@@ -223,6 +186,13 @@ class WorldMeshNode {
     } else {
       return '${diff.inDays}d ago';
     }
+  }
+
+  /// True if the node was seen within the last hour.
+  bool get isRecentlySeen {
+    final seen = lastSeen;
+    if (seen == null) return false;
+    return DateTime.now().difference(seen) <= const Duration(hours: 1);
   }
 
   /// Get battery status string

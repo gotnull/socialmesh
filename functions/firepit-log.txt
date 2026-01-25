@@ -1,0 +1,14 @@
+Welcome to firepit v1.1.0!
+Doing JSON parses for version checks at /snapshot/firepit/vendor/node_modules/firebase-tools/package.json
+firebase-tools
+Installed ft@11.24.0 and packaged ft@11.24.0
+Checking for npm/bin/npm-cli install at /Users/fulvio/.cache/firebase/tools/lib/node_modules/npm/bin/npm-cli
+Checking for npm/bin/npm-cli install at /Users/fulvio/.cache/firebase/tools/node_modules/npm/bin/npm-cli
+Checking for npm/bin/npm-cli install at /snapshot/firepit/node_modules/npm/bin/npm-cli
+Found npm/bin/npm-cli install.
+Checking for npm/bin/npm-cli install at /Users/fulvio/.cache/firebase/tools/lib/node_modules/npm/bin/npm-cli
+Checking for npm/bin/npm-cli install at /Users/fulvio/.cache/firebase/tools/node_modules/npm/bin/npm-cli
+Checking for npm/bin/npm-cli install at /snapshot/firepit/node_modules/npm/bin/npm-cli
+Found npm/bin/npm-cli install.
+ShellJSInternalError: EPERM: operation not permitted, chmod '/Users/fulvio/.cache/firebase/runtime/shell'
+Error: EPERM: operation not permitted, open '/Users/fulvio/.cache/firebase/runtime/shell'

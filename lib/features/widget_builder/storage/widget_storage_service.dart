@@ -873,7 +873,7 @@ class WidgetTemplates {
                 iconSize: 24,
                 style: const StyleSchema(textColor: '#4ADE80'),
                 condition: ConditionalSchema(
-                  bindingPath: 'node.isOnline',
+                  bindingPath: 'node.presenceConfidence',
                   operator: ConditionalOperator.equals,
                   value: true,
                 ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../models/world_mesh_node.dart';
+import '../../models/presence_confidence.dart';
 
 /// Filter categories for world mesh map
 enum WorldMeshFilterCategory {
@@ -60,7 +61,7 @@ extension WorldMeshFilterCategoryExtension on WorldMeshFilterCategory {
 
 /// Filter state for world mesh map
 class WorldMeshFilters {
-  final Set<NodeStatus> statusFilter;
+  final Set<PresenceConfidence> statusFilter;
   final Set<String> hardwareFilter;
   final Set<String> modemPresetFilter;
   final Set<String> regionFilter;
@@ -108,7 +109,7 @@ class WorldMeshFilters {
   }
 
   WorldMeshFilters copyWith({
-    Set<NodeStatus>? statusFilter,
+    Set<PresenceConfidence>? statusFilter,
     Set<String>? hardwareFilter,
     Set<String>? modemPresetFilter,
     Set<String>? regionFilter,
@@ -158,7 +159,7 @@ class WorldMeshFilters {
     // Apply status filter
     if (statusFilter.isNotEmpty) {
       filtered = filtered.where((node) {
-        return statusFilter.contains(node.status);
+        return statusFilter.contains(node.presenceConfidence);
       }).toList();
     }
 
@@ -230,9 +231,10 @@ class WorldMeshFilterOptions {
   final Set<String> regions;
   final Set<String> roles;
   final Set<String> firmwareVersions;
-  final int onlineCount;
-  final int idleCount;
-  final int offlineCount;
+  final int activeCount;
+  final int fadingCount;
+  final int staleCount;
+  final int unknownCount;
   final int withEnvironmentSensors;
   final int withBattery;
 
@@ -242,9 +244,10 @@ class WorldMeshFilterOptions {
     this.regions = const {},
     this.roles = const {},
     this.firmwareVersions = const {},
-    this.onlineCount = 0,
-    this.idleCount = 0,
-    this.offlineCount = 0,
+    this.activeCount = 0,
+    this.fadingCount = 0,
+    this.staleCount = 0,
+    this.unknownCount = 0,
     this.withEnvironmentSensors = 0,
     this.withBattery = 0,
   });
@@ -256,9 +259,10 @@ class WorldMeshFilterOptions {
     final regions = <String>{};
     final roles = <String>{};
     final firmwareVersions = <String>{};
-    int onlineCount = 0;
-    int idleCount = 0;
-    int offlineCount = 0;
+    int activeCount = 0;
+    int fadingCount = 0;
+    int staleCount = 0;
+    int unknownCount = 0;
     int withEnvironmentSensors = 0;
     int withBattery = 0;
 
@@ -276,13 +280,15 @@ class WorldMeshFilterOptions {
       }
 
       // Count statuses
-      switch (node.status) {
-        case NodeStatus.online:
-          onlineCount++;
-        case NodeStatus.idle:
-          idleCount++;
-        case NodeStatus.offline:
-          offlineCount++;
+      switch (node.presenceConfidence) {
+        case PresenceConfidence.active:
+          activeCount++;
+        case PresenceConfidence.fading:
+          fadingCount++;
+        case PresenceConfidence.stale:
+          staleCount++;
+        case PresenceConfidence.unknown:
+          unknownCount++;
       }
 
       // Count sensors
@@ -305,9 +311,10 @@ class WorldMeshFilterOptions {
       regions: regions,
       roles: roles,
       firmwareVersions: firmwareVersions,
-      onlineCount: onlineCount,
-      idleCount: idleCount,
-      offlineCount: offlineCount,
+      activeCount: activeCount,
+      fadingCount: fadingCount,
+      staleCount: staleCount,
+      unknownCount: unknownCount,
       withEnvironmentSensors: withEnvironmentSensors,
       withBattery: withBattery,
     );

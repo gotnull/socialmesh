@@ -15,9 +15,12 @@ import '../../core/widgets/node_info_card.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../models/mesh_models.dart';
+import '../../models/presence_confidence.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/presence_providers.dart';
 import '../../providers/help_providers.dart';
 import '../../services/share_link_service.dart';
+import '../../utils/presence_utils.dart';
 import '../messaging/messaging_screen.dart';
 import '../navigation/main_shell.dart';
 import '../../core/widgets/loading_indicator.dart';
@@ -25,8 +28,8 @@ import '../../core/widgets/loading_indicator.dart';
 /// Node filter options
 enum NodeFilter {
   all('All'),
-  online('Online'),
-  offline('Offline'),
+  active('Active'),
+  inactive('Inactive'),
   withGps('With GPS'),
   inRange('In Range');
 
@@ -161,7 +164,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
   }
 
   /// Update position cache and return nodes with valid (current or cached) positions
-  List<_NodeWithPosition> _getNodesWithPositions(Map<int, MeshNode> nodes) {
+  List<_NodeWithPosition> _getNodesWithPositions(
+    Map<int, MeshNode> nodes,
+    Map<int, NodePresence> presenceMap,
+  ) {
     final result = <_NodeWithPosition>[];
     final now = DateTime.now();
 
@@ -191,7 +197,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
         final age = now.difference(cached.timestamp);
         final isStale = age > staleThreshold;
 
-        if (node.isOnline || !isStale) {
+        if (presenceConfidenceFor(presenceMap, node).isActive || !isStale) {
           result.add(
             _NodeWithPosition(
               node: node,
@@ -240,6 +246,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
   List<_NodeWithPosition> _filterNodes(
     List<_NodeWithPosition> nodes,
     int? myNodeNum,
+    Map<int, NodePresence> presenceMap,
   ) {
     var filtered = nodes;
 
@@ -257,11 +264,19 @@ class _MapScreenState extends ConsumerState<MapScreen>
     switch (_nodeFilter) {
       case NodeFilter.all:
         break;
-      case NodeFilter.online:
-        filtered = filtered.where((n) => n.node.isOnline).toList();
+      case NodeFilter.active:
+        filtered = filtered
+            .where(
+              (n) => presenceConfidenceFor(presenceMap, n.node).isActive,
+            )
+            .toList();
         break;
-      case NodeFilter.offline:
-        filtered = filtered.where((n) => !n.node.isOnline).toList();
+      case NodeFilter.inactive:
+        filtered = filtered
+            .where(
+              (n) => presenceConfidenceFor(presenceMap, n.node).isInactive,
+            )
+            .toList();
         break;
       case NodeFilter.withGps:
         filtered = filtered.where((n) => !n.isStale).toList();
@@ -403,11 +418,16 @@ class _MapScreenState extends ConsumerState<MapScreen>
   @override
   Widget build(BuildContext context) {
     final nodes = ref.watch(nodesProvider);
+    final presenceMap = ref.watch(presenceMapProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
 
     // Get nodes with positions (current or cached)
-    final allNodesWithPosition = _getNodesWithPositions(nodes);
-    final nodesWithPosition = _filterNodes(allNodesWithPosition, myNodeNum);
+    final allNodesWithPosition = _getNodesWithPositions(nodes, presenceMap);
+    final nodesWithPosition = _filterNodes(
+      allNodesWithPosition,
+      myNodeNum,
+      presenceMap,
+    );
 
     // Handle initial node centering from navigation
     if (!_initialCenteringDone && widget.initialNodeNum != null) {
@@ -1044,6 +1064,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
                                 },
                                 child: _NodeMarker(
                                   node: n.node,
+                                  presence: presenceConfidenceFor(
+                                    presenceMap,
+                                    n.node,
+                                  ),
                                   isMyNode: isMyNode,
                                   isSelected: isSelected,
                                   isStale: n.isStale,
@@ -1303,6 +1327,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         searchController: _searchController,
                         onSearchChanged: (query) =>
                             setState(() => _searchQuery = query),
+                        presenceMap: presenceMap,
                       ),
                     ),
                   // Node count indicator - hide in location only mode
@@ -1840,6 +1865,19 @@ class _CachedPosition {
   });
 }
 
+Color _presenceColor(BuildContext context, PresenceConfidence confidence) {
+  switch (confidence) {
+    case PresenceConfidence.active:
+      return AppTheme.primaryPurple;
+    case PresenceConfidence.fading:
+      return AppTheme.warningYellow;
+    case PresenceConfidence.stale:
+      return context.textSecondary;
+    case PresenceConfidence.unknown:
+      return context.textTertiary;
+  }
+}
+
 /// Node with resolved position (current or cached)
 class _NodeWithPosition {
   final MeshNode node;
@@ -1858,12 +1896,14 @@ class _NodeWithPosition {
 /// Custom marker widget for nodes
 class _NodeMarker extends StatelessWidget {
   final MeshNode node;
+  final PresenceConfidence presence;
   final bool isMyNode;
   final bool isSelected;
   final bool isStale;
 
   const _NodeMarker({
     required this.node,
+    required this.presence,
     required this.isMyNode,
     required this.isSelected,
     this.isStale = false,
@@ -1873,7 +1913,7 @@ class _NodeMarker extends StatelessWidget {
   Widget build(BuildContext context) {
     final baseColor = isMyNode
         ? context.accentColor
-        : (node.isOnline ? AppTheme.primaryPurple : context.textTertiary);
+        : _presenceColor(context, presence);
     final color = isStale ? baseColor.withValues(alpha: 0.5) : baseColor;
 
     return AnimatedContainer(
@@ -1954,6 +1994,7 @@ class _NodeListPanel extends StatelessWidget {
   final double? Function(_NodeWithPosition) calculateDistanceFromMe;
   final TextEditingController searchController;
   final void Function(String) onSearchChanged;
+  final Map<int, NodePresence> presenceMap;
 
   const _NodeListPanel({
     required this.nodesWithPosition,
@@ -1964,6 +2005,7 @@ class _NodeListPanel extends StatelessWidget {
     required this.calculateDistanceFromMe,
     required this.searchController,
     required this.onSearchChanged,
+    required this.presenceMap,
   });
 
   @override
@@ -2104,11 +2146,20 @@ class _NodeListPanel extends StatelessWidget {
                             selectedNode?.nodeNum == nodeWithPos.node.nodeNum;
                         final distance = calculateDistanceFromMe(nodeWithPos);
 
+                        final presence = presenceConfidenceFor(
+                          presenceMap,
+                          nodeWithPos.node,
+                        );
                         return _NodeListItem(
                           nodeWithPos: nodeWithPos,
                           isMyNode: isMyNode,
                           isSelected: isSelected,
                           distance: distance,
+                          presence: presence,
+                          lastHeardAge: lastHeardAgeFor(
+                            presenceMap,
+                            nodeWithPos.node,
+                          ),
                           onTap: () => onNodeSelected(nodeWithPos),
                         );
                       },
@@ -2127,6 +2178,8 @@ class _NodeListItem extends StatelessWidget {
   final bool isMyNode;
   final bool isSelected;
   final double? distance;
+  final PresenceConfidence presence;
+  final Duration? lastHeardAge;
   final VoidCallback onTap;
 
   const _NodeListItem({
@@ -2134,6 +2187,8 @@ class _NodeListItem extends StatelessWidget {
     required this.isMyNode,
     required this.isSelected,
     required this.distance,
+    required this.presence,
+    required this.lastHeardAge,
     required this.onTap,
   });
 
@@ -2150,9 +2205,14 @@ class _NodeListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final node = nodeWithPos.node;
+    final statusColor = _presenceColor(context, presence);
+    final statusText = presenceStatusText(
+      presence,
+      lastHeardAge,
+    );
     final baseColor = isMyNode
         ? context.accentColor
-        : (node.isOnline ? AppTheme.primaryPurple : context.textTertiary);
+        : _presenceColor(context, presence);
 
     return Material(
       color: isSelected
@@ -2238,11 +2298,11 @@ class _NodeListItem extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
-                              color: isSelected
-                                  ? Colors.white
-                                  : (node.isOnline
-                                        ? context.textPrimary
-                                        : context.textSecondary),
+                                color: isSelected
+                                    ? Colors.white
+                                    : (presence.isActive
+                                          ? context.textPrimary
+                                          : context.textSecondary),
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -2273,23 +2333,26 @@ class _NodeListItem extends StatelessWidget {
                     SizedBox(height: 2),
                     Row(
                       children: [
-                        // Online/offline status
+                        // Presence status
                         Container(
                           width: 6,
                           height: 6,
                           decoration: BoxDecoration(
-                            color: node.isOnline
+                            color: presence.isActive
                                 ? AppTheme.successGreen
                                 : context.textTertiary,
                             shape: BoxShape.circle,
                           ),
                         ),
                         SizedBox(width: 4),
-                        Text(
-                          node.isOnline ? 'Online' : 'Offline',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: context.textTertiary,
+                        Tooltip(
+                          message: kPresenceInferenceTooltip,
+                          child: Text(
+                            statusText,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: statusColor,
+                            ),
                           ),
                         ),
                         if (nodeWithPos.isStale) ...[

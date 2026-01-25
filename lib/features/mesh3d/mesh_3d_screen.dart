@@ -12,8 +12,10 @@ import '../../core/widgets/edge_fade.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../providers/help_providers.dart';
 import '../../models/mesh_models.dart';
+import '../../models/presence_confidence.dart';
 import '../../providers/app_providers.dart';
-import '../presence/presence_screen.dart';
+import '../../providers/presence_providers.dart';
+import '../../utils/presence_utils.dart';
 import '../ar/ar_radar_screen.dart';
 
 /// View modes for the 3D mesh visualization
@@ -117,6 +119,7 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
   // Signal history for live updates
   final Map<int, List<double>> _rssiHistory = {};
   final Map<int, List<double>> _snrHistory = {};
+  Map<int, NodePresence> _presenceMap = const {};
 
   @override
   void initState() {
@@ -271,6 +274,7 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
     final theme = Theme.of(context);
     final nodes = ref.watch(nodesProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
+    _presenceMap = ref.watch(presenceMapProvider);
 
     // Watch stream providers for real-time data updates
     // This ensures the 3D view rebuilds when new signal data arrives
@@ -530,8 +534,10 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
     filteredNodes.sort((a, b) {
       if (a.nodeNum == myNodeNum) return -1;
       if (b.nodeNum == myNodeNum) return 1;
-      if (a.isOnline && !b.isOnline) return -1;
-      if (!a.isOnline && b.isOnline) return 1;
+      final aActive = presenceConfidenceFor(_presenceMap, a).isActive;
+      final bActive = presenceConfidenceFor(_presenceMap, b).isActive;
+      if (aActive && !bActive) return -1;
+      if (!aActive && bActive) return 1;
       return a.displayName.compareTo(b.displayName);
     });
 
@@ -673,14 +679,16 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
     required bool isMyNode,
     required bool isSelected,
   }) {
-    final status = _getPresenceStatus(node);
+    final presence = _getPresenceStatus(node);
     final baseColor = isMyNode
         ? context.accentColor
-        : (status == PresenceStatus.active
+        : (presence.isActive
               ? AppTheme.primaryPurple
-              : (status == PresenceStatus.idle
+              : (presence.isFading
                     ? AppTheme.warningYellow
-                    : context.textTertiary));
+                    : (presence.isStale
+                          ? context.textSecondary
+                          : context.textTertiary)));
 
     return Material(
       color: isSelected
@@ -777,15 +785,18 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
                           margin: const EdgeInsets.only(right: 6),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: status == PresenceStatus.active
+                            color: presence.isActive
                                 ? AppTheme.successGreen
-                                : (status == PresenceStatus.idle
+                                : (presence.isFading
                                       ? AppTheme.warningYellow
                                       : context.textTertiary),
                           ),
                         ),
                         Text(
-                          _getStatusText(status, node.lastHeard),
+                          _getStatusText(
+                            presence,
+                            lastHeardAgeFor(_presenceMap, node),
+                          ),
                           style: TextStyle(
                             fontSize: 12,
                             color: context.textSecondary,
@@ -821,13 +832,8 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
     );
   }
 
-  String _getStatusText(PresenceStatus status, DateTime? lastHeard) {
-    if (lastHeard == null) return 'Never heard';
-    final diff = DateTime.now().difference(lastHeard);
-    if (diff.inMinutes < 5) return 'Just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    return '${diff.inDays}d ago';
+  String _getStatusText(PresenceConfidence presence, Duration? age) {
+    return presenceStatusText(presence, age);
   }
 
   Widget _buildViewModeChips(ThemeData theme) {
@@ -1233,14 +1239,16 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
       if (position == null) continue;
 
       // Determine node color based on presence status
-      final status = _getPresenceStatus(node);
+      final presence = _getPresenceStatus(node);
       Color nodeColor;
-      switch (status) {
-        case PresenceStatus.active:
+      switch (presence) {
+        case PresenceConfidence.active:
           nodeColor = AppTheme.successGreen;
-        case PresenceStatus.idle:
+        case PresenceConfidence.fading:
           nodeColor = AppTheme.warningYellow;
-        case PresenceStatus.offline:
+        case PresenceConfidence.stale:
+          nodeColor = context.textSecondary;
+        case PresenceConfidence.unknown:
           nodeColor = context.textTertiary;
       }
 
@@ -1257,7 +1265,7 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
           isMyNode ? 0.5 : 0.35,
           nodeColor,
           isHighlighted: isMyNode,
-          showRings: status == PresenceStatus.active || isMyNode,
+          showRings: presence.isActive || isMyNode,
         ),
       );
     }
@@ -2167,20 +2175,17 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
     return figures;
   }
 
-  PresenceStatus _getPresenceStatus(MeshNode node) {
-    if (node.lastHeard == null) return PresenceStatus.offline;
-    final diff = DateTime.now().difference(node.lastHeard!);
-    if (diff.inMinutes < 2) return PresenceStatus.active;
-    if (diff.inMinutes < 15) return PresenceStatus.idle;
-    return PresenceStatus.offline;
+  PresenceConfidence _getPresenceStatus(MeshNode node) {
+    return presenceConfidenceFor(_presenceMap, node);
   }
 
   Color _getNodeColor(MeshNode node) {
-    final status = _getPresenceStatus(node);
-    return switch (status) {
-      PresenceStatus.active => AppTheme.successGreen,
-      PresenceStatus.idle => AppTheme.warningYellow,
-      PresenceStatus.offline => context.textTertiary,
+    final presence = _getPresenceStatus(node);
+    return switch (presence) {
+      PresenceConfidence.active => AppTheme.successGreen,
+      PresenceConfidence.fading => AppTheme.warningYellow,
+      PresenceConfidence.stale => context.textSecondary,
+      PresenceConfidence.unknown => context.textTertiary,
     };
   }
 
@@ -2316,7 +2321,13 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
           const SizedBox(height: 8),
           if (node.rssi != null) _buildInfoRow('RSSI', '${node.rssi} dBm'),
           if (node.snr != null) _buildInfoRow('SNR', '${node.snr} dB'),
-          _buildInfoRow('Status', _getPresenceStatus(node).label),
+          _buildInfoRow(
+            'Status',
+            presenceStatusText(
+              _getPresenceStatus(node),
+              lastHeardAgeFor(_presenceMap, node),
+            ),
+          ),
         ],
       ),
     );

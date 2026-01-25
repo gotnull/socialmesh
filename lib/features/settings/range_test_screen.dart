@@ -10,6 +10,9 @@ import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
+import '../../models/presence_confidence.dart';
+import '../../utils/presence_utils.dart';
+import '../../providers/presence_providers.dart';
 import '../../core/widgets/loading_indicator.dart';
 
 /// Screen for running and configuring Range Test module
@@ -216,11 +219,14 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
   void _showNodePicker() {
     final nodes = ref.read(nodesProvider);
     final myNodeNum = ref.read(myNodeNumProvider);
+    final presenceMap = ref.read(presenceMapProvider);
 
     final otherNodes =
         nodes.values.where((n) => n.nodeNum != myNodeNum).toList()
           ..sort((a, b) {
-            if (a.isOnline != b.isOnline) return a.isOnline ? -1 : 1;
+            final aActive = presenceConfidenceFor(presenceMap, a).isActive;
+            final bActive = presenceConfidenceFor(presenceMap, b).isActive;
+            if (aActive != bActive) return aActive ? -1 : 1;
             final aName = a.longName ?? a.shortName ?? '';
             final bName = b.longName ?? b.shortName ?? '';
             return aName.compareTo(bName);
@@ -270,6 +276,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
               itemCount: otherNodes.length,
               itemBuilder: (context, index) {
                 final node = otherNodes[index];
+                final presence = presenceConfidenceFor(presenceMap, node);
                 final displayName =
                     node.longName ??
                     node.shortName ??
@@ -280,7 +287,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: node.isOnline
+                      color: presence.isActive
                           ? context.accentColor.withValues(alpha: 0.15)
                           : context.background,
                       borderRadius: BorderRadius.circular(10),
@@ -289,7 +296,7 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
                       child: Text(
                         node.shortName?.substring(0, 1).toUpperCase() ?? '?',
                         style: TextStyle(
-                          color: node.isOnline
+                          color: presence.isActive
                               ? context.accentColor
                               : context.textTertiary,
                           fontWeight: FontWeight.w600,
@@ -302,9 +309,12 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
                     style: TextStyle(color: context.textPrimary),
                   ),
                   subtitle: Text(
-                    node.isOnline ? 'Online' : 'Offline',
+                    presenceStatusText(
+                      presence,
+                      lastHeardAgeFor(presenceMap, node),
+                    ),
                     style: TextStyle(
-                      color: node.isOnline
+                      color: presence.isActive
                           ? context.accentColor
                           : context.textTertiary,
                       fontSize: 12,

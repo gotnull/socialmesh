@@ -8,7 +8,9 @@ import '../../core/widgets/edge_fade.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../providers/help_providers.dart';
 import '../../models/mesh_models.dart';
+import '../../models/presence_confidence.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/presence_providers.dart';
 
 /// Types of events that can appear in the timeline
 enum TimelineEventType {
@@ -82,6 +84,8 @@ final timelineEventsProvider = Provider<List<TimelineEvent>>((ref) {
   final messages = ref.watch(messagesProvider);
   final nodes = ref.watch(nodesProvider);
   final myNodeNum = ref.watch(myNodeNumProvider);
+  final presenceMap = ref.watch(presenceMapProvider);
+  final now = ref.watch(presenceClockProvider)();
 
   final events = <TimelineEvent>[];
 
@@ -136,11 +140,12 @@ final timelineEventsProvider = Provider<List<TimelineEvent>>((ref) {
   for (final node in nodes.values) {
     if (node.nodeNum == myNodeNum) continue;
 
+    final presence = presenceConfidenceFor(presenceMap, node);
     final lastHeard = node.lastHeard;
     if (lastHeard != null) {
       // Node was heard - determine if this is a join event
-      final isRecent = DateTime.now().difference(lastHeard).inMinutes < 5;
-      if (isRecent && node.isOnline) {
+      final isRecent = now.difference(lastHeard).inMinutes < 5;
+      if (isRecent && presence.isActive) {
         events.add(
           TimelineEvent(
             id: 'node_heard_${node.nodeNum}_${lastHeard.millisecondsSinceEpoch}',
@@ -174,17 +179,17 @@ final timelineEventsProvider = Provider<List<TimelineEvent>>((ref) {
     }
 
     // Check for offline nodes
-    if (!node.isOnline && node.lastHeard != null) {
+    if (presence.isStale && node.lastHeard != null) {
       final lastHeardTime = node.lastHeard!;
       events.add(
         TimelineEvent(
           id: 'node_offline_${node.nodeNum}',
           type: TimelineEventType.nodeLeft,
-          timestamp: lastHeardTime.add(const Duration(minutes: 15)),
+          timestamp: lastHeardTime.add(const Duration(minutes: 10)),
           nodeNum: node.nodeNum,
           nodeName: node.shortName,
           title:
-              '${node.shortName ?? _formatNodeId(node.nodeNum)} went offline',
+              '${node.shortName ?? _formatNodeId(node.nodeNum)} became inactive',
           subtitle: 'Last heard ${_formatTimeAgo(lastHeardTime)}',
         ),
       );
@@ -194,7 +199,7 @@ final timelineEventsProvider = Provider<List<TimelineEvent>>((ref) {
     if (node.latitude != null &&
         node.longitude != null &&
         node.lastHeard != null) {
-      final positionAge = DateTime.now().difference(node.lastHeard!);
+      final positionAge = now.difference(node.lastHeard!);
       if (positionAge.inMinutes < 10) {
         events.add(
           TimelineEvent(

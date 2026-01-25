@@ -9,9 +9,11 @@ import '../../providers/app_providers.dart';
 import '../../providers/help_providers.dart';
 import '../../providers/social_providers.dart';
 import '../../models/mesh_models.dart';
+import '../../models/presence_confidence.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../utils/snackbar.dart';
+import '../../utils/presence_utils.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/info_table.dart';
 import '../../core/widgets/animations.dart';
@@ -26,6 +28,7 @@ import '../../services/share_link_service.dart';
 import '../messaging/messaging_screen.dart';
 import '../map/map_screen.dart';
 import '../navigation/main_shell.dart';
+import '../../providers/presence_providers.dart';
 // import '../social/screens/profile_social_screen.dart';
 
 // Battery helper functions
@@ -76,9 +79,24 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
     FocusScope.of(context).unfocus();
   }
 
+  PresenceConfidence _presenceForNode(
+    Map<int, NodePresence> presenceMap,
+    MeshNode node,
+  ) {
+    return presenceMap[node.nodeNum]?.confidence ?? node.presenceConfidence;
+  }
+
+  Duration? _lastHeardAgeForNode(
+    Map<int, NodePresence> presenceMap,
+    MeshNode node,
+  ) {
+    return presenceMap[node.nodeNum]?.timeSinceLastHeard ?? node.lastHeardAge;
+  }
+
   @override
   Widget build(BuildContext context) {
     final nodes = ref.watch(nodesProvider);
+    final presenceMap = ref.watch(presenceMapProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
     final linkedNodeIds =
         ref.watch(linkedNodeIdsProvider).asData?.value ?? <int>[];
@@ -94,7 +112,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
     var nodesList = nodes.values.toList();
 
     // Apply filter
-    nodesList = _applyFilter(nodesList, myNodeNum, linkedNodeIds);
+    nodesList = _applyFilter(nodesList, myNodeNum, linkedNodeIds, presenceMap);
 
     // Apply sort
     nodesList = _applySort(nodesList, myNodeNum);
@@ -111,7 +129,16 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
 
     // Count nodes by filter for badges
     final allNodes = nodes.values.toList();
-    final onlineCount = allNodes.where((n) => n.isOnline).length;
+    final activeCount = allNodes
+        .where(
+          (n) => _presenceForNode(presenceMap, n).isActive,
+        )
+        .length;
+    final inactiveCount = allNodes
+        .where(
+          (n) => _presenceForNode(presenceMap, n).isInactive,
+        )
+        .length;
     final favoritesCount = allNodes.where((n) => n.isFavorite).length;
     final withPositionCount = allNodes
         .where((n) => n.latitude != null && n.longitude != null)
@@ -266,12 +293,12 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
                             ),
                             SizedBox(width: 8),
                             _FilterChip(
-                              label: 'Online',
-                              count: onlineCount,
-                              isSelected: _activeFilter == NodeFilter.online,
+                              label: 'Active',
+                              count: activeCount,
+                              isSelected: _activeFilter == NodeFilter.active,
                               color: AccentColors.green,
                               onTap: () => setState(
-                                () => _activeFilter = NodeFilter.online,
+                                () => _activeFilter = NodeFilter.active,
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -299,12 +326,12 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
                             ),
                             const SizedBox(width: 8),
                             _FilterChip(
-                              label: 'Offline',
-                              count: nodes.length - onlineCount,
-                              isSelected: _activeFilter == NodeFilter.offline,
+                              label: 'Inactive',
+                              count: inactiveCount,
+                              isSelected: _activeFilter == NodeFilter.inactive,
                               color: context.textTertiary,
                               onTap: () => setState(
-                                () => _activeFilter = NodeFilter.offline,
+                                () => _activeFilter = NodeFilter.inactive,
                               ),
                             ),
                             SizedBox(width: 8),
@@ -395,7 +422,12 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
                                 ],
                               ),
                             )
-                    : _buildNodeList(nodesList, myNodeNum, linkedNodeIds),
+                    : _buildNodeList(
+                        nodesList,
+                        myNodeNum,
+                        linkedNodeIds,
+                        presenceMap,
+                      ),
               ),
             ],
           ),
@@ -408,6 +440,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
     List<MeshNode> nodesList,
     int? myNodeNum,
     List<int> linkedNodeIds,
+    Map<int, NodePresence> presenceMap,
   ) {
     final animationsEnabled = ref.watch(animationsEnabledProvider);
 
@@ -444,6 +477,8 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
             child: _NodeCard(
               node: node,
               isMyNode: isMyNode,
+              presenceConfidence: _presenceForNode(presenceMap, node),
+              lastHeardAge: _lastHeardAgeForNode(presenceMap, node),
               animationsEnabled: animationsEnabled,
               onTap: () => _showNodeDetails(context, node, isMyNode),
               onLongPress: isMyNode
@@ -460,6 +495,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
       nodesList,
       myNodeNum,
       linkedNodeIds,
+      presenceMap,
     );
     final nonEmptySections = sections.where((s) => s.nodes.isNotEmpty).toList();
 
@@ -498,6 +534,8 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
                 child: _NodeCard(
                   node: node,
                   isMyNode: isMyNode,
+                  presenceConfidence: _presenceForNode(presenceMap, node),
+                  lastHeardAge: _lastHeardAgeForNode(presenceMap, node),
                   animationsEnabled: animationsEnabled,
                   onTap: () => _showNodeDetails(context, node, isMyNode),
                   onLongPress: isMyNode
@@ -516,10 +554,11 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
     List<MeshNode> nodes,
     int? myNodeNum,
     List<int> linkedNodeIds,
+    Map<int, NodePresence> presenceMap,
   ) {
     switch (_sortOrder) {
       case NodeSortOrder.lastHeard:
-        return _groupByStatus(nodes, myNodeNum, linkedNodeIds);
+        return _groupByStatus(nodes, myNodeNum, linkedNodeIds, presenceMap);
       case NodeSortOrder.name:
         return _groupByAlphabet(nodes, myNodeNum, linkedNodeIds);
       case NodeSortOrder.signalStrength:
@@ -533,6 +572,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
     List<MeshNode> nodes,
     int? myNodeNum,
     List<int> linkedNodeIds,
+    Map<int, NodePresence> presenceMap,
   ) {
     final myNode = nodes.where((n) => n.nodeNum == myNodeNum).toList();
     // final linkedNodes = nodes
@@ -540,37 +580,46 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
     //       (n) => n.nodeNum != myNodeNum && linkedNodeIds.contains(n.nodeNum),
     //     )
     //     .toList();
-    final online = nodes
+    final active = nodes
         .where(
           (n) =>
               n.nodeNum != myNodeNum &&
               !linkedNodeIds.contains(n.nodeNum) &&
-              n.isOnline,
+              _presenceForNode(presenceMap, n).isActive,
         )
         .toList();
-    final idle = nodes
+    final fading = nodes
         .where(
           (n) =>
               n.nodeNum != myNodeNum &&
               !linkedNodeIds.contains(n.nodeNum) &&
-              n.isIdle,
+              _presenceForNode(presenceMap, n).isFading,
         )
         .toList();
-    final offline = nodes
+    final inactive = nodes
         .where(
           (n) =>
               n.nodeNum != myNodeNum &&
               !linkedNodeIds.contains(n.nodeNum) &&
-              n.isOffline,
+              _presenceForNode(presenceMap, n).isStale,
+        )
+        .toList();
+    final unknown = nodes
+        .where(
+          (n) =>
+              n.nodeNum != myNodeNum &&
+              !linkedNodeIds.contains(n.nodeNum) &&
+              _presenceForNode(presenceMap, n).isUnknown,
         )
         .toList();
 
     return [
       if (myNode.isNotEmpty) _NodeSection('Your Device', myNode),
       // if (linkedNodes.isNotEmpty) _NodeSection('Linked Devices', linkedNodes),
-      _NodeSection('Online', online),
-      _NodeSection('Idle (2-24h)', idle),
-      _NodeSection('Offline', offline),
+      _NodeSection('Active', active),
+      _NodeSection('Seen Recently', fading),
+      _NodeSection('Inactive', inactive),
+      _NodeSection('Unknown', unknown),
     ];
   }
 
@@ -700,14 +749,23 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
     List<MeshNode> nodes,
     int? myNodeNum,
     List<int> linkedNodeIds,
+    Map<int, NodePresence> presenceMap,
   ) {
     switch (_activeFilter) {
       case NodeFilter.all:
         return nodes;
-      case NodeFilter.online:
-        return nodes.where((n) => n.isOnline).toList();
-      case NodeFilter.offline:
-        return nodes.where((n) => !n.isOnline).toList();
+      case NodeFilter.active:
+        return nodes
+            .where(
+              (n) => _presenceForNode(presenceMap, n).isActive,
+            )
+            .toList();
+      case NodeFilter.inactive:
+        return nodes
+            .where(
+              (n) => _presenceForNode(presenceMap, n).isInactive,
+            )
+            .toList();
       case NodeFilter.favorites:
         return nodes.where((n) => n.isFavorite).toList();
       case NodeFilter.withPosition:
@@ -863,8 +921,8 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
 /// Filter options for the nodes list
 enum NodeFilter {
   all,
-  online,
-  offline,
+  active,
+  inactive,
   favorites,
   withPosition,
   recentlyDiscovered,
@@ -894,7 +952,7 @@ class _FilterChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final chipColor = color ?? AppTheme.primaryBlue;
-    final showStatusIndicator = label == 'Online';
+    final showStatusIndicator = label == 'Active';
 
     return GestureDetector(
       onTap: onTap,
@@ -913,8 +971,8 @@ class _FilterChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Status indicator for Online chip
-            if (showStatusIndicator && label == 'Online') ...[
+            // Status indicator for Active chip
+            if (showStatusIndicator && label == 'Active') ...[
               Container(
                 width: 10,
                 height: 10,
@@ -1255,6 +1313,8 @@ void showNodeDetailsSheet(BuildContext context, MeshNode node, bool isMyNode) {
 class _NodeCard extends StatelessWidget {
   final MeshNode node;
   final bool isMyNode;
+  final PresenceConfidence presenceConfidence;
+  final Duration? lastHeardAge;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
   final bool animationsEnabled;
@@ -1262,6 +1322,8 @@ class _NodeCard extends StatelessWidget {
   const _NodeCard({
     required this.node,
     required this.isMyNode,
+    required this.presenceConfidence,
+    required this.lastHeardAge,
     required this.onTap,
     this.onLongPress,
     this.animationsEnabled = true,
@@ -1308,6 +1370,9 @@ class _NodeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final signalBars = _calculateSignalBars(node.rssi);
+    final statusColor = _presenceColor(context, presenceConfidence);
+    final statusText = presenceStatusText(presenceConfidence, lastHeardAge);
+    final cardOpacity = isMyNode ? 1.0 : presenceOpacity(presenceConfidence);
 
     return BouncyTap(
       onTap: onTap,
@@ -1315,38 +1380,39 @@ class _NodeCard extends StatelessWidget {
       scaleFactor: animationsEnabled ? 0.98 : 1.0,
       enable3DPress: animationsEnabled,
       tiltDegrees: 4.0,
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        decoration: BoxDecoration(
-          color: isMyNode
-              ? context.accentColor.withValues(alpha: 0.08)
-              : context.card,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
+      child: Opacity(
+        opacity: cardOpacity,
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          decoration: BoxDecoration(
             color: isMyNode
-                ? context.accentColor.withValues(alpha: 0.5)
-                : context.border,
-            width: isMyNode ? 1.5 : 1,
+                ? context.accentColor.withValues(alpha: 0.08)
+                : context.card,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isMyNode
+                  ? context.accentColor.withValues(alpha: 0.5)
+                  : context.border,
+              width: isMyNode ? 1.5 : 1,
+            ),
           ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Avatar
-              NodeAvatar(
-                text: node.avatarName,
-                color: isMyNode ? context.accentColor : _getAvatarColor(),
-                size: 56,
-                showOnlineIndicator: true,
-                onlineStatus: node.isOnline
-                    ? OnlineStatus.online
-                    : OnlineStatus.offline,
-                batteryLevel: node.batteryLevel,
-                showBatteryBadge: true,
-                border: isMyNode
-                    ? Border.all(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Avatar
+                NodeAvatar(
+                  text: node.avatarName,
+                  color: isMyNode ? context.accentColor : _getAvatarColor(),
+                  size: 56,
+                  showOnlineIndicator: presenceConfidence.isActive,
+                  onlineStatus:
+                      presenceConfidence.isActive ? OnlineStatus.online : null,
+                  batteryLevel: node.batteryLevel,
+                  showBatteryBadge: true,
+                  border: isMyNode
+                      ? Border.all(
                         color: Colors.white.withValues(alpha: 0.3),
                         width: 2,
                       )
@@ -1435,12 +1501,10 @@ class _NodeCard extends StatelessWidget {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               gradient: RadialGradient(
-                                colors: node.isOnline
+                                colors: presenceConfidence.isActive
                                     ? [
-                                        context.accentColor,
-                                        context.accentColor.withValues(
-                                          alpha: 0.6,
-                                        ),
+                                        statusColor,
+                                        statusColor.withValues(alpha: 0.6),
                                       ]
                                     : [
                                         context.textTertiary,
@@ -1449,10 +1513,10 @@ class _NodeCard extends StatelessWidget {
                                         ),
                                       ],
                               ),
-                              boxShadow: node.isOnline
+                              boxShadow: presenceConfidence.isActive
                                   ? [
                                       BoxShadow(
-                                        color: context.accentColor.withValues(
+                                        color: statusColor.withValues(
                                           alpha: 0.3,
                                         ),
                                         blurRadius: 4,
@@ -1464,8 +1528,8 @@ class _NodeCard extends StatelessWidget {
                             child: Container(
                               margin: const EdgeInsets.all(2),
                               decoration: BoxDecoration(
-                                color: node.isOnline
-                                    ? context.accentColor.withValues(alpha: 0.3)
+                                color: presenceConfidence.isActive
+                                    ? statusColor.withValues(alpha: 0.3)
                                     : context.textTertiary.withValues(
                                         alpha: 0.3,
                                       ),
@@ -1474,11 +1538,14 @@ class _NodeCard extends StatelessWidget {
                             ),
                           ),
                           SizedBox(width: 8),
-                          Text(
-                            node.isOnline ? 'Connected' : 'Offline',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: context.textSecondary,
+                          Tooltip(
+                            message: kPresenceInferenceTooltip,
+                            child: Text(
+                              statusText,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: context.textSecondary,
+                              ),
                             ),
                           ),
                         ],
@@ -1672,11 +1739,25 @@ class _NodeCard extends StatelessWidget {
                   ),
                 ],
               ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
+  }
+
+  Color _presenceColor(BuildContext context, PresenceConfidence confidence) {
+    switch (confidence) {
+      case PresenceConfidence.active:
+        return context.accentColor;
+      case PresenceConfidence.fading:
+        return AppTheme.warningYellow;
+      case PresenceConfidence.stale:
+        return context.textSecondary;
+      case PresenceConfidence.unknown:
+        return context.textTertiary;
+    }
   }
 }
 

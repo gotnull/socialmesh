@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
-import '../../models/world_mesh_node.dart';
+import '../../models/presence_confidence.dart';
 import '../../providers/world_mesh_map_provider.dart';
 import 'world_mesh_filters.dart';
 
@@ -415,33 +415,47 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
     return Column(
       children: [
         _buildStatusChip(
-          label: 'Online (<1h)',
-          count: options.onlineCount,
+          label: 'Active (≤2m)',
+          count: options.activeCount,
           color: AppTheme.successGreen,
-          isSelected: filters.statusFilter.contains(NodeStatus.online),
+          isSelected:
+              filters.statusFilter.contains(PresenceConfidence.active),
           onTap: () => ref
               .read(worldMeshFiltersProvider.notifier)
-              .toggleStatus(NodeStatus.online),
+              .toggleStatus(PresenceConfidence.active),
         ),
         SizedBox(height: 8),
         _buildStatusChip(
-          label: 'Idle (1-24h)',
-          count: options.idleCount,
+          label: 'Fading (2-10m)',
+          count: options.fadingCount,
           color: Colors.amber,
-          isSelected: filters.statusFilter.contains(NodeStatus.idle),
+          isSelected:
+              filters.statusFilter.contains(PresenceConfidence.fading),
           onTap: () => ref
               .read(worldMeshFiltersProvider.notifier)
-              .toggleStatus(NodeStatus.idle),
+              .toggleStatus(PresenceConfidence.fading),
         ),
         const SizedBox(height: 8),
         _buildStatusChip(
-          label: 'Offline (>24h)',
-          count: options.offlineCount,
+          label: 'Inactive (10-60m)',
+          count: options.staleCount,
           color: context.textTertiary,
-          isSelected: filters.statusFilter.contains(NodeStatus.offline),
+          isSelected:
+              filters.statusFilter.contains(PresenceConfidence.stale),
           onTap: () => ref
               .read(worldMeshFiltersProvider.notifier)
-              .toggleStatus(NodeStatus.offline),
+              .toggleStatus(PresenceConfidence.stale),
+        ),
+        const SizedBox(height: 8),
+        _buildStatusChip(
+          label: 'Unknown (>60m)',
+          count: options.unknownCount,
+          color: context.textTertiary,
+          isSelected:
+              filters.statusFilter.contains(PresenceConfidence.unknown),
+          onTap: () => ref
+              .read(worldMeshFiltersProvider.notifier)
+              .toggleStatus(PresenceConfidence.unknown),
         ),
       ],
     );

@@ -7,7 +7,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/automations/automation_providers.dart';
 import '../../features/automations/models/automation.dart';
 import '../../models/mesh_models.dart';
+import '../../models/presence_confidence.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/presence_providers.dart';
 
 /// Service to handle iOS App Intents (Siri Shortcuts integration)
 class AppIntentsService {
@@ -193,6 +195,7 @@ class AppIntentsService {
     }
 
     final nodes = _ref.read(nodesProvider);
+    final presenceMap = _ref.read(presenceMapProvider);
     final node = nodes[nodeNum];
 
     if (node == null) {
@@ -206,7 +209,8 @@ class AppIntentsService {
     return {
       'name': node.longName ?? 'Node $nodeNum',
       'nodeNum': nodeNum,
-      'isOnline': node.isOnline,
+      'presenceConfidence':
+          presenceConfidenceFor(presenceMap, node).name,
       'battery': node.batteryLevel,
       'lastSeen': lastSeen,
     };
@@ -214,15 +218,16 @@ class AppIntentsService {
 
   Future<Map<String, dynamic>?> _handleGetOnlineNodes() async {
     final nodes = _ref.read(nodesProvider);
-    int onlineCount = 0;
+    final presenceMap = _ref.read(presenceMapProvider);
+    int activeCount = 0;
 
     for (final node in nodes.values) {
-      if (node.isOnline) {
-        onlineCount++;
+      if (presenceConfidenceFor(presenceMap, node).isActive) {
+        activeCount++;
       }
     }
 
-    return {'count': onlineCount, 'total': nodes.length};
+    return {'count': activeCount, 'total': nodes.length};
   }
 
   Future<Map<String, dynamic>?> _handleOpenNode(

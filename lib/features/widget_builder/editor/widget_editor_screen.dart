@@ -2655,7 +2655,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
         return ElementSchema(
           type: type,
           condition: const ConditionalSchema(
-            bindingPath: 'node.isOnline',
+            bindingPath: 'node.presenceConfidence',
             operator: ConditionalOperator.equals,
             value: true,
           ),

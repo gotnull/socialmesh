@@ -16,6 +16,7 @@ import '../services/notifications/notification_service.dart';
 import '../services/messaging/offline_queue_service.dart';
 import '../services/location/location_service.dart';
 import '../services/live_activity/live_activity_service.dart';
+import '../models/presence_confidence.dart';
 import '../services/ifttt/ifttt_service.dart';
 import '../services/notifications/push_notification_service.dart';
 import '../services/messaging/message_utils.dart';
@@ -1159,8 +1160,7 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
     final rssi = myNode?.rssi;
     final snr = myNode?.snr;
 
-    // Count online and total nodes
-    final onlineCount = nodes.values.where((n) => n.isOnline).length;
+    final activeCount = _activeNodeCount(nodes);
     final totalCount = nodes.length;
 
     // Find nearest node with distance
@@ -1168,7 +1168,7 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
 
     AppLogging.debug(
       '📱 Starting Live Activity: device=$deviceName, shortName=$shortName, '
-      'battery=$batteryLevel%, rssi=$rssi, snr=$snr, nodes=$onlineCount/$totalCount',
+      'battery=$batteryLevel%, rssi=$rssi, snr=$snr, nodes=$activeCount/$totalCount',
     );
 
     final success = await _liveActivityService.startMeshActivity(
@@ -1178,7 +1178,7 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
       batteryLevel: batteryLevel,
       signalStrength: rssi,
       snr: snr,
-      nodesOnline: onlineCount,
+      nodesOnline: activeCount,
       totalNodes: totalCount,
       channelUtilization: myNode?.channelUtilization,
       airtime: myNode?.airUtilTx,
@@ -1214,9 +1214,7 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
             ? currentNodes[currentMyNodeNum]
             : null;
 
-        final currentOnlineCount = currentNodes.values
-            .where((n) => n.isOnline)
-            .length;
+        final currentOnlineCount = _activeNodeCount(currentNodes);
 
         final currentNearestNode = _findNearestNode(
           currentNodes,
@@ -1227,7 +1225,7 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
           batteryLevel: currentNode?.batteryLevel,
           signalStrength: currentNode?.rssi,
           snr: currentNode?.snr,
-          nodesOnline: currentOnlineCount,
+      nodesOnline: currentOnlineCount,
           totalNodes: currentNodes.length,
           channelUtilization: channelUtil,
           airtime: currentNode?.airUtilTx,
@@ -1254,7 +1252,7 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
     final myNode = nodes[myNodeNum];
     if (myNode == null) return;
 
-    final onlineCount = nodes.values.where((n) => n.isOnline).length;
+    final onlineCount = _activeNodeCount(nodes);
     final totalCount = nodes.length;
     final nearestNode = _findNearestNode(nodes, myNodeNum);
 
@@ -1280,6 +1278,17 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
       nearestNodeDistance: nearestNode?.$2,
       nearestNodeName: nearestNode?.$1.shortName ?? nearestNode?.$1.longName,
     );
+  }
+
+  int _activeNodeCount(Map<int, MeshNode> nodes) {
+    final now = DateTime.now();
+    return nodes.values
+        .where(
+          (node) =>
+              PresenceCalculator.fromLastHeard(node.lastHeard, now: now)
+                  .isActive,
+        )
+        .length;
   }
 
   /// Find the nearest node with a valid distance from my node
@@ -1840,16 +1849,9 @@ final messagesProvider = NotifierProvider<MessagesNotifier, List<Message>>(
 
 // Nodes
 class NodesNotifier extends Notifier<Map<int, MeshNode>> {
-  Timer? _stalenessTimer;
   NodeStorageService? _storage;
   DeviceFavoritesService? _deviceFavorites;
   StreamSubscription<MeshNode>? _nodeSubscription;
-
-  /// Timeout after which a node is considered offline (15 minutes)
-  /// The iOS Meshtastic app uses 120 minutes, but we use 15 minutes as a
-  /// reasonable compromise that's responsive while accounting for nodes
-  /// that don't send packets frequently.
-  static const _offlineTimeoutMinutes = 15;
 
   @override
   Map<int, MeshNode> build() {
@@ -1861,7 +1863,6 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
 
     // Set up disposal
     ref.onDispose(() {
-      _stalenessTimer?.cancel();
       _nodeSubscription?.cancel();
     });
 
@@ -1926,12 +1927,6 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
       state = {...state, entry.key: node};
     }
 
-    // Start periodic staleness check (every 30 seconds)
-    _stalenessTimer = Timer.periodic(
-      const Duration(seconds: 30),
-      (_) => _checkNodeStaleness(),
-    );
-
     // Listen for new nodes
     _nodeSubscription = protocol.nodeStream.listen((node) {
       if (!ref.mounted) return;
@@ -1982,36 +1977,6 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
       // Update cached metadata for linked nodes when identity changes
       onLinkedNodeUpdated(ref, node, existing);
     });
-  }
-
-  /// Check all nodes for staleness and trigger automation/IFTTT if node went offline
-  /// Note: isOnline is now a computed property based on lastHeard (120min threshold)
-  /// This method triggers side effects when a node transitions to offline
-  void _checkNodeStaleness() {
-    final now = DateTime.now();
-    final cutoff = now.subtract(Duration(minutes: _offlineTimeoutMinutes));
-
-    for (final entry in state.entries) {
-      final node = entry.value;
-      // Skip nodes that are already offline or have no lastHeard
-      if (node.lastHeard == null) continue;
-
-      // Check if node just went stale (hasn't been heard from in _offlineTimeoutMinutes)
-      // and trigger automations for the offline transition
-      if (node.lastHeard!.isBefore(cutoff) && !node.isOnline) {
-        AppLogging.debug(
-          '⚠️ Node ${node.displayName} (${node.nodeNum}) is offline - '
-          'last heard ${now.difference(node.lastHeard!).inMinutes}m ago',
-        );
-
-        // Trigger automation/IFTTT for the offline transition
-        _triggerIftttForNode(node, node);
-        _triggerAutomationForNode(node, node);
-
-        // Persist the updated node (to update lastHeard if needed)
-        _storage?.saveNode(node);
-      }
-    }
   }
 
   void _triggerIftttForNode(MeshNode node, MeshNode? previousNode) {

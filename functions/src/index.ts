@@ -13,6 +13,7 @@ import * as admin from 'firebase-admin';
 import { onRequest } from 'firebase-functions/v2/https';
 import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import { z } from 'zod';
+import nodemailer from 'nodemailer';
 
 // Initialize Firebase Admin
 admin.initializeApp();
@@ -128,6 +129,42 @@ function escapeHtml(input: string) {
     .replace(/'/g, '&#39;');
 }
 
+function getBugReportTransport() {
+  // Prefer Firebase `functions.config()` values when present (set via
+  // `firebase functions:config:set improvmx.user=... improvmx.pass=...`),
+  // otherwise fall back to environment variables for CI/local workflows.
+  let cfg: Record<string, string> | undefined;
+  try {
+    // `config()` is provided by the firebase-functions SDK in runtime
+    // environments where `functions:config:set` was used.
+    // Use require() so transpiled code doesn't eagerly import non-runtime helpers.
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const functions = require('firebase-functions');
+    cfg = (functions && typeof functions.config === 'function' && functions.config().improvmx) || undefined;
+  } catch (e) {
+    cfg = undefined;
+  }
+
+  const host = (cfg && cfg.host) || process.env.IMPROVMX_SMTP_HOST || 'smtp.improvmx.com';
+  const port = parseInt((cfg && cfg.port) || process.env.IMPROVMX_SMTP_PORT || '587', 10);
+  const user = (cfg && cfg.user) || process.env.IMPROVMX_SMTP_USER;
+  const pass = (cfg && cfg.pass) || process.env.IMPROVMX_SMTP_PASS;
+  const secure = (cfg && cfg.secure === 'true') || process.env.IMPROVMX_SMTP_SECURE === 'true';
+  const requireTLS = (cfg && cfg.require_tls !== 'false') || process.env.IMPROVMX_SMTP_REQUIRE_TLS !== 'false';
+
+  if (!user || !pass) {
+    throw new Error('Missing IMPROVMX_SMTP_USER or IMPROVMX_SMTP_PASS');
+  }
+
+  return nodemailer.createTransport({
+    host,
+    port,
+    secure,
+    requireTLS,
+    auth: { user, pass },
+  });
+}
+
 function buildBugReportEmailHtml(params: {
   reportId: string;
   userEmail: string;
@@ -227,6 +264,9 @@ function buildBugReportEmailHtml(params: {
   </div>
   `;
 }
+
+// Export helpers for testing
+export { getBugReportTransport, buildBugReportEmailHtml, BugReportSchema };
 
 // =============================================================================
 // WIDGET MARKETPLACE API
@@ -2338,14 +2378,37 @@ export const reportBug = onCall({ cors: true }, async (request) => {
     description,
   });
 
-  await db.collection('mail').add({
-    to: 'support@socialmesh.app',
-    message: {
+  // Allow `improvmx.to`/`improvmx.from` from functions.config(), falling back to env vars
+  let improvmxCfg: Record<string, string> | undefined;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const functions = require('firebase-functions');
+    improvmxCfg = (functions && typeof functions.config === 'function' && functions.config().improvmx) || undefined;
+  } catch (e) {
+    improvmxCfg = undefined;
+  }
+
+  const toAddress = (improvmxCfg && improvmxCfg.to) || process.env.IMPROVMX_SMTP_TO || 'support@socialmesh.app';
+  const fromAddress = (improvmxCfg && improvmxCfg.from) || process.env.IMPROVMX_SMTP_FROM || process.env.IMPROVMX_SMTP_USER || 'support@socialmesh.app';
+  // Attempt to send email and surface any failures as an HttpsError so the client can
+  // show a descriptive error message. This ensures the report won't be silently accepted
+  // when email notifications fail due to misconfiguration or auth errors.
+  try {
+    const transport = getBugReportTransport();
+    console.info(`[reportBug] Sending bug report email to ${toAddress} from ${fromAddress} using host ${process.env.IMPROVMX_SMTP_HOST || 'env'} (reportId=${reportDoc.id})`);
+    const info = await transport.sendMail({
+      to: toAddress,
+      from: fromAddress,
       subject,
       text,
       html,
-    },
-  });
+    });
+    console.info(`[reportBug] Email sent (messageId=${info && info.messageId})`);
+  } catch (emailErr) {
+    console.error('[reportBug] Failed to send email:', (emailErr as Error).message || emailErr);
+    // Surface a clear error to the client
+    throw new HttpsError('internal', `Failed to send bug report email: ${(emailErr as Error).message || String(emailErr)}`);
+  }
 
   return { success: true, reportId: reportDoc.id, emailSent: true };
 });

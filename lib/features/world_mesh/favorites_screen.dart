@@ -4,9 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
 import '../../models/world_mesh_node.dart';
+import '../../models/presence_confidence.dart';
 import '../../providers/node_favorites_provider.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
+import '../../utils/presence_utils.dart';
 import 'node_analytics_screen.dart';
 import 'node_comparison_screen.dart';
 import 'services/node_favorites_service.dart';
@@ -26,8 +28,8 @@ class _FavoriteItem {
           ? metadata.shortName
           : '!${metadata.nodeId}');
 
-  bool get isOnline => liveNode?.isOnline ?? false;
-  bool get isIdle => liveNode?.isIdle ?? false;
+  PresenceConfidence get presence =>
+      liveNode?.presenceConfidence ?? PresenceConfidence.unknown;
   bool get hasLiveData => liveNode != null;
 }
 
@@ -421,11 +423,12 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
   }
 
   Widget _buildFavoriteCard(_FavoriteItem item) {
-    final statusColor = item.isOnline
-        ? AccentColors.green
-        : (item.isIdle ? AppTheme.warningYellow : context.textTertiary);
+    final lastSeenAge = item.liveNode?.lastSeen != null
+        ? DateTime.now().difference(item.liveNode!.lastSeen!)
+        : null;
+    final statusColor = _presenceColor(context, item.presence);
     final statusText = item.hasLiveData
-        ? (item.isOnline ? 'Online' : (item.isIdle ? 'Idle' : 'Offline'))
+        ? presenceStatusText(item.presence, lastSeenAge)
         : 'Not in mesh';
 
     final isSelected =
@@ -490,11 +493,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
                 child: Center(
                   child: Icon(
                     item.hasLiveData
-                        ? (item.isOnline
-                              ? Icons.wifi
-                              : (item.isIdle
-                                    ? Icons.wifi_1_bar
-                                    : Icons.wifi_off))
+                        ? _presenceIcon(item.presence)
                         : Icons.cloud_off,
                     color: statusColor,
                     size: 22,
@@ -632,6 +631,32 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
         ),
       ),
     );
+  }
+
+  Color _presenceColor(BuildContext context, PresenceConfidence confidence) {
+    switch (confidence) {
+      case PresenceConfidence.active:
+        return AccentColors.green;
+      case PresenceConfidence.fading:
+        return AppTheme.warningYellow;
+      case PresenceConfidence.stale:
+        return context.textSecondary;
+      case PresenceConfidence.unknown:
+        return context.textTertiary;
+    }
+  }
+
+  IconData _presenceIcon(PresenceConfidence confidence) {
+    switch (confidence) {
+      case PresenceConfidence.active:
+        return Icons.wifi;
+      case PresenceConfidence.fading:
+        return Icons.wifi_1_bar;
+      case PresenceConfidence.stale:
+        return Icons.wifi_off;
+      case PresenceConfidence.unknown:
+        return Icons.help_outline;
+    }
   }
 
   IconData _getBatteryIcon(int level) {

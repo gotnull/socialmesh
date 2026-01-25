@@ -6,6 +6,8 @@ import '../../utils/snackbar.dart';
 import 'node_selector_sheet.dart';
 import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
+import '../../models/presence_confidence.dart';
+import '../../providers/presence_providers.dart';
 
 /// Broadcast address for mesh-wide messages
 const int broadcastAddress = 0xFFFFFFFF;
@@ -61,9 +63,12 @@ class _QuickMessageSheetContentState extends State<QuickMessageSheetContent> {
   List<MeshNode> get _availableNodes {
     final nodes = widget.ref.read(nodesProvider);
     final myNodeNum = widget.ref.read(myNodeNumProvider);
+    final presenceMap = widget.ref.read(presenceMapProvider);
     return nodes.values.where((n) => n.nodeNum != myNodeNum).toList()
       ..sort((a, b) {
-        if (a.isOnline != b.isOnline) return a.isOnline ? -1 : 1;
+        final aActive = presenceConfidenceFor(presenceMap, a).isActive;
+        final bActive = presenceConfidenceFor(presenceMap, b).isActive;
+        if (aActive != bActive) return aActive ? -1 : 1;
         final aName = a.longName ?? a.shortName ?? '';
         final bName = b.longName ?? b.shortName ?? '';
         return aName.compareTo(bName);

@@ -18,6 +18,7 @@ import '../../../core/widgets/content_moderation_warning.dart';
 import '../../../core/widgets/default_banner.dart';
 import '../../../core/widgets/edge_fade.dart';
 import '../../../core/widgets/node_avatar.dart';
+import '../../../models/presence_confidence.dart';
 import '../../../core/widgets/shimmer_image.dart';
 import '../../../core/widgets/verified_badge.dart';
 import '../../../models/mesh_models.dart';
@@ -1724,7 +1725,7 @@ class _LinkedDeviceChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isOnline = node?.isOnline ?? false;
+    final presence = node?.presenceConfidence ?? PresenceConfidence.unknown;
     final accentColor = context.accentColor;
     final gradientColors = AccentColors.gradientFor(accentColor);
 
@@ -1741,10 +1742,9 @@ class _LinkedDeviceChip extends StatelessWidget {
               size: 44,
               showGradientBorder: true,
               gradientColors: gradientColors,
-              showOnlineIndicator: true,
-              onlineStatus: isOnline
-                  ? OnlineStatus.online
-                  : OnlineStatus.offline,
+              showOnlineIndicator: presence.isActive,
+              onlineStatus:
+                  presence.isActive ? OnlineStatus.online : null,
               batteryLevel: node?.batteryLevel,
               showBatteryBadge: false,
               badge: isPrimary

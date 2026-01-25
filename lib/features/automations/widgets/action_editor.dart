@@ -7,6 +7,8 @@ import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/node_selector_sheet.dart';
 import '../../../models/mesh_models.dart';
+import '../../../models/presence_confidence.dart';
+import '../../../providers/presence_providers.dart';
 import '../../../providers/splash_mesh_provider.dart';
 import '../../../services/audio/rtttl_library_service.dart';
 import '../../../services/audio/rtttl_player.dart';
@@ -218,14 +220,17 @@ class _ActionEditorState extends ConsumerState<ActionEditor> {
   }
 
   Widget _buildMessageConfig(BuildContext context, {required bool toChannel}) {
+    final presenceMap = ref.watch(presenceMapProvider);
     // Get available nodes excluding self
     final nodes =
         widget.availableNodes
             .where((n) => n.nodeNum != widget.myNodeNum)
             .toList()
           ..sort((a, b) {
-            // Online nodes first, then by name
-            if (a.isOnline != b.isOnline) return a.isOnline ? -1 : 1;
+            // Active nodes first, then by name
+            final aActive = presenceConfidenceFor(presenceMap, a).isActive;
+            final bActive = presenceConfidenceFor(presenceMap, b).isActive;
+            if (aActive != bActive) return aActive ? -1 : 1;
             final aName = a.longName ?? a.shortName ?? '';
             final bName = b.longName ?? b.shortName ?? '';
             return aName.compareTo(bName);

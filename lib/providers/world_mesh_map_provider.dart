@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../features/world_mesh/services/node_cache_service.dart';
 import '../features/world_mesh/world_mesh_filters.dart';
 import '../models/world_mesh_node.dart';
+import '../models/presence_confidence.dart';
 import '../services/world_mesh_map_service.dart';
 
 /// Provider for the WorldMeshMapService
@@ -216,8 +217,8 @@ class WorldMeshFiltersNotifier extends Notifier<WorldMeshFilters> {
     state = state.copyWith(searchQuery: query);
   }
 
-  void toggleStatus(NodeStatus status) {
-    final newSet = Set<NodeStatus>.from(state.statusFilter);
+  void toggleStatus(PresenceConfidence status) {
+    final newSet = Set<PresenceConfidence>.from(state.statusFilter);
     if (newSet.contains(status)) {
       newSet.remove(status);
     } else {

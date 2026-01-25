@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/mesh_models.dart';
+import '../../models/presence_confidence.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/presence_providers.dart';
 import '../../utils/snackbar.dart';
+import '../../utils/presence_utils.dart';
 import '../theme.dart';
 
 /// Reusable node information card widget
@@ -83,6 +86,32 @@ class NodeInfoCard extends ConsumerWidget {
     return '${diff.inDays}d ago';
   }
 
+  Color _presenceColor(BuildContext context, PresenceConfidence confidence) {
+    switch (confidence) {
+      case PresenceConfidence.active:
+        return AppTheme.successGreen;
+      case PresenceConfidence.fading:
+        return AppTheme.warningYellow;
+      case PresenceConfidence.stale:
+        return context.textSecondary;
+      case PresenceConfidence.unknown:
+        return context.textTertiary;
+    }
+  }
+
+  IconData _presenceIcon(PresenceConfidence confidence) {
+    switch (confidence) {
+      case PresenceConfidence.active:
+        return Icons.wifi;
+      case PresenceConfidence.fading:
+        return Icons.wifi_tethering;
+      case PresenceConfidence.stale:
+        return Icons.wifi_off;
+      case PresenceConfidence.unknown:
+        return Icons.help_outline;
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (compact) {
@@ -92,6 +121,9 @@ class NodeInfoCard extends ConsumerWidget {
   }
 
   Widget _buildCompact(BuildContext context, WidgetRef ref) {
+    final presenceMap = ref.watch(presenceMapProvider);
+    final presence = presenceConfidenceFor(presenceMap, node);
+    final lastHeardAge = lastHeardAgeFor(presenceMap, node);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -169,20 +201,22 @@ class NodeInfoCard extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                node.isOnline ? Icons.wifi : Icons.wifi_off,
+                _presenceIcon(presence),
                 size: 14,
-                color: node.isOnline
-                    ? AppTheme.successGreen
-                    : context.textTertiary,
+                color: _presenceColor(context, presence),
               ),
               const SizedBox(width: 4),
-              Text(
-                node.isOnline ? 'Online' : 'Offline',
-                style: TextStyle(
-                  color: node.isOnline
-                      ? AppTheme.successGreen
-                      : context.textTertiary,
-                  fontSize: 12,
+              Tooltip(
+                message: kPresenceInferenceTooltip,
+                child: Text(
+                  presenceStatusText(
+                    presence,
+                    lastHeardAge,
+                  ),
+                  style: TextStyle(
+                    color: _presenceColor(context, presence),
+                    fontSize: 12,
+                  ),
                 ),
               ),
             ],
@@ -193,6 +227,8 @@ class NodeInfoCard extends ConsumerWidget {
   }
 
   Widget _buildFull(BuildContext context, WidgetRef ref) {
+    final presenceMap = ref.watch(presenceMapProvider);
+    final presence = presenceConfidenceFor(presenceMap, node);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -370,9 +406,7 @@ class NodeInfoCard extends ConsumerWidget {
               NodeStatChip(
                 icon: Icons.access_time,
                 value: _formatLastHeard(node.lastHeard),
-                color: node.isOnline
-                    ? AppTheme.successGreen
-                    : context.textTertiary,
+                color: _presenceColor(context, presence),
               ),
             ],
           ),

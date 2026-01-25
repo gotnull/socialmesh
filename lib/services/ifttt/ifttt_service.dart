@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socialmesh/core/logging.dart';
 import '../../models/mesh_models.dart';
+import '../../models/presence_confidence.dart';
 
 /// IFTTT trigger types
 enum IftttTriggerType {
@@ -156,8 +157,8 @@ class IftttService {
   final Map<int, DateTime> _lastGeofenceAlert = {};
   // Track if node was previously inside geofence (only alert on transition)
   final Map<int, bool> _wasInsideGeofence = {};
-  // Track node online status for online/offline transitions
-  final Map<int, bool> _previousOnlineStatus = {};
+  // Track node presence confidence for transitions
+  final Map<int, PresenceConfidence> _previousPresence = {};
 
   IftttConfig get config => _config;
 
@@ -280,11 +281,11 @@ class IftttService {
     if (!_config.nodeOnline) return false;
 
     // Check for status transition
-    final wasOnline = _previousOnlineStatus[nodeNum];
-    _previousOnlineStatus[nodeNum] = true;
+    final wasOnline = _previousPresence[nodeNum];
+    _previousPresence[nodeNum] = PresenceConfidence.active;
 
     // Only trigger if node was previously offline or unknown
-    if (wasOnline == true) return false;
+    if (wasOnline == PresenceConfidence.active) return false;
 
     return _triggerWebhook(
       eventName: 'meshtastic_node_online',
@@ -302,11 +303,14 @@ class IftttService {
     if (!_config.nodeOffline) return false;
 
     // Check for status transition
-    final wasOnline = _previousOnlineStatus[nodeNum];
-    _previousOnlineStatus[nodeNum] = false;
+    final wasOnline = _previousPresence[nodeNum];
+    _previousPresence[nodeNum] = PresenceConfidence.stale;
 
     // Only trigger if node was previously online
-    if (wasOnline != true) return false;
+    if (wasOnline != PresenceConfidence.active &&
+        wasOnline != PresenceConfidence.fading) {
+      return false;
+    }
 
     return _triggerWebhook(
       eventName: 'meshtastic_node_offline',
@@ -505,13 +509,6 @@ class IftttService {
 
     final nodeName = node.displayName;
 
-    // Check online/offline status change
-    if (node.isOnline) {
-      await triggerNodeOnline(nodeNum: node.nodeNum, nodeName: nodeName);
-    } else {
-      await triggerNodeOffline(nodeNum: node.nodeNum, nodeName: nodeName);
-    }
-
     // Check battery level
     if (node.batteryLevel != null) {
       await triggerBatteryLow(
@@ -538,6 +535,27 @@ class IftttService {
         latitude: node.latitude!,
         longitude: node.longitude!,
       );
+    }
+  }
+
+  /// Process a presence transition for IFTTT triggers
+  Future<void> processPresenceUpdate(
+    MeshNode node, {
+    required PresenceConfidence previous,
+    required PresenceConfidence current,
+  }) async {
+    if (!isActive) return;
+
+    _previousPresence[node.nodeNum] = current;
+    final nodeName = node.displayName;
+
+    if (current.isActive && !previous.isActive) {
+      await triggerNodeOnline(nodeNum: node.nodeNum, nodeName: nodeName);
+      return;
+    }
+
+    if (current.isInactive && !previous.isInactive) {
+      await triggerNodeOffline(nodeNum: node.nodeNum, nodeName: nodeName);
     }
   }
 

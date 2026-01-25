@@ -25,6 +25,7 @@
     "dotenv": "^16.3.1",
     "firebase-admin": "^12.7.0",
     "firebase-functions": "^6.3.0",
+    "nodemailer": "^6.9.13",
     "zod": "^3.22.4"
   },
   "devDependencies": {

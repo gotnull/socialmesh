@@ -6,6 +6,7 @@ import 'package:latlong2/latlong.dart';
 import '../map_config.dart';
 import '../theme.dart';
 import '../../models/mesh_models.dart';
+import '../../models/presence_confidence.dart';
 
 /// A shared, configurable map widget for displaying mesh nodes.
 ///
@@ -305,20 +306,28 @@ class MeshNodeMarkerData {
   final double latitude;
   final double longitude;
   final bool isStale;
+  final PresenceConfidence? presence;
 
   const MeshNodeMarkerData({
     required this.node,
     required this.latitude,
     required this.longitude,
     this.isStale = false,
+    this.presence,
   });
 
-  factory MeshNodeMarkerData.fromNode(MeshNode node, {bool? isStale}) {
+  factory MeshNodeMarkerData.fromNode(
+    MeshNode node, {
+    bool? isStale,
+    PresenceConfidence? presence,
+  }) {
+    final resolvedPresence = presence ?? node.presenceConfidence;
     return MeshNodeMarkerData(
       node: node,
       latitude: node.latitude ?? 0,
       longitude: node.longitude ?? 0,
-      isStale: isStale ?? !node.isOnline,
+      isStale: isStale ?? resolvedPresence.isInactive,
+      presence: resolvedPresence,
     );
   }
 }
@@ -390,18 +399,23 @@ class MeshNodeMarker extends StatelessWidget {
 class MiniMeshNodeMarker extends StatelessWidget {
   final MeshNode node;
   final bool isMyNode;
+  final PresenceConfidence? presence;
 
   const MiniMeshNodeMarker({
     super.key,
     required this.node,
     this.isMyNode = false,
+    this.presence,
   });
 
   @override
   Widget build(BuildContext context) {
+    final resolvedPresence = presence ?? node.presenceConfidence;
     final color = isMyNode
         ? context.accentColor
-        : (node.isOnline ? context.accentColor : context.textTertiary);
+        : (resolvedPresence.isActive
+              ? context.accentColor
+              : context.textTertiary);
 
     return Container(
       decoration: BoxDecoration(

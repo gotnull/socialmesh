@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import '../../models/mesh_models.dart';
+import '../../models/presence_confidence.dart';
 import '../theme.dart';
 import '../logging.dart';
 
@@ -37,6 +38,9 @@ class MeshGlobe extends StatefulWidget {
   /// Connection line color
   final Color connectionColor;
 
+  /// Optional presence overrides keyed by nodeNum
+  final Map<int, PresenceConfidence>? presenceMap;
+
   // Legacy parameters (kept for API compatibility)
   final double initialPhi;
   final double initialTheta;
@@ -56,6 +60,7 @@ class MeshGlobe extends StatefulWidget {
     this.initialLongitude,
     this.markerColor = const Color(0xFF42A5F5),
     this.connectionColor = const Color(0xFF42A5F5),
+    this.presenceMap,
     // Legacy parameters for API compatibility
     this.initialPhi = 0.0,
     this.initialTheta = 0.3,
@@ -117,6 +122,7 @@ class MeshGlobeState extends State<MeshGlobe> {
       '[MeshGlobe] Sending ${nodesWithPos.length} nodes with position',
     );
 
+    final presenceOverrides = widget.presenceMap ?? const {};
     final nodesJson = nodesWithPos
         .map(
           (n) => {
@@ -125,7 +131,9 @@ class MeshGlobeState extends State<MeshGlobe> {
             'longName': n.longName,
             'latitude': n.latitude,
             'longitude': n.longitude,
-            'isOnline': n.isOnline,
+            'presenceConfidence':
+                (presenceOverrides[n.nodeNum] ?? n.presenceConfidence).name,
+            'lastHeard': n.lastHeard?.millisecondsSinceEpoch,
             'avatarColor': n.avatarColor != null
                 ? '#${n.avatarColor!.toRadixString(16).padLeft(8, '0').substring(2)}'
                 : null,

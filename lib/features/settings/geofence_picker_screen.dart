@@ -12,8 +12,10 @@ import '../../core/theme.dart';
 import '../../core/widgets/mesh_map_widget.dart';
 import '../../core/widgets/map_controls.dart';
 import '../../models/mesh_models.dart';
+import '../../models/presence_confidence.dart';
 import '../../utils/snackbar.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/presence_providers.dart';
 import '../../core/widgets/loading_indicator.dart';
 
 /// Result from the geofence picker
@@ -316,6 +318,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final presenceMap = ref.watch(presenceMapProvider);
     final nodes = ref.watch(nodesProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
     final allNodesWithPosition = _getNodesWithPositions(nodes);
@@ -400,6 +403,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
                         onTap: () => _selectNode(n),
                         child: _NodeMarker(
                           node: n.node,
+                          presence: presenceConfidenceFor(presenceMap, n.node),
                           isMyNode: isMyNode,
                           isSelected: isSelected,
                           isMonitored: isMonitored,
@@ -579,6 +583,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
               nodesWithPosition: filteredNodes,
               myNodeNum: myNodeNum,
               monitoredNodeNum: _monitoredNodeNum,
+              presenceMap: presenceMap,
               onNodeSelected: _selectNode,
               onClose: () => setState(() => _showNodeList = false),
               searchController: _searchController,
@@ -775,12 +780,14 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
 /// Custom marker widget for nodes
 class _NodeMarker extends StatelessWidget {
   final MeshNode node;
+  final PresenceConfidence presence;
   final bool isMyNode;
   final bool isSelected;
   final bool isMonitored;
 
   const _NodeMarker({
     required this.node,
+    required this.presence,
     required this.isMyNode,
     this.isSelected = false,
     this.isMonitored = false,
@@ -790,7 +797,9 @@ class _NodeMarker extends StatelessWidget {
   Widget build(BuildContext context) {
     final baseColor = isMyNode
         ? context.accentColor
-        : (node.isOnline ? context.accentColor : context.textTertiary);
+        : (presence.isActive
+              ? context.accentColor
+              : context.textTertiary);
 
     // Use green border if monitored, white if selected
     final borderColor = isMonitored
@@ -836,6 +845,7 @@ class _NodeListPanel extends StatelessWidget {
   final List<_NodeWithPosition> nodesWithPosition;
   final int? myNodeNum;
   final int? monitoredNodeNum;
+  final Map<int, NodePresence> presenceMap;
   final void Function(_NodeWithPosition, {bool setAsMonitored}) onNodeSelected;
   final VoidCallback onClose;
   final TextEditingController searchController;
@@ -845,6 +855,7 @@ class _NodeListPanel extends StatelessWidget {
     required this.nodesWithPosition,
     required this.myNodeNum,
     required this.monitoredNodeNum,
+    required this.presenceMap,
     required this.onNodeSelected,
     required this.onClose,
     required this.searchController,
@@ -977,10 +988,15 @@ class _NodeListPanel extends StatelessWidget {
                         final isMonitored =
                             nodeWithPos.node.nodeNum == monitoredNodeNum;
 
+                        final presence = presenceConfidenceFor(
+                          presenceMap,
+                          nodeWithPos.node,
+                        );
                         return _NodeListItem(
                           nodeWithPos: nodeWithPos,
                           isMyNode: isMyNode,
                           isMonitored: isMonitored,
+                          presence: presence,
                           onTap: () => onNodeSelected(
                             nodeWithPos,
                             setAsMonitored: false,
@@ -1003,6 +1019,7 @@ class _NodeListItem extends StatelessWidget {
   final _NodeWithPosition nodeWithPos;
   final bool isMyNode;
   final bool isMonitored;
+  final PresenceConfidence presence;
   final VoidCallback onTap;
   final VoidCallback onSetMonitored;
 
@@ -1010,6 +1027,7 @@ class _NodeListItem extends StatelessWidget {
     required this.nodeWithPos,
     required this.isMyNode,
     required this.isMonitored,
+    required this.presence,
     required this.onTap,
     required this.onSetMonitored,
   });
@@ -1019,7 +1037,9 @@ class _NodeListItem extends StatelessWidget {
     final node = nodeWithPos.node;
     final baseColor = isMyNode
         ? context.accentColor
-        : (node.isOnline ? context.accentColor : context.textTertiary);
+        : (presence.isActive
+              ? context.accentColor
+              : context.textTertiary);
 
     return Material(
       color: isMonitored

@@ -1,4 +1,5 @@
 import 'package:uuid/uuid.dart';
+import 'presence_confidence.dart';
 
 /// Message status enum
 enum MessageStatus {
@@ -613,34 +614,21 @@ class MeshNode {
       longitude != null &&
       !(latitude == 0.0 && longitude == 0.0);
 
-  /// Check if node is online (heard within last 2 hours)
-  /// Using 120 minutes as the stale threshold
-  bool get isOnline {
-    final heard = lastHeard;
-    if (heard == null) return false;
-    return DateTime.now().difference(heard).inMinutes < 120;
-  }
-
-  /// Check if node is idle (heard 2-24 hours ago)
-  bool get isIdle {
-    final heard = lastHeard;
-    if (heard == null) return false;
-    final diff = DateTime.now().difference(heard);
-    return diff.inMinutes >= 120 && diff.inHours < 24;
-  }
-
-  /// Check if node is offline (>24 hours or never heard)
-  bool get isOffline {
-    final heard = lastHeard;
-    if (heard == null) return true;
-    return DateTime.now().difference(heard).inHours >= 24;
-  }
-
   /// Check if node was recently discovered (first heard within last 24 hours)
   bool get isRecentlyDiscovered {
     final discovered = firstHeard;
     if (discovered == null) return false;
     return DateTime.now().difference(discovered).inHours < 24;
+  }
+
+  PresenceConfidence get presenceConfidence {
+    return PresenceCalculator.fromLastHeard(lastHeard, now: DateTime.now());
+  }
+
+  Duration? get lastHeardAge {
+    final heard = lastHeard;
+    if (heard == null) return null;
+    return DateTime.now().difference(heard);
   }
 
   @override

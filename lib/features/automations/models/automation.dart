@@ -113,9 +113,9 @@ extension TriggerTypeExtension on TriggerType {
   String get displayName {
     switch (this) {
       case TriggerType.nodeOnline:
-        return 'Node comes online';
+        return 'Node becomes active';
       case TriggerType.nodeOffline:
-        return 'Node goes offline';
+        return 'Node becomes inactive';
       case TriggerType.batteryLow:
         return 'Battery drops below threshold';
       case TriggerType.batteryFull:
@@ -206,9 +206,9 @@ extension TriggerTypeExtension on TriggerType {
   String get defaultDescription {
     switch (this) {
       case TriggerType.nodeOnline:
-        return 'Triggered when a node comes online';
+        return 'Triggered when a node is heard recently';
       case TriggerType.nodeOffline:
-        return 'Triggered when a node goes offline';
+        return 'Triggered when a node is not heard for a while';
       case TriggerType.batteryLow:
         return 'Triggered when battery drops below threshold';
       case TriggerType.batteryFull:
@@ -240,9 +240,9 @@ extension TriggerTypeExtension on TriggerType {
   String get defaultMessageText {
     switch (this) {
       case TriggerType.nodeOnline:
-        return '{{node.name}} is now online';
+        return '{{node.name}} is now active';
       case TriggerType.nodeOffline:
-        return '{{node.name}} went offline';
+        return '{{node.name}} became inactive';
       case TriggerType.batteryLow:
         return '{{node.name}} battery low: {{battery}}';
       case TriggerType.batteryFull:
@@ -571,9 +571,9 @@ extension ConditionTypeExtension on ConditionType {
       case ConditionType.batteryBelow:
         return 'Battery below threshold';
       case ConditionType.nodeOnline:
-        return 'Node is online';
+        return 'Node is active';
       case ConditionType.nodeOffline:
-        return 'Node is offline';
+        return 'Node is inactive';
       case ConditionType.withinGeofence:
         return 'Within geofence';
       case ConditionType.outsideGeofence:

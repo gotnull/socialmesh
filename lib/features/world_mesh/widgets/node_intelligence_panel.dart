@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import '../../../core/theme.dart';
 import '../../../models/world_mesh_node.dart';
+import '../../../models/presence_confidence.dart';
 import '../node_analytics_screen.dart';
 
 /// Computed intelligence derived from WorldMeshNode data (mesh-observer snapshot)
@@ -50,15 +51,19 @@ class NodeIntelligenceData {
     }
 
     // Recency factor
-    if (node.isOnline) {
-      health += 1.0;
-      healthFactors++;
-    } else if (node.isIdle) {
-      health += 0.5;
-      healthFactors++;
-    } else {
-      health += 0.1;
-      healthFactors++;
+    switch (node.presenceConfidence) {
+      case PresenceConfidence.active:
+        health += 1.0;
+        healthFactors++;
+      case PresenceConfidence.fading:
+        health += 0.7;
+        healthFactors++;
+      case PresenceConfidence.stale:
+        health += 0.3;
+        healthFactors++;
+      case PresenceConfidence.unknown:
+        health += 0.1;
+        healthFactors++;
     }
 
     // Uptime factor (longer uptime = more stable)
@@ -111,12 +116,17 @@ class NodeIntelligenceData {
       } else {
         activity = 'Cold';
       }
-    } else if (node.isOnline) {
-      activity = 'Active';
-    } else if (node.isIdle) {
-      activity = 'Quiet';
     } else {
-      activity = 'Cold';
+      switch (node.presenceConfidence) {
+        case PresenceConfidence.active:
+          activity = 'Active';
+        case PresenceConfidence.fading:
+          activity = 'Quiet';
+        case PresenceConfidence.stale:
+          activity = 'Cold';
+        case PresenceConfidence.unknown:
+          activity = 'Unknown';
+      }
     }
 
     return NodeIntelligenceData(

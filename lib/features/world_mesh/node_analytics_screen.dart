@@ -12,9 +12,11 @@ import '../../core/theme.dart';
 import '../../core/widgets/auto_scroll_text.dart';
 import '../../core/widgets/info_table.dart';
 import '../../models/world_mesh_node.dart';
+import '../../models/presence_confidence.dart';
 import '../../services/world_mesh_map_service.dart';
 import '../../utils/share_utils.dart';
 import '../../utils/snackbar.dart';
+import '../../utils/presence_utils.dart';
 import 'services/node_favorites_service.dart';
 import 'services/node_history_service.dart';
 import 'widgets/node_history_charts.dart';
@@ -271,11 +273,19 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
     final sharePosition = getSafeSharePosition(context);
 
     // Create a shareable record in Firestore
-    final docRef = await FirebaseFirestore.instance.collection('shared_nodes').add({
+    final lastSeenAge = node.lastSeen != null
+        ? DateTime.now().difference(node.lastSeen!)
+        : null;
+    final statusText = presenceStatusText(
+      node.presenceConfidence,
+      lastSeenAge,
+    );
+
+    final docRef =
+        await FirebaseFirestore.instance.collection('shared_nodes').add({
       'nodeId': _nodeId,
       'name': node.displayName,
-      'description':
-          '${node.role} • ${node.hwModel} • ${node.isOnline ? "Online" : "Offline"}',
+      'description': '${node.role} • ${node.hwModel} • $statusText',
       'createdAt': FieldValue.serverTimestamp(),
     });
 
@@ -312,12 +322,11 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
     }
 
     buffer.writeln('');
+    final lastSeenAge = node.lastSeen != null
+        ? DateTime.now().difference(node.lastSeen!)
+        : null;
     buffer.writeln(
-      'Status: ${node.isOnline
-          ? "Online"
-          : node.isIdle
-          ? "Idle"
-          : "Offline"}',
+      'Status: ${presenceStatusText(node.presenceConfidence, lastSeenAge)}',
     );
     buffer.writeln('Neighbors: ${node.neighbors?.length ?? 0}');
     buffer.writeln('Gateways: ${node.seenBy.length}');
@@ -424,7 +433,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
           .map(
             (entry) => {
               'timestamp': dateFormat.format(entry.timestamp),
-              'isOnline': entry.isOnline,
+              'presenceConfidence': entry.presenceConfidence.name,
               'batteryLevel': entry.batteryLevel,
               'voltage': entry.voltage,
               'channelUtil': entry.channelUtil,
@@ -453,14 +462,14 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
 
     final buffer = StringBuffer();
     buffer.writeln(
-      'timestamp,isOnline,batteryLevel,voltage,channelUtil,airUtilTx,neighborCount,gatewayCount,latitude,longitude',
+      'timestamp,presenceConfidence,batteryLevel,voltage,channelUtil,airUtilTx,neighborCount,gatewayCount,latitude,longitude',
     );
 
     for (final entry in _history) {
       buffer.writeln(
         [
           dateFormat.format(entry.timestamp),
-          entry.isOnline ? '1' : '0',
+          entry.presenceConfidence.name,
           entry.batteryLevel?.toString() ?? '',
           entry.voltage?.toStringAsFixed(2) ?? '',
           entry.channelUtil?.toStringAsFixed(2) ?? '',
@@ -589,12 +598,12 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
   }
 
   Widget _buildStatusCard(WorldMeshNode node) {
-    final statusColor = node.isOnline
-        ? AccentColors.green
-        : (node.isIdle ? AppTheme.warningYellow : context.textTertiary);
-    final statusText = node.isOnline
-        ? 'Online'
-        : (node.isIdle ? 'Idle' : 'Offline');
+    final lastSeenAge = node.lastSeen != null
+        ? DateTime.now().difference(node.lastSeen!)
+        : null;
+    final statusColor = _presenceColor(context, node.presenceConfidence);
+    final statusText =
+        presenceStatusText(node.presenceConfidence, lastSeenAge);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -616,9 +625,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
             ),
             child: Center(
               child: Icon(
-                node.isOnline
-                    ? Icons.wifi
-                    : (node.isIdle ? Icons.wifi_1_bar : Icons.wifi_off),
+                _presenceIcon(node.presenceConfidence),
                 color: statusColor,
                 size: 28,
               ),
@@ -1203,5 +1210,31 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
     if (diff.inHours > 0) return '${diff.inHours}h ago';
     if (diff.inMinutes > 0) return '${diff.inMinutes}m ago';
     return 'Just now';
+  }
+
+  Color _presenceColor(BuildContext context, PresenceConfidence confidence) {
+    switch (confidence) {
+      case PresenceConfidence.active:
+        return AccentColors.green;
+      case PresenceConfidence.fading:
+        return AppTheme.warningYellow;
+      case PresenceConfidence.stale:
+        return context.textSecondary;
+      case PresenceConfidence.unknown:
+        return context.textTertiary;
+    }
+  }
+
+  IconData _presenceIcon(PresenceConfidence confidence) {
+    switch (confidence) {
+      case PresenceConfidence.active:
+        return Icons.wifi;
+      case PresenceConfidence.fading:
+        return Icons.wifi_1_bar;
+      case PresenceConfidence.stale:
+        return Icons.wifi_off;
+      case PresenceConfidence.unknown:
+        return Icons.help_outline;
+    }
   }
 }

@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme.dart';
 import '../../models/mesh_models.dart';
+import '../../models/presence_confidence.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/presence_providers.dart';
+import '../../utils/presence_utils.dart';
 import 'animations.dart';
 import 'app_bottom_sheet.dart';
 import 'node_avatar.dart';
@@ -59,6 +62,7 @@ class _RemoteAdminSelectorSheetState
   List<MeshNode> get _filteredNodes {
     final nodes = ref.watch(nodesProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
+    final presenceMap = ref.watch(presenceMapProvider);
 
     // Filter to PKI-enabled nodes only, excluding our own node
     var nodeList =
@@ -66,8 +70,10 @@ class _RemoteAdminSelectorSheetState
           if (n.nodeNum == myNodeNum) return false;
           return n.hasPublicKey;
         }).toList()..sort((a, b) {
-          // Online nodes first, then by name
-          if (a.isOnline != b.isOnline) return a.isOnline ? -1 : 1;
+          // Active nodes first, then by name
+          final aActive = presenceConfidenceFor(presenceMap, a).isActive;
+          final bActive = presenceConfidenceFor(presenceMap, b).isActive;
+          if (aActive != bActive) return aActive ? -1 : 1;
           return a.displayName.compareTo(b.displayName);
         });
 
@@ -93,6 +99,7 @@ class _RemoteAdminSelectorSheetState
     final accentColor = context.accentColor;
     final isLocalSelected = widget.currentTarget == null;
     final animationsEnabled = ref.watch(animationsEnabledProvider);
+    final presenceMap = ref.watch(presenceMapProvider);
 
     return ConstrainedBox(
       constraints: BoxConstraints(
@@ -230,6 +237,8 @@ class _RemoteAdminSelectorSheetState
                         child: _NodeAdminTile(
                           node: node,
                           isSelected: isSelected,
+                          presence: presenceConfidenceFor(presenceMap, node),
+                          lastHeardAge: lastHeardAgeFor(presenceMap, node),
                           onTap: () {
                             Navigator.pop(
                               context,
@@ -388,11 +397,15 @@ class _DeviceTile extends StatelessWidget {
 class _NodeAdminTile extends StatelessWidget {
   final MeshNode node;
   final bool isSelected;
+  final PresenceConfidence presence;
+  final Duration? lastHeardAge;
   final VoidCallback onTap;
 
   const _NodeAdminTile({
     required this.node,
     required this.isSelected,
+    required this.presence,
+    required this.lastHeardAge,
     required this.onTap,
   });
 
@@ -434,8 +447,8 @@ class _NodeAdminTile extends StatelessWidget {
                     color: _getAvatarColor(),
                     size: 44,
                   ),
-                  // Online indicator
-                  if (node.isOnline)
+                  // Active indicator
+                  if (presence.isActive)
                     Positioned(
                       right: 0,
                       bottom: 0,
@@ -484,13 +497,19 @@ class _NodeAdminTile extends StatelessWidget {
                     const SizedBox(height: 2),
                     Row(
                       children: [
-                        Text(
-                          node.isOnline ? 'Online' : 'Offline',
-                          style: TextStyle(
-                            color: node.isOnline
-                                ? accentColor.withValues(alpha: 0.8)
-                                : context.textTertiary,
-                            fontSize: 12,
+                        Tooltip(
+                          message: kPresenceInferenceTooltip,
+                          child: Text(
+                            presenceStatusText(
+                              presence,
+                              lastHeardAge,
+                            ),
+                            style: TextStyle(
+                              color: presence.isActive
+                                  ? accentColor.withValues(alpha: 0.8)
+                                  : context.textTertiary,
+                              fontSize: 12,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 8),

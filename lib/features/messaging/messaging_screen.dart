@@ -9,10 +9,13 @@ import 'dart:convert';
 import '../../providers/app_providers.dart';
 import '../../providers/help_providers.dart';
 import '../../models/mesh_models.dart';
+import '../../models/presence_confidence.dart';
 import '../../models/canned_response.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../utils/snackbar.dart';
+import '../../utils/presence_utils.dart';
+import '../../providers/presence_providers.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
@@ -36,7 +39,7 @@ import '../../core/widgets/loading_indicator.dart';
 enum ConversationType { channel, directMessage }
 
 /// Contact filter enum
-enum ContactFilter { all, favorites, messaged, unread, online }
+enum ContactFilter { all, favorites, messaged, unread, active }
 
 /// Main messaging screen - shows list of conversations
 class MessagingScreen extends ConsumerStatefulWidget {
@@ -68,6 +71,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
   @override
   Widget build(BuildContext context) {
     final nodes = ref.watch(nodesProvider);
+    final presenceMap = ref.watch(presenceMapProvider);
     final messages = ref.watch(messagesProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
 
@@ -126,7 +130,8 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
           displayName: node.displayName,
           shortName: node.shortName,
           avatarColor: node.avatarColor,
-          isOnline: node.isOnline,
+          presence: presenceConfidenceFor(presenceMap, node),
+          lastHeardAge: lastHeardAgeFor(presenceMap, node),
           isFavorite: node.isFavorite,
           lastMessage: dmInfo?.lastMessage,
           lastMessageTime: dmInfo?.lastMessageTime,
@@ -149,7 +154,8 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
               'Node ${nodeNum.toRadixString(16).toUpperCase()}',
           shortName: dmInfo.senderShortName,
           avatarColor: dmInfo.senderAvatarColor,
-          isOnline: false,
+          presence: PresenceConfidence.unknown,
+          lastHeardAge: null,
           lastMessage: dmInfo.lastMessage,
           lastMessageTime: dmInfo.lastMessageTime,
           unreadCount: dmInfo.unreadCount,
@@ -162,8 +168,10 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
       // Unread messages first
       if (a.unreadCount > 0 && b.unreadCount == 0) return -1;
       if (b.unreadCount > 0 && a.unreadCount == 0) return 1;
-      // Then online nodes
-      if (a.isOnline != b.isOnline) return a.isOnline ? -1 : 1;
+      // Then active nodes
+      if (a.presence.isActive != b.presence.isActive) {
+        return a.presence.isActive ? -1 : 1;
+      }
       // Then alphabetically
       return a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase());
     });
@@ -172,7 +180,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
     final favoritesCount = contacts.where((c) => c.isFavorite).length;
     final messagedCount = contacts.where((c) => c.hasMessages).length;
     final unreadCount = contacts.where((c) => c.unreadCount > 0).length;
-    final onlineCount = contacts.where((c) => c.isOnline).length;
+    final activeCount = contacts.where((c) => c.presence.isActive).length;
 
     // Apply filter
     var filteredContacts = contacts;
@@ -188,8 +196,8 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
       case ContactFilter.unread:
         filteredContacts = contacts.where((c) => c.unreadCount > 0).toList();
         break;
-      case ContactFilter.online:
-        filteredContacts = contacts.where((c) => c.isOnline).toList();
+      case ContactFilter.active:
+        filteredContacts = contacts.where((c) => c.presence.isActive).toList();
         break;
     }
 
@@ -259,12 +267,12 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
                       ),
                       SizedBox(width: 8),
                       _ContactFilterChip(
-                        label: 'Online',
-                        count: onlineCount,
-                        isSelected: _currentFilter == ContactFilter.online,
+                        label: 'Active',
+                        count: activeCount,
+                        isSelected: _currentFilter == ContactFilter.active,
                         color: AccentColors.green,
                         onTap: () => setState(
-                          () => _currentFilter = ContactFilter.online,
+                          () => _currentFilter = ContactFilter.active,
                         ),
                       ),
                       SizedBox(width: 8),
@@ -459,7 +467,8 @@ class _Contact {
   final String displayName;
   final String? shortName;
   final int? avatarColor;
-  final bool isOnline;
+  final PresenceConfidence presence;
+  final Duration? lastHeardAge;
   final bool isFavorite;
   final String? lastMessage;
   final DateTime? lastMessageTime;
@@ -470,7 +479,8 @@ class _Contact {
     required this.displayName,
     this.shortName,
     this.avatarColor,
-    this.isOnline = false,
+    this.presence = PresenceConfidence.unknown,
+    this.lastHeardAge,
     this.isFavorite = false,
     this.lastMessage,
     this.lastMessageTime,
@@ -516,7 +526,7 @@ class _ContactTile extends StatelessWidget {
                         : AppTheme.graphPurple,
                     size: 48,
                   ),
-                  if (contact.isOnline)
+                  if (contact.presence.isActive)
                     Positioned(
                       right: 0,
                       bottom: 0,
@@ -578,12 +588,15 @@ class _ContactTile extends StatelessWidget {
                     SizedBox(height: 4),
                     Text(
                       contact.lastMessage ??
-                          (contact.isOnline ? 'Online' : 'Offline'),
+                          presenceStatusText(
+                            contact.presence,
+                            contact.lastHeardAge,
+                          ),
                       style: TextStyle(
                         fontSize: 14,
                         color: contact.lastMessage != null
                             ? context.textSecondary
-                            : (contact.isOnline
+                            : (contact.presence.isActive
                                   ? AppTheme.successGreen
                                   : context.textTertiary),
                       ),
@@ -2500,7 +2513,7 @@ class _ContactFilterChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final chipColor = color ?? AppTheme.primaryBlue;
-    final showStatusIndicator = label == 'Online';
+    final showStatusIndicator = label == 'Active';
 
     return GestureDetector(
       onTap: onTap,
@@ -2519,7 +2532,7 @@ class _ContactFilterChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Status indicator for Online chip
+            // Status indicator for Active chip
             if (showStatusIndicator) ...[
               Container(
                 width: 10,

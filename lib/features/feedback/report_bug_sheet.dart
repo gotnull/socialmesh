@@ -163,7 +163,8 @@ class _ReportBugSheetState extends State<ReportBugSheet> {
       showGlobalSuccessSnackBar('Bug report sent.');
     } catch (e) {
       if (!mounted) return;
-      showGlobalErrorSnackBar('Failed to send bug report.');
+      final msg = e is Exception ? e.toString() : '$e';
+      showGlobalErrorSnackBar('Failed to send bug report: $msg');
     } finally {
       if (mounted) setState(() => _isSending = false);
     }

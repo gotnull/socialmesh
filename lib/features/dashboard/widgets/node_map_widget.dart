@@ -5,6 +5,7 @@ import 'package:latlong2/latlong.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/mesh_map_widget.dart';
 import '../../../providers/app_providers.dart';
+import '../../../providers/presence_providers.dart';
 
 /// Dashboard widget showing nodes on a mini map
 class NodeMapContent extends ConsumerWidget {
@@ -14,6 +15,7 @@ class NodeMapContent extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final nodes = ref.watch(nodesProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
+    final presenceMap = ref.watch(presenceMapProvider);
 
     final nodesWithPosition = nodes.values
         .where((node) => node.hasPosition)
@@ -25,7 +27,12 @@ class NodeMapContent extends ConsumerWidget {
 
     // Convert to marker data
     final markerData = nodesWithPosition
-        .map((node) => MeshNodeMarkerData.fromNode(node))
+        .map(
+          (node) => MeshNodeMarkerData.fromNode(
+            node,
+            presence: presenceConfidenceFor(presenceMap, node),
+          ),
+        )
         .toList();
 
     // Calculate center
@@ -75,6 +82,7 @@ class NodeMapContent extends ConsumerWidget {
                           child: MiniMeshNodeMarker(
                             node: node,
                             isMyNode: isMyNode,
+                            presence: presenceConfidenceFor(presenceMap, node),
                           ),
                         );
                       }).toList(),

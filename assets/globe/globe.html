@@ -104,13 +104,27 @@
         id: n.id,
         lat: n.lat,
         lng: n.lng,
-        color: n.isOnline ? (n.color || '#00ff88') : '#666666',
+        color: presenceColor(n.presenceConfidence, n.color),
         name: n.name,
-        isOnline: n.isOnline,
+        presenceConfidence: n.presenceConfidence,
         selected: n.id === selectedNodeId
       }));
 
       globe.pointsData(nodesData);
+    }
+
+    function presenceColor(confidence, fallback) {
+      switch (confidence) {
+        case 'active':
+          return fallback || '#00ff88';
+        case 'fading':
+          return '#f6c445';
+        case 'stale':
+          return '#777777';
+        case 'unknown':
+        default:
+          return '#555555';
+      }
     }
 
     // Update arcs (connections)

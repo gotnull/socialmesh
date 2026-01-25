@@ -200,7 +200,7 @@ class BugReportService {
     final callable = functions.httpsCallable('reportBug');
 
     AppLogging.bugReport('Submitting report (screenshot=$includeScreenshot)');
-    await callable.call({
+    final result = await callable.call({
       'description': description,
       'screenshotUrl': screenshotUrl,
       'appVersion': package.version,
@@ -210,6 +210,19 @@ class BugReportService {
       'uid': user?.uid,
       'email': user?.email,
     });
+
+    // Validate server response and surface any email errors to the UI
+    final Map<String, dynamic>? data = result.data as Map<String, dynamic>?;
+    if (data == null) {
+      throw Exception('Invalid server response');
+    }
+    if (data['success'] != true) {
+      throw Exception(data['error'] ?? 'Failed to submit bug report');
+    }
+    if (data['emailSent'] == false) {
+      throw Exception(data['emailError'] ?? 'Bug report saved but email notification failed');
+    }
+
     AppLogging.bugReport('Report submitted');
   }
 }

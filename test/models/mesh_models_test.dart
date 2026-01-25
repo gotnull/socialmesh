@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/models/mesh_models.dart';
+import 'package:socialmesh/models/presence_confidence.dart';
 
 void main() {
   group('MessageStatus', () {
@@ -235,7 +236,7 @@ void main() {
       expect(node.nodeNum, 123);
       expect(node.longName, isNull);
       expect(node.shortName, isNull);
-      expect(node.isOnline, false);
+      expect(node.presenceConfidence, PresenceConfidence.unknown);
       expect(node.isFavorite, false);
     });
 
@@ -271,7 +272,7 @@ void main() {
       expect(node.longitude, 151.2093);
       expect(node.altitude, 100);
       expect(node.batteryLevel, 85);
-      expect(node.isOnline, true);
+      expect(node.presenceConfidence, PresenceConfidence.active);
       expect(node.isFavorite, true);
       expect(node.hasPublicKey, true);
     });
@@ -332,7 +333,7 @@ void main() {
       expect(copied.longName, 'Original');
       expect(copied.shortName, 'ORIG');
       expect(copied.batteryLevel, 50);
-      expect(copied.isOnline, true);
+      expect(copied.presenceConfidence, PresenceConfidence.active);
     });
 
     test('equality based on nodeNum', () {

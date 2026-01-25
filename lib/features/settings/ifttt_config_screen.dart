@@ -349,8 +349,8 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
       children: [
         _SettingsTile(
           icon: Icons.wifi_tethering,
-          title: 'Node Online',
-          subtitle: 'Trigger when a node comes online',
+          title: 'Node Active',
+          subtitle: 'Trigger when a node is heard recently',
           trailing: ThemedSwitch(
             value: _nodeOnline,
             onChanged: (value) {
@@ -361,8 +361,8 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
         ),
         _SettingsTile(
           icon: Icons.wifi_off_outlined,
-          title: 'Node Offline',
-          subtitle: 'Trigger when a node goes offline',
+          title: 'Node Inactive',
+          subtitle: 'Trigger when a node is not heard for a while',
           trailing: ThemedSwitch(
             value: _nodeOffline,
             onChanged: (value) {

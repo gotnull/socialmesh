@@ -16,6 +16,7 @@ import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/map_controls.dart';
 import '../../providers/help_providers.dart';
 import '../../models/world_mesh_node.dart';
+import '../../models/presence_confidence.dart';
 import '../../providers/node_favorites_provider.dart';
 import '../../providers/world_mesh_map_provider.dart';
 import '../../utils/snackbar.dart';
@@ -485,7 +486,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                 children: [
                   _StatusLegendItem(
                     color: AppTheme.successGreen,
-                    label: 'Online (<1h)',
+                    label: 'Active (<1h)',
                   ),
                   SizedBox(width: 16),
                   _StatusLegendItem(color: Colors.amber, label: 'Idle (1-24h)'),
@@ -1169,21 +1170,24 @@ class _SearchResultTile extends StatelessWidget {
   });
 
   Color _statusColor(BuildContext context) {
-    switch (node.status) {
-      case NodeStatus.online:
+    switch (node.presenceConfidence) {
+      case PresenceConfidence.active:
         return AppTheme.successGreen;
-      case NodeStatus.idle:
+      case PresenceConfidence.fading:
         return Colors.amber;
-      case NodeStatus.offline:
+      case PresenceConfidence.stale:
+        return context.textSecondary;
+      case PresenceConfidence.unknown:
         return context.textTertiary;
     }
   }
 
-  bool get _showStatusBadge => node.status != NodeStatus.offline;
+  bool get _showStatusBadge =>
+      node.presenceConfidence != PresenceConfidence.unknown;
 
   @override
   Widget build(BuildContext context) {
-    final isActive = node.status != NodeStatus.offline;
+    final isActive = node.presenceConfidence.isActive;
 
     return InkWell(
       onTap: onTap,
@@ -1423,7 +1427,7 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
-                                'ONLINE',
+                                'ACTIVE',
                                 style: TextStyle(
                                   color: AppTheme.successGreen,
                                   fontSize: 9,
