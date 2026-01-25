@@ -168,41 +168,11 @@ class _ReportBugSheetState extends State<ReportBugSheet> {
         final err = result['emailError'] ?? 'Unknown error';
         final id = result['reportId'] ?? 'unknown';
         showGlobalErrorSnackBar('Report saved (ID: $id) — email failed: $err');
-        await showDialog<void>(
-          context: navigatorKey.currentContext!,
-          builder: (ctx) => AlertDialog(
-            title: const Text('Bug report saved'),
-            content: Text(
-              'Report saved (ID: $id) but email notification failed: $err',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        );
       } else {
         // success
         final id = result != null ? (result['reportId'] ?? '') : '';
         showGlobalSuccessSnackBar(
           'Bug report sent${id != '' ? ' (ID: $id)' : ''}.',
-        );
-        await showDialog<void>(
-          context: navigatorKey.currentContext!,
-          builder: (ctx) => AlertDialog(
-            title: const Text('Thanks!'),
-            content: Text(
-              'Bug report sent${id != '' ? '\nReport ID: $id' : ''}',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('OK'),
-              ),
-            ],
-          ),
         );
       }
     } catch (e) {
