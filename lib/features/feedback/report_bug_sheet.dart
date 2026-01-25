@@ -163,18 +163,10 @@ class _ReportBugSheetState extends State<ReportBugSheet> {
       // Close the sheet first
       navigatorKey.currentState?.pop();
 
-      // If server indicated email failed, show a clear dialog with details
-      if (result != null && result['emailSent'] == false) {
-        final err = result['emailError'] ?? 'Unknown error';
-        final id = result['reportId'] ?? 'unknown';
-        showGlobalErrorSnackBar('Report saved (ID: $id) — email failed: $err');
-      } else {
-        // success
-        final id = result != null ? (result['reportId'] ?? '') : '';
-        showGlobalSuccessSnackBar(
-          'Bug report sent${id != '' ? ' (ID: $id)' : ''}.',
-        );
-      }
+      final id = result != null ? (result['reportId'] ?? '') : '';
+      showGlobalSuccessSnackBar(
+        'Bug report submitted${id != '' ? ' (ID: $id)' : ''}.',
+      );
     } catch (e) {
       if (!mounted) return;
       String msg;

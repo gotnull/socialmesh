@@ -208,21 +208,13 @@ class BugReportService {
       'email': user?.email,
     });
 
-    // Validate server response and surface any email errors to the UI
+    // Validate server response
     final Map<String, dynamic>? data = result.data as Map<String, dynamic>?;
     if (data == null) {
       throw Exception('Invalid server response');
     }
     if (data['success'] != true) {
       throw Exception(data['error'] ?? 'Failed to submit bug report');
-    }
-
-    // If email sending failed on server, keep the report saved but return the
-    // response so the UI can surface a descriptive confirmation to the user.
-    if (data['emailSent'] == false) {
-      final err = data['emailError'] ?? 'Email notification failed';
-      AppLogging.bugReport('Report submitted but email failed: $err');
-      return data;
     }
 
     AppLogging.bugReport('Report submitted');

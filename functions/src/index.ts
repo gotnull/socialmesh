@@ -2421,68 +2421,7 @@ export const reportBug = onCall({ cors: true }, async (request) => {
   });
   console.info(`[reportBug] Created report ${reportDoc.id} by ${authEmail || email || 'anonymous'}`);
 
-  const subject = 'Socialmesh bug report';
-  const bodyLines = [
-    `Report ID: ${reportDoc.id}`,
-    `User: ${authEmail || email || 'anonymous'}`,
-    `UID: ${authUid || uid || 'anonymous'}`,
-    `App Version: ${appVersion || 'unknown'} (${buildNumber || 'unknown'})`,
-    `Platform: ${platform || 'unknown'} ${platformVersion || ''}`.trim(),
-    `Screenshot: ${screenshotUrl || 'none'}`,
-    '',
-    'Description:',
-    description,
-  ];
-  const text = bodyLines.join('\n');
-  const html = buildBugReportEmailHtml({
-    reportId: reportDoc.id,
-    userEmail: authEmail || email || 'anonymous',
-    userId: authUid || uid || 'anonymous',
-    appVersion: appVersion || 'unknown',
-    buildNumber: buildNumber || 'unknown',
-    platform: `${platform || 'unknown'} ${platformVersion || ''}`.trim(),
-    screenshotUrl: screenshotUrl || null,
-    description,
-  });
-
-  // Allow `improvmx.to`/`improvmx.from` from functions.config(), falling back to env vars
-  let improvmxCfg: Record<string, string> | undefined;
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const functions = require('firebase-functions');
-    improvmxCfg = (functions && typeof functions.config === 'function' && functions.config().improvmx) || undefined;
-  } catch (e) {
-    improvmxCfg = undefined;
-  }
-
-  const toAddress = (improvmxCfg && improvmxCfg.to) || process.env.IMPROVMX_SMTP_TO || 'support@socialmesh.app';
-  const fromAddress = (improvmxCfg && improvmxCfg.from) || process.env.IMPROVMX_SMTP_FROM || process.env.IMPROVMX_SMTP_USER || 'support@socialmesh.app';
-  // Attempt to send email and surface any failures as an HttpsError so the client can
-  // show a descriptive error message. This ensures the report won't be silently accepted
-  // when email notifications fail due to misconfiguration or auth errors.
-  try {
-    const transport = await getBugReportTransport();
-    console.info(`[reportBug] Sending bug report email to ${toAddress} from ${fromAddress} using host ${process.env.IMPROVMX_SMTP_HOST || 'env'} (reportId=${reportDoc.id})`);
-    const info = await transport.sendMail({
-      to: toAddress,
-      from: fromAddress,
-      subject,
-      text,
-      html,
-    });
-    console.info(`[reportBug] Email sent (messageId=${info && info.messageId})`);
-  } catch (emailErr) {
-    console.error('[reportBug] Failed to send email:', (emailErr as Error).message || emailErr);
-    // Return success for the bug report creation but indicate the email failure
-    return {
-      success: true,
-      reportId: reportDoc.id,
-      emailSent: false,
-      emailError: (emailErr as Error).message || String(emailErr),
-    };
-  }
-
-  return { success: true, reportId: reportDoc.id, emailSent: true };
+  return { success: true, reportId: reportDoc.id };
 });
 
 // =============================================================================
