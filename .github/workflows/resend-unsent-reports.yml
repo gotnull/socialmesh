@@ -1,4 +1,4 @@
-name: Resend unsent bug reports (fixed)
+name: Resend unsent bug reports
 
 on:
   workflow_dispatch: {}
