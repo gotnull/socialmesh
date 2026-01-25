@@ -42,6 +42,11 @@ TO_OVERRIDE = os.getenv("IMPROVMX_SMTP_TO")  # optional override
 
 if not SMTP_USER or not SMTP_PASS:
     print("Warning: IMPROVMX_SMTP_USER or IMPROVMX_SMTP_PASS missing in environment. You can still run dry-run to list reports.")
+if not FROM_EMAIL:
+    FROM_EMAIL = SMTP_USER
+if not FROM_EMAIL:
+    print("Error: IMPROVMX_SMTP_FROM or IMPROVMX_SMTP_USER must be set to a valid From address.")
+    sys.exit(1)
 
 parser = argparse.ArgumentParser(description="Resend unsent bug report emails")
 parser.add_argument("--days", type=int, default=7, help="how many days back to look (default 7)")
