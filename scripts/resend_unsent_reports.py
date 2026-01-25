@@ -92,7 +92,9 @@ for i, (docid, data) in enumerate(unsent, start=1):
     print(f"   createdAt: {data.get('createdAt')}")
     print(f"   email: {data.get('email')}")
     desc = data.get('description', '')
-    print(f"   description: {desc[:120].replace('\n',' ')}{('...' if len(desc)>120 else '')}")
+    desc_sanitized = desc[:120].replace("\n", " ")
+    desc_suffix = '...' if len(desc) > 120 else ''
+    print(f"   description: {desc_sanitized}{desc_suffix}")
     print(f"   screenshot: {data.get('screenshotUrl')}")
     print(f"   emailError: {data.get('emailError')}")
     print()
