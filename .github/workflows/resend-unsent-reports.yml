@@ -25,14 +25,25 @@ jobs:
           pip install google-cloud-firestore python-dotenv
 
       - name: Configure GCP service account (write secret)
-        if: ${{ secrets.GCP_SA_KEY != '' }}
+        env:
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
         run: |
-          echo "${{ secrets.GCP_SA_KEY }}" > "${{ runner.temp }}/gcp_sa.json"
-          echo "Wrote service account key to ${{ runner.temp }}/gcp_sa.json"
+          if [ -n "${GCP_SA_KEY}" ]; then
+            echo "$GCP_SA_KEY" > "${{ runner.temp }}/gcp_sa.json"
+            echo "Wrote service account key to ${{ runner.temp }}/gcp_sa.json"
+          else
+            echo "No GCP_SA_KEY secret provided; skipping service account setup."
+          fi
 
       - name: Set GOOGLE_APPLICATION_CREDENTIALS
-        if: ${{ secrets.GCP_SA_KEY != '' }}
-        run: echo "GOOGLE_APPLICATION_CREDENTIALS=${{ runner.temp }}/gcp_sa.json" >> $GITHUB_ENV
+        env:
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+        run: |
+          if [ -n "${GCP_SA_KEY}" ]; then
+            echo "GOOGLE_APPLICATION_CREDENTIALS=${{ runner.temp }}/gcp_sa.json" >> $GITHUB_ENV
+          else
+            echo "No GCP_SA_KEY secret provided; not setting GOOGLE_APPLICATION_CREDENTIALS."
+          fi
 
       - name: Run resend script
         env:
