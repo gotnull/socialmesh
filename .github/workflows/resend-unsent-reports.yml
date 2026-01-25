@@ -32,11 +32,11 @@ jobs:
           if [ -z "${GCP_SA_KEY}" ]; then
             echo "ERROR: GCP_SA_KEY secret is missing from the environment."
             echo "Create a service account with Firestore access, add its JSON as the environment secret named 'GCP_SA_KEY', then rerun this workflow."
-            echo 'Quick commands (local):'
-            echo '  gcloud iam service-accounts create ci-firestore-resender --display-name "CI Firestore Resender"'
-            echo '  gcloud projects add-iam-policy-binding YOUR_PROJECT_ID --member=serviceAccount:ci-firestore-resender@YOUR_PROJECT_ID.iam.gserviceaccount.com --role=roles/datastore.user'
-            echo '  gcloud iam service-accounts keys create key.json --iam-account=ci-firestore-resender@YOUR_PROJECT_ID.iam.gserviceaccount.com'
-            echo 'Then add the key as an Environment secret: GCP_SA_KEY (use the UI or run: gh secret set GCP_SA_KEY --env "IMPROVMX_SMTP_USER" --body "$(cat key.json)")'
+            echo "Quick commands (local):"
+            echo "  gcloud iam service-accounts create ci-firestore-resender --display-name 'CI Firestore Resender'"
+            echo "  gcloud projects add-iam-policy-binding ${{ secrets.GCP_PROJECT_ID || 'YOUR_PROJECT_ID' }} --member=serviceAccount:ci-firestore-resender@$(gcloud config get-value project).iam.gserviceaccount.com --role=roles/datastore.user"
+            echo "  gcloud iam service-accounts keys create key.json --iam-account=ci-firestore-resender@$(gcloud config get-value project).iam.gserviceaccount.com"
+            echo "Then add the key as an Environment secret: 'GCP_SA_KEY' (use the UI or 'gh secret set GCP_SA_KEY --env "IMPROVMX_SMTP_USER" --body "$(cat key.json)"')."
             exit 1
           else
             echo "GCP_SA_KEY found. Continuing."
@@ -47,18 +47,14 @@ jobs:
           GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
         run: |
           if [ -n "${GCP_SA_KEY}" ]; then
-            # Write secret to temp file first to avoid quoting issues
-            printf '%s' "${GCP_SA_KEY}" > "${{ runner.temp }}/gcp_sa.json"
-            # Validate JSON by loading the file
-            python - << 'PY'
-import sys, json
+            # Validate JSON using Python so we get a clear error if it's malformed
+            printf '%s' "${GCP_SA_KEY}" | python -c 'import sys, json
 try:
-    json.load(open('${{ runner.temp }}/gcp_sa.json'))
+    json.load(sys.stdin)
 except Exception as e:
-    print('Invalid JSON for GCP_SA_KEY:', e)
-    sys.exit(1)
-print('GCP_SA_KEY JSON validated.')
-PY
+    print("Invalid JSON for GCP_SA_KEY:", e)
+    sys.exit(1)'
+            echo "GCP_SA_KEY JSON validated."
           else
             echo "No GCP_SA_KEY secret provided; skipping validation."
           fi
