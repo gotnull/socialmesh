@@ -6,8 +6,6 @@ Supports viewing encrypted messages (binary protobuf) and JSON messages
 
 import paho.mqtt.client as mqtt
 import json
-import time
-import base64
 from datetime import datetime
 
 # MQTT Configuration
@@ -67,7 +65,7 @@ def on_message(client, userdata, msg):
         # JSON message (unencrypted)
         try:
             data = json.loads(msg.payload.decode('utf-8'))
-            print(f"   Type: JSON (unencrypted)")
+            print("   Type: JSON (unencrypted)")
             # Pretty print relevant fields
             if 'type' in data:
                 print(f"   Msg Type: {data.get('type')}")

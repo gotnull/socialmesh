@@ -7,7 +7,6 @@ tones into a single JSON file for efficient loading.
 """
 
 import json
-import os
 import re
 from pathlib import Path
 
@@ -209,7 +208,6 @@ def main():
     # Collect all tones
     tones = []
     skipped = 0
-    errors = 0
 
     # Process .txt files (valid RTTTL format)
     txt_files = list(rtttl_dir.glob('*.txt'))
