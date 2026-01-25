@@ -47,14 +47,18 @@ jobs:
           GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
         run: |
           if [ -n "${GCP_SA_KEY}" ]; then
-            # Validate JSON using Python so we get a clear error if it's malformed
-            printf '%s' "${GCP_SA_KEY}" | python -c 'import sys, json
+            # Write secret to temp file first to avoid quoting issues
+            printf '%s' "${GCP_SA_KEY}" > "${{ runner.temp }}/gcp_sa.json"
+            # Validate JSON by loading the file
+            python - << 'PY'
+import sys, json
 try:
-    json.load(sys.stdin)
+    json.load(open('${{ runner.temp }}/gcp_sa.json'))
 except Exception as e:
-    print("Invalid JSON for GCP_SA_KEY:", e)
-    sys.exit(1)'
-            echo "GCP_SA_KEY JSON validated."
+    print('Invalid JSON for GCP_SA_KEY:', e)
+    sys.exit(1)
+print('GCP_SA_KEY JSON validated.')
+PY
           else
             echo "No GCP_SA_KEY secret provided; skipping validation."
           fi
