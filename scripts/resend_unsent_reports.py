@@ -199,6 +199,13 @@ def build_bug_report_email_html(report_id, data):
 # Send loop
 for docid, data in unsent:
     to_email = TO_OVERRIDE or data.get('email') or os.getenv('IMPROVMX_SMTP_TO') or SMTP_USER
+    if not to_email:
+        print("  send skipped: missing recipient email")
+        db.collection('bugReports').document(docid).update({
+            'emailSent': False,
+            'emailError': 'Missing recipient email',
+        })
+        continue
     subject = f"Bug report {docid}"
 
     text_body = "\n".join([
