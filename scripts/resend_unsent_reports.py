@@ -48,6 +48,9 @@ parser.add_argument("--days", type=int, default=7, help="how many days back to l
 parser.add_argument("--send", action="store_true", help="actually send emails (default is dry-run)")
 parser.add_argument("--yes", "-y", action="store_true", help="non-interactive confirmation for --send (use in CI)")
 parser.add_argument("--id", type=str, help="optional single bug report ID to resend")
+parser.add_argument("--retries", type=int, default=2, help="number of retries for sending each email (default 2)")
+parser.add_argument("--delay", type=float, default=0.5, help="seconds to wait between sends (default 0.5)")
+parser.add_argument("--limit", type=int, default=0, help="limit number of reports to send (0 = no limit)")
 args = parser.parse_args()
 
 # Initialize Firestore
