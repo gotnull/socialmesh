@@ -37,15 +37,13 @@ SMTP_PORT = int(os.getenv("IMPROVMX_SMTP_PORT", "587"))
 SMTP_USER = os.getenv("IMPROVMX_SMTP_USER")
 SMTP_PASS = os.getenv("IMPROVMX_SMTP_PASS")
 SMTP_STARTTLS = os.getenv("IMPROVMX_SMTP_STARTTLS", "true").lower() == "true"
-FROM_EMAIL = os.getenv("IMPROVMX_SMTP_FROM", SMTP_USER)
-TO_OVERRIDE = os.getenv("IMPROVMX_SMTP_TO")  # optional override
+FROM_EMAIL = "bug@socialmesh.app"
+TO_OVERRIDE = "bug@socialmesh.app"
 
 if not SMTP_USER or not SMTP_PASS:
     print("Warning: IMPROVMX_SMTP_USER or IMPROVMX_SMTP_PASS missing in environment. You can still run dry-run to list reports.")
 if not FROM_EMAIL:
-    FROM_EMAIL = SMTP_USER
-if not FROM_EMAIL:
-    print("Error: IMPROVMX_SMTP_FROM or IMPROVMX_SMTP_USER must be set to a valid From address.")
+    print("Error: Missing fixed From address for bug reports.")
     sys.exit(1)
 
 parser = argparse.ArgumentParser(description="Resend unsent bug report emails")
@@ -198,7 +196,7 @@ def build_bug_report_email_html(report_id, data):
 
 # Send loop
 for docid, data in unsent:
-    to_email = TO_OVERRIDE or data.get('email') or os.getenv('IMPROVMX_SMTP_TO') or SMTP_USER
+    to_email = TO_OVERRIDE
     if not to_email:
         print("  send skipped: missing recipient email")
         db.collection('bugReports').document(docid).update({
