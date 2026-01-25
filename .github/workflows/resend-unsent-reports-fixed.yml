@@ -1,0 +1,56 @@
+name: Resend unsent bug reports (fixed)
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: '0 6 * * *'
+
+jobs:
+  resend:
+    environment: IMPROVMX_SMTP_USER
+    name: Resend unsent reports (fixed)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install google-cloud-firestore python-dotenv
+
+      - name: Ensure GCP_SA_KEY is present
+        env:
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+        run: |
+          if [ -z "${GCP_SA_KEY}" ]; then
+            echo "ERROR: GCP_SA_KEY is missing. Add the service account JSON as an Environment secret named 'GCP_SA_KEY' and rerun."
+            exit 1
+          fi
+
+      - name: Write & validate GCP service account key
+        env:
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+        run: |
+          set -euo pipefail
+          printf '%s' "${GCP_SA_KEY}" > "${{ runner.temp }}/gcp_sa.json"
+          python -c "import json,sys
+json.load(open(sys.argv[1]))
+print('GCP_SA_KEY JSON valid')" "${{ runner.temp }}/gcp_sa.json"
+
+      - name: Set GOOGLE_APPLICATION_CREDENTIALS
+        run: echo "GOOGLE_APPLICATION_CREDENTIALS=${{ runner.temp }}/gcp_sa.json" >> $GITHUB_ENV
+
+      - name: Run resend script
+        env:
+          IMPROVMX_SMTP_USER: ${{ secrets.IMPROVMX_SMTP_USER }}
+          IMPROVMX_SMTP_PASS: ${{ secrets.IMPROVMX_SMTP_PASS }}
+          IMPROVMX_SMTP_FROM: ${{ secrets.IMPROVMX_SMTP_FROM }}
+          IMPROVMX_SMTP_TO: ${{ secrets.IMPROVMX_SMTP_TO }}
+          CI: true
+        run: python3 scripts/resend_unsent_reports.py --send --yes
