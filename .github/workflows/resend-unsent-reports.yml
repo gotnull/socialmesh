@@ -42,15 +42,33 @@ jobs:
             echo "GCP_SA_KEY found. Continuing."
           fi
 
-      - name: Configure GCP service account (write secret)
+      - name: Validate GCP service account JSON
         env:
           GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
         run: |
           if [ -n "${GCP_SA_KEY}" ]; then
-            echo "$GCP_SA_KEY" > "${{ runner.temp }}/gcp_sa.json"
+            # Validate JSON using Python so we get a clear error if it's malformed
+            printf '%s' "${GCP_SA_KEY}" | python -c 'import sys, json
+try:
+    json.load(sys.stdin)
+except Exception as e:
+    print("Invalid JSON for GCP_SA_KEY:", e)
+    sys.exit(1)'
+            echo "GCP_SA_KEY JSON validated."
+          else
+            echo "No GCP_SA_KEY secret provided; skipping validation."
+          fi
+
+      - name: Write GCP service account key to file
+        env:
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+        run: |
+          if [ -n "${GCP_SA_KEY}" ]; then
+            # Use printf to preserve exact file contents (avoid issues with echo)
+            printf '%s' "${GCP_SA_KEY}" > "${{ runner.temp }}/gcp_sa.json"
             echo "Wrote service account key to ${{ runner.temp }}/gcp_sa.json"
           else
-            echo "No GCP_SA_KEY secret provided; skipping service account setup."
+            echo "No GCP_SA_KEY secret provided; skipping service account write."
           fi
 
       - name: Set GOOGLE_APPLICATION_CREDENTIALS
