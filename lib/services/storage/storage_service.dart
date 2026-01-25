@@ -250,6 +250,14 @@ class SettingsService {
   bool get animationsEnabled =>
       _preferences.getBool('animations_enabled') ?? true;
 
+  // Map tile style (index in MapTileStyle enum)
+  Future<void> setMapTileStyleIndex(int index) async {
+    await _preferences.setInt('map_tile_style_index', index);
+  }
+
+  int get mapTileStyleIndex =>
+      _preferences.getInt('map_tile_style_index') ?? 0;
+
   // 3D Animations Enabled
   Future<void> setAnimations3DEnabled(bool enabled) async {
     await _preferences.setBool('animations_3d_enabled', enabled);

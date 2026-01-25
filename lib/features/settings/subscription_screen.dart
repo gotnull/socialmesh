@@ -517,7 +517,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
         children: [
           Icon(icon, size: 18, color: context.accentColor),
           const SizedBox(width: 10),
-          Flexible(
+          Expanded(
             child: Text(
               name,
               style: const TextStyle(
@@ -525,15 +525,21 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                 fontWeight: FontWeight.w600,
                 fontSize: 13,
               ),
+              maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
           ),
           const SizedBox(width: 10),
-          Text(
-            detail,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.6),
-              fontSize: 12,
+          Flexible(
+            child: Text(
+              detail,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.6),
+                fontSize: 12,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              softWrap: false,
             ),
           ),
         ],

@@ -121,6 +121,26 @@ class _MapScreenState extends ConsumerState<MapScreen>
     super.dispose();
   }
 
+  @override
+  void initState() {
+    super.initState();
+    _loadMapStyle();
+  }
+
+  Future<void> _loadMapStyle() async {
+    final settings = await ref.read(settingsServiceProvider.future);
+    final index = settings.mapTileStyleIndex;
+    if (!mounted) return;
+    if (index >= 0 && index < MapTileStyle.values.length) {
+      setState(() => _mapStyle = MapTileStyle.values[index]);
+    }
+  }
+
+  Future<void> _saveMapStyle(MapTileStyle style) async {
+    final settings = await ref.read(settingsServiceProvider.future);
+    await settings.setMapTileStyleIndex(style.index);
+  }
+
   /// Animate camera to a specific location with smooth easing
   void _animatedMove(LatLng destLocation, double destZoom, {double? rotation}) {
     _animationController?.dispose();
@@ -545,7 +565,10 @@ class _MapScreenState extends ConsumerState<MapScreen>
             PopupMenuButton<MapTileStyle>(
               icon: Icon(Icons.map, color: context.textSecondary),
               tooltip: 'Map style',
-              onSelected: (style) => setState(() => _mapStyle = style),
+              onSelected: (style) {
+                setState(() => _mapStyle = style);
+                unawaited(_saveMapStyle(style));
+              },
               itemBuilder: (context) => MapTileStyle.values.map((style) {
                 return PopupMenuItem(
                   value: style,
