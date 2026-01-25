@@ -6,6 +6,7 @@ import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/navigation.dart';
 import '../../utils/snackbar.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 
 class ReportBugSheet extends StatefulWidget {
   const ReportBugSheet({
@@ -17,11 +18,12 @@ class ReportBugSheet extends StatefulWidget {
   });
 
   final Uint8List? initialScreenshot;
-  final Future<void> Function({
+  final Future<Map<String, dynamic>?> Function({
     required String description,
     required bool includeScreenshot,
     Uint8List? screenshotBytes,
-  }) onSubmit;
+  })
+  onSubmit;
   final Future<void> Function(bool enabled) onToggleShake;
   final bool isShakeEnabled;
 
@@ -79,10 +81,7 @@ class _ReportBugPromptSheetState extends State<ReportBugPromptSheet> {
               const SizedBox(height: 8),
               Text(
                 "If something isn't working correctly, you can report it to help improve Socialmesh for everyone.",
-                style: TextStyle(
-                  color: context.textSecondary,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: context.textSecondary, fontSize: 14),
               ),
               const SizedBox(height: 20),
               SizedBox(
@@ -152,18 +151,70 @@ class _ReportBugSheetState extends State<ReportBugSheet> {
       return;
     }
     setState(() => _isSending = true);
+    showLoadingSnackBar(context, 'Sending bug report...');
     try {
-      await widget.onSubmit(
+      final result = await widget.onSubmit(
         description: text,
         includeScreenshot: _includeScreenshot,
         screenshotBytes: widget.initialScreenshot,
       );
+
       if (!mounted) return;
+      // Close the sheet first
       navigatorKey.currentState?.pop();
-      showGlobalSuccessSnackBar('Bug report sent.');
+
+      // If server indicated email failed, show a clear dialog with details
+      if (result != null && result['emailSent'] == false) {
+        final err = result['emailError'] ?? 'Unknown error';
+        final id = result['reportId'] ?? 'unknown';
+        showGlobalErrorSnackBar('Report saved (ID: $id) — email failed: $err');
+        await showDialog<void>(
+          context: navigatorKey.currentContext!,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Bug report saved'),
+            content: Text(
+              'Report saved (ID: $id) but email notification failed: $err',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      } else {
+        // success
+        final id = result != null ? (result['reportId'] ?? '') : '';
+        showGlobalSuccessSnackBar(
+          'Bug report sent${id != '' ? ' (ID: $id)' : ''}.',
+        );
+        await showDialog<void>(
+          context: navigatorKey.currentContext!,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Thanks!'),
+            content: Text(
+              'Bug report sent${id != '' ? '\nReport ID: $id' : ''}',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
     } catch (e) {
       if (!mounted) return;
-      final msg = e is Exception ? e.toString() : '$e';
+      String msg;
+      if (e is FirebaseFunctionsException) {
+        msg = e.message ?? e.toString();
+      } else if (e is Exception) {
+        msg = e.toString();
+      } else {
+        msg = '$e';
+      }
       showGlobalErrorSnackBar('Failed to send bug report: $msg');
     } finally {
       if (mounted) setState(() => _isSending = false);
@@ -185,7 +236,9 @@ class _ReportBugSheetState extends State<ReportBugSheet> {
             child: Container(
               decoration: BoxDecoration(
                 color: context.card,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
+                ),
               ),
               child: SingleChildScrollView(
                 controller: scrollController,
@@ -312,7 +365,9 @@ class _ReportBugSheetState extends State<ReportBugSheet> {
                             ? const SizedBox(
                                 width: 18,
                                 height: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               )
                             : const Text('Send'),
                       ),

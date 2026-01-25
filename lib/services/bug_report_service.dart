@@ -175,16 +175,13 @@ class BugReportService {
     final refPath = 'bug_reports/$uid/$timestamp.png';
     AppLogging.bugReport('Uploading screenshot to $refPath');
     final ref = FirebaseStorage.instance.ref(refPath);
-    await ref.putData(
-      bytes,
-      SettableMetadata(contentType: 'image/png'),
-    );
+    await ref.putData(bytes, SettableMetadata(contentType: 'image/png'));
     final url = await ref.getDownloadURL();
     AppLogging.bugReport('Screenshot uploaded');
     return url;
   }
 
-  Future<void> _submitReport({
+  Future<Map<String, dynamic>> _submitReport({
     required String description,
     required bool includeScreenshot,
     Uint8List? screenshotBytes,
@@ -219,10 +216,16 @@ class BugReportService {
     if (data['success'] != true) {
       throw Exception(data['error'] ?? 'Failed to submit bug report');
     }
+
+    // If email sending failed on server, keep the report saved but return the
+    // response so the UI can surface a descriptive confirmation to the user.
     if (data['emailSent'] == false) {
-      throw Exception(data['emailError'] ?? 'Bug report saved but email notification failed');
+      final err = data['emailError'] ?? 'Email notification failed';
+      AppLogging.bugReport('Report submitted but email failed: $err');
+      return data;
     }
 
     AppLogging.bugReport('Report submitted');
+    return data;
   }
 }

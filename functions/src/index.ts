@@ -129,7 +129,7 @@ function escapeHtml(input: string) {
     .replace(/'/g, '&#39;');
 }
 
-function getBugReportTransport() {
+async function getBugReportTransport() {
   // Prefer Firebase `functions.config()` values when present (set via
   // `firebase functions:config:set improvmx.user=... improvmx.pass=...`),
   // otherwise fall back to environment variables for CI/local workflows.
@@ -145,25 +145,91 @@ function getBugReportTransport() {
     cfg = undefined;
   }
 
+  // Allow explicit URL like `smtps://smtp.improvmx.com:465` to be provided
+  const smtpUrl = process.env.IMPROVMX_SMTP_URL || (cfg && (cfg.url || cfg.smtp_url));
+
   const host = (cfg && cfg.host) || process.env.IMPROVMX_SMTP_HOST || 'smtp.improvmx.com';
   const port = parseInt((cfg && cfg.port) || process.env.IMPROVMX_SMTP_PORT || '587', 10);
   const user = (cfg && cfg.user) || process.env.IMPROVMX_SMTP_USER;
   const pass = (cfg && cfg.pass) || process.env.IMPROVMX_SMTP_PASS;
   const secure = (cfg && cfg.secure === 'true') || process.env.IMPROVMX_SMTP_SECURE === 'true';
   const requireTLS = (cfg && cfg.require_tls !== 'false') || process.env.IMPROVMX_SMTP_REQUIRE_TLS !== 'false';
+  const starttls = (process.env.IMPROVMX_SMTP_STARTTLS || 'true').toLowerCase() === 'true';
+
+  let transportHost = host;
+  let transportPort = port;
+  let transportSecure = secure;
+
+  if (smtpUrl) {
+    try {
+      const parsed = new URL(smtpUrl);
+      transportHost = parsed.hostname || transportHost;
+      transportPort = parsed.port ? parseInt(parsed.port, 10) : transportPort;
+      transportSecure = parsed.protocol === 'smtps:' || transportSecure;
+    } catch (e) {
+      console.debug('[getBugReportTransport] Ignoring invalid IMPROVMX_SMTP_URL:', (e as Error).message || e);
+    }
+  }
 
   if (!user || !pass) {
     throw new Error('Missing IMPROVMX_SMTP_USER or IMPROVMX_SMTP_PASS');
   }
 
-  return nodemailer.createTransport({
-    host,
-    port,
-    secure,
-    requireTLS,
+  // Create transport according to desired STARTTLS behavior (match Python script):
+  // - If starttls is true, connect with secure=false and requireTLS accordingly
+  // - If SMTPS (secure=true) or URL uses smtps://, use secure connection
+  const createOpts = (opts: { host: string; port: number; secure: boolean; requireTLS?: boolean }) => ({
+    host: opts.host,
+    port: opts.port,
+    secure: opts.secure,
+    requireTLS: opts.requireTLS !== undefined ? opts.requireTLS : requireTLS,
     auth: { user, pass },
-  });
+    // do not reject self-signed certs by default; allow provider to control via env
+    tls: { rejectUnauthorized: process.env.IMPROVMX_SMTP_REJECT_UNAUTHORIZED !== 'false' },
+  } as nodemailer.TransportOptions);
+
+  const tryCreateAndVerify = async (opts: { host: string; port: number; secure: boolean; requireTLS?: boolean }) => {
+    const transport = nodemailer.createTransport(createOpts(opts));
+    try {
+      await transport.verify();
+      return transport;
+    } catch (err) {
+      // close transport if verify failed
+      try { if (typeof transport.close === 'function') transport.close(); } catch (closeErr) { console.debug('[getBugReportTransport] transport.close failed:', (closeErr as Error).message || closeErr); }
+      throw err;
+    }
+  };
+
+  // Attempt strategy: mirror Python: prefer STARTTLS on 587, then fall back to SMTPS on 465
+  // If IMPROVMX_SMTP_URL explicitly set, honor it first
+  try {
+    if (smtpUrl) {
+      // honor explicit URL overrides
+      const t = nodemailer.createTransport(createOpts({ host: transportHost, port: transportPort, secure: transportSecure }));
+      return t;
+    }
+
+    if (starttls) {
+      // Try STARTTLS (secure=false, requireTLS=true)
+      try {
+        const transport = await tryCreateAndVerify({ host: transportHost, port: transportPort, secure: false, requireTLS: true });
+        return transport;
+      } catch (err) {
+        // STARTTLS verification failed; log and fall back to SMTPS
+        console.warn('[getBugReportTransport] STARTTLS verify failed, falling back to SMTPS:', (err as Error).message || err);
+      }
+    }
+
+    // Fallback to SMTPS (implicit TLS) on port 465
+    const smtpsPort = 465;
+    const transport = nodemailer.createTransport(createOpts({ host: transportHost, port: smtpsPort, secure: true }));
+    return transport;
+  } catch (finalErr) {
+    // Re-throw a helpful error for caller
+    throw new Error(`Failed to create SMTP transport: ${(finalErr as Error).message || finalErr}`);
+  }
 }
+
 
 function buildBugReportEmailHtml(params: {
   reportId: string;
@@ -2353,6 +2419,7 @@ export const reportBug = onCall({ cors: true }, async (request) => {
     email: authEmail || email || null,
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
   });
+  console.info(`[reportBug] Created report ${reportDoc.id} by ${authEmail || email || 'anonymous'}`);
 
   const subject = 'Socialmesh bug report';
   const bodyLines = [
@@ -2394,7 +2461,7 @@ export const reportBug = onCall({ cors: true }, async (request) => {
   // show a descriptive error message. This ensures the report won't be silently accepted
   // when email notifications fail due to misconfiguration or auth errors.
   try {
-    const transport = getBugReportTransport();
+    const transport = await getBugReportTransport();
     console.info(`[reportBug] Sending bug report email to ${toAddress} from ${fromAddress} using host ${process.env.IMPROVMX_SMTP_HOST || 'env'} (reportId=${reportDoc.id})`);
     const info = await transport.sendMail({
       to: toAddress,
@@ -2406,8 +2473,13 @@ export const reportBug = onCall({ cors: true }, async (request) => {
     console.info(`[reportBug] Email sent (messageId=${info && info.messageId})`);
   } catch (emailErr) {
     console.error('[reportBug] Failed to send email:', (emailErr as Error).message || emailErr);
-    // Surface a clear error to the client
-    throw new HttpsError('internal', `Failed to send bug report email: ${(emailErr as Error).message || String(emailErr)}`);
+    // Return success for the bug report creation but indicate the email failure
+    return {
+      success: true,
+      reportId: reportDoc.id,
+      emailSent: false,
+      emailError: (emailErr as Error).message || String(emailErr),
+    };
   }
 
   return { success: true, reportId: reportDoc.id, emailSent: true };

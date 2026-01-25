@@ -1,0 +1,44 @@
+name: Resend unsent bug reports
+
+on:
+  schedule:
+    # Daily at 06:00 UTC
+    - cron: '0 6 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  resend:
+    name: Resend unsent reports
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install google-cloud-firestore python-dotenv
+
+      - name: Configure GCP service account (write secret)
+        if: ${{ secrets.GCP_SA_KEY != '' }}
+        run: |
+          echo "${{ secrets.GCP_SA_KEY }}" > "${{ runner.temp }}/gcp_sa.json"
+          echo "Wrote service account key to ${{ runner.temp }}/gcp_sa.json"
+
+      - name: Set GOOGLE_APPLICATION_CREDENTIALS
+        if: ${{ secrets.GCP_SA_KEY != '' }}
+        run: echo "GOOGLE_APPLICATION_CREDENTIALS=${{ runner.temp }}/gcp_sa.json" >> $GITHUB_ENV
+
+      - name: Run resend script
+        env:
+          IMPROVMX_SMTP_USER: ${{ secrets.IMPROVMX_SMTP_USER }}
+          IMPROVMX_SMTP_PASS: ${{ secrets.IMPROVMX_SMTP_PASS }}
+          IMPROVMX_SMTP_FROM: ${{ secrets.IMPROVMX_SMTP_FROM }}
+          IMPROVMX_SMTP_TO: ${{ secrets.IMPROVMX_SMTP_TO }}
+          CI: true
+        run: python3 scripts/resend_unsent_reports.py --send --yes
