@@ -39,9 +39,7 @@ jobs:
         run: |
           set -euo pipefail
           printf '%s' "${GCP_SA_KEY}" > "${{ runner.temp }}/gcp_sa.json"
-          python -c "import json,sys
-json.load(open(sys.argv[1]))
-print('GCP_SA_KEY JSON valid')" "${{ runner.temp }}/gcp_sa.json"
+          python -c "import json,sys; json.load(open(sys.argv[1])); print('GCP_SA_KEY JSON valid')" "${{ runner.temp }}/gcp_sa.json"
 
       - name: Set GOOGLE_APPLICATION_CREDENTIALS
         run: echo "GOOGLE_APPLICATION_CREDENTIALS=${{ runner.temp }}/gcp_sa.json" >> $GITHUB_ENV
