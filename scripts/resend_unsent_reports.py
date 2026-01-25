@@ -21,7 +21,6 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 import argparse
-import textwrap
 
 try:
     from dotenv import load_dotenv
