@@ -24,27 +24,15 @@ jobs:
           python -m pip install --upgrade pip
           pip install google-cloud-firestore python-dotenv
 
-      - name: Ensure GCP_SA_KEY is present
-        env:
-          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
-        run: |
-          if [ -z "${GCP_SA_KEY}" ]; then
-            echo "ERROR: GCP_SA_KEY is missing. Add the service account JSON as an Environment secret named 'GCP_SA_KEY' and rerun."
-            exit 1
-          fi
-
-      - name: Write & validate GCP service account key
-        env:
-          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+      - name: Validate GCP service account key
         run: |
           set -euo pipefail
-          printf '%s' "${GCP_SA_KEY}" > "${{ runner.temp }}/gcp_sa.json"
           python -c "import json,sys
 json.load(open(sys.argv[1]))
-print('GCP_SA_KEY JSON valid')" "${{ runner.temp }}/gcp_sa.json"
+print('GCP_SA_KEY JSON valid')" "scripts/social-mesh-app-9e8f26071bf7.json"
 
       - name: Set GOOGLE_APPLICATION_CREDENTIALS
-        run: echo "GOOGLE_APPLICATION_CREDENTIALS=${{ runner.temp }}/gcp_sa.json" >> $GITHUB_ENV
+        run: echo "GOOGLE_APPLICATION_CREDENTIALS=${GITHUB_WORKSPACE}/scripts/social-mesh-app-9e8f26071bf7.json" >> $GITHUB_ENV
 
       - name: Run resend script
         env:
