@@ -352,6 +352,9 @@ class CloudSyncExpiredBanner extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () => showCloudSyncPaywall(context),
+            style: TextButton.styleFrom(
+              foregroundColor: theme.colorScheme.onErrorContainer,
+            ),
             child: const Text('Renew'),
           ),
         ],
