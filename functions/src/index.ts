@@ -258,11 +258,11 @@ function buildBugReportEmailHtml(params: {
   const safeUserId = userId ? escapeHtml(userId) : null;
 
   const safeUserEmailDisplay = safeUserEmail
-    ? `<span style="color:#e8edf7;font-weight:600;">${safeUserEmail}</span>`
-    : `<span style="color:#8b93a7;font-style:italic;">Not provided</span>`;
+    ? '<span style="color:#e8edf7;font-weight:600;">' + safeUserEmail + '</span>'
+    : '<span style="color:#8b93a7;font-style:italic;">Not provided</span>';
   const safeUserIdDisplay = safeUserId
-    ? `<span style="color:#e8edf7;font-weight:600;">${safeUserId}</span>`
-    : `<span style="color:#8b93a7;font-style:italic;">Not provided</span>`;
+    ? '<span style="color:#e8edf7;font-weight:600;">' + safeUserId + '</span>'
+    : '<span style="color:#8b93a7;font-style:italic;">Not provided</span>';
 
   return `
   <div style="margin:0;padding:0;background:#0f1420;color:#e8edf7;font-family:Inter,Arial,sans-serif;">
@@ -2447,16 +2447,16 @@ export const reportBug = onCall({ cors: true }, async (request) => {
         description: description || '',
       });
 
-      const mailOptions = {
+      const mailOptions: nodemailer.SendMailOptions = {
         from: process.env.IMPROVMX_SMTP_FROM,
         to: process.env.IMPROVMX_SMTP_TO,
         subject: `Socialmesh bug report · ${reportDoc.id}`,
         html,
-      } as unknown as Record<string, unknown>;
+      };
 
       // ignore result but log outcome
       try {
-        await transport.sendMail(mailOptions as any);
+        await transport.sendMail(mailOptions);
         console.info(`[reportBug] Notification email sent for report ${reportDoc.id}`);
       } catch (sendErr) {
         console.warn('[reportBug] Failed to send notification email:', (sendErr as Error).message || sendErr);
