@@ -922,6 +922,14 @@ section {
   text-align: right;
 }
 
+.presence-caption {
+  padding: 12px 14px 14px;
+  border-top: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .feature-card {
   background: var(--bg-card);
   border-radius: 16px;
