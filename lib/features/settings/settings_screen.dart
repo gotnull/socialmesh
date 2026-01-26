@@ -93,7 +93,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
+  final GlobalKey _feedbackSectionKey = GlobalKey();
   String _searchQuery = '';
+  bool _pendingScrollToFeedback = false;
+  int _feedbackScrollAttempts = 0;
 
   @override
   void dispose() {
@@ -101,6 +104,33 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _searchController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
+  }
+
+  void _scheduleFeedbackScroll() {
+    if (!_pendingScrollToFeedback) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_searchQuery.isNotEmpty) return;
+      final ctx = _feedbackSectionKey.currentContext;
+      if (ctx != null) {
+        _pendingScrollToFeedback = false;
+        _feedbackScrollAttempts = 0;
+        Scrollable.ensureVisible(
+          ctx,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOut,
+        );
+        return;
+      }
+
+      if (_feedbackScrollAttempts >= 3) {
+        _pendingScrollToFeedback = false;
+        _feedbackScrollAttempts = 0;
+        return;
+      }
+
+      _feedbackScrollAttempts += 1;
+      _scheduleFeedbackScroll();
+    });
   }
 
   /// Get all searchable settings items
@@ -159,13 +189,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           subtitle: 'Shake your device to open the bug report flow',
           keywords: ['bug', 'report', 'shake', 'feedback', 'support'],
           section: 'FEEDBACK',
+          hasSwitch: true,
           onTap: () {
-            // Scroll to the FEEDBACK section
-            _scrollController.animateTo(
-              0,
-              duration: const Duration(milliseconds: 1),
-              curve: Curves.easeOut,
-            );
+            setState(() {
+              _searchQuery = '';
+              _searchController.clear();
+              _pendingScrollToFeedback = true;
+            });
+            _searchFocusNode.unfocus();
+            _scheduleFeedbackScroll();
           },
         ),
         _SearchableSettingItem(
@@ -2749,7 +2781,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               const SizedBox(height: 16),
 
                               // Feedback Section
-                              const _SectionHeader(title: 'FEEDBACK'),
+                              Container(
+                                key: _feedbackSectionKey,
+                                child: const _SectionHeader(title: 'FEEDBACK'),
+                              ),
                               _SettingsTile(
                                 icon: Icons.bug_report_outlined,
                                 title: 'Shake to report a bug',
