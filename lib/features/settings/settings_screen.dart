@@ -95,8 +95,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final FocusNode _searchFocusNode = FocusNode();
   final GlobalKey _feedbackSectionKey = GlobalKey();
   String _searchQuery = '';
-  bool _pendingScrollToFeedback = false;
-  int _feedbackScrollAttempts = 0;
 
   @override
   void dispose() {
@@ -106,31 +104,35 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     super.dispose();
   }
 
-  void _scheduleFeedbackScroll() {
-    if (!_pendingScrollToFeedback) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_searchQuery.isNotEmpty) return;
+  Future<void> _scrollToFeedbackSection() async {
+    if (_searchQuery.isNotEmpty) return;
+    for (var attempt = 0; attempt < 8; attempt += 1) {
+      await Future.delayed(const Duration(milliseconds: 16));
+      if (!_scrollController.hasClients) continue;
       final ctx = _feedbackSectionKey.currentContext;
-      if (ctx != null) {
-        _pendingScrollToFeedback = false;
-        _feedbackScrollAttempts = 0;
-        Scrollable.ensureVisible(
-          ctx,
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.easeOut,
-        );
-        return;
-      }
+      if (ctx == null) continue;
 
-      if (_feedbackScrollAttempts >= 3) {
-        _pendingScrollToFeedback = false;
-        _feedbackScrollAttempts = 0;
-        return;
-      }
+      final box = ctx.findRenderObject() as RenderBox?;
+      final listBox =
+          _scrollController.position.context.storageContext.findRenderObject()
+              as RenderBox?;
+      if (box == null || listBox == null) continue;
 
-      _feedbackScrollAttempts += 1;
-      _scheduleFeedbackScroll();
-    });
+      final targetOffset =
+          _scrollController.offset +
+          box.localToGlobal(Offset.zero, ancestor: listBox).dy -
+          12;
+
+      await _scrollController.animateTo(
+        targetOffset.clamp(
+          _scrollController.position.minScrollExtent,
+          _scrollController.position.maxScrollExtent,
+        ),
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
+      return;
+    }
   }
 
   /// Get all searchable settings items
@@ -194,10 +196,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             setState(() {
               _searchQuery = '';
               _searchController.clear();
-              _pendingScrollToFeedback = true;
             });
             _searchFocusNode.unfocus();
-            _scheduleFeedbackScroll();
+            _scrollToFeedbackSection();
           },
         ),
         _SearchableSettingItem(
