@@ -127,9 +127,11 @@ class _ReportBugPromptSheetState extends State<ReportBugPromptSheet> {
 
 class _ReportBugSheetState extends State<ReportBugSheet> {
   final _controller = TextEditingController();
+  final _descriptionFocusNode = FocusNode();
   bool _includeScreenshot = true;
   bool _isSending = false;
   late bool _shakeEnabled;
+  bool _showDescriptionError = false;
 
   @override
   void initState() {
@@ -141,13 +143,15 @@ class _ReportBugSheetState extends State<ReportBugSheet> {
   @override
   void dispose() {
     _controller.dispose();
+    _descriptionFocusNode.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
     final text = _controller.text.trim();
     if (text.isEmpty) {
-      showErrorSnackBar(context, 'Please describe the issue.');
+      setState(() => _showDescriptionError = true);
+      _descriptionFocusNode.requestFocus();
       return;
     }
     setState(() => _isSending = true);
@@ -185,29 +189,34 @@ class _ReportBugSheetState extends State<ReportBugSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     return SafeArea(
       top: true,
-      child: DraggableScrollableSheet(
-        initialChildSize: 0.82,
-        minChildSize: 0.55,
-        maxChildSize: 0.95,
-        builder: (context, scrollController) {
-          return GestureDetector(
-            onTap: () => FocusScope.of(context).unfocus(),
-            child: Container(
-              decoration: BoxDecoration(
-                color: context.card,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(24),
+      child: Padding(
+        padding: EdgeInsets.only(bottom: bottomInset),
+        child: DraggableScrollableSheet(
+          initialChildSize: 0.82,
+          minChildSize: 0.55,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (context, scrollController) {
+            return GestureDetector(
+              onTap: () => FocusScope.of(context).unfocus(),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: context.card,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24),
+                  ),
                 ),
-              ),
-              child: SingleChildScrollView(
-                controller: scrollController,
-                padding: EdgeInsets.fromLTRB(20, 16, 20, 24 + bottomPadding),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
                     Row(
                       children: [
                         Expanded(
@@ -241,12 +250,17 @@ class _ReportBugSheetState extends State<ReportBugSheet> {
                     const SizedBox(height: 8),
                     TextField(
                       controller: _controller,
+                      focusNode: _descriptionFocusNode,
                       maxLines: 6,
                       maxLength: 2000,
                       decoration: InputDecoration(
                         hintText: 'Tell us about the issue you encountered',
                         filled: true,
                         fillColor: context.background,
+                        errorText:
+                            _showDescriptionError
+                                ? 'Please describe the issue.'
+                                : null,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
@@ -254,6 +268,11 @@ class _ReportBugSheetState extends State<ReportBugSheet> {
                       ),
                       style: TextStyle(color: context.textPrimary),
                       onTapOutside: (_) => FocusScope.of(context).unfocus(),
+                      onChanged: (_) {
+                        if (_showDescriptionError) {
+                          setState(() => _showDescriptionError = false);
+                        }
+                      },
                     ),
                     const SizedBox(height: 8),
                     if (widget.initialScreenshot != null) ...[
@@ -334,12 +353,13 @@ class _ReportBugSheetState extends State<ReportBugSheet> {
                             : const Text('Send'),
                       ),
                     ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
