@@ -126,7 +126,10 @@ class _SignalHeader extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final nodes = ref.watch(nodesProvider);
+    final myNodeNum = ref.watch(myNodeNumProvider);
     final isMeshSignal = signal.authorId.startsWith('mesh_');
+    final isOwnMeshSignal =
+        isMeshSignal && signal.meshNodeId != null && signal.meshNodeId == myNodeNum;
 
     AppLogging.signals(
       'SignalHeader: id=${signal.id}, authorId=${signal.authorId}, isMeshSignal=$isMeshSignal, hasAuthorSnapshot=${signal.authorSnapshot != null}',
@@ -247,7 +250,8 @@ class _SignalHeader extends ConsumerWidget {
           ),
 
           // Subscribe button for cloud authors (show even if profile service is disabled)
-          if (!isMeshSignal || signal.authorSnapshot != null) ...[
+          if ((!isMeshSignal || signal.authorSnapshot != null) &&
+              !isOwnMeshSignal) ...[
             SubscribeButton(
               authorId:
                   signal.authorId.startsWith('mesh_') &&

@@ -31,7 +31,10 @@ class SignalGridCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final nodes = ref.watch(nodesProvider);
+    final myNodeNum = ref.watch(myNodeNumProvider);
     final isMeshSignal = signal.authorId.startsWith('mesh_');
+    final isOwnMeshSignal =
+        isMeshSignal && signal.meshNodeId != null && signal.meshNodeId == myNodeNum;
     final hasImage =
         signal.mediaUrls.isNotEmpty || signal.imageLocalPath != null;
     final hasLocation = signal.location != null;
@@ -251,8 +254,9 @@ class SignalGridCard extends ConsumerWidget {
                             ),
                           ),
                           // Subscribe button for cloud authors (compact)
-                          if (!isMeshSignal ||
-                              signal.authorSnapshot != null) ...[
+                          if ((!isMeshSignal ||
+                                  signal.authorSnapshot != null) &&
+                              !isOwnMeshSignal) ...[
                             SubscribeButton(
                               authorId:
                                   signal.authorId.startsWith('mesh_') &&

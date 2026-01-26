@@ -457,7 +457,11 @@ class _BottomInfoOverlay extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final nodes = ref.watch(nodesProvider);
+    final myNodeNum = ref.watch(myNodeNumProvider);
     final author = signal.authorSnapshot;
+    final isMeshSignal = signal.authorId.startsWith('mesh_');
+    final isOwnMeshSignal =
+        isMeshSignal && signal.meshNodeId != null && signal.meshNodeId == myNodeNum;
 
     // Get mesh node info if available
     String? meshNodeName;
@@ -585,8 +589,9 @@ class _BottomInfoOverlay extends ConsumerWidget {
                   ),
 
                   // Subscribe button (for cloud authors; show even if profile service is disabled)
-                  if (!signal.authorId.startsWith('mesh_') ||
-                      signal.authorSnapshot != null) ...[
+                  if ((!signal.authorId.startsWith('mesh_') ||
+                          signal.authorSnapshot != null) &&
+                      !isOwnMeshSignal) ...[
                     SubscribeButton(
                       authorId:
                           signal.authorId.startsWith('mesh_') &&
