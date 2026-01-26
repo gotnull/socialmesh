@@ -8,10 +8,12 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
+import '../../core/map_config.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/mesh_map_widget.dart';
 import '../../providers/help_providers.dart';
+import '../../providers/app_providers.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/loading_indicator.dart';
 
@@ -26,6 +28,7 @@ class OfflineMapsScreen extends ConsumerStatefulWidget {
 class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
   final MapController _mapController = MapController();
   final List<OfflineMapRegion> _regions = [];
+  MapTileStyle _mapStyle = MapTileStyle.dark;
   bool _isSelecting = false;
   LatLng? _selectionStart;
   LatLng? _selectionEnd;
@@ -40,6 +43,7 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
   void initState() {
     super.initState();
     _loadSavedRegions();
+    _loadMapStyle();
   }
 
   Future<void> _loadSavedRegions() async {
@@ -77,6 +81,15 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
       AppLogging.maps('Error loading offline regions: $e');
     } finally {
       setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _loadMapStyle() async {
+    final settings = await ref.read(settingsServiceProvider.future);
+    final index = settings.mapTileStyleIndex;
+    if (!mounted) return;
+    if (index >= 0 && index < MapTileStyle.values.length) {
+      setState(() => _mapStyle = MapTileStyle.values[index]);
     }
   }
 
@@ -535,6 +548,7 @@ class _OfflineMapsScreenState extends ConsumerState<OfflineMapsScreen> {
                   children: [
                     MeshMapWidget(
                       mapController: _mapController,
+                      mapStyle: _mapStyle,
                       initialCenter: const LatLng(-33.8688, 151.2093),
                       initialZoom: 10,
                       onTap: _onMapTap,

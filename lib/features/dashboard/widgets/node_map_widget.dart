@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
+import '../../../core/map_config.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/mesh_map_widget.dart';
 import '../../../providers/app_providers.dart';
@@ -16,6 +17,16 @@ class NodeMapContent extends ConsumerWidget {
     final nodes = ref.watch(nodesProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
     final presenceMap = ref.watch(presenceMapProvider);
+    final mapStyle = ref.watch(settingsServiceProvider).maybeWhen(
+          data: (settings) {
+            final index = settings.mapTileStyleIndex;
+            if (index >= 0 && index < MapTileStyle.values.length) {
+              return MapTileStyle.values[index];
+            }
+            return MapTileStyle.dark;
+          },
+          orElse: () => MapTileStyle.dark,
+        );
 
     final nodesWithPosition = nodes.values
         .where((node) => node.hasPosition)
@@ -63,6 +74,7 @@ class NodeMapContent extends ConsumerWidget {
               children: [
                 // Use shared MeshMapWidget with mini node markers
                 MeshMapWidget(
+                  mapStyle: mapStyle,
                   initialCenter: center,
                   initialZoom: zoom,
                   minZoom: 2,

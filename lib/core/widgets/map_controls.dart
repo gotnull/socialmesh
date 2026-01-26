@@ -319,6 +319,8 @@ class MapControlsOverlay extends StatelessWidget {
   final bool showFitAll;
   final bool showNavigation;
   final bool showCompass;
+  final double topOffset;
+  final double rightOffset;
 
   const MapControlsOverlay({
     super.key,
@@ -335,16 +337,17 @@ class MapControlsOverlay extends StatelessWidget {
     this.showFitAll = true,
     this.showNavigation = true,
     this.showCompass = true,
+    this.topOffset = MapControlLayout.padding,
+    this.rightOffset = MapControlLayout.padding,
   });
 
   @override
   Widget build(BuildContext context) {
-    const padding = MapControlLayout.padding;
     const spacing = MapControlLayout.controlSpacing;
 
     return Positioned(
-      right: padding,
-      top: padding,
+      right: rightOffset,
+      top: topOffset,
       child: Column(
         children: [
           // Compass

@@ -4,6 +4,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:intl/intl.dart';
+import '../../core/map_config.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/mesh_map_widget.dart';
 import '../../core/widgets/map_controls.dart';
@@ -27,6 +28,22 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen> {
   int? _maxAltitude;
   int? _minSatellites;
   bool _showMap = false;
+  MapTileStyle _mapStyle = MapTileStyle.dark;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMapStyle();
+  }
+
+  Future<void> _loadMapStyle() async {
+    final settings = await ref.read(settingsServiceProvider.future);
+    final index = settings.mapTileStyleIndex;
+    if (!mounted) return;
+    if (index >= 0 && index < MapTileStyle.values.length) {
+      setState(() => _mapStyle = MapTileStyle.values[index]);
+    }
+  }
 
   List<PositionLog> _filterLogs(List<PositionLog> logs) {
     return logs.where((log) {
@@ -311,7 +328,11 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen> {
             }
 
             if (_showMap) {
-              return _PositionMapView(logs: filtered, nodes: nodes);
+              return _PositionMapView(
+                logs: filtered,
+                nodes: nodes,
+                mapStyle: _mapStyle,
+              );
             }
 
             return ListView.builder(
@@ -371,8 +392,13 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen> {
 class _PositionMapView extends StatefulWidget {
   final List<PositionLog> logs;
   final Map<int, dynamic> nodes;
+  final MapTileStyle mapStyle;
 
-  const _PositionMapView({required this.logs, required this.nodes});
+  const _PositionMapView({
+    required this.logs,
+    required this.nodes,
+    required this.mapStyle,
+  });
 
   @override
   State<_PositionMapView> createState() => _PositionMapViewState();
@@ -432,6 +458,7 @@ class _PositionMapViewState extends State<_PositionMapView> {
       children: [
         MeshMapWidget(
           mapController: _mapController,
+          mapStyle: widget.mapStyle,
           initialCenter: center,
           initialZoom: _currentZoom,
           onPositionChanged: (camera, hasGesture) {

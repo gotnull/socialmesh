@@ -36,16 +36,31 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
   final MapController _mapController = MapController();
   bool _isExporting = false;
   final bool _showNodes = true;
-  final MapTileStyle _mapStyle = MapTileStyle.dark;
+  MapTileStyle _mapStyle = MapTileStyle.dark;
   MeshNode? _selectedNode;
   AnimationController? _animationController;
   double _currentZoom = 13.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMapStyle();
+  }
 
   @override
   void dispose() {
     _animationController?.dispose();
     _mapController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadMapStyle() async {
+    final settings = await ref.read(settingsServiceProvider.future);
+    final index = settings.mapTileStyleIndex;
+    if (!mounted) return;
+    if (index >= 0 && index < MapTileStyle.values.length) {
+      setState(() => _mapStyle = MapTileStyle.values[index]);
+    }
   }
 
   /// Animate camera to a specific location with smooth easing
@@ -353,6 +368,10 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
               showNavigation: false,
               showCompass: false,
               mapRotation: 0,
+              topOffset:
+                  MediaQuery.of(context).padding.top +
+                  kToolbarHeight +
+                  MapControlLayout.padding,
             ),
 
           // Stats panel at bottom

@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../../../core/map_config.dart';
 import '../../../core/theme.dart';
 import '../../../models/social.dart';
+import '../../../providers/app_providers.dart';
 import '../utils/signal_utils.dart';
 import 'signal_thumbnail.dart';
 
 /// A map view showing signals with GPS locations
-class SignalMapView extends StatefulWidget {
+class SignalMapView extends ConsumerStatefulWidget {
   const SignalMapView({
     required this.signals,
     required this.onSignalTap,
@@ -26,13 +29,14 @@ class SignalMapView extends StatefulWidget {
   final String? initialSelectedSignalId;
 
   @override
-  State<SignalMapView> createState() => _SignalMapViewState();
+  ConsumerState<SignalMapView> createState() => _SignalMapViewState();
 }
 
-class _SignalMapViewState extends State<SignalMapView> {
+class _SignalMapViewState extends ConsumerState<SignalMapView> {
   final MapController _mapController = MapController();
   Post? _selectedSignal;
   bool _showSignalList = false;
+  MapTileStyle _mapStyle = MapTileStyle.dark;
 
   /// Programmatically focus on a specific signal: select the preview card
   /// and center/zoom the map to its location.
@@ -76,6 +80,7 @@ class _SignalMapViewState extends State<SignalMapView> {
   @override
   void initState() {
     super.initState();
+    _loadMapStyle();
     if (widget.initialSelectedSignalId != null) {
       try {
         _selectedSignal = widget.signals.firstWhere(
@@ -84,6 +89,15 @@ class _SignalMapViewState extends State<SignalMapView> {
       } catch (_) {
         _selectedSignal = null;
       }
+    }
+  }
+
+  Future<void> _loadMapStyle() async {
+    final settings = await ref.read(settingsServiceProvider.future);
+    final index = settings.mapTileStyleIndex;
+    if (!mounted) return;
+    if (index >= 0 && index < MapTileStyle.values.length) {
+      setState(() => _mapStyle = MapTileStyle.values[index]);
     }
   }
 
@@ -130,14 +144,13 @@ class _SignalMapViewState extends State<SignalMapView> {
                 _showSignalList = false;
               });
             },
-            backgroundColor: const Color(0xFF1a1a2e),
+            backgroundColor: context.background,
           ),
           children: [
             TileLayer(
-              urlTemplate:
-                  'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-              subdomains: const ['a', 'b', 'c', 'd'],
-              userAgentPackageName: 'mesh.social.app',
+              urlTemplate: _mapStyle.url,
+              subdomains: _mapStyle.subdomains,
+              userAgentPackageName: MapConfig.userAgentPackageName,
             ),
             MarkerLayer(
               markers: _signalsWithLocation.map((signal) {

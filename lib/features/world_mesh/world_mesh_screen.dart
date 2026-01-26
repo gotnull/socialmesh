@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -18,6 +19,7 @@ import '../../providers/help_providers.dart';
 import '../../models/world_mesh_node.dart';
 import '../../models/presence_confidence.dart';
 import '../../providers/node_favorites_provider.dart';
+import '../../providers/app_providers.dart';
 import '../../providers/world_mesh_map_provider.dart';
 import '../../utils/snackbar.dart';
 import 'favorites_screen.dart';
@@ -53,6 +55,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
   @override
   void initState() {
     super.initState();
+    _loadMapStyle();
   }
 
   @override
@@ -97,6 +100,20 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
     });
 
     _animationController!.forward();
+  }
+
+  Future<void> _loadMapStyle() async {
+    final settings = await ref.read(settingsServiceProvider.future);
+    final index = settings.mapTileStyleIndex;
+    if (!mounted) return;
+    if (index >= 0 && index < MapTileStyle.values.length) {
+      setState(() => _mapStyle = MapTileStyle.values[index]);
+    }
+  }
+
+  Future<void> _saveMapStyle(MapTileStyle style) async {
+    final settings = await ref.read(settingsServiceProvider.future);
+    await settings.setMapTileStyleIndex(style.index);
   }
 
   void _openFavorites(BuildContext context) {
@@ -178,19 +195,29 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                   switch (value) {
                     case 'dark':
                       setState(() => _mapStyle = MapTileStyle.dark);
+                      unawaited(_saveMapStyle(MapTileStyle.dark));
+                      break;
                     case 'satellite':
                       setState(() => _mapStyle = MapTileStyle.satellite);
+                      unawaited(_saveMapStyle(MapTileStyle.satellite));
+                      break;
                     case 'light':
                       setState(() => _mapStyle = MapTileStyle.light);
+                      unawaited(_saveMapStyle(MapTileStyle.light));
+                      break;
                     case 'terrain':
                       setState(() => _mapStyle = MapTileStyle.terrain);
+                      unawaited(_saveMapStyle(MapTileStyle.terrain));
+                      break;
                     case 'refresh':
                       HapticFeedback.lightImpact();
                       ref.read(worldMeshMapProvider.notifier).forceRefresh();
+                      break;
                     case 'help':
                       ref
                           .read(helpProvider.notifier)
                           .startTour('world_mesh_overview');
+                      break;
                   }
                 },
                 itemBuilder: (context) => [

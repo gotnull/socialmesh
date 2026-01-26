@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
+import '../../core/map_config.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/mesh_map_widget.dart';
 import '../../models/user_profile.dart';
@@ -44,11 +45,13 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
   int _geofenceThrottleMinutes = 30;
   int _batteryThreshold = 20;
   double _temperatureThreshold = 40.0;
+  MapTileStyle _mapStyle = MapTileStyle.dark;
 
   @override
   void initState() {
     super.initState();
     _loadConfig();
+    _loadMapStyle();
   }
 
   void _loadConfig() {
@@ -75,6 +78,15 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
       _batteryThreshold = config.batteryThreshold;
       _temperatureThreshold = config.temperatureThreshold;
     });
+  }
+
+  Future<void> _loadMapStyle() async {
+    final settings = await ref.read(settingsServiceProvider.future);
+    final index = settings.mapTileStyleIndex;
+    if (!mounted) return;
+    if (index >= 0 && index < MapTileStyle.values.length) {
+      setState(() => _mapStyle = MapTileStyle.values[index]);
+    }
   }
 
   Future<void> _saveConfig() async {
@@ -738,6 +750,7 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                               height: 150,
                               child: IgnorePointer(
                                 child: MeshMapWidget(
+                                  mapStyle: _mapStyle,
                                   initialCenter: LatLng(lat, lon),
                                   initialZoom: _calculateZoomForRadius(radius),
                                   interactive: false,

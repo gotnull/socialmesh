@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../../core/map_config.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/mesh_map_widget.dart';
 import '../../core/widgets/map_controls.dart';
@@ -73,6 +74,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
   LatLng? _center;
   double _radiusMeters = 1000.0;
   double _currentZoom = 13.0;
+  MapTileStyle _mapStyle = MapTileStyle.dark;
   bool _isDraggingRadius = false;
   bool _isLoadingLocation = false;
   bool _showNodeList = false;
@@ -90,6 +92,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
     _mapController = MapController();
     _radiusMeters = widget.initialRadius;
     _monitoredNodeNum = widget.initialMonitoredNodeNum;
+    _loadMapStyle();
 
     if (widget.initialLat != null && widget.initialLon != null) {
       _center = LatLng(widget.initialLat!, widget.initialLon!);
@@ -101,6 +104,15 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
     _mapController.dispose();
     _searchController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadMapStyle() async {
+    final settings = await ref.read(settingsServiceProvider.future);
+    final index = settings.mapTileStyleIndex;
+    if (!mounted) return;
+    if (index >= 0 && index < MapTileStyle.values.length) {
+      setState(() => _mapStyle = MapTileStyle.values[index]);
+    }
   }
 
   /// Get nodes with GPS positions
@@ -361,6 +373,7 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
             onPointerUp: _onPointerUp,
             child: MeshMapWidget(
               mapController: _mapController,
+              mapStyle: _mapStyle,
               initialCenter: _center ?? const LatLng(-33.8688, 151.2093),
               initialZoom: _currentZoom,
               minZoom: 3.0,
