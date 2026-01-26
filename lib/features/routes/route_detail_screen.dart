@@ -324,7 +324,7 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
             Positioned(
               top: MediaQuery.of(context).padding.top + 70,
               left: 16,
-              right: 16,
+              right: 16 + MapControlLayout.controlSize + MapControlLayout.controlSpacing,
               child: _NodeInfoCard(
                 node: _selectedNode!,
                 isMyNode: _selectedNode!.nodeNum == myNodeNum,
