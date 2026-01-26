@@ -157,23 +157,52 @@
 
       <div class="presence-grid">
         <div class="presence-content reveal-left">
-          <h3>Presence is the product</h3>
+          <h3>Presence is the <span class="gradient-text">product</span></h3>
           <p>
             Socialmesh is built around presence: who’s active, who’s nearby, and what the mesh is doing right now.
-            It’s not a chat app bolted onto LoRa — it’s a living map of activity that updates as real packets arrive.
+            It’s not a chat app bolted onto LoRa — it’s a living map of activity that updates only when real packets arrive.
           </p>
           <p>
-            Broadcast Signals, discover nearby nodes, and see activity decay naturally when radios go quiet. No
-            fake pings, no assumptions — just the mesh as it is.
+            Broadcast Signals, discover nearby nodes, and watch activity decay naturally when radios go quiet.
+            No fake pings, no “online” lies — just the mesh as it is.
           </p>
-          <ul class="presence-list">
-            <li><span class="presence-dot active"></span> Active — heard recently</li>
-            <li><span class="presence-dot fading"></span> Fading — silence, still plausible</li>
-            <li><span class="presence-dot stale"></span> Inactive — likely offline</li>
-            <li><span class="presence-dot unknown"></span> Unknown — no recent data</li>
-          </ul>
+
+          <div class="presence-pill-grid">
+            <div class="presence-pill">
+              <span class="presence-dot active"></span>
+              Active — heard recently
+            </div>
+            <div class="presence-pill">
+              <span class="presence-dot fading"></span>
+              Fading — silence, still plausible
+            </div>
+            <div class="presence-pill">
+              <span class="presence-dot stale"></span>
+              Inactive — likely offline
+            </div>
+            <div class="presence-pill">
+              <span class="presence-dot unknown"></span>
+              Unknown — no recent data
+            </div>
+          </div>
+
+          <div class="presence-info">
+            <div class="presence-info-item">
+              <span class="material-icons">rss_feed</span>
+              Mesh‑first Signals with TTL decay
+            </div>
+            <div class="presence-info-item">
+              <span class="material-icons">location_on</span>
+              Nearby discovery + geo‑context
+            </div>
+            <div class="presence-info-item">
+              <span class="material-icons">schedule</span>
+              Status inferred from last‑heard + cadence
+            </div>
+          </div>
+
           <div class="presence-note">
-            Signals appear when nearby nodes go active. Status is inferred from last-heard and packet cadence.
+            Signals appear when nearby nodes go active. Presence is inferred from last‑heard time and packet cadence.
           </div>
         </div>
 
