@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../config/admin_config.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
@@ -10,9 +9,7 @@ import '../../providers/help_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/animations.dart';
-import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/edge_fade.dart';
-import 'automation_debug_service.dart';
 import 'automation_providers.dart';
 import 'automation_repository.dart';
 import 'models/automation.dart';
@@ -38,12 +35,6 @@ class AutomationsScreen extends ConsumerWidget {
           centerTitle: true,
           title: const Text('Automations'),
           actions: [
-            if (AdminConfig.showAutomationDebug)
-              IconButton(
-                icon: const Icon(Icons.bug_report),
-                tooltip: 'Debug Panel',
-                onPressed: () => _showDebugPanel(context, ref),
-              ),
             IconButton(
               icon: const Icon(Icons.history),
               tooltip: 'Execution Log',
@@ -523,165 +514,6 @@ class AutomationsScreen extends ConsumerWidget {
     if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
     if (diff.inHours < 24) return '${diff.inHours}h ago';
     return '${diff.inDays}d ago';
-  }
-
-  void _showDebugPanel(BuildContext context, WidgetRef ref) {
-    final debugService = ref.read(automationDebugServiceProvider);
-    final repository = ref.read(automationRepositoryProvider);
-
-    AppBottomSheet.show(
-      context: context,
-      child: _AutomationDebugSheet(
-        debugService: debugService,
-        repository: repository,
-      ),
-    );
-  }
-}
-
-/// Debug sheet showing automation evaluations
-class _AutomationDebugSheet extends StatelessWidget {
-  final AutomationDebugService debugService;
-  final AutomationRepository repository;
-
-  const _AutomationDebugSheet({
-    required this.debugService,
-    required this.repository,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final evaluations = debugService.evaluations;
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Automation Debug',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: context.textPrimary,
-              ),
-            ),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextButton.icon(
-                  onPressed: () => debugService.shareDebugJson(repository),
-                  icon: const Icon(Icons.share, size: 18),
-                  label: const Text('Export'),
-                ),
-                TextButton.icon(
-                  onPressed: () {
-                    debugService.clearHistory();
-                    Navigator.pop(context);
-                  },
-                  icon: const Icon(
-                    Icons.delete_outline,
-                    color: AppTheme.errorRed,
-                    size: 18,
-                  ),
-                  label: const Text('Clear'),
-                ),
-              ],
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Text(
-          '${evaluations.length} evaluations recorded',
-          style: TextStyle(color: Colors.grey[400], fontSize: 12),
-        ),
-        const SizedBox(height: 16),
-        if (evaluations.isEmpty)
-          Padding(
-            padding: EdgeInsets.symmetric(vertical: 32),
-            child: Center(
-              child: Text(
-                'No automation evaluations yet.\nTrigger some automations to see debug info.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey),
-              ),
-            ),
-          )
-        else
-          ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.5,
-            ),
-            child: ListView.separated(
-              shrinkWrap: true,
-              itemCount: evaluations.length,
-              separatorBuilder: (_, _) => const Divider(height: 1),
-              itemBuilder: (context, index) {
-                final eval = evaluations[evaluations.length - 1 - index];
-                return _buildEvaluationTile(eval);
-              },
-            ),
-          ),
-        SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
-      ],
-    );
-  }
-
-  Widget _buildEvaluationTile(AutomationEvaluation eval) {
-    final statusIcon = eval.triggered
-        ? const Icon(Icons.check_circle, color: Colors.green, size: 20)
-        : const Icon(Icons.cancel, color: Colors.orange, size: 20);
-
-    final skipReason = eval.skipReason;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          statusIcon,
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  eval.automationName,
-                  style: const TextStyle(fontWeight: FontWeight.w500),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  eval.triggered
-                      ? 'Triggered: ${eval.triggerType.displayName}'
-                      : 'Skipped: ${skipReason?.displayName ?? "Unknown"}',
-                  style: TextStyle(color: Colors.grey[400], fontSize: 12),
-                ),
-                if (eval.skipDetails != null) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    eval.skipDetails!,
-                    style: TextStyle(color: Colors.grey[500], fontSize: 11),
-                  ),
-                ],
-                Text(
-                  _formatTimestamp(eval.timestamp),
-                  style: TextStyle(color: Colors.grey[600], fontSize: 10),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _formatTimestamp(DateTime time) {
-    final h = time.hour.toString().padLeft(2, '0');
-    final m = time.minute.toString().padLeft(2, '0');
-    final s = time.second.toString().padLeft(2, '0');
-    return '$h:$m:$s';
   }
 }
 

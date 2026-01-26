@@ -1822,6 +1822,19 @@ footer::before {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.store-badge--disabled {
+  opacity: 0.5;
+  filter: grayscale(100%);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.store-status {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--text-tertiary);
+}
+
 .store-badge:hover,
 .store-badge:focus,
 .store-badge:active,
