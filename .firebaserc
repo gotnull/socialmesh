@@ -1,13 +1,5 @@
 {
   "projects": {},
-  "targets": {
-    "social-mesh-app": {
-      "hosting": {
-        "map": [
-          "social-mesh-app-map"
-        ]
-      }
-    }
-  },
+  "targets": {},
   "etags": {}
 }

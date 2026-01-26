@@ -51,107 +51,89 @@
       ]
     }
   ],
-  "hosting": [
-    {
-      "target": "web",
-      "public": "web",
-      "ignore": [
-        "firebase.json",
-        "**/node_modules/**"
-      ],
-      "headers": [
-        {
-          "source": "/.well-known/assetlinks.json",
-          "headers": [
-            {
-              "key": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        {
-          "source": "/.well-known/apple-app-site-association",
-          "headers": [
-            {
-              "key": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        }
-      ],
-      "redirects": [
-        {
-          "source": "/map",
-          "destination": "https://api.socialmesh.app/map",
-          "type": 302
-        }
-      ],
-      "rewrites": [
-        {
-          "source": "/privacy",
-          "destination": "/privacy-policy.html"
-        },
-        {
-          "source": "/terms",
-          "destination": "/terms-of-service.html"
-        },
-        {
-          "source": "/support",
-          "destination": "/support.html"
-        },
-        {
-          "source": "/docs",
-          "destination": "/docs.html"
-        },
-        {
-          "source": "/faq",
-          "destination": "/faq.html"
-        },
-        {
-          "source": "/delete-account",
-          "destination": "/delete-account.html"
-        },
-        {
-          "source": "/share/**",
-          "function": "share"
-        },
-        {
-          "source": "/api/widgets/browse",
-          "function": "widgetsBrowse"
-        },
-        {
-          "source": "/api/widgets/featured",
-          "function": "widgetsFeatured"
-        },
-        {
-          "source": "/api/widgets/categories",
-          "function": "widgetsCategories"
-        },
-        {
-          "source": "/api/widgets/download",
-          "function": "widgetsDownload"
-        },
-        {
-          "source": "/api/widgets/upload",
-          "function": "widgetsUpload"
-        },
-        {
-          "source": "/api/widgets/rate",
-          "function": "widgetsRate"
-        },
-        {
-          "source": "/api/widgets/**",
-          "function": "widgetsGet"
-        }
-      ]
-    },
-    {
-      "target": "map",
-      "public": "mesh-observer/dist",
-      "ignore": [
-        "firebase.json",
-        "**/node_modules/**"
-      ]
-    }
-  ]
+  "hosting": {
+    "public": "web",
+    "ignore": [
+      "firebase.json",
+      "**/node_modules/**"
+    ],
+    "headers": [
+      {
+        "source": "/.well-known/assetlinks.json",
+        "headers": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      {
+        "source": "/.well-known/apple-app-site-association",
+        "headers": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      }
+    ],
+    "rewrites": [
+      {
+        "source": "/privacy",
+        "destination": "/privacy-policy.html"
+      },
+      {
+        "source": "/terms",
+        "destination": "/terms-of-service.html"
+      },
+      {
+        "source": "/support",
+        "destination": "/support.html"
+      },
+      {
+        "source": "/docs",
+        "destination": "/docs.html"
+      },
+      {
+        "source": "/faq",
+        "destination": "/faq.html"
+      },
+      {
+        "source": "/delete-account",
+        "destination": "/delete-account.html"
+      },
+      {
+        "source": "/share/**",
+        "function": "share"
+      },
+      {
+        "source": "/api/widgets/browse",
+        "function": "widgetsBrowse"
+      },
+      {
+        "source": "/api/widgets/featured",
+        "function": "widgetsFeatured"
+      },
+      {
+        "source": "/api/widgets/categories",
+        "function": "widgetsCategories"
+      },
+      {
+        "source": "/api/widgets/download",
+        "function": "widgetsDownload"
+      },
+      {
+        "source": "/api/widgets/upload",
+        "function": "widgetsUpload"
+      },
+      {
+        "source": "/api/widgets/rate",
+        "function": "widgetsRate"
+      },
+      {
+        "source": "/api/widgets/**",
+        "function": "widgetsGet"
+      }
+    ]
+  }
 }

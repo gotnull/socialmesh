@@ -35,6 +35,11 @@ const MQTT_USERNAME = process.env.MQTT_USERNAME || 'meshdev';
 const MQTT_PASSWORD = process.env.MQTT_PASSWORD || 'large4cats';
 const NODE_EXPIRY_HOURS = parseInt(process.env.NODE_EXPIRY_HOURS || '24', 10);
 const NODE_PURGE_DAYS = parseInt(process.env.NODE_PURGE_DAYS || '30', 10);
+const MAP_ALLOWED_HOSTS = (process.env.MAP_ALLOWED_HOSTS ||
+  'map.socialmesh.app')
+  .split(',')
+  .map((host) => host.trim())
+  .filter(Boolean);
 
 // Firebase Admin initialization
 const FIREBASE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'social-mesh-app';
@@ -144,6 +149,11 @@ const mqttObserver = new MqttObserver(
 
 // API Documentation (root endpoint)
 app.get('/', (req, res) => {
+  const host = req.headers.host || '';
+  if (MAP_ALLOWED_HOSTS.some((allowedHost) => host.includes(allowedHost))) {
+    const mapHtml = generateMapPage();
+    return res.type('html').send(mapHtml);
+  }
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -749,11 +759,16 @@ app.get('/internal/nodes', (req, res) => {
   // Only allow requests from our own map page
   const referer = req.headers.referer || '';
   const host = req.headers.host || '';
+  const origin = req.headers.origin || '';
 
   // Allow if referer is from same host or localhost (for development)
   const isInternalRequest = referer.includes(host) ||
     referer.includes('localhost') ||
     referer.includes('127.0.0.1') ||
+    MAP_ALLOWED_HOSTS.some(
+      (allowedHost) =>
+        referer.includes(allowedHost) || origin.includes(allowedHost)
+    ) ||
     !referer; // Allow direct requests for now (map page initial load)
 
   if (!isInternalRequest) {
