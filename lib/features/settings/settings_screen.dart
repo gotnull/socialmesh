@@ -154,6 +154,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           },
         ),
         _SearchableSettingItem(
+          icon: Icons.bug_report_outlined,
+          title: 'Shake to report a bug',
+          subtitle: 'Shake your device to open the bug report flow',
+          keywords: ['bug', 'report', 'shake', 'feedback', 'support'],
+          section: 'FEEDBACK',
+          onTap: () {
+            // Scroll to the FEEDBACK section
+            _scrollController.animateTo(
+              0,
+              duration: const Duration(milliseconds: 1),
+              curve: Curves.easeOut,
+            );
+          },
+        ),
+        _SearchableSettingItem(
           icon: Icons.palette,
           title:
               storeProducts[RevenueCatConfig.themePackProductId]?.title ??
