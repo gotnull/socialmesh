@@ -513,33 +513,37 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   Widget _buildBundleFeature(IconData icon, String name, String detail) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 18, color: context.accentColor),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              name,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
+          Row(
+            children: [
+              Icon(icon, size: 18, color: context.accentColor),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  name,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
+            ],
           ),
-          const SizedBox(width: 10),
-          Flexible(
+          const SizedBox(height: 2),
+          Padding(
+            padding: const EdgeInsets.only(left: 28),
             child: Text(
               detail,
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.6),
                 fontSize: 12,
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              softWrap: false,
+              maxLines: 2,
             ),
           ),
         ],
