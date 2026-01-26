@@ -18,6 +18,8 @@ void main() {
       ],
     );
 
+    final connNotifier = container.read(connectivityStatusProvider.notifier);
+
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
@@ -27,8 +29,11 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    // Ensure notifier is offline
-    final connNotifier = container.read(connectivityStatusProvider.notifier);
+    // Ensure notifier is online so cloud features are available, then go offline
+    connNotifier.setOnline(true);
+    await tester.pumpAndSettle();
+
+    // Now simulate going offline
     connNotifier.setOnline(false);
     await tester.pumpAndSettle();
 
@@ -58,10 +63,7 @@ void main() {
     // Now tapping image should no longer show the offline message (permission/state may vary in tests)
     await tester.tap(imageFinder);
     await tester.pump(const Duration(milliseconds: 100));
-    expect(
-      find.textContaining('No internet connection'),
-      findsNothing,
-    );
+    expect(find.textContaining('No internet connection'), findsNothing);
 
     container.dispose();
   });

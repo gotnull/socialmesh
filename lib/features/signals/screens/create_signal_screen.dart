@@ -217,7 +217,8 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
     }
 
     try {
-      final canUseCloudNow = ref.read(signalConnectivityProvider).canUseCloud &&
+      final canUseCloudNow =
+          ref.read(signalConnectivityProvider).canUseCloud &&
           !ref.read(meshOnlyDebugModeProvider);
 
       // If location is being fetched, wait briefly (2s) for it to finish
@@ -288,7 +289,8 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
         context,
         meshOnlyDebug
             ? 'Mesh-only debug mode enabled. Cloud features disabled.'
-            : (connectivity.cloudDisabledReason ?? 'Cloud features unavailable.'),
+            : (connectivity.cloudDisabledReason ??
+                  'Cloud features unavailable.'),
       );
       return;
     }
@@ -607,10 +609,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
         // Auto-remove the image and explain to the user
         setState(() => _imageLocalPath = null);
         if (mounted) {
-          showErrorSnackBar(
-            context,
-            'Images require internet. Image removed.',
-          );
+          showErrorSnackBar(context, 'Images require internet. Image removed.');
         }
       }
     });
@@ -992,18 +991,17 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
               // Action buttons
               Row(
                 children: [
-                  if (canUseCloud) ...[
-                    _ActionButton(
-                      icon: Icons.image_outlined,
-                      label: 'Image',
-                      onTap: _isSubmitting || _isValidatingImage
-                          ? null
-                          : _pickImage,
-                      isSelected: _imageLocalPath != null,
-                      isLoading: _isValidatingImage,
-                    ),
-                    const SizedBox(width: 12),
-                  ],
+                  _ActionButton(
+                    icon: Icons.image_outlined,
+                    label: 'Image',
+                    onTap:
+                        (canUseCloud && !_isSubmitting && !_isValidatingImage)
+                        ? _pickImage
+                        : null,
+                    isSelected: _imageLocalPath != null,
+                    isLoading: _isValidatingImage,
+                  ),
+                  const SizedBox(width: 12),
                   _ActionButton(
                     icon: Icons.location_on_outlined,
                     label: 'Location',
@@ -1049,8 +1047,8 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
                                 meshOnlyDebug
                                     ? 'Mesh-only debug mode enabled. Signals use local DB + mesh only.'
                                     : connectivity.hasInternet
-                                        ? 'Sign in to enable images and cloud features. Text and location still broadcast over mesh.'
-                                        : 'Offline: images and cloud features are unavailable. Text and location still broadcast over mesh.',
+                                    ? 'Sign in to enable images and cloud features. Text and location still broadcast over mesh.'
+                                    : 'Offline: images and cloud features are unavailable. Text and location still broadcast over mesh.',
                                 style: TextStyle(
                                   color: context.textTertiary,
                                   fontSize: 12,
@@ -1072,7 +1070,8 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
                           onTap: () {
                             Navigator.of(context).push(
                               MaterialPageRoute(
-                                builder: (_) => const AccountSubscriptionsScreen(),
+                                builder: (_) =>
+                                    const AccountSubscriptionsScreen(),
                               ),
                             );
                           },

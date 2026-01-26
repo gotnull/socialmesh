@@ -7,6 +7,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socialmesh/core/transport.dart';
 import 'package:socialmesh/providers/app_providers.dart';
 import 'package:socialmesh/providers/connection_providers.dart';
+import 'package:socialmesh/services/mesh_packet_dedupe_store.dart';
+import 'package:socialmesh/services/storage/storage_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -19,51 +21,59 @@ void main() {
     });
   });
 
-  test(
-    'saved device invalidates after repeated missing scans',
-    () async {
-      final container = ProviderContainer(
-        overrides: [
-          transportProvider.overrideWithValue(_TestTransport()),
-        ],
-      );
-      addTearDown(container.dispose);
+  test('saved device invalidates after repeated missing scans', () async {
+    final s = SettingsService();
+    await s.init();
 
-      final notifier = container.read(deviceConnectionProvider.notifier);
-      final deviceInfo = DeviceInfo(
-        id: 'device-alpha',
-        name: 'Alpha Unit',
-        type: TransportType.ble,
-      );
+    final container = ProviderContainer(
+      overrides: [
+        transportProvider.overrideWithValue(_TestTransport()),
+        meshPacketDedupeStoreProvider.overrideWithValue(
+          MeshPacketDedupeStore(dbPathOverride: ':memory:'),
+        ),
+        settingsServiceProvider.overrideWithValue(AsyncValue.data(s)),
+      ],
+    );
+    addTearDown(container.dispose);
 
-      notifier.state = DeviceConnectionState2(
-        state: DevicePairingState.disconnected,
-        device: deviceInfo,
-      );
+    final notifier = container.read(deviceConnectionProvider.notifier);
+    final deviceInfo = DeviceInfo(
+      id: 'device-alpha',
+      name: 'Alpha Unit',
+      type: TransportType.ble,
+    );
 
-      final settings = await container.read(settingsServiceProvider.future);
-      expect(settings.lastDeviceId, 'device-alpha');
+    notifier.state = DeviceConnectionState2(
+      state: DevicePairingState.disconnected,
+      device: deviceInfo,
+    );
 
-      expect(await notifier.reportMissingSavedDevice(), isFalse);
-      expect(await notifier.reportMissingSavedDevice(), isFalse);
-      expect(await notifier.reportMissingSavedDevice(), isTrue);
+    final settings = await container.read(settingsServiceProvider.future);
+    expect(settings.lastDeviceId, 'device-alpha');
 
-      expect(
-        notifier.state.state,
-        DevicePairingState.pairedDeviceInvalidated,
-      );
-      expect(settings.lastDeviceId, isNull);
-      expect(settings.lastDeviceName, isNull);
-      expect(settings.lastDeviceType, isNull);
-  },
-);
+    expect(await notifier.reportMissingSavedDevice(), isFalse);
+    expect(await notifier.reportMissingSavedDevice(), isFalse);
+    expect(await notifier.reportMissingSavedDevice(), isTrue);
+
+    expect(notifier.state.state, DevicePairingState.pairedDeviceInvalidated);
+    expect(settings.lastDeviceId, isNull);
+    expect(settings.lastDeviceName, isNull);
+    expect(settings.lastDeviceType, isNull);
+  });
 
   test(
     'peer reset invalidation clears saved device and blocks reconnect',
     () async {
+      final s = SettingsService();
+      await s.init();
+
       final container = ProviderContainer(
         overrides: [
           transportProvider.overrideWithValue(_TestTransport()),
+          meshPacketDedupeStoreProvider.overrideWithValue(
+            MeshPacketDedupeStore(dbPathOverride: ':memory:'),
+          ),
+          settingsServiceProvider.overrideWithValue(AsyncValue.data(s)),
         ],
       );
       addTearDown(container.dispose);
@@ -88,10 +98,7 @@ void main() {
         appleCode: 14,
       );
 
-      expect(
-        notifier.state.state,
-        DevicePairingState.pairedDeviceInvalidated,
-      );
+      expect(notifier.state.state, DevicePairingState.pairedDeviceInvalidated);
       expect(settings.lastDeviceId, isNull);
       expect(
         container.read(autoReconnectStateProvider),
@@ -104,34 +111,31 @@ void main() {
     },
   );
 
-  test(
-    'pairing invalidation detection matches apple peer reset errors',
-    () {
-      expect(
-        isPairingInvalidationError(
-          FlutterBluePlusException(
-            ErrorPlatform.apple,
-            'connect',
-            14,
-            'Peer removed pairing information',
-          ),
+  test('pairing invalidation detection matches apple peer reset errors', () {
+    expect(
+      isPairingInvalidationError(
+        FlutterBluePlusException(
+          ErrorPlatform.apple,
+          'connect',
+          14,
+          'Peer removed pairing information',
         ),
-        isTrue,
-      );
+      ),
+      isTrue,
+    );
 
-      expect(
-        pairingInvalidationAppleCode(
-          FlutterBluePlusException(
-            ErrorPlatform.apple,
-            'connect',
-            14,
-            'Peer removed pairing information',
-          ),
+    expect(
+      pairingInvalidationAppleCode(
+        FlutterBluePlusException(
+          ErrorPlatform.apple,
+          'connect',
+          14,
+          'Peer removed pairing information',
         ),
-        14,
-      );
-    },
-  );
+      ),
+      14,
+    );
+  });
 }
 
 class _TestTransport implements DeviceTransport {

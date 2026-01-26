@@ -24,10 +24,10 @@ void main() {
       expect(sanitizeUtf16(input), input);
     });
 
-    test('handles mixed valid and invalid sequences', () {
+    test('preserves valid surrogate pairs (supplementary characters)', () {
       const input = '\uD83D\uDE03\uD800\uDC00X';
-      const expected = '\uD83D\uDE03\uFFFD\uFFFDX';
-      expect(sanitizeUtf16(input), expected);
+      // Both sequences are valid surrogate pairs and should be preserved.
+      expect(sanitizeUtf16(input), input);
     });
   });
 }

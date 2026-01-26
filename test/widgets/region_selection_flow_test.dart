@@ -36,8 +36,9 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      container.read(deviceConnectionProvider.notifier).state =
-          DeviceConnectionState2(
+      container
+          .read(deviceConnectionProvider.notifier)
+          .state = DeviceConnectionState2(
         state: DevicePairingState.connected,
         device: DeviceInfo(
           id: 'device-alpha',
@@ -73,44 +74,16 @@ void main() {
       await tester.pump();
 
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      expect(
-        tester.widget<ElevatedButton>(continueButton).onPressed,
-        isNull,
-      );
+      expect(tester.widget<ElevatedButton>(continueButton).onPressed, isNull);
 
       await fakeProtocol.regionSetCompleter.future;
-      container.read(deviceConnectionProvider.notifier).state =
-          DeviceConnectionState2(
-        state: DevicePairingState.connected,
-        device: DeviceInfo(
-          id: 'device-alpha',
-          name: 'Region Device',
-          type: TransportType.ble,
-        ),
-        lastConnectedAt: DateTime.now().add(const Duration(seconds: 1)),
-      );
+      // Ensure the reconnect wait has started
       await tester.pump();
-    },
-  );
-
-  testWidgets(
-    'Region screen pops after reconnection completes',
-    (tester) async {
-      final fakeProtocol = _FakeRegionProtocolService();
-      final settings = SettingsService();
-      await settings.init();
-
-      final container = ProviderContainer(
-        overrides: [
-          protocolServiceProvider.overrideWithValue(fakeProtocol),
-          settingsServiceProvider.overrideWithValue(AsyncValue.data(settings)),
-        ],
-      );
-      addTearDown(container.dispose);
-
-      container.read(deviceConnectionProvider.notifier).state =
-          DeviceConnectionState2(
-        state: DevicePairingState.connected,
+      // Simulate device disconnect then reconnect so the reconnect wait completes
+      container
+          .read(deviceConnectionProvider.notifier)
+          .state = DeviceConnectionState2(
+        state: DevicePairingState.disconnected,
         device: DeviceInfo(
           id: 'device-alpha',
           name: 'Region Device',
@@ -118,50 +91,12 @@ void main() {
         ),
         lastConnectedAt: DateTime.now(),
       );
-
-      final observer = _TestNavigatorObserver();
-
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: MaterialApp(
-            navigatorObservers: [observer],
-            home: Builder(
-              builder: (context) {
-                return Center(
-                  child: FilledButton(
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const RegionSelectionScreen(),
-                        ),
-                      );
-                    },
-                    child: const Text('Open'),
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-      );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
-
-      await tester.tap(find.text('Open'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
-
-      await tester.tap(find.text('United States'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
-
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Save'));
+      // Allow listeners to process the disconnected state
       await tester.pump();
 
-      await fakeProtocol.regionSetCompleter.future;
-      container.read(deviceConnectionProvider.notifier).state =
-          DeviceConnectionState2(
+      container
+          .read(deviceConnectionProvider.notifier)
+          .state = DeviceConnectionState2(
         state: DevicePairingState.connected,
         device: DeviceInfo(
           id: 'device-alpha',
@@ -170,11 +105,107 @@ void main() {
         ),
         lastConnectedAt: DateTime.now().add(const Duration(seconds: 1)),
       );
-      await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
-      expect(observer.didPopRoute, isTrue);
     },
   );
+
+  testWidgets('Region screen pops after reconnection completes', (
+    tester,
+  ) async {
+    final fakeProtocol = _FakeRegionProtocolService();
+    final settings = SettingsService();
+    await settings.init();
+
+    final container = ProviderContainer(
+      overrides: [
+        protocolServiceProvider.overrideWithValue(fakeProtocol),
+        settingsServiceProvider.overrideWithValue(AsyncValue.data(settings)),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    container
+        .read(deviceConnectionProvider.notifier)
+        .state = DeviceConnectionState2(
+      state: DevicePairingState.connected,
+      device: DeviceInfo(
+        id: 'device-alpha',
+        name: 'Region Device',
+        type: TransportType.ble,
+      ),
+      lastConnectedAt: DateTime.now(),
+    );
+
+    final observer = _TestNavigatorObserver();
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          navigatorObservers: [observer],
+          home: Builder(
+            builder: (context) {
+              return Center(
+                child: FilledButton(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const RegionSelectionScreen(),
+                      ),
+                    );
+                  },
+                  child: const Text('Open'),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    await tester.tap(find.text('Open'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    await tester.tap(find.text('United States'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Save'));
+    await tester.pump();
+
+    await fakeProtocol.regionSetCompleter.future;
+    // Simulate device disconnect then reconnect so the reconnect wait completes
+    container
+        .read(deviceConnectionProvider.notifier)
+        .state = DeviceConnectionState2(
+      state: DevicePairingState.disconnected,
+      device: DeviceInfo(
+        id: 'device-alpha',
+        name: 'Region Device',
+        type: TransportType.ble,
+      ),
+      lastConnectedAt: DateTime.now(),
+    );
+    // Allow listeners to process the disconnected state
+    await tester.pump();
+
+    container
+        .read(deviceConnectionProvider.notifier)
+        .state = DeviceConnectionState2(
+      state: DevicePairingState.connected,
+      device: DeviceInfo(
+        id: 'device-alpha',
+        name: 'Region Device',
+        type: TransportType.ble,
+      ),
+      lastConnectedAt: DateTime.now().add(const Duration(seconds: 1)),
+    );
+    await tester.pumpAndSettle();
+    expect(observer.didPopRoute, isTrue);
+  });
 }
 
 class _TestNavigatorObserver extends NavigatorObserver {
@@ -192,10 +223,7 @@ class _FakeRegionProtocolService extends ProtocolService {
   config_pbenum.Config_LoRaConfig_RegionCode? _currentRegion;
 
   _FakeRegionProtocolService()
-      : super(
-          _FakeDeviceTransport(),
-          dedupeStore: _FakeMeshPacketDedupeStore(),
-        );
+    : super(_FakeDeviceTransport(), dedupeStore: _FakeMeshPacketDedupeStore());
 
   @override
   config_pbenum.Config_LoRaConfig_RegionCode? get currentRegion =>
@@ -221,20 +249,13 @@ class _FakeMeshPacketDedupeStore extends MeshPacketDedupeStore {
   Future<void> dispose() async {}
 
   @override
-  Future<bool> hasSeen(
-    MeshPacketKey key, {
-    Duration? ttl,
-  }) async =>
-      false;
+  Future<bool> hasSeen(MeshPacketKey key, {Duration? ttl}) async => false;
 
   @override
   Future<void> init() async {}
 
   @override
-  Future<void> markSeen(
-    MeshPacketKey key, {
-    Duration? ttl,
-  }) async {}
+  Future<void> markSeen(MeshPacketKey key, {Duration? ttl}) async {}
 }
 
 class _FakeDeviceTransport implements DeviceTransport {

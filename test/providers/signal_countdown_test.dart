@@ -7,7 +7,9 @@ import 'package:socialmesh/providers/auth_providers.dart';
 import 'package:socialmesh/providers/connectivity_providers.dart';
 import 'package:socialmesh/providers/connection_providers.dart';
 import 'package:socialmesh/providers/signal_providers.dart';
+import 'package:socialmesh/providers/profile_providers.dart';
 import 'package:socialmesh/services/signal_service.dart';
+import 'package:socialmesh/models/user_profile.dart';
 
 class FakeSignalService extends SignalService {
   FakeSignalService(this.nowProvider);
@@ -51,6 +53,7 @@ void main() {
           isDeviceConnectedProvider.overrideWithValue(true),
           isSignedInProvider.overrideWithValue(true),
           isOnlineProvider.overrideWithValue(true),
+          authStateProvider.overrideWithValue(AsyncValue.data(null)),
         ],
       );
 

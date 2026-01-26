@@ -521,6 +521,14 @@ class BindingRegistry {
       category: BindingCategory.network,
       valueType: int,
     ),
+    // Back-compat alias for older widgets
+    BindingDefinition(
+      path: 'network.onlineNodes',
+      label: 'Active Mesh Nodes (legacy)',
+      description: 'Alias for active node count (back-compat)',
+      category: BindingCategory.network,
+      valueType: int,
+    ),
     BindingDefinition(
       path: 'network.unreadMessages',
       label: 'Unread Messages',

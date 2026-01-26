@@ -5,6 +5,7 @@ import 'package:socialmesh/features/device_shop/models/shop_models.dart';
 import 'package:socialmesh/features/device_shop/screens/category_products_screen.dart';
 import 'package:socialmesh/features/device_shop/screens/search_products_screen.dart';
 import 'package:socialmesh/features/device_shop/screens/favorites_screen.dart';
+import 'package:socialmesh/core/widgets/app_bar_overflow_menu.dart';
 
 // Helper to wrap widgets for testing
 Widget createTestWidget(Widget child) {
@@ -111,7 +112,7 @@ void main() {
       }
     });
 
-    testWidgets('shows sort button', (WidgetTester tester) async {
+    testWidgets('shows sort overflow menu', (WidgetTester tester) async {
       await tester.pumpWidget(
         createTestWidget(
           const CategoryProductsScreen(category: DeviceCategory.module),
@@ -119,8 +120,8 @@ void main() {
       );
       await tester.pump();
 
-      // Sort icon should be present
-      expect(find.byIcon(Icons.sort), findsOneWidget);
+      // Sort is available via the overflow menu
+      expect(find.byType(AppBarOverflowMenu<String>), findsOneWidget);
     });
   });
 

@@ -268,11 +268,28 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
           }
           return;
         }
+        // Detect explicit disconnect
         if (next.state != conn.DevicePairingState.connected) {
           sawDisconnect = true;
           return;
         }
+
+        // If we saw a disconnect before, a connected state means reconnect completed
         if (sawDisconnect) {
+          if (!completer.isCompleted) {
+            completer.complete();
+          }
+          return;
+        }
+
+        // In some transports the device may report connected but with an updated
+        // lastConnectedAt timestamp indicating a reconnect without an explicit
+        // intermediate disconnect event. Treat an increase in lastConnectedAt as
+        // a successful reconnect as well.
+        if (previous != null &&
+            previous.lastConnectedAt != null &&
+            next.lastConnectedAt != null &&
+            next.lastConnectedAt!.isAfter(previous.lastConnectedAt!)) {
           if (!completer.isCompleted) {
             completer.complete();
           }

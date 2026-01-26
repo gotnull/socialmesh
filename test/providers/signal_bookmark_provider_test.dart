@@ -1,8 +1,19 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socialmesh/providers/signal_bookmark_provider.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  // Provide mock shared preferences so Provider init doesn't call platform channels
+  SharedPreferences.setMockInitialValues({});
+
+  setUp(() {
+    // Reset mock prefs between tests to avoid state leakage
+    SharedPreferences.setMockInitialValues({});
+  });
+
   group('SignalViewMode', () {
     test('has all expected values', () {
       expect(SignalViewMode.values.length, 4);

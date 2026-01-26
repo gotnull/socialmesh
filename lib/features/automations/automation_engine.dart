@@ -209,9 +209,27 @@ class AutomationEngine {
       );
     }
 
+    // Capture previous lastHeard for presence calculation
+    final prevLastHeard = _nodeLastHeard[node.nodeNum];
+
     // Update last heard for silent node detection
     if (node.lastHeard != null) {
       _nodeLastHeard[node.nodeNum] = node.lastHeard!;
+    }
+
+    // Presence detection: determine if the node transitioned between active/inactive
+    try {
+      final now = DateTime.now();
+      // Prefer previously computed presence if available, else derive from previous lastHeard
+      final previousPresence = _nodePresence[node.nodeNum] ??
+          PresenceCalculator.fromLastHeard(prevLastHeard, now: now);
+      final currentPresence = PresenceCalculator.fromLastHeard(node.lastHeard, now: now);
+
+      if (previousPresence != currentPresence) {
+        await processPresenceUpdate(node, previous: previousPresence, current: currentPresence);
+      }
+    } catch (e) {
+      AppLogging.automations('AutomationEngine: Presence detection error: $e');
     }
   }
 
