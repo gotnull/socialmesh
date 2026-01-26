@@ -34,7 +34,7 @@ class SignalGridCard extends ConsumerWidget {
     final myNodeNum = ref.watch(myNodeNumProvider);
     final isMeshSignal = signal.authorId.startsWith('mesh_');
     final isOwnMeshSignal =
-        isMeshSignal && signal.meshNodeId != null && signal.meshNodeId == myNodeNum;
+        signal.meshNodeId != null && signal.meshNodeId == myNodeNum;
     final hasImage =
         signal.mediaUrls.isNotEmpty || signal.imageLocalPath != null;
     final hasLocation = signal.location != null;

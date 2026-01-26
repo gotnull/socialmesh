@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:socialmesh/features/settings/account_subscriptions_screen.dart';
 
 import '../../../core/theme.dart';
 import '../../../core/logging.dart';
@@ -19,7 +20,6 @@ import '../utils/signal_utils.dart';
 import 'proximity_indicator.dart';
 import 'signal_gallery_view.dart';
 import 'signal_ttl_footer.dart';
-import '../../settings/account_subscriptions_screen.dart';
 import '../../social/widgets/subscribe_button.dart';
 
 /// Card widget for displaying a signal.
@@ -129,7 +129,7 @@ class _SignalHeader extends ConsumerWidget {
     final myNodeNum = ref.watch(myNodeNumProvider);
     final isMeshSignal = signal.authorId.startsWith('mesh_');
     final isOwnMeshSignal =
-        isMeshSignal && signal.meshNodeId != null && signal.meshNodeId == myNodeNum;
+        signal.meshNodeId != null && signal.meshNodeId == myNodeNum;
 
     AppLogging.signals(
       'SignalHeader: id=${signal.id}, authorId=${signal.authorId}, isMeshSignal=$isMeshSignal, hasAuthorSnapshot=${signal.authorSnapshot != null}',

@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:socialmesh/features/settings/account_subscriptions_screen.dart';
 
 import '../../../core/logging.dart';
 import '../../../core/theme.dart';
@@ -366,7 +367,19 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
     if (!isAuthenticated) {
       AppLogging.signals('🔒 Response blocked: user not authenticated');
       if (mounted) {
-        showErrorSnackBar(context, 'Sign in required to comment');
+        showActionSnackBar(
+          context,
+          'Sign in required to comment',
+          actionLabel: 'Profile',
+          onAction: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const AccountSubscriptionsScreen(),
+              ),
+            );
+          },
+          type: SnackBarType.warning,
+        );
       }
       return;
     }

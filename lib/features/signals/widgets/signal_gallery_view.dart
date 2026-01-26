@@ -459,9 +459,8 @@ class _BottomInfoOverlay extends ConsumerWidget {
     final nodes = ref.watch(nodesProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
     final author = signal.authorSnapshot;
-    final isMeshSignal = signal.authorId.startsWith('mesh_');
     final isOwnMeshSignal =
-        isMeshSignal && signal.meshNodeId != null && signal.meshNodeId == myNodeNum;
+        signal.meshNodeId != null && signal.meshNodeId == myNodeNum;
 
     // Get mesh node info if available
     String? meshNodeName;

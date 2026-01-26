@@ -665,6 +665,7 @@ class AnimatedCounter extends StatefulWidget {
   final String? prefix;
   final String? suffix;
   final Curve curve;
+  final String Function(int value)? formatter;
 
   const AnimatedCounter({
     super.key,
@@ -674,6 +675,7 @@ class AnimatedCounter extends StatefulWidget {
     this.prefix,
     this.suffix,
     this.curve = Curves.easeOutCubic,
+    this.formatter,
   });
 
   @override
@@ -721,8 +723,10 @@ class _AnimatedCounterState extends State<AnimatedCounter>
             (_previousValue +
                     (_currentValue - _previousValue) * _animation.value)
                 .round();
+        final displayText =
+            widget.formatter != null ? widget.formatter!(displayValue) : '$displayValue';
         return Text(
-          '${widget.prefix ?? ''}$displayValue${widget.suffix ?? ''}',
+          '${widget.prefix ?? ''}$displayText${widget.suffix ?? ''}',
           style: widget.style,
         );
       },

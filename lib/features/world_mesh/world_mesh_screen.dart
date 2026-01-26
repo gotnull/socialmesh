@@ -793,59 +793,16 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
             ),
           ),
 
-        // Attribution + Stats bar
+        // Stats bar
         Positioned(
           left: 0,
           right: 0,
           bottom: 0,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Attribution floating above stats bar
-              Padding(
-                padding: const EdgeInsets.only(left: 8, bottom: 4),
-                child: GestureDetector(
-                  onTap: () => launchUrl(
-                    Uri.parse(
-                      _mapStyle == MapTileStyle.satellite
-                          ? 'https://www.esri.com'
-                          : _mapStyle == MapTileStyle.terrain
-                          ? 'https://opentopomap.org'
-                          : 'https://carto.com/attributions',
-                    ),
-                  ),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      _mapStyle == MapTileStyle.satellite
-                          ? '© Esri'
-                          : _mapStyle == MapTileStyle.terrain
-                          ? '© OpenTopoMap © OSM'
-                          : '© OSM © CARTO',
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 10,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              // Stats bar
-              _buildStatsBar(
-                theme,
-                state,
-                displayNodes.length,
-                filters.hasActiveFilters,
-              ),
-            ],
+          child: _buildStatsBar(
+            theme,
+            state,
+            displayNodes.length,
+            filters.hasActiveFilters,
           ),
         ),
       ],
@@ -892,6 +849,16 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
     int visibleCount,
     bool hasFilters,
   ) {
+    final attributionUrl = _mapStyle == MapTileStyle.satellite
+        ? 'https://www.esri.com'
+        : _mapStyle == MapTileStyle.terrain
+        ? 'https://opentopomap.org'
+        : 'https://carto.com/attributions';
+    final attributionLabel = _mapStyle == MapTileStyle.satellite
+        ? '© Esri'
+        : _mapStyle == MapTileStyle.terrain
+        ? '© OpenTopoMap © OSM'
+        : '© OSM © CARTO';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -902,55 +869,76 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
       ),
       child: SafeArea(
         top: false,
-        child: Row(
+        child: Stack(
+          alignment: Alignment.centerLeft,
           children: [
-            _buildStatItem(
-              theme,
-              hasFilters ? Icons.filter_alt : Icons.public,
-              visibleCount,
-              hasFilters ? 'filtered' : 'visible',
-              highlight: hasFilters,
-            ),
-            const SizedBox(width: 16),
-            _buildStatItem(theme, Icons.cloud_done, state.nodeCount, 'total'),
-            const Spacer(),
-            if (state.lastUpdated != null)
-              GestureDetector(
-                onTap: () {
-                  ref.read(worldMeshMapProvider.notifier).forceRefresh();
-                  showInfoSnackBar(context, 'Refreshing world mesh data...');
-                },
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (state.isFromCache)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 4),
-                        child: Icon(
-                          Icons.cloud_off,
-                          size: 12,
-                          color: theme.colorScheme.error.withValues(alpha: 0.7),
+            Row(
+              children: [
+                _buildStatItem(
+                  theme,
+                  hasFilters ? Icons.filter_alt : Icons.public,
+                  visibleCount,
+                  hasFilters ? 'filtered' : 'visible',
+                  highlight: hasFilters,
+                ),
+                const SizedBox(width: 16),
+                _buildStatItem(theme, Icons.cloud_done, state.nodeCount, 'total'),
+                const Spacer(),
+                if (state.lastUpdated != null)
+                  GestureDetector(
+                    onTap: () {
+                      ref.read(worldMeshMapProvider.notifier).forceRefresh();
+                      showInfoSnackBar(context, 'Refreshing world mesh data...');
+                    },
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (state.isFromCache)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 4),
+                            child: Icon(
+                              Icons.cloud_off,
+                              size: 12,
+                              color:
+                                  theme.colorScheme.error.withValues(alpha: 0.7),
+                            ),
+                          ),
+                        Text(
+                          _formatLastUpdated(state.lastUpdated!),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: state.isFromCache
+                                ? theme.colorScheme.error.withValues(alpha: 0.6)
+                                : theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.5,
+                                  ),
+                          ),
                         ),
-                      ),
-                    Text(
-                      _formatLastUpdated(state.lastUpdated!),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: state.isFromCache
-                            ? theme.colorScheme.error.withValues(alpha: 0.6)
-                            : theme.colorScheme.onSurface.withValues(
-                                alpha: 0.5,
-                              ),
-                      ),
+                        const SizedBox(width: 6),
+                        Icon(
+                          Icons.refresh,
+                          size: 14,
+                          color:
+                              theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 6),
-                    Icon(
-                      Icons.refresh,
-                      size: 14,
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-                    ),
-                  ],
+                  ),
+              ],
+            ),
+            Positioned(
+              left: 0,
+              bottom: -2,
+              child: GestureDetector(
+                onTap: () => launchUrl(Uri.parse(attributionUrl)),
+                child: Text(
+                  attributionLabel,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                    fontSize: 9,
+                  ),
                 ),
               ),
+            ),
           ],
         ),
       ),
@@ -974,6 +962,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
         AnimatedCounter(
           value: value,
           duration: const Duration(milliseconds: 600),
+          formatter: (v) => v.toString(),
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
             color: highlight ? theme.colorScheme.primary : null,

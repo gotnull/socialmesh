@@ -487,9 +487,9 @@ class _SnapSwipeableSignalItemState extends State<SnapSwipeableSignalItem>
                     // Call the onSwipeLeft after snap completes (for hide action)
                     // or onExpired for TTL expiry
                     if (_isSnapping) {
-                      widget.onSwipeLeft();
-                    } else {
                       widget.onExpired?.call();
+                    } else {
+                      widget.onSwipeLeft();
                     }
                   },
                   child: widget.child,
