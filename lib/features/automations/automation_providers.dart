@@ -111,9 +111,34 @@ class AutomationsNotifier extends Notifier<AsyncValue<List<Automation>>> {
   AsyncValue<List<Automation>> build() {
     final repository = ref.watch(automationRepositoryProvider);
     repository.addListener(_onRepositoryChanged);
+
+    // Watch the current user profile and restore automations from cloud prefs
+    // whenever the profile changes (sign-in / sign-out / profile update).
+    ref.listen<AsyncValue<UserProfile?>>(userProfileProvider, (
+      prev,
+      next,
+    ) async {
+      try {
+        final profile = next.value;
+        final cloudJson = profile?.preferences?.automationsJson;
+        if (cloudJson != null && cloudJson.isNotEmpty) {
+          // Avoid unnecessary loads if already identical
+          if (repository.toJsonString() != cloudJson) {
+            await repository.loadFromJson(cloudJson);
+            AppLogging.automations(
+              'Automations restored from cloud preferences',
+            );
+          }
+        }
+      } catch (e) {
+        AppLogging.automations('Error restoring automations from cloud: $e');
+      }
+    });
+
     ref.onDispose(() {
       repository.removeListener(_onRepositoryChanged);
     });
+
     _loadAutomations();
     return const AsyncValue.loading();
   }

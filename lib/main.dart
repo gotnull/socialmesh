@@ -186,16 +186,16 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ref.read(appInitProvider.notifier).initialize();
-        // Load accent color from settings
-        _loadAccentColor();
-        // Set user online presence
-        _initializePresence();
-        // Initialize shake-to-report bug listener
-        ref.read(bugReportServiceProvider).initialize();
-        // Setup App Intents for iOS Shortcuts integration
-        ref.read(appIntentsServiceProvider).setup();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(appInitProvider.notifier).initialize();
+      // Load accent color from settings
+      _loadAccentColor();
+      // Set user online presence
+      _initializePresence();
+      // Initialize shake-to-report bug listener
+      ref.read(bugReportServiceProvider).initialize();
+      // Setup App Intents for iOS Shortcuts integration
+      ref.read(appIntentsServiceProvider).setup();
       // Initialize RevenueCat for purchases
       _initializePurchases();
       // Initialize deep link handling
@@ -878,11 +878,11 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       try {
         final automationRepo = ref.read(automationRepositoryProvider);
         await automationRepo.loadFromJson(prefs.automationsJson!);
-        AppLogging.debug(
+        AppLogging.automations(
           '⚡ Loaded ${automationRepo.automations.length} automations from cloud',
         );
       } catch (e) {
-        AppLogging.debug('Failed to parse automations: $e');
+        AppLogging.automations('Failed to parse automations: $e');
       }
     }
 
@@ -973,56 +973,56 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
           '/reachability': (context) => const MeshReachabilityScreen(),
         },
         onGenerateRoute: (settings) {
-        // Check route requirements before building
-        if (RouteRegistry.isDeviceRequired(settings.name)) {
-          // This route requires device - it will be checked by the builder
-        }
+          // Check route requirements before building
+          if (RouteRegistry.isDeviceRequired(settings.name)) {
+            // This route requires device - it will be checked by the builder
+          }
 
-        // Handle routes that need arguments
-        if (settings.name == '/route-detail') {
-          final route = settings.arguments as route_model.Route;
-          return MaterialPageRoute(
-            builder: (context) => RouteDetailScreen(route: route),
-          );
-        }
-        if (settings.name == '/map') {
-          final args = settings.arguments as Map<String, dynamic>?;
-          return MaterialPageRoute(
-            builder: (context) => MapScreen(
-              initialLatitude: args?['latitude'] as double?,
-              initialLongitude: args?['longitude'] as double?,
-              initialLocationLabel: args?['label'] as String?,
-            ),
-          );
-        }
-        if (settings.name == '/post-detail') {
-          final args = settings.arguments as Map<String, dynamic>?;
-          final postId = args?['postId'] as String?;
-          if (postId != null) {
+          // Handle routes that need arguments
+          if (settings.name == '/route-detail') {
+            final route = settings.arguments as route_model.Route;
             return MaterialPageRoute(
-              builder: (context) => PostDetailScreen(postId: postId),
+              builder: (context) => RouteDetailScreen(route: route),
             );
           }
-        }
-        if (settings.name == '/profile') {
-          final args = settings.arguments as Map<String, dynamic>?;
-          final userId = args?['userId'] as String?;
-          if (userId != null) {
+          if (settings.name == '/map') {
+            final args = settings.arguments as Map<String, dynamic>?;
             return MaterialPageRoute(
-              builder: (context) => ProfileSocialScreen(userId: userId),
+              builder: (context) => MapScreen(
+                initialLatitude: args?['latitude'] as double?,
+                initialLongitude: args?['longitude'] as double?,
+                initialLocationLabel: args?['label'] as String?,
+              ),
             );
           }
-        }
-        if (settings.name == '/signal-detail') {
-          final args = settings.arguments as Map<String, dynamic>?;
-          final signalId = args?['signalId'] as String?;
-          if (signalId != null) {
-            return MaterialPageRoute(
-              builder: (context) => _SignalDetailLoader(signalId: signalId),
-            );
+          if (settings.name == '/post-detail') {
+            final args = settings.arguments as Map<String, dynamic>?;
+            final postId = args?['postId'] as String?;
+            if (postId != null) {
+              return MaterialPageRoute(
+                builder: (context) => PostDetailScreen(postId: postId),
+              );
+            }
           }
-        }
-        return null;
+          if (settings.name == '/profile') {
+            final args = settings.arguments as Map<String, dynamic>?;
+            final userId = args?['userId'] as String?;
+            if (userId != null) {
+              return MaterialPageRoute(
+                builder: (context) => ProfileSocialScreen(userId: userId),
+              );
+            }
+          }
+          if (settings.name == '/signal-detail') {
+            final args = settings.arguments as Map<String, dynamic>?;
+            final signalId = args?['signalId'] as String?;
+            if (signalId != null) {
+              return MaterialPageRoute(
+                builder: (context) => _SignalDetailLoader(signalId: signalId),
+              );
+            }
+          }
+          return null;
         },
       ),
     );
