@@ -1045,15 +1045,11 @@ class DataBindingEngine {
       case 'activeCount':
         final nodes = _allNodes;
         if (nodes == null) return 0;
-        return nodes.values
-            .where((n) => n.presenceConfidence.isActive)
-            .length;
+        return nodes.values.where((n) => n.presenceConfidence.isActive).length;
       case 'onlineNodes': // Back-compat for older widgets
         final nodes = _allNodes;
         if (nodes == null) return 0;
-        return nodes.values
-            .where((n) => n.presenceConfidence.isActive)
-            .length;
+        return nodes.values.where((n) => n.presenceConfidence.isActive).length;
       case 'unreadMessages':
         // This would need to be tracked elsewhere
         return 0;

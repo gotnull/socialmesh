@@ -221,12 +221,20 @@ class AutomationEngine {
     try {
       final now = DateTime.now();
       // Prefer previously computed presence if available, else derive from previous lastHeard
-      final previousPresence = _nodePresence[node.nodeNum] ??
+      final previousPresence =
+          _nodePresence[node.nodeNum] ??
           PresenceCalculator.fromLastHeard(prevLastHeard, now: now);
-      final currentPresence = PresenceCalculator.fromLastHeard(node.lastHeard, now: now);
+      final currentPresence = PresenceCalculator.fromLastHeard(
+        node.lastHeard,
+        now: now,
+      );
 
       if (previousPresence != currentPresence) {
-        await processPresenceUpdate(node, previous: previousPresence, current: currentPresence);
+        await processPresenceUpdate(
+          node,
+          previous: previousPresence,
+          current: currentPresence,
+        );
       }
     } catch (e) {
       AppLogging.automations('AutomationEngine: Presence detection error: $e');
