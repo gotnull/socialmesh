@@ -2733,6 +2733,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
                               const SizedBox(height: 16),
 
+                              // Feedback Section
+                              const _SectionHeader(title: 'FEEDBACK'),
+                              _SettingsTile(
+                                icon: Icons.bug_report_outlined,
+                                title: 'Shake to report a bug',
+                                subtitle:
+                                    'Shake your device to open the bug report flow',
+                                trailing: ThemedSwitch(
+                                  value: settingsService.shakeToReportEnabled,
+                                  onChanged: (value) async {
+                                    HapticFeedback.selectionClick();
+                                    await ref
+                                        .read(bugReportServiceProvider)
+                                        .setEnabled(value);
+                                    setState(() {});
+                                  },
+                                ),
+                              ),
+
+                              const SizedBox(height: 16),
+
                               // About Section
                               _SectionHeader(title: 'ABOUT'),
                               // Secret gesture to unlock debug settings - 7 taps with PIN
