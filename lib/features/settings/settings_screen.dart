@@ -93,7 +93,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
-  final GlobalKey _feedbackSectionKey = GlobalKey();
   String _searchQuery = '';
 
   @override
@@ -102,37 +101,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _searchController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
-  }
-
-  Future<void> _scrollToFeedbackSection() async {
-    if (_searchQuery.isNotEmpty) return;
-    for (var attempt = 0; attempt < 8; attempt += 1) {
-      await Future.delayed(const Duration(milliseconds: 16));
-      if (!_scrollController.hasClients) continue;
-      final ctx = _feedbackSectionKey.currentContext;
-      if (ctx == null) continue;
-
-      final box = ctx.findRenderObject() as RenderBox?;
-      final listBox =
-          _scrollController.position.context.storageContext.findRenderObject()
-              as RenderBox?;
-      if (box == null || listBox == null) continue;
-
-      final targetOffset =
-          _scrollController.offset +
-          box.localToGlobal(Offset.zero, ancestor: listBox).dy -
-          12;
-
-      await _scrollController.animateTo(
-        targetOffset.clamp(
-          _scrollController.position.minScrollExtent,
-          _scrollController.position.maxScrollExtent,
-        ),
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOut,
-      );
-      return;
-    }
   }
 
   /// Get all searchable settings items
@@ -192,14 +160,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           keywords: ['bug', 'report', 'shake', 'feedback', 'support'],
           section: 'FEEDBACK',
           hasSwitch: true,
-          onTap: () {
-            setState(() {
-              _searchQuery = '';
-              _searchController.clear();
-            });
-            _searchFocusNode.unfocus();
-            _scrollToFeedbackSection();
-          },
+          switchBuilder: (context, ref, settingsService) => ThemedSwitch(
+            value: settingsService.shakeToReportEnabled,
+            onChanged: (value) async {
+              HapticFeedback.selectionClick();
+              await ref.read(bugReportServiceProvider).setEnabled(value);
+              if (mounted) setState(() {});
+            },
+          ),
         ),
         _SearchableSettingItem(
           icon: Icons.palette,
@@ -1007,6 +975,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     BuildContext context,
     List<_SearchableSettingItem> results,
   ) {
+    final settingsServiceAsync = ref.watch(settingsServiceProvider);
     if (results.isEmpty) {
       return Center(
         child: Column(
@@ -1058,13 +1027,35 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 icon: item.icon,
                 title: item.title,
                 subtitle: item.subtitle,
-                trailing: item.hasSwitch
-                    ? Icon(
-                        Icons.toggle_on_outlined,
-                        color: context.textTertiary,
-                        size: 24,
+                trailing: item.switchBuilder != null
+                    ? settingsServiceAsync.when(
+                        data:
+                            (settingsService) =>
+                                item.switchBuilder!(
+                                  context,
+                                  ref,
+                                  settingsService,
+                                ),
+                        loading:
+                            () => Icon(
+                              Icons.toggle_on_outlined,
+                              color: context.textTertiary,
+                              size: 24,
+                            ),
+                        error:
+                            (_, _) => Icon(
+                              Icons.toggle_on_outlined,
+                              color: context.textTertiary,
+                              size: 24,
+                            ),
                       )
-                    : null,
+                    : item.hasSwitch
+                        ? Icon(
+                            Icons.toggle_on_outlined,
+                            color: context.textTertiary,
+                            size: 24,
+                          )
+                        : null,
                 onTap:
                     item.onTap ??
                     () {
@@ -2782,10 +2773,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               const SizedBox(height: 16),
 
                               // Feedback Section
-                              Container(
-                                key: _feedbackSectionKey,
-                                child: const _SectionHeader(title: 'FEEDBACK'),
-                              ),
+                              const _SectionHeader(title: 'FEEDBACK'),
                               _SettingsTile(
                                 icon: Icons.bug_report_outlined,
                                 title: 'Shake to report a bug',
@@ -4156,6 +4144,7 @@ class _SearchableSettingItem {
   final String section;
   final VoidCallback? onTap;
   final bool hasSwitch;
+  final Widget Function(BuildContext, WidgetRef, SettingsService)? switchBuilder;
 
   const _SearchableSettingItem({
     required this.icon,
@@ -4165,5 +4154,6 @@ class _SearchableSettingItem {
     required this.section,
     this.onTap,
     this.hasSwitch = false,
+    this.switchBuilder,
   });
 }
