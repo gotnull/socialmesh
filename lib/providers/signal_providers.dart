@@ -552,9 +552,9 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
         location: location,
         meshNodeId: myNodeNum,
         imageLocalPath: imageLocalPath,
-        authorSnapshot: profile != null
+        authorSnapshot: profile?.isSynced == true
             ? PostAuthorSnapshot(
-                displayName: profile.displayName,
+                displayName: profile!.displayName,
                 avatarUrl: profile.avatarUrl,
                 isVerified: profile.isVerified,
               )

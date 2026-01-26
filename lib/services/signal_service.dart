@@ -874,9 +874,13 @@ class SignalService {
       }
     }
 
+    final authorId =
+        _currentUserId ??
+        (meshNodeId != null ? 'mesh_${meshNodeId.toRadixString(16)}' : 'anonymous');
+
     final signal = Post(
       id: id,
-      authorId: _currentUserId ?? 'anonymous',
+      authorId: authorId,
       content: content,
       mediaUrls: const [],
       location: location,
