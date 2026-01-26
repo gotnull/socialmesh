@@ -13,6 +13,7 @@
 migrate_working_dir/
 meshtastic-ios/
 .venv/
+.firebase
 
 # Environment files (keep .env.example)
 .env
