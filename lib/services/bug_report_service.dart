@@ -19,12 +19,13 @@ import '../core/navigation.dart';
 import '../features/feedback/report_bug_sheet.dart';
 import '../providers/app_providers.dart';
 
-class BugReportService {
+class BugReportService with WidgetsBindingObserver {
   BugReportService(this.ref);
 
   final Ref ref;
   StreamSubscription<AccelerometerEvent>? _accelerometerSub;
   bool _enabled = true;
+  bool _appActive = true;
   bool _isShowing = false;
   int _shakeCount = 0;
   DateTime _lastShake = DateTime.fromMillisecondsSinceEpoch(0);
@@ -37,11 +38,13 @@ class BugReportService {
   Future<void> initialize() async {
     final settings = await ref.read(settingsServiceProvider.future);
     _enabled = settings.shakeToReportEnabled;
+    WidgetsBinding.instance.addObserver(this);
     AppLogging.bugReport('Initialized (enabled=$_enabled)');
     _startListening();
   }
 
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _accelerometerSub?.cancel();
     _resetTimer?.cancel();
   }
@@ -67,7 +70,7 @@ class BugReportService {
   }
 
   void _handleAccel(AccelerometerEvent event) {
-    if (!_enabled || _isShowing) return;
+    if (!_enabled || _isShowing || !_appActive) return;
     final gX = event.x / 9.81;
     final gY = event.y / 9.81;
     final gZ = event.z / 9.81;
@@ -154,6 +157,21 @@ class BugReportService {
 
     _isShowing = false;
     AppLogging.bugReport('Report flow closed');
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final isActive = state == AppLifecycleState.resumed;
+    if (_appActive == isActive) return;
+    _appActive = isActive;
+    if (!isActive) {
+      _shakeCount = 0;
+      _lastShake = DateTime.fromMillisecondsSinceEpoch(0);
+      _resetTimer?.cancel();
+      AppLogging.bugReport('Shake listener paused (app inactive)');
+    } else {
+      AppLogging.bugReport('Shake listener resumed');
+    }
   }
 
   Future<Uint8List?> _captureScreenshot() async {
