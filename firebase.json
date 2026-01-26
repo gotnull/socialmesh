@@ -91,6 +91,10 @@
         "destination": "/support.html"
       },
       {
+        "source": "/marketing",
+        "destination": "/marketing.html"
+      },
+      {
         "source": "/docs",
         "destination": "/docs.html"
       },

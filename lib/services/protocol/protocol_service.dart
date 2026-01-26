@@ -19,6 +19,7 @@ import '../../generated/meshtastic/portnums.pbenum.dart' as pn;
 import '../../generated/meshtastic/telemetry.pb.dart' as telemetry;
 import 'packet_framer.dart';
 import '../mesh_packet_dedupe_store.dart';
+import '../../utils/text_sanitizer.dart';
 
 /// Mesh signal packet received from PRIVATE_APP portnum.
 ///
@@ -1401,7 +1402,7 @@ class ProtocolService {
   /// Handle text message
   void _handleTextMessage(pb.MeshPacket packet, pb.Data data) {
     try {
-      final text = utf8.decode(data.payload);
+      final text = sanitizeUtf16(utf8.decode(data.payload, allowMalformed: true));
       AppLogging.protocol('Text message from ${packet.from}: $text');
 
       // Look up sender node info to cache in message

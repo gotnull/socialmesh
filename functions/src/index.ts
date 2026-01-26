@@ -254,6 +254,15 @@ function buildBugReportEmailHtml(params: {
 
   const safeDescription = escapeHtml(description).replace(/\n/g, '<br>');
   const safeScreenshot = screenshotUrl ? escapeHtml(screenshotUrl) : null;
+  const safeUserEmail = userEmail ? escapeHtml(userEmail) : null;
+  const safeUserId = userId ? escapeHtml(userId) : null;
+
+  const safeUserEmailDisplay = safeUserEmail
+    ? `<span style="color:#e8edf7;font-weight:600;">${safeUserEmail}</span>`
+    : `<span style="color:#8b93a7;font-style:italic;">Not provided</span>`;
+  const safeUserIdDisplay = safeUserId
+    ? `<span style="color:#e8edf7;font-weight:600;">${safeUserId}</span>`
+    : `<span style="color:#8b93a7;font-style:italic;">Not provided</span>`;
 
   return `
   <div style="margin:0;padding:0;background:#0f1420;color:#e8edf7;font-family:Inter,Arial,sans-serif;">
@@ -269,7 +278,7 @@ function buildBugReportEmailHtml(params: {
             </tr>
             <tr>
               <td style="background:#151b2b;border:1px solid #2a3245;border-radius:16px;padding:20px;">
-                <div style="display:inline-block;padding:6px 12px;border-radius:999px;background:linear-gradient(90deg,#ff2d95,#ff6a3d);color:#ffffff;font-size:12px;font-weight:700;letter-spacing:0.4px;text-transform:uppercase;">
+                <div style="display:inline-block;padding:6px 12px;border-radius:999px;background:linear-gradient(90deg,#ff2d95,#ff6a3d);color:#0f1420!important;-webkit-text-fill-color:#0f1420!important;font-size:12px;font-weight:700;letter-spacing:0.4px;text-transform:uppercase;">
                   Report ${reportId}
                 </div>
 
@@ -282,11 +291,11 @@ function buildBugReportEmailHtml(params: {
                   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
                     <tr>
                       <td style="color:#8b93a7;font-size:12px;padding:4px 0;">User</td>
-                      <td style="color:#e8edf7;font-size:12px;padding:4px 0;text-align:right;">${escapeHtml(userEmail)}</td>
+                      <td style="color:#e8edf7;font-size:12px;padding:4px 0;text-align:right;">${safeUserEmailDisplay}</td>
                     </tr>
                     <tr>
                       <td style="color:#8b93a7;font-size:12px;padding:4px 0;">UID</td>
-                      <td style="color:#e8edf7;font-size:12px;padding:4px 0;text-align:right;">${escapeHtml(userId)}</td>
+                      <td style="color:#e8edf7;font-size:12px;padding:4px 0;text-align:right;">${safeUserIdDisplay}</td>
                     </tr>
                     <tr>
                       <td style="color:#8b93a7;font-size:12px;padding:4px 0;">App Version</td>
@@ -306,7 +315,7 @@ function buildBugReportEmailHtml(params: {
                 ${safeScreenshot
       ? `
                 <div style="margin-top:16px;">
-                  <a href="${safeScreenshot}" style="display:inline-block;padding:10px 16px;border-radius:10px;background:linear-gradient(90deg,#ff2d95,#ff6a3d);color:#ffffff;text-decoration:none;font-weight:600;font-size:13px;">
+                  <a href="${safeScreenshot}" style="display:inline-block;padding:10px 16px;border-radius:10px;background:linear-gradient(90deg,#ff2d95,#ff6a3d);color:#0f1420!important;-webkit-text-fill-color:#0f1420!important;text-decoration:none;font-weight:600;font-size:13px;">
                     View screenshot
                   </a>
                 </div>
@@ -2420,6 +2429,44 @@ export const reportBug = onCall({ cors: true }, async (request) => {
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
   });
   console.info(`[reportBug] Created report ${reportDoc.id} by ${authEmail || email || 'anonymous'}`);
+
+  // Send a notification email to support (best-effort)
+  (async () => {
+    try {
+      const transport = await getBugReportTransport();
+      const userEmailToShow = authEmail || email || 'Not provided';
+      const userIdToShow = authUid || uid || 'Not provided';
+      const html = buildBugReportEmailHtml({
+        reportId: reportDoc.id,
+        userEmail: userEmailToShow,
+        userId: userIdToShow,
+        appVersion: appVersion || 'Unknown',
+        buildNumber: buildNumber || 'Unknown',
+        platform: platform || 'Unknown',
+        screenshotUrl: screenshotUrl || null,
+        description: description || '',
+      });
+
+      const mailOptions = {
+        from: process.env.IMPROVMX_SMTP_FROM,
+        to: process.env.IMPROVMX_SMTP_TO,
+        subject: `Socialmesh bug report · ${reportDoc.id}`,
+        html,
+      } as unknown as Record<string, unknown>;
+
+      // ignore result but log outcome
+      try {
+        await transport.sendMail(mailOptions as any);
+        console.info(`[reportBug] Notification email sent for report ${reportDoc.id}`);
+      } catch (sendErr) {
+        console.warn('[reportBug] Failed to send notification email:', (sendErr as Error).message || sendErr);
+      }
+
+      try { if (typeof transport.close === 'function') transport.close(); } catch (closeErr) { /* noop */ }
+    } catch (err) {
+      console.warn('[reportBug] Failed to prepare/send notification email:', (err as Error).message || err);
+    }
+  })();
 
   return { success: true, reportId: reportDoc.id };
 });

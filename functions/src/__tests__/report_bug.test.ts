@@ -106,6 +106,7 @@ describe('reportBug callable', () => {
     expect(html).toContain('Report r1');
     expect(html).toContain('&lt;script&gt;alert(1)&lt;/script&gt;');
     expect(html).toContain('View screenshot');
+    expect(html).toContain('uid1');
   });
 
   it('getBugReportTransport should throw if SMTP creds missing', async () => {
@@ -116,7 +117,7 @@ describe('reportBug callable', () => {
     delete process.env.IMPROVMX_SMTP_USER;
     delete process.env.IMPROVMX_SMTP_PASS;
 
-    expect(() => getBugReportTransport()).toThrow('Missing IMPROVMX_SMTP_USER or IMPROVMX_SMTP_PASS');
+    await expect(getBugReportTransport()).rejects.toThrow('Missing IMPROVMX_SMTP_USER or IMPROVMX_SMTP_PASS');
 
     // restore
     process.env.IMPROVMX_SMTP_USER = origUser;

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import '../../models/mesh_models.dart';
 import '../../core/logging.dart';
+import '../../utils/text_sanitizer.dart';
 
 /// Parse push payload into Message if possible. Accepts common key names.
 Message? parsePushMessagePayload(Map<String, dynamic> data) {
@@ -16,7 +17,9 @@ Message? parsePushMessagePayload(Map<String, dynamic> data) {
     final int? channel = data['channel'] != null
         ? int.tryParse('${data['channel']}')
         : null;
-    final String text = (data['text'] ?? data['message'] ?? '') as String;
+    final String text = sanitizeUtf16(
+      (data['text'] ?? data['message'] ?? '') as String,
+    );
     if (text.isEmpty) return null;
 
     // Parse timestamp if available

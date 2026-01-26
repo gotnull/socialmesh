@@ -5,6 +5,7 @@ import '../../core/logging.dart';
 import '../../models/mesh_models.dart';
 import '../../models/canned_response.dart';
 import '../../models/tapback.dart';
+import '../../utils/text_sanitizer.dart';
 
 /// Secure storage service for sensitive data
 class SecureStorageService {
@@ -802,7 +803,7 @@ class MessageStorageService {
       id: json['id'] as String,
       from: json['from'] as int,
       to: json['to'] as int,
-      text: json['text'] as String,
+      text: sanitizeUtf16(json['text'] as String),
       timestamp: DateTime.fromMillisecondsSinceEpoch(json['timestamp'] as int),
       channel: json['channel'] as int?,
       sent: json['sent'] as bool? ?? false,
@@ -810,8 +811,12 @@ class MessageStorageService {
       acked: json['acked'] as bool? ?? false,
       source: _parseMessageSource(json['source'] as String?),
       // Sender info cache
-      senderLongName: json['senderLongName'] as String?,
-      senderShortName: json['senderShortName'] as String?,
+      senderLongName: json['senderLongName'] != null
+          ? sanitizeUtf16(json['senderLongName'] as String)
+          : null,
+      senderShortName: json['senderShortName'] != null
+          ? sanitizeUtf16(json['senderShortName'] as String)
+          : null,
       senderAvatarColor: json['senderAvatarColor'] as int?,
     );
   }
