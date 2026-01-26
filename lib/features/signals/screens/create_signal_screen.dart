@@ -23,6 +23,7 @@ import '../../../providers/social_providers.dart';
 import '../../../providers/connectivity_providers.dart';
 
 import '../../../services/signal_service.dart';
+import '../../settings/account_subscriptions_screen.dart';
 import '../../../utils/snackbar.dart';
 import '../widgets/ttl_selector.dart';
 
@@ -1021,39 +1022,64 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
               if (!canUseCloud)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 12),
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: context.card,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: context.border.withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(
-                          Icons.cloud_off,
-                          size: 18,
-                          color: context.textTertiary,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            meshOnlyDebug
-                                ? 'Mesh-only debug mode enabled. Signals use local DB + mesh only.'
-                                : connectivity.hasInternet
-                                    ? 'Sign in to enable images and cloud features. Text and location still broadcast over mesh.'
-                                    : 'Offline: images and cloud features are unavailable. Text and location still broadcast over mesh.',
-                            style: TextStyle(
-                              color: context.textTertiary,
-                              fontSize: 12,
-                            ),
+                  child: Builder(
+                    builder: (context) {
+                      final canTapToSubscribe =
+                          !meshOnlyDebug && connectivity.hasInternet;
+                      final banner = Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: context.card,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: context.border.withValues(alpha: 0.3),
                           ),
                         ),
-                      ],
-                    ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              Icons.cloud_off,
+                              size: 18,
+                              color: context.textTertiary,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                meshOnlyDebug
+                                    ? 'Mesh-only debug mode enabled. Signals use local DB + mesh only.'
+                                    : connectivity.hasInternet
+                                        ? 'Sign in to enable images and cloud features. Text and location still broadcast over mesh.'
+                                        : 'Offline: images and cloud features are unavailable. Text and location still broadcast over mesh.',
+                                style: TextStyle(
+                                  color: context.textTertiary,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+
+                      if (!canTapToSubscribe) {
+                        return banner;
+                      }
+
+                      return Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(8),
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const AccountSubscriptionsScreen(),
+                              ),
+                            );
+                          },
+                          child: banner,
+                        ),
+                      );
+                    },
                   ),
                 ),
 
