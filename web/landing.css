@@ -791,32 +791,6 @@ section {
   );
 }
 
-.presence-grid {
-  display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
-  gap: 48px;
-  align-items: center;
-}
-
-.presence-content h3 {
-  font-size: 28px;
-  margin-bottom: 12px;
-  color: var(--text-primary);
-}
-
-.presence-content p {
-  color: var(--text-muted);
-  font-size: 16px;
-  line-height: 1.7;
-  margin-bottom: 24px;
-}
-
-.presence-list {
-  list-style: none;
-  display: grid;
-  gap: 12px;
-  margin-bottom: 20px;
-}
 
 .presence-pill-grid {
   display: grid;
@@ -835,34 +809,6 @@ section {
   border: 1px solid var(--border-color);
   color: var(--text-secondary);
   font-size: 13px;
-}
-
-.presence-info {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  margin: 12px 0 18px;
-}
-
-.presence-info-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
-  border-radius: 14px;
-  background: linear-gradient(
-    135deg,
-    rgba(233, 30, 140, 0.12),
-    rgba(39, 47, 60, 0.4)
-  );
-  border: 1px solid var(--border-color);
-  color: var(--text-secondary);
-  font-size: 13px;
-}
-
-.presence-info-item .material-icons {
-  font-size: 18px;
-  color: var(--accent-magenta);
 }
 
 .presence-dot {
@@ -894,88 +840,59 @@ section {
   box-shadow: 0 0 12px rgba(142, 142, 147, 0.4);
 }
 
-.presence-note {
-  padding: 14px 16px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  color: var(--text-secondary);
-  font-size: 13px;
-}
-
-.presence-media {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.presence-media-grid {
+.presence-visual-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
 }
 
-.presence-shot {
+.presence-visual-card {
   background: var(--bg-card);
+  border-radius: 20px;
   border: 1px solid var(--border-color);
-  border-radius: 16px;
-  position: relative;
   overflow: hidden;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+  box-shadow:
+    0 30px 60px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+    0 0 50px rgba(139, 92, 246, 0.15);
 }
 
-.presence-shot-image {
-  width: 100%;
-  height: auto;
-  display: block;
-}
-
-.presence-img-wrapper {
+.presence-visual-img {
   position: relative;
   overflow: hidden;
 }
 
-.presence-img-wrapper::after {
+.presence-visual-img::after {
   content: '';
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 80px;
+  height: 70px;
   background: linear-gradient(
     to bottom,
     transparent 0%,
-    rgba(41, 48, 61, 0.4) 60%,
+    rgba(41, 48, 61, 0.35) 60%,
     var(--bg-card) 100%
   );
   pointer-events: none;
 }
 
-
-.presence-shot-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-tertiary);
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  height: 100%;
+.presence-visual-img img {
+  width: 100%;
+  height: auto;
+  display: block;
 }
 
-.presence-media-caption {
-  color: var(--text-tertiary);
-  font-size: 12px;
-  text-align: right;
-}
-
-.presence-caption {
+.presence-visual-caption {
   padding: 12px 14px 14px;
   border-top: 1px solid var(--border-color);
   color: var(--text-secondary);
   font-size: 13px;
   line-height: 1.5;
 }
+
 
 .feature-card {
   background: var(--bg-card);
@@ -1224,6 +1141,13 @@ section {
   position: relative;
   display: flex;
   justify-content: center;
+}
+
+.premium-feature-visual.presence-visual-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
 }
 
 .premium-feature-visual img {
@@ -1765,12 +1689,7 @@ footer::before {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .presence-grid {
-    grid-template-columns: 1fr;
-    gap: 32px;
-  }
-
-  .presence-info {
+  .presence-visual-grid {
     grid-template-columns: 1fr;
   }
 
@@ -1835,11 +1754,11 @@ footer::before {
     grid-template-columns: 1fr;
   }
 
-  .presence-media-grid {
+  .presence-pill-grid {
     grid-template-columns: 1fr;
   }
 
-  .presence-pill-grid {
+  .presence-visual-grid {
     grid-template-columns: 1fr;
   }
 
