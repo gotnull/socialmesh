@@ -376,7 +376,22 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
       AppLogging.signals(
         '[CreateSignal] Uploading for validation: signal_images_temp/$fileName',
       );
-      await ref.putFile(imageFile, metadata);
+
+      // Debug logging: current auth user and storage bucket
+      final debugUser = FirebaseAuth.instance.currentUser;
+      AppLogging.signals('[CreateSignal] currentUser uid=${debugUser?.uid}');
+      AppLogging.signals(
+        '[CreateSignal] storageBucket=${FirebaseStorage.instance.app.options.storageBucket}',
+      );
+
+      try {
+        await ref.putFile(imageFile, metadata);
+      } on FirebaseException catch (e) {
+        AppLogging.signals(
+          '[CreateSignal] FirebaseStorage error during putFile: code=${e.code}, message=${e.message}',
+        );
+        rethrow;
+      }
 
       // Listen for moderation result from Firestore
       final moderationDocId = 'post_${fileName.replaceAll('.jpg', '')}';

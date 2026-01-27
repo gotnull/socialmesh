@@ -194,6 +194,14 @@ async function analyzeImageWithVision(imageUrl: string): Promise<ModerationResul
     const [result] = await client.safeSearchDetection(imageUrl);
     const safeSearch = result.safeSearchAnnotation;
 
+    // Log raw Vision response and the SafeSearch annotation for debugging
+    try {
+      console.log(`Vision API raw result for ${imageUrl}: ${JSON.stringify(result, null, 2)}`);
+      console.log(`Vision safeSearchAnnotation for ${imageUrl}: ${JSON.stringify(safeSearch, null, 2)}`);
+    } catch (logErr) {
+      console.log('Failed to stringify Vision API result for logging', logErr);
+    }
+
     if (!safeSearch) {
       return {
         passed: true,
@@ -775,6 +783,13 @@ export const moderateUploadedMedia = onObjectFinalized(
     console.log(`Analyzing ${moderationContentType}: ${contentId} from ${gcsUri}`);
     const result = await analyzeImageWithVision(gcsUri);
 
+    // Log the moderation result so we can inspect why Vision marked or rejected content
+    try {
+      console.log(`Moderation result for ${gcsUri}: ${JSON.stringify(result, null, 2)}`);
+    } catch (logErr) {
+      console.log('Failed to stringify moderation result for logging', logErr);
+    }
+
     // Get a public URL for storing in queue (for admin preview)
     const bucket = admin.storage().bucket(event.data.bucket);
     const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${event.data.bucket}/o/${encodeURIComponent(filePath)}?alt=media`;
@@ -790,14 +805,19 @@ export const moderateUploadedMedia = onObjectFinalized(
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
+    // Immediately delete any uploaded file that is not approved.
+    if (result.action !== 'approve') {
+      console.log(`Deleting uploaded file ${filePath} due to moderation action=${result.action}`);
+      await bucket.file(filePath).delete().catch((e) => {
+        console.error(`Failed to delete flagged file ${filePath}:`, e);
+      });
+    }
+
     // Take action based on result
     if (result.action === 'reject') {
       console.log(`Auto-rejecting ${moderationContentType} ${contentId}${isTempValidation ? ' (temp validation)' : ''}`);
 
-      // Delete the uploaded file
-      await bucket.file(filePath).delete();
-
-      // For temp validation, just delete the file - don't remove content or record strike
+      // For temp validation, file already deleted above - don't remove content or record strike
       if (!isTempValidation) {
         // Remove the content document
         await removeViolatingContent(moderationContentType, contentId, false);
@@ -815,7 +835,7 @@ export const moderateUploadedMedia = onObjectFinalized(
       if (!isTempValidation) {
         console.log(`Flagging ${moderationContentType} ${contentId} for review`);
 
-        // Add to review queue
+        // Add to review queue (file has been deleted to avoid retention of flagged content)
         await addToModerationQueue(
           moderationContentType,
           contentId,
@@ -825,7 +845,7 @@ export const moderateUploadedMedia = onObjectFinalized(
         );
       }
     } else if (result.action === 'flag') {
-      // Flag but don't remove - just log
+      // Flag but don't remove - already deleted above; just log
       console.log(`Flagged ${moderationContentType} ${contentId}: ${result.details}`);
     }
   },
@@ -1017,31 +1037,38 @@ export const validateImages = onCall(
         console.log(`Validating image: ${gcsUri}`);
         const result = await analyzeImageWithVision(gcsUri);
 
-        if (result.action === 'reject') {
-          console.log(`Image rejected: ${gcsUri} - ${result.details}`);
+        if (result.action !== 'approve') {
+          console.log(`Image not approved: ${gcsUri} - action=${result.action} - ${result.details}`);
 
-          // Delete the violating image
+          // Delete the violating image (no exceptions)
           const bucket = admin.storage().bucket();
           await bucket.file(filePath).delete().catch((e) => {
             console.error(`Failed to delete image ${filePath}:`, e);
           });
 
-          // Record strike
-          await recordUserStrike(
-            userId,
-            `Image policy violation: ${result.details}`,
-            filePath,
-            'image',
-          );
+          // Record strike for explicit rejects; for reviews/flags we still record a notice
+          if (result.action === 'reject') {
+            await recordUserStrike(
+              userId,
+              `Image policy violation: ${result.details}`,
+              filePath,
+              'image',
+            );
+          } else {
+            // Log as a lower-severity strike/notice
+            await recordUserStrike(
+              userId,
+              `Image flagged for review: ${result.details}`,
+              filePath,
+              'image',
+            ).catch(() => { });
+          }
 
           return {
             passed: false,
             message: 'Image contains inappropriate content and has been removed.',
             details: result.details,
           };
-        } else if (result.action === 'review') {
-          console.log(`Image flagged for review: ${gcsUri} - ${result.details}`);
-          // Allow but log for review
         }
       } catch (error) {
         console.error(`Error validating image ${url}:`, error);
