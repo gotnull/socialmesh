@@ -158,7 +158,7 @@ Please include:
 
 Found a bug? Help us improve by reporting it:
 
-**Email**: bugs@socialmesh.app
+**Email**: bug@socialmesh.app
 
 Please include:
 - Steps to reproduce the issue
