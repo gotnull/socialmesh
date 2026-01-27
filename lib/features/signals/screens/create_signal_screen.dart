@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:async';
+import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -41,7 +42,8 @@ class CreateSignalScreen extends ConsumerStatefulWidget {
   ConsumerState<CreateSignalScreen> createState() => _CreateSignalScreenState();
 }
 
-class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
+class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
+    with SingleTickerProviderStateMixin {
   final TextEditingController _contentController = TextEditingController();
   final FocusNode _contentFocusNode = FocusNode();
 
@@ -49,17 +51,34 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
   bool _isSubmitting = false;
   bool _isLoadingLocation = false;
   bool _isValidatingImage = false;
+  bool _cloudBannerHighlight = false;
   int _ttlMinutes = SignalTTL.defaultTTL;
   PostLocation? _location;
   String? _imageLocalPath;
 
   final ImagePicker _imagePicker = ImagePicker();
+  late final AnimationController _bannerShakeController;
+  late final Animation<double> _bannerShakeAnimation;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _contentFocusNode.requestFocus();
+    });
+    _bannerShakeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 650),
+    );
+    _bannerShakeAnimation = CurvedAnimation(
+      parent: _bannerShakeController,
+      curve: Curves.easeInOut,
+    );
+    _bannerShakeController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        if (mounted) setState(() => _cloudBannerHighlight = false);
+        _bannerShakeController.reset();
+      }
     });
   }
 
@@ -68,6 +87,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
     _contentController.dispose();
     _contentFocusNode.dispose();
     super.dispose();
+    _bannerShakeController.dispose();
   }
 
   /// Check basic content requirements (text not empty, within length limit)
@@ -1009,10 +1029,22 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
                   _ActionButton(
                     icon: Icons.image_outlined,
                     label: 'Image',
-                    onTap:
-                        (canUseCloud && !_isSubmitting && !_isValidatingImage)
-                        ? _pickImage
-                        : null,
+                    onTap: () {
+                      if (canUseCloud &&
+                          !_isSubmitting &&
+                          !_isValidatingImage) {
+                        _pickImage();
+                        return;
+                      }
+
+                      // If cloud features unavailable but we have internet (signed out),
+                      // highlight the cloud banner to draw attention and show a prompt.
+                      if (!canUseCloud && connectivity.hasInternet) {
+                        HapticFeedback.mediumImpact();
+                        setState(() => _cloudBannerHighlight = true);
+                        _bannerShakeController.forward(from: 0);
+                      }
+                    },
                     isSelected: _imageLocalPath != null,
                     isLoading: _isValidatingImage,
                   ),
@@ -1045,7 +1077,10 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
                           color: context.card,
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: context.border.withValues(alpha: 0.3),
+                            color: _cloudBannerHighlight
+                                ? Colors.red.withOpacity(0.9)
+                                : context.border.withValues(alpha: 0.3),
+                            width: _cloudBannerHighlight ? 2 : 1,
                           ),
                         ),
                         child: Row(
@@ -1074,8 +1109,24 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
                         ),
                       );
 
+                      final animatedBanner = AnimatedBuilder(
+                        animation: _bannerShakeAnimation,
+                        builder: (ctx, child) {
+                          final t = _bannerShakeAnimation.value;
+                          final dx = sin(t * pi * 4) * 8; // shake
+                          return Transform.translate(
+                            offset: Offset(dx, 0),
+                            child: child,
+                          );
+                        },
+                        child: banner,
+                      );
+
                       if (!canTapToSubscribe) {
-                        return banner;
+                        return GestureDetector(
+                          onTap: _dismissKeyboard,
+                          child: animatedBanner,
+                        );
                       }
 
                       return Material(
@@ -1083,6 +1134,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
                         child: InkWell(
                           borderRadius: BorderRadius.circular(8),
                           onTap: () {
+                            _dismissKeyboard();
                             Navigator.of(context).push(
                               MaterialPageRoute(
                                 builder: (_) =>
@@ -1090,7 +1142,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen> {
                               ),
                             );
                           },
-                          child: banner,
+                          child: animatedBanner,
                         ),
                       );
                     },
