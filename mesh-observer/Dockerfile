@@ -11,9 +11,11 @@ COPY package*.json ./
 # Install ALL dependencies (including dev for building)
 RUN npm ci
 
-# Copy source files
+# Copy source files and proto definitions
 COPY tsconfig.json ./
 COPY src/ ./src/
+# Copy proto definitions so runtime can load them (used by decoder)
+COPY protos/ ./protos/
 
 # Build TypeScript
 RUN npm run build
@@ -35,8 +37,9 @@ RUN npm ci --only=production
 # Create data directory for SQLite database
 RUN mkdir -p /app/data
 
-# Copy built files from builder
+# Copy built files and protos from builder
 COPY --from=builder /app/dist ./dist/
+COPY --from=builder /app/protos ./protos/
 
 # Expose port
 EXPOSE 3001

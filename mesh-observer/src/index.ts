@@ -722,6 +722,9 @@ Authorization: Bearer &lt;firebase_id_token&gt;
   res.type('html').send(html);
 });
 
+// Admin endpoints removed temporarily
+
+
 // Health check endpoint (detailed)
 app.get('/health', (req, res) => {
   const memUsage = process.memoryUsage();

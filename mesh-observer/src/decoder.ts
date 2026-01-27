@@ -72,25 +72,66 @@ export class MeshtasticDecoder {
    */
   private async loadProtos(): Promise<void> {
     try {
-      // Try to load from protos directory
-      const protoPath = path.join(__dirname, '..', 'protos', 'meshtastic');
-      this.root = await protobuf.load([
-        path.join(protoPath, 'mqtt.proto'),
-        path.join(protoPath, 'mesh.proto'),
-        path.join(protoPath, 'portnums.proto'),
-        path.join(protoPath, 'telemetry.proto'),
-      ]);
+      // Try to load from protos directory inside mesh-observer, or fall back to repo root
+      const candidates = [
+        path.join(__dirname, '..', 'protos'),
+        path.join(__dirname, '..', '..', 'protos'),
+      ];
 
-      this.serviceEnvelopeType = this.root.lookupType('meshtastic.ServiceEnvelope');
-      this.meshPacketType = this.root.lookupType('meshtastic.MeshPacket');
-      this.dataType = this.root.lookupType('meshtastic.Data');
-      this.positionType = this.root.lookupType('meshtastic.Position');
-      this.userType = this.root.lookupType('meshtastic.User');
-      this.telemetryType = this.root.lookupType('meshtastic.Telemetry');
-      this.neighborInfoType = this.root.lookupType('meshtastic.NeighborInfo');
-      this.mapReportType = this.root.lookupType('meshtastic.MapReport');
+      const relativeFiles = [
+        path.join('meshtastic', 'mqtt.proto'),
+        path.join('meshtastic', 'mesh.proto'),
+        path.join('meshtastic', 'portnums.proto'),
+        path.join('meshtastic', 'telemetry.proto'),
+      ];
 
-      console.log('Protobuf definitions loaded successfully');
+      let loaded = false;
+      for (const protoRoot of candidates) {
+        try {
+          const files = relativeFiles.map((r) => path.join(protoRoot, r));
+          // Log files existence before attempting to load
+          const exists = files.map((f) => ({ f, ok: require('fs').existsSync(f) }));
+          console.log('Attempting to load protos from root', protoRoot, 'files:', exists);
+
+          // Use a dedicated Root with custom resolvePath so imports referencing 'meshtastic/...' resolve correctly
+          const rootObj = new protobuf.Root();
+          rootObj.resolvePath = function (origin: string, target: string) {
+            // If import starts with meshtastic/, load from the proto root directly
+            if (target.startsWith('meshtastic/')) {
+              return path.join(protoRoot, target);
+            }
+            // Fallback to default resolution
+            try {
+              return protobuf.util.path.resolve(path.dirname(origin), target);
+            } catch (e) {
+              return target;
+            }
+          };
+          await rootObj.load(files, { keepCase: true });
+          rootObj.resolveAll();
+          this.root = rootObj;
+
+          this.serviceEnvelopeType = this.root.lookupType('meshtastic.ServiceEnvelope');
+          this.meshPacketType = this.root.lookupType('meshtastic.MeshPacket');
+          this.dataType = this.root.lookupType('meshtastic.Data');
+          this.positionType = this.root.lookupType('meshtastic.Position');
+          this.userType = this.root.lookupType('meshtastic.User');
+          this.telemetryType = this.root.lookupType('meshtastic.Telemetry');
+          this.neighborInfoType = this.root.lookupType('meshtastic.NeighborInfo');
+          this.mapReportType = this.root.lookupType('meshtastic.MapReport');
+
+          console.log('Protobuf definitions loaded successfully from', protoRoot);
+          loaded = true;
+          break;
+        } catch (e) {
+          console.warn('Failed to load protos from', protoRoot, 'error:', (e && (e as Error).message) || e);
+          // try next candidate
+        }
+      }
+
+      if (!loaded) {
+        throw new Error('No proto files found in candidates: ' + candidates.join(', '));
+      }
     } catch (err) {
       console.warn('Failed to load protobuf definitions, using manual parsing:', err);
       // Will fall back to manual parsing
