@@ -2,7 +2,7 @@ name: socialmesh
 description: "Socialmesh - Meshtastic companion app with BLE and USB serial support."
 publish_to: 'none'
 
-version: 1.11.0+74
+version: 1.11.0+76
 
 environment:
   sdk: ^3.10.0

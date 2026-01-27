@@ -1072,7 +1072,7 @@ class HelpContent {
   static final HelpTopic offlineMapsOverview = HelpTopic(
     id: 'offline_maps_overview',
     title: 'Offline Maps',
-    description: 'Download maps for offline use',
+    description: 'Map display settings and controls',
     icon: Icons.download,
     category: catDevice,
     priority: 18,

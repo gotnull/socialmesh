@@ -1,13 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:socialmesh/features/signals/screens/create_signal_screen.dart';
+import 'package:socialmesh/models/mesh_models.dart';
+import 'package:socialmesh/providers/app_providers.dart';
 import 'package:socialmesh/providers/connectivity_providers.dart';
 import 'package:socialmesh/providers/auth_providers.dart';
 import 'package:socialmesh/providers/connection_providers.dart';
 
+class _TestNodesNotifier extends NodesNotifier {
+  _TestNodesNotifier(this._nodes);
+
+  final Map<int, MeshNode> _nodes;
+
+  @override
+  Map<int, MeshNode> build() => _nodes;
+}
+
+class _TestMyNodeNumNotifier extends MyNodeNumNotifier {
+  _TestMyNodeNumNotifier(this._nodeNum);
+
+  final int? _nodeNum;
+
+  @override
+  int? build() => _nodeNum;
+}
+
 void main() {
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
+
   testWidgets('Offline: image disabled and offline banner shown', (
     tester,
   ) async {
@@ -15,6 +40,12 @@ void main() {
       overrides: [
         isSignedInProvider.overrideWithValue(true),
         isDeviceConnectedProvider.overrideWithValue(true),
+        myNodeNumProvider.overrideWith(() => _TestMyNodeNumNotifier(1)),
+        nodesProvider.overrideWith(
+          () => _TestNodesNotifier({
+            1: MeshNode(nodeNum: 1, latitude: 1.0, longitude: 1.0),
+          }),
+        ),
       ],
     );
 
@@ -27,15 +58,15 @@ void main() {
       ),
     );
 
-    await tester.pumpAndSettle();
+    await tester.pump();
 
     // Ensure notifier is online so cloud features are available, then go offline
     connNotifier.setOnline(true);
-    await tester.pumpAndSettle();
+    await tester.pump();
 
     // Now simulate going offline
     connNotifier.setOnline(false);
-    await tester.pumpAndSettle();
+    await tester.pump();
 
     // Image action should be present and offline banner visible
     final imageFinder = find.text('Image');

@@ -59,7 +59,6 @@ import 'detection_sensor_config_screen.dart';
 import 'external_notification_config_screen.dart';
 import 'account_subscriptions_screen.dart';
 import 'linked_devices_screen.dart';
-import '../map/offline_maps_screen.dart';
 import 'data_export_screen.dart';
 import '../device/serial_config_screen.dart';
 import '../device/gps_status_screen.dart';
@@ -435,17 +434,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           subtitle: 'Maximum messages to keep',
           keywords: ['history', 'limit', 'storage', 'message', 'keep'],
           section: 'DATA & STORAGE',
-        ),
-        _SearchableSettingItem(
-          icon: Icons.map_outlined,
-          title: 'Offline maps',
-          subtitle: 'Download maps for offline use',
-          keywords: ['map', 'offline', 'download', 'cache'],
-          section: 'DATA & STORAGE',
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const OfflineMapsScreen()),
-          ),
         ),
         _SearchableSettingItem(
           icon: Icons.ios_share,

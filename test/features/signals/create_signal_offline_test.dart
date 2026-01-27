@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:socialmesh/providers/connectivity_providers.dart';
 import 'package:socialmesh/providers/auth_providers.dart';
@@ -49,6 +50,10 @@ class FakeSignalService extends SignalService {
 void main() {
   // Ensure bindings initialized for any WidgetsBinding usage in service code
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
 
   test('canUseCloudFeatures logic - online & signed in -> true', () async {
     final container = ProviderContainer(

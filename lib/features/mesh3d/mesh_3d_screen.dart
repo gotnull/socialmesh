@@ -16,7 +16,6 @@ import '../../models/presence_confidence.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/presence_providers.dart';
 import '../../utils/presence_utils.dart';
-import '../ar/ar_radar_screen.dart';
 
 /// View modes for the 3D mesh visualization
 enum Mesh3DViewMode {
@@ -312,11 +311,6 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
                     setState(() => _showLabels = !_showLabels);
                   case 'rotate':
                     _toggleAutoRotate();
-                  case 'radar':
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const ARRadarScreen()),
-                    );
                   case 'help':
                     ref
                         .read(helpProvider.notifier)
@@ -364,15 +358,6 @@ class _Mesh3DScreenState extends ConsumerState<Mesh3DScreen>
                   child: ListTile(
                     leading: const Icon(Icons.rotate_right),
                     title: Text(_autoRotate ? 'Stop Rotation' : 'Auto Rotate'),
-                    contentPadding: EdgeInsets.zero,
-                    visualDensity: VisualDensity.compact,
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: 'radar',
-                  child: ListTile(
-                    leading: Icon(Icons.radar),
-                    title: Text('AR Node Radar'),
                     contentPadding: EdgeInsets.zero,
                     visualDensity: VisualDensity.compact,
                   ),
