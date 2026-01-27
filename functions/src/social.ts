@@ -454,6 +454,28 @@ export const onPostDeleted = onDocumentDeleted(
     }
 
     // Get all followers to remove from their feeds (social posts only)
+    // Ensure no residual moderation or temp records remain for this signal.
+    try {
+      // Delete any content_moderation document for this signal
+      const modDocId = `post_${postId}`;
+      await db.collection('content_moderation').doc(modDocId).delete().catch(() => { });
+
+      // Delete any moderation_queue items referencing this contentId
+      const queueSnap = await db.collection('moderation_queue')
+        .where('contentId', '==', postId)
+        .get();
+      for (const doc of queueSnap.docs) {
+        await doc.ref.delete().catch(() => { });
+      }
+
+      // Delete any temp_uploads or temp signal images referencing this id (best-effort)
+      // Try to delete possible temp path entries: signal_images_temp/<filename> may reference postId in filename
+      // We won't attempt wildcard deletes on GCS here; main storage deletion above removes the image object.
+    } catch (err) {
+      console.warn(`Failed to fully purge moderation records for signal ${postId}:`, err);
+    }
+
+    return;
     const followersSnap = await db.collection('follows')
       .where('followeeId', '==', authorId)
       .get();
