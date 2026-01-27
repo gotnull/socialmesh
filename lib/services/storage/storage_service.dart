@@ -6,6 +6,7 @@ import '../../models/mesh_models.dart';
 import '../../models/canned_response.dart';
 import '../../models/tapback.dart';
 import '../../utils/text_sanitizer.dart';
+import '../../utils/location_privacy.dart';
 
 /// Secure storage service for sensitive data
 class SecureStorageService {
@@ -98,6 +99,11 @@ class SettingsService {
       throw Exception('SettingsService not initialized');
     }
     return _prefs!;
+  }
+
+  /// Reload preferences from disk to avoid stale reads.
+  Future<void> reload() async {
+    await _preferences.reload();
   }
 
   // Last connected device
@@ -219,6 +225,16 @@ class SettingsService {
 
   bool get meshOnlyDebugMode =>
       _preferences.getBool('mesh_only_debug_mode') ?? false;
+
+  // Privacy: Signal location approximation radius (meters)
+  Future<void> setSignalLocationRadiusMeters(int meters) async {
+    final normalized = LocationPrivacy.normalizeRadiusMeters(meters);
+    await _preferences.setInt('signal_location_radius_meters', normalized);
+  }
+
+  int get signalLocationRadiusMeters =>
+      _preferences.getInt('signal_location_radius_meters') ??
+      kDefaultSignalLocationRadiusMeters;
 
   // Notification: Vibration
   Future<void> setNotificationVibrationEnabled(bool enabled) async {

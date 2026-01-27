@@ -1046,7 +1046,7 @@ export function generateMapPage(): string {
       </div>
       
       <div class="nav-actions">
-        <a href="/" class="btn btn-secondary">
+        <a href="https://api.socialmesh.app" target="_blank" class="btn btn-secondary">
           <svg class="btn-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
           API
         </a>

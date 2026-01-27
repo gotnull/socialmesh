@@ -7,6 +7,7 @@ import '../core/logging.dart';
 import '../models/social.dart';
 import '../services/protocol/protocol_service.dart';
 import '../services/signal_service.dart';
+import '../utils/location_privacy.dart';
 import 'app_providers.dart';
 import 'auth_providers.dart';
 import 'profile_providers.dart';
@@ -280,9 +281,11 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
 
     PostLocation? location;
     if (packet.latitude != null && packet.longitude != null) {
-      location = PostLocation(
-        latitude: packet.latitude!,
-        longitude: packet.longitude!,
+      final settings = await ref.read(settingsServiceProvider.future);
+      location = LocationPrivacy.coarseFromCoordinates(
+        latitude: packet.latitude,
+        longitude: packet.longitude,
+        radiusMeters: settings.signalLocationRadiusMeters,
       );
     }
 
@@ -532,15 +535,20 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
     final service = ref.read(signalServiceProvider);
     final myNodeNum = ref.read(myNodeNumProvider);
     final profile = ref.read(userProfileProvider).value;
+    final settings = await ref.read(settingsServiceProvider.future);
     final detectedCanUseCloud = ref
         .read(signalConnectivityProvider)
         .canUseCloud;
     final meshOnlyDebug = ref.read(meshOnlyDebugModeProvider);
     final canUseCloud =
         (useCloud ?? detectedCanUseCloud) && !meshOnlyDebug;
+    final safeLocation = LocationPrivacy.coarsenLocation(
+      location,
+      radiusMeters: settings.signalLocationRadiusMeters,
+    );
 
     AppLogging.signals(
-      'Creating new signal: ttl=${ttlMinutes}m, hasLocation=${location != null}, '
+      'Creating new signal: ttl=${ttlMinutes}m, hasLocation=${safeLocation != null}, '
       'hasImage=${imageLocalPath != null}, canUseCloud=$canUseCloud '
       'meshOnlyDebug=$meshOnlyDebug',
     );
@@ -549,7 +557,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
       final signal = await service.createSignal(
         content: content,
         ttlMinutes: ttlMinutes,
-        location: location,
+        location: safeLocation,
         meshNodeId: myNodeNum,
         imageLocalPath: imageLocalPath,
         authorSnapshot: profile?.isSynced == true

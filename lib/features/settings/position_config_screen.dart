@@ -134,6 +134,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
     });
   }
 
+
   int _buildPositionFlags() {
     int flags = 0;
     if (_includeAltitude) flags |= 1;

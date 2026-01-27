@@ -8,8 +8,6 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:photo_manager/photo_manager.dart';
 
@@ -22,9 +20,11 @@ import '../../../providers/app_providers.dart';
 import '../../../providers/signal_providers.dart';
 import '../../../providers/social_providers.dart';
 import '../../../providers/connectivity_providers.dart';
+import '../../../utils/location_privacy.dart';
 
 import '../../../services/signal_service.dart';
 import '../../settings/account_subscriptions_screen.dart';
+import '../../settings/signal_settings_screen.dart';
 import '../../../utils/snackbar.dart';
 import '../widgets/ttl_selector.dart';
 
@@ -532,45 +532,50 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
     setState(() => _isLoadingLocation = true);
 
     try {
-      final permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        final requested = await Geolocator.requestPermission();
-        if (requested == LocationPermission.denied ||
-            requested == LocationPermission.deniedForever) {
-          if (mounted) {
-            showErrorSnackBar(context, 'Location permission denied');
-          }
-          return;
+      final settings = await ref.read(settingsServiceProvider.future);
+      final myNodeNum = ref.read(myNodeNumProvider);
+      if (myNodeNum == null) {
+        if (mounted) {
+          showErrorSnackBar(context, 'No connected device location available');
         }
+        return;
       }
 
-      final position = await Geolocator.getCurrentPosition();
-      String? locationName;
+      final nodes = ref.read(nodesProvider);
+      final myNode = nodes[myNodeNum];
+      final nodeLat = myNode?.latitude;
+      final nodeLon = myNode?.longitude;
 
-      try {
-        final placemarks = await placemarkFromCoordinates(
-          position.latitude,
-          position.longitude,
-        );
-        if (placemarks.isNotEmpty) {
-          final place = placemarks.first;
-          locationName = [
-            place.locality,
-            place.administrativeArea,
-          ].where((e) => e != null && e.isNotEmpty).join(', ');
+      if (nodeLat == null || nodeLon == null) {
+        if (mounted) {
+          showActionSnackBar(
+            context,
+            'Device has no location yet. Enable GPS or set a fixed position.',
+            actionLabel: 'Settings',
+            type: SnackBarType.warning,
+            onAction: () {
+              if (!context.mounted) return;
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const SignalSettingsScreen(),
+                ),
+              );
+            },
+          );
         }
-      } catch (_) {
-        // Geocoding failed, use coordinates
+        return;
       }
+
+      final radiusMeters = settings.signalLocationRadiusMeters;
+      final safeLocation = LocationPrivacy.coarseFromCoordinates(
+        latitude: nodeLat,
+        longitude: nodeLon,
+        radiusMeters: radiusMeters,
+        name: 'Approx. area (~${radiusMeters}m)',
+      );
 
       if (mounted) {
-        setState(() {
-          _location = PostLocation(
-            latitude: position.latitude,
-            longitude: position.longitude,
-            name: locationName,
-          );
-        });
+        setState(() => _location = safeLocation);
       }
     } catch (e) {
       if (mounted) {
@@ -625,8 +630,16 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
   @override
   Widget build(BuildContext context) {
     final myNodeNum = ref.watch(myNodeNumProvider);
+    final nodes = ref.watch(nodesProvider);
+    final myNode = myNodeNum != null ? nodes[myNodeNum] : null;
+    final hasNodeLocation =
+        myNode?.latitude != null && myNode?.longitude != null;
     final connectivity = ref.watch(signalConnectivityProvider);
     final meshOnlyDebug = ref.watch(meshOnlyDebugModeProvider);
+    final settings = ref.watch(settingsServiceProvider).value;
+    final signalRadiusMeters =
+        settings?.signalLocationRadiusMeters ??
+        kDefaultSignalLocationRadiusMeters;
     final canUseCloud = connectivity.canUseCloud && !meshOnlyDebug;
     final isDeviceConnected = connectivity.isBleConnected;
     final canSubmit =
@@ -1052,11 +1065,59 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                   _ActionButton(
                     icon: Icons.location_on_outlined,
                     label: 'Location',
-                    onTap: _isSubmitting || _isLoadingLocation
-                        ? null
-                        : _getLocation,
+                    onTap:
+                        _isSubmitting || _isLoadingLocation || !hasNodeLocation
+                            ? null
+                            : _getLocation,
                     isSelected: _location != null,
                     isLoading: _isLoadingLocation,
+                    isEnabled:
+                        !(_isSubmitting || _isLoadingLocation || !hasNodeLocation),
+                    isWaiting: !hasNodeLocation,
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    tooltip: 'Signal settings',
+                    onPressed: _isSubmitting || !hasNodeLocation
+                        ? null
+                        : () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const SignalSettingsScreen(),
+                              ),
+                            );
+                          },
+                    icon: Icon(
+                      Icons.tune,
+                      color: hasNodeLocation
+                          ? context.accentColor
+                          : context.textTertiary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Icon(
+                      Icons.shield_outlined,
+                      size: 16,
+                      color: context.textTertiary,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'Signal location uses the mesh device position and is '
+                      'rounded to your setting (~${signalRadiusMeters}m).',
+                      style: TextStyle(
+                        color: context.textTertiary,
+                        fontSize: 12,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -1232,6 +1293,8 @@ class _ActionButton extends StatelessWidget {
     required this.onTap,
     this.isSelected = false,
     this.isLoading = false,
+    this.isEnabled = true,
+    this.isWaiting = false,
   });
 
   final IconData icon;
@@ -1239,22 +1302,31 @@ class _ActionButton extends StatelessWidget {
   final VoidCallback? onTap;
   final bool isSelected;
   final bool isLoading;
+  final bool isEnabled;
+  final bool isWaiting;
 
   @override
   Widget build(BuildContext context) {
+    final baseColor = isSelected
+        ? context.accentColor
+        : (isEnabled ? context.textSecondary : context.textTertiary);
+    final backgroundColor = isSelected
+        ? context.accentColor.withValues(alpha: 0.15)
+        : (isEnabled ? context.card : context.card.withValues(alpha: 0.6));
+    final borderColor = isSelected
+        ? context.accentColor.withValues(alpha: 0.5)
+        : (isEnabled
+            ? context.border.withValues(alpha: 0.5)
+            : context.border.withValues(alpha: 0.3));
     return BouncyTap(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected
-              ? context.accentColor.withValues(alpha: 0.15)
-              : context.card,
+          color: backgroundColor,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isSelected
-                ? context.accentColor.withValues(alpha: 0.5)
-                : context.border.withValues(alpha: 0.5),
+            color: borderColor,
           ),
         ),
         child: Row(
@@ -1273,20 +1345,84 @@ class _ActionButton extends StatelessWidget {
               Icon(
                 icon,
                 size: 18,
-                color: isSelected ? context.accentColor : context.textSecondary,
+                color: baseColor,
               ),
             const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? context.accentColor : context.textSecondary,
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
+            if (isWaiting)
+              Row(
+                children: [
+                  Text(
+                    'Waiting',
+                    style: TextStyle(
+                      color: baseColor,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(width: 2),
+                  _AnimatedDots(color: baseColor),
+                ],
+              )
+            else
+              Text(
+                label,
+                style: TextStyle(
+                  color: baseColor,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-            ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _AnimatedDots extends StatefulWidget {
+  const _AnimatedDots({required this.color});
+
+  final Color color;
+
+  @override
+  State<_AnimatedDots> createState() => _AnimatedDotsState();
+}
+
+class _AnimatedDotsState extends State<_AnimatedDots>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final phase = (_controller.value * 3).floor() + 1;
+        final dots = '.' * phase;
+        return Text(
+          dots,
+          style: TextStyle(
+            color: widget.color,
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+          ),
+        );
+      },
     );
   }
 }

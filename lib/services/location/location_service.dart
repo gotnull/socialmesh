@@ -5,8 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import '../protocol/protocol_service.dart';
 
 /// Service that provides phone GPS location and can send it to the mesh.
-/// This mimics the iOS Meshtastic app behavior where the phone provides
-/// GPS coordinates for the connected device when the device doesn't have GPS.
+/// Phone GPS sharing is opt-in only and disabled by default for privacy.
 class LocationService {
   final ProtocolService _protocolService;
   Timer? _locationTimer;
@@ -133,4 +132,5 @@ class LocationService {
   void dispose() {
     stopLocationUpdates();
   }
+
 }

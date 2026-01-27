@@ -1014,12 +1014,19 @@ class AnimatedMorphIcon extends StatelessWidget {
 class ThemedSwitch extends StatelessWidget {
   final bool value;
   final ValueChanged<bool>? onChanged;
+  final Color? activeColor;
 
-  const ThemedSwitch({super.key, required this.value, this.onChanged});
+  const ThemedSwitch({
+    super.key,
+    required this.value,
+    this.onChanged,
+    this.activeColor,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final accentColor = Theme.of(context).colorScheme.primary;
+    final accentColor =
+        activeColor ?? Theme.of(context).colorScheme.primary;
     return Switch.adaptive(
       value: value,
       onChanged: onChanged,
