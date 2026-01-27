@@ -471,6 +471,8 @@ class NodeInfoCard extends ConsumerWidget {
                 ],
               ),
 
+              const SizedBox(height: 12),
+
               // Icon buttons on their own line, bottom right
               Row(
                 children: [
