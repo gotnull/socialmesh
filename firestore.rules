@@ -643,7 +643,10 @@ service cloud.firestore {
 
     // Moderation results - AI scan results (Cloud Functions write, admin read)
     match /content_moderation/{docId} {
-      allow read: if isAdmin();
+      // Allow admins or the content owner (uploader) to read their moderation result.
+      // Also allow the read when the document does not yet exist (so clients can listen for creation).
+      // The moderation documents include `userId` (uploader's UID).
+      allow read: if isAdmin() || (isAuthenticated() && (resource == null || resource.data.userId == request.auth.uid));
       allow write: if false; // Cloud Functions only
     }
 
