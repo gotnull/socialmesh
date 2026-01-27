@@ -209,10 +209,7 @@ class NodeInfoCard extends ConsumerWidget {
               Tooltip(
                 message: kPresenceInferenceTooltip,
                 child: Text(
-                  presenceStatusText(
-                    presence,
-                    lastHeardAge,
-                  ),
+                  presenceStatusText(presence, lastHeardAge),
                   style: TextStyle(
                     color: _presenceColor(context, presence),
                     fontSize: 12,
@@ -411,95 +408,117 @@ class NodeInfoCard extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 12),
-          // Action buttons row
-          Row(
+          // Action buttons: main actions in their own row, icon buttons placed
+          // below and aligned to the bottom-right of the card
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Share and copy buttons
-              if (onShareLocation != null)
-                SizedBox(
-                  width: 40,
-                  height: 40,
-                  child: Material(
-                    color: context.background,
-                    borderRadius: BorderRadius.circular(8),
-                    child: InkWell(
-                      onTap: onShareLocation,
-                      borderRadius: BorderRadius.circular(8),
-                      child: Center(
-                        child: Icon(
-                          Icons.share,
-                          size: 18,
-                          color: context.textSecondary,
+              // Main action buttons (Position / Message) on one line
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 40,
+                      child: OutlinedButton.icon(
+                        onPressed: (!isMyNode && onMessage != null)
+                            ? () => _exchangePositions(context, ref)
+                            : null,
+                        icon: const Icon(Icons.swap_horiz, size: 18),
+                        label: const Text(
+                          'Position',
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: context.accentColor,
+                          side: BorderSide(
+                            color: context.accentColor.withValues(alpha: 0.5),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              if (onShareLocation != null) const SizedBox(width: 8),
-              if (onCopyCoordinates != null)
-                SizedBox(
-                  width: 40,
-                  height: 40,
-                  child: Material(
-                    color: context.background,
-                    borderRadius: BorderRadius.circular(8),
-                    child: InkWell(
-                      onTap: onCopyCoordinates,
-                      borderRadius: BorderRadius.circular(8),
-                      child: Center(
-                        child: Icon(
-                          Icons.copy,
-                          size: 18,
-                          color: context.textSecondary,
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: SizedBox(
+                      height: 40,
+                      child: ElevatedButton.icon(
+                        onPressed: (!isMyNode && onMessage != null)
+                            ? onMessage
+                            : null,
+                        icon: const Icon(Icons.message, size: 18),
+                        label: const Text(
+                          'Message',
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: context.accentColor,
+                          foregroundColor: SemanticColors.onAccent,
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              if (onCopyCoordinates != null) const SizedBox(width: 12),
-              // Main action buttons
-              if (!isMyNode && onMessage != null) ...[
-                Expanded(
-                  child: SizedBox(
-                    height: 40,
-                    child: OutlinedButton.icon(
-                      onPressed: () => _exchangePositions(context, ref),
-                      icon: const Icon(Icons.swap_horiz, size: 18),
-                      label: Text('Position'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: context.accentColor,
-                        side: BorderSide(
-                          color: context.accentColor.withValues(alpha: 0.5),
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        shape: RoundedRectangleBorder(
+                ],
+              ),
+
+              // Icon buttons on their own line, bottom right
+              Row(
+                children: [
+                  const Spacer(),
+                  if (onShareLocation != null)
+                    SizedBox(
+                      width: 40,
+                      height: 40,
+                      child: Material(
+                        color: context.background,
+                        borderRadius: BorderRadius.circular(8),
+                        child: InkWell(
+                          onTap: onShareLocation,
                           borderRadius: BorderRadius.circular(8),
+                          child: Center(
+                            child: Icon(
+                              Icons.share,
+                              size: 18,
+                              color: context.textSecondary,
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: SizedBox(
-                    height: 40,
-                    child: ElevatedButton.icon(
-                      onPressed: onMessage,
-                      icon: const Icon(Icons.message, size: 18),
-                      label: Text('Message'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: context.accentColor,
-                        foregroundColor: SemanticColors.onAccent,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        shape: RoundedRectangleBorder(
+                  if (onShareLocation != null && onCopyCoordinates != null)
+                    const SizedBox(width: 8),
+                  if (onCopyCoordinates != null)
+                    SizedBox(
+                      width: 40,
+                      height: 40,
+                      child: Material(
+                        color: context.background,
+                        borderRadius: BorderRadius.circular(8),
+                        child: InkWell(
+                          onTap: onCopyCoordinates,
                           borderRadius: BorderRadius.circular(8),
+                          child: Center(
+                            child: Icon(
+                              Icons.copy,
+                              size: 18,
+                              color: context.textSecondary,
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ),
-              ] else
-                const Spacer(),
+                ],
+              ),
             ],
           ),
         ],
