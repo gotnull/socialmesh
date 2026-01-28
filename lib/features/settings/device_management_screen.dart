@@ -29,26 +29,28 @@ class _DeviceManagementScreenState
   }) async {
     AppLogging.protocol('DeviceManagement: _executeAction($actionName) started');
     
+    if (!mounted) return;
+    
     if (requiresConfirmation) {
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (dialogContext) => AlertDialog(
-          backgroundColor: context.card,
+          backgroundColor: Theme.of(dialogContext).cardColor,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: BorderSide(color: context.border),
+            side: BorderSide(color: Theme.of(dialogContext).colorScheme.outline),
           ),
           title: Row(
             children: [
               Icon(
                 causesDisconnect ? Icons.warning_amber_rounded : Icons.info_outline,
-                color: causesDisconnect ? AppTheme.warningYellow : context.accentColor,
+                color: causesDisconnect ? AppTheme.warningYellow : Theme.of(dialogContext).colorScheme.primary,
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   actionName,
-                  style: TextStyle(color: context.textPrimary),
+                  style: TextStyle(color: Theme.of(dialogContext).colorScheme.onSurface),
                 ),
               ),
             ],
@@ -56,14 +58,14 @@ class _DeviceManagementScreenState
           content: Text(
             warningMessage ??
                 'Are you sure you want to $actionName? This action cannot be undone.',
-            style: TextStyle(color: context.textSecondary),
+            style: TextStyle(color: Theme.of(dialogContext).colorScheme.onSurfaceVariant),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
               child: Text(
                 'Cancel',
-                style: TextStyle(color: context.textTertiary),
+                style: TextStyle(color: Theme.of(dialogContext).colorScheme.onSurfaceVariant),
               ),
             ),
             FilledButton(
@@ -71,7 +73,7 @@ class _DeviceManagementScreenState
               style: FilledButton.styleFrom(
                 backgroundColor: causesDisconnect 
                     ? AppTheme.warningYellow 
-                    : context.accentColor,
+                    : Theme.of(dialogContext).colorScheme.primary,
                 foregroundColor: causesDisconnect ? Colors.black : Colors.white,
               ),
               child: const Text('Confirm'),
@@ -85,6 +87,8 @@ class _DeviceManagementScreenState
         return;
       }
     }
+
+    if (!mounted) return;
 
     setState(() => _isProcessing = true);
 

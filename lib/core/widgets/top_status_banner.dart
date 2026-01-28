@@ -58,7 +58,7 @@ class TopStatusBanner extends ConsumerWidget {
 
     final topPadding = MediaQuery.of(context).padding.top;
     // Use kToolbarHeight as a single source of truth for common top bar sizes
-    const double kTopStatusContentHeight = kToolbarHeight - 10;
+    const double kTopStatusContentHeight = kToolbarHeight - 2;
     final bannerHeight = topPadding + kTopStatusContentHeight;
 
     // The banner is tappable for navigation but does NOT block interactions below

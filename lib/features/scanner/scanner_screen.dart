@@ -746,13 +746,16 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
           regionState.applyStatus != RegionApplyStatus.failed;
 
       if (shouldShowRegionPicker) {
-        // Navigate to region selection (initial setup mode)
+        // Navigate to region selection
+        // isInitialSetup should ONLY be true for the very first app launch (needsScanner state)
+        // For subsequent devices that need region setup (e.g., after factory reset),
+        // use isInitialSetup: false so the screen pops after region selection
         // Use direct MaterialPageRoute to bypass route guard protection
         // The region save causes device reboot, which momentarily disconnects.
         // Route guard would show "Device Required" screen during this brief disconnect.
         Navigator.of(context).pushReplacement(
           MaterialPageRoute<void>(
-            builder: (context) => const RegionSelectionScreen(isInitialSetup: true),
+            builder: (context) => RegionSelectionScreen(isInitialSetup: isFromNeedsScanner),
           ),
         );
       } else if (needsRegionSetup) {
@@ -1008,7 +1011,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
             // Info banner when saved device wasn't found
             if (_savedDeviceNotFoundName != null)
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(24),
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
                   color: Colors.orange.withValues(alpha: 0.15),

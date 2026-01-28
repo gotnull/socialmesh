@@ -264,12 +264,13 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
       final shouldSkipApply = !widget.isInitialSetup && (alreadyApplied || regionAlreadySet);
       
       if (!shouldSkipApply) {
-        // For non-initial setup (settings change), pop the screen BEFORE applying the region
+        // For non-initial setup (settings change), navigate away from region screen BEFORE applying
         // This ensures the loading overlay and reconnection happen on the nodes screen,
         // where the auto-retry logic can properly reconnect the device after reboot.
         if (!isInitialSetup) {
-          Navigator.of(context).pop(true);
-          // Small delay to let the pop animation start
+          // Navigate to main screen (this works whether screen was pushed or pushReplaced)
+          Navigator.of(context).pushReplacementNamed('/main');
+          // Small delay to let the navigation start
           await Future.delayed(const Duration(milliseconds: 100));
         }
         
@@ -356,23 +357,9 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
   @override
   Widget build(BuildContext context) {
     final regionState = ref.watch(regionConfigProvider);
-    final connectionState = ref.watch(conn.deviceConnectionProvider);
-    final isBusy = regionState.applyStatus == RegionApplyStatus.applying;
     final statusText = regionState.applyStatus == RegionApplyStatus.failed
         ? _errorMessage
         : null;
-
-    // Determine detailed status for the loading overlay
-    String loadingStatusText = 'Setting region...';
-    if (isBusy) {
-      if (!connectionState.isConnected) {
-        loadingStatusText = 'Device rebooting...';
-      } else if (connectionState.state == conn.DevicePairingState.connecting) {
-        loadingStatusText = 'Reconnecting...';
-      } else if (connectionState.state == conn.DevicePairingState.configuring) {
-        loadingStatusText = 'Loading configuration...';
-      }
-    }
 
     return HelpTourController(
       topicId: 'region_selection',
@@ -389,11 +376,9 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                   : IconButton(
                       icon: Icon(
                         Icons.arrow_back,
-                        color:
-                            isBusy ? context.textTertiary : context.textPrimary,
+                        color: context.textPrimary,
                       ),
-                      onPressed:
-                          isBusy ? null : () => Navigator.of(context).pop(),
+                      onPressed: () => Navigator.of(context).pop(),
                     ),
               title: Text(
                 widget.isInitialSetup ? 'Select Your Region' : 'Change Region',
@@ -492,17 +477,14 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
 
                 // Region list
                 Expanded(
-                  child: AbsorbPointer(
-                    absorbing: isBusy,
-                    child: ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: _filteredRegions.length,
-                      itemBuilder: (context, index) {
-                        final region = _filteredRegions[index];
-                        final isSelected = _selectedRegion == region.code;
-                        return _buildRegionTile(region, isSelected);
-                      },
-                    ),
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: _filteredRegions.length,
+                    itemBuilder: (context, index) {
+                      final region = _filteredRegions[index];
+                      final isSelected = _selectedRegion == region.code;
+                      return _buildRegionTile(region, isSelected);
+                    },
                   ),
                 ),
 
@@ -556,7 +538,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                           height: 56,
                           child: ElevatedButton(
                             key: regionSelectionApplyButtonKey,
-                            onPressed: _selectedRegion != null && !isBusy
+                            onPressed: _selectedRegion != null
                                 ? _saveRegion
                                 : null,
                             style: ElevatedButton.styleFrom(
@@ -590,65 +572,6 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
               ],
             ),
           ),
-
-          // Full-screen loading overlay during region apply
-          // Wrap in Material to prevent yellow underline on Text widgets (they need a Material ancestor)
-          if (isBusy)
-            Positioned.fill(
-              child: Material(
-                color: context.background.withValues(alpha: 0.95),
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: context.accentColor.withValues(alpha: 0.15),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: SizedBox(
-                            width: 40,
-                            height: 40,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 3,
-                              color: context.accentColor,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        loadingStatusText,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: context.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Please wait while your device reboots',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: context.textSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'This may take up to 30 seconds',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: context.textTertiary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
         ],
       ),
     );
