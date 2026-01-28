@@ -536,6 +536,12 @@ class ProtocolService {
     AppLogging.debug('🔵 Protocol.start() called - instance: $hashCode');
     AppLogging.protocol('Starting protocol service');
 
+    // Cancel any existing subscriptions to prevent duplicates
+    await _dataSubscription?.cancel();
+    _dataSubscription = null;
+    _transportStateSubscription?.cancel();
+    _transportStateSubscription = null;
+
     // Clear previous connection state
     _channels.clear();
     _nodes.clear();

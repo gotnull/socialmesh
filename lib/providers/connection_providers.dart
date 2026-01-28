@@ -67,8 +67,13 @@ enum PairingInvalidationReason {
 }
 
 /// Detect whether the given exception signals the device removed pairing state.
+/// This happens when:
+/// - iOS: Error code 14 or "Peer removed pairing information" message
+/// - Android: GATT status 5 (GATT_INSUFFICIENT_AUTHENTICATION) during connect/MTU,
+///   or "device is disconnected" during requestMtu which indicates bond mismatch
 bool isPairingInvalidationError(Object error) {
   if (error is FlutterBluePlusException) {
+    // iOS: Error code 14 means peer removed pairing
     final isApplePeerReset =
         error.platform == ErrorPlatform.apple && error.code == 14;
     final hasPeerResetMessage =
@@ -76,9 +81,36 @@ bool isPairingInvalidationError(Object error) {
     if (isApplePeerReset || hasPeerResetMessage) {
       return true;
     }
+
+    // Android: Error code 5 is GATT_INSUFFICIENT_AUTHENTICATION (bond mismatch)
+    // This happens when device expects bonded connection but phone doesn't have bond
+    final isAndroidAuthError =
+        error.platform == ErrorPlatform.android && error.code == 5;
+    if (isAndroidAuthError) {
+      return true;
+    }
   }
+
   final message = error.toString();
-  return message.contains('Peer removed pairing information');
+
+  // iOS specific message
+  if (message.contains('Peer removed pairing information')) {
+    return true;
+  }
+
+  // Android: "device is disconnected" during requestMtu usually means bond mismatch
+  // The device was connected but immediately disconnected during MTU negotiation
+  if (message.contains('requestMtu') && message.contains('device is disconnected')) {
+    return true;
+  }
+
+  // Our custom message when device disconnects during connection setup
+  // This typically happens on Android when there's a bond mismatch
+  if (message.contains('Device disconnected during connection setup')) {
+    return true;
+  }
+
+  return false;
 }
 
 /// Extract the apple-specific error code when available.
@@ -346,6 +378,19 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
 
   /// Initialize protocol after BLE auto-reconnected (without going through _connectToDevice)
   Future<void> _initializeProtocolAfterAutoReconnect() async {
+    // CRITICAL: Only handle auto-reconnect initiated connections
+    // When scanner initiates connection, autoReconnectState is idle/failed
+    // When background auto-reconnect initiates, it sets state to 'connecting'
+    // If we're not in 'connecting' state, scanner is handling the connection
+    final autoReconnectState = ref.read(autoReconnectStateProvider);
+    if (autoReconnectState != AutoReconnectState.connecting) {
+      AppLogging.connection(
+        '🔌 _initializeProtocolAfterAutoReconnect: SKIPPING - not auto-reconnect '
+        '(state=$autoReconnectState), scanner is handling connection',
+      );
+      return;
+    }
+
     AppLogging.connection(
       '🔌 _initializeProtocolAfterAutoReconnect: BLE auto-reconnected, starting protocol...',
     );

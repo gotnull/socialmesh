@@ -362,21 +362,51 @@ class BleTransport implements DeviceTransport {
         _device = BluetoothDevice.fromId(device.id);
       }
 
-      // Connect to device - simple and reliable
+      // Connect to device with longer timeout and no auto MTU
+      // Status 5 disconnects happen when the device drops connection during MTU negotiation
       AppLogging.ble('Initiating BLE connection...');
-      await _device!.connect(license: License.free, autoConnect: false);
+      await _device!.connect(
+        license: License.free,
+        autoConnect: false,
+        mtu: null, // Skip auto MTU request - we'll do it manually with retry
+        timeout: const Duration(seconds: 15), // Give device more time to stabilize
+      );
 
-      // Device is now connected, discover services immediately
-      AppLogging.ble('Connection established, discovering services...');
+      // Longer delay to let connection fully stabilize before ANY operations
+      // The device seems to drop connection if hit too fast after GATT connect
+      await Future.delayed(const Duration(milliseconds: 500));
 
-      // Request MTU size 512 per Meshtastic docs
-      try {
-        await _device!.requestMtu(512);
-      } catch (e) {
-        AppLogging.ble('⚠️ MTU request failed (may not be supported): $e');
+      // Device is now connected, check if still connected before proceeding
+      if (!_device!.isConnected) {
+        throw Exception('Device disconnected during connection setup');
       }
 
+      AppLogging.ble('Connection established, discovering services...');
+
+      // Discover services FIRST - gives connection more time to stabilize
       await _discoverServices();
+
+      // Now request MTU after connection is proven stable
+      // Request MTU size 512 per Meshtastic docs with retry logic
+      for (var attempt = 1; attempt <= 3; attempt++) {
+        try {
+          await _device!.requestMtu(512);
+          AppLogging.ble('✓ MTU request successful');
+          break;
+        } catch (e) {
+          AppLogging.ble('⚠️ MTU request attempt $attempt/3 failed: $e');
+          if (attempt == 3) {
+            // After 3 attempts, continue anyway - some devices don't support MTU negotiation
+            AppLogging.ble('⚠️ Proceeding without MTU negotiation');
+          } else {
+            // Wait before retrying, check if still connected
+            await Future.delayed(const Duration(milliseconds: 300));
+            if (!_device!.isConnected) {
+              throw Exception('Device disconnected during MTU negotiation');
+            }
+          }
+        }
+      }
 
       // Set up listener for disconnection events
       _deviceStateSubscription = _device!.connectionState.listen((state) {

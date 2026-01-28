@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
+import '../../core/widgets/auto_scroll_text.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../scanner/widgets/connecting_animation.dart';
@@ -1159,7 +1160,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
             ],
           ),
           const SizedBox(height: 10),
-          Text(
+          AutoScrollText(
             name,
             style: TextStyle(
               fontWeight: FontWeight.w600,
@@ -1167,17 +1168,19 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
               color: isEnabled ? context.textPrimary : Colors.grey,
             ),
             maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+            velocity: 25,
+            delayBefore: const Duration(seconds: 2),
           ),
           const SizedBox(height: 2),
-          Text(
+          AutoScrollText(
             description,
             style: TextStyle(
               fontSize: 11,
               color: Colors.grey,
             ),
             maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+            velocity: 25,
+            delayBefore: const Duration(seconds: 3),
           ),
         ],
       ),

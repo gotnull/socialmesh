@@ -1989,6 +1989,11 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
   final Set<int> _fallbackLoggedNodes = {};
   final Set<int> _bleStripLoggedNodes = {};
 
+  /// Debounced batch save: collect node updates and flush after a delay
+  final Map<int, MeshNode> _pendingSaves = {};
+  Timer? _saveTimer;
+  static const _saveDebounceDuration = Duration(seconds: 2);
+
   @override
   Map<int, MeshNode> build() {
     final protocol = ref.watch(protocolServiceProvider);
@@ -2006,6 +2011,9 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
     // Set up disposal
     ref.onDispose(() {
       _nodeSubscription?.cancel();
+      // Flush any pending saves before disposing
+      _flushPendingSaves();
+      _saveTimer?.cancel();
     });
 
     // Initialize asynchronously
@@ -2084,6 +2092,26 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
     }
   }
 
+  /// Schedule a node to be saved. Debounces multiple saves into a single batch.
+  void _scheduleSave(MeshNode node) {
+    _pendingSaves[node.nodeNum] = node;
+    _saveTimer?.cancel();
+    _saveTimer = Timer(_saveDebounceDuration, _flushPendingSaves);
+  }
+
+  /// Flush all pending node saves to storage in a single batch operation.
+  void _flushPendingSaves() {
+    _saveTimer?.cancel();
+    _saveTimer = null;
+    if (_pendingSaves.isEmpty || _storage == null) return;
+
+    final nodesToSave = _pendingSaves.values.toList();
+    _pendingSaves.clear();
+
+    AppLogging.debug('Flushing ${nodesToSave.length} pending node saves');
+    _storage!.saveNodes(nodesToSave);
+  }
+
   Future<void> _init(ProtocolService protocol) async {
     // Get persisted favorites/ignored from DeviceFavoritesService
     final favoritesSet = _deviceFavorites?.favorites ?? <int>{};
@@ -2101,7 +2129,7 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
           if (sanitized.longName != node.longName ||
               sanitized.shortName != node.shortName) {
             node = sanitized;
-            _storage?.saveNode(node);
+            _scheduleSave(node);
           }
           // Apply persisted favorites/ignored status from DeviceFavoritesService
           node = node.copyWith(
@@ -2193,8 +2221,8 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
 
       _logFallbackIfNeeded(node);
 
-      // Persist node to storage
-      _storage?.saveNode(node);
+      // Schedule debounced persist to storage (batches multiple updates)
+      _scheduleSave(node);
 
       // Increment new nodes counter if this is a genuinely new node
       if (isNewNode) {
@@ -2232,7 +2260,7 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
     final merged = _mergeIdentity(node, identities[node.nodeNum]);
     state = {...state, node.nodeNum: merged};
     _logFallbackIfNeeded(merged);
-    _storage?.saveNode(merged);
+    _scheduleSave(merged);
   }
 
   void removeNode(int nodeNum) {
