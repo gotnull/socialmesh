@@ -232,142 +232,117 @@ class _AdvisorSpeechBubbleState extends State<AdvisorSpeechBubble>
                     ),
                   ),
 
-                  // Content - Fixed height with scrollable text
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxHeight: 140),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Header indicator
-                          Row(
-                            children: [
-                              Container(
-                                width: 8,
-                                height: 8,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: widget.accentColor,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: widget.accentColor,
-                                      blurRadius: 4,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Ico',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: widget.accentColor,
-                                  letterSpacing: 2,
-                                  fontFamily: AppTheme.fontFamily,
-                                ),
-                              ),
-                              const Spacer(),
-                              // Haptic toggle button
-                              if (widget.onHapticToggle != null)
-                                GestureDetector(
-                                  onTap: () {
-                                    HapticFeedback.lightImpact();
-                                    widget.onHapticToggle?.call(
-                                      !widget.hapticFeedback,
-                                    );
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.all(4),
-                                    child: Icon(
-                                      widget.hapticFeedback
-                                          ? Icons.vibration
-                                          : Icons.mobile_off,
-                                      size: 14,
-                                      color: widget.hapticFeedback
-                                          ? widget.accentColor.withValues(
-                                              alpha: 0.7,
-                                            )
-                                          : Colors.white.withValues(alpha: 0.3),
-                                    ),
+                  // Content - Adaptive height
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Header indicator
+                        Row(
+                          children: [
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: widget.accentColor,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: widget.accentColor,
+                                    blurRadius: 4,
                                   ),
-                                ),
-                              if (widget.onHapticToggle != null)
-                                const SizedBox(width: 8),
-                              // Typing indicator
-                              if (_currentCharIndex < widget.text.length &&
-                                  widget.typewriterEffect)
-                                _buildTypingIndicator(),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-
-                          // Main text with cursor - scrollable
-                          Expanded(
-                            child: ShaderMask(
-                              shaderCallback: (Rect bounds) {
-                                return LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [
-                                    Colors.white,
-                                    Colors.white,
-                                    Colors.white,
-                                    Colors.white.withValues(alpha: 0),
-                                  ],
-                                  stops: const [0.0, 0.7, 0.9, 1.0],
-                                ).createShader(bounds);
-                              },
-                              blendMode: BlendMode.dstIn,
-                              child: SingleChildScrollView(
-                                physics: const BouncingScrollPhysics(),
-                                child: RichText(
-                                  text: TextSpan(
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.white,
-                                      height: 1.5,
-                                      fontFamily: AppTheme.fontFamily,
-                                    ),
-                                    children: [
-                                      TextSpan(text: _displayedText),
-                                      if (_currentCharIndex <
-                                              widget.text.length &&
-                                          widget.typewriterEffect)
-                                        TextSpan(
-                                          text: '▌',
-                                          style: TextStyle(
-                                            color: widget.accentColor
-                                                .withValues(alpha: _glow.value),
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ),
+                                ],
                               ),
                             ),
-                          ),
-
-                          // Subtitle
-                          if (widget.subtitle != null) ...[
-                            SizedBox(height: 8),
+                            const SizedBox(width: 8),
                             Text(
-                              widget.subtitle!,
+                              'Ico',
                               style: TextStyle(
-                                fontSize: 12,
-                                color: context.textTertiary,
-                                fontStyle: FontStyle.italic,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: widget.accentColor,
+                                letterSpacing: 2,
                                 fontFamily: AppTheme.fontFamily,
                               ),
                             ),
+                            const Spacer(),
+                            // Haptic toggle button
+                            if (widget.onHapticToggle != null)
+                              GestureDetector(
+                                onTap: () {
+                                  HapticFeedback.lightImpact();
+                                  widget.onHapticToggle?.call(
+                                    !widget.hapticFeedback,
+                                  );
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  child: Icon(
+                                    widget.hapticFeedback
+                                        ? Icons.vibration
+                                        : Icons.mobile_off,
+                                    size: 14,
+                                    color: widget.hapticFeedback
+                                        ? widget.accentColor.withValues(
+                                            alpha: 0.7,
+                                          )
+                                        : Colors.white.withValues(alpha: 0.3),
+                                  ),
+                                ),
+                              ),
+                            if (widget.onHapticToggle != null)
+                                const SizedBox(width: 8),
+                            // Typing indicator
+                            if (_currentCharIndex < widget.text.length &&
+                                widget.typewriterEffect)
+                              _buildTypingIndicator(),
                           ],
+                        ),
+                        const SizedBox(height: 10),
+
+                        // Main text with cursor - adaptive height
+                        RichText(
+                          text: TextSpan(
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.white,
+                              height: 1.5,
+                              fontFamily: AppTheme.fontFamily,
+                            ),
+                            children: [
+                              TextSpan(text: _displayedText),
+                              if (_currentCharIndex < widget.text.length &&
+                                  widget.typewriterEffect)
+                                TextSpan(
+                                  text: '▌',
+                                  style: TextStyle(
+                                    color: widget.accentColor
+                                        .withValues(alpha: _glow.value),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+
+                        // Subtitle
+                        if (widget.subtitle != null) ...[
+                          SizedBox(height: 8),
+                          Text(
+                            widget.subtitle!,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: context.textTertiary,
+                              fontStyle: FontStyle.italic,
+                              fontFamily: AppTheme.fontFamily,
+                            ),
+                          ),
                         ],
-                      ),
+                      ],
                     ),
                   ),
                 ],

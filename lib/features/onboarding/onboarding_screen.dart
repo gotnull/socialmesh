@@ -53,10 +53,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     _OnboardingPage(
       title: 'Signals',
       description:
-          'Quick broadcasts that ripple through the mesh.\nShare updates, locations, or just say hello.',
+          'Broadcast your presence. Share moments.\nEphemeral by design - they fade when you want them to.',
       advisorText:
-          'Think of Signals as digital flares - they spread fast, fade naturally, and keep everyone in the loop.',
-      mood: MeshBrainMood.approving,
+          "This is what makes us different. Signals ripple through the mesh, carrying text, photos, and location - then vanish. No permanent record. Pure presence.",
+      mood: MeshBrainMood.excited,
+      isSignalsShowcase: true,
       accentColor: AccentColors.pink,
     ),
 
@@ -66,7 +67,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
           'Watch nodes appear and activity unfold.\nThe mesh comes alive on your map.',
       advisorText:
           "I'll show you who's nearby and where the action is - even when connectivity comes and goes.",
-      mood: MeshBrainMood.excited,
+      mood: MeshBrainMood.approving,
       accentColor: AppTheme.graphBlue,
     ),
 
@@ -83,10 +84,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     _OnboardingPage(
       title: 'Automate Everything',
       description:
-          'Set triggers for battery warnings, node alerts,\ngeofences, and more. Let the mesh work for you.',
+          'Set triggers for battery alerts, geofences, message keywords,\nand more. The mesh works while you focus on what matters.',
       advisorText:
-          "Tell me what matters and I'll watch for it - then ping you, send a message, or kick off an action automatically.",
-      mood: MeshBrainMood.idle,
+          "Tell me what to watch for and I'll handle the rest - notifications, auto-replies, sounds, even IFTTT webhooks.",
+      mood: MeshBrainMood.focused,
+      isAutomationsShowcase: true,
       accentColor: AccentColors.yellow,
     ),
 
@@ -297,6 +299,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     SplashMeshConfig meshConfig,
   ) {
     final page = _pages[index];
+    final hasShowcase =
+        page.isWidgetShowcase || page.isSignalsShowcase || page.isAutomationsShowcase;
 
     return AnimatedBuilder(
       animation: _pageController,
@@ -320,16 +324,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
               ..scaleByDouble(scaleValue, scaleValue, 1.0, 1.0),
             alignment: Alignment.center,
             child: Column(
-              mainAxisAlignment: page.isWidgetShowcase
+              mainAxisAlignment: hasShowcase
                   ? MainAxisAlignment.start
                   : MainAxisAlignment.center,
               children: [
-                // Extra top spacing for non-widget pages to push content down
-                if (!page.isWidgetShowcase) const SizedBox(height: 20),
+                // Extra top spacing for non-showcase pages to push content down
+                if (!hasShowcase) const SizedBox(height: 20),
 
                 // Mesh Brain Advisor - uses global config for line/node sizes
                 MeshNodeBrain(
-                  size: page.isWidgetShowcase ? 80 : 100,
+                  size: hasShowcase ? 80 : 100,
                   mood: _brainMood,
                   colors: [
                     accentColor,
@@ -352,7 +356,24 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   onTypingComplete: _onSpeechComplete,
                 ),
 
-                SizedBox(height: page.isWidgetShowcase ? 12 : 24),
+                SizedBox(height: hasShowcase ? 12 : 24),
+
+                // Automations showcase (if applicable)
+                if (page.isAutomationsShowcase) ...[                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: _buildAutomationsShowcase(page),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+
+                // Signals showcase (if applicable)
+                if (page.isSignalsShowcase) ...[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: _buildSignalsShowcase(page),
+                  ),
+                  const SizedBox(height: 12),
+                ],
 
                 // Widget showcase (if applicable)
                 if (page.isWidgetShowcase) ...[
@@ -366,8 +387,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                 // Title and description
                 _buildTitleSection(page),
 
-                // Extra bottom spacing for non-widget pages
-                if (!page.isWidgetShowcase) const SizedBox(height: 40),
+                // Extra bottom spacing for non-showcase pages
+                if (!hasShowcase) const SizedBox(height: 40),
               ],
             ),
           ),
@@ -518,6 +539,477 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildSignalsShowcase(_OnboardingPage page) {
+    return AnimatedBuilder(
+      animation: _pulseController,
+      builder: (context, child) {
+        final glowIntensity = 0.25 + (_pulseController.value * 0.2);
+
+        return SizedBox(
+          height: 160,
+          child: ShaderMask(
+            shaderCallback: (Rect bounds) {
+              return LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [
+                  Colors.transparent,
+                  Colors.white,
+                  Colors.white,
+                  Colors.transparent,
+                ],
+                stops: const [0.0, 0.05, 0.9, 1.0],
+              ).createShader(bounds);
+            },
+            blendMode: BlendMode.dstIn,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              children: [
+                _buildCompactSignalCard(
+                  name: 'Sarah',
+                  content: 'Beautiful sunset from the ridge!',
+                  hasImage: true,
+                  ttlMinutes: 23,
+                  hops: 1,
+                  color: AccentColors.pink,
+                  glowIntensity: glowIntensity,
+                  isHighlighted: true,
+                ),
+                const SizedBox(width: 10),
+                _buildCompactSignalCard(
+                  name: 'Mike',
+                  content: 'Base camp ready. Signal check!',
+                  hasLocation: true,
+                  ttlMinutes: 45,
+                  hops: 0,
+                  color: AccentColors.cyan,
+                  glowIntensity: glowIntensity,
+                ),
+                const SizedBox(width: 10),
+                _buildCompactSignalCard(
+                  name: 'Alex',
+                  content: 'On my way, ETA 15 min',
+                  ttlMinutes: 4,
+                  hops: 2,
+                  color: AccentColors.yellow,
+                  glowIntensity: glowIntensity,
+                  isFading: true,
+                ),
+                const SizedBox(width: 10),
+                _buildCompactSignalCard(
+                  name: 'Trail Cam',
+                  content: 'Motion detected at waypoint',
+                  hasImage: true,
+                  ttlMinutes: 58,
+                  hops: 3,
+                  color: AccentColors.green,
+                  glowIntensity: glowIntensity,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCompactSignalCard({
+    required String name,
+    required String content,
+    required int ttlMinutes,
+    required int hops,
+    required Color color,
+    required double glowIntensity,
+    bool hasImage = false,
+    bool hasLocation = false,
+    bool isHighlighted = false,
+    bool isFading = false,
+  }) {
+    final opacity = isFading ? 0.6 : 1.0;
+
+    return Opacity(
+      opacity: opacity,
+      child: Container(
+        width: 150,
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: context.card,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isHighlighted
+                ? color.withValues(alpha: 0.5)
+                : context.border.withValues(alpha: 0.3),
+            width: isHighlighted ? 1.5 : 1,
+          ),
+          boxShadow: isHighlighted
+              ? [
+                  BoxShadow(
+                    color: color.withValues(alpha: glowIntensity * 0.5),
+                    blurRadius: 12,
+                    spreadRadius: 1,
+                  ),
+                ]
+              : null,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header row
+            Row(
+              children: [
+                Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [color, color.withValues(alpha: 0.7)],
+                    ),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Center(
+                    child: Text(
+                      name[0],
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    name,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (isHighlighted) _buildMiniPulse(color),
+              ],
+            ),
+            const SizedBox(height: 8),
+            // Content
+            Text(
+              content,
+              style: TextStyle(
+                color: context.textPrimary.withValues(alpha: 0.9),
+                fontSize: 11,
+                height: 1.3,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const Spacer(),
+            // Footer with image/location indicator and TTL
+            Row(
+              children: [
+                if (hasImage) ...[
+                  Icon(
+                    Icons.image_rounded,
+                    size: 12,
+                    color: color.withValues(alpha: 0.8),
+                  ),
+                  const SizedBox(width: 4),
+                ],
+                if (hasLocation) ...[
+                  Icon(
+                    Icons.location_on,
+                    size: 12,
+                    color: AccentColors.green,
+                  ),
+                  const SizedBox(width: 4),
+                ],
+                const Spacer(),
+                Icon(
+                  Icons.timer_outlined,
+                  size: 10,
+                  color: isFading ? AppTheme.errorRed : context.textTertiary,
+                ),
+                const SizedBox(width: 2),
+                Text(
+                  '${ttlMinutes}m',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                    color: isFading ? AppTheme.errorRed : context.textTertiary,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMiniPulse(Color color) {
+    return AnimatedBuilder(
+      animation: _pulseController,
+      builder: (context, child) {
+        final scale = 1.0 + (_pulseController.value * 0.4);
+        final opacity = 1.0 - (_pulseController.value * 0.6);
+
+        return SizedBox(
+          width: 14,
+          height: 14,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Transform.scale(
+                scale: scale,
+                child: Opacity(
+                  opacity: opacity,
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: color, width: 1),
+                    ),
+                  ),
+                ),
+              ),
+              Container(
+                width: 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildAutomationsShowcase(_OnboardingPage page) {
+    return AnimatedBuilder(
+      animation: _pulseController,
+      builder: (context, child) {
+        final glowIntensity = 0.25 + (_pulseController.value * 0.2);
+
+        return SizedBox(
+          height: 160,
+          child: ShaderMask(
+            shaderCallback: (Rect bounds) {
+              return LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [
+                  Colors.transparent,
+                  Colors.white,
+                  Colors.white,
+                  Colors.transparent,
+                ],
+                stops: const [0.0, 0.05, 0.9, 1.0],
+              ).createShader(bounds);
+            },
+            blendMode: BlendMode.dstIn,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              children: [
+                _buildAutomationCard(
+                  name: 'Low Battery Alert',
+                  trigger: 'Battery < 20%',
+                  action: 'Send notification',
+                  icon: Icons.battery_alert,
+                  color: AppTheme.errorRed,
+                  glowIntensity: glowIntensity,
+                  isEnabled: true,
+                ),
+                const SizedBox(width: 10),
+                _buildAutomationCard(
+                  name: 'Base Camp Geofence',
+                  trigger: 'Enters area',
+                  action: 'Auto-message "Arrived"',
+                  icon: Icons.location_searching,
+                  color: AccentColors.green,
+                  glowIntensity: glowIntensity,
+                  isEnabled: true,
+                ),
+                const SizedBox(width: 10),
+                _buildAutomationCard(
+                  name: 'Node Silent Watch',
+                  trigger: 'No contact 30 min',
+                  action: 'Alert + sound',
+                  icon: Icons.timer_off,
+                  color: AccentColors.orange,
+                  glowIntensity: glowIntensity,
+                  isEnabled: true,
+                ),
+                const SizedBox(width: 10),
+                _buildAutomationCard(
+                  name: 'Keyword Alert',
+                  trigger: 'Message contains "SOS"',
+                  action: 'IFTTT webhook',
+                  icon: Icons.text_fields,
+                  color: AccentColors.cyan,
+                  glowIntensity: glowIntensity,
+                  isEnabled: false,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildAutomationCard({
+    required String name,
+    required String trigger,
+    required String action,
+    required IconData icon,
+    required Color color,
+    required double glowIntensity,
+    required bool isEnabled,
+  }) {
+    return Container(
+      width: 150,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isEnabled
+              ? color.withValues(alpha: 0.4)
+              : context.border.withValues(alpha: 0.3),
+          width: isEnabled ? 1.5 : 1,
+        ),
+        boxShadow: isEnabled
+            ? [
+                BoxShadow(
+                  color: color.withValues(alpha: glowIntensity * 0.4),
+                  blurRadius: 10,
+                  spreadRadius: 1,
+                ),
+              ]
+            : null,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Header with icon
+          Row(
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: isEnabled
+                      ? color.withValues(alpha: 0.2)
+                      : context.surface,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  icon,
+                  size: 16,
+                  color: isEnabled ? color : context.textTertiary,
+                ),
+              ),
+              const Spacer(),
+              // Enabled indicator
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isEnabled ? AccentColors.green : context.textTertiary,
+                  boxShadow: isEnabled
+                      ? [
+                          BoxShadow(
+                            color: AccentColors.green.withValues(alpha: 0.5),
+                            blurRadius: 4,
+                          ),
+                        ]
+                      : null,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // Name
+          Text(
+            name,
+            style: TextStyle(
+              color: isEnabled ? Colors.white : context.textSecondary,
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 6),
+          // Trigger
+          Row(
+            children: [
+              Icon(
+                Icons.bolt,
+                size: 10,
+                color: isEnabled ? color : context.textTertiary,
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  trigger,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: context.textTertiary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const Spacer(),
+          // Action
+          Row(
+            children: [
+              Icon(
+                Icons.arrow_forward,
+                size: 10,
+                color: isEnabled
+                    ? AccentColors.green
+                    : context.textTertiary.withValues(alpha: 0.5),
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  action,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: isEnabled
+                        ? AccentColors.green
+                        : context.textTertiary.withValues(alpha: 0.5),
+                    fontWeight: FontWeight.w500,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -689,6 +1181,8 @@ class _OnboardingPage {
   final MeshBrainMood mood;
   final bool isLastPage;
   final bool isWidgetShowcase;
+  final bool isSignalsShowcase;
+  final bool isAutomationsShowcase;
   final Color accentColor;
 
   const _OnboardingPage({
@@ -698,6 +1192,8 @@ class _OnboardingPage {
     required this.mood,
     this.isLastPage = false,
     this.isWidgetShowcase = false,
+    this.isSignalsShowcase = false,
+    this.isAutomationsShowcase = false,
     this.accentColor = AppTheme.primaryMagenta,
   });
 }
