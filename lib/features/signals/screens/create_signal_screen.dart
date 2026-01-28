@@ -1125,25 +1125,42 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                                       icon: Icons.timer_outlined,
                                       label: _getTTLDisplayText(),
                                     ),
-                                    const SizedBox(width: 8),
-                              // Location pill (if set) - just icon
-                              if (_location != null)
-                                GestureDetector(
-                                  onTap: _isSubmitting ? null : _removeLocation,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: Colors.black.withValues(alpha: 0.55),
-                                      borderRadius: BorderRadius.circular(16),
+                                    // Location pill with fade animation
+                                    AnimatedSize(
+                                      duration: const Duration(milliseconds: 200),
+                                      curve: Curves.easeInOut,
+                                      child: AnimatedOpacity(
+                                        duration: const Duration(milliseconds: 200),
+                                        opacity: _location != null ? 1.0 : 0.0,
+                                        child: _location != null
+                                            ? Padding(
+                                                padding:
+                                                    const EdgeInsets.only(left: 8),
+                                                child: GestureDetector(
+                                                  onTap: _isSubmitting
+                                                      ? null
+                                                      : _removeLocation,
+                                                  child: Container(
+                                                    padding:
+                                                        const EdgeInsets.all(8),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.black
+                                                          .withValues(alpha: 0.55),
+                                                      borderRadius:
+                                                          BorderRadius.circular(16),
+                                                    ),
+                                                    child: const Icon(
+                                                      Icons.location_on,
+                                                      size: 16,
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                ),
+                                              )
+                                            : const SizedBox.shrink(),
+                                      ),
                                     ),
-                                    child: const Icon(
-                                      Icons.location_on,
-                                      size: 16,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              const Spacer(),
+                                    const Spacer(),
                               // Local storage indicator
                               _InfoPill(
                                 icon: Icons.phone_android,
