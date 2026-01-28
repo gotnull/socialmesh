@@ -379,12 +379,27 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent> {
       );
       autoReconnectNotifier.setState(AutoReconnectState.idle);
 
-      // Close sheet immediately to prevent further interaction
-      // The disconnect will complete in the background
-      AppLogging.connection('🔌 DISCONNECT: Closing sheet immediately');
+      // Close sheet FIRST before navigation to avoid conflicts
+      AppLogging.connection('🔌 DISCONNECT: Closing sheet');
       if (context.mounted) {
         Navigator.pop(context);
       }
+
+      // Small delay to let sheet close animation start
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      // Navigate to Scanner, clearing back stack
+      // This prevents the brief flash of the "No Device Connected" empty state
+      // in MainShell when the connection state changes to disconnected.
+      // Make Scanner the only route so the user cannot navigate back to prior
+      // device-required screens after a manual disconnect.
+      AppLogging.connection(
+        '🔌 DISCONNECT: Navigating to Scanner - clearing back stack',
+      );
+      navigatorKey.currentState?.pushNamedAndRemoveUntil(
+        '/scanner',
+        (route) => false,
+      );
 
       // Now perform the actual disconnect in the background
       // Use DeviceConnectionNotifier for proper disconnect handling
@@ -399,23 +414,6 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent> {
       protocol.stop();
 
       AppLogging.connection('🔌 DISCONNECT: Disconnect sequence complete');
-
-      // After a manual disconnect, navigate to the Scanner screen so the user
-      // can immediately scan/connect to another device. This preserves the
-      // previous behavior where manual disconnects showed the full scan
-      // overlay, while automatic/out-of-range disconnects continue to show
-      // only the inline banner.
-      // Use the global navigatorKey so navigation succeeds even after the
-      // sheet context has been popped.
-      AppLogging.connection(
-        '🔌 DISCONNECT: Navigating to Scanner (manual disconnect) - clearing back stack',
-      );
-      // Make Scanner the only route so the user cannot navigate back to prior
-      // device-required screens after a manual disconnect.
-      navigatorKey.currentState?.pushNamedAndRemoveUntil(
-        '/scanner',
-        (route) => false,
-      );
     } else {
       AppLogging.connection(
         '🔌 DISCONNECT: Dialog dismissed or context not mounted',

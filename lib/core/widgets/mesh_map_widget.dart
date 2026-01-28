@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../map_config.dart';
 import '../theme.dart';
 import '../../models/mesh_models.dart';
@@ -118,7 +119,7 @@ class MeshMapWidget extends StatelessWidget {
     this.clusterRadius = 45,
     this.popupController,
     this.popupBuilder,
-    this.showAttribution = false,
+    this.showAttribution = true,
     this.attributions,
   });
 
@@ -224,10 +225,25 @@ class MeshMapWidget extends StatelessWidget {
             ),
 
           // Attribution
-          if (showAttribution && attributions != null)
+          if (showAttribution)
             RichAttributionWidget(
               alignment: AttributionAlignment.bottomLeft,
-              attributions: attributions!,
+              attributions: attributions ?? [
+                TextSourceAttribution(
+                  mapStyle == MapTileStyle.satellite
+                      ? '© Esri'
+                      : mapStyle == MapTileStyle.terrain
+                          ? '© OpenTopoMap © OSM'
+                          : '© OSM © CARTO',
+                  onTap: () => launchUrl(Uri.parse(
+                    mapStyle == MapTileStyle.satellite
+                        ? 'https://www.esri.com'
+                        : mapStyle == MapTileStyle.terrain
+                            ? 'https://opentopomap.org'
+                            : 'https://carto.com/attributions',
+                  )),
+                ),
+              ],
             ),
         ],
       ),

@@ -205,17 +205,80 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
     if (!settingsAsync.hasValue) return; // Settings not ready
     final settings = settingsAsync.requireValue;
 
+    // Show confirmation dialog explaining the device will reboot
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: context.card,
+        title: const Text('Apply Region'),
+        content: Text(
+          isInitialSetup
+              ? 'Your device will reboot to apply the region settings. '
+                  'This may take up to 30 seconds.\n\n'
+                  'The app will automatically reconnect when ready.'
+              : 'Changing the region will cause your device to reboot. '
+                  'This may take up to 30 seconds.\n\n'
+                  'You will be briefly disconnected while the device restarts.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(
+              foregroundColor: context.accentColor,
+            ),
+            child: const Text('Continue'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+    if (!mounted) return;
+
     setState(() {
       _errorMessage = null;
       _showPairingInvalidationHint = false;
     });
 
     try {
-      final regionNotifier = ref.read(regionConfigProvider.notifier);
-      await regionNotifier.applyRegion(
-        _selectedRegion!,
-        reason: widget.isInitialSetup ? 'initial_setup' : 'settings_change',
-      );
+      // If region was already applied (from a previous attempt that timed out but succeeded),
+      // skip the apply and just mark setup as complete
+      final protocol = ref.read(protocolServiceProvider);
+      final currentDeviceRegion = protocol.currentRegion;
+      final alreadyApplied = regionState.applyStatus == RegionApplyStatus.applied &&
+          regionState.regionChoice == _selectedRegion;
+      final regionAlreadySet = currentDeviceRegion == _selectedRegion;
+      
+      // CRITICAL: During initial setup, always call applyRegion() even if the region
+      // already matches. This ensures:
+      // 1. The loading overlay shows consistently ("This may take up to 30 seconds")
+      // 2. We properly handle the device reboot cycle
+      // 3. Users get visual feedback that setup is progressing
+      // Some Meshtastic devices ship with pre-configured regions, so we can't skip
+      // the apply flow just because the region matches - the user still needs to see
+      // the proper feedback and wait for any necessary device operations to complete.
+      final shouldSkipApply = !widget.isInitialSetup && (alreadyApplied || regionAlreadySet);
+      
+      if (!shouldSkipApply) {
+        // For non-initial setup (settings change), pop the screen BEFORE applying the region
+        // This ensures the loading overlay and reconnection happen on the nodes screen,
+        // where the auto-retry logic can properly reconnect the device after reboot.
+        if (!isInitialSetup) {
+          Navigator.of(context).pop(true);
+          // Small delay to let the pop animation start
+          await Future.delayed(const Duration(milliseconds: 100));
+        }
+        
+        final regionNotifier = ref.read(regionConfigProvider.notifier);
+        await regionNotifier.applyRegion(
+          _selectedRegion!,
+          reason: widget.isInitialSetup ? 'initial_setup' : 'settings_change',
+        );
+      }
 
       if (!mounted) return;
 
@@ -224,15 +287,38 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
 
       if (isInitialSetup) {
         ref.read(appInitProvider.notifier).setInitialized();
-      } else {
+      } else if (shouldSkipApply) {
+        // Only pop if we didn't already pop above
         Navigator.of(context).pop(true);
       }
     } on Exception catch (e) {
       if (!mounted) return;
+      
+      // Check if the region was actually applied despite the error (e.g., timeout during reconnect
+      // but region stream already confirmed the change)
+      final postErrorState = ref.read(regionConfigProvider);
+      final protocol = ref.read(protocolServiceProvider);
+      if ((postErrorState.applyStatus == RegionApplyStatus.applied && 
+           postErrorState.regionChoice == _selectedRegion) ||
+          protocol.currentRegion == _selectedRegion) {
+        // Region was actually applied - proceed with success flow
+        await settings.setRegionConfigured(true);
+        if (!mounted) return;
+        if (isInitialSetup) {
+          ref.read(appInitProvider.notifier).setInitialized();
+        }
+        // Note: For non-initial setup, we already popped earlier
+        return;
+      }
+      
       final connectionState = ref.read(conn.deviceConnectionProvider);
       final pairingInvalidation = conn.isPairingInvalidationError(e);
       if (connectionState.isTerminalInvalidated || pairingInvalidation) {
-        Navigator.of(context).pushNamed('/scanner');
+        // For initial setup, we're still on the screen so we can navigate
+        // For non-initial setup, we already popped so this is a no-op
+        if (mounted && isInitialSetup) {
+          Navigator.of(context).pushNamed('/scanner');
+        }
         return;
       }
       final message = e is TimeoutException
@@ -241,11 +327,18 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
               ? 'Your phone removed the stored pairing info for this device.\nGo to Settings > Bluetooth, forget the Meshtastic device, and try again.'
               : 'Failed to set region: $e';
       if (!mounted) return;
-      setState(() {
-        _errorMessage = message;
-        _showPairingInvalidationHint = pairingInvalidation;
-      });
-      showErrorSnackBar(context, message);
+      
+      // Only show error UI if we're in initial setup mode (screen is still visible)
+      // For non-initial setup, we already popped the screen so we can't show error UI here
+      if (isInitialSetup) {
+        setState(() {
+          _errorMessage = message;
+          _showPairingInvalidationHint = pairingInvalidation;
+        });
+        showErrorSnackBar(context, message);
+      }
+      // For non-initial setup, the error will be visible through the connection state
+      // on the nodes screen (e.g., "Device not found - Retry" banner)
     }
   }
 
@@ -413,90 +506,96 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                   ),
                 ),
 
-                // Save button
+                // Bottom section with SafeArea - includes error, button, and pairing hint
                 SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton(
-                        key: regionSelectionApplyButtonKey,
-                        onPressed: _selectedRegion != null && !isBusy
-                            ? _saveRegion
-                            : null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: context.accentColor,
-                          foregroundColor: Colors.white,
-                          disabledBackgroundColor: context.card,
-                          disabledForegroundColor: context.textTertiary,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Error message - styled as a subtle card, not ugly red text
+                      if (statusText != null) ...[
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: AppTheme.errorRed.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: AppTheme.errorRed.withValues(alpha: 0.3),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.error_outline,
+                                  color: AppTheme.errorRed,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    statusText,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      color: context.textPrimary,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                        child: Text(
-                          widget.isInitialSetup ? 'Continue' : 'Save',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                      ],
 
-                // Error message - styled as a subtle card, not ugly red text
-                if (statusText != null) ...[
-                  const SizedBox(height: 12),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: AppTheme.errorRed.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: AppTheme.errorRed.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            color: AppTheme.errorRed,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
+                      // Save button
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: 56,
+                          child: ElevatedButton(
+                            key: regionSelectionApplyButtonKey,
+                            onPressed: _selectedRegion != null && !isBusy
+                                ? _saveRegion
+                                : null,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: context.accentColor,
+                              foregroundColor: Colors.white,
+                              disabledBackgroundColor: context.card,
+                              disabledForegroundColor: context.textTertiary,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
                             child: Text(
-                              statusText,
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                                color: context.textPrimary,
+                              widget.isInitialSetup ? 'Continue' : 'Save',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
-                ],
 
-                // Pairing invalidation hint
-                if (_showPairingInvalidationHint) ...[
-                  const SizedBox(height: 8),
-                  _buildPairingHint(),
-                ],
+                      // Pairing invalidation hint
+                      if (_showPairingInvalidationHint) ...[
+                        _buildPairingHint(),
+                        const SizedBox(height: 16),
+                      ],
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
 
           // Full-screen loading overlay during region apply
+          // Wrap in Material to prevent yellow underline on Text widgets (they need a Material ancestor)
           if (isBusy)
             Positioned.fill(
-              child: Container(
+              child: Material(
                 color: context.background.withValues(alpha: 0.95),
                 child: Center(
                   child: Column(

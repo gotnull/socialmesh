@@ -861,7 +861,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
         ? '© OpenTopoMap © OSM'
         : '© OSM © CARTO';
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface.withValues(alpha: 0.95),
         border: Border(
@@ -870,9 +870,25 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
       ),
       child: SafeArea(
         top: false,
-        child: Stack(
-          alignment: Alignment.centerLeft,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
+            // Attribution row at the top
+            GestureDetector(
+              onTap: () => launchUrl(Uri.parse(attributionUrl)),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  attributionLabel,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.35),
+                    fontSize: 9,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 6),
+            // Stats row below
             Row(
               children: [
                 _buildStatItem(
@@ -925,21 +941,6 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                     ),
                   ),
               ],
-            ),
-            // Attribution positioned at top-left to avoid clashing with stats
-            Positioned(
-              left: 0,
-              top: 0,
-              child: GestureDetector(
-                onTap: () => launchUrl(Uri.parse(attributionUrl)),
-                child: Text(
-                  attributionLabel,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.35),
-                    fontSize: 9,
-                  ),
-                ),
-              ),
             ),
           ],
         ),

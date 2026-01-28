@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/map_config.dart';
 import '../../../core/theme.dart';
@@ -178,6 +179,26 @@ class _SignalMapViewState extends ConsumerState<SignalMapView> {
                   ),
                 );
               }).toList(),
+            ),
+            // Map attribution
+            RichAttributionWidget(
+              alignment: AttributionAlignment.bottomLeft,
+              attributions: [
+                TextSourceAttribution(
+                  _mapStyle == MapTileStyle.satellite
+                      ? '© Esri'
+                      : _mapStyle == MapTileStyle.terrain
+                          ? '© OpenTopoMap © OSM'
+                          : '© OSM © CARTO',
+                  onTap: () => launchUrl(Uri.parse(
+                    _mapStyle == MapTileStyle.satellite
+                        ? 'https://www.esri.com'
+                        : _mapStyle == MapTileStyle.terrain
+                            ? 'https://opentopomap.org'
+                            : 'https://carto.com/attributions',
+                  )),
+                ),
+              ],
             ),
           ],
         ),

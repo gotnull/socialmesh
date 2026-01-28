@@ -21,6 +21,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/logging.dart';
 import '../core/transport.dart';
 import 'app_providers.dart';
+import 'connectivity_providers.dart';
 
 // =============================================================================
 // DEVICE PAIRING STATE
@@ -217,6 +218,7 @@ class DeviceConnectionState2 {
 class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
   StreamSubscription<DeviceConnectionState>? _connectionSubscription;
   Timer? _scanTimer;
+  Timer? _retryTimer; // Timer for retry attempts
   bool _isInitialized = false;
   bool _userDisconnected = false; // Track if user manually disconnected
   bool _backgroundScanInProgress = false; // Guard against concurrent scans
@@ -225,6 +227,9 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
   static const int _maxInvalidationAttempts = 3;
   static const Duration _invalidationWindow = Duration(seconds: 120);
   int _connectionSessionId = 0;
+  int _reconnectAttempt = 0; // Current retry attempt (0-based)
+  int _maxReconnectAttempts = 3; // Max retries for normal reconnect
+  static const int _maxReconnectAttemptsRegion = 6; // Max retries during region apply (device reboot)
 
   int _nextConnectionSessionId() {
     _connectionSessionId += 1;
@@ -238,6 +243,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       AppLogging.connection('🔌 DeviceConnectionNotifier: Disposing...');
       _connectionSubscription?.cancel();
       _scanTimer?.cancel();
+      _retryTimer?.cancel();
     });
 
     return const DeviceConnectionState2(state: DevicePairingState.neverPaired);
@@ -263,6 +269,10 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     _userDisconnected = false;
 
     AppLogging.connection('🔌 DeviceConnectionNotifier: Initializing...');
+
+    // Set up connectivity listener for auto-retry when internet comes back online
+    // This helps reconnect after region change (device reboot) when connectivity is restored
+    _setupConnectivityListener();
 
     // Check if we have a previously paired device
     final settings = await ref.read(settingsServiceProvider.future);
@@ -312,6 +322,64 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
         '🔌 DeviceConnectionNotifier: Auto-reconnect disabled',
       );
     }
+  }
+
+  /// Set up listener for connectivity changes to auto-retry device connection
+  /// when internet comes back online after region change (device reboot).
+  /// This ensures the "Device not found - Retry" banner automatically retries
+  /// when connectivity is restored.
+  void _setupConnectivityListener() {
+    ref.listen<ConnectivityStatus>(
+      connectivityStatusProvider,
+      (previous, next) {
+        // Only act when connectivity changes from offline to online
+        final wasOffline = previous == null || !previous.online;
+        final isNowOnline = next.online;
+        
+        if (!wasOffline || !isNowOnline) return;
+        
+        AppLogging.connection(
+          '🔌 Connectivity restored: checking if reconnect needed...',
+        );
+        
+        // Skip if user manually disconnected
+        if (_userDisconnected) {
+          AppLogging.connection(
+            '🔌 Connectivity restored but user disconnected - skipping auto-reconnect',
+          );
+          return;
+        }
+        
+        // Check if we need to reconnect
+        final regionState = ref.read(regionConfigProvider);
+        final autoReconnectState = ref.read(autoReconnectStateProvider);
+        final isRegionApplyInProgress = regionState.applyStatus == RegionApplyStatus.applying;
+        final isFailed = autoReconnectState == AutoReconnectState.failed;
+        final isScanning = autoReconnectState == AutoReconnectState.scanning;
+        final isDisconnected = state.state == DevicePairingState.disconnected;
+        
+        // Trigger reconnect if:
+        // 1. Region apply is in progress (device rebooted after region change)
+        // 2. Previous reconnect failed (e.g., device not found after region reboot)
+        // 3. Currently scanning/retrying (connectivity came back during retry)
+        // 4. We're disconnected but not by user
+        if (isRegionApplyInProgress || isFailed || isScanning || isDisconnected) {
+          AppLogging.connection(
+            '🔌 Connectivity restored: triggering reconnect '
+            '(regionApplying=$isRegionApplyInProgress, failed=$isFailed, scanning=$isScanning, disconnected=$isDisconnected)',
+          );
+          // Reset retry counter to give fresh attempts after connectivity restored
+          _reconnectAttempt = 0;
+          _retryTimer?.cancel();
+          // Small delay to ensure network stack is ready
+          Future.delayed(const Duration(milliseconds: 500), () {
+            if (ref.mounted && !_userDisconnected) {
+              startBackgroundConnection();
+            }
+          });
+        }
+      },
+    );
   }
 
   /// Set up listener for transport connection state changes
@@ -616,8 +684,51 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
 
       if (foundDevice == null) {
         AppLogging.connection(
-          '🔌 startBackgroundConnection: Device not found in scan',
+          '🔌 startBackgroundConnection: Device not found in scan (attempt ${_reconnectAttempt + 1})',
         );
+        
+        // Check if we're in region apply flow - use more aggressive retry
+        final regionState = ref.read(regionConfigProvider);
+        final isRegionApplying = regionState.applyStatus == RegionApplyStatus.applying;
+        
+        // Set max attempts based on context
+        _maxReconnectAttempts = isRegionApplying 
+            ? _maxReconnectAttemptsRegion // 6 attempts (60s) for region reboot
+            : 3; // 3 attempts (30s) for normal reconnect
+        
+        // Check if we should retry
+        if (_reconnectAttempt < _maxReconnectAttempts) {
+          _reconnectAttempt++;
+          final retryDelay = isRegionApplying ? 10000 : 10000; // 10s between retries
+          AppLogging.connection(
+            '🔌 startBackgroundConnection: Will retry in ${retryDelay}ms '
+            '(attempt $_reconnectAttempt/$_maxReconnectAttempts, regionApplying=$isRegionApplying)',
+          );
+          
+          // Schedule retry
+          _retryTimer?.cancel();
+          _retryTimer = Timer(Duration(milliseconds: retryDelay), () {
+            if (ref.mounted && !_userDisconnected) {
+              AppLogging.connection(
+                '🔌 startBackgroundConnection: Retry timer fired, attempt $_reconnectAttempt',
+              );
+              startBackgroundConnection();
+            }
+          });
+          
+          // Keep state as scanning during retry
+          ref
+              .read(autoReconnectStateProvider.notifier)
+              .setState(AutoReconnectState.scanning);
+          return;
+        }
+        
+        // Max retries exceeded
+        AppLogging.connection(
+          '🔌 startBackgroundConnection: Max retries exceeded ($_maxReconnectAttempts attempts)',
+        );
+        _reconnectAttempt = 0; // Reset for next disconnect event
+        
         final invalidated = await reportMissingSavedDevice();
         if (!invalidated) {
           ref
@@ -645,6 +756,10 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
         return;
       }
 
+      // Reset retry counter on successful device find
+      _reconnectAttempt = 0;
+      _retryTimer?.cancel();
+      
       await _connectToDevice(foundDevice);
     } catch (e) {
       if (state.state == DevicePairingState.pairedDeviceInvalidated) {
@@ -900,6 +1015,8 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       AppLogging.connection(
         '🔌 _handleDisconnect: Unexpected disconnect, triggering auto-reconnect',
       );
+      // Reset retry counter for new disconnect event
+      _reconnectAttempt = 0;
       // Use a slight delay to allow disconnect to complete
       Future.delayed(const Duration(milliseconds: 500), () {
         if (ref.mounted) {
@@ -922,6 +1039,8 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     ref.read(userDisconnectedProvider.notifier).setUserDisconnected(true);
 
     _scanTimer?.cancel();
+    _retryTimer?.cancel();
+    _reconnectAttempt = 0; // Reset retry counter
 
     // Stop any active scans before disconnecting
     try {
