@@ -43,7 +43,7 @@ class CreateSignalScreen extends ConsumerStatefulWidget {
 }
 
 class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   final TextEditingController _contentController = TextEditingController();
   final FocusNode _contentFocusNode = FocusNode();
 
@@ -63,6 +63,9 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
   late final AnimationController _entryAnimationController;
   late final Animation<double> _fadeAnimation;
   late final Animation<Offset> _slideAnimation;
+  late final AnimationController _imageAnimationController;
+  late final Animation<double> _imageScaleAnimation;
+  late final Animation<double> _imageFadeAnimation;
 
   @override
   void initState() {
@@ -102,6 +105,22 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
       curve: Curves.easeOutCubic,
     ));
     _entryAnimationController.forward();
+
+    // Image add/remove animations
+    _imageAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 350),
+    );
+    _imageScaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _imageAnimationController,
+        curve: Curves.easeOutBack,
+      ),
+    );
+    _imageFadeAnimation = CurvedAnimation(
+      parent: _imageAnimationController,
+      curve: Curves.easeOut,
+    );
   }
 
   @override
@@ -110,6 +129,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
     _contentFocusNode.dispose();
     _bannerShakeController.dispose();
     _entryAnimationController.dispose();
+    _imageAnimationController.dispose();
     super.dispose();
   }
 
@@ -362,6 +382,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
           final validated = await _validateImage(pickedFile.path);
           if (validated && mounted) {
             setState(() => _imageLocalPath = pickedFile.path);
+            _imageAnimationController.forward(from: 0);
           }
         }
       } else if (result.asset != null) {
@@ -371,6 +392,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
           final validated = await _validateImage(file.path);
           if (validated && mounted) {
             setState(() => _imageLocalPath = file.path);
+            _imageAnimationController.forward(from: 0);
           }
         }
       }
@@ -545,10 +567,14 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
     }
   }
 
-  void _removeImage() {
-    setState(() {
-      _imageLocalPath = null;
-    });
+  void _removeImage() async {
+    // Animate out before removing
+    await _imageAnimationController.reverse();
+    if (mounted) {
+      setState(() {
+        _imageLocalPath = null;
+      });
+    }
   }
 
   Future<void> _getLocation() async {
@@ -949,15 +975,23 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                                 }
                               },
                             ),
-                          // Location button
+                          // Location button (toggle: tap to add or remove)
                           _InputActionButton(
-                            icon: Icons.location_on_outlined,
+                            icon: _location != null
+                                ? Icons.location_off_outlined
+                                : Icons.location_on_outlined,
                             isSelected: _location != null,
                             isLoading: _isLoadingLocation,
                             isEnabled: hasNodeLocation,
                             onTap: _isSubmitting || _isLoadingLocation || !hasNodeLocation
                                 ? null
-                                : _getLocation,
+                                : () {
+                                    if (_location != null) {
+                                      _removeLocation();
+                                    } else {
+                                      _getLocation();
+                                    }
+                                  },
                           ),
                           // TTL button (shows current selection)
                           _InputActionButton(
@@ -1030,25 +1064,24 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
               // Image preview with overlay info pills
               if (showImage) ...[
                 const SizedBox(height: 16),
-                FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: SlideTransition(
-                    position: _slideAnimation,
+                ScaleTransition(
+                  scale: _imageScaleAnimation,
+                  child: FadeTransition(
+                    opacity: _imageFadeAnimation,
                     child: GestureDetector(
                       onTap: _isSubmitting ? null : () => _showImagePreview(),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.25),
-                              blurRadius: 16,
-                              offset: const Offset(0, 6),
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(20),
+                      child: ClipPath(
+                        clipper: _SquircleClipper(radius: 48),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.25),
+                                blurRadius: 16,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
+                          ),
                           child: Stack(
                             children: [
                               // The image
@@ -1093,12 +1126,22 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                                       label: _getTTLDisplayText(),
                                     ),
                                     const SizedBox(width: 8),
-                              // Location pill (if set)
+                              // Location pill (if set) - just icon
                               if (_location != null)
-                                _InfoPill(
-                                  icon: Icons.location_on_outlined,
-                                  label: _location!.name ?? 'Location',
+                                GestureDetector(
                                   onTap: _isSubmitting ? null : _removeLocation,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withValues(alpha: 0.55),
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: const Icon(
+                                      Icons.location_on,
+                                      size: 16,
+                                      color: Colors.white,
+                                    ),
+                                  ),
                                 ),
                               const Spacer(),
                               // Local storage indicator
@@ -1983,16 +2026,14 @@ class _InfoPill extends StatelessWidget {
   const _InfoPill({
     required this.icon,
     required this.label,
-    this.onTap,
   });
 
   final IconData icon;
   final String label;
-  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    final pill = Container(
+    return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.55),
@@ -2016,18 +2057,9 @@ class _InfoPill extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          if (onTap != null) ...[
-            const SizedBox(width: 4),
-            const Icon(Icons.close, size: 12, color: Colors.white70),
-          ],
         ],
       ),
     );
-
-    if (onTap != null) {
-      return GestureDetector(onTap: onTap, child: pill);
-    }
-    return pill;
   }
 }
 
@@ -2093,4 +2125,21 @@ class _InputActionButton extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Squircle clipper using ContinuousRectangleBorder for iOS-style rounded corners
+class _SquircleClipper extends CustomClipper<Path> {
+  _SquircleClipper({required this.radius});
+
+  final double radius;
+
+  @override
+  Path getClip(Size size) {
+    return ContinuousRectangleBorder(
+      borderRadius: BorderRadius.circular(radius),
+    ).getOuterPath(Rect.fromLTWH(0, 0, size.width, size.height));
+  }
+
+  @override
+  bool shouldReclip(_SquircleClipper oldClipper) => oldClipper.radius != radius;
 }

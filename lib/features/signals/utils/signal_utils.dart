@@ -117,11 +117,17 @@ bool isSignalExpired(DateTime? expiresAt) {
 }
 
 /// Format a TTL countdown string for signal cards.
-/// Uses seconds when remaining < 60s and returns "Faded" at or below 0.
+/// Uses seconds when remaining < 60s, minutes + seconds when < 10m,
+/// and returns "Faded" at or below 0.
 String formatSignalTtlCountdown(Duration? remaining) {
   if (remaining == null) return '';
   if (remaining.inSeconds <= 0) return 'Faded';
   if (remaining.inSeconds < 60) return 'Fades in ${remaining.inSeconds}s';
+  if (remaining.inMinutes < 10) {
+    final mins = remaining.inMinutes;
+    final secs = remaining.inSeconds % 60;
+    return 'Fades in ${mins}m ${secs}s';
+  }
   if (remaining.inMinutes < 60) return 'Fades in ${remaining.inMinutes}m';
   if (remaining.inHours < 24) return 'Fades in ${remaining.inHours}h';
   return 'Fades in ${remaining.inDays}d';

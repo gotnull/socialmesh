@@ -22,10 +22,25 @@ void main() {
       );
     });
 
-    test('uses minutes under 60m', () {
+    test('uses minutes + seconds under 10m', () {
       expect(
         formatSignalTtlCountdown(const Duration(seconds: 60)),
-        'Fades in 1m',
+        'Fades in 1m 0s',
+      );
+      expect(
+        formatSignalTtlCountdown(const Duration(minutes: 1, seconds: 30)),
+        'Fades in 1m 30s',
+      );
+      expect(
+        formatSignalTtlCountdown(const Duration(minutes: 9, seconds: 59)),
+        'Fades in 9m 59s',
+      );
+    });
+
+    test('uses minutes only at 10m+', () {
+      expect(
+        formatSignalTtlCountdown(const Duration(minutes: 10)),
+        'Fades in 10m',
       );
       expect(
         formatSignalTtlCountdown(const Duration(minutes: 59)),

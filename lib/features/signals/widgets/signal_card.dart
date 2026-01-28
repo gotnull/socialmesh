@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -469,24 +470,23 @@ class _SignalImage extends ConsumerWidget {
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       child: GestureDetector(
         onTap: onTap,
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.25),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
-              ),
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
+        child: ClipPath(
+          clipper: _SquircleClipper(radius: 48),
+          child: Container(
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.25),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
             child: Stack(
               children: [
                 imageContent,
@@ -552,6 +552,23 @@ class _SignalImage extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Squircle clipper using ContinuousRectangleBorder for iOS-style rounded corners
+class _SquircleClipper extends CustomClipper<ui.Path> {
+  _SquircleClipper({required this.radius});
+
+  final double radius;
+
+  @override
+  ui.Path getClip(Size size) {
+    return ContinuousRectangleBorder(
+      borderRadius: BorderRadius.circular(radius),
+    ).getOuterPath(Rect.fromLTWH(0, 0, size.width, size.height));
+  }
+
+  @override
+  bool shouldReclip(_SquircleClipper oldClipper) => oldClipper.radius != radius;
 }
 
 /// Tappable location row that opens in-app map
