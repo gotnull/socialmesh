@@ -351,22 +351,22 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
         }
         
         // Check if we need to reconnect
-        final regionState = ref.read(regionConfigProvider);
+        // Note: We avoid reading regionConfigProvider here to prevent circular dependency.
+        // The region apply reconnect is handled via autoReconnectState.
         final autoReconnectState = ref.read(autoReconnectStateProvider);
-        final isRegionApplyInProgress = regionState.applyStatus == RegionApplyStatus.applying;
         final isFailed = autoReconnectState == AutoReconnectState.failed;
         final isScanning = autoReconnectState == AutoReconnectState.scanning;
+        final isConnecting = autoReconnectState == AutoReconnectState.connecting;
         final isDisconnected = state.state == DevicePairingState.disconnected;
         
         // Trigger reconnect if:
-        // 1. Region apply is in progress (device rebooted after region change)
-        // 2. Previous reconnect failed (e.g., device not found after region reboot)
-        // 3. Currently scanning/retrying (connectivity came back during retry)
-        // 4. We're disconnected but not by user
-        if (isRegionApplyInProgress || isFailed || isScanning || isDisconnected) {
+        // 1. Previous reconnect failed (e.g., device not found after region reboot)
+        // 2. Currently scanning/connecting/retrying (connectivity came back during retry)
+        // 3. We're disconnected but not by user
+        if (isFailed || isScanning || isConnecting || isDisconnected) {
           AppLogging.connection(
             '🔌 Connectivity restored: triggering reconnect '
-            '(regionApplying=$isRegionApplyInProgress, failed=$isFailed, scanning=$isScanning, disconnected=$isDisconnected)',
+            '(failed=$isFailed, scanning=$isScanning, connecting=$isConnecting, disconnected=$isDisconnected)',
           );
           // Reset retry counter to give fresh attempts after connectivity restored
           _reconnectAttempt = 0;
@@ -449,19 +449,17 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     // Check if we should handle this reconnection
     // We handle it in these cases:
     // 1. autoReconnectState == connecting (our background reconnect initiated it)
-    // 2. Region apply is in progress (device rebooted after region change, iOS auto-reconnected)
     final autoReconnectState = ref.read(autoReconnectStateProvider);
-    final regionState = ref.read(regionConfigProvider);
-    final isRegionApplyInProgress = regionState.applyStatus == RegionApplyStatus.applying;
     
-    final shouldHandleReconnect = 
-        autoReconnectState == AutoReconnectState.connecting ||
-        isRegionApplyInProgress;
+    // Note: We don't check regionConfigProvider here to avoid circular dependency
+    // during initialization. If region apply is in progress, the auto-reconnect
+    // state will be set to 'connecting' which we check above.
+    final shouldHandleReconnect = autoReconnectState == AutoReconnectState.connecting;
     
     if (!shouldHandleReconnect) {
       AppLogging.connection(
         '🔌 _initializeProtocolAfterAutoReconnect: SKIPPING - '
-        'autoReconnect=$autoReconnectState, regionApplying=$isRegionApplyInProgress, '
+        'autoReconnect=$autoReconnectState, '
         'scanner is handling connection',
       );
       return;
@@ -469,7 +467,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
 
     AppLogging.connection(
       '🔌 _initializeProtocolAfterAutoReconnect: BLE auto-reconnected, starting protocol... '
-      '(autoReconnect=$autoReconnectState, regionApplying=$isRegionApplyInProgress)',
+      '(autoReconnect=$autoReconnectState)',
     );
 
     try {

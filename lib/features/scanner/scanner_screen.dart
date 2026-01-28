@@ -747,15 +747,15 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
       if (shouldShowRegionPicker) {
         // Navigate to region selection
-        // isInitialSetup should ONLY be true for the very first app launch (needsScanner state)
-        // For subsequent devices that need region setup (e.g., after factory reset),
-        // use isInitialSetup: false so the screen pops after region selection
+        // CRITICAL: isInitialSetup should ONLY be true during genuine first-time onboarding
+        // After factory reset, user is experienced and screen should pop immediately
+        // Use widget.isOnboarding (true only during onboarding flow, false for factory reset)
         // Use direct MaterialPageRoute to bypass route guard protection
         // The region save causes device reboot, which momentarily disconnects.
         // Route guard would show "Device Required" screen during this brief disconnect.
         Navigator.of(context).pushReplacement(
           MaterialPageRoute<void>(
-            builder: (context) => RegionSelectionScreen(isInitialSetup: isFromNeedsScanner),
+            builder: (context) => RegionSelectionScreen(isInitialSetup: widget.isOnboarding),
           ),
         );
       } else if (needsRegionSetup) {

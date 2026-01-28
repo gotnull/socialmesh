@@ -251,6 +251,16 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
     
     if (!mounted) return;
 
+    // Check if device is still connected before attempting to apply region
+    final connectionState = ref.read(conn.deviceConnectionProvider);
+    if (!connectionState.isConnected) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = 'Device disconnected. Please reconnect and try again.';
+      });
+      return;
+    }
+
     setState(() {
       _errorMessage = null;
       _showPairingInvalidationHint = false;

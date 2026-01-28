@@ -954,7 +954,8 @@ class _MainShellState extends ConsumerState<MainShell> {
       AppLogging.app(
         '⚠️ MainShell: Connected but region is UNSET and not configured - forcing region setup',
       );
-      return const RegionSelectionScreen(isInitialSetup: true);
+      // CRITICAL: User has already been through onboarding, so screen should pop after selection
+      return const RegionSelectionScreen(isInitialSetup: false);
     }
 
     // Build the main scaffold with Drawer

@@ -286,6 +286,10 @@ class _DeviceManagementScreenState
                       ref.read(nodesProvider.notifier).clearNodes();
                       ref.read(channelsProvider.notifier).clearChannels();
                       
+                      // CRITICAL: Set app state to needsScanner BEFORE navigating
+                      // This ensures the router shows ScannerScreen instead of MainShell
+                      ref.read(appInitProvider.notifier).setNeedsScanner();
+                      
                       // Navigate directly to scanner after factory reset
                       // The device is wiped and will need to be paired again
                       if (mounted) {
