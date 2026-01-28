@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/logging.dart';
+import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
@@ -23,40 +25,91 @@ class _DeviceManagementScreenState
     Future<void> Function() action, {
     bool requiresConfirmation = true,
     String? warningMessage,
+    bool causesDisconnect = false,
   }) async {
+    AppLogging.protocol('DeviceManagement: _executeAction($actionName) started');
+    
     if (requiresConfirmation) {
       final confirmed = await showDialog<bool>(
         context: context,
-        builder: (context) => AlertDialog(
-          title: Text(actionName),
+        builder: (dialogContext) => AlertDialog(
+          backgroundColor: context.card,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: context.border),
+          ),
+          title: Row(
+            children: [
+              Icon(
+                causesDisconnect ? Icons.warning_amber_rounded : Icons.info_outline,
+                color: causesDisconnect ? AppTheme.warningYellow : context.accentColor,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  actionName,
+                  style: TextStyle(color: context.textPrimary),
+                ),
+              ),
+            ],
+          ),
           content: Text(
             warningMessage ??
                 'Are you sure you want to $actionName? This action cannot be undone.',
+            style: TextStyle(color: context.textSecondary),
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel'),
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: context.textTertiary),
+              ),
             ),
             FilledButton(
-              onPressed: () => Navigator.pop(context, true),
+              onPressed: () => Navigator.pop(dialogContext, true),
+              style: FilledButton.styleFrom(
+                backgroundColor: causesDisconnect 
+                    ? AppTheme.warningYellow 
+                    : context.accentColor,
+                foregroundColor: causesDisconnect ? Colors.black : Colors.white,
+              ),
               child: const Text('Confirm'),
             ),
           ],
         ),
       );
 
-      if (confirmed != true) return;
+      if (confirmed != true) {
+        AppLogging.protocol('DeviceManagement: $actionName cancelled by user');
+        return;
+      }
     }
 
     setState(() => _isProcessing = true);
 
     try {
+      AppLogging.protocol('DeviceManagement: Executing $actionName...');
       await action();
+      
       if (mounted) {
-        showSuccessSnackBar(context, '$actionName command sent');
+        final message = causesDisconnect 
+            ? '$actionName - device will disconnect'
+            : '$actionName command sent';
+        showSuccessSnackBar(context, message);
+        
+        // Pop the screen after triggering actions that cause disconnect
+        if (causesDisconnect) {
+          AppLogging.protocol('DeviceManagement: $actionName causes disconnect, popping screen');
+          Future.delayed(const Duration(milliseconds: 500), () {
+            if (mounted) {
+              Navigator.pop(context);
+            }
+          });
+        }
       }
     } catch (e) {
+      AppLogging.protocol('DeviceManagement: $actionName failed: $e');
       if (mounted) {
         showErrorSnackBar(context, 'Failed: $e');
       }
@@ -123,7 +176,8 @@ class _DeviceManagementScreenState
                     'Reboot Device',
                     () => protocol.reboot(delaySeconds: 2),
                     warningMessage:
-                        'The device will reboot in 2 seconds. You will need to reconnect.',
+                        'The device will reboot in 2 seconds. You will be briefly disconnected while the device restarts.',
+                    causesDisconnect: true,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -138,6 +192,7 @@ class _DeviceManagementScreenState
                     () => protocol.shutdown(delaySeconds: 2),
                     warningMessage:
                         'The device will shut down in 2 seconds. You will need to manually power it back on.',
+                    causesDisconnect: true,
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -186,8 +241,9 @@ class _DeviceManagementScreenState
                     'Factory Reset Config',
                     () => protocol.factoryResetConfig(),
                     warningMessage:
-                        'This is the closest thing we offer to a full factory reset: '
-                        'it wipes channels, region, and all settings but preserves the node database.',
+                        'This will wipe channels, region, and all settings but preserves the node database.\n\n'
+                        'The device will reboot and you will be disconnected.',
+                    causesDisconnect: true,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -206,7 +262,8 @@ class _DeviceManagementScreenState
                         '• All channels\n'
                         '• All known nodes\n'
                         '• Device identity\n\n'
-                        'The device will be like new out of the box.',
+                        'The device will be like new out of the box and you will be disconnected.',
+                    causesDisconnect: true,
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -223,7 +280,9 @@ class _DeviceManagementScreenState
                     () => protocol.enterDfuMode(),
                     warningMessage:
                         'The device will enter Device Firmware Update (DFU) mode. '
-                        'You will need to use a firmware update tool to flash new firmware or reset the device.',
+                        'You will need to use a firmware update tool to flash new firmware or reset the device.\n\n'
+                        'You will be disconnected from the device.',
+                    causesDisconnect: true,
                   ),
                 ),
                 const SizedBox(height: 32),
