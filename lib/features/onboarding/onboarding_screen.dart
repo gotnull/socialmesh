@@ -31,84 +31,85 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
   final List<_OnboardingPage> _pages = [
     _OnboardingPage(
-      title: 'Welcome to the Mesh',
+      title: 'Welcome to Socialmesh',
       description:
-          'A radio network that belongs to no one - and everyone.\nNo towers. No carriers. Just you and the airwaves.',
+          'The most advanced Meshtastic companion app.\nBuilt for professionals. Designed for everyone.',
       advisorText:
-          "I'm Mesh, your guide. Together we'll explore a world where communication doesn't depend on infrastructure.",
+          "I'm Ico, your mesh intelligence. I'll guide you through a communication platform that works when nothing else does.",
       mood: MeshBrainMood.focused,
       accentColor: AppTheme.primaryMagenta,
     ),
 
     _OnboardingPage(
-      title: 'Connect Your Way',
+      title: 'Off-Grid by Design',
       description:
-          'Bluetooth for on-the-go. USB when you need power.\nYour radio, your choice.',
+          'No cellular towers. No internet required.\nTrue peer-to-peer radio communication.',
       advisorText:
-          "Plug in or go wireless - I'll work with whatever setup fits your situation.",
+          "Every message hops through the mesh until it reaches its destination. Range measured in kilometers, not bars.",
       mood: MeshBrainMood.speaking,
       accentColor: AccentColors.cyan,
     ),
 
     _OnboardingPage(
-      title: 'Signals',
+      title: 'Compatible Hardware',
       description:
-          'Broadcast your presence. Share moments.\nEphemeral by design - they fade when you want them to.',
+          'Works with all Meshtastic-compatible devices.\nFrom compact trackers to long-range stations.',
       advisorText:
-          "This is what makes us different. Signals ripple through the mesh, carrying text, photos, and location - then vanish. No permanent record. Pure presence.",
-      mood: MeshBrainMood.excited,
-      isSignalsShowcase: true,
-      accentColor: AccentColors.pink,
-    ),
-
-    _OnboardingPage(
-      title: 'See the Network',
-      description:
-          'Watch nodes appear and activity unfold.\nThe mesh comes alive on your map.',
-      advisorText:
-          "I'll show you who's nearby and where the action is - even when connectivity comes and goes.",
+          "Pick up a SenseCAP T1000-E for tracking, a Heltec V3 for range, or a RAK WisMesh for reliability. I'll work with any of them.",
       mood: MeshBrainMood.approving,
-      accentColor: AppTheme.graphBlue,
-    ),
-
-    _OnboardingPage(
-      title: 'Your Data, Your Device',
-      description:
-          'No accounts required. No cloud by default.\nEverything stays local unless you choose otherwise.',
-      advisorText:
-          "Privacy isn't a feature here - it's the foundation. Cloud sync exists if you want it, not because you need it.",
-      mood: MeshBrainMood.focused,
+      showcaseType: ShowcaseType.devices,
       accentColor: AccentColors.green,
     ),
 
     _OnboardingPage(
-      title: 'Automate Everything',
+      title: 'Signals',
       description:
-          'Set triggers for battery alerts, geofences, message keywords,\nand more. The mesh works while you focus on what matters.',
+          'Ephemeral broadcasts across the mesh.\nShare presence, photos, and location - then let them fade.',
       advisorText:
-          "Tell me what to watch for and I'll handle the rest - notifications, auto-replies, sounds, even IFTTT webhooks.",
+          "Signals are what set us apart. Broadcast to everyone in range, watch them ripple through the network, then disappear on your terms.",
+      mood: MeshBrainMood.excited,
+      showcaseType: ShowcaseType.signals,
+      accentColor: AccentColors.pink,
+    ),
+
+    _OnboardingPage(
+      title: 'Intelligent Automations',
+      description:
+          'Trigger actions based on mesh events.\nBattery alerts, geofences, keywords, and more.',
+      advisorText:
+          "Set up rules once, and I'll monitor everything. Low battery? I'll alert you. Node goes silent? I'll let you know. SOS received? I'll trigger your webhook.",
       mood: MeshBrainMood.focused,
-      isAutomationsShowcase: true,
+      showcaseType: ShowcaseType.automations,
       accentColor: AccentColors.yellow,
     ),
 
     _OnboardingPage(
-      title: 'Your Dashboard',
+      title: 'Your Command Center',
       description:
-          'Widgets, stats, and live telemetry.\nBuild the view that fits how you operate.',
+          'Customizable dashboard with live telemetry.\nTrack nodes, monitor channels, visualize the network.',
       advisorText:
-          'Drag, drop, customize. Your command center should look exactly how you want it.',
+          "Widgets, maps, stats - arrange them however you work. Your mesh, your view, your control.",
       mood: MeshBrainMood.approving,
-      isWidgetShowcase: true,
+      showcaseType: ShowcaseType.widgets,
       accentColor: AccentColors.orange,
+    ),
+
+    _OnboardingPage(
+      title: 'Privacy First',
+      description:
+          'No accounts required. No cloud by default.\nYour data stays on your device.',
+      advisorText:
+          "Everything is local unless you explicitly enable cloud sync. No tracking, no analytics, no compromise.",
+      mood: MeshBrainMood.focused,
+      accentColor: AppTheme.graphBlue,
     ),
 
     _OnboardingPage(
       title: 'Ready to Connect',
       description:
-          "Grab your radio and let's get started.\nThe mesh is waiting.",
+          'Pair your Meshtastic device to begin.\nBluetooth or USB - your choice.',
       advisorText:
-          "Once you're connected, we operate independently - no internet required. Let's do this.",
+          "Once connected, we operate completely offline. The mesh is waiting.",
       mood: MeshBrainMood.celebrating,
       isLastPage: true,
       accentColor: AppTheme.primaryPurple,
@@ -299,8 +300,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     SplashMeshConfig meshConfig,
   ) {
     final page = _pages[index];
-    final hasShowcase =
-        page.isWidgetShowcase || page.isSignalsShowcase || page.isAutomationsShowcase;
+    final hasShowcase = page.showcaseType != null;
 
     return AnimatedBuilder(
       animation: _pageController,
@@ -358,28 +358,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
                 SizedBox(height: hasShowcase ? 12 : 24),
 
-                // Automations showcase (if applicable)
-                if (page.isAutomationsShowcase) ...[                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: _buildAutomationsShowcase(page),
-                  ),
-                  const SizedBox(height: 12),
-                ],
-
-                // Signals showcase (if applicable)
-                if (page.isSignalsShowcase) ...[
+                // Showcase section
+                if (page.showcaseType != null) ...[
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: _buildSignalsShowcase(page),
-                  ),
-                  const SizedBox(height: 12),
-                ],
-
-                // Widget showcase (if applicable)
-                if (page.isWidgetShowcase) ...[
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: _buildWidgetShowcase(page),
+                    child: _buildShowcase(page),
                   ),
                   const SizedBox(height: 12),
                 ],
@@ -543,14 +526,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     );
   }
 
-  Widget _buildSignalsShowcase(_OnboardingPage page) {
+  Widget _buildDeviceShowcase(_OnboardingPage page) {
     return AnimatedBuilder(
       animation: _pulseController,
       builder: (context, child) {
         final glowIntensity = 0.25 + (_pulseController.value * 0.2);
 
         return SizedBox(
-          height: 160,
+          height: 150,
           child: ShaderMask(
             shaderCallback: (Rect bounds) {
               return LinearGradient(
@@ -571,44 +554,40 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
               physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.symmetric(horizontal: 8),
               children: [
-                _buildCompactSignalCard(
-                  name: 'Sarah',
-                  content: 'Beautiful sunset from the ridge!',
-                  hasImage: true,
-                  ttlMinutes: 23,
-                  hops: 1,
-                  color: AccentColors.pink,
+                _buildDeviceCard(
+                  name: 'SenseCAP T1000-E',
+                  category: 'Tracker',
+                  description: 'Compact GPS tracker with long battery life',
+                  icon: Icons.gps_fixed,
+                  color: AccentColors.green,
                   glowIntensity: glowIntensity,
-                  isHighlighted: true,
+                  isPopular: true,
                 ),
-                const SizedBox(width: 10),
-                _buildCompactSignalCard(
-                  name: 'Mike',
-                  content: 'Base camp ready. Signal check!',
-                  hasLocation: true,
-                  ttlMinutes: 45,
-                  hops: 0,
+                const SizedBox(width: 12),
+                _buildDeviceCard(
+                  name: 'Heltec V3',
+                  category: 'All-Purpose',
+                  description: 'Versatile node with built-in display',
+                  icon: Icons.memory,
                   color: AccentColors.cyan,
                   glowIntensity: glowIntensity,
                 ),
-                const SizedBox(width: 10),
-                _buildCompactSignalCard(
-                  name: 'Alex',
-                  content: 'On my way, ETA 15 min',
-                  ttlMinutes: 4,
-                  hops: 2,
-                  color: AccentColors.yellow,
+                const SizedBox(width: 12),
+                _buildDeviceCard(
+                  name: 'RAK WisMesh',
+                  category: 'Professional',
+                  description: 'Industrial-grade reliability',
+                  icon: Icons.router,
+                  color: AccentColors.orange,
                   glowIntensity: glowIntensity,
-                  isFading: true,
                 ),
-                const SizedBox(width: 10),
-                _buildCompactSignalCard(
-                  name: 'Trail Cam',
-                  content: 'Motion detected at waypoint',
-                  hasImage: true,
-                  ttlMinutes: 58,
-                  hops: 3,
-                  color: AccentColors.green,
+                const SizedBox(width: 12),
+                _buildDeviceCard(
+                  name: 'LilyGo T-Beam',
+                  category: 'Long Range',
+                  description: 'Maximum range with external antenna',
+                  icon: Icons.cell_tower,
+                  color: AccentColors.pink,
                   glowIntensity: glowIntensity,
                 ),
               ],
@@ -619,182 +598,413 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     );
   }
 
-  Widget _buildCompactSignalCard({
+  Widget _buildDeviceCard({
     required String name,
-    required String content,
-    required int ttlMinutes,
-    required int hops,
+    required String category,
+    required String description,
+    required IconData icon,
     required Color color,
     required double glowIntensity,
-    bool hasImage = false,
-    bool hasLocation = false,
-    bool isHighlighted = false,
-    bool isFading = false,
+    bool isPopular = false,
   }) {
-    final opacity = isFading ? 0.6 : 1.0;
-
-    return Opacity(
-      opacity: opacity,
-      child: Container(
-        width: 150,
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: context.card,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isHighlighted
-                ? color.withValues(alpha: 0.5)
-                : context.border.withValues(alpha: 0.3),
-            width: isHighlighted ? 1.5 : 1,
-          ),
-          boxShadow: isHighlighted
-              ? [
-                  BoxShadow(
-                    color: color.withValues(alpha: glowIntensity * 0.5),
-                    blurRadius: 12,
-                    spreadRadius: 1,
-                  ),
-                ]
-              : null,
+    return Container(
+      width: 160,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isPopular
+              ? color.withValues(alpha: 0.5)
+              : context.border.withValues(alpha: 0.3),
+          width: isPopular ? 1.5 : 1,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Header row
-            Row(
-              children: [
-                Container(
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [color, color.withValues(alpha: 0.7)],
-                    ),
-                    borderRadius: BorderRadius.circular(6),
+        boxShadow: isPopular
+            ? [
+                BoxShadow(
+                  color: color.withValues(alpha: glowIntensity * 0.5),
+                  blurRadius: 12,
+                  spreadRadius: 1,
+                ),
+              ]
+            : null,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header with icon and popular badge
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      color.withValues(alpha: 0.3),
+                      color.withValues(alpha: 0.1),
+                    ],
                   ),
-                  child: Center(
-                    child: Text(
-                      name[0],
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 11,
-                      ),
-                    ),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: color.withValues(alpha: 0.3),
                   ),
                 ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    name,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                child: Icon(
+                  icon,
+                  size: 20,
+                  color: color,
                 ),
-                if (isHighlighted) _buildMiniPulse(color),
-              ],
-            ),
-            const SizedBox(height: 8),
-            // Content
-            Text(
-              content,
-              style: TextStyle(
-                color: context.textPrimary.withValues(alpha: 0.9),
-                fontSize: 11,
-                height: 1.3,
               ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const Spacer(),
-            // Footer with image/location indicator and TTL
-            Row(
-              children: [
-                if (hasImage) ...[
-                  Icon(
-                    Icons.image_rounded,
-                    size: 12,
-                    color: color.withValues(alpha: 0.8),
+              const Spacer(),
+              if (isPopular)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
                   ),
-                  const SizedBox(width: 4),
-                ],
-                if (hasLocation) ...[
-                  Icon(
-                    Icons.location_on,
-                    size: 12,
-                    color: AccentColors.green,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(4),
                   ),
-                  const SizedBox(width: 4),
-                ],
-                const Spacer(),
-                Icon(
-                  Icons.timer_outlined,
-                  size: 10,
-                  color: isFading ? AppTheme.errorRed : context.textTertiary,
-                ),
-                const SizedBox(width: 2),
-                Text(
-                  '${ttlMinutes}m',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
-                    color: isFading ? AppTheme.errorRed : context.textTertiary,
+                  child: Text(
+                    'POPULAR',
+                    style: TextStyle(
+                      fontSize: 8,
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                      letterSpacing: 0.5,
+                    ),
                   ),
                 ),
-              ],
+            ],
+          ),
+          const SizedBox(height: 10),
+          // Category
+          Text(
+            category.toUpperCase(),
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w600,
+              color: color,
+              letterSpacing: 0.5,
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 2),
+          // Name
+          Text(
+            name,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const Spacer(),
+          // Description
+          Text(
+            description,
+            style: TextStyle(
+              fontSize: 10,
+              color: context.textTertiary,
+              height: 1.3,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildMiniPulse(Color color) {
+  Widget _buildShowcase(_OnboardingPage page) {
+    switch (page.showcaseType!) {
+      case ShowcaseType.devices:
+        return _buildDeviceShowcase(page);
+      case ShowcaseType.signals:
+        return _buildSignalsShowcase(page);
+      case ShowcaseType.automations:
+        return _buildAutomationsShowcase(page);
+      case ShowcaseType.widgets:
+        return _buildWidgetsShowcase(page);
+    }
+  }
+
+  Widget _buildSignalsShowcase(_OnboardingPage page) {
     return AnimatedBuilder(
       animation: _pulseController,
       builder: (context, child) {
-        final scale = 1.0 + (_pulseController.value * 0.4);
-        final opacity = 1.0 - (_pulseController.value * 0.6);
+        final glowIntensity = 0.2 + (_pulseController.value * 0.15);
 
         return SizedBox(
-          width: 14,
-          height: 14,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Transform.scale(
-                scale: scale,
-                child: Opacity(
-                  opacity: opacity,
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: color, width: 1),
-                    ),
-                  ),
+          height: 180,
+          child: ShaderMask(
+            shaderCallback: (Rect bounds) {
+              return LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [
+                  Colors.transparent,
+                  Colors.white,
+                  Colors.white,
+                  Colors.transparent,
+                ],
+                stops: const [0.0, 0.05, 0.9, 1.0],
+              ).createShader(bounds);
+            },
+            blendMode: BlendMode.dstIn,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              children: [
+                _buildSignalCard(
+                  authorName: 'Sarah',
+                  content: 'Just reached the summit! Signal is crystal clear up here.',
+                  hasImage: true,
+                  ttlMinutes: 23,
+                  hopCount: 1,
+                  color: AccentColors.pink,
+                  glowIntensity: glowIntensity,
+                  isLive: true,
                 ),
-              ),
-              Container(
-                width: 6,
-                height: 6,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
+                const SizedBox(width: 12),
+                _buildSignalCard(
+                  authorName: 'Mike',
+                  content: 'Base camp is set. Ready when you are.',
+                  hasLocation: true,
+                  ttlMinutes: 45,
+                  hopCount: 0,
+                  color: AccentColors.cyan,
+                  glowIntensity: glowIntensity,
                 ),
-              ),
-            ],
+                const SizedBox(width: 12),
+                _buildSignalCard(
+                  authorName: 'Alex',
+                  content: 'On my way, ETA 15 min',
+                  ttlMinutes: 8,
+                  hopCount: 2,
+                  color: AccentColors.yellow,
+                  glowIntensity: glowIntensity,
+                ),
+              ],
+            ),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildSignalCard({
+    required String authorName,
+    required String content,
+    required int ttlMinutes,
+    required int hopCount,
+    required Color color,
+    required double glowIntensity,
+    bool hasImage = false,
+    bool hasLocation = false,
+    bool isLive = false,
+  }) {
+    return Container(
+      width: 200,
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isLive
+              ? color.withValues(alpha: 0.4)
+              : context.border.withValues(alpha: 0.5),
+          width: isLive ? 1.5 : 1,
+        ),
+        boxShadow: isLive
+            ? [
+                BoxShadow(
+                  color: color.withValues(alpha: glowIntensity * 0.4),
+                  blurRadius: 12,
+                  spreadRadius: 1,
+                ),
+              ]
+            : null,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header - matches real SignalCard
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                // Avatar
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.person,
+                    color: color,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                // Name and hop count
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        authorName,
+                        style: TextStyle(
+                          color: context.textPrimary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      // Hop badge - matches ProximityBadge
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 1,
+                        ),
+                        decoration: BoxDecoration(
+                          color: hopCount == 0
+                              ? AccentColors.green.withValues(alpha: 0.2)
+                              : context.surface,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          hopCount == 0 ? 'Direct' : '$hopCount hop${hopCount > 1 ? 's' : ''}',
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w500,
+                            color: hopCount == 0
+                                ? AccentColors.green
+                                : context.textTertiary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (isLive)
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: AccentColors.green,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AccentColors.green.withValues(alpha: 0.5),
+                          blurRadius: 4,
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          // Content
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Text(
+              content,
+              style: TextStyle(
+                color: context.textPrimary,
+                fontSize: 13,
+                height: 1.4,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          // Image placeholder
+          if (hasImage)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+              child: Container(
+                height: 40,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: color.withValues(alpha: 0.2)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.image_rounded, color: color, size: 16),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Photo',
+                      style: TextStyle(
+                        color: color,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          // Location
+          if (hasLocation)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+              child: Row(
+                children: [
+                  Icon(Icons.location_on, color: AccentColors.green, size: 14),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Location shared',
+                    style: TextStyle(
+                      color: AccentColors.green,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          const Spacer(),
+          // TTL Footer - matches SignalTTLFooter
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              border: Border(
+                top: BorderSide(color: context.border.withValues(alpha: 0.3)),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.timer_outlined,
+                  size: 14,
+                  color: ttlMinutes < 10
+                      ? AppTheme.errorRed
+                      : context.textTertiary,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  '${ttlMinutes}m remaining',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: ttlMinutes < 10
+                        ? AppTheme.errorRed
+                        : context.textTertiary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -802,10 +1012,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     return AnimatedBuilder(
       animation: _pulseController,
       builder: (context, child) {
-        final glowIntensity = 0.25 + (_pulseController.value * 0.2);
+        final glowIntensity = 0.2 + (_pulseController.value * 0.15);
 
         return SizedBox(
-          height: 160,
+          height: 140,
           child: ShaderMask(
             shaderCallback: (Rect bounds) {
               return LinearGradient(
@@ -828,38 +1038,34 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
               children: [
                 _buildAutomationCard(
                   name: 'Low Battery Alert',
-                  trigger: 'Battery < 20%',
-                  action: 'Send notification',
+                  description: 'Battery drops below 20%',
                   icon: Icons.battery_alert,
                   color: AppTheme.errorRed,
                   glowIntensity: glowIntensity,
                   isEnabled: true,
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 12),
                 _buildAutomationCard(
                   name: 'Base Camp Geofence',
-                  trigger: 'Enters area',
-                  action: 'Auto-message "Arrived"',
+                  description: 'Enters designated area',
                   icon: Icons.location_searching,
                   color: AccentColors.green,
                   glowIntensity: glowIntensity,
                   isEnabled: true,
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 12),
                 _buildAutomationCard(
                   name: 'Node Silent Watch',
-                  trigger: 'No contact 30 min',
-                  action: 'Alert + sound',
+                  description: 'No contact for 30 min',
                   icon: Icons.timer_off,
                   color: AccentColors.orange,
                   glowIntensity: glowIntensity,
                   isEnabled: true,
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 12),
                 _buildAutomationCard(
-                  name: 'Keyword Alert',
-                  trigger: 'Message contains "SOS"',
-                  action: 'IFTTT webhook',
+                  name: 'SOS Keyword',
+                  description: 'Message contains "SOS"',
                   icon: Icons.text_fields,
                   color: AccentColors.cyan,
                   glowIntensity: glowIntensity,
@@ -875,29 +1081,28 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
   Widget _buildAutomationCard({
     required String name,
-    required String trigger,
-    required String action,
+    required String description,
     required IconData icon,
     required Color color,
     required double glowIntensity,
     required bool isEnabled,
   }) {
+    // Matches actual AutomationCard styling
     return Container(
-      width: 150,
-      padding: const EdgeInsets.all(10),
+      width: 180,
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: context.card,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isEnabled
-              ? color.withValues(alpha: 0.4)
-              : context.border.withValues(alpha: 0.3),
-          width: isEnabled ? 1.5 : 1,
+              ? color.withValues(alpha: 0.3)
+              : context.border,
         ),
         boxShadow: isEnabled
             ? [
                 BoxShadow(
-                  color: color.withValues(alpha: glowIntensity * 0.4),
+                  color: color.withValues(alpha: glowIntensity * 0.3),
                   blurRadius: 10,
                   spreadRadius: 1,
                 ),
@@ -906,271 +1111,244 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
         children: [
-          // Header with icon
           Row(
             children: [
+              // Trigger icon - matches AutomationCard
               Container(
-                width: 28,
-                height: 28,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
                   color: isEnabled
                       ? color.withValues(alpha: 0.2)
-                      : context.surface,
-                  borderRadius: BorderRadius.circular(8),
+                      : context.background,
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
                   icon,
-                  size: 16,
-                  color: isEnabled ? color : context.textTertiary,
+                  color: isEnabled ? color : Colors.grey,
+                  size: 20,
                 ),
               ),
               const Spacer(),
-              // Enabled indicator
+              // Toggle indicator
               Container(
-                width: 8,
-                height: 8,
+                width: 36,
+                height: 20,
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: isEnabled ? AccentColors.green : context.textTertiary,
-                  boxShadow: isEnabled
-                      ? [
-                          BoxShadow(
-                            color: AccentColors.green.withValues(alpha: 0.5),
-                            blurRadius: 4,
-                          ),
-                        ]
-                      : null,
+                  color: isEnabled
+                      ? AccentColors.green
+                      : context.surface,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Align(
+                  alignment: isEnabled
+                      ? Alignment.centerRight
+                      : Alignment.centerLeft,
+                  child: Container(
+                    margin: const EdgeInsets.all(2),
+                    width: 16,
+                    height: 16,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          // Name
+          const SizedBox(height: 10),
           Text(
             name,
             style: TextStyle(
-              color: isEnabled ? Colors.white : context.textSecondary,
               fontWeight: FontWeight.w600,
-              fontSize: 12,
+              fontSize: 13,
+              color: isEnabled ? context.textPrimary : Colors.grey,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 6),
-          // Trigger
-          Row(
-            children: [
-              Icon(
-                Icons.bolt,
-                size: 10,
-                color: isEnabled ? color : context.textTertiary,
-              ),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  trigger,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: context.textTertiary,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-          const Spacer(),
-          // Action
-          Row(
-            children: [
-              Icon(
-                Icons.arrow_forward,
-                size: 10,
-                color: isEnabled
-                    ? AccentColors.green
-                    : context.textTertiary.withValues(alpha: 0.5),
-              ),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  action,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: isEnabled
-                        ? AccentColors.green
-                        : context.textTertiary.withValues(alpha: 0.5),
-                    fontWeight: FontWeight.w500,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
+          const SizedBox(height: 2),
+          Text(
+            description,
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.grey,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildWidgetShowcase(_OnboardingPage page) {
+  Widget _buildWidgetsShowcase(_OnboardingPage page) {
     return AnimatedBuilder(
       animation: _pulseController,
       builder: (context, child) {
         final glowIntensity = 0.2 + (_pulseController.value * 0.15);
 
         return Container(
-          width: double.infinity,
-          height: 130,
+          height: 140,
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
+            color: context.card,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: page.accentColor.withValues(alpha: 0.3),
+            ),
             boxShadow: [
               BoxShadow(
-                color: page.accentColor.withValues(alpha: glowIntensity),
-                blurRadius: 16,
+                color: page.accentColor.withValues(alpha: glowIntensity * 0.3),
+                blurRadius: 12,
                 spreadRadius: 1,
               ),
             ],
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(14),
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [context.card, context.surface],
-                ),
-                border: Border.all(
-                  color: page.accentColor.withValues(alpha: 0.3),
-                  width: 1.5,
-                ),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Column(
+          child: Column(
+            children: [
+              // Header
+              Row(
                 children: [
-                  // Header
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+                  Icon(
+                    Icons.dashboard_rounded,
+                    color: page.accentColor,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Dashboard',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: context.textPrimary,
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AccentColors.green.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
                     child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          Icons.dashboard_rounded,
-                          color: page.accentColor,
-                          size: 16,
-                        ),
-                        const SizedBox(width: 6),
-                        const Text(
-                          'Dashboard',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const Spacer(),
                         Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
+                          width: 6,
+                          height: 6,
                           decoration: BoxDecoration(
-                            color: page.accentColor.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(4),
+                            color: AccentColors.green,
+                            shape: BoxShape.circle,
                           ),
-                          child: Text(
-                            'LIVE',
-                            style: TextStyle(
-                              fontSize: 8,
-                              fontWeight: FontWeight.bold,
-                              color: page.accentColor,
-                              letterSpacing: 0.5,
-                            ),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'LIVE',
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            color: AccentColors.green,
+                            letterSpacing: 0.5,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  // Widgets
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(8, 2, 8, 8),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: _buildMiniWidget(
-                              Icons.hub,
-                              '12',
-                              'Nodes',
-                              AccentColors.cyan,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: _buildMiniWidget(
-                              Icons.battery_5_bar,
-                              '87%',
-                              'Battery',
-                              AccentColors.green,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: _buildMiniWidget(
-                              Icons.signal_cellular_alt,
-                              '-68',
-                              'dBm',
-                              page.accentColor,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
                 ],
               ),
-            ),
+              const SizedBox(height: 12),
+              // Widget grid
+              Expanded(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _buildDashboardWidget(
+                        icon: Icons.hub,
+                        value: '12',
+                        label: 'Nodes Online',
+                        color: AccentColors.cyan,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _buildDashboardWidget(
+                        icon: Icons.battery_5_bar,
+                        value: '87%',
+                        label: 'Battery',
+                        color: AccentColors.green,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _buildDashboardWidget(
+                        icon: Icons.signal_cellular_alt,
+                        value: '-68',
+                        label: 'SNR dB',
+                        color: page.accentColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         );
       },
     );
   }
 
-  Widget _buildMiniWidget(
-    IconData icon,
-    String value,
-    String label,
-    Color color,
-  ) {
+  Widget _buildDashboardWidget({
+    required IconData icon,
+    required String value,
+    required String label,
+    required Color color,
+  }) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: color, size: 18),
-          SizedBox(height: 2),
+          Icon(icon, color: color, size: 20),
+          const SizedBox(height: 4),
           Text(
             value,
-            style: const TextStyle(
-              fontSize: 14,
+            style: TextStyle(
+              fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: context.textPrimary,
             ),
           ),
           Text(
             label,
-            style: TextStyle(fontSize: 9, color: context.textSecondary),
+            style: TextStyle(
+              fontSize: 9,
+              color: context.textSecondary,
+            ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
     );
   }
+}
+
+/// Types of showcases available in onboarding
+enum ShowcaseType {
+  devices,
+  signals,
+  automations,
+  widgets,
 }
 
 /// Data class for onboarding pages
@@ -1180,9 +1358,7 @@ class _OnboardingPage {
   final String advisorText;
   final MeshBrainMood mood;
   final bool isLastPage;
-  final bool isWidgetShowcase;
-  final bool isSignalsShowcase;
-  final bool isAutomationsShowcase;
+  final ShowcaseType? showcaseType;
   final Color accentColor;
 
   const _OnboardingPage({
@@ -1191,9 +1367,7 @@ class _OnboardingPage {
     required this.advisorText,
     required this.mood,
     this.isLastPage = false,
-    this.isWidgetShowcase = false,
-    this.isSignalsShowcase = false,
-    this.isAutomationsShowcase = false,
+    this.showcaseType,
     this.accentColor = AppTheme.primaryMagenta,
   });
 }
