@@ -895,7 +895,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                   position: _slideAnimation,
                   child: GradientBorderContainer(
                     borderRadius: 24,
-                    borderWidth: 2,
+                    borderWidth: 4,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
