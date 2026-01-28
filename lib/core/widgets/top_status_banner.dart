@@ -61,6 +61,7 @@ class TopStatusBanner extends ConsumerWidget {
     const double kTopStatusContentHeight = kToolbarHeight - 10;
     final bannerHeight = topPadding + kTopStatusContentHeight;
 
+    // The banner is tappable for navigation but does NOT block interactions below
     return SizedBox(
       height: bannerHeight,
       child: ClipRRect(

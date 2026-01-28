@@ -239,10 +239,20 @@ class _DeviceManagementScreenState
                   enabled: isConnected,
                   onTap: () => _executeAction(
                     'Factory Reset Config',
-                    () => protocol.factoryResetConfig(),
+                    () async {
+                      await protocol.factoryResetConfig();
+                      // Clear local state that will be invalidated by config reset
+                      final settingsAsync = ref.read(settingsServiceProvider);
+                      if (settingsAsync.hasValue) {
+                        // Region will be UNSET after config reset, so clear the configured flag
+                        await settingsAsync.requireValue.setRegionConfigured(false);
+                      }
+                      // Clear channels from local cache
+                      ref.read(channelsProvider.notifier).clearChannels();
+                    },
                     warningMessage:
                         'This will wipe channels, region, and all settings but preserves the node database.\n\n'
-                        'The device will reboot and you will be disconnected.',
+                        'The device will reboot in 5 seconds. You will need to set up the region again.',
                     causesDisconnect: true,
                   ),
                 ),
@@ -255,14 +265,27 @@ class _DeviceManagementScreenState
                   enabled: isConnected,
                   onTap: () => _executeAction(
                     'Full Factory Reset',
-                    () => protocol.factoryResetDevice(),
+                    () async {
+                      await protocol.factoryResetDevice();
+                      // Clear ALL local state - device is being wiped completely
+                      final settingsAsync = ref.read(settingsServiceProvider);
+                      if (settingsAsync.hasValue) {
+                        // Region will be UNSET, clear configured flag
+                        await settingsAsync.requireValue.setRegionConfigured(false);
+                        // Clear last device - it's essentially a new device now
+                        await settingsAsync.requireValue.clearLastDevice();
+                      }
+                      // Clear nodes and channels from local cache
+                      ref.read(nodesProvider.notifier).clearNodes();
+                      ref.read(channelsProvider.notifier).clearChannels();
+                    },
                     warningMessage:
                         'WARNING: This will completely erase the device including:\n'
                         '• All configuration\n'
                         '• All channels\n'
                         '• All known nodes\n'
                         '• Device identity\n\n'
-                        'The device will be like new out of the box and you will be disconnected.',
+                        'The device will reboot in 5 seconds. You will need to pair and set it up again.',
                     causesDisconnect: true,
                   ),
                 ),

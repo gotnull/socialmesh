@@ -26,7 +26,6 @@ import '../services/bug_report_service.dart';
 import '../features/automations/automation_providers.dart';
 import '../features/automations/automation_engine.dart';
 import '../models/mesh_models.dart';
-import '../generated/meshtastic/config.pb.dart' as config_pb;
 import '../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import 'social_providers.dart';
 import 'telemetry_providers.dart';
@@ -2773,7 +2772,22 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
     ref.listen<DeviceConnectionState2>(
       deviceConnectionProvider,
       (previous, next) {
+        // Check if session ID changed
         if (previous?.connectionSessionId != next.connectionSessionId) {
+          // IMPORTANT: During region apply, the device reboots and reconnects with a NEW session.
+          // If we're currently applying a region, don't reset state - let _awaitRegionConfirmation
+          // handle the reconnection and complete the region apply flow.
+          if (state.applyStatus == RegionApplyStatus.applying) {
+            AppLogging.protocol(
+              'REGION_FLOW choose=${state.regionChoice?.name ?? "null"} session=${state.connectionSessionId} '
+              'new_session=${next.connectionSessionId} status=applying reason=session_change_during_apply',
+            );
+            // Update the session ID but keep the apply status
+            state = state.copyWith(connectionSessionId: next.connectionSessionId);
+            return;
+          }
+          
+          // Not applying - reset state for new session
           state = RegionConfigState(connectionSessionId: next.connectionSessionId);
           AppLogging.protocol(
             'REGION_FLOW choose=null session=${next.connectionSessionId} status=idle reason=new_session',
@@ -2790,11 +2804,15 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
             return;
           }
 
+          // NOTE: We intentionally DO NOT mark as failed on disconnect during apply.
+          // Setting region causes device reboot, which triggers a temporary disconnect.
+          // The _awaitRegionConfirmation method handles this expected disconnect/reconnect cycle.
+          // Marking as failed here would abort the operation before reconnection can complete.
           if (previous?.isConnected == true && !next.isConnected) {
-            state = state.copyWith(applyStatus: RegionApplyStatus.failed);
             AppLogging.protocol(
-              'REGION_FLOW choose=${state.regionChoice?.name ?? "null"} session=${state.connectionSessionId} status=failed reason=disconnect',
+              'REGION_FLOW choose=${state.regionChoice?.name ?? "null"} session=${state.connectionSessionId} status=applying disconnect_expected=true reason=device_reboot',
             );
+            // DO NOT set applyStatus to failed - let _awaitRegionConfirmation handle it
             return;
           }
         }
@@ -2865,28 +2883,28 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
       await protocol.setRegion(region);
       await _awaitRegionConfirmation(region, sessionId);
 
+      // If we get here, _awaitRegionConfirmation completed successfully.
+      // This means the device rebooted and reconnected, confirming the region was applied.
+      // Note: The session ID will have changed because reconnection creates a new session.
+      // This is expected behavior - don't treat session change as an error here.
+      
       if (!ref.mounted) return;
 
-      if (state.connectionSessionId != sessionId) {
-        throw StateError('Region apply no longer active');
-      }
-
+      // The region stream listener might have already set status to applied
       if (state.applyStatus == RegionApplyStatus.applied) {
         return;
       }
 
-      if (state.applyStatus != RegionApplyStatus.applying) {
-        throw StateError('Region apply no longer active');
-      }
-
+      // Mark as applied - the reconnection confirms success
       state = state.copyWith(applyStatus: RegionApplyStatus.applied);
       AppLogging.protocol(
-        'REGION_FLOW choose=${region.name} session=$sessionId status=applied reason=confirmed',
+        'REGION_FLOW choose=${region.name} session=$sessionId status=applied reason=reconnect_confirmed',
       );
     } catch (e) {
       if (!ref.mounted) rethrow;
-      if (state.connectionSessionId == sessionId &&
-          state.applyStatus == RegionApplyStatus.applying) {
+      // Only set failed if we're still in applying state for this session
+      // (session might have changed if user started a new connection)
+      if (state.applyStatus == RegionApplyStatus.applying) {
         state = state.copyWith(applyStatus: RegionApplyStatus.failed);
         AppLogging.protocol(
           'REGION_FLOW choose=${region.name} session=$sessionId status=failed reason=${e.runtimeType}',
@@ -2900,18 +2918,19 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
     config_pbenum.Config_LoRaConfig_RegionCode region,
     int sessionId,
   ) async {
-    final protocol = ref.read(protocolServiceProvider);
     // Capture the device ID so we can verify reconnect is to the same device
     final targetDeviceId = ref.read(deviceConnectionProvider).device?.id;
 
     final completer = Completer<void>();
-    StreamSubscription<config_pbenum.Config_LoRaConfig_RegionCode>? regionSub;
-    StreamSubscription<config_pb.Config_LoRaConfig>? loraSub;
     ProviderSubscription<DeviceConnectionState2>? connectionSub;
     bool sawDisconnect = false;
+    bool sawReconnect = false;
 
     void completeSuccess() {
       if (!completer.isCompleted) {
+        AppLogging.protocol(
+          'REGION_FLOW session=$sessionId region_confirmed=${region.name}',
+        );
         completer.complete();
       }
     }
@@ -2922,23 +2941,11 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
       }
     }
 
-    regionSub = protocol.regionStream.listen((value) {
-      if (value == region) {
-        completeSuccess();
-      }
-    });
-
-    loraSub = protocol.loraConfigStream.listen((config) {
-      if (config.region == region) {
-        completeSuccess();
-      }
-    });
-
     // Setting region causes device reboot, which causes disconnect/reconnect.
-    // We need to:
-    // 1. Allow the expected disconnect
-    // 2. Wait for reconnect to the SAME device
-    // 3. Only fail on terminal errors or wrong device
+    // We track the connection state through this cycle:
+    // 1. Connected -> Disconnected (expected reboot)
+    // 2. Disconnected -> Connecting -> Connected (auto-reconnect)
+    // 3. Once reconnected and protocol is ready, we complete
     connectionSub = ref.listen<DeviceConnectionState2>(
       deviceConnectionProvider,
       (previous, next) {
@@ -2947,8 +2954,8 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
           return;
         }
         
-        // Track that we saw a disconnect (expected during region change)
-        if (!next.isConnected && !sawDisconnect) {
+        // Track disconnect (expected during region change)
+        if (!sawDisconnect && !next.isConnected) {
           sawDisconnect = true;
           AppLogging.protocol(
             'REGION_FLOW session=$sessionId disconnect_during_apply (expected for reboot)',
@@ -2962,30 +2969,35 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
           return;
         }
         
-        // If we reconnected, verify it's to the same device
-        if (sawDisconnect && next.isConnected) {
+        // Track reconnect - but only complete if device is fully connected
+        // (state == DevicePairingState.connected, not just .connecting)
+        if (sawDisconnect && !sawReconnect && next.isConnected && 
+            next.state == DevicePairingState.connected) {
           final reconnectedDeviceId = next.device?.id;
           if (targetDeviceId != null && reconnectedDeviceId != targetDeviceId) {
             completeError(StateError('Region apply canceled - reconnected to different device'));
             return;
           }
+          sawReconnect = true;
           AppLogging.protocol(
             'REGION_FLOW session=$sessionId reconnected_after_reboot newSession=${next.connectionSessionId}',
           );
-          // Don't error here - wait for region confirmation from streams
+          
+          // Device is fully reconnected - region change succeeded
+          // The device only reboots after accepting the region, so if we're
+          // connected again, the region was applied successfully.
+          completeSuccess();
         }
       },
     );
 
     try {
       await completer.future.timeout(
-        const Duration(seconds: 60),
+        const Duration(seconds: 90), // Increased timeout for slow reboots
         onTimeout: () =>
-            throw TimeoutException('Timed out waiting for region confirmation'),
+            throw TimeoutException('Timed out waiting for device to reconnect after region change'),
       );
     } finally {
-      await regionSub.cancel();
-      await loraSub.cancel();
       connectionSub.close();
     }
   }

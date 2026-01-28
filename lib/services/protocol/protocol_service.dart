@@ -3463,7 +3463,8 @@ class ProtocolService {
   }
 
   /// Factory reset the device configuration (keeps node DB)
-  Future<void> factoryResetConfig() async {
+  /// The delay parameter specifies seconds to wait before reset (default 5, like official app)
+  Future<void> factoryResetConfig({int delaySeconds = 5}) async {
     if (_myNodeNum == null) {
       throw StateError('Cannot factory reset config: device not ready');
     }
@@ -3471,9 +3472,9 @@ class ProtocolService {
       throw StateError('Cannot factory reset config: not connected');
     }
 
-    AppLogging.protocol('Factory resetting configuration');
+    AppLogging.protocol('Factory resetting configuration (delay: ${delaySeconds}s)');
 
-    final adminMsg = admin.AdminMessage()..factoryResetConfig = 1;
+    final adminMsg = admin.AdminMessage()..factoryResetConfig = delaySeconds;
 
     final data = pb.Data()
       ..portnum = pn.PortNum.ADMIN_APP
@@ -3492,7 +3493,8 @@ class ProtocolService {
   }
 
   /// Factory reset the entire device (config + node DB)
-  Future<void> factoryResetDevice() async {
+  /// The delay parameter specifies seconds to wait before reset (default 5, like official app)
+  Future<void> factoryResetDevice({int delaySeconds = 5}) async {
     if (_myNodeNum == null) {
       throw StateError('Cannot factory reset device: device not ready');
     }
@@ -3500,9 +3502,9 @@ class ProtocolService {
       throw StateError('Cannot factory reset device: not connected');
     }
 
-    AppLogging.protocol('Factory resetting entire device');
+    AppLogging.protocol('Factory resetting entire device (delay: ${delaySeconds}s)');
 
-    final adminMsg = admin.AdminMessage()..factoryResetDevice = 1;
+    final adminMsg = admin.AdminMessage()..factoryResetDevice = delaySeconds;
 
     final data = pb.Data()
       ..portnum = pn.PortNum.ADMIN_APP

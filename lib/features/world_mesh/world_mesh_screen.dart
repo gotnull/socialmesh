@@ -767,11 +767,12 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
         ),
 
         // Node info card when selected (with loading indicator)
+        // Position above the stats bar (which is ~60px) plus safe area
         if (_selectedNode != null && !_showSearchResults)
           Positioned(
             left: 16,
             right: 16,
-            bottom: 70,
+            bottom: 85,
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
               child: _isLoadingNodeInfo
@@ -925,15 +926,16 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                   ),
               ],
             ),
+            // Attribution positioned at top-left to avoid clashing with stats
             Positioned(
               left: 0,
-              bottom: -2,
+              top: 0,
               child: GestureDetector(
                 onTap: () => launchUrl(Uri.parse(attributionUrl)),
                 child: Text(
                   attributionLabel,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.35),
                     fontSize: 9,
                   ),
                 ),

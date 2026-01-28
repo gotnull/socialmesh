@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:permission_handler/permission_handler.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../core/logging.dart';
 
 /// Permission helper for managing app permissions
@@ -92,5 +95,23 @@ class PermissionHelper {
   /// Open app settings (platform)
   Future<void> goToAppSettings() async {
     await openAppSettings();
+  }
+
+  /// Open Bluetooth settings directly.
+  /// Returns true if settings were opened successfully.
+  /// On iOS uses App-Prefs:Bluetooth, on Android uses android.settings.BLUETOOTH_SETTINGS
+  Future<bool> openBluetoothSettings() async {
+    if (Platform.isIOS) {
+      final bluetoothUrl = Uri.parse('App-Prefs:Bluetooth');
+      if (await canLaunchUrl(bluetoothUrl)) {
+        return await launchUrl(bluetoothUrl);
+      }
+    } else if (Platform.isAndroid) {
+      final bluetoothUrl = Uri.parse('android.settings.BLUETOOTH_SETTINGS');
+      if (await canLaunchUrl(bluetoothUrl)) {
+        return await launchUrl(bluetoothUrl);
+      }
+    }
+    return false;
   }
 }

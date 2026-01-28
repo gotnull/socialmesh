@@ -2,12 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:permission_handler/permission_handler.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/connection_providers.dart' as conn;
 import '../../generated/meshtastic/config.pbenum.dart';
+import '../../utils/permissions.dart';
 import '../../utils/snackbar.dart';
 
 /// Typedef for shorter reference to the enum
@@ -238,8 +238,8 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
       final message = e is TimeoutException
           ? 'Reconnect timed out. Please try again.'
           : pairingInvalidation
-          ? 'Your phone removed the stored pairing info for this device.\nGo to Settings > Bluetooth, forget the Meshtastic device, and try again.'
-          : 'Failed to set region: $e';
+              ? 'Your phone removed the stored pairing info for this device.\nGo to Settings > Bluetooth, forget the Meshtastic device, and try again.'
+              : 'Failed to set region: $e';
       if (!mounted) return;
       setState(() {
         _errorMessage = message;
@@ -249,13 +249,13 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
     }
   }
 
-  Future<void> _openAppSettings() async {
-    final opened = await openAppSettings();
+  Future<void> _openBluetoothSettings() async {
+    final opened = await PermissionHelper().openBluetoothSettings();
     if (!mounted) return;
     if (!opened) {
       showErrorSnackBar(
         context,
-        'Could not open Settings. Please open Bluetooth settings manually.',
+        'Could not open Bluetooth Settings. Please open Settings > Bluetooth manually.',
       );
     }
   }
@@ -263,414 +263,491 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
   @override
   Widget build(BuildContext context) {
     final regionState = ref.watch(regionConfigProvider);
+    final connectionState = ref.watch(conn.deviceConnectionProvider);
     final isBusy = regionState.applyStatus == RegionApplyStatus.applying;
     final statusText = regionState.applyStatus == RegionApplyStatus.failed
         ? _errorMessage
         : null;
+
+    // Determine detailed status for the loading overlay
+    String loadingStatusText = 'Setting region...';
+    if (isBusy) {
+      if (!connectionState.isConnected) {
+        loadingStatusText = 'Device rebooting...';
+      } else if (connectionState.state == conn.DevicePairingState.connecting) {
+        loadingStatusText = 'Reconnecting...';
+      } else if (connectionState.state == conn.DevicePairingState.configuring) {
+        loadingStatusText = 'Loading configuration...';
+      }
+    }
+
     return HelpTourController(
       topicId: 'region_selection',
       stepKeys: const {},
-      child: Scaffold(
-        backgroundColor: context.background,
-        appBar: AppBar(
-          backgroundColor: context.background,
-          leading: widget.isInitialSetup
-              ? null
-              : IconButton(
-                  icon: Icon(
-                    Icons.arrow_back,
-                    color: isBusy ? context.textTertiary : context.textPrimary,
-                  ),
-                  onPressed: isBusy ? null : () => Navigator.of(context).pop(),
-                ),
-          title: Text(
-            widget.isInitialSetup ? 'Select Your Region' : 'Change Region',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: context.textPrimary,
-            ),
-          ),
-          actions: [
-            IcoHelpAppBarButton(
-              topicId: 'region_selection',
-              autoTrigger: widget.isInitialSetup,
-            ),
-          ],
-        ),
-        body: Column(
-          children: [
-            if (widget.isInitialSetup)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: context.accentColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: context.accentColor.withValues(alpha: 0.3),
+      child: Stack(
+        children: [
+          // Main content
+          Scaffold(
+            backgroundColor: context.background,
+            appBar: AppBar(
+              backgroundColor: context.background,
+              leading: widget.isInitialSetup
+                  ? null
+                  : IconButton(
+                      icon: Icon(
+                        Icons.arrow_back,
+                        color:
+                            isBusy ? context.textTertiary : context.textPrimary,
+                      ),
+                      onPressed:
+                          isBusy ? null : () => Navigator.of(context).pop(),
                     ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.info_outline,
-                        color: context.accentColor,
-                        size: 24,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Important: Select Your Region',
-                              style: TextStyle(
-                                color: context.textPrimary,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Choose the correct frequency for your location to comply with local regulations.',
-                              style: TextStyle(
-                                color: context.textSecondary,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+              title: Text(
+                widget.isInitialSetup ? 'Select Your Region' : 'Change Region',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: context.textPrimary,
                 ),
               ),
-
-            // Search bar
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: context.card,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: context.border),
+              actions: [
+                IcoHelpAppBarButton(
+                  topicId: 'region_selection',
+                  autoTrigger: widget.isInitialSetup,
                 ),
-                child: TextField(
-                  style: TextStyle(color: context.textPrimary),
-                  decoration: InputDecoration(
-                    hintText: 'Search regions...',
-                    hintStyle: TextStyle(color: context.textTertiary),
-                    prefixIcon: Icon(Icons.search, color: context.textTertiary),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
-                    ),
-                  ),
-                  onChanged: (value) => setState(() => _searchQuery = value),
-                ),
-              ),
+              ],
             ),
-
-            const SizedBox(height: 16),
-
-            // Region list
-            Expanded(
-              child: AbsorbPointer(
-                absorbing: isBusy,
-                child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: _filteredRegions.length,
-                  itemBuilder: (context, index) {
-                    final region = _filteredRegions[index];
-                    final isSelected = _selectedRegion == region.code;
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 8),
+            body: Column(
+              children: [
+                if (widget.isInitialSetup)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: isSelected
-                            ? context.accentColor.withValues(alpha: 0.15)
-                            : context.card,
+                        color: context.accentColor.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: isSelected
-                              ? context.accentColor
-                              : context.border,
-                          width: isSelected ? 2 : 1,
+                          color: context.accentColor.withValues(alpha: 0.3),
                         ),
                       ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () =>
-                              setState(() => _selectedRegion = region.code),
-                          borderRadius: BorderRadius.circular(12),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Row(
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            color: context.accentColor,
+                            size: 24,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Container(
-                                  width: 48,
-                                  height: 48,
-                                  decoration: BoxDecoration(
-                                    color: isSelected
-                                        ? context.accentColor.withValues(
-                                            alpha: 0.2,
-                                          )
-                                        : context.background,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Center(
-                                    child: Icon(
-                                      Icons.cell_tower,
-                                      color: isSelected
-                                          ? context.accentColor
-                                          : context.textTertiary,
-                                      size: 24,
-                                    ),
+                                Text(
+                                  'Important: Select Your Region',
+                                  style: TextStyle(
+                                    color: context.textPrimary,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        region.name,
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                          color: isSelected
-                                              ? Colors.white
-                                              : context.textSecondary,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        region.description,
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          color: context.textTertiary,
-                                        ),
-                                      ),
-                                    ],
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Choose the correct frequency for your location to comply with local regulations.',
+                                  style: TextStyle(
+                                    color: context.textSecondary,
+                                    fontSize: 12,
                                   ),
                                 ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: isSelected
-                                        ? context.accentColor
-                                        : context.background,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    region.frequency,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: isSelected
-                                          ? Colors.white
-                                          : context.textTertiary,
-                                    ),
-                                  ),
-                                ),
-                                if (_currentRegion == region.code &&
-                                    !isSelected) ...[
-                                  const SizedBox(width: 8),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: context.accentColor.withValues(
-                                        alpha: 0.2,
-                                      ),
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: Text(
-                                      'CURRENT',
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w700,
-                                        color: context.accentColor,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                                if (isSelected) ...[
-                                  const SizedBox(width: 12),
-                                  Icon(
-                                    Icons.check_circle,
-                                    color: context.accentColor,
-                                    size: 24,
-                                  ),
-                                ],
                               ],
                             ),
                           ),
-                        ),
+                        ],
                       ),
-                    );
-                  },
-                ),
-              ),
-            ),
+                    ),
+                  ),
 
-            // Save button
-            SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    key: regionSelectionApplyButtonKey,
-                    onPressed: _selectedRegion != null && !isBusy
-                        ? _saveRegion
-                        : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: context.accentColor,
-                      foregroundColor: Colors.white,
-                      disabledBackgroundColor: context.card,
-                      disabledForegroundColor: context.textTertiary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                // Search bar
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: context.card,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: context.border),
                     ),
-                    child: isBusy
-                        ? Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Text(
-                                'Applying region…',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          )
-                        : Text(
-                            widget.isInitialSetup ? 'Continue' : 'Save',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                  ),
-                ),
-              ),
-            ),
-            if (statusText != null) ...[
-              const SizedBox(height: 12),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  statusText,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: AppTheme.errorRed,
-                  ),
-                ),
-              ),
-            ],
-            if (_showPairingInvalidationHint) ...[
-              const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: context.accentColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: context.accentColor.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Bluetooth pairing was removed. Forget “Meshtastic” in Settings > Bluetooth and reconnect to continue.',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: context.textSecondary,
+                    child: TextField(
+                      style: TextStyle(color: context.textPrimary),
+                      decoration: InputDecoration(
+                        hintText: 'Search regions...',
+                        hintStyle: TextStyle(color: context.textTertiary),
+                        prefixIcon:
+                            Icon(Icons.search, color: context.textTertiary),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 14,
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          TextButton.icon(
-                            onPressed: _openAppSettings,
-                            icon: Icon(
-                              Icons.settings_rounded,
-                              size: 16,
-                              color: context.textPrimary,
-                            ),
-                            label: Text(
-                              'Open Settings',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: context.textPrimary,
-                              ),
-                            ),
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 6,
-                                horizontal: 10,
-                              ),
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            ),
+                      onChanged: (value) =>
+                          setState(() => _searchQuery = value),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Region list
+                Expanded(
+                  child: AbsorbPointer(
+                    absorbing: isBusy,
+                    child: ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: _filteredRegions.length,
+                      itemBuilder: (context, index) {
+                        final region = _filteredRegions[index];
+                        final isSelected = _selectedRegion == region.code;
+                        return _buildRegionTile(region, isSelected);
+                      },
+                    ),
+                  ),
+                ),
+
+                // Save button
+                SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        key: regionSelectionApplyButtonKey,
+                        onPressed: _selectedRegion != null && !isBusy
+                            ? _saveRegion
+                            : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: context.accentColor,
+                          foregroundColor: Colors.white,
+                          disabledBackgroundColor: context.card,
+                          disabledForegroundColor: context.textTertiary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          const SizedBox(width: 8),
-                          TextButton(
-                            onPressed: () =>
-                                Navigator.of(context).pushNamed('/scanner'),
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 6,
-                                horizontal: 10,
-                              ),
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            ),
+                        ),
+                        child: Text(
+                          widget.isInitialSetup ? 'Continue' : 'Save',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Error message - styled as a subtle card, not ugly red text
+                if (statusText != null) ...[
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: AppTheme.errorRed.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppTheme.errorRed.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            color: AppTheme.errorRed,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
                             child: Text(
-                              'View Scanner',
+                              statusText,
                               style: TextStyle(
                                 fontSize: 13,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w500,
                                 color: context.textPrimary,
                               ),
                             ),
                           ),
                         ],
                       ),
+                    ),
+                  ),
+                ],
+
+                // Pairing invalidation hint
+                if (_showPairingInvalidationHint) ...[
+                  const SizedBox(height: 8),
+                  _buildPairingHint(),
+                ],
+              ],
+            ),
+          ),
+
+          // Full-screen loading overlay during region apply
+          if (isBusy)
+            Positioned.fill(
+              child: Container(
+                color: context.background.withValues(alpha: 0.95),
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          color: context.accentColor.withValues(alpha: 0.15),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: SizedBox(
+                            width: 40,
+                            height: 40,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 3,
+                              color: context.accentColor,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        loadingStatusText,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: context.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Please wait while your device reboots',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: context.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'This may take up to 30 seconds',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: context.textTertiary,
+                        ),
+                      ),
                     ],
                   ),
                 ),
               ),
-            ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRegionTile(RegionInfo region, bool isSelected) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: isSelected
+            ? context.accentColor.withValues(alpha: 0.15)
+            : context.card,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isSelected ? context.accentColor : context.border,
+          width: isSelected ? 2 : 1,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => setState(() => _selectedRegion = region.code),
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? context.accentColor.withValues(alpha: 0.2)
+                        : context.background,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      Icons.cell_tower,
+                      color: isSelected
+                          ? context.accentColor
+                          : context.textTertiary,
+                      size: 24,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        region.name,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color:
+                              isSelected ? Colors.white : context.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        region.description,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: context.textTertiary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSelected ? context.accentColor : context.background,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    region.frequency,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: isSelected ? Colors.white : context.textTertiary,
+                    ),
+                  ),
+                ),
+                if (_currentRegion == region.code && !isSelected) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: context.accentColor.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      'CURRENT',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: context.accentColor,
+                      ),
+                    ),
+                  ),
+                ],
+                if (isSelected) ...[
+                  const SizedBox(width: 12),
+                  Icon(
+                    Icons.check_circle,
+                    color: context.accentColor,
+                    size: 24,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPairingHint() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: context.accentColor.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: context.accentColor.withValues(alpha: 0.3),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Bluetooth pairing was removed. Forget "Meshtastic" in Settings > Bluetooth and reconnect to continue.',
+              style: TextStyle(
+                fontSize: 13,
+                color: context.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                TextButton.icon(
+                  onPressed: _openBluetoothSettings,
+                  icon: Icon(
+                    Icons.bluetooth_rounded,
+                    size: 16,
+                    color: context.textPrimary,
+                  ),
+                  label: Text(
+                    'Bluetooth Settings',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: context.textPrimary,
+                    ),
+                  ),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 6,
+                      horizontal: 10,
+                    ),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                TextButton(
+                  onPressed: () =>
+                      Navigator.of(context).pushNamed('/scanner'),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 6,
+                      horizontal: 10,
+                    ),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Text(
+                    'View Scanner',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: context.textPrimary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),

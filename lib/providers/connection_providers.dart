@@ -378,21 +378,30 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
 
   /// Initialize protocol after BLE auto-reconnected (without going through _connectToDevice)
   Future<void> _initializeProtocolAfterAutoReconnect() async {
-    // CRITICAL: Only handle auto-reconnect initiated connections
-    // When scanner initiates connection, autoReconnectState is idle/failed
-    // When background auto-reconnect initiates, it sets state to 'connecting'
-    // If we're not in 'connecting' state, scanner is handling the connection
+    // Check if we should handle this reconnection
+    // We handle it in these cases:
+    // 1. autoReconnectState == connecting (our background reconnect initiated it)
+    // 2. Region apply is in progress (device rebooted after region change, iOS auto-reconnected)
     final autoReconnectState = ref.read(autoReconnectStateProvider);
-    if (autoReconnectState != AutoReconnectState.connecting) {
+    final regionState = ref.read(regionConfigProvider);
+    final isRegionApplyInProgress = regionState.applyStatus == RegionApplyStatus.applying;
+    
+    final shouldHandleReconnect = 
+        autoReconnectState == AutoReconnectState.connecting ||
+        isRegionApplyInProgress;
+    
+    if (!shouldHandleReconnect) {
       AppLogging.connection(
-        '🔌 _initializeProtocolAfterAutoReconnect: SKIPPING - not auto-reconnect '
-        '(state=$autoReconnectState), scanner is handling connection',
+        '🔌 _initializeProtocolAfterAutoReconnect: SKIPPING - '
+        'autoReconnect=$autoReconnectState, regionApplying=$isRegionApplyInProgress, '
+        'scanner is handling connection',
       );
       return;
     }
 
     AppLogging.connection(
-      '🔌 _initializeProtocolAfterAutoReconnect: BLE auto-reconnected, starting protocol...',
+      '🔌 _initializeProtocolAfterAutoReconnect: BLE auto-reconnected, starting protocol... '
+      '(autoReconnect=$autoReconnectState, regionApplying=$isRegionApplyInProgress)',
     );
 
     try {
@@ -886,6 +895,17 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       ref
           .read(autoReconnectStateProvider.notifier)
           .setState(AutoReconnectState.idle);
+    } else {
+      // Unexpected disconnect (e.g., device reboot after region change) - trigger auto-reconnect
+      AppLogging.connection(
+        '🔌 _handleDisconnect: Unexpected disconnect, triggering auto-reconnect',
+      );
+      // Use a slight delay to allow disconnect to complete
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (ref.mounted) {
+          startBackgroundConnection();
+        }
+      });
     }
   }
 
@@ -955,6 +975,16 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
   bool _reconciledThisSession = false;
 
   void markAsPaired(DeviceInfo device, int? myNodeNum) {
+    // CRITICAL: Set up the connection listener if not already done.
+    // This is needed for first-time connections where initialize() was never called
+    // (because there was no lastDeviceId). Without this listener, disconnect events
+    // won't trigger auto-reconnect.
+    _setupConnectionListener();
+    
+    // Mark as initialized so future calls don't re-run build() initialization
+    _isInitialized = true;
+    _userDisconnected = false;
+    
     state = DeviceConnectionState2(
       state: DevicePairingState.connected,
       device: device,
@@ -963,6 +993,10 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       connectionSessionId: _nextConnectionSessionId(),
     );
     _resetInvalidationTracking();
+    
+    AppLogging.connection(
+      '🔌 markAsPaired: device=${device.id}, myNodeNum=$myNodeNum, listener active',
+    );
 
     // Run one-shot reconciliation for this node on connect
     if (!_reconciledThisSession && myNodeNum != null) {

@@ -19,7 +19,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  test('Region apply sets applying and disconnect keeps picker suppressed',
+  test('Region apply sets applying and disconnect-reconnect completes successfully',
       () async {
     final fakeProtocol = _FakeRegionProtocolService(
       initialRegion: config_pbenum.Config_LoRaConfig_RegionCode.UNSET,
@@ -59,6 +59,7 @@ void main() {
       RegionApplyStatus.applying,
     );
 
+    // Simulate disconnect (device reboot) - status should STAY applying, not fail
     container.read(deviceConnectionProvider.notifier).setTestState(
       DeviceConnectionState2(
         state: DevicePairingState.disconnected,
@@ -72,11 +73,34 @@ void main() {
       ),
     );
 
-    await expectLater(regionFuture, throwsStateError);
+    await Future<void>.delayed(Duration.zero);
+
+    // Status should still be applying - disconnect during region apply is expected
+    expect(
+      container.read(regionConfigProvider).applyStatus,
+      RegionApplyStatus.applying,
+    );
+
+    // Simulate reconnect after device reboot - this completes the region apply
+    container.read(deviceConnectionProvider.notifier).setTestState(
+      DeviceConnectionState2(
+        state: DevicePairingState.connected,
+        device: DeviceInfo(
+          id: 'device-alpha',
+          name: 'Region Device',
+          type: TransportType.ble,
+        ),
+        connectionSessionId: 2, // New session after reconnect
+        lastConnectedAt: DateTime.now(),
+      ),
+    );
+
+    // Wait for the region apply to complete
+    await regionFuture;
 
     expect(
       container.read(regionConfigProvider).applyStatus,
-      RegionApplyStatus.failed,
+      RegionApplyStatus.applied,
     );
     expect(container.read(needsRegionSetupProvider), isFalse);
   });
@@ -127,6 +151,7 @@ void main() {
     // and registers its confirmation listener
     await Future<void>.delayed(Duration.zero);
 
+    // Simulate disconnect (device reboot) - status should stay applying
     container.read(deviceConnectionProvider.notifier).setTestState(
       DeviceConnectionState2(
         state: DevicePairingState.disconnected,
@@ -140,10 +165,16 @@ void main() {
       ),
     );
 
-    await expectLater(regionFuture, throwsStateError);
+    await Future<void>.delayed(Duration.zero);
 
+    // Status should still be applying during disconnect
+    expect(
+      container.read(regionConfigProvider).applyStatus,
+      RegionApplyStatus.applying,
+    );
     expect(container.read(needsRegionSetupProvider), isFalse);
 
+    // Simulate reconnect with new session - this completes the region apply
     container.read(deviceConnectionProvider.notifier).setTestState(
       DeviceConnectionState2(
         state: DevicePairingState.connected,
@@ -157,7 +188,14 @@ void main() {
       ),
     );
 
-    expect(container.read(needsRegionSetupProvider), isTrue);
+    await regionFuture;
+
+    // After successful region apply, needsRegionSetup should be false
+    expect(container.read(needsRegionSetupProvider), isFalse);
+    expect(
+      container.read(regionConfigProvider).applyStatus,
+      RegionApplyStatus.applied,
+    );
   });
 }
 

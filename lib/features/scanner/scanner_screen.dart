@@ -10,11 +10,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-import 'package:permission_handler/permission_handler.dart';
 import '../../core/transport.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/connecting_content.dart';
 import '../../core/widgets/ico_help_system.dart';
+import '../../utils/permissions.dart';
 import '../../utils/snackbar.dart';
 import '../../providers/app_providers.dart';
 import '../../services/storage/storage_service.dart';
@@ -499,13 +499,13 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     }
   }
 
-  Future<void> _openAppSettings() async {
-    final opened = await openAppSettings();
+  Future<void> _openBluetoothSettings() async {
+    final opened = await PermissionHelper().openBluetoothSettings();
     if (!mounted) return;
     if (!opened) {
       showErrorSnackBar(
         context,
-        'Could not open Settings. Please open Bluetooth settings manually.',
+        'Could not open Bluetooth Settings. Please open Settings > Bluetooth manually.',
       );
     }
   }
@@ -1114,14 +1114,14 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                     Row(
                       children: [
                         TextButton.icon(
-                          onPressed: _openAppSettings,
+                          onPressed: _openBluetoothSettings,
                           icon: Icon(
-                            Icons.settings_rounded,
+                            Icons.bluetooth_rounded,
                             size: 16,
                             color: context.textPrimary,
                           ),
                           label: Text(
-                            'Open Settings',
+                            'Bluetooth Settings',
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,

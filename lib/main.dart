@@ -1128,15 +1128,28 @@ class _SignalDetailLoader extends ConsumerWidget {
 }
 
 /// Screen shown when a device-required route is accessed while disconnected
-class _BlockedRouteScreen extends StatelessWidget {
+class _BlockedRouteScreen extends ConsumerWidget {
   final String routeName;
   final String message;
 
   const _BlockedRouteScreen({required this.routeName, required this.message});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final deviceState = ref.watch(conn.deviceConnectionProvider);
+    final isInvalidated = deviceState.isTerminalInvalidated;
+
+    // Customize UI based on whether pairing was invalidated (factory reset, etc.)
+    final iconData = isInvalidated ? Icons.error_outline : Icons.bluetooth_disabled;
+    final iconColor = isInvalidated ? Colors.red : Colors.orange;
+    final bgColor = isInvalidated
+        ? Colors.red.withValues(alpha: 0.1)
+        : Colors.orange.withValues(alpha: 0.1);
+    final title = isInvalidated ? 'Device Reset' : 'Device Not Connected';
+    final description = isInvalidated
+        ? 'Your device was factory reset or replaced.\n\nGo to Settings → Bluetooth, forget the Meshtastic device, then scan again.'
+        : message;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Device Required')),
@@ -1151,25 +1164,25 @@ class _BlockedRouteScreen extends StatelessWidget {
                   width: 80,
                   height: 80,
                   decoration: BoxDecoration(
-                    color: Colors.orange.withValues(alpha: 0.1),
+                    color: bgColor,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
-                    Icons.bluetooth_disabled,
+                  child: Icon(
+                    iconData,
                     size: 40,
-                    color: Colors.orange,
+                    color: iconColor,
                   ),
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  'Device Not Connected',
+                  title,
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  message,
+                  description,
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
@@ -1181,7 +1194,7 @@ class _BlockedRouteScreen extends StatelessWidget {
                     Navigator.of(context).pushNamed('/scanner');
                   },
                   icon: const Icon(Icons.bluetooth_searching),
-                  label: const Text('Connect Device'),
+                  label: Text(isInvalidated ? 'Scan for Devices' : 'Connect Device'),
                 ),
                 const SizedBox(height: 12),
                 TextButton(

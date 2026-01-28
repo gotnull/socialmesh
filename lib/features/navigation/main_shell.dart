@@ -940,6 +940,12 @@ class _MainShellState extends ConsumerState<MainShell> {
       return const ScannerScreen(isInline: true);
     }
 
+    // If pairing was invalidated (factory reset, device replaced, etc.), go straight to scanner
+    // User needs to forget device in Bluetooth settings and re-pair
+    if (deviceState.isTerminalInvalidated) {
+      return const ScannerScreen(isInline: true);
+    }
+
     // If connected but region is UNSET, force region selection
     // This catches firmware updates/resets that clear the region
     // BUT: skip this during auto-reconnect if user already configured region before
@@ -958,10 +964,12 @@ class _MainShellState extends ConsumerState<MainShell> {
     return Scaffold(
       key: _scaffoldKey,
       drawer: _buildDrawer(context),
-      drawerEdgeDragWidth: 40, // Edge area for swipe gesture
+      drawerEdgeDragWidth: 40,
       body: Stack(
         children: [
           // Main content (fills available space)
+          // Allow user interaction even when reconnection banner is showing
+          // The app should remain usable with cached data while reconnecting
           Positioned.fill(
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
