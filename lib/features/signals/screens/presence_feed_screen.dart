@@ -1681,18 +1681,25 @@ class _AnimatedSignalItemState extends ConsumerState<AnimatedSignalItem>
     with TickerProviderStateMixin {
   late AnimationController _enterController;
   late AnimationController _fadeOutController;
+  late AnimationController _newSignalController;
   late Animation<Offset> _slideAnimation;
   late Animation<double> _fadeAnimation;
   late Animation<double> _fadeOutAnimation;
   late Animation<double> _scaleOutAnimation;
   late Animation<Offset> _slideOutAnimation;
+  // New signal entrance animations
+  late Animation<double> _newScaleAnimation;
+  late Animation<double> _newFadeAnimation;
+  late Animation<Offset> _newSlideAnimation;
   bool _hasStartedFadeOut = false;
+  bool _isNewSignal = false;
+  bool _hasCheckedNewStatus = false;
 
   @override
   void initState() {
     super.initState();
 
-    // Enter animation controller
+    // Enter animation controller (for normal list items)
     _enterController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
@@ -1707,6 +1714,30 @@ class _AnimatedSignalItemState extends ConsumerState<AnimatedSignalItem>
       begin: 0.0,
       end: 1.0,
     ).animate(CurvedAnimation(parent: _enterController, curve: Curves.easeOut));
+
+    // New signal entrance animation - more dramatic
+    _newSignalController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+
+    _newScaleAnimation = Tween<double>(begin: 0.85, end: 1.0).animate(
+      CurvedAnimation(parent: _newSignalController, curve: Curves.easeOutBack),
+    );
+
+    _newFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _newSignalController,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
+      ),
+    );
+
+    _newSlideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.15),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _newSignalController, curve: Curves.easeOutCubic),
+    );
 
     // Fade-out animation controller - smooth cinematic exit
     _fadeOutController = AnimationController(
@@ -1735,10 +1766,7 @@ class _AnimatedSignalItemState extends ConsumerState<AnimatedSignalItem>
           ),
         );
 
-    // Stagger animation based on index
-    Future<void>.delayed(Duration(milliseconds: 50 * widget.index), () {
-      if (mounted) _enterController.forward();
-    });
+    // Regular stagger animation will be handled in build after checking new status
   }
 
   @override
@@ -1748,6 +1776,7 @@ class _AnimatedSignalItemState extends ConsumerState<AnimatedSignalItem>
     if (widget.isRefreshing && !oldWidget.isRefreshing) {
       // Slide out when refreshing
       _enterController.reverse();
+      _newSignalController.reset();
     } else if (!widget.isRefreshing && oldWidget.isRefreshing) {
       // Slide back in after refresh
       Future<void>.delayed(Duration(milliseconds: 50 * widget.index), () {
@@ -1760,11 +1789,40 @@ class _AnimatedSignalItemState extends ConsumerState<AnimatedSignalItem>
   void dispose() {
     _enterController.dispose();
     _fadeOutController.dispose();
+    _newSignalController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    // Check if this is a newly added signal (only once per widget lifecycle)
+    if (!_hasCheckedNewStatus) {
+      _hasCheckedNewStatus = true;
+      _isNewSignal = ref.read(isSignalNewlyAddedProvider(widget.signalId));
+
+      if (_isNewSignal) {
+        // Play the dramatic new signal animation
+        _enterController.value = 1.0; // Skip regular animation
+        Future<void>.delayed(const Duration(milliseconds: 50), () {
+          if (mounted) {
+            _newSignalController.forward().then((_) {
+              // Clear the newly added flag after animation
+              if (mounted) {
+                ref
+                    .read(signalFeedProvider.notifier)
+                    .clearNewlyAdded(widget.signalId);
+              }
+            });
+          }
+        });
+      } else {
+        // Regular stagger animation for existing items
+        Future<void>.delayed(Duration(milliseconds: 50 * widget.index), () {
+          if (mounted) _enterController.forward();
+        });
+      }
+    }
+
     // Watch for fading state (unless fade-out is disabled for snap effect)
     final isFading = widget.disableFadeOut
         ? false
@@ -1776,10 +1834,33 @@ class _AnimatedSignalItemState extends ConsumerState<AnimatedSignalItem>
       _fadeOutController.forward();
     }
 
-    Widget child = SlideTransition(
-      position: _slideAnimation,
-      child: FadeTransition(opacity: _fadeAnimation, child: widget.child),
-    );
+    Widget child;
+
+    if (_isNewSignal) {
+      // Use the dramatic new signal animation
+      child = AnimatedBuilder(
+        animation: _newSignalController,
+        builder: (context, animChild) {
+          return SlideTransition(
+            position: _newSlideAnimation,
+            child: Transform.scale(
+              scale: _newScaleAnimation.value,
+              child: Opacity(
+                opacity: _newFadeAnimation.value,
+                child: animChild,
+              ),
+            ),
+          );
+        },
+        child: widget.child,
+      );
+    } else {
+      // Regular slide + fade animation
+      child = SlideTransition(
+        position: _slideAnimation,
+        child: FadeTransition(opacity: _fadeAnimation, child: widget.child),
+      );
+    }
 
     // Apply cinematic fade-out animation when fading
     if (_hasStartedFadeOut) {
@@ -1832,12 +1913,18 @@ class _AnimatedGridItemState extends ConsumerState<AnimatedGridItem>
     with TickerProviderStateMixin {
   late AnimationController _enterController;
   late AnimationController _fadeOutController;
+  late AnimationController _newSignalController;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
   late Animation<double> _fadeOutAnimation;
   late Animation<double> _scaleOutAnimation;
   late Animation<double> _rotateOutAnimation;
+  // New signal entrance animations
+  late Animation<double> _newScaleAnimation;
+  late Animation<double> _newFadeAnimation;
   bool _hasStartedFadeOut = false;
+  bool _isNewSignal = false;
+  bool _hasCheckedNewStatus = false;
 
   @override
   void initState() {
@@ -1857,6 +1944,23 @@ class _AnimatedGridItemState extends ConsumerState<AnimatedGridItem>
       begin: 0.0,
       end: 1.0,
     ).animate(CurvedAnimation(parent: _enterController, curve: Curves.easeOut));
+
+    // New signal entrance animation - more dramatic for grid
+    _newSignalController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+
+    _newScaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
+      CurvedAnimation(parent: _newSignalController, curve: Curves.elasticOut),
+    );
+
+    _newFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _newSignalController,
+        curve: const Interval(0.0, 0.4, curve: Curves.easeOut),
+      ),
+    );
 
     // Fade-out animation controller - cinematic grid card exit
     _fadeOutController = AnimationController(
@@ -1888,12 +1992,7 @@ class _AnimatedGridItemState extends ConsumerState<AnimatedGridItem>
         );
 
     // Staggered animation - grid alternates for visual interest
-    final row = widget.index ~/ 2;
-    final col = widget.index % 2;
-    final delay = (row * 60) + (col * 30);
-    Future<void>.delayed(Duration(milliseconds: delay), () {
-      if (mounted) _enterController.forward();
-    });
+    // Staggered animation will be handled in build after checking new status
   }
 
   @override
@@ -1902,6 +2001,7 @@ class _AnimatedGridItemState extends ConsumerState<AnimatedGridItem>
 
     if (widget.isRefreshing && !oldWidget.isRefreshing) {
       _enterController.reverse();
+      _newSignalController.reset();
     } else if (!widget.isRefreshing && oldWidget.isRefreshing) {
       final row = widget.index ~/ 2;
       final col = widget.index % 2;
@@ -1916,11 +2016,43 @@ class _AnimatedGridItemState extends ConsumerState<AnimatedGridItem>
   void dispose() {
     _enterController.dispose();
     _fadeOutController.dispose();
+    _newSignalController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    // Check if this is a newly added signal (only once per widget lifecycle)
+    if (!_hasCheckedNewStatus) {
+      _hasCheckedNewStatus = true;
+      _isNewSignal = ref.read(isSignalNewlyAddedProvider(widget.signalId));
+
+      if (_isNewSignal) {
+        // Play the dramatic new signal animation
+        _enterController.value = 1.0; // Skip regular animation
+        Future<void>.delayed(const Duration(milliseconds: 50), () {
+          if (mounted) {
+            _newSignalController.forward().then((_) {
+              // Clear the newly added flag after animation
+              if (mounted) {
+                ref
+                    .read(signalFeedProvider.notifier)
+                    .clearNewlyAdded(widget.signalId);
+              }
+            });
+          }
+        });
+      } else {
+        // Regular stagger animation for existing items
+        final row = widget.index ~/ 2;
+        final col = widget.index % 2;
+        final delay = (row * 60) + (col * 30);
+        Future<void>.delayed(Duration(milliseconds: delay), () {
+          if (mounted) _enterController.forward();
+        });
+      }
+    }
+
     // Watch for fading state (unless fade-out is disabled for snap effect)
     final isFading = widget.disableFadeOut
         ? false
@@ -1932,10 +2064,30 @@ class _AnimatedGridItemState extends ConsumerState<AnimatedGridItem>
       _fadeOutController.forward();
     }
 
-    Widget child = ScaleTransition(
-      scale: _scaleAnimation,
-      child: FadeTransition(opacity: _fadeAnimation, child: widget.child),
-    );
+    Widget child;
+
+    if (_isNewSignal) {
+      // Use the dramatic new signal animation (elastic scale)
+      child = AnimatedBuilder(
+        animation: _newSignalController,
+        builder: (context, animChild) {
+          return Transform.scale(
+            scale: _newScaleAnimation.value,
+            child: Opacity(
+              opacity: _newFadeAnimation.value,
+              child: animChild,
+            ),
+          );
+        },
+        child: widget.child,
+      );
+    } else {
+      // Regular scale + fade animation
+      child = ScaleTransition(
+        scale: _scaleAnimation,
+        child: FadeTransition(opacity: _fadeAnimation, child: widget.child),
+      );
+    }
 
     // Apply cinematic fade-out animation when fading
     if (_hasStartedFadeOut) {

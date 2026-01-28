@@ -36,6 +36,9 @@ class SignalFeedState {
   /// Signal IDs that are currently fading out (expired but animating).
   final Set<String> fadingSignalIds;
 
+  /// Signal IDs that were just created and should animate in.
+  final Set<String> newlyAddedSignalIds;
+
   final bool isLoading;
   final String? error;
   final DateTime? lastRefresh;
@@ -43,11 +46,13 @@ class SignalFeedState {
   SignalFeedState({
     Map<String, Post>? signalMap,
     Set<String>? fadingSignalIds,
+    Set<String>? newlyAddedSignalIds,
     this.isLoading = false,
     this.error,
     this.lastRefresh,
   }) : _signalMap = signalMap ?? {},
-       fadingSignalIds = fadingSignalIds ?? {};
+       fadingSignalIds = fadingSignalIds ?? {},
+       newlyAddedSignalIds = newlyAddedSignalIds ?? {};
 
   /// Get signals as sorted list (computed from map).
   List<Post> get signals => List<Post>.from(_signalMap.values);
@@ -61,6 +66,7 @@ class SignalFeedState {
   SignalFeedState copyWith({
     Map<String, Post>? signalMap,
     Set<String>? fadingSignalIds,
+    Set<String>? newlyAddedSignalIds,
     bool? isLoading,
     String? error,
     DateTime? lastRefresh,
@@ -68,6 +74,8 @@ class SignalFeedState {
     return SignalFeedState(
       signalMap: signalMap ?? Map.from(_signalMap),
       fadingSignalIds: fadingSignalIds ?? Set.from(this.fadingSignalIds),
+      newlyAddedSignalIds:
+          newlyAddedSignalIds ?? Set.from(this.newlyAddedSignalIds),
       isLoading: isLoading ?? this.isLoading,
       error: error,
       lastRefresh: lastRefresh ?? this.lastRefresh,
@@ -430,6 +438,13 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
     AppLogging.signals('Fade-out complete: removed signal $signalId');
   }
 
+  /// Clear the "newly added" flag for a signal after its entrance animation.
+  void clearNewlyAdded(String signalId) {
+    if (!state.newlyAddedSignalIds.contains(signalId)) return;
+    final newSet = Set<String>.from(state.newlyAddedSignalIds)..remove(signalId);
+    state = state.copyWith(newlyAddedSignalIds: newSet);
+  }
+
   /// Refresh the signal feed from local storage.
   Future<void> refresh({bool silent = false}) async {
     if (!silent) {
@@ -571,7 +586,11 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
       );
 
       // Add to state using map-based upsert (handles duplicates)
-      state = state.withSignal(signal, source: 'local');
+      // Also mark as newly added for entrance animation
+      final newState = state.withSignal(signal, source: 'local');
+      state = newState.copyWith(
+        newlyAddedSignalIds: {...newState.newlyAddedSignalIds, signal.id},
+      );
 
       AppLogging.signals('Signal created successfully: ${signal.id}');
       return signal;
@@ -705,6 +724,13 @@ final signalFeedProvider =
 final isSignalFadingProvider = Provider.family<bool, String>((ref, signalId) {
   final feedState = ref.watch(signalFeedProvider);
   return feedState.fadingSignalIds.contains(signalId);
+});
+
+/// Provider to check if a signal was just created (for entrance animation).
+final isSignalNewlyAddedProvider =
+    Provider.family<bool, String>((ref, signalId) {
+  final feedState = ref.watch(signalFeedProvider);
+  return feedState.newlyAddedSignalIds.contains(signalId);
 });
 
 /// Provider for active (non-expired) signal count.
