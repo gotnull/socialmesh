@@ -714,7 +714,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Bluetooth pairing was removed. Forget "Meshtastic" in Settings > Bluetooth and reconnect to continue.',
+              'Bluetooth pairing was removed. Forget "Meshtastic_XXXX" in Settings > Bluetooth and reconnect to continue.',
               style: TextStyle(
                 fontSize: 13,
                 color: context.textSecondary,

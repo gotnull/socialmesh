@@ -836,7 +836,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       final sanitizedMessage = e.toString().replaceFirst('Exception: ', '');
       final pairingInvalidation = conn.isPairingInvalidationError(e);
       final pairingMessage =
-          'Your phone removed the stored pairing info for this device. Return to Settings > Bluetooth, forget "Meshtastic", and try again.';
+          'Your phone removed the stored pairing info for this device. Return to Settings > Bluetooth, forget "Meshtastic_XXXX", and try again.';
 
       // Provide user-friendly error messages for common BLE errors
       final errorLower = e.toString().toLowerCase();
