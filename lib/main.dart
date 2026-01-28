@@ -54,7 +54,6 @@ import 'features/settings/settings_screen.dart';
 import 'features/settings/qr_import_screen.dart';
 import 'features/device/device_config_screen.dart';
 import 'features/settings/device_management_screen.dart';
-import 'features/device/region_selection_screen.dart';
 import 'features/navigation/main_shell.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/onboarding/screens/mesh_brain_emotion_test_screen.dart';
@@ -966,11 +965,9 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
             '/device-management',
             const DeviceManagementScreen(),
           ),
-          '/region-setup': (context) => _buildProtectedRoute(
-            context,
-            '/region-setup',
-            const RegionSelectionScreen(isInitialSetup: true),
-          ),
+          // Note: Region setup is NOT a named route - it's navigated to directly
+          // from scanner using MaterialPageRoute to avoid route guard interference
+          // during the device reboot that occurs when setting region.
           '/main': (context) => const MainShell(),
           '/onboarding': (context) => const OnboardingScreen(),
           '/emotion-test': (context) => const MeshBrainEmotionTestScreen(),

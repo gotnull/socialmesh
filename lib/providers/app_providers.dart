@@ -2901,11 +2901,14 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
     int sessionId,
   ) async {
     final protocol = ref.read(protocolServiceProvider);
+    // Capture the device ID so we can verify reconnect is to the same device
+    final targetDeviceId = ref.read(deviceConnectionProvider).device?.id;
 
     final completer = Completer<void>();
     StreamSubscription<config_pbenum.Config_LoRaConfig_RegionCode>? regionSub;
     StreamSubscription<config_pb.Config_LoRaConfig>? loraSub;
     ProviderSubscription<DeviceConnectionState2>? connectionSub;
+    bool sawDisconnect = false;
 
     void completeSuccess() {
       if (!completer.isCompleted) {
@@ -2931,6 +2934,11 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
       }
     });
 
+    // Setting region causes device reboot, which causes disconnect/reconnect.
+    // We need to:
+    // 1. Allow the expected disconnect
+    // 2. Wait for reconnect to the SAME device
+    // 3. Only fail on terminal errors or wrong device
     connectionSub = ref.listen<DeviceConnectionState2>(
       deviceConnectionProvider,
       (previous, next) {
@@ -2938,13 +2946,33 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
           completeError(StateError('Region apply canceled'));
           return;
         }
-        if (next.connectionSessionId != sessionId) {
-          completeError(StateError('Region apply canceled'));
+        
+        // Track that we saw a disconnect (expected during region change)
+        if (!next.isConnected && !sawDisconnect) {
+          sawDisconnect = true;
+          AppLogging.protocol(
+            'REGION_FLOW session=$sessionId disconnect_during_apply (expected for reboot)',
+          );
           return;
         }
-        if (!next.isConnected || next.isTerminalInvalidated) {
-          completeError(StateError('Region apply canceled'));
+        
+        // If we see terminal invalidation, that's a real error
+        if (next.isTerminalInvalidated) {
+          completeError(StateError('Region apply canceled - terminal invalidation'));
           return;
+        }
+        
+        // If we reconnected, verify it's to the same device
+        if (sawDisconnect && next.isConnected) {
+          final reconnectedDeviceId = next.device?.id;
+          if (targetDeviceId != null && reconnectedDeviceId != targetDeviceId) {
+            completeError(StateError('Region apply canceled - reconnected to different device'));
+            return;
+          }
+          AppLogging.protocol(
+            'REGION_FLOW session=$sessionId reconnected_after_reboot newSession=${next.connectionSessionId}',
+          );
+          // Don't error here - wait for region confirmation from streams
         }
       },
     );

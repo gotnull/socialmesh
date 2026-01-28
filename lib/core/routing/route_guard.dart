@@ -58,12 +58,8 @@ class RouteRegistry {
       fallbackRoute: '/main',
       blockedMessage: 'Connect device to access device management',
     ),
-    '/region-setup': RouteMetadata(
-      path: '/region-setup',
-      requirements: {RouteRequirement.deviceConnected},
-      fallbackRoute: '/main',
-      blockedMessage: 'Connect device to set region',
-    ),
+    // Note: '/region-setup' is NOT a protected route - it's navigated to directly
+    // from scanner to avoid route guard interference during device reboot.
     '/channel-qr-scanner': RouteMetadata(
       path: '/channel-qr-scanner',
       requirements: {RouteRequirement.deviceConnected},

@@ -21,6 +21,7 @@ import '../../services/storage/storage_service.dart';
 import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import 'widgets/connecting_animation.dart';
 import '../../core/widgets/loading_indicator.dart';
+import '../device/region_selection_screen.dart';
 
 class ScannerScreen extends ConsumerStatefulWidget {
   final bool isOnboarding;
@@ -738,7 +739,14 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
       if (shouldShowRegionPicker) {
         // Navigate to region selection (initial setup mode)
-        Navigator.of(context).pushReplacementNamed('/region-setup');
+        // Use direct MaterialPageRoute to bypass route guard protection
+        // The region save causes device reboot, which momentarily disconnects.
+        // Route guard would show "Device Required" screen during this brief disconnect.
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute<void>(
+            builder: (context) => const RegionSelectionScreen(isInitialSetup: true),
+          ),
+        );
       } else if (needsRegionSetup) {
         AppLogging.app(
           'REGION_FLOW choose=${regionState.regionChoice?.name ?? "null"} session=$sessionId status=${regionState.applyStatus.name} reason=region_picker_suppressed',
