@@ -15,6 +15,7 @@ import '../../../core/logging.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/content_moderation_warning.dart';
+import '../../../core/widgets/gradient_border_container.dart';
 import '../../../models/social.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/signal_providers.dart';
@@ -887,27 +888,14 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                 const SizedBox(height: 16),
               ],
 
-              // Modern floating input container
+              // Modern floating input container with gradient accent border
               FadeTransition(
                 opacity: _fadeAnimation,
                 child: SlideTransition(
                   position: _slideAnimation,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: context.card,
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(
-                        color: context.accentColor.withValues(alpha: 0.3),
-                        width: 1.5,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: context.accentColor.withValues(alpha: 0.08),
-                          blurRadius: 20,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
+                  child: GradientBorderContainer(
+                    borderRadius: 24,
+                    borderWidth: 2,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
