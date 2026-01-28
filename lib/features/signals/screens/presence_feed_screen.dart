@@ -172,9 +172,14 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
       AppLogging.signals('ℹ️ Go Active: unauthenticated session (mesh-only)');
     }
 
-    // Note: Device connection check removed - CreateSignalScreen will handle
-    // showing connection warnings and the actual broadcast will fail gracefully
-    // if device is not connected (signal saved locally but not transmitted).
+    // Connection gating check
+    final connectivity = ref.read(signalConnectivityProvider);
+    final isDeviceConnected = connectivity.isBleConnected;
+    if (!isDeviceConnected) {
+      AppLogging.signals('🚫 Go Active blocked: device not connected');
+      showErrorSnackBar(context, 'Connect to a device to go active');
+      return;
+    }
 
     Navigator.of(context).push(
       MaterialPageRoute<void>(
