@@ -263,17 +263,15 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
       // the proper feedback and wait for any necessary device operations to complete.
       final shouldSkipApply = !widget.isInitialSetup && (alreadyApplied || regionAlreadySet);
       
+      // For non-initial setup: ALWAYS navigate away immediately
+      // This ensures we're never stuck on the region selection screen
+      if (!isInitialSetup) {
+        Navigator.of(context).pushReplacementNamed('/main');
+        // Small delay to let the navigation start
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
+
       if (!shouldSkipApply) {
-        // For non-initial setup (settings change), navigate away from region screen BEFORE applying
-        // This ensures the loading overlay and reconnection happen on the nodes screen,
-        // where the auto-retry logic can properly reconnect the device after reboot.
-        if (!isInitialSetup) {
-          // Navigate to main screen (this works whether screen was pushed or pushReplaced)
-          Navigator.of(context).pushReplacementNamed('/main');
-          // Small delay to let the navigation start
-          await Future.delayed(const Duration(milliseconds: 100));
-        }
-        
         final regionNotifier = ref.read(regionConfigProvider.notifier);
         await regionNotifier.applyRegion(
           _selectedRegion!,
@@ -288,9 +286,6 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
 
       if (isInitialSetup) {
         ref.read(appInitProvider.notifier).setInitialized();
-      } else if (shouldSkipApply) {
-        // Only pop if we didn't already pop above
-        Navigator.of(context).pop(true);
       }
     } on Exception catch (e) {
       if (!mounted) return;
