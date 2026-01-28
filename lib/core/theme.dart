@@ -53,18 +53,149 @@ class AccentColors {
   /// Each gradient has 3 colors that blend well with the base accent
   /// Indexed same as [all] list
   static const List<List<Color>> gradients = [
-    [Color(0xFFE91E8C), Color(0xFFFF6B35), Color(0xFF8B5CF6)], // magenta
-    [Color(0xFF8B5CF6), Color(0xFFE91E8C), Color(0xFF3B82F6)], // purple
-    [Color(0xFF4F6AF6), Color(0xFF06B6D4), Color(0xFFA855F7)], // blue
-    [Color(0xFF06B6D4), Color(0xFF22C55E), Color(0xFF3B82F6)], // cyan
-    [Color(0xFF14B8A6), Color(0xFF06B6D4), Color(0xFF22C55E)], // teal
-    [Color(0xFF22C55E), Color(0xFF06B6D4), Color(0xFFEAB308)], // green
-    [Color(0xFF84CC16), Color(0xFF22C55E), Color(0xFFEAB308)], // lime
-    [Color(0xFFEAB308), Color(0xFFF97316), Color(0xFF22C55E)], // yellow
-    [Color(0xFFF97316), Color(0xFFEF4444), Color(0xFFEAB308)], // orange
-    [Color(0xFFEF4444), Color(0xFFF97316), Color(0xFFEC4899)], // red
-    [Color(0xFFEC4899), Color(0xFF8B5CF6), Color(0xFFEF4444)], // pink
-    [Color(0xFFF43F5E), Color(0xFFEC4899), Color(0xFFF97316)], // rose
+    // magenta (0xFFE91E8C)
+    [
+      Color(0xFFE91E8C),
+      Color(0xFFEB3698),
+      Color(0xFFED4DA4),
+      Color(0xFFEF6AB2),
+      Color(0xFFED4DA4),
+      Color(0xFFEB3698),
+      Color(0xFFE61687),
+      Color(0xFFD4147C),
+    ],
+
+    // purple (0xFF8B5CF6)
+    [
+      Color(0xFF8B5CF6),
+      Color(0xFF9C75F7),
+      Color(0xFFAE8DF8),
+      Color(0xFFC2AAF9),
+      Color(0xFFAE8DF8),
+      Color(0xFF9C75F7),
+      Color(0xFF8452F6),
+      Color(0xFF763FF5),
+    ],
+
+    // blue (0xFF4F6AF6)
+    [
+      Color(0xFF4F6AF6),
+      Color(0xFF687FF7),
+      Color(0xFF8094F8),
+      Color(0xFF9EACF9),
+      Color(0xFF8094F8),
+      Color(0xFF687FF7),
+      Color(0xFF4562F6),
+      Color(0xFF3251F5),
+    ],
+
+    // cyan (0xFF06B6D4)
+    [
+      Color(0xFF06B6D4),
+      Color(0xFF07CBEC),
+      Color(0xFF16D6F7),
+      Color(0xFF34DBF7),
+      Color(0xFF16D6F7),
+      Color(0xFF07CBEC),
+      Color(0xFF06AECA),
+      Color(0xFF059DB7),
+    ],
+
+    // teal (0xFF14B8A6)
+    [
+      Color(0xFF14B8A6),
+      Color(0xFF17CEBA),
+      Color(0xFF1AE5CF),
+      Color(0xFF36E7D4),
+      Color(0xFF1AE5CF),
+      Color(0xFF17CEBA),
+      Color(0xFF13AF9E),
+      Color(0xFF119D8D),
+    ],
+
+    // green (0xFF22C55E)
+    [
+      Color(0xFF22C55E),
+      Color(0xFF27D969),
+      Color(0xFF3EDC78),
+      Color(0xFF58E18A),
+      Color(0xFF3EDC78),
+      Color(0xFF27D969),
+      Color(0xFF20BC5A),
+      Color(0xFF1DAB51),
+    ],
+
+    // lime (0xFF84CC16)
+    [
+      Color(0xFF84CC16),
+      Color(0xFF93E219),
+      Color(0xFF9EE72E),
+      Color(0xFFAAEA4A),
+      Color(0xFF9EE72E),
+      Color(0xFF93E219),
+      Color(0xFF7EC315),
+      Color(0xFF72B113),
+    ],
+
+    // yellow (0xFFEAB308)
+    [
+      Color(0xFFEAB308),
+      Color(0xFFF6C015),
+      Color(0xFFF7C62E),
+      Color(0xFFF7CE4C),
+      Color(0xFFF7C62E),
+      Color(0xFFF6C015),
+      Color(0xFFE0AC08),
+      Color(0xFFCD9D07),
+    ],
+
+    // orange (0xFFF97316)
+    [
+      Color(0xFFF97316),
+      Color(0xFFF9822F),
+      Color(0xFFF99149),
+      Color(0xFFFAA367),
+      Color(0xFFF99149),
+      Color(0xFFF9822F),
+      Color(0xFFF96D0C),
+      Color(0xFFEB6406),
+    ],
+
+    // red (0xFFEF4444)
+    [
+      Color(0xFFEF4444),
+      Color(0xFFF15C5C),
+      Color(0xFFF27474),
+      Color(0xFFF49090),
+      Color(0xFFF27474),
+      Color(0xFFF15C5C),
+      Color(0xFFEE3A3A),
+      Color(0xFFED2727),
+    ],
+
+    // pink (0xFFEC4899)
+    [
+      Color(0xFFEC4899),
+      Color(0xFFEE60A6),
+      Color(0xFFF077B3),
+      Color(0xFFF393C2),
+      Color(0xFFF077B3),
+      Color(0xFFEE60A6),
+      Color(0xFFEB3F94),
+      Color(0xFFE92C8A),
+    ],
+
+    // rose (0xFFF43F5E)
+    [
+      Color(0xFFF43F5E),
+      Color(0xFFF55873),
+      Color(0xFFF67087),
+      Color(0xFFF78D9F),
+      Color(0xFFF67087),
+      Color(0xFFF55873),
+      Color(0xFFF43556),
+      Color(0xFFF32245),
+    ],
   ];
 
   /// Get the gradient colors for a given accent color

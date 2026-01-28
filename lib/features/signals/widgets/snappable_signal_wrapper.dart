@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:socialmesh/core/theme.dart';
 
 import '../../../core/widgets/snappable.dart';
 
@@ -378,7 +379,8 @@ class _SnapSwipeableSignalItemState extends State<SnapSwipeableSignalItem>
     final rightProgress = progress.clamp(0.0, 1.0);
     final leftProgress = (-progress).clamp(0.0, 1.0);
 
-    final rightColor = Colors.amber;
+    final rightGradient = AccentColors.gradientFor(context.accentColor);
+    final rightColor = rightGradient.first;
     final leftColor = Colors.grey;
     final radius = BorderRadius.circular(widget.borderRadius);
 
@@ -408,10 +410,10 @@ class _SnapSwipeableSignalItemState extends State<SnapSwipeableSignalItem>
                             begin: Alignment.centerLeft,
                             end: Alignment.center,
                             colors: [
-                              rightColor.withValues(
+                              rightGradient.first.withValues(
                                 alpha: 0.2 + rightProgress * 0.2,
                               ),
-                              rightColor.withValues(alpha: 0.05),
+                              rightGradient.last.withValues(alpha: 0.05),
                             ],
                           ),
                         ),
