@@ -3064,6 +3064,92 @@ class ProtocolService {
     }
   }
 
+  /// Set owner config (name and/or role) in a single admin message.
+  /// This is preferred over calling setUserName and setDeviceRole separately
+  /// because the device will reboot after each setOwner call.
+  /// 
+  /// After calling this, the device will save the config and reboot.
+  /// The caller should expect a disconnection.
+  Future<void> setOwnerConfig({
+    String? longName,
+    String? shortName,
+    config_pb.Config_DeviceConfig_Role? role,
+  }) async {
+    // Validate we're ready to send
+    if (_myNodeNum == null) {
+      throw StateError(
+        'Cannot set owner config: device not ready (no node number)',
+      );
+    }
+    if (!_transport.isConnected) {
+      throw StateError('Cannot set owner config: not connected to device');
+    }
+
+    // Must have at least one field to update
+    if (longName == null && shortName == null && role == null) {
+      AppLogging.protocol('setOwnerConfig called with no changes');
+      return;
+    }
+
+    try {
+      // Validate and trim lengths
+      final trimmedLong = longName != null
+          ? (longName.length > 36 ? longName.substring(0, 36) : longName)
+          : null;
+      final trimmedShort = shortName != null
+          ? (shortName.length > 4 ? shortName.substring(0, 4) : shortName)
+          : null;
+
+      AppLogging.protocol(
+        'Setting owner config: '
+        'longName=${trimmedLong ?? "(unchanged)"}, '
+        'shortName=${trimmedShort ?? "(unchanged)"}, '
+        'role=${role?.name ?? "(unchanged)"}',
+      );
+
+      // Build User object with all provided fields
+      final user = pb.User();
+      if (trimmedLong != null) user.longName = trimmedLong;
+      if (trimmedShort != null) user.shortName = trimmedShort;
+      if (role != null) user.role = role;
+
+      final adminMsg = admin.AdminMessage()..setOwner = user;
+
+      final data = pb.Data()
+        ..portnum = pn.PortNum.ADMIN_APP
+        ..payload = adminMsg.writeToBuffer()
+        ..wantResponse = true;
+
+      final packet = pb.MeshPacket()
+        ..from = _myNodeNum!
+        ..to = _myNodeNum!
+        ..decoded = data
+        ..id = _generatePacketId();
+
+      final toRadio = pb.ToRadio()..packet = packet;
+      final bytes = toRadio.writeToBuffer();
+
+      await _transport.send(_prepareForSend(bytes));
+      AppLogging.protocol('Owner config sent successfully, device will reboot');
+
+      // Immediately update local node cache so UI reflects the change
+      final existingNode = _nodes[_myNodeNum!];
+      if (existingNode != null) {
+        final updatedNode = existingNode.copyWith(
+          longName: trimmedLong ?? existingNode.longName,
+          shortName: trimmedShort ?? existingNode.shortName,
+          role: role?.name ?? existingNode.role,
+        );
+        _nodes[_myNodeNum!] = updatedNode;
+        _nodeController.add(updatedNode);
+        AppLogging.protocol('Updated local node cache with new owner config');
+      }
+    } catch (e) {
+      AppLogging.protocol('Error setting owner config: $e');
+      rethrow;
+    }
+  }
+
   /// Set the user name (long name and short name)
   /// Long name is up to 36 bytes, short name is up to 4 characters
   Future<void> setUserName({

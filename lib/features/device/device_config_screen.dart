@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/logging.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/info_table.dart';
 import '../../providers/app_providers.dart';
@@ -84,6 +85,7 @@ class DeviceConfigScreen extends ConsumerStatefulWidget {
 
 class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
   config_pbenum.Config_DeviceConfig_Role? _selectedRole;
+  config_pbenum.Config_DeviceConfig_Role? _originalRole;
   bool _isSaving = false;
   bool _hasChanges = false;
   ProviderSubscription? _deviceSub;
@@ -97,6 +99,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
   @override
   void initState() {
     super.initState();
+    AppLogging.protocol('DeviceConfigScreen: initState');
     _longNameController = TextEditingController();
     _shortNameController = TextEditingController();
     _loadCurrentConfig();
@@ -109,6 +112,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
 
   @override
   void dispose() {
+    AppLogging.protocol('DeviceConfigScreen: dispose');
     _deviceSub?.close();
     _longNameController.dispose();
     _shortNameController.dispose();
@@ -119,6 +123,11 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
     final myNodeNum = ref.read(myNodeNumProvider);
     final nodes = ref.read(nodesProvider);
     final myNode = myNodeNum != null ? nodes[myNodeNum] : null;
+    
+    AppLogging.protocol(
+      'DeviceConfigScreen: _loadCurrentConfig - myNodeNum=$myNodeNum, '
+      'myNode=${myNode != null ? "found" : "null"}',
+    );
 
     if (myNode != null) {
       // Load names
@@ -126,6 +135,10 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
       _originalShortName = myNode.shortName ?? '';
       _longNameController.text = _originalLongName!;
       _shortNameController.text = _originalShortName!;
+      
+      AppLogging.protocol(
+        'DeviceConfigScreen: Loaded names - long="$_originalLongName", short="$_originalShortName"',
+      );
 
       // Load role
       if (myNode.role != null) {
@@ -136,14 +149,19 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                 (r) => r.name == roleString,
                 orElse: () => config_pbenum.Config_DeviceConfig_Role.CLIENT,
               );
+          _originalRole = _selectedRole;
+          AppLogging.protocol('DeviceConfigScreen: Loaded role - ${_selectedRole?.name}');
         } catch (e) {
           _selectedRole = config_pbenum.Config_DeviceConfig_Role.CLIENT;
+          _originalRole = _selectedRole;
         }
       } else {
         _selectedRole = config_pbenum.Config_DeviceConfig_Role.CLIENT;
+        _originalRole = _selectedRole;
       }
     } else {
       _selectedRole = config_pbenum.Config_DeviceConfig_Role.CLIENT;
+      _originalRole = _selectedRole;
     }
   }
 
@@ -151,38 +169,108 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
     final nameChanged =
         _longNameController.text != _originalLongName ||
         _shortNameController.text != _originalShortName;
+    final roleChanged = _selectedRole != _originalRole;
     setState(() {
-      _hasChanges = nameChanged || _selectedRole != null;
+      _hasChanges = nameChanged || roleChanged;
     });
   }
 
+  Future<void> _confirmAndSave() async {
+    // Show confirmation dialog warning about device reboot
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: context.card,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: context.border),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: context.accentColor),
+            const SizedBox(width: 12),
+            Text(
+              'Save Changes?',
+              style: TextStyle(color: context.textPrimary),
+            ),
+          ],
+        ),
+        content: Text(
+          'Saving device configuration will cause the device to reboot. '
+          'You will be briefly disconnected while the device restarts.',
+          style: TextStyle(color: context.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: context.textTertiary),
+            ),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: context.accentColor,
+            ),
+            child: const Text('Save & Reboot'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await _saveConfig();
+    }
+  }
+
   Future<void> _saveConfig() async {
+    AppLogging.protocol('DeviceConfigScreen: _saveConfig started');
     setState(() => _isSaving = true);
 
     try {
       final protocol = ref.read(protocolServiceProvider);
 
-      // Save name if changed
+      // Determine what changed
       final nameChanged =
           _longNameController.text != _originalLongName ||
           _shortNameController.text != _originalShortName;
-      if (nameChanged) {
-        await protocol.setUserName(
-          longName: _longNameController.text,
-          shortName: _shortNameController.text,
-        );
+      final roleChanged = _selectedRole != _originalRole;
+
+      AppLogging.protocol(
+        'DeviceConfigScreen: Changes - nameChanged=$nameChanged, roleChanged=$roleChanged',
+      );
+
+      if (!nameChanged && !roleChanged) {
+        AppLogging.protocol('DeviceConfigScreen: No changes to save');
+        if (mounted) {
+          Navigator.pop(context);
+        }
+        return;
       }
 
-      // Save role if changed
-      if (_selectedRole != null) {
-        await protocol.setDeviceRole(_selectedRole!);
-      }
+      // Use combined setOwnerConfig to send all changes in one message
+      // This prevents multiple reboots if both name and role changed
+      await protocol.setOwnerConfig(
+        longName: nameChanged ? _longNameController.text : null,
+        shortName: nameChanged ? _shortNameController.text : null,
+        role: roleChanged ? _selectedRole : null,
+      );
+
+      AppLogging.protocol('DeviceConfigScreen: Config saved, device will reboot');
 
       if (mounted) {
         setState(() => _hasChanges = false);
-        showSuccessSnackBar(context, 'Device configuration saved');
+        showSuccessSnackBar(context, 'Configuration saved - device rebooting');
+        // Pop the screen after a brief delay to let the snackbar appear
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) {
+            Navigator.pop(context);
+          }
+        });
       }
     } catch (e) {
+      AppLogging.protocol('DeviceConfigScreen: Error saving config: $e');
       if (mounted) {
         showErrorSnackBar(context, 'Error saving config: $e');
       }
@@ -215,7 +303,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
         actions: [
           if (_hasChanges)
             TextButton(
-              onPressed: _isSaving ? null : _saveConfig,
+              onPressed: _isSaving ? null : _confirmAndSave,
               child: _isSaving
                   ? SizedBox(
                       width: 20,
@@ -338,8 +426,8 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                         onTap: () {
                           setState(() {
                             _selectedRole = option.role;
-                            _hasChanges = true;
                           });
+                          _checkForChanges();
                         },
                         child: Padding(
                           padding: const EdgeInsets.symmetric(

@@ -884,6 +884,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       statusInfo: statusInfo,
       showMeshNode: true,
       showCancel: _autoReconnecting,
+      accentColor: context.accentColor,
       onCancel: () {
         setState(() {
           _connecting = false;

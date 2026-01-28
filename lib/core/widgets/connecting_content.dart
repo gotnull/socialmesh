@@ -87,6 +87,8 @@ class ConnectingContent extends StatelessWidget {
   final bool showCancel;
   final VoidCallback? onCancel;
   final Animation<double>? pulseAnimation;
+  /// Optional accent color for the logo gradient. Uses default brand gradient if null.
+  final Color? accentColor;
 
   const ConnectingContent({
     super.key,
@@ -95,6 +97,7 @@ class ConnectingContent extends StatelessWidget {
     this.showCancel = false,
     this.onCancel,
     this.pulseAnimation,
+    this.accentColor,
   });
 
   @override
@@ -108,7 +111,7 @@ class ConnectingContent extends StatelessWidget {
             const ConfiguredSplashMeshNode(),
             const SizedBox(height: 32),
           ],
-          const SocialmeshSplitFlapLogo(fontSize: 32),
+          SocialmeshSplitFlapLogo(fontSize: 32, accentColor: accentColor),
           const SizedBox(height: 8),
           const AnimatedTagline(taglines: appTaglines),
           const SizedBox(height: 48),

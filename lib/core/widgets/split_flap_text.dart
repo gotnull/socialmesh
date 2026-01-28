@@ -1,9 +1,10 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import '../theme.dart';
 
-/// Brand gradient colors from web/landing.css
-const _brandGradientColors = [
+/// Default brand gradient colors (used when no accent color specified)
+const _defaultGradientColors = [
   Color(0xFFE91E8C), // Pink/Magenta
   Color(0xFF8B5CF6), // Purple
   Color(0xFF4F6AF6), // Blue
@@ -27,6 +28,7 @@ class SplitFlapText extends StatefulWidget {
     required this.text,
     this.style,
     this.useGradient = false,
+    this.gradientColors,
     this.spinDuration = const Duration(milliseconds: 1800),
     this.staggerDelay = const Duration(milliseconds: 180),
   });
@@ -34,6 +36,8 @@ class SplitFlapText extends StatefulWidget {
   final String text;
   final TextStyle? style;
   final bool useGradient;
+  /// Custom gradient colors. If null, uses default brand gradient.
+  final List<Color>? gradientColors;
   final Duration spinDuration;
   final Duration staggerDelay;
 
@@ -100,6 +104,7 @@ class _SplitFlapTextState extends State<SplitFlapText>
           controller: _letterControllers[index],
           style: widget.style,
           useGradient: widget.useGradient,
+          gradientColors: widget.gradientColors,
           gradientPosition: index / (widget.text.length - 1).clamp(1, 999),
         );
       }),
@@ -250,12 +255,14 @@ class _SlotLetter extends StatefulWidget {
     required this.controller,
     this.style,
     this.useGradient = false,
+    this.gradientColors,
     this.gradientPosition = 0,
   });
 
   final _LetterAnimationController controller;
   final TextStyle? style;
   final bool useGradient;
+  final List<Color>? gradientColors;
   final double gradientPosition;
 
   @override
@@ -295,9 +302,10 @@ class _SlotLetterState extends State<_SlotLetter> {
 
     // Apply gradient shader
     if (widget.useGradient) {
+      final colors = widget.gradientColors ?? _defaultGradientColors;
       text = ShaderMask(
         shaderCallback: (bounds) {
-          return LinearGradient(colors: _brandGradientColors).createShader(
+          return LinearGradient(colors: colors).createShader(
             Rect.fromLTWH(
               -bounds.width * widget.gradientPosition * 4,
               0,
@@ -390,10 +398,13 @@ class SocialmeshSplitFlapLogo extends StatelessWidget {
     super.key,
     this.fontSize = 32,
     this.fontWeight = FontWeight.bold,
+    this.accentColor,
   });
 
   final double fontSize;
   final FontWeight fontWeight;
+  /// Optional accent color for the gradient. If null, uses default brand gradient.
+  final Color? accentColor;
 
   @override
   Widget build(BuildContext context) {
@@ -402,6 +413,11 @@ class SocialmeshSplitFlapLogo extends StatelessWidget {
       fontWeight: fontWeight,
       letterSpacing: -0.5,
     );
+
+    // Get gradient colors based on accent color
+    final gradientColors = accentColor != null
+        ? AccentColors.gradientFor(accentColor!)
+        : null;
 
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -421,6 +437,7 @@ class SocialmeshSplitFlapLogo extends StatelessWidget {
           text: 'mesh',
           style: baseStyle,
           useGradient: true,
+          gradientColors: gradientColors,
           spinDuration: const Duration(milliseconds: 1600),
           staggerDelay: const Duration(milliseconds: 220),
         ),
