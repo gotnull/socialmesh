@@ -84,6 +84,7 @@ class DeepLinkService {
   final AppLinks _appLinks = AppLinks();
   // Firestore reference is optional and only obtained when needed so that
   // this service can be constructed before Firebase initialization completes.
+  // If null, we lazily access FirebaseFirestore.instance in fetchSharedNodeData.
   final FirebaseFirestore? _firestore;
   final Ref _ref;
 
@@ -93,8 +94,7 @@ class DeepLinkService {
   /// Stream of parsed deep links
   Stream<DeepLinkData> get linkStream => _linkController.stream;
 
-  DeepLinkService(this._ref, {FirebaseFirestore? firestore})
-    : _firestore = firestore ?? FirebaseFirestore.instance;
+  DeepLinkService(this._ref, {FirebaseFirestore? firestore}) : _firestore = firestore;
 
   /// Initialize deep link handling
   Future<void> initialize() async {

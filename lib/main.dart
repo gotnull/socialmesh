@@ -1736,12 +1736,7 @@ class _AppleTVGridCardState extends State<_AppleTVGridCard>
   Widget build(BuildContext context) {
     final node = widget.entry?.node;
     final shortName = node?.shortName ?? '';
-    final longName = node?.longName ?? '';
-    final displayName = longName.isNotEmpty
-        ? longName
-        : shortName.isNotEmpty
-        ? shortName
-        : '';
+    final displayName = node?.displayName ?? '';
     final nodeId =
         node?.nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0') ?? '';
 
@@ -2208,13 +2203,8 @@ class _SplashNodeCardState extends State<_SplashNodeCard>
   @override
   Widget build(BuildContext context) {
     final node = widget.entry.node;
-    final longName = node.longName ?? '';
     final shortName = node.shortName ?? '';
-    final displayName = longName.isNotEmpty
-        ? longName
-        : shortName.isNotEmpty
-        ? shortName
-        : 'Unknown Node';
+    final displayName = node.displayName;
     final nodeId = node.nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0');
 
     return AnimatedBuilder(

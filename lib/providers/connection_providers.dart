@@ -14,6 +14,7 @@
 import 'dart:async';
 import 'dart:io' show Platform;
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -125,6 +126,7 @@ class DeviceConnectionState2 {
   final DateTime? lastConnectedAt;
   final int reconnectAttempts;
   final int? myNodeNum;
+  final int connectionSessionId;
 
   const DeviceConnectionState2({
     required this.state,
@@ -134,6 +136,7 @@ class DeviceConnectionState2 {
     this.lastConnectedAt,
     this.reconnectAttempts = 0,
     this.myNodeNum,
+    this.connectionSessionId = 0,
   });
 
   bool get isConnected => state == DevicePairingState.connected;
@@ -154,6 +157,7 @@ class DeviceConnectionState2 {
     DateTime? lastConnectedAt,
     int? reconnectAttempts,
     int? myNodeNum,
+    int? connectionSessionId,
   }) {
     return DeviceConnectionState2(
       state: state ?? this.state,
@@ -163,12 +167,13 @@ class DeviceConnectionState2 {
       lastConnectedAt: lastConnectedAt ?? this.lastConnectedAt,
       reconnectAttempts: reconnectAttempts ?? this.reconnectAttempts,
       myNodeNum: myNodeNum ?? this.myNodeNum,
+      connectionSessionId: connectionSessionId ?? this.connectionSessionId,
     );
   }
 
   @override
   String toString() =>
-      'DeviceConnectionState2(state: $state, reason: $reason, device: ${device?.name})';
+      'DeviceConnectionState2(state: $state, reason: $reason, device: ${device?.name}, session: $connectionSessionId)';
 }
 
 // =============================================================================
@@ -187,6 +192,12 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
   DateTime? _firstMissingAttemptAt;
   static const int _maxInvalidationAttempts = 3;
   static const Duration _invalidationWindow = Duration(seconds: 120);
+  int _connectionSessionId = 0;
+
+  int _nextConnectionSessionId() {
+    _connectionSessionId += 1;
+    return _connectionSessionId;
+  }
 
   @override
   DeviceConnectionState2 build() {
@@ -198,6 +209,13 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     });
 
     return const DeviceConnectionState2(state: DevicePairingState.neverPaired);
+  }
+
+  /// Test-only method to set state directly.
+  /// Do not use in production code.
+  @visibleForTesting
+  void setTestState(DeviceConnectionState2 newState) {
+    state = newState;
   }
 
   /// Initialize the connection manager.
@@ -223,8 +241,9 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       AppLogging.connection(
         '🔌 DeviceConnectionNotifier: No previous device, state=neverPaired',
       );
-      state = const DeviceConnectionState2(
+      state = DeviceConnectionState2(
         state: DevicePairingState.neverPaired,
+        connectionSessionId: _connectionSessionId,
       );
       return;
     }
@@ -233,8 +252,9 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     AppLogging.connection(
       '🔌 DeviceConnectionNotifier: Previous device found: $lastDeviceId',
     );
-    state = const DeviceConnectionState2(
+    state = DeviceConnectionState2(
       state: DevicePairingState.disconnected,
+      connectionSessionId: _connectionSessionId,
     );
 
     // Listen to transport connection state changes
@@ -367,6 +387,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
         myNodeNum: protocol.myNodeNum,
         reason: DisconnectReason.none,
         reconnectAttempts: 0,
+        connectionSessionId: _nextConnectionSessionId(),
       );
 
       // Update legacy providers
@@ -669,10 +690,11 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
         .read(autoReconnectStateProvider.notifier)
         .setState(AutoReconnectState.failed);
 
-    state = const DeviceConnectionState2(
+    state = DeviceConnectionState2(
       state: DevicePairingState.pairedDeviceInvalidated,
       reason: DisconnectReason.deviceNotFound,
       errorMessage: 'Device was reset or replaced. Set it up again.',
+      connectionSessionId: _connectionSessionId,
     );
   }
 
@@ -735,6 +757,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
         myNodeNum: protocol.myNodeNum,
         reason: DisconnectReason.none,
         reconnectAttempts: 0,
+        connectionSessionId: _nextConnectionSessionId(),
       );
 
       // Update legacy providers for compatibility
@@ -892,6 +915,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       device: device,
       lastConnectedAt: DateTime.now(),
       myNodeNum: myNodeNum,
+      connectionSessionId: _nextConnectionSessionId(),
     );
     _resetInvalidationTracking();
 

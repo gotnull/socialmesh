@@ -140,8 +140,6 @@ const List<RegionInfo> availableRegions = [
   ),
 ];
 
-enum RegionApplyState { idle, applying, waitingForReconnect, success, error }
-
 const regionSelectionApplyButtonKey = Key('region_selection_apply_button');
 
 class RegionSelectionScreen extends ConsumerStatefulWidget {
@@ -157,18 +155,10 @@ class RegionSelectionScreen extends ConsumerStatefulWidget {
 class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
   RegionCode? _selectedRegion;
   RegionCode? _currentRegion;
-  RegionApplyState _state = RegionApplyState.idle;
   String? _errorMessage;
   String _searchQuery = '';
   bool _initialized = false;
   bool _showPairingInvalidationHint = false;
-
-  bool get _isBusy =>
-      _state == RegionApplyState.applying ||
-      _state == RegionApplyState.waitingForReconnect;
-
-  String? get _statusText =>
-      _state == RegionApplyState.error ? _errorMessage : null;
 
   @override
   void initState() {
@@ -179,6 +169,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
 
   void _loadCurrentRegion() {
     if (_initialized) return;
+    if (!mounted) return;
     final protocol = ref.read(protocolServiceProvider);
     final region = protocol.currentRegion;
     if (region != null && region != RegionCode.UNSET) {
@@ -204,43 +195,46 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
   }
 
   Future<void> _saveRegion() async {
-    if (_selectedRegion == null || _isBusy) return;
+    if (_selectedRegion == null) return;
+    final regionState = ref.read(regionConfigProvider);
+    if (regionState.applyStatus == RegionApplyStatus.applying) return;
     final isInitialSetup = widget.isInitialSetup;
 
+    // Capture settings reference BEFORE async work to avoid accessing ref after disposal
+    final settingsAsync = ref.read(settingsServiceProvider);
+    if (!settingsAsync.hasValue) return; // Settings not ready
+    final settings = settingsAsync.requireValue;
+
     setState(() {
-      _state = RegionApplyState.applying;
       _errorMessage = null;
       _showPairingInvalidationHint = false;
     });
 
     try {
-      final protocol = ref.read(protocolServiceProvider);
-      await protocol.setRegion(_selectedRegion!);
+      final regionNotifier = ref.read(regionConfigProvider.notifier);
+      await regionNotifier.applyRegion(
+        _selectedRegion!,
+        reason: widget.isInitialSetup ? 'initial_setup' : 'settings_change',
+      );
 
       if (!mounted) return;
 
-      setState(() => _state = RegionApplyState.waitingForReconnect);
-
-      await _waitForReconnect();
-
-      if (!mounted) return;
-
-      final settings = await ref.read(settingsServiceProvider.future);
       await settings.setRegionConfigured(true);
       if (!mounted) return;
-      setState(() => _state = RegionApplyState.success);
 
       if (isInitialSetup) {
         ref.read(appInitProvider.notifier).setInitialized();
       } else {
         Navigator.of(context).pop(true);
       }
-    } on _PairingInvalidatedDuringRegionSetup {
+    } on Exception catch (e) {
       if (!mounted) return;
-      Navigator.of(context).pushNamed('/scanner');
-      return;
-    } catch (e) {
+      final connectionState = ref.read(conn.deviceConnectionProvider);
       final pairingInvalidation = conn.isPairingInvalidationError(e);
+      if (connectionState.isTerminalInvalidated || pairingInvalidation) {
+        Navigator.of(context).pushNamed('/scanner');
+        return;
+      }
       final message = e is TimeoutException
           ? 'Reconnect timed out. Please try again.'
           : pairingInvalidation
@@ -248,62 +242,10 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
           : 'Failed to set region: $e';
       if (!mounted) return;
       setState(() {
-        _state = RegionApplyState.error;
         _errorMessage = message;
         _showPairingInvalidationHint = pairingInvalidation;
       });
       showErrorSnackBar(context, message);
-    }
-  }
-
-  Future<void> _waitForReconnect() async {
-    bool sawDisconnect = !ref.read(conn.deviceConnectionProvider).isConnected;
-    final completer = Completer<void>();
-    final subscription = ref.listenManual<conn.DeviceConnectionState2>(
-      conn.deviceConnectionProvider,
-      (previous, next) {
-        if (next.isTerminalInvalidated) {
-          if (!completer.isCompleted) {
-            completer.completeError(_PairingInvalidatedDuringRegionSetup());
-          }
-          return;
-        }
-        // Detect explicit disconnect
-        if (next.state != conn.DevicePairingState.connected) {
-          sawDisconnect = true;
-          return;
-        }
-
-        // If we saw a disconnect before, a connected state means reconnect completed
-        if (sawDisconnect) {
-          if (!completer.isCompleted) {
-            completer.complete();
-          }
-          return;
-        }
-
-        // In some transports the device may report connected but with an updated
-        // lastConnectedAt timestamp indicating a reconnect without an explicit
-        // intermediate disconnect event. Treat an increase in lastConnectedAt as
-        // a successful reconnect as well.
-        if (previous != null &&
-            previous.lastConnectedAt != null &&
-            next.lastConnectedAt != null &&
-            next.lastConnectedAt!.isAfter(previous.lastConnectedAt!)) {
-          if (!completer.isCompleted) {
-            completer.complete();
-          }
-        }
-      },
-    );
-    try {
-      await completer.future.timeout(
-        const Duration(seconds: 60),
-        onTimeout: () =>
-            throw TimeoutException('Timed out waiting for device to reconnect'),
-      );
-    } finally {
-      subscription.close();
     }
   }
 
@@ -320,6 +262,11 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final regionState = ref.watch(regionConfigProvider);
+    final isBusy = regionState.applyStatus == RegionApplyStatus.applying;
+    final statusText = regionState.applyStatus == RegionApplyStatus.failed
+        ? _errorMessage
+        : null;
     return HelpTourController(
       topicId: 'region_selection',
       stepKeys: const {},
@@ -332,9 +279,9 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
               : IconButton(
                   icon: Icon(
                     Icons.arrow_back,
-                    color: _isBusy ? context.textTertiary : context.textPrimary,
+                    color: isBusy ? context.textTertiary : context.textPrimary,
                   ),
-                  onPressed: _isBusy ? null : () => Navigator.of(context).pop(),
+                  onPressed: isBusy ? null : () => Navigator.of(context).pop(),
                 ),
           title: Text(
             widget.isInitialSetup ? 'Select Your Region' : 'Change Region',
@@ -432,7 +379,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
             // Region list
             Expanded(
               child: AbsorbPointer(
-                absorbing: _isBusy,
+                absorbing: isBusy,
                 child: ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: _filteredRegions.length,
@@ -585,7 +532,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                   height: 56,
                   child: ElevatedButton(
                     key: regionSelectionApplyButtonKey,
-                    onPressed: _selectedRegion != null && !_isBusy
+                    onPressed: _selectedRegion != null && !isBusy
                         ? _saveRegion
                         : null,
                     style: ElevatedButton.styleFrom(
@@ -597,7 +544,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: _isBusy
+                    child: isBusy
                         ? Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             mainAxisSize: MainAxisSize.min,
@@ -612,9 +559,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                               ),
                               const SizedBox(width: 10),
                               Text(
-                                _state == RegionApplyState.waitingForReconnect
-                                    ? 'Reconnecting…'
-                                    : 'Applying region…',
+                                'Applying region…',
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
@@ -633,19 +578,17 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
                 ),
               ),
             ),
-            if (_statusText != null) ...[
+            if (statusText != null) ...[
               const SizedBox(height: 12),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
-                  _statusText!,
+                  statusText,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: _state == RegionApplyState.error
-                        ? AppTheme.errorRed
-                        : context.textSecondary,
+                    color: AppTheme.errorRed,
                   ),
                 ),
               ),
@@ -734,5 +677,3 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
     );
   }
 }
-
-class _PairingInvalidatedDuringRegionSetup implements Exception {}

@@ -4,6 +4,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/help/help_content.dart';
 import '../core/logging.dart';
 
+/// Controls whether help system animations (pulsing, ring effects) are enabled.
+/// Default true in production. Override to false in widget tests to allow pumpAndSettle.
+final helpAnimationsEnabledProvider = Provider<bool>((ref) => true);
+
 /// State for the help system
 class HelpState {
   final Set<String> completedTopics;

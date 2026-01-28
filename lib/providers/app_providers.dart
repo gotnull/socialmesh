@@ -17,6 +17,8 @@ import '../services/messaging/offline_queue_service.dart';
 import '../services/location/location_service.dart';
 import '../services/live_activity/live_activity_service.dart';
 import '../models/presence_confidence.dart';
+import '../services/nodes/node_identity_store.dart';
+import '../features/nodes/node_display_name_resolver.dart';
 import '../services/ifttt/ifttt_service.dart';
 import '../services/notifications/push_notification_service.dart';
 import '../services/messaging/message_utils.dart';
@@ -24,6 +26,7 @@ import '../services/bug_report_service.dart';
 import '../features/automations/automation_providers.dart';
 import '../features/automations/automation_engine.dart';
 import '../models/mesh_models.dart';
+import '../generated/meshtastic/config.pb.dart' as config_pb;
 import '../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import 'social_providers.dart';
 import 'telemetry_providers.dart';
@@ -91,13 +94,13 @@ class AppInitNotifier extends Notifier<AppInitState> {
       if (hasEverPaired) {
         // User has paired before - go directly to main UI
         // Device connection will happen in background via DeviceConnectionNotifier
-        AppLogging.debug(
+        AppLogging.ble(
           '🎯 AppInitNotifier: User has paired before, setting ready',
         );
         state = AppInitState.ready;
       } else {
         // Never paired - need to go through scanner first
-        AppLogging.debug(
+        AppLogging.ble(
           '🎯 AppInitNotifier: No previous device, setting needsScanner',
         );
         state = AppInitState.needsScanner;
@@ -231,6 +234,15 @@ final nodeStorageProvider = FutureProvider<NodeStorageService>((ref) async {
   return service;
 });
 
+// Node identity store - persists node long/short names separately
+final nodeIdentityStoreProvider = FutureProvider<NodeIdentityStore>((
+  ref,
+) async {
+  final service = NodeIdentityStore();
+  await service.init();
+  return service;
+});
+
 // Device favorites service - persists favorite/ignored node numbers
 final deviceFavoritesProvider = FutureProvider<DeviceFavoritesService>((
   ref,
@@ -239,6 +251,112 @@ final deviceFavoritesProvider = FutureProvider<DeviceFavoritesService>((
   await service.init();
   return service;
 });
+
+class NodeIdentityNotifier extends Notifier<Map<int, NodeIdentity>> {
+  NodeIdentityStore? _store;
+  bool _loaded = false;
+  final Set<int> _bleStripLoggedNodes = {};
+
+  @override
+  Map<int, NodeIdentity> build() {
+    final storeAsync = ref.watch(nodeIdentityStoreProvider);
+    _store = storeAsync.value;
+    if (!_loaded && _store != null) {
+      _load();
+    }
+    return {};
+  }
+
+  Future<void> _load() async {
+    if (_store == null) return;
+    final identities = await _store!.getAllIdentities();
+    if (identities.isNotEmpty) {
+      final sanitized = _sanitizeIdentities(identities);
+      state = sanitized;
+      if (!_identitiesEqual(identities, sanitized)) {
+        await _store!.saveAllIdentities(sanitized);
+      }
+    }
+    _loaded = true;
+  }
+
+  Map<int, NodeIdentity> _sanitizeIdentities(
+    Map<int, NodeIdentity> identities,
+  ) {
+    final sanitized = <int, NodeIdentity>{};
+    for (final entry in identities.entries) {
+      final identity = entry.value;
+      final longIsBle =
+          NodeDisplayNameResolver.isBleDefaultName(identity.longName);
+      final shortIsBle =
+          NodeDisplayNameResolver.isBleDefaultName(identity.shortName);
+      if (longIsBle || shortIsBle) {
+        final bleValue = longIsBle ? identity.longName : identity.shortName;
+        if (_bleStripLoggedNodes.add(identity.nodeNum)) {
+          AppLogging.protocol(
+            'NODE_NAME_STRIP_BLE node=!${identity.nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')} '
+            'old=$bleValue',
+          );
+        }
+        sanitized[entry.key] = identity.copyWith(
+          longName: longIsBle ? null : identity.longName,
+          shortName: shortIsBle ? null : identity.shortName,
+        );
+      } else {
+        sanitized[entry.key] = identity;
+      }
+    }
+    return sanitized;
+  }
+
+  bool _identitiesEqual(
+    Map<int, NodeIdentity> a,
+    Map<int, NodeIdentity> b,
+  ) {
+    if (a.length != b.length) return false;
+    for (final entry in a.entries) {
+      final other = b[entry.key];
+      if (other == null) return false;
+      if (entry.value.longName != other.longName ||
+          entry.value.shortName != other.shortName ||
+          entry.value.lastUpdatedAt != other.lastUpdatedAt ||
+          entry.value.lastSeenAt != other.lastSeenAt) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  NodeIdentity? getIdentity(int nodeNum) => state[nodeNum];
+
+  Map<int, NodeIdentity> getAllIdentities() => state;
+
+  Future<void> upsertIdentity({
+    required int nodeNum,
+    String? longName,
+    String? shortName,
+    int? updatedAtMs,
+    int? lastSeenAtMs,
+  }) async {
+    if (_store == null) return;
+    final updated = await _store!.upsert(
+      current: state,
+      nodeNum: nodeNum,
+      longName: longName,
+      shortName: shortName,
+      updatedAtMs: updatedAtMs,
+      lastSeenAtMs: lastSeenAtMs,
+    );
+    if (!identical(updated, state)) {
+      state = updated;
+    }
+  }
+}
+
+final nodeIdentityProvider =
+    NotifierProvider<NodeIdentityNotifier, Map<int, NodeIdentity>>(
+      NodeIdentityNotifier.new,
+    );
 
 // Transport
 class TransportTypeNotifier extends Notifier<TransportType> {
@@ -1034,6 +1152,21 @@ final protocolServiceProvider = Provider<ProtocolService>((ref) {
   final dedupeStore = ref.watch(meshPacketDedupeStoreProvider);
   final service = ProtocolService(transport, dedupeStore: dedupeStore);
 
+  service.onIdentityUpdate = ({
+    required int nodeNum,
+    String? longName,
+    String? shortName,
+    int? lastSeenAtMs,
+  }) {
+    ref.read(nodeIdentityProvider.notifier).upsertIdentity(
+          nodeNum: nodeNum,
+          longName: longName,
+          shortName: shortName,
+          updatedAtMs: DateTime.now().millisecondsSinceEpoch,
+          lastSeenAtMs: lastSeenAtMs,
+        );
+  };
+
   AppLogging.debug(
     '🟢 ProtocolService provider created - instance: ${service.hashCode}',
   );
@@ -1225,7 +1358,7 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
           batteryLevel: currentNode?.batteryLevel,
           signalStrength: currentNode?.rssi,
           snr: currentNode?.snr,
-      nodesOnline: currentOnlineCount,
+          nodesOnline: currentOnlineCount,
           totalNodes: currentNodes.length,
           channelUtilization: channelUtil,
           airtime: currentNode?.airUtilTx,
@@ -1284,9 +1417,10 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
     final now = DateTime.now();
     return nodes.values
         .where(
-          (node) =>
-              PresenceCalculator.fromLastHeard(node.lastHeard, now: now)
-                  .isActive,
+          (node) => PresenceCalculator.fromLastHeard(
+            node.lastHeard,
+            now: now,
+          ).isActive,
         )
         .length;
   }
@@ -1852,6 +1986,8 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
   NodeStorageService? _storage;
   DeviceFavoritesService? _deviceFavorites;
   StreamSubscription<MeshNode>? _nodeSubscription;
+  final Set<int> _fallbackLoggedNodes = {};
+  final Set<int> _bleStripLoggedNodes = {};
 
   @override
   Map<int, MeshNode> build() {
@@ -1860,6 +1996,12 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
     final deviceFavoritesAsync = ref.watch(deviceFavoritesProvider);
     _storage = storageAsync.value;
     _deviceFavorites = deviceFavoritesAsync.value;
+
+    // Listen for identity changes and apply to existing nodes
+    ref.listen<Map<int, NodeIdentity>>(nodeIdentityProvider, (previous, next) {
+      if (!ref.mounted) return;
+      _applyIdentityUpdates(next);
+    });
 
     // Set up disposal
     ref.onDispose(() {
@@ -1872,10 +2014,81 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
     return {};
   }
 
+  MeshNode _mergeIdentity(MeshNode node, NodeIdentity? identity) {
+    if (identity == null) return node;
+
+    final identityLong = identity.longName?.trim();
+    final identityShort = identity.shortName?.trim();
+
+    final newLongName = (identityLong != null && identityLong.isNotEmpty)
+        ? identityLong
+        : node.longName;
+    final newShortName = (identityShort != null && identityShort.isNotEmpty)
+        ? identityShort
+        : node.shortName;
+
+    if (newLongName == node.longName && newShortName == node.shortName) {
+      return node;
+    }
+
+    return node.copyWith(longName: newLongName, shortName: newShortName);
+  }
+
+  MeshNode _stripBleNamesIfNeeded(MeshNode node) {
+    final longIsBle =
+        NodeDisplayNameResolver.isBleDefaultName(node.longName);
+    final shortIsBle =
+        NodeDisplayNameResolver.isBleDefaultName(node.shortName);
+    if (!longIsBle && !shortIsBle) return node;
+
+    final bleValue = longIsBle ? node.longName : node.shortName;
+    if (_bleStripLoggedNodes.add(node.nodeNum)) {
+      AppLogging.protocol(
+        'NODE_NAME_STRIP_BLE node=!${node.nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')} '
+        'old=$bleValue',
+      );
+    }
+
+    return node.copyWith(
+      clearLongName: longIsBle,
+      clearShortName: shortIsBle,
+    );
+  }
+
+  void _applyIdentityUpdates(Map<int, NodeIdentity> identities) {
+    if (state.isEmpty) return;
+    var changed = false;
+    final updated = <int, MeshNode>{};
+    for (final entry in state.entries) {
+      final node = entry.value;
+      final merged = _mergeIdentity(node, identities[entry.key]);
+      updated[entry.key] = merged;
+      if (merged.longName != node.longName ||
+          merged.shortName != node.shortName) {
+        changed = true;
+      }
+    }
+    if (changed) {
+      state = updated;
+    }
+  }
+
+  void _logFallbackIfNeeded(MeshNode node) {
+    final hasName =
+        (node.longName != null && node.longName!.trim().isNotEmpty) ||
+        (node.shortName != null && node.shortName!.trim().isNotEmpty);
+    if (!hasName && _fallbackLoggedNodes.add(node.nodeNum)) {
+      AppLogging.protocol(
+        'NODE_NAME_FALLBACK node=!${node.nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')} reason=no_identity',
+      );
+    }
+  }
+
   Future<void> _init(ProtocolService protocol) async {
     // Get persisted favorites/ignored from DeviceFavoritesService
     final favoritesSet = _deviceFavorites?.favorites ?? <int>{};
     final ignoredSet = _deviceFavorites?.ignored ?? <int>{};
+    final identities = ref.read(nodeIdentityProvider);
 
     // Load persisted nodes (with their positions) first
     if (_storage != null) {
@@ -1884,17 +2097,25 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
         AppLogging.nodes('Loaded ${savedNodes.length} nodes from storage');
         final nodeMap = <int, MeshNode>{};
         for (var node in savedNodes) {
+          final sanitized = _stripBleNamesIfNeeded(node);
+          if (sanitized.longName != node.longName ||
+              sanitized.shortName != node.shortName) {
+            node = sanitized;
+            _storage?.saveNode(node);
+          }
           // Apply persisted favorites/ignored status from DeviceFavoritesService
           node = node.copyWith(
             isFavorite: favoritesSet.contains(node.nodeNum),
             isIgnored: ignoredSet.contains(node.nodeNum),
           );
+          node = _mergeIdentity(node, identities[node.nodeNum]);
           nodeMap[node.nodeNum] = node;
           if (node.hasPosition) {
             AppLogging.debug(
               '📍 Node ${node.nodeNum} has stored position: ${node.latitude}, ${node.longitude}',
             );
           }
+          _logFallbackIfNeeded(node);
         }
         state = nodeMap;
       }
@@ -1924,7 +2145,10 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
           isIgnored: ignoredSet.contains(node.nodeNum),
         );
       }
+      node = _stripBleNamesIfNeeded(node);
+      node = _mergeIdentity(node, identities[node.nodeNum]);
       state = {...state, entry.key: node};
+      _logFallbackIfNeeded(node);
     }
 
     // Listen for new nodes
@@ -1956,7 +2180,18 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
         );
       }
 
+      node = _stripBleNamesIfNeeded(node);
+
+      // Note: Identity store is updated via ProtocolService.onIdentityUpdate callback
+      // which is set up in protocolServiceProvider. This avoids duplicate upserts.
+
+      // Apply cached identity (if any) to ensure stable display names
+      final identities = ref.read(nodeIdentityProvider);
+      node = _mergeIdentity(node, identities[node.nodeNum]);
+
       state = {...state, node.nodeNum: node};
+
+      _logFallbackIfNeeded(node);
 
       // Persist node to storage
       _storage?.saveNode(node);
@@ -1992,8 +2227,12 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
   }
 
   void addOrUpdateNode(MeshNode node) {
-    state = {...state, node.nodeNum: node};
-    _storage?.saveNode(node);
+    final identities = ref.read(nodeIdentityProvider);
+    node = _stripBleNamesIfNeeded(node);
+    final merged = _mergeIdentity(node, identities[node.nodeNum]);
+    state = {...state, node.nodeNum: merged};
+    _logFallbackIfNeeded(merged);
+    _storage?.saveNode(merged);
   }
 
   void removeNode(int nodeNum) {
@@ -2449,14 +2688,256 @@ final deviceRegionProvider =
       }
     });
 
+enum RegionApplyStatus { idle, applying, applied, failed }
+
+class RegionConfigState {
+  final config_pbenum.Config_LoRaConfig_RegionCode? regionChoice;
+  final RegionApplyStatus applyStatus;
+  final int? lastAttemptAtMs;
+  final int connectionSessionId;
+
+  const RegionConfigState({
+    this.regionChoice,
+    this.applyStatus = RegionApplyStatus.idle,
+    this.lastAttemptAtMs,
+    this.connectionSessionId = 0,
+  });
+
+  RegionConfigState copyWith({
+    config_pbenum.Config_LoRaConfig_RegionCode? regionChoice,
+    RegionApplyStatus? applyStatus,
+    int? lastAttemptAtMs,
+    int? connectionSessionId,
+    bool clearRegionChoice = false,
+    bool clearLastAttemptAt = false,
+  }) {
+    return RegionConfigState(
+      regionChoice: clearRegionChoice ? null : regionChoice ?? this.regionChoice,
+      applyStatus: applyStatus ?? this.applyStatus,
+      lastAttemptAtMs:
+          clearLastAttemptAt ? null : lastAttemptAtMs ?? this.lastAttemptAtMs,
+      connectionSessionId: connectionSessionId ?? this.connectionSessionId,
+    );
+  }
+}
+
+class RegionConfigNotifier extends Notifier<RegionConfigState> {
+  @override
+  RegionConfigState build() {
+    final connectionState = ref.read(deviceConnectionProvider);
+
+    ref.listen<DeviceConnectionState2>(
+      deviceConnectionProvider,
+      (previous, next) {
+        if (previous?.connectionSessionId != next.connectionSessionId) {
+          state = RegionConfigState(connectionSessionId: next.connectionSessionId);
+          AppLogging.protocol(
+            'REGION_FLOW choose=null session=${next.connectionSessionId} status=idle reason=new_session',
+          );
+          return;
+        }
+
+        if (state.applyStatus == RegionApplyStatus.applying) {
+          if (next.isTerminalInvalidated) {
+            state = state.copyWith(applyStatus: RegionApplyStatus.failed);
+            AppLogging.protocol(
+              'REGION_FLOW choose=${state.regionChoice?.name ?? "null"} session=${state.connectionSessionId} status=failed reason=pairing_invalidated',
+            );
+            return;
+          }
+
+          if (previous?.isConnected == true && !next.isConnected) {
+            state = state.copyWith(applyStatus: RegionApplyStatus.failed);
+            AppLogging.protocol(
+              'REGION_FLOW choose=${state.regionChoice?.name ?? "null"} session=${state.connectionSessionId} status=failed reason=disconnect',
+            );
+            return;
+          }
+        }
+      },
+    );
+
+    ref.listen<AsyncValue<config_pbenum.Config_LoRaConfig_RegionCode>>(
+      deviceRegionProvider,
+      (previous, next) {
+        next.whenData((region) {
+          if (state.applyStatus == RegionApplyStatus.applying &&
+              state.regionChoice != null &&
+              region == state.regionChoice) {
+            state = state.copyWith(applyStatus: RegionApplyStatus.applied);
+            AppLogging.protocol(
+              'REGION_FLOW choose=${region.name} session=${state.connectionSessionId} status=applied reason=region_stream',
+            );
+          }
+        });
+      },
+    );
+
+    return RegionConfigState(connectionSessionId: connectionState.connectionSessionId);
+  }
+
+  Future<void> applyRegion(
+    config_pbenum.Config_LoRaConfig_RegionCode region, {
+    String reason = 'user_action',
+  }) async {
+    final connectionState = ref.read(deviceConnectionProvider);
+    final sessionId = connectionState.connectionSessionId;
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+
+    if (!connectionState.isConnected) {
+      state = state.copyWith(
+        regionChoice: region,
+        applyStatus: RegionApplyStatus.failed,
+        lastAttemptAtMs: nowMs,
+        connectionSessionId: sessionId,
+      );
+      AppLogging.protocol(
+        'REGION_FLOW choose=${region.name} session=$sessionId status=failed reason=not_connected',
+      );
+      throw StateError('Cannot set region while disconnected');
+    }
+
+    if (state.applyStatus == RegionApplyStatus.applying &&
+        state.regionChoice == region &&
+        state.connectionSessionId == sessionId) {
+      AppLogging.protocol(
+        'REGION_FLOW choose=${region.name} session=$sessionId status=applying reason=already_applying',
+      );
+      return;
+    }
+
+    state = state.copyWith(
+      regionChoice: region,
+      applyStatus: RegionApplyStatus.applying,
+      lastAttemptAtMs: nowMs,
+      connectionSessionId: sessionId,
+    );
+    AppLogging.protocol(
+      'REGION_FLOW choose=${region.name} session=$sessionId status=applying reason=$reason',
+    );
+
+    try {
+      final protocol = ref.read(protocolServiceProvider);
+      await protocol.setRegion(region);
+      await _awaitRegionConfirmation(region, sessionId);
+
+      if (!ref.mounted) return;
+
+      if (state.connectionSessionId != sessionId) {
+        throw StateError('Region apply no longer active');
+      }
+
+      if (state.applyStatus == RegionApplyStatus.applied) {
+        return;
+      }
+
+      if (state.applyStatus != RegionApplyStatus.applying) {
+        throw StateError('Region apply no longer active');
+      }
+
+      state = state.copyWith(applyStatus: RegionApplyStatus.applied);
+      AppLogging.protocol(
+        'REGION_FLOW choose=${region.name} session=$sessionId status=applied reason=confirmed',
+      );
+    } catch (e) {
+      if (!ref.mounted) rethrow;
+      if (state.connectionSessionId == sessionId &&
+          state.applyStatus == RegionApplyStatus.applying) {
+        state = state.copyWith(applyStatus: RegionApplyStatus.failed);
+        AppLogging.protocol(
+          'REGION_FLOW choose=${region.name} session=$sessionId status=failed reason=${e.runtimeType}',
+        );
+      }
+      rethrow;
+    }
+  }
+
+  Future<void> _awaitRegionConfirmation(
+    config_pbenum.Config_LoRaConfig_RegionCode region,
+    int sessionId,
+  ) async {
+    final protocol = ref.read(protocolServiceProvider);
+
+    final completer = Completer<void>();
+    StreamSubscription<config_pbenum.Config_LoRaConfig_RegionCode>? regionSub;
+    StreamSubscription<config_pb.Config_LoRaConfig>? loraSub;
+    ProviderSubscription<DeviceConnectionState2>? connectionSub;
+
+    void completeSuccess() {
+      if (!completer.isCompleted) {
+        completer.complete();
+      }
+    }
+
+    void completeError(Object error) {
+      if (!completer.isCompleted) {
+        completer.completeError(error);
+      }
+    }
+
+    regionSub = protocol.regionStream.listen((value) {
+      if (value == region) {
+        completeSuccess();
+      }
+    });
+
+    loraSub = protocol.loraConfigStream.listen((config) {
+      if (config.region == region) {
+        completeSuccess();
+      }
+    });
+
+    connectionSub = ref.listen<DeviceConnectionState2>(
+      deviceConnectionProvider,
+      (previous, next) {
+        if (!ref.mounted) {
+          completeError(StateError('Region apply canceled'));
+          return;
+        }
+        if (next.connectionSessionId != sessionId) {
+          completeError(StateError('Region apply canceled'));
+          return;
+        }
+        if (!next.isConnected || next.isTerminalInvalidated) {
+          completeError(StateError('Region apply canceled'));
+          return;
+        }
+      },
+    );
+
+    try {
+      await completer.future.timeout(
+        const Duration(seconds: 60),
+        onTimeout: () =>
+            throw TimeoutException('Timed out waiting for region confirmation'),
+      );
+    } finally {
+      await regionSub.cancel();
+      await loraSub.cancel();
+      connectionSub.close();
+    }
+  }
+}
+
+final regionConfigProvider =
+    NotifierProvider<RegionConfigNotifier, RegionConfigState>(
+      RegionConfigNotifier.new,
+    );
+
 /// Needs region setup - true if region is UNSET
 final needsRegionSetupProvider = Provider<bool>((ref) {
   final regionAsync = ref.watch(deviceRegionProvider);
-  return regionAsync.whenOrNull(
+  final regionState = ref.watch(regionConfigProvider);
+  final sessionId = ref.watch(deviceConnectionProvider).connectionSessionId;
+  final isUnset =
+      regionAsync.whenOrNull(
         data: (region) =>
             region == config_pbenum.Config_LoRaConfig_RegionCode.UNSET,
       ) ??
       false;
+  if (!isUnset) return false;
+  if (regionState.connectionSessionId != sessionId) return false;
+  return regionState.applyStatus == RegionApplyStatus.idle;
 });
 
 /// Offline message queue provider

@@ -31,21 +31,21 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
   final List<_OnboardingPage> _pages = [
     _OnboardingPage(
-      title: 'The Mesh',
+      title: 'Welcome to the Mesh',
       description:
-          'A peer-to-peer radio network where each device\nacts as a node. No towers or carriers.',
+          'A radio network that belongs to no one - and everyone.\nNo towers. No carriers. Just you and the airwaves.',
       advisorText:
-          'Socialmesh is a professional client for Meshtastic-based radio meshes, designed for reliable local-first communication.',
+          "I'm Mesh, your guide. Together we'll explore a world where communication doesn't depend on infrastructure.",
       mood: MeshBrainMood.focused,
       accentColor: AppTheme.primaryMagenta,
     ),
 
     _OnboardingPage(
-      title: 'Flexible Connectivity',
+      title: 'Connect Your Way',
       description:
-          'Connect over Bluetooth or USB.\nPortable or bench-based operation.',
+          'Bluetooth for on-the-go. USB when you need power.\nYour radio, your choice.',
       advisorText:
-          'Radios can be connected wirelessly or via USB, supporting both mobile and stationary workflows.',
+          "Plug in or go wireless - I'll work with whatever setup fits your situation.",
       mood: MeshBrainMood.speaking,
       accentColor: AccentColors.cyan,
     ),
@@ -53,59 +53,60 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     _OnboardingPage(
       title: 'Signals',
       description:
-          'Broadcast short-lived updates to nearby nodes.\nText, location, and optional media.',
+          'Quick broadcasts that ripple through the mesh.\nShare updates, locations, or just say hello.',
       advisorText:
-          'Signals are time-limited broadcasts propagated over the mesh. They are designed for situational awareness rather than permanent messaging.',
+          'Think of Signals as digital flares - they spread fast, fade naturally, and keep everyone in the loop.',
       mood: MeshBrainMood.approving,
       accentColor: AccentColors.pink,
     ),
 
     _OnboardingPage(
-      title: 'Network Visibility',
+      title: 'See the Network',
       description:
-          'View active nodes and activity regions.\nDesigned for intermittent connectivity.',
+          'Watch nodes appear and activity unfold.\nThe mesh comes alive on your map.',
       advisorText:
-          'The map visualises mesh activity based on node reports and signal metadata, not continuous tracking.',
+          "I'll show you who's nearby and where the action is - even when connectivity comes and goes.",
       mood: MeshBrainMood.excited,
       accentColor: AppTheme.graphBlue,
     ),
 
     _OnboardingPage(
-      title: 'Local-First Design',
-      description: 'No mandatory accounts.\nNo central message storage.',
+      title: 'Your Data, Your Device',
+      description:
+          'No accounts required. No cloud by default.\nEverything stays local unless you choose otherwise.',
       advisorText:
-          'By default, data remains on the device and within the mesh. Cloud services are optional and limited to specific features.',
+          "Privacy isn't a feature here - it's the foundation. Cloud sync exists if you want it, not because you need it.",
       mood: MeshBrainMood.focused,
       accentColor: AccentColors.green,
     ),
 
     _OnboardingPage(
-      title: 'Automation',
+      title: 'Automate Everything',
       description:
-          'Respond automatically to mesh events.\nAlerts, triggers, and actions.',
+          'Set triggers for battery warnings, node alerts,\ngeofences, and more. Let the mesh work for you.',
       advisorText:
-          'Automations allow reactions to conditions such as node availability, battery levels, or location-based events.',
+          "Tell me what matters and I'll watch for it - then ping you, send a message, or kick off an action automatically.",
       mood: MeshBrainMood.idle,
       accentColor: AccentColors.yellow,
     ),
 
     _OnboardingPage(
-      title: 'Operations Dashboard',
+      title: 'Your Dashboard',
       description:
-          'Customisable dashboards and widgets.\nLive telemetry at a glance.',
+          'Widgets, stats, and live telemetry.\nBuild the view that fits how you operate.',
       advisorText:
-          'Configure dashboards to surface the information you care about, including node status and network activity.',
+          'Drag, drop, customize. Your command center should look exactly how you want it.',
       mood: MeshBrainMood.approving,
       isWidgetShowcase: true,
       accentColor: AccentColors.orange,
     ),
 
     _OnboardingPage(
-      title: 'Enter the Mesh',
+      title: 'Ready to Connect',
       description:
-          'Connect a radio to begin.\nOperate independently of infrastructure.',
+          "Grab your radio and let's get started.\nThe mesh is waiting.",
       advisorText:
-          'Once connected, Socialmesh operates directly on the mesh with no external dependencies.',
+          "Once you're connected, we operate independently - no internet required. Let's do this.",
       mood: MeshBrainMood.celebrating,
       isLastPage: true,
       accentColor: AppTheme.primaryPurple,

@@ -721,9 +721,29 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       final appState = ref.read(appInitProvider);
       final isFromNeedsScanner = appState == AppInitState.needsScanner;
 
-      if (needsRegionSetup) {
+      final regionState = ref.read(regionConfigProvider);
+        final sessionId =
+          ref.read(conn.deviceConnectionProvider).connectionSessionId;
+      final shouldShowRegionPicker =
+          needsRegionSetup &&
+          regionState.connectionSessionId == sessionId &&
+          regionState.applyStatus != RegionApplyStatus.applying &&
+          regionState.applyStatus != RegionApplyStatus.applied &&
+          regionState.applyStatus != RegionApplyStatus.failed;
+
+      if (shouldShowRegionPicker) {
         // Navigate to region selection (initial setup mode)
         Navigator.of(context).pushReplacementNamed('/region-setup');
+      } else if (needsRegionSetup) {
+        AppLogging.app(
+          'REGION_FLOW choose=${regionState.regionChoice?.name ?? "null"} session=$sessionId status=${regionState.applyStatus.name} reason=region_picker_suppressed',
+        );
+        // Keep user on main flow; require explicit reconnect to retry
+        if (isFromNeedsScanner) {
+          ref.read(appInitProvider.notifier).setInitialized();
+        } else if (!widget.isInline) {
+          Navigator.of(context).pushReplacementNamed('/main');
+        }
       } else if (isFromNeedsScanner) {
         // We're at the root level from needsScanner - update app state to initialized
         // This will cause _AppRouter to show MainShell

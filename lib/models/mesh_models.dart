@@ -1,5 +1,6 @@
 import 'package:uuid/uuid.dart';
 import 'presence_confidence.dart';
+import '../features/nodes/node_display_name_resolver.dart';
 
 /// Message status enum
 enum MessageStatus {
@@ -418,7 +419,9 @@ class MeshNode {
   MeshNode copyWith({
     int? nodeNum,
     String? longName,
+    bool clearLongName = false,
     String? shortName,
+    bool clearShortName = false,
     String? userId,
     double? latitude,
     double? longitude,
@@ -504,8 +507,8 @@ class MeshNode {
   }) {
     return MeshNode(
       nodeNum: nodeNum ?? this.nodeNum,
-      longName: longName ?? this.longName,
-      shortName: shortName ?? this.shortName,
+      longName: clearLongName ? null : (longName ?? this.longName),
+      shortName: clearShortName ? null : (shortName ?? this.shortName),
       userId: userId ?? this.userId,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
@@ -592,9 +595,12 @@ class MeshNode {
   }
 
   String get displayName {
-    if (longName != null && longName!.isNotEmpty) return longName!;
-    if (shortName != null && shortName!.isNotEmpty) return shortName!;
-    return 'Node $nodeNum';
+    return NodeDisplayNameResolver.resolve(
+      nodeNum: nodeNum,
+      longName: longName,
+      shortName: shortName,
+      fallback: 'Node $nodeNum',
+    );
   }
 
   /// Get a short display name suitable for avatars (max 4 chars)

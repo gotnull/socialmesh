@@ -6,10 +6,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socialmesh/core/transport.dart';
 import 'package:socialmesh/features/device/region_selection_screen.dart';
+import 'package:socialmesh/generated/meshtastic/config.pb.dart' as config_pb;
 import 'package:socialmesh/generated/meshtastic/config.pbenum.dart'
     as config_pbenum;
 import 'package:socialmesh/providers/app_providers.dart';
 import 'package:socialmesh/providers/connection_providers.dart';
+import 'package:socialmesh/providers/help_providers.dart';
 import 'package:socialmesh/services/mesh_packet_dedupe_store.dart';
 import 'package:socialmesh/services/protocol/protocol_service.dart';
 import 'package:socialmesh/services/storage/storage_service.dart';
@@ -32,20 +34,23 @@ void main() {
         overrides: [
           protocolServiceProvider.overrideWithValue(fakeProtocol),
           settingsServiceProvider.overrideWithValue(AsyncValue.data(settings)),
+          // Disable help animations to allow pumpAndSettle to complete
+          helpAnimationsEnabledProvider.overrideWithValue(false),
         ],
       );
       addTearDown(container.dispose);
 
-      container
-          .read(deviceConnectionProvider.notifier)
-          .state = DeviceConnectionState2(
-        state: DevicePairingState.connected,
-        device: DeviceInfo(
-          id: 'device-alpha',
-          name: 'Region Device',
-          type: TransportType.ble,
+      container.read(deviceConnectionProvider.notifier).setTestState(
+        DeviceConnectionState2(
+          state: DevicePairingState.connected,
+          device: DeviceInfo(
+            id: 'device-alpha',
+            name: 'Region Device',
+            type: TransportType.ble,
+          ),
+          lastConnectedAt: DateTime.now(),
+          connectionSessionId: 1,
         ),
-        lastConnectedAt: DateTime.now(),
       );
 
       await tester.pumpWidget(
@@ -77,39 +82,12 @@ void main() {
       expect(tester.widget<ElevatedButton>(continueButton).onPressed, isNull);
 
       await fakeProtocol.regionSetCompleter.future;
-      // Ensure the reconnect wait has started
-      await tester.pump();
-      // Simulate device disconnect then reconnect so the reconnect wait completes
-      container
-          .read(deviceConnectionProvider.notifier)
-          .state = DeviceConnectionState2(
-        state: DevicePairingState.disconnected,
-        device: DeviceInfo(
-          id: 'device-alpha',
-          name: 'Region Device',
-          type: TransportType.ble,
-        ),
-        lastConnectedAt: DateTime.now(),
-      );
-      // Allow listeners to process the disconnected state
-      await tester.pump();
-
-      container
-          .read(deviceConnectionProvider.notifier)
-          .state = DeviceConnectionState2(
-        state: DevicePairingState.connected,
-        device: DeviceInfo(
-          id: 'device-alpha',
-          name: 'Region Device',
-          type: TransportType.ble,
-        ),
-        lastConnectedAt: DateTime.now().add(const Duration(seconds: 1)),
-      );
+      fakeProtocol.emitRegion(config_pbenum.Config_LoRaConfig_RegionCode.US);
       await tester.pump(const Duration(milliseconds: 100));
     },
   );
 
-  testWidgets('Region screen pops after reconnection completes', (
+  testWidgets('Region screen pops after region confirmation', (
     tester,
   ) async {
     final fakeProtocol = _FakeRegionProtocolService();
@@ -120,20 +98,23 @@ void main() {
       overrides: [
         protocolServiceProvider.overrideWithValue(fakeProtocol),
         settingsServiceProvider.overrideWithValue(AsyncValue.data(settings)),
+        // Disable help animations to allow pumpAndSettle to complete
+        helpAnimationsEnabledProvider.overrideWithValue(false),
       ],
     );
     addTearDown(container.dispose);
 
-    container
-        .read(deviceConnectionProvider.notifier)
-        .state = DeviceConnectionState2(
-      state: DevicePairingState.connected,
-      device: DeviceInfo(
-        id: 'device-alpha',
-        name: 'Region Device',
-        type: TransportType.ble,
+    container.read(deviceConnectionProvider.notifier).setTestState(
+      DeviceConnectionState2(
+        state: DevicePairingState.connected,
+        device: DeviceInfo(
+          id: 'device-alpha',
+          name: 'Region Device',
+          type: TransportType.ble,
+        ),
+        lastConnectedAt: DateTime.now(),
+        connectionSessionId: 1,
       ),
-      lastConnectedAt: DateTime.now(),
     );
 
     final observer = _TestNavigatorObserver();
@@ -163,47 +144,41 @@ void main() {
       ),
     );
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
 
+    // Navigate to region screen
     await tester.tap(find.text('Open'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
+    // Pump enough frames for route transition (can't use pumpAndSettle due to
+    // infinite animation in IcoHelpAppBarButton)
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+    }
 
+    // Select a region
     await tester.tap(find.text('United States'));
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
 
+    // Tap Save
     await tester.tap(find.widgetWithText(ElevatedButton, 'Save'));
     await tester.pump();
 
+    // Wait for setRegion to be called
     await fakeProtocol.regionSetCompleter.future;
-    // Simulate device disconnect then reconnect so the reconnect wait completes
-    container
-        .read(deviceConnectionProvider.notifier)
-        .state = DeviceConnectionState2(
-      state: DevicePairingState.disconnected,
-      device: DeviceInfo(
-        id: 'device-alpha',
-        name: 'Region Device',
-        type: TransportType.ble,
-      ),
-      lastConnectedAt: DateTime.now(),
-    );
-    // Allow listeners to process the disconnected state
-    await tester.pump();
 
-    container
-        .read(deviceConnectionProvider.notifier)
-        .state = DeviceConnectionState2(
-      state: DevicePairingState.connected,
-      device: DeviceInfo(
-        id: 'device-alpha',
-        name: 'Region Device',
-        type: TransportType.ble,
-      ),
-      lastConnectedAt: DateTime.now().add(const Duration(seconds: 1)),
-    );
-    await tester.pumpAndSettle();
+    // Emit region confirmation - this completes _awaitRegionConfirmation
+    fakeProtocol.emitRegion(config_pbenum.Config_LoRaConfig_RegionCode.US);
+
+    // Use runAsync to process real async continuations:
+    // 1. Stream event propagates to listener
+    // 2. Completer completes in _awaitRegionConfirmation
+    // 3. applyRegion future completes
+    // 4. _saveRegion continuation runs (setRegionConfigured + Navigator.pop)
+    await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+
+    // Pump frames for Navigator.pop animation
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+
     expect(observer.didPopRoute, isTrue);
   });
 }
@@ -221,6 +196,10 @@ class _TestNavigatorObserver extends NavigatorObserver {
 class _FakeRegionProtocolService extends ProtocolService {
   final Completer<void> regionSetCompleter = Completer<void>();
   config_pbenum.Config_LoRaConfig_RegionCode? _currentRegion;
+  final StreamController<config_pbenum.Config_LoRaConfig_RegionCode>
+      _regionController = StreamController.broadcast();
+  final StreamController<config_pb.Config_LoRaConfig> _loraController =
+      StreamController.broadcast();
 
   _FakeRegionProtocolService()
     : super(_FakeDeviceTransport(), dedupeStore: _FakeMeshPacketDedupeStore());
@@ -230,6 +209,14 @@ class _FakeRegionProtocolService extends ProtocolService {
       _currentRegion;
 
   @override
+  Stream<config_pbenum.Config_LoRaConfig_RegionCode> get regionStream =>
+      _regionController.stream;
+
+  @override
+  Stream<config_pb.Config_LoRaConfig> get loraConfigStream =>
+      _loraController.stream;
+
+  @override
   Future<void> setRegion(
     config_pbenum.Config_LoRaConfig_RegionCode region,
   ) async {
@@ -237,7 +224,16 @@ class _FakeRegionProtocolService extends ProtocolService {
     if (!regionSetCompleter.isCompleted) {
       regionSetCompleter.complete();
     }
-    await Future<void>.value();
+  }
+
+  void emitRegion(config_pbenum.Config_LoRaConfig_RegionCode region) {
+    _currentRegion = region;
+    if (!_regionController.isClosed) {
+      _regionController.add(region);
+    }
+    if (!_loraController.isClosed) {
+      _loraController.add(config_pb.Config_LoRaConfig()..region = region);
+    }
   }
 }
 

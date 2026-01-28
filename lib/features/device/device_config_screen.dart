@@ -86,6 +86,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
   config_pbenum.Config_DeviceConfig_Role? _selectedRole;
   bool _isSaving = false;
   bool _hasChanges = false;
+  ProviderSubscription? _deviceSub;
 
   // Name editing
   late TextEditingController _longNameController;
@@ -101,13 +102,14 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
     _loadCurrentConfig();
 
     // Listen for device changes and force rebuild
-    ref.listen(connectedDeviceProvider, (_, _) {
+    _deviceSub = ref.listenManual(connectedDeviceProvider, (previous, next) {
       if (mounted) setState(() {});
     });
   }
 
   @override
   void dispose() {
+    _deviceSub?.close();
     _longNameController.dispose();
     _shortNameController.dispose();
     super.dispose();

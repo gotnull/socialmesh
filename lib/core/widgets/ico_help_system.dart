@@ -42,7 +42,15 @@ class _IcoHelpButtonState extends ConsumerState<IcoHelpButton>
     _pulseController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
-    )..repeat(reverse: true);
+    );
+    // Only start repeating animation if enabled (disabled in tests)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final animationsEnabled = ref.read(helpAnimationsEnabledProvider);
+      if (animationsEnabled) {
+        _pulseController.repeat(reverse: true);
+      }
+    });
   }
 
   @override
@@ -183,7 +191,15 @@ class _IcoHelpAppBarButtonState extends ConsumerState<IcoHelpAppBarButton>
     _ringController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
-    )..repeat(reverse: true);
+    );
+    // Only start repeating animation if enabled (disabled in tests)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final animationsEnabled = ref.read(helpAnimationsEnabledProvider);
+      if (animationsEnabled) {
+        _ringController.repeat(reverse: true);
+      }
+    });
   }
 
   @override

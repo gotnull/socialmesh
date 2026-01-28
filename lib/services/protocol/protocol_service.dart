@@ -237,6 +237,14 @@ class ProtocolService {
   bool _configurationComplete = false;
   final MeshPacketDedupeStore _dedupeStore;
 
+  void Function({
+    required int nodeNum,
+    String? longName,
+    String? shortName,
+    int? lastSeenAtMs,
+  })?
+  onIdentityUpdate;
+
   static const Duration _messagePacketTtl = Duration(minutes: 120);
 
   // Track pending messages by packet ID for delivery status updates
@@ -2053,6 +2061,12 @@ class ProtocolService {
 
       _nodes[packet.from] = updatedNode;
       _nodeController.add(updatedNode);
+      onIdentityUpdate?.call(
+        nodeNum: packet.from,
+        longName: user.longName.isNotEmpty ? user.longName : null,
+        shortName: user.shortName.isNotEmpty ? user.shortName : null,
+        lastSeenAtMs: updatedNode.lastHeard?.millisecondsSinceEpoch,
+      );
     } catch (e) {
       AppLogging.protocol('Error decoding node info: $e');
     }
@@ -2257,6 +2271,15 @@ class ProtocolService {
 
     _nodes[nodeInfo.num] = updatedNode;
     _nodeController.add(updatedNode);
+    if (nodeInfo.hasUser()) {
+      final user = nodeInfo.user;
+      onIdentityUpdate?.call(
+        nodeNum: nodeInfo.num,
+        longName: user.longName.isNotEmpty ? user.longName : null,
+        shortName: user.shortName.isNotEmpty ? user.shortName : null,
+        lastSeenAtMs: updatedNode.lastHeard?.millisecondsSinceEpoch,
+      );
+    }
   }
 
   /// Handle channel configuration

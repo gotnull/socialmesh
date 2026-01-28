@@ -2,7 +2,7 @@ name: socialmesh
 description: "Socialmesh - Meshtastic companion app with BLE and USB serial support."
 publish_to: 'none'
 
-version: 1.11.0+76
+version: 1.11.0+77
 
 environment:
   sdk: ^3.10.0
@@ -139,7 +139,6 @@ flutter:
     - assets/models/
     - assets/globe/
     - assets/meshtastic_powered_landscape.png
-    - docs/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
