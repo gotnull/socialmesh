@@ -175,6 +175,16 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent> {
                 },
               ),
               _ActionTile(
+                icon: Icons.settings_applications_outlined,
+                title: 'Device Management',
+                subtitle: 'Radio, display, power, and position settings',
+                enabled: actionsEnabled && isConnected,
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.of(context).pushNamed('/device-management');
+                },
+              ),
+              _ActionTile(
                 icon: Icons.qr_code_scanner,
                 title: 'Scan Channel QR',
                 subtitle: 'Import channel from QR code',

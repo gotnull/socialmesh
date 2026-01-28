@@ -52,6 +52,12 @@ class RouteRegistry {
       fallbackRoute: '/main',
       blockedMessage: 'Connect device to access configuration',
     ),
+    '/device-management': RouteMetadata(
+      path: '/device-management',
+      requirements: {RouteRequirement.deviceConnected},
+      fallbackRoute: '/main',
+      blockedMessage: 'Connect device to access device management',
+    ),
     '/region-setup': RouteMetadata(
       path: '/region-setup',
       requirements: {RouteRequirement.deviceConnected},

@@ -3143,6 +3143,18 @@ class ProtocolService {
         _nodes[_myNodeNum!] = updatedNode;
         _nodeController.add(updatedNode);
         AppLogging.protocol('Updated local node cache with new owner config');
+
+        // Also update identity store so name persists across reconnects
+        // This is critical - without this, _mergeIdentity will restore old name
+        if (trimmedLong != null || trimmedShort != null) {
+          onIdentityUpdate?.call(
+            nodeNum: _myNodeNum!,
+            longName: trimmedLong,
+            shortName: trimmedShort,
+            lastSeenAtMs: DateTime.now().millisecondsSinceEpoch,
+          );
+          AppLogging.protocol('Updated identity store with new name');
+        }
       }
     } catch (e) {
       AppLogging.protocol('Error setting owner config: $e');
@@ -3211,6 +3223,14 @@ class ProtocolService {
         _nodes[_myNodeNum!] = updatedNode;
         _nodeController.add(updatedNode);
         AppLogging.protocol('Updated local node cache with new name');
+
+        // Also update identity store so name persists across reconnects
+        onIdentityUpdate?.call(
+          nodeNum: _myNodeNum!,
+          longName: trimmedLong,
+          shortName: trimmedShort,
+          lastSeenAtMs: DateTime.now().millisecondsSinceEpoch,
+        );
       }
     } catch (e) {
       AppLogging.protocol('Error setting user name: $e');

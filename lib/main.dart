@@ -53,6 +53,7 @@ import 'features/map/map_screen.dart';
 import 'features/settings/settings_screen.dart';
 import 'features/settings/qr_import_screen.dart';
 import 'features/device/device_config_screen.dart';
+import 'features/settings/device_management_screen.dart';
 import 'features/device/region_selection_screen.dart';
 import 'features/navigation/main_shell.dart';
 import 'features/onboarding/onboarding_screen.dart';
@@ -959,6 +960,11 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
             context,
             '/device-config',
             const DeviceConfigScreen(),
+          ),
+          '/device-management': (context) => _buildProtectedRoute(
+            context,
+            '/device-management',
+            const DeviceManagementScreen(),
           ),
           '/region-setup': (context) => _buildProtectedRoute(
             context,
