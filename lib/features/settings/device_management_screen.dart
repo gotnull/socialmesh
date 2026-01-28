@@ -270,18 +270,30 @@ class _DeviceManagementScreenState
                   onTap: () => _executeAction(
                     'Full Factory Reset',
                     () async {
+                      // Capture navigator before async operations
+                      final navigator = Navigator.of(context);
+                      
                       await protocol.factoryResetDevice();
                       // Clear ALL local state - device is being wiped completely
                       final settingsAsync = ref.read(settingsServiceProvider);
                       if (settingsAsync.hasValue) {
                         // Region will be UNSET, clear configured flag
                         await settingsAsync.requireValue.setRegionConfigured(false);
-                        // Clear last device - it's essentially a new device now
+                        // Device is being wiped, clear the last device
                         await settingsAsync.requireValue.clearLastDevice();
                       }
                       // Clear nodes and channels from local cache
                       ref.read(nodesProvider.notifier).clearNodes();
                       ref.read(channelsProvider.notifier).clearChannels();
+                      
+                      // Navigate directly to scanner after factory reset
+                      // The device is wiped and will need to be paired again
+                      if (mounted) {
+                        navigator.pushNamedAndRemoveUntil(
+                          '/scanner',
+                          (route) => false,
+                        );
+                      }
                     },
                     warningMessage:
                         'WARNING: This will completely erase the device including:\n'
@@ -290,7 +302,7 @@ class _DeviceManagementScreenState
                         '• All known nodes\n'
                         '• Device identity\n\n'
                         'The device will reboot in 5 seconds. You will need to pair and set it up again.',
-                    causesDisconnect: true,
+                    causesDisconnect: false, // Navigation handled in action
                   ),
                 ),
                 const SizedBox(height: 24),
