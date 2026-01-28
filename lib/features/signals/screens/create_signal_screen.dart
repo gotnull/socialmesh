@@ -890,7 +890,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
               if (_imageLocalPath != null) ...[
                 const SizedBox(height: 8),
                 GestureDetector(
-                  onTap: () => _showImagePreview(),
+                  onTap: _isSubmitting ? null : () => _showImagePreview(),
                   child: Stack(
                     children: [
                       Container(
@@ -909,25 +909,26 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                           ),
                         ),
                       ),
-                      Positioned(
-                        top: 8,
-                        right: 8,
-                        child: BouncyTap(
-                          onTap: _isSubmitting ? null : _removeImage,
-                          child: Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.6),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.close,
-                              color: Colors.white,
-                              size: 18,
+                      if (!_isSubmitting)
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: BouncyTap(
+                            onTap: _removeImage,
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.6),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.close,
+                                color: Colors.white,
+                                size: 18,
+                              ),
                             ),
                           ),
                         ),
-                      ),
                       // Local indicator
                       Positioned(
                         bottom: 8,
@@ -1039,29 +1040,30 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
               // Action buttons
               Row(
                 children: [
-                  _ActionButton(
-                    icon: Icons.image_outlined,
-                    label: 'Image',
-                    onTap: () {
-                      if (canUseCloud &&
-                          !_isSubmitting &&
-                          !_isValidatingImage) {
-                        _pickImage();
-                        return;
-                      }
+                  if (canUseCloud)
+                    _ActionButton(
+                      icon: Icons.image_outlined,
+                      label: 'Image',
+                      onTap: () {
+                        if (canUseCloud &&
+                            !_isSubmitting &&
+                            !_isValidatingImage) {
+                          _pickImage();
+                          return;
+                        }
 
-                      // If cloud features unavailable but we have internet (signed out),
-                      // highlight the cloud banner to draw attention and show a prompt.
-                      if (!canUseCloud && connectivity.hasInternet) {
-                        HapticFeedback.mediumImpact();
-                        setState(() => _cloudBannerHighlight = true);
-                        _bannerShakeController.forward(from: 0);
-                      }
-                    },
-                    isSelected: _imageLocalPath != null,
-                    isLoading: _isValidatingImage,
-                  ),
-                  const SizedBox(width: 12),
+                        // If cloud features unavailable but we have internet (signed out),
+                        // highlight the cloud banner to draw attention and show a prompt.
+                        if (!canUseCloud && connectivity.hasInternet) {
+                          HapticFeedback.mediumImpact();
+                          setState(() => _cloudBannerHighlight = true);
+                          _bannerShakeController.forward(from: 0);
+                        }
+                      },
+                      isSelected: _imageLocalPath != null,
+                      isLoading: _isValidatingImage,
+                    ),
+                  if (canUseCloud) const SizedBox(width: 12),
                   _ActionButton(
                     icon: Icons.location_on_outlined,
                     label: 'Location',
@@ -1352,7 +1354,7 @@ class _ActionButton extends StatelessWidget {
               Row(
                 children: [
                   Text(
-                    'Waiting',
+                    'Waiting...',
                     style: TextStyle(
                       color: baseColor,
                       fontSize: 13,
