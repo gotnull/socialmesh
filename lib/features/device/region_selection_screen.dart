@@ -204,6 +204,9 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
     final settingsAsync = ref.read(settingsServiceProvider);
     if (!settingsAsync.hasValue) return; // Settings not ready
     final settings = settingsAsync.requireValue;
+    
+    // CRITICAL: Capture navigator BEFORE dialog to avoid BuildContext across async gaps
+    final navigator = !isInitialSetup ? Navigator.of(context) : null;
 
     // Show confirmation dialog explaining the device will reboot
     final confirmed = await showDialog<bool>(
@@ -237,6 +240,15 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
     );
 
     if (confirmed != true) return;
+    
+    // CRITICAL: For non-initial setup, navigate away IMMEDIATELY before ANY other logic
+    // Navigator was captured before dialog to avoid BuildContext issues
+    if (navigator != null) {
+      navigator.pushReplacementNamed('/main');
+      // Small delay to ensure navigation completes
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+    
     if (!mounted) return;
 
     setState(() {
@@ -263,14 +275,6 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
       // the proper feedback and wait for any necessary device operations to complete.
       final shouldSkipApply = !widget.isInitialSetup && (alreadyApplied || regionAlreadySet);
       
-      // For non-initial setup: ALWAYS navigate away immediately
-      // This ensures we're never stuck on the region selection screen
-      if (!isInitialSetup) {
-        Navigator.of(context).pushReplacementNamed('/main');
-        // Small delay to let the navigation start
-        await Future.delayed(const Duration(milliseconds: 100));
-      }
-
       if (!shouldSkipApply) {
         final regionNotifier = ref.read(regionConfigProvider.notifier);
         await regionNotifier.applyRegion(

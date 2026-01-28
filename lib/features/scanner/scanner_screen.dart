@@ -1261,6 +1261,29 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                         ),
                       ),
                     ),
+                    Spacer(),
+                    TextButton.icon(
+                      onPressed: _scanning ? null : _startScan,
+                      icon: Icon(
+                        Icons.refresh,
+                        size: 16,
+                      ),
+                      label: Text(
+                        'Retry Scan',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 6,
+                          horizontal: 10,
+                        ),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                    ),
                   ],
                 ),
               ),
