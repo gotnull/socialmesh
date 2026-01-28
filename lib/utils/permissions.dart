@@ -99,18 +99,25 @@ class PermissionHelper {
 
   /// Open Bluetooth settings directly.
   /// Returns true if settings were opened successfully.
-  /// On iOS uses App-Prefs:Bluetooth, on Android uses android.settings.BLUETOOTH_SETTINGS
+  /// iOS: Opens app settings (Apple doesn't provide documented API for Bluetooth settings)
+  /// Android: Opens Bluetooth settings directly
   Future<bool> openBluetoothSettings() async {
-    if (Platform.isIOS) {
-      final bluetoothUrl = Uri.parse('App-Prefs:Bluetooth');
-      if (await canLaunchUrl(bluetoothUrl)) {
-        return await launchUrl(bluetoothUrl);
+    try {
+      if (Platform.isAndroid) {
+        // Android supports direct Bluetooth settings intent
+        final bluetoothUrl = Uri.parse('android.settings.BLUETOOTH_SETTINGS');
+        final launched = await launchUrl(
+          bluetoothUrl,
+          mode: LaunchMode.externalApplication,
+        );
+        return launched;
+      } else if (Platform.isIOS) {
+        // iOS doesn't provide a documented way to open Bluetooth settings
+        // Open the app's settings page instead (official API)
+        return await openAppSettings();
       }
-    } else if (Platform.isAndroid) {
-      final bluetoothUrl = Uri.parse('android.settings.BLUETOOTH_SETTINGS');
-      if (await canLaunchUrl(bluetoothUrl)) {
-        return await launchUrl(bluetoothUrl);
-      }
+    } catch (e) {
+      AppLogging.ble('Failed to open Bluetooth settings: $e');
     }
     return false;
   }
