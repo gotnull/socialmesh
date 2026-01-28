@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/map_config.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/gradient_border_container.dart';
 import '../../../models/social.dart';
 import '../../../providers/app_providers.dart';
 import '../utils/signal_utils.dart';
@@ -180,25 +181,37 @@ class _SignalMapViewState extends ConsumerState<SignalMapView> {
                 );
               }).toList(),
             ),
-            // Map attribution
-            RichAttributionWidget(
-              alignment: AttributionAlignment.bottomLeft,
-              attributions: [
-                TextSourceAttribution(
+            // Map attribution (matches world mesh style)
+            Positioned(
+              left: 8,
+              bottom: 8,
+              child: GestureDetector(
+                onTap: () => launchUrl(Uri.parse(
                   _mapStyle == MapTileStyle.satellite
-                      ? '© Esri'
+                      ? 'https://www.esri.com'
                       : _mapStyle == MapTileStyle.terrain
-                          ? '© OpenTopoMap © OSM'
-                          : '© OSM © CARTO',
-                  onTap: () => launchUrl(Uri.parse(
+                          ? 'https://opentopomap.org'
+                          : 'https://carto.com/attributions',
+                )),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
                     _mapStyle == MapTileStyle.satellite
-                        ? 'https://www.esri.com'
+                        ? '© Esri'
                         : _mapStyle == MapTileStyle.terrain
-                            ? 'https://opentopomap.org'
-                            : 'https://carto.com/attributions',
-                  )),
+                            ? '© OpenTopoMap © OSM'
+                            : '© OSM © CARTO',
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 9,
+                    ),
+                  ),
                 ),
-              ],
+              ),
             ),
           ],
         ),
@@ -451,20 +464,12 @@ class _SignalPreviewCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: GradientBorderContainer(
+        borderRadius: 16,
+        borderWidth: 2,
+        accentOpacity: 0.5,
+        backgroundColor: const Color(0xFF1a1a2e),
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1a1a2e),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: ageColor.withValues(alpha: 0.5)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.5),
-              blurRadius: 20,
-              offset: const Offset(0, -5),
-            ),
-          ],
-        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -478,7 +483,7 @@ class _SignalPreviewCard extends StatelessWidget {
                   signal: signal,
                   size: 56,
                   borderRadius: 12,
-                  borderColor: ageColor.withValues(alpha: 0.5),
+                  borderColor: context.accentColor.withValues(alpha: 0.3),
                 ),
                 const SizedBox(width: 12),
                 // Signal content

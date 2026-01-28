@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/gradient_border_container.dart';
 import '../models/dashboard_widget_config.dart';
 import '../../../core/widgets/loading_indicator.dart';
 
@@ -158,6 +159,31 @@ class _DashboardWidgetState extends State<DashboardWidget>
     IconData displayIcon,
     bool isFavorite,
   ) {
+    final cardChild = ClipRRect(
+      borderRadius: BorderRadius.circular(15),
+      child: Material(
+        color: Colors.transparent,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (widget.showHeader) _buildHeader(displayName, displayIcon),
+            Flexible(child: widget.child),
+          ],
+        ),
+      ),
+    );
+
+    if (isFavorite && !widget.isEditMode) {
+      return GradientBorderContainer(
+        borderRadius: 16,
+        borderWidth: 2,
+        accentOpacity: 1.0,
+        backgroundColor: context.card,
+        child: cardChild,
+      );
+    }
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
@@ -165,28 +191,12 @@ class _DashboardWidgetState extends State<DashboardWidget>
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: widget.isEditMode
-              ? Colors
-                    .transparent // Border handled by CustomPaint
-              : isFavorite
-              ? context.accentColor
+              ? Colors.transparent
               : context.border,
           width: 1,
         ),
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(15),
-        child: Material(
-          color: Colors.transparent,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (widget.showHeader) _buildHeader(displayName, displayIcon),
-              Flexible(child: widget.child),
-            ],
-          ),
-        ),
-      ),
+      child: cardChild,
     );
   }
 

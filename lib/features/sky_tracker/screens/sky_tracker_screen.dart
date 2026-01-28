@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme.dart';
+import '../../../core/widgets/gradient_border_container.dart';
 import '../../../providers/auth_providers.dart';
 import '../models/sky_node.dart';
 import '../providers/sky_tracker_providers.dart';
@@ -643,15 +644,15 @@ class _LiveTrackingIndicator extends ConsumerWidget {
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: context.accentColor.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: context.accentColor.withValues(alpha: 0.3)),
-      ),
-      child: positionAsync.when(
-        loading: () => Row(
-          mainAxisSize: MainAxisSize.min,
+      child: GradientBorderContainer(
+        borderRadius: 8,
+        borderWidth: 2,
+        accentOpacity: 0.3,
+        backgroundColor: context.accentColor.withValues(alpha: 0.1),
+        padding: const EdgeInsets.all(12),
+        child: positionAsync.when(
+          loading: () => Row(
+            mainAxisSize: MainAxisSize.min,
           children: [
             SizedBox(
               width: 16,
@@ -720,6 +721,7 @@ class _LiveTrackingIndicator extends ConsumerWidget {
             ],
           );
         },
+        ),
       ),
     );
   }

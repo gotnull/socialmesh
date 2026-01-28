@@ -298,7 +298,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
             error: (error, _) => _buildErrorState(theme, error.toString()),
             data: (state) {
               if (state.isLoading && state.nodes.isEmpty) {
-                return Center(child: LoadingIndicator(size: 100));
+                return Center(child: LoadingIndicator(size: 48));
               }
               if (state.error != null && state.nodes.isEmpty) {
                 return _buildErrorState(theme, state.error!);
@@ -772,7 +772,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
           Positioned(
             left: 16,
             right: 16,
-            bottom: 85,
+            bottom: 100,
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
               child: _isLoadingNodeInfo

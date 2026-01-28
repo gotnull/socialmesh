@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
+import '../../../core/widgets/gradient_border_container.dart';
 import '../../../providers/social_providers.dart';
 import '../../../services/content_moderation_service.dart';
 
@@ -444,13 +445,12 @@ class _StrikeMeterCard extends StatelessWidget {
 class _GuidelinesCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GradientBorderContainer(
+      borderRadius: 16,
+      borderWidth: 2,
+      accentOpacity: 0.2,
+      backgroundColor: context.accentColor.withValues(alpha: 0.1),
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: context.accentColor.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.accentColor.withValues(alpha: 0.2)),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

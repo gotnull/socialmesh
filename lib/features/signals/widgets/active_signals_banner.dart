@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme.dart';
+import '../../../core/widgets/gradient_border_container.dart';
 
 /// Animated banner showing active signal count with pulsing indicator.
 class ActiveSignalsBanner extends StatefulWidget {
@@ -44,15 +45,15 @@ class _ActiveSignalsBannerState extends State<ActiveSignalsBanner>
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: accentColor.withValues(alpha: 0.3), width: 1),
-      ),
-      child: Row(
-        children: [
-          // Pulsing indicator
+      child: GradientBorderContainer(
+        borderRadius: 12,
+        borderWidth: 2,
+        accentOpacity: 0.3,
+        backgroundColor: context.card,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            // Pulsing indicator
           AnimatedBuilder(
             animation: _pulseAnimation,
             builder: (context, child) {
@@ -85,6 +86,7 @@ class _ActiveSignalsBannerState extends State<ActiveSignalsBanner>
             ),
           ),
         ],
+        ),
       ),
     );
   }

@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
 import '../../../core/widgets/content_moderation_warning.dart';
+import '../../../core/widgets/gradient_border_container.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/profile_providers.dart';
 import '../../../providers/social_providers.dart';
@@ -952,13 +953,12 @@ class _FeatureChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GradientBorderContainer(
+      borderRadius: 8,
+      borderWidth: 2,
+      accentOpacity: 0.3,
+      backgroundColor: context.accentColor.withValues(alpha: 0.15),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: context.accentColor.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: context.accentColor.withValues(alpha: 0.3)),
-      ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

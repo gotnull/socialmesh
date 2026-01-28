@@ -934,7 +934,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
           builder: (context, ref, child) {
             final appVersionAsync = ref.watch(appVersionProvider);
             final versionText = appVersionAsync.when(
-              data: (version) => 'Socialmesh v$version',
+              data: (version) => 'Version v$version',
               loading: () => 'Socialmesh',
               error: (_, _) => 'Socialmesh',
             );

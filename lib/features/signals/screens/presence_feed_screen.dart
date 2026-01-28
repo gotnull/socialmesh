@@ -533,7 +533,7 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                               label: 'Nearby',
                               count: nearbyCount,
                               isSelected: _activeFilter == SignalFilter.nearby,
-                              color: AccentColors.green,
+                              color: context.accentColor,
                               icon: Icons.near_me,
                               onTap: () => setState(
                                 () => _activeFilter = SignalFilter.nearby,
@@ -569,7 +569,7 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                               count: withLocationCount,
                               isSelected:
                                   _activeFilter == SignalFilter.withLocation,
-                              color: AccentColors.green,
+                              color: context.accentColor,
                               icon: Icons.location_on,
                               onTap: () => setState(
                                 () => _activeFilter = SignalFilter.withLocation,

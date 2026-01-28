@@ -10,6 +10,7 @@ import '../../core/theme.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../../core/widgets/gradient_border_container.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../providers/help_providers.dart';
 import '../../models/route.dart' as route_model;
@@ -252,21 +253,26 @@ class _ActiveRouteBanner extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AccentColors.green.withValues(alpha: 0.3),
-            AccentColors.teal.withValues(alpha: 0.2),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AccentColors.green.withValues(alpha: 0.5)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+      child: GradientBorderContainer(
+        borderRadius: 16,
+        borderWidth: 2,
+        accentColor: AccentColors.green,
+        accentOpacity: 0.5,
+        padding: const EdgeInsets.all(16),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AccentColors.green.withValues(alpha: 0.3),
+                AccentColors.teal.withValues(alpha: 0.2),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
             children: [
               Container(
                 width: 12,
@@ -354,6 +360,8 @@ class _ActiveRouteBanner extends ConsumerWidget {
             ],
           ),
         ],
+          ),
+        ),
       ),
     );
   }

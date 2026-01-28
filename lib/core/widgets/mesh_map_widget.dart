@@ -224,26 +224,38 @@ class MeshMapWidget extends StatelessWidget {
               }).toList(),
             ),
 
-          // Attribution
+          // Attribution (matches world mesh style)
           if (showAttribution)
-            RichAttributionWidget(
-              alignment: AttributionAlignment.bottomLeft,
-              attributions: attributions ?? [
-                TextSourceAttribution(
+            Positioned(
+              left: 8,
+              bottom: 8,
+              child: GestureDetector(
+                onTap: () => launchUrl(Uri.parse(
                   mapStyle == MapTileStyle.satellite
-                      ? '© Esri'
+                      ? 'https://www.esri.com'
                       : mapStyle == MapTileStyle.terrain
-                          ? '© OpenTopoMap © OSM'
-                          : '© OSM © CARTO',
-                  onTap: () => launchUrl(Uri.parse(
+                          ? 'https://opentopomap.org'
+                          : 'https://carto.com/attributions',
+                )),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
                     mapStyle == MapTileStyle.satellite
-                        ? 'https://www.esri.com'
+                        ? '© Esri'
                         : mapStyle == MapTileStyle.terrain
-                            ? 'https://opentopomap.org'
-                            : 'https://carto.com/attributions',
-                  )),
+                            ? '© OpenTopoMap © OSM'
+                            : '© OSM © CARTO',
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 9,
+                    ),
+                  ),
                 ),
-              ],
+              ),
             ),
         ],
       ),

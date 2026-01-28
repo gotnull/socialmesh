@@ -13,6 +13,7 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/content_moderation_warning.dart';
 import '../../../core/widgets/edge_fade.dart';
+import '../../../core/widgets/gradient_border_container.dart';
 import '../../../core/widgets/node_selector_sheet.dart';
 import '../../../models/social.dart';
 import '../../../providers/app_providers.dart';
@@ -735,13 +736,13 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   }
 
   Widget _buildNodeTag() {
-    return Container(
+    return GradientBorderContainer(
+      borderRadius: 20,
+      borderWidth: 2,
+      accentColor: AccentColors.cyan,
+      accentOpacity: 0.3,
+      backgroundColor: AccentColors.cyan.withValues(alpha: 0.15),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: AccentColors.cyan.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AccentColors.cyan.withValues(alpha: 0.3)),
-      ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

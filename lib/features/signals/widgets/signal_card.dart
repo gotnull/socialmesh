@@ -240,7 +240,7 @@ class _SignalHeader extends ConsumerWidget {
                         width: 8,
                         height: 8,
                         decoration: BoxDecoration(
-                          color: AccentColors.green,
+                          color: context.accentColor,
                           shape: BoxShape.circle,
                         ),
                       ),

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
+import '../../core/widgets/gradient_border_container.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../providers/help_providers.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
@@ -214,26 +215,14 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
   Widget _buildWidgetUpsellCard(int premiumWidgetCount) {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      decoration: BoxDecoration(
-        color: context.card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.accentColor.withValues(alpha: 0.4)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3),
-            blurRadius: 12,
-            offset: const Offset(0, -4),
-          ),
-          BoxShadow(
-            color: context.accentColor.withValues(alpha: 0.1),
-            blurRadius: 20,
-            spreadRadius: -2,
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
+      child: GradientBorderContainer(
+        borderRadius: 16,
+        borderWidth: 2,
+        accentOpacity: 0.4,
+        backgroundColor: context.card,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
           onTap: () {
             Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
@@ -307,6 +296,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
               ],
             ),
           ),
+        ),
         ),
       ),
     );
@@ -835,22 +825,26 @@ class _AddWidgetSheet extends ConsumerWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16, top: 8),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            context.accentColor.withValues(alpha: 0.15),
-            context.accentColor.withValues(alpha: 0.05),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: context.accentColor.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        children: [
-          Container(
+      child: GradientBorderContainer(
+        borderRadius: 12,
+        borderWidth: 2,
+        accentOpacity: 0.3,
+        padding: const EdgeInsets.all(16),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                context.accentColor.withValues(alpha: 0.15),
+                context.accentColor.withValues(alpha: 0.05),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              Container(
             width: 44,
             height: 44,
             decoration: BoxDecoration(
@@ -905,6 +899,8 @@ class _AddWidgetSheet extends ConsumerWidget {
             ),
           ),
         ],
+          ),
+        ),
       ),
     );
   }

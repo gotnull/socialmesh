@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/mesh_models.dart';
+import '../widgets/gradient_border_container.dart';
 import '../../models/presence_confidence.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/presence_providers.dart';
@@ -124,13 +125,12 @@ class NodeInfoCard extends ConsumerWidget {
     final presenceMap = ref.watch(presenceMapProvider);
     final presence = presenceConfidenceFor(presenceMap, node);
     final lastHeardAge = lastHeardAgeFor(presenceMap, node);
-    return Container(
+    return GradientBorderContainer(
+      borderRadius: 12,
+      borderWidth: 2,
+      accentOpacity: 0.4,
+      backgroundColor: context.card.withAlpha(230),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: context.card.withAlpha(230),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: context.accentColor.withAlpha(100)),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,

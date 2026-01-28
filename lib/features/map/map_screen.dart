@@ -1165,25 +1165,37 @@ class _MapScreenState extends ConsumerState<MapScreen>
                             myNodeNum,
                           ),
                         ),
-                      // Map attribution
-                      RichAttributionWidget(
-                        alignment: AttributionAlignment.bottomLeft,
-                        attributions: [
-                          TextSourceAttribution(
+                      // Map attribution (matches world mesh style)
+                      Positioned(
+                        left: 8,
+                        bottom: 8,
+                        child: GestureDetector(
+                          onTap: () => launchUrl(Uri.parse(
                             _mapStyle == MapTileStyle.satellite
-                                ? '© Esri'
+                                ? 'https://www.esri.com'
                                 : _mapStyle == MapTileStyle.terrain
-                                    ? '© OpenTopoMap © OSM'
-                                    : '© OSM © CARTO',
-                            onTap: () => launchUrl(Uri.parse(
+                                    ? 'https://opentopomap.org'
+                                    : 'https://carto.com/attributions',
+                          )),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.5),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
                               _mapStyle == MapTileStyle.satellite
-                                  ? 'https://www.esri.com'
+                                  ? '© Esri'
                                   : _mapStyle == MapTileStyle.terrain
-                                      ? 'https://opentopomap.org'
-                                      : 'https://carto.com/attributions',
-                            )),
+                                      ? '© OpenTopoMap © OSM'
+                                      : '© OSM © CARTO',
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 9,
+                              ),
+                            ),
                           ),
-                        ],
+                        ),
                       ),
                     ],
                   ),

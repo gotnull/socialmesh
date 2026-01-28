@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme.dart';
 import '../../../../core/widgets/app_bottom_sheet.dart';
+import '../../../../core/widgets/gradient_border_container.dart';
 import '../../models/widget_schema.dart';
 
 /// Visual action selector with guided configuration
@@ -41,15 +42,12 @@ class _ActionSelectorState extends State<ActionSelector> {
         widget.onSelect(result);
       },
       borderRadius: BorderRadius.circular(8),
-      child: Container(
+      child: GradientBorderContainer(
+        borderRadius: 8,
+        borderWidth: 2,
+        accentOpacity: hasAction ? 0.5 : 0.0,
+        backgroundColor: context.background,
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: context.background,
-          borderRadius: BorderRadius.circular(8),
-          border: hasAction
-              ? Border.all(color: context.accentColor.withValues(alpha: 0.5))
-              : null,
-        ),
         child: Row(
           children: [
             Icon(
@@ -367,13 +365,12 @@ class _ActionSelectorSheetState extends State<_ActionSelectorSheet> {
   }
 
   Widget _buildConfigSection(Color accentColor) {
-    return Container(
+    return GradientBorderContainer(
+      borderRadius: 10,
+      borderWidth: 2,
+      accentOpacity: 0.3,
+      backgroundColor: accentColor.withValues(alpha: 0.1),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: accentColor.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: accentColor.withValues(alpha: 0.3)),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

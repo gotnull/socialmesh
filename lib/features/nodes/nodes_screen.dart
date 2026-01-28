@@ -19,6 +19,7 @@ import '../../core/widgets/info_table.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../../core/widgets/gradient_border_container.dart';
 import '../../core/widgets/node_avatar.dart';
 import '../../core/widgets/edge_fade.dart';
 import '../../core/widgets/auto_scroll_text.dart';
@@ -1384,21 +1385,41 @@ class _NodeCard extends StatelessWidget {
         opacity: cardOpacity,
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          decoration: BoxDecoration(
-            color: isMyNode
-                ? context.accentColor.withValues(alpha: 0.08)
-                : context.card,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: isMyNode
-                  ? context.accentColor.withValues(alpha: 0.5)
-                  : context.border,
-              width: isMyNode ? 1.5 : 1,
-            ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
+          decoration: !isMyNode
+              ? BoxDecoration(
+                  color: context.card,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: context.border,
+                    width: 1,
+                  ),
+                )
+              : null,
+          child: isMyNode
+              ? GradientBorderContainer(
+                  borderRadius: 12,
+                  borderWidth: 2,
+                  accentOpacity: 1.0,
+                  backgroundColor: context.accentColor.withValues(alpha: 0.08),
+                  padding: const EdgeInsets.all(16),
+                  child: _buildCardContent(context, signalBars, statusColor, statusText),
+                )
+              : Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: _buildCardContent(context, signalBars, statusColor, statusText),
+                ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCardContent(
+    BuildContext context,
+    int signalBars,
+    Color statusColor,
+    String statusText,
+  ) {
+    return Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Avatar
@@ -1739,12 +1760,8 @@ class _NodeCard extends StatelessWidget {
                   ),
                 ],
               ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+            ],
+          );
   }
 
   Color _presenceColor(BuildContext context, PresenceConfidence confidence) {

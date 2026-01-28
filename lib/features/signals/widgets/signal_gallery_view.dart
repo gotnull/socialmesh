@@ -694,10 +694,10 @@ class _BottomInfoOverlay extends ConsumerWidget {
       color = AppTheme.warningYellow;
     } else if (hours < 1) {
       label = '${minutes}m left';
-      color = AccentColors.green;
+      color = AccentColors.cyan;
     } else {
       label = '${hours}h left';
-      color = AccentColors.green;
+      color = AccentColors.cyan;
     }
 
     return _InfoBadge(icon: Icons.schedule, label: label, color: color);

@@ -18,6 +18,7 @@ import 'core/theme.dart';
 import 'core/transport.dart';
 import 'core/logging.dart';
 import 'core/widgets/connecting_content.dart';
+import 'core/widgets/gradient_border_container.dart';
 import 'core/routing/route_guard.dart';
 import 'providers/splash_mesh_provider.dart';
 import 'providers/connection_providers.dart' as conn;
@@ -2237,21 +2238,12 @@ class _SplashNodeCardState extends State<_SplashNodeCard>
           ),
         );
       },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
+      child: GradientBorderContainer(
+        borderRadius: 12,
+        borderWidth: 2,
+        accentOpacity: 0.3,
+        backgroundColor: context.card.withValues(alpha: 0.95),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: context.card.withValues(alpha: 0.95),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: context.accentColor.withValues(alpha: 0.3)),
-          boxShadow: [
-            BoxShadow(
-              color: context.accentColor.withValues(alpha: 0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
         child: Row(
           children: [
             // Node icon
