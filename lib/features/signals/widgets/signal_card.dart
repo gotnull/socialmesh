@@ -13,6 +13,7 @@ import '../../../core/widgets/user_avatar.dart';
 import '../../../models/social.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/auth_providers.dart';
+import '../../../providers/connectivity_providers.dart';
 import '../../navigation/main_shell.dart';
 import '../../../providers/signal_bookmark_provider.dart';
 import '../screens/presence_feed_screen.dart';
@@ -350,6 +351,8 @@ class _SignalImage extends ConsumerWidget {
     final isSignedIn = ref
         .watch(authStateProvider)
         .maybeWhen(data: (user) => user != null, orElse: () => false);
+    // Watch online status to force image reload when connectivity is restored
+    final isOnline = ref.watch(isOnlineProvider);
     final showSignInPlaceholder =
         !isSignedIn && (hasCloudImage || hasPendingImage);
     final onTap = showSignInPlaceholder
@@ -394,8 +397,11 @@ class _SignalImage extends ConsumerWidget {
         ),
       );
     } else if (hasCloudImage) {
+      // Use a key based on online status to force rebuild when connectivity changes
+      // This causes Image.network to retry loading when coming back online
       imageContent = Image.network(
         signal.mediaUrls.first,
+        key: ValueKey('${signal.id}_image_$isOnline'),
         width: double.infinity,
         height: 200,
         fit: BoxFit.cover,

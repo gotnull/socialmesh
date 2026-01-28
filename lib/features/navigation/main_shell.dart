@@ -14,6 +14,7 @@ import '../../models/subscription_models.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/connection_providers.dart';
+import '../../providers/connectivity_providers.dart';
 import '../../providers/profile_providers.dart';
 import '../../providers/signal_providers.dart';
 import '../../providers/social_providers.dart';
@@ -660,6 +661,7 @@ class _MainShellState extends ConsumerState<MainShell> {
   ) {
     final accentColor = theme.colorScheme.primary;
     final syncStatus = ref.watch(syncStatusProvider);
+    final isOnline = ref.watch(isOnlineProvider);
 
     final displayName = profile?.displayName ?? 'MeshUser';
     final initials = profile?.initials ?? '?';
@@ -667,6 +669,7 @@ class _MainShellState extends ConsumerState<MainShell> {
 
     String getSyncStatusText() {
       if (!isSignedIn) return 'Not signed in';
+      if (!isOnline) return 'Offline';
       return switch (syncStatus) {
         SyncStatus.syncing => 'Syncing...',
         SyncStatus.error => 'Sync error',
@@ -722,7 +725,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                     const SizedBox(height: 2),
                     Row(
                       children: [
-                        if (syncStatus == SyncStatus.syncing)
+                        if (isOnline && syncStatus == SyncStatus.syncing)
                           Padding(
                             padding: const EdgeInsets.only(right: 4),
                             child: SizedBox(

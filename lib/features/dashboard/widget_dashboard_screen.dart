@@ -53,6 +53,9 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
     // This screen only needs to handle the connected state
     final widgetConfigs = ref.watch(dashboardWidgetsProvider);
 
+    // Check if this screen was pushed (can pop) - show back button instead of hamburger
+    final canPop = Navigator.of(context).canPop();
+
     return HelpTourController(
       topicId: 'dashboard_overview',
       stepKeys: const {},
@@ -60,7 +63,7 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
         backgroundColor: context.background,
         appBar: AppBar(
           backgroundColor: context.background,
-          leading: const HamburgerMenuButton(),
+          leading: canPop ? const BackButton() : const HamburgerMenuButton(),
           centerTitle: true,
           title: Text(
             _editMode ? 'Edit Dashboard' : 'Dashboard',
