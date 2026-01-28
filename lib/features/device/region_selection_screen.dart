@@ -496,7 +496,7 @@ class _RegionSelectionScreenState extends ConsumerState<RegionSelectionScreen> {
           // Full-screen loading overlay during region apply
           if (isBusy)
             Positioned.fill(
-              child: Container(
+              child: Material(
                 color: context.background.withValues(alpha: 0.95),
                 child: Center(
                   child: Column(

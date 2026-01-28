@@ -60,7 +60,15 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     // In that case, we should immediately show the "device not found" banner
     final autoReconnectState = ref.read(autoReconnectStateProvider);
     final deviceState = ref.read(conn.deviceConnectionProvider);
-    if (autoReconnectState == AutoReconnectState.failed &&
+    
+    // Check if pairing was invalidated (factory reset, device replaced, etc.)
+    // Show the pairing hint immediately so user knows to forget in Bluetooth settings
+    if (deviceState.isTerminalInvalidated) {
+      AppLogging.connection(
+        '📡 SCANNER: Shown after pairing invalidation',
+      );
+      _showPairingInvalidationHint = true;
+    } else if (autoReconnectState == AutoReconnectState.failed &&
         deviceState.reason == conn.DisconnectReason.deviceNotFound) {
       AppLogging.connection(
         '📡 SCANNER: Shown after auto-reconnect failed with deviceNotFound',
