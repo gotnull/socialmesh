@@ -18,7 +18,7 @@ class SignalThumbnail extends StatelessWidget {
   const SignalThumbnail({
     required this.signal,
     this.size = 48,
-    this.borderRadius = 12,
+    this.borderRadius = 20,
     this.isCircular = false,
     this.borderColor,
     this.borderWidth = 1,

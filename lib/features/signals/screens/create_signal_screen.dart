@@ -55,10 +55,14 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
   int _ttlMinutes = SignalTTL.defaultTTL;
   PostLocation? _location;
   String? _imageLocalPath;
+  bool _imageHiddenDueToOffline = false; // Track if image was hidden due to going offline
 
   final ImagePicker _imagePicker = ImagePicker();
   late final AnimationController _bannerShakeController;
   late final Animation<double> _bannerShakeAnimation;
+  late final AnimationController _entryAnimationController;
+  late final Animation<double> _fadeAnimation;
+  late final Animation<Offset> _slideAnimation;
 
   @override
   void initState() {
@@ -80,14 +84,33 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
         _bannerShakeController.reset();
       }
     });
+
+    // Entry animations
+    _entryAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _entryAnimationController,
+      curve: Curves.easeOut,
+    );
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.1),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _entryAnimationController,
+      curve: Curves.easeOutCubic,
+    ));
+    _entryAnimationController.forward();
   }
 
   @override
   void dispose() {
     _contentController.dispose();
     _contentFocusNode.dispose();
-    super.dispose();
     _bannerShakeController.dispose();
+    _entryAnimationController.dispose();
+    super.dispose();
   }
 
   /// Check basic content requirements (text not empty, within length limit)
@@ -627,6 +650,77 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
     );
   }
 
+  String _getTTLDisplayText() {
+    if (_ttlMinutes < 60) return '${_ttlMinutes}m';
+    final hours = _ttlMinutes ~/ 60;
+    final mins = _ttlMinutes % 60;
+    if (mins == 0) return '${hours}h';
+    return '${hours}h ${mins}m';
+  }
+
+  String _getTTLShortText() {
+    if (_ttlMinutes < 60) return '${_ttlMinutes}m';
+    final hours = _ttlMinutes ~/ 60;
+    return '${hours}h';
+  }
+
+  void _showTTLPicker(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: context.background,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: context.border,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Signal Duration',
+                style: TextStyle(
+                  color: context.textPrimary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'How long until your signal fades',
+                style: TextStyle(
+                  color: context.textTertiary,
+                  fontSize: 13,
+                ),
+              ),
+              const SizedBox(height: 20),
+              TTLSelector(
+                selectedMinutes: _ttlMinutes,
+                onChanged: (minutes) {
+                  setState(() => _ttlMinutes = minutes);
+                  Navigator.of(ctx).pop();
+                },
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final myNodeNum = ref.watch(myNodeNumProvider);
@@ -646,26 +740,43 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
         _hasValidContent && isDeviceConnected && !_isValidatingImage;
     final submitBlockedReason = _submitBlockedReason(isDeviceConnected);
 
-    // Listen for cloud availability changes and remove image if needed.
+    // Listen for cloud availability changes - hide/show image accordingly
     ref.listen<SignalConnectivityState>(signalConnectivityProvider, (
       previous,
       next,
     ) {
-      if (((previous?.canUseCloud ?? true) && !next.canUseCloud ||
-              meshOnlyDebug) &&
-          _imageLocalPath != null) {
-        // Auto-remove the image and explain to the user
-        setState(() => _imageLocalPath = null);
+      final wasOnline = previous?.canUseCloud ?? true;
+      final isOnline = next.canUseCloud && !meshOnlyDebug;
+
+      if (wasOnline && !isOnline && _imageLocalPath != null) {
+        // Going offline with an image - mark as hidden but don't remove
+        setState(() => _imageHiddenDueToOffline = true);
         if (mounted) {
-          showErrorSnackBar(context, 'Images require internet. Image removed.');
+          showInfoSnackBar(
+            context,
+            'Image hidden while offline. It will return when back online.',
+          );
+        }
+      } else if (!wasOnline && isOnline && _imageHiddenDueToOffline) {
+        // Coming back online - restore the image visibility
+        setState(() => _imageHiddenDueToOffline = false);
+        if (mounted && _imageLocalPath != null) {
+          showSuccessSnackBar(context, 'Image restored!');
         }
       }
     });
+
+    // Determine if image should be shown (exists and not hidden due to offline)
+    final showImage = _imageLocalPath != null && !_imageHiddenDueToOffline;
+
+    final gradientColors = AccentColors.gradientFor(context.accentColor);
 
     return Scaffold(
       backgroundColor: context.background,
       appBar: AppBar(
         backgroundColor: context.background,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         leading: IconButton(
           icon: Icon(
             Icons.close,
@@ -673,123 +784,44 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
           ),
           onPressed: _isSubmitting ? null : _handleClose,
         ),
-        title: Text(
-          'Go Active',
-          style: TextStyle(
-            color: context.textPrimary,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: Tooltip(
-              message: submitBlockedReason ?? '',
-              child: Builder(
-                builder: (context) {
-                  final gradientColors = AccentColors.gradientFor(
-                    context.accentColor,
-                  );
-                  return BouncyTap(
-                    onTap: canSubmit ? _submitSignal : null,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        gradient: canSubmit
-                            ? LinearGradient(
-                                begin: Alignment.centerLeft,
-                                end: Alignment.centerRight,
-                                colors: [gradientColors[0], gradientColors[1]],
-                              )
-                            : null,
-                        color: canSubmit
-                            ? null
-                            : context.border.withValues(alpha: 0.5),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: _isSubmitting
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.sensors,
-                                  size: 18,
-                                  color: canSubmit
-                                      ? Colors.white
-                                      : context.textTertiary,
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  'Send signal',
-                                  style: TextStyle(
-                                    color: canSubmit
-                                        ? Colors.white
-                                        : context.textTertiary,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
-                            ),
-                    ),
-                  );
-                },
+        centerTitle: true,
+        title: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Go Active',
+              style: TextStyle(
+                color: context.textPrimary,
+                fontWeight: FontWeight.w700,
+                fontSize: 18,
               ),
             ),
-          ),
-        ],
+            if (myNodeNum != null)
+              Text(
+                '!${myNodeNum.toRadixString(16).toUpperCase()}',
+                style: TextStyle(
+                  color: context.accentColor,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+          ],
+        ),
       ),
       body: GestureDetector(
         onTap: _dismissKeyboard,
         behavior: HitTestBehavior.opaque,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Mesh node indicator
-              if (myNodeNum != null) ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: context.accentColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: context.accentColor.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.router, size: 16, color: context.accentColor),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Emitting from !${myNodeNum.toRadixString(16)}',
-                        style: TextStyle(
-                          color: context.accentColor,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: BouncingScrollPhysics(),
                 ),
-                const SizedBox(height: 16),
-              ],
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
               if (myNodeNum == null &&
                   connectivity.isBleConnected &&
                   Platform.isIOS) ...[
@@ -829,158 +861,297 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                 const SizedBox(height: 16),
               ],
 
-              // Content input
-              Container(
-                decoration: BoxDecoration(
-                  color: context.card,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: context.border.withValues(alpha: 0.5),
-                  ),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(11),
-                  child: TextField(
-                    controller: _contentController,
-                    focusNode: _contentFocusNode,
-                    enabled: !_isSubmitting,
-                    maxLines: 5,
-                    maxLength: _maxLength,
-                    maxLengthEnforcement: MaxLengthEnforcement.enforced,
-                    textCapitalization: TextCapitalization.sentences,
-                    inputFormatters: [
-                      LengthLimitingTextInputFormatter(_maxLength),
-                    ],
-                    style: TextStyle(color: context.textPrimary, fontSize: 16),
-                    decoration: InputDecoration(
-                      hintText: 'What are you signaling?',
-                      hintStyle: TextStyle(color: context.textTertiary),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.all(16),
-                      counterText: '',
+              // Modern floating input container
+              FadeTransition(
+                opacity: _fadeAnimation,
+                child: SlideTransition(
+                  position: _slideAnimation,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: context.card,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color: context.accentColor.withValues(alpha: 0.3),
+                        width: 1.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: context.accentColor.withValues(alpha: 0.08),
+                          blurRadius: 20,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
-                    onChanged: (_) => setState(() {}),
-                  ),
-                ),
-              ),
-
-              // Character count
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Text(
-                      '$_remainingChars',
-                      style: TextStyle(
-                        color: _remainingChars < 0
-                            ? Colors.red
-                            : _remainingChars < 20
-                            ? Colors.orange
-                            : context.textTertiary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Text input area
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                          child: TextField(
+                            controller: _contentController,
+                            focusNode: _contentFocusNode,
+                            enabled: !_isSubmitting,
+                            maxLines: 8,
+                            minLines: 5,
+                            maxLength: _maxLength,
+                            maxLengthEnforcement: MaxLengthEnforcement.enforced,
+                            textCapitalization: TextCapitalization.sentences,
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(_maxLength),
+                            ],
+                            style: TextStyle(
+                              color: context.textPrimary,
+                          fontSize: 16,
+                          height: 1.4,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'What are you signaling?',
+                          hintStyle: TextStyle(
+                            color: context.textTertiary,
+                            fontSize: 16,
+                          ),
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          disabledBorder: InputBorder.none,
+                          errorBorder: InputBorder.none,
+                          focusedErrorBorder: InputBorder.none,
+                          isDense: true,
+                          contentPadding: EdgeInsets.zero,
+                          counterText: '',
+                        ),
+                        onChanged: (_) => setState(() {}),
+                      ),
+                    ),
+                    // Bottom action bar
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+                      child: Row(
+                        children: [
+                          // Image button
+                          if (canUseCloud)
+                            _InputActionButton(
+                              icon: Icons.image_outlined,
+                              isSelected: _imageLocalPath != null,
+                              isLoading: _isValidatingImage,
+                              onTap: () {
+                                if (canUseCloud &&
+                                    !_isSubmitting &&
+                                    !_isValidatingImage) {
+                                  _pickImage();
+                                  return;
+                                }
+                                if (!canUseCloud && connectivity.hasInternet) {
+                                  HapticFeedback.mediumImpact();
+                                  setState(() => _cloudBannerHighlight = true);
+                                  _bannerShakeController.forward(from: 0);
+                                }
+                              },
+                            ),
+                          // Location button
+                          _InputActionButton(
+                            icon: Icons.location_on_outlined,
+                            isSelected: _location != null,
+                            isLoading: _isLoadingLocation,
+                            isEnabled: hasNodeLocation,
+                            onTap: _isSubmitting || _isLoadingLocation || !hasNodeLocation
+                                ? null
+                                : _getLocation,
+                          ),
+                          // TTL button (shows current selection)
+                          _InputActionButton(
+                            icon: Icons.timer_outlined,
+                            label: _getTTLShortText(),
+                            onTap: _isSubmitting
+                                ? null
+                                : () => _showTTLPicker(context),
+                          ),
+                          // Settings
+                          _InputActionButton(
+                            icon: Icons.tune,
+                            isEnabled: hasNodeLocation,
+                            onTap: _isSubmitting || !hasNodeLocation
+                                ? null
+                                : () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            const SignalSettingsScreen(),
+                                      ),
+                                    );
+                                  },
+                          ),
+                          const Spacer(),
+                          // Character count
+                          SizedBox(
+                            width: 36,
+                            height: 36,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                CircularProgressIndicator(
+                                  value: (_contentController.text.length /
+                                          _maxLength)
+                                      .clamp(0.0, 1.0),
+                                  strokeWidth: 2.5,
+                                  backgroundColor:
+                                      context.border.withValues(alpha: 0.2),
+                                  color: _remainingChars < 0
+                                      ? Colors.red
+                                      : _remainingChars < 20
+                                          ? Colors.orange
+                                          : context.accentColor,
+                                ),
+                                Text(
+                                  '$_remainingChars',
+                                  style: TextStyle(
+                                    color: _remainingChars < 0
+                                        ? Colors.red
+                                        : _remainingChars < 20
+                                            ? Colors.orange
+                                            : context.textTertiary,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
+                ),
+              ),
 
-              // Image preview
-              if (_imageLocalPath != null) ...[
-                const SizedBox(height: 8),
-                GestureDetector(
-                  onTap: _isSubmitting ? null : () => _showImagePreview(),
-                  child: Stack(
-                    children: [
-                      Container(
+              // Image preview with overlay info pills
+              if (showImage) ...[
+                const SizedBox(height: 16),
+                FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: SlideTransition(
+                    position: _slideAnimation,
+                    child: GestureDetector(
+                      onTap: _isSubmitting ? null : () => _showImagePreview(),
+                      child: Container(
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: context.border.withValues(alpha: 0.3),
-                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.25),
+                              blurRadius: 16,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
                         ),
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Image.file(
-                            File(_imageLocalPath!),
-                            width: double.infinity,
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                      ),
-                      if (!_isSubmitting)
-                        Positioned(
-                          top: 8,
-                          right: 8,
-                          child: BouncyTap(
-                            onTap: _removeImage,
-                            child: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withValues(alpha: 0.6),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.close,
-                                color: Colors.white,
-                                size: 18,
-                              ),
-                            ),
-                          ),
-                        ),
-                      // Local indicator
-                      Positioned(
-                        bottom: 8,
-                        left: 8,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.6),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
+                          borderRadius: BorderRadius.circular(20),
+                          child: Stack(
                             children: [
-                              Icon(
-                                Icons.phone_android,
-                                color: Colors.white,
-                                size: 14,
-                              ),
-                              SizedBox(width: 4),
-                              Text(
-                                'Attached locally',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w500,
+                              // The image
+                              Container(
+                                constraints: const BoxConstraints(maxHeight: 400),
+                                width: double.infinity,
+                                child: Image.file(
+                                  File(_imageLocalPath!),
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
                                 ),
+                              ),
+                              // Gradient overlay at bottom for pills
+                              Positioned(
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                child: Container(
+                                  height: 80,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        Colors.transparent,
+                                        Colors.black.withValues(alpha: 0.7),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              // Info pills at bottom
+                              Positioned(
+                                left: 12,
+                                right: 12,
+                                bottom: 12,
+                                child: Row(
+                                  children: [
+                                    // TTL pill
+                                    _InfoPill(
+                                      icon: Icons.timer_outlined,
+                                      label: _getTTLDisplayText(),
+                                    ),
+                                    const SizedBox(width: 8),
+                              // Location pill (if set)
+                              if (_location != null)
+                                _InfoPill(
+                                  icon: Icons.location_on_outlined,
+                                  label: _location!.name ?? 'Location',
+                                  onTap: _isSubmitting ? null : _removeLocation,
+                                ),
+                              const Spacer(),
+                              // Local storage indicator
+                              _InfoPill(
+                                icon: Icons.phone_android,
+                                label: 'Local',
                               ),
                             ],
                           ),
                         ),
+                              // Remove button at top right
+                              if (!_isSubmitting)
+                                Positioned(
+                                  top: 12,
+                                  right: 12,
+                                  child: BouncyTap(
+                                    onTap: _removeImage,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withValues(alpha: 0.5),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.close,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ],
 
-              // Location preview
-              if (_location != null) ...[
+              // Location preview (only if no image - otherwise shown as pill on image)
+              if (_location != null && !showImage) ...[
                 const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
+                    horizontal: 14,
+                    vertical: 10,
                   ),
                   decoration: BoxDecoration(
                     color: context.card,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: context.border.withValues(alpha: 0.5),
+                      color: context.border.withValues(alpha: 0.3),
                     ),
                   ),
                   child: Row(
@@ -988,15 +1159,15 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                       Icon(
                         Icons.location_on,
                         size: 18,
-                        color: context.textSecondary,
+                        color: context.accentColor,
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           _location!.name ?? 'Current location',
                           style: TextStyle(
-                            color: context.textSecondary,
-                            fontSize: 13,
+                            color: context.textPrimary,
+                            fontSize: 14,
                           ),
                         ),
                       ),
@@ -1013,118 +1184,31 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                 ),
               ],
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
 
-              // TTL Selector
-              Text(
-                'Fades in',
-                style: TextStyle(
-                  color: context.textSecondary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.5,
-                ),
-              ),
-              const SizedBox(height: 8),
-              TTLSelector(
-                selectedMinutes: _ttlMinutes,
-                onChanged: _isSubmitting
-                    ? null
-                    : (minutes) {
-                        setState(() => _ttlMinutes = minutes);
-                      },
-              ),
-
-              const SizedBox(height: 24),
-
-              // Action buttons
-              Row(
-                children: [
-                  if (canUseCloud)
-                    _ActionButton(
-                      icon: Icons.image_outlined,
-                      label: 'Image',
-                      onTap: () {
-                        if (canUseCloud &&
-                            !_isSubmitting &&
-                            !_isValidatingImage) {
-                          _pickImage();
-                          return;
-                        }
-
-                        // If cloud features unavailable but we have internet (signed out),
-                        // highlight the cloud banner to draw attention and show a prompt.
-                        if (!canUseCloud && connectivity.hasInternet) {
-                          HapticFeedback.mediumImpact();
-                          setState(() => _cloudBannerHighlight = true);
-                          _bannerShakeController.forward(from: 0);
-                        }
-                      },
-                      isSelected: _imageLocalPath != null,
-                      isLoading: _isValidatingImage,
-                    ),
-                  if (canUseCloud) const SizedBox(width: 12),
-                  _ActionButton(
-                    icon: Icons.location_on_outlined,
-                    label: 'Location',
-                    onTap:
-                        _isSubmitting || _isLoadingLocation || !hasNodeLocation
-                            ? null
-                            : _getLocation,
-                    isSelected: _location != null,
-                    isLoading: _isLoadingLocation,
-                    isEnabled:
-                        !(_isSubmitting || _isLoadingLocation || !hasNodeLocation),
-                    isWaiting: !hasNodeLocation,
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    tooltip: 'Signal settings',
-                    onPressed: _isSubmitting || !hasNodeLocation
-                        ? null
-                        : () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const SignalSettingsScreen(),
-                              ),
-                            );
-                          },
-                    icon: Icon(
-                      Icons.tune,
-                      color: hasNodeLocation
-                          ? context.accentColor
-                          : context.textTertiary,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
+              // Privacy note
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Icon(
-                      Icons.shield_outlined,
-                      size: 16,
-                      color: context.textTertiary,
-                    ),
+                  Icon(
+                    Icons.shield_outlined,
+                    size: 14,
+                    color: context.textTertiary,
                   ),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
-                      'Signal location uses the mesh device position and is '
-                      'rounded to your setting (~${signalRadiusMeters}m).',
+                      'Signal location uses mesh device position, rounded to ~${signalRadiusMeters}m.',
                       style: TextStyle(
                         color: context.textTertiary,
-                        fontSize: 12,
+                        fontSize: 11,
                       ),
                     ),
                   ),
                 ],
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
 
               // Cloud availability banner
               if (!canUseCloud)
@@ -1280,151 +1364,108 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                   ],
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ActionButton extends StatelessWidget {
-  const _ActionButton({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    this.isSelected = false,
-    this.isLoading = false,
-    this.isEnabled = true,
-    this.isWaiting = false,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback? onTap;
-  final bool isSelected;
-  final bool isLoading;
-  final bool isEnabled;
-  final bool isWaiting;
-
-  @override
-  Widget build(BuildContext context) {
-    final baseColor = isSelected
-        ? context.accentColor
-        : (isEnabled ? context.textSecondary : context.textTertiary);
-    final backgroundColor = isSelected
-        ? context.accentColor.withValues(alpha: 0.15)
-        : (isEnabled ? context.card : context.card.withValues(alpha: 0.6));
-    final borderColor = isSelected
-        ? context.accentColor.withValues(alpha: 0.5)
-        : (isEnabled
-            ? context.border.withValues(alpha: 0.5)
-            : context.border.withValues(alpha: 0.3));
-    return BouncyTap(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: borderColor,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (isLoading)
-              SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: context.accentColor,
+                  ],
                 ),
-              )
-            else
-              Icon(
-                icon,
-                size: 18,
-                color: baseColor,
               ),
-            const SizedBox(width: 8),
-            if (isWaiting)
-              Row(
-                children: [
-                  Text(
-                    'Waiting...',
-                    style: TextStyle(
-                      color: baseColor,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
+            ),
+            // Bottom send button
+            FadeTransition(
+              opacity: _fadeAnimation,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, 0.3),
+                  end: Offset.zero,
+                ).animate(CurvedAnimation(
+                  parent: _entryAnimationController,
+                  curve: const Interval(0.3, 1.0, curve: Curves.easeOutCubic),
+                )),
+                child: Container(
+                  padding: EdgeInsets.fromLTRB(
+                    20,
+                    12,
+                    20,
+                    12 + MediaQuery.of(context).padding.bottom,
+                  ),
+                  decoration: BoxDecoration(
+                    color: context.background,
+                    border: Border(
+                      top: BorderSide(
+                        color: context.border.withValues(alpha: 0.2),
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 2),
-                  _AnimatedDots(color: baseColor),
-                ],
-              )
-            else
-              Text(
-                label,
-                style: TextStyle(
-                  color: baseColor,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
+                  child: Tooltip(
+                    message: submitBlockedReason ?? '',
+                    child: BouncyTap(
+                      onTap: canSubmit ? _submitSignal : null,
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        decoration: BoxDecoration(
+                          gradient: canSubmit
+                              ? LinearGradient(
+                                  begin: Alignment.centerLeft,
+                                  end: Alignment.centerRight,
+                                  colors: [gradientColors[0], gradientColors[1]],
+                                )
+                              : null,
+                          color: canSubmit
+                              ? null
+                              : context.border.withValues(alpha: 0.3),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: canSubmit
+                              ? [
+                                  BoxShadow(
+                                    color: gradientColors[0].withValues(alpha: 0.4),
+                                    blurRadius: 16,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ]
+                              : null,
+                        ),
+                        child: _isSubmitting
+                            ? const Center(
+                                child: SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              )
+                            : Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                              Icon(
+                                Icons.sensors,
+                                size: 22,
+                                color: canSubmit
+                                    ? Colors.white
+                                    : context.textTertiary,
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                'Send Signal',
+                                style: TextStyle(
+                                  color: canSubmit
+                                      ? Colors.white
+                                      : context.textTertiary,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
+            ),
           ],
         ),
       ),
-    );
-  }
-}
-
-class _AnimatedDots extends StatefulWidget {
-  const _AnimatedDots({required this.color});
-
-  final Color color;
-
-  @override
-  State<_AnimatedDots> createState() => _AnimatedDotsState();
-}
-
-class _AnimatedDotsState extends State<_AnimatedDots>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        final phase = (_controller.value * 3).floor() + 1;
-        final dots = '.' * phase;
-        return Text(
-          dots,
-          style: TextStyle(
-            color: widget.color,
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-          ),
-        );
-      },
     );
   }
 }
@@ -1933,6 +1974,123 @@ class _AlbumListTileState extends State<_AlbumListTile> {
         ),
       ),
       trailing: const Icon(Icons.chevron_right, color: Colors.white54),
+    );
+  }
+}
+
+/// Info pill widget for image overlay
+class _InfoPill extends StatelessWidget {
+  const _InfoPill({
+    required this.icon,
+    required this.label,
+    this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final pill = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: Colors.white),
+          const SizedBox(width: 5),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 100),
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          if (onTap != null) ...[
+            const SizedBox(width: 4),
+            const Icon(Icons.close, size: 12, color: Colors.white70),
+          ],
+        ],
+      ),
+    );
+
+    if (onTap != null) {
+      return GestureDetector(onTap: onTap, child: pill);
+    }
+    return pill;
+  }
+}
+
+/// Input action button for the floating input bar
+class _InputActionButton extends StatelessWidget {
+  const _InputActionButton({
+    required this.icon,
+    this.label,
+    this.onTap,
+    this.isSelected = false,
+    this.isLoading = false,
+    this.isEnabled = true,
+  });
+
+  final IconData icon;
+  final String? label;
+  final VoidCallback? onTap;
+  final bool isSelected;
+  final bool isLoading;
+  final bool isEnabled;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isSelected
+        ? context.accentColor
+        : (isEnabled ? context.textSecondary : context.textTertiary);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: isEnabled ? onTap : null,
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (isLoading)
+                SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: context.accentColor,
+                  ),
+                )
+              else
+                Icon(icon, size: 20, color: color),
+              if (label != null) ...[
+                const SizedBox(width: 4),
+                Text(
+                  label!,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
