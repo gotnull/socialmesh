@@ -172,12 +172,9 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
       AppLogging.signals('ℹ️ Go Active: unauthenticated session (mesh-only)');
     }
 
-    // Connection gating check
-    if (!ref.read(isDeviceConnectedProvider)) {
-      AppLogging.signals('🚫 Go Active blocked: device not connected');
-      showErrorSnackBar(context, 'Connect to a device to go active');
-      return;
-    }
+    // Note: Device connection check removed - CreateSignalScreen will handle
+    // showing connection warnings and the actual broadcast will fail gracefully
+    // if device is not connected (signal saved locally but not transmitted).
 
     Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -295,7 +292,8 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
     final isSignedIn = authState.value != null;
     final connectivity = ref.watch(signalConnectivityProvider);
     final isConnected = connectivity.isBleConnected;
-    final canGoActive = isConnected;
+    // Allow offline signal composition - CreateSignalScreen handles connection warnings
+    final canGoActive = true;
 
     // Watch bookmarks for saved count
     final bookmarkedIds = ref.watch(signalBookmarksProvider).value ?? {};
@@ -801,7 +799,8 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
     final authState = ref.watch(authStateProvider);
     final isSignedIn = authState.value != null;
     final isConnected = ref.watch(isDeviceConnectedProvider);
-    final canGoActive = isConnected;
+    // Allow offline signal composition - CreateSignalScreen handles connection warnings
+    final canGoActive = true;
 
     String? blockedReason;
     if (!isConnected) {
