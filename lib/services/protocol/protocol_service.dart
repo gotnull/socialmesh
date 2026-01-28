@@ -1262,8 +1262,8 @@ class ProtocolService {
 
           final newNode = MeshNode(
             nodeNum: packet.from,
-            longName: user.longName.isNotEmpty ? user.longName : null,
-            shortName: user.shortName.isNotEmpty ? user.shortName : null,
+            longName: user.longName.isNotEmpty ? sanitizeUtf16(user.longName) : null,
+            shortName: user.shortName.isNotEmpty ? sanitizeUtf16(user.shortName) : null,
             userId: user.hasId() ? user.id : null,
             hardwareModel: hwModel,
             role: user.hasRole() ? user.role.name : 'CLIENT',
@@ -2005,13 +2005,18 @@ class ProtocolService {
   void _handleNodeInfoUpdate(pb.MeshPacket packet, pb.Data data) {
     try {
       final user = pb.User.fromBuffer(data.payload);
+
+      // Sanitize node names to prevent UTF-16 crashes when rendering text
+      final longName = sanitizeUtf16(user.longName);
+      final shortName = sanitizeUtf16(user.shortName);
+
       AppLogging.protocol(
-        '🔑 📥 Received node info from ${packet.from.toRadixString(16)}: ${user.longName} (${user.shortName})',
+        '🔑 📥 Received node info from ${packet.from.toRadixString(16)}: $longName ($shortName)',
       );
       AppLogging.protocol(
         '🔑 📥 Public key present: ${user.publicKey.isNotEmpty} (${user.publicKey.length} bytes)',
       );
-      AppLogging.protocol('Node info from ${packet.from}: ${user.longName}');
+      AppLogging.protocol('Node info from ${packet.from}: $longName');
 
       final colors = [
         0xFF1976D2,
@@ -2044,8 +2049,8 @@ class ProtocolService {
       final existingNode = _nodes[packet.from];
       final updatedNode =
           existingNode?.copyWith(
-            longName: user.longName,
-            shortName: user.shortName,
+            longName: longName,
+            shortName: shortName,
             userId: user.hasId() ? user.id : existingNode.userId,
             hardwareModel: hwModel ?? existingNode.hardwareModel,
             role: role,
@@ -2054,8 +2059,8 @@ class ProtocolService {
           ) ??
           MeshNode(
             nodeNum: packet.from,
-            longName: user.longName,
-            shortName: user.shortName,
+            longName: longName,
+            shortName: shortName,
             userId: user.hasId() ? user.id : null,
             hardwareModel: hwModel,
             role: role,
@@ -2069,8 +2074,8 @@ class ProtocolService {
       _nodeController.add(updatedNode);
       onIdentityUpdate?.call(
         nodeNum: packet.from,
-        longName: user.longName.isNotEmpty ? user.longName : null,
-        shortName: user.shortName.isNotEmpty ? user.shortName : null,
+        longName: longName.isNotEmpty ? longName : null,
+        shortName: shortName.isNotEmpty ? shortName : null,
         lastSeenAtMs: updatedNode.lastHeard?.millisecondsSinceEpoch,
       );
     } catch (e) {
@@ -2208,14 +2213,14 @@ class ProtocolService {
     }
 
     if (existingNode != null) {
-      // Preserve existing names if new ones are empty
+      // Preserve existing names if new ones are empty, sanitize to prevent UTF-16 crashes
       final newLongName =
           nodeInfo.hasUser() && nodeInfo.user.longName.isNotEmpty
-          ? nodeInfo.user.longName
+          ? sanitizeUtf16(nodeInfo.user.longName)
           : existingNode.longName;
       final newShortName =
           nodeInfo.hasUser() && nodeInfo.user.shortName.isNotEmpty
-          ? nodeInfo.user.shortName
+          ? sanitizeUtf16(nodeInfo.user.shortName)
           : existingNode.shortName;
 
       updatedNode = existingNode.copyWith(
@@ -2242,14 +2247,14 @@ class ProtocolService {
         hasPublicKey: hasPublicKey,
       );
     } else {
-      // Use null for empty strings to trigger fallback display logic
+      // Use null for empty strings to trigger fallback display logic, sanitize to prevent UTF-16 crashes
       final userLongName =
           nodeInfo.hasUser() && nodeInfo.user.longName.isNotEmpty
-          ? nodeInfo.user.longName
+          ? sanitizeUtf16(nodeInfo.user.longName)
           : null;
       final userShortName =
           nodeInfo.hasUser() && nodeInfo.user.shortName.isNotEmpty
-          ? nodeInfo.user.shortName
+          ? sanitizeUtf16(nodeInfo.user.shortName)
           : null;
 
       updatedNode = MeshNode(
@@ -2279,10 +2284,13 @@ class ProtocolService {
     _nodeController.add(updatedNode);
     if (nodeInfo.hasUser()) {
       final user = nodeInfo.user;
+      // Sanitize names for the callback as well
+      final sanitizedLongName = user.longName.isNotEmpty ? sanitizeUtf16(user.longName) : null;
+      final sanitizedShortName = user.shortName.isNotEmpty ? sanitizeUtf16(user.shortName) : null;
       onIdentityUpdate?.call(
         nodeNum: nodeInfo.num,
-        longName: user.longName.isNotEmpty ? user.longName : null,
-        shortName: user.shortName.isNotEmpty ? user.shortName : null,
+        longName: sanitizedLongName,
+        shortName: sanitizedShortName,
         lastSeenAtMs: updatedNode.lastHeard?.millisecondsSinceEpoch,
       );
     }

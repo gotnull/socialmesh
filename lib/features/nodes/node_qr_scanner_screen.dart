@@ -6,6 +6,7 @@ import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../core/theme.dart';
 import '../../utils/snackbar.dart';
+import '../../utils/text_sanitizer.dart';
 import '../../core/widgets/loading_indicator.dart';
 
 class NodeQrScannerScreen extends ConsumerStatefulWidget {
@@ -305,11 +306,15 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
       final existingNodes = ref.read(nodesProvider);
       final existing = existingNodes[nodeNum];
 
+      // Sanitize names to prevent UTF-16 crashes when rendering text
+      final sanitizedLongName = longName != null ? sanitizeUtf16(longName) : existing?.longName;
+      final sanitizedShortName = shortName != null ? sanitizeUtf16(shortName) : existing?.shortName;
+
       // Create or update the node
       final node = MeshNode(
         nodeNum: nodeNum,
-        longName: longName ?? existing?.longName,
-        shortName: shortName ?? existing?.shortName,
+        longName: sanitizedLongName,
+        shortName: sanitizedShortName,
         userId: userId ?? existing?.userId,
         latitude: lat ?? existing?.latitude,
         longitude: lon ?? existing?.longitude,

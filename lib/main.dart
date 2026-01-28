@@ -1369,6 +1369,9 @@ class _SplashScreenState extends ConsumerState<_SplashScreen>
     switch (autoState) {
       case AutoReconnectState.idle:
         return ConnectionStatusInfo.initializing(context.accentColor);
+      case AutoReconnectState.manualConnecting:
+        // User is manually connecting to a device
+        return ConnectionStatusInfo.connecting(context.accentColor);
       case AutoReconnectState.scanning:
         return ConnectionStatusInfo.scanning(context.accentColor);
       case AutoReconnectState.connecting:

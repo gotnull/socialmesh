@@ -274,8 +274,6 @@ class MainShell extends ConsumerStatefulWidget {
 class _MainShellState extends ConsumerState<MainShell> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  late final MainShellScaffoldKeyNotifier _scaffoldKeyNotifier;
-
   @override
   void initState() {
     super.initState();
@@ -284,14 +282,14 @@ class _MainShellState extends ConsumerState<MainShell> {
         ref.read(mainShellScaffoldKeyProvider.notifier).setKey(_scaffoldKey);
       }
     });
-    _scaffoldKeyNotifier = ref.read(mainShellScaffoldKeyProvider.notifier);
   }
 
   @override
   void dispose() {
-    // Clear the scaffold key from the provider when MainShell is disposed
-    // This prevents stale key references if MainShell is recreated
-    _scaffoldKeyNotifier.setKey(null);
+    // Note: We don't clear the scaffold key here because:
+    // 1. Modifying providers during dispose causes Riverpod exceptions
+    // 2. When MainShell is recreated, initState will set a new key anyway
+    // 3. If MainShell is permanently gone, the key becomes naturally stale
     super.dispose();
   }
 

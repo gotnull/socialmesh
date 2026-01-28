@@ -1022,10 +1022,14 @@ class NodeStorageService {
   }
 
   MeshNode _nodeFromJson(Map<String, dynamic> json) {
+    // Sanitize string fields to prevent UTF-16 crashes when rendering text
+    final rawLongName = json['longName'] as String?;
+    final rawShortName = json['shortName'] as String?;
+
     return MeshNode(
       nodeNum: json['nodeNum'] as int,
-      longName: json['longName'] as String?,
-      shortName: json['shortName'] as String?,
+      longName: rawLongName != null ? sanitizeUtf16(rawLongName) : null,
+      shortName: rawShortName != null ? sanitizeUtf16(rawShortName) : null,
       userId: json['userId'] as String?,
       hardwareModel: json['hardwareModel'] as String?,
       latitude: (json['latitude'] as num?)?.toDouble(),

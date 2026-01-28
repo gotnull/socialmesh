@@ -94,13 +94,13 @@ class AppInitNotifier extends Notifier<AppInitState> {
       if (hasEverPaired) {
         // User has paired before - go directly to main UI
         // Device connection will happen in background via DeviceConnectionNotifier
-        AppLogging.ble(
+        AppLogging.connection(
           '🎯 AppInitNotifier: User has paired before, setting ready',
         );
         state = AppInitState.ready;
       } else {
         // Never paired - need to go through scanner first
-        AppLogging.ble(
+        AppLogging.connection(
           '🎯 AppInitNotifier: No previous device, setting needsScanner',
         );
         state = AppInitState.needsScanner;
@@ -413,7 +413,13 @@ final connectedDeviceProvider =
     );
 
 // Auto-reconnect state
-enum AutoReconnectState { idle, scanning, connecting, failed, success }
+// - idle: No reconnection in progress
+// - manualConnecting: User manually initiated connection (don't auto-reconnect on failure)
+// - scanning: Auto-reconnect is scanning for the device
+// - connecting: Auto-reconnect is connecting to the device
+// - failed: Auto-reconnect failed (all retries exhausted)
+// - success: Auto-reconnect succeeded
+enum AutoReconnectState { idle, manualConnecting, scanning, connecting, failed, success }
 
 class AutoReconnectStateNotifier extends Notifier<AutoReconnectState> {
   @override
@@ -721,6 +727,16 @@ final autoReconnectManagerProvider = Provider<void>((ref) {
       if (userDisconnected) {
         AppLogging.connection(
           '🔄 BLOCKED: User manually disconnected - not auto-reconnecting',
+        );
+        return;
+      }
+
+      // If user is manually connecting to a device, don't trigger auto-reconnect
+      // This prevents auto-reconnect to the OLD saved device when the user taps
+      // a DIFFERENT device and it times out (e.g., device is already connected to another phone)
+      if (autoReconnectState == AutoReconnectState.manualConnecting) {
+        AppLogging.connection(
+          '🔄 BLOCKED: User is manually connecting - not auto-reconnecting',
         );
         return;
       }

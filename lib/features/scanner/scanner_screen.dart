@@ -555,6 +555,11 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     // This allows auto-reconnect to work for this new device
     ref.read(userDisconnectedProvider.notifier).setUserDisconnected(false);
     ref.read(conn.deviceConnectionProvider.notifier).clearUserDisconnected();
+    // Set state to manualConnecting to prevent auto-reconnect to the OLD saved device
+    // if this manual connection fails (e.g., device is already connected to another phone)
+    ref
+        .read(autoReconnectStateProvider.notifier)
+        .setState(AutoReconnectState.manualConnecting);
     await _connectToDevice(device, isAutoReconnect: false);
   }
 
@@ -770,10 +775,27 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     } catch (e, stack) {
       if (!mounted) return;
 
-      // Log error to Crashlytics for stack trace visibility
-      try {
-        await FirebaseCrashlytics.instance.recordError(e, stack);
-      } catch (_) {}
+      // Log error to Crashlytics ONLY for unexpected errors
+      // Don't log expected errors like timeouts (device busy/connected elsewhere),
+      // pairing/auth errors which are user-recoverable, or GATT errors (133)
+      // which happen when device is connected to another phone or cache is stale
+      final errorStr = e.toString().toLowerCase();
+      final isExpectedError = errorStr.contains('timed out') ||
+          errorStr.contains('timeout') ||
+          errorStr.contains('pairing') ||
+          errorStr.contains('bonding') ||
+          errorStr.contains('pin') ||
+          errorStr.contains('authentication') ||
+          errorStr.contains('disconnected during') ||
+          errorStr.contains('gatt_error') ||
+          errorStr.contains('android-code: 133') ||
+          errorStr.contains('device is disconnected') ||
+          errorStr.contains('discovery failed');
+      if (!isExpectedError) {
+        try {
+          await FirebaseCrashlytics.instance.recordError(e, stack);
+        } catch (_) {}
+      }
 
       // Force cleanup on error to ensure clean state for retry
       try {
@@ -795,21 +817,55 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       final sanitizedMessage = e.toString().replaceFirst('Exception: ', '');
       final pairingInvalidation = conn.isPairingInvalidationError(e);
       final pairingMessage =
-          'Your phone removed the stored pairing info for this device. Return to Settings > Bluetooth, forget “Meshtastic”, and try again.';
-      final displayMessage = pairingInvalidation
-          ? pairingMessage
-          : sanitizedMessage;
+          'Your phone removed the stored pairing info for this device. Return to Settings > Bluetooth, forget "Meshtastic", and try again.';
 
-      if (!isAutoReconnect) {
-        showErrorSnackBar(context, displayMessage);
+      // Provide user-friendly error messages for common BLE errors
+      final errorLower = e.toString().toLowerCase();
+      final isTimeout = errorLower.contains('timed out') ||
+          errorLower.contains('timeout');
+      final isGattError = errorLower.contains('gatt_error') ||
+          errorLower.contains('android-code: 133');
+      final isDiscoveryFailed = errorLower.contains('discovery failed');
+      final isDeviceDisconnected =
+          errorLower.contains('device is disconnected');
+
+      String userMessage;
+      if (pairingInvalidation) {
+        userMessage = pairingMessage;
+      } else if (isGattError || isDiscoveryFailed) {
+        // GATT_ERROR 133 can happen when:
+        // - Device was previously paired with another app (stale bond)
+        // - Device is connected to another phone
+        // - BLE cache is corrupted
+        userMessage =
+            'Connection failed. This can happen if the device was previously '
+            'paired with another app. Go to Settings > Bluetooth, find the '
+            'Meshtastic device, tap "Forget", then try again.';
+      } else if (isTimeout) {
+        userMessage =
+            'Connection timed out. The device may be out of range, powered off, '
+            'or connected to another phone.';
+      } else if (isDeviceDisconnected) {
+        userMessage =
+            'The device disconnected unexpectedly. It may have gone out of range '
+            'or lost power.';
+      } else {
+        userMessage = sanitizedMessage;
       }
+
+      // Reset auto-reconnect state to idle since manual connection failed
+      // This prevents the auto-reconnect manager from trying to reconnect
+      // to the OLD saved device after the user's manual attempt failed
+      ref
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.idle);
 
       // Only reset connecting state on error
       setState(() {
         _connecting = false;
         _autoReconnecting = false;
-        _errorMessage = displayMessage;
-        _showPairingInvalidationHint = pairingInvalidation;
+        _errorMessage = userMessage;
+        _showPairingInvalidationHint = pairingInvalidation || isGattError;
       });
 
       // If auto-reconnect failed, start regular scan

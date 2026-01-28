@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/logging.dart';
 import '../models/mesh_models.dart';
 import '../providers/app_providers.dart';
+import '../utils/text_sanitizer.dart';
 
 /// Represents a parsed deep link
 sealed class DeepLinkData {
@@ -354,11 +355,11 @@ class DeepLinkService {
       return false;
     }
 
-    // Create a MeshNode from the deep link data
+    // Create a MeshNode from the deep link data, sanitizing names to prevent UTF-16 crashes
     final node = MeshNode(
       nodeNum: nodeData.nodeNum!,
-      longName: nodeData.longName,
-      shortName: nodeData.shortName,
+      longName: nodeData.longName != null ? sanitizeUtf16(nodeData.longName!) : null,
+      shortName: nodeData.shortName != null ? sanitizeUtf16(nodeData.shortName!) : null,
       userId: nodeData.userId,
       latitude: nodeData.latitude,
       longitude: nodeData.longitude,
