@@ -272,6 +272,8 @@ class ActiveRouteNotifier extends Notifier<Route?> {
 
   void _startLocationTracking() {
     AppLogging.debug('🛤️ Route: Starting location tracking');
+    // Cancel any existing subscription first
+    _positionSubscription?.cancel();
     // Listen to position updates from nodes (including phone GPS positions)
     _positionSubscription = _protocol.nodeStream.listen((node) async {
       if (state == null) {
@@ -503,6 +505,8 @@ class TelemetryLoggerNotifier extends Notifier<bool> {
   ProtocolService get _protocol => ref.read(protocolServiceProvider);
 
   void _startLogging(TelemetryStorageService storage) {
+    // Cancel any existing subscription first
+    _nodeSubscription?.cancel();
     // Listen to node updates and log telemetry
     _nodeSubscription = _protocol.nodeStream.listen((node) async {
       // Log device metrics if present

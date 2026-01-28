@@ -229,6 +229,16 @@ class ARNotifier extends Notifier<ARState> {
       _engine = ref.read(arEngineProvider);
       await _engine!.start();
 
+      // Cancel any existing subscriptions first (defensive)
+      _calibrationSub?.cancel();
+      _orientationSub?.cancel();
+      _positionSub?.cancel();
+      _nodesSub?.cancel();
+      _clustersSub?.cancel();
+      _alertsSub?.cancel();
+      _animationTimer?.cancel();
+      _processTimer?.cancel();
+
       // Subscribe to calibration state updates
       _calibrationSub = _engine!.calibrationStream.listen((calibration) {
         if (state.isRunning || state.isInitializing) {

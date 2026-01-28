@@ -110,6 +110,7 @@ class CloudSyncEntitlementService {
     Purchases.addCustomerInfoUpdateListener(_onCustomerInfoUpdate);
 
     // Listen to Firebase Auth changes
+    await _authSubscription?.cancel();
     _authSubscription = _auth.authStateChanges().listen(
       _onAuthStateChange,
       onError: (error) {

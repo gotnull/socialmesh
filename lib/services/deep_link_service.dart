@@ -115,6 +115,7 @@ class DeepLinkService {
     }
 
     // Listen for incoming links while app is running
+    await _linkSubscription?.cancel();
     _linkSubscription = _appLinks.uriLinkStream.listen(
       (Uri uri) async {
         AppLogging.debug('🔗 Received deep link: $uri');
