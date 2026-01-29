@@ -23,6 +23,7 @@ import '../../core/widgets/gradient_border_container.dart';
 import '../../core/widgets/node_avatar.dart';
 import '../../core/widgets/edge_fade.dart';
 import '../../core/widgets/auto_scroll_text.dart';
+import '../../core/widgets/section_header.dart';
 import '../../core/widgets/skeleton_config.dart';
 // import '../../core/widgets/verified_badge.dart';
 import '../../services/share_link_service.dart';
@@ -280,7 +281,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
                           scrollDirection: Axis.horizontal,
                           padding: const EdgeInsets.only(left: 16),
                           children: [
-                            _FilterChip(
+                            SectionFilterChip(
                               label: 'All',
                               count: nodes.length,
                               isSelected: _activeFilter == NodeFilter.all,
@@ -289,7 +290,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
                               ),
                             ),
                             SizedBox(width: 8),
-                            _FilterChip(
+                            SectionFilterChip(
                               label: 'Active',
                               count: activeCount,
                               isSelected: _activeFilter == NodeFilter.active,
@@ -299,7 +300,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
                               ),
                             ),
                             const SizedBox(width: 8),
-                            _FilterChip(
+                            SectionFilterChip(
                               label: 'Favorites',
                               count: favoritesCount,
                               isSelected: _activeFilter == NodeFilter.favorites,
@@ -310,7 +311,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
                               ),
                             ),
                             const SizedBox(width: 8),
-                            _FilterChip(
+                            SectionFilterChip(
                               label: 'With Position',
                               count: withPositionCount,
                               isSelected:
@@ -322,7 +323,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
                               ),
                             ),
                             const SizedBox(width: 8),
-                            _FilterChip(
+                            SectionFilterChip(
                               label: 'Inactive',
                               count: inactiveCount,
                               isSelected: _activeFilter == NodeFilter.inactive,
@@ -332,7 +333,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
                               ),
                             ),
                             SizedBox(width: 8),
-                            _FilterChip(
+                            SectionFilterChip(
                               label: 'New',
                               count: recentlyDiscoveredCount,
                               isSelected:
@@ -358,7 +359,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
                     ),
                     // Static toggle at end
                     const SizedBox(width: 8),
-                    _HeadersToggle(
+                    SectionHeadersToggle(
                       enabled: _showSectionHeaders,
                       onToggle: () => setState(
                         () => _showSectionHeaders = !_showSectionHeaders,
@@ -506,7 +507,7 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
           // Sticky header
           SliverPersistentHeader(
             pinned: true,
-            delegate: _StickyHeaderDelegate(
+            delegate: SectionHeaderDelegate(
               title: nonEmptySections[sectionIndex].title,
               count: nonEmptySections[sectionIndex].nodes.length,
             ),
@@ -924,116 +925,6 @@ enum NodeFilter {
 /// Sort order options for the nodes list
 enum NodeSortOrder { lastHeard, name, signalStrength, batteryLevel }
 
-/// Filter chip widget
-class _FilterChip extends StatelessWidget {
-  final String label;
-  final int count;
-  final bool isSelected;
-  final Color? color;
-  final IconData? icon;
-  final VoidCallback onTap;
-
-  const _FilterChip({
-    required this.label,
-    required this.count,
-    required this.isSelected,
-    required this.onTap,
-    this.color,
-    this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final chipColor = color ?? AppTheme.primaryBlue;
-    final showStatusIndicator = label == 'Active';
-
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected ? chipColor.withValues(alpha: 0.2) : context.card,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected
-                ? chipColor.withValues(alpha: 0.5)
-                : context.border.withValues(alpha: 0.3),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Status indicator for Active chip
-            if (showStatusIndicator && label == 'Active') ...[
-              Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [chipColor, chipColor.withValues(alpha: 0.6)],
-                  ),
-                  boxShadow: isSelected
-                      ? [
-                          BoxShadow(
-                            color: chipColor.withValues(alpha: 0.4),
-                            blurRadius: 4,
-                            spreadRadius: 1,
-                          ),
-                        ]
-                      : null,
-                ),
-                child: Container(
-                  margin: const EdgeInsets.all(2),
-                  decoration: BoxDecoration(
-                    color: chipColor.withValues(alpha: 0.3),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-              SizedBox(width: 6),
-            ] else if (icon != null) ...[
-              Icon(
-                icon,
-                size: 14,
-                color: isSelected ? chipColor : context.textTertiary,
-              ),
-              SizedBox(width: 4),
-            ],
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                color: isSelected ? chipColor : context.textSecondary,
-              ),
-            ),
-            SizedBox(width: 6),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? chipColor.withValues(alpha: 0.3)
-                    : context.border.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                count.toString(),
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: isSelected ? chipColor : context.textTertiary,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 /// Sort button with dropdown
 class _SortButton extends StatelessWidget {
   final NodeSortOrder sortOrder;
@@ -1170,120 +1061,6 @@ class _SortButton extends StatelessWidget {
         ],
       ),
     );
-  }
-}
-
-/// Toggle button for section headers
-class _HeadersToggle extends StatelessWidget {
-  final bool enabled;
-  final VoidCallback onToggle;
-
-  const _HeadersToggle({required this.enabled, required this.onToggle});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onToggle,
-      child: Container(
-        padding: const EdgeInsets.all(6),
-        decoration: BoxDecoration(
-          color: enabled
-              ? context.accentColor.withValues(alpha: 0.2)
-              : context.card,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: enabled
-                ? context.accentColor.withValues(alpha: 0.5)
-                : context.border.withValues(alpha: 0.3),
-          ),
-        ),
-        child: Icon(
-          Icons.view_agenda_outlined,
-          size: 16,
-          color: enabled ? context.accentColor : context.textTertiary,
-        ),
-      ),
-    );
-  }
-}
-
-/// Section header widget
-class _SectionHeader extends StatelessWidget {
-  final String title;
-  final int count;
-
-  const _SectionHeader({required this.title, required this.count});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 40,
-      color: context.background,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: [
-          Text(
-            title.toUpperCase(),
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: context.textSecondary,
-              letterSpacing: 0.5,
-            ),
-          ),
-          SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: context.card,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              count.toString(),
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: context.textTertiary,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Delegate for sticky section headers
-class _StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
-  final String title;
-  final int count;
-
-  _StickyHeaderDelegate({required this.title, required this.count});
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    // Show shadow when content is scrolling underneath
-    final showShadow = shrinkOffset > 0 || overlapsContent;
-    return StickyHeaderShadow(
-      blurRadius: showShadow ? 8 : 0,
-      offsetY: showShadow ? 2 : 0,
-      child: _SectionHeader(title: title, count: count),
-    );
-  }
-
-  @override
-  double get maxExtent => 40;
-
-  @override
-  double get minExtent => 40;
-
-  @override
-  bool shouldRebuild(covariant _StickyHeaderDelegate oldDelegate) {
-    return title != oldDelegate.title || count != oldDelegate.count;
   }
 }
 

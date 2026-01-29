@@ -23,6 +23,7 @@ import '../../core/widgets/auto_scroll_text.dart';
 import '../../core/widgets/edge_fade.dart';
 import '../../core/widgets/gradient_border_container.dart';
 import '../../core/widgets/ico_help_system.dart';
+import '../../core/widgets/section_header.dart';
 import '../../core/widgets/node_avatar.dart';
 import '../../generated/meshtastic/channel.pb.dart' as channel_pb;
 import '../../generated/meshtastic/channel.pbenum.dart' as channel_pbenum;
@@ -264,7 +265,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.only(left: 16),
                     children: [
-                      _ContactFilterChip(
+                      SectionFilterChip(
                         label: 'All',
                         count: contacts.length,
                         isSelected: _currentFilter == ContactFilter.all,
@@ -272,7 +273,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
                             setState(() => _currentFilter = ContactFilter.all),
                       ),
                       SizedBox(width: 8),
-                      _ContactFilterChip(
+                      SectionFilterChip(
                         label: 'Active',
                         count: activeCount,
                         isSelected: _currentFilter == ContactFilter.active,
@@ -282,7 +283,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
                         ),
                       ),
                       SizedBox(width: 8),
-                      _ContactFilterChip(
+                      SectionFilterChip(
                         label: 'Unread',
                         count: unreadCount,
                         isSelected: _currentFilter == ContactFilter.unread,
@@ -293,7 +294,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
                         ),
                       ),
                       SizedBox(width: 8),
-                      _ContactFilterChip(
+                      SectionFilterChip(
                         label: 'Messaged',
                         count: messagedCount,
                         isSelected: _currentFilter == ContactFilter.messaged,
@@ -304,7 +305,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
                         ),
                       ),
                       SizedBox(width: 8),
-                      _ContactFilterChip(
+                      SectionFilterChip(
                         label: 'Favorites',
                         count: favoritesCount,
                         isSelected: _currentFilter == ContactFilter.favorites,
@@ -321,7 +322,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
               ),
               // Static toggle at end
               const SizedBox(width: 8),
-              _ContactHeadersToggle(
+              SectionHeadersToggle(
                 enabled: _showSectionHeaders,
                 onToggle: () =>
                     setState(() => _showSectionHeaders = !_showSectionHeaders),
@@ -477,7 +478,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
           // Sticky header
           SliverPersistentHeader(
             pinned: true,
-            delegate: _ContactStickyHeaderDelegate(
+            delegate: SectionHeaderDelegate(
               title: nonEmptySections[sectionIndex].title,
               count: nonEmptySections[sectionIndex].contacts.length,
             ),
@@ -547,84 +548,6 @@ class _ContactSection {
   _ContactSection(this.title, this.contacts);
 }
 
-/// Sticky header delegate for contact sections
-class _ContactStickyHeaderDelegate extends SliverPersistentHeaderDelegate {
-  final String title;
-  final int count;
-
-  _ContactStickyHeaderDelegate({required this.title, required this.count});
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    final showShadow = shrinkOffset > 0;
-    return StickyHeaderShadow(
-      blurRadius: showShadow ? 8 : 0,
-      offsetY: showShadow ? 2 : 0,
-      child: _ContactSectionHeader(title: title, count: count),
-    );
-  }
-
-  @override
-  double get maxExtent => 40;
-
-  @override
-  double get minExtent => 40;
-
-  @override
-  bool shouldRebuild(covariant _ContactStickyHeaderDelegate oldDelegate) {
-    return title != oldDelegate.title || count != oldDelegate.count;
-  }
-}
-
-class _ContactSectionHeader extends StatelessWidget {
-  final String title;
-  final int count;
-
-  const _ContactSectionHeader({required this.title, required this.count});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 40,
-      color: context.background,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: [
-          Text(
-            title.toUpperCase(),
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: context.textSecondary,
-              letterSpacing: 0.5,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: context.card,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              count.toString(),
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: context.textTertiary,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 /// Helper class to track DM info for a node
 class _DmInfo {
   final String? lastMessage;
@@ -671,40 +594,6 @@ class _Contact {
   });
 
   bool get hasMessages => lastMessage != null;
-}
-
-/// Toggle button for section headers in contacts list
-class _ContactHeadersToggle extends StatelessWidget {
-  final bool enabled;
-  final VoidCallback onToggle;
-
-  const _ContactHeadersToggle({required this.enabled, required this.onToggle});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onToggle,
-      child: Container(
-        padding: const EdgeInsets.all(6),
-        decoration: BoxDecoration(
-          color: enabled
-              ? context.accentColor.withValues(alpha: 0.2)
-              : context.card,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: enabled
-                ? context.accentColor.withValues(alpha: 0.5)
-                : context.border.withValues(alpha: 0.3),
-          ),
-        ),
-        child: Icon(
-          Icons.view_agenda_outlined,
-          size: 16,
-          color: enabled ? context.accentColor : context.textTertiary,
-        ),
-      ),
-    );
-  }
 }
 
 class _ContactTile extends StatelessWidget {
@@ -2724,116 +2613,6 @@ class MessagingPopupMenu extends ConsumerWidget {
         ]);
         return items;
       },
-    );
-  }
-}
-
-/// Filter chip widget for contacts
-class _ContactFilterChip extends StatelessWidget {
-  final String label;
-  final int count;
-  final bool isSelected;
-  final Color? color;
-  final IconData? icon;
-  final VoidCallback onTap;
-
-  const _ContactFilterChip({
-    required this.label,
-    required this.count,
-    required this.isSelected,
-    required this.onTap,
-    this.color,
-    this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final chipColor = color ?? AppTheme.primaryBlue;
-    final showStatusIndicator = label == 'Active';
-
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected ? chipColor.withValues(alpha: 0.2) : context.card,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected
-                ? chipColor.withValues(alpha: 0.5)
-                : context.border.withValues(alpha: 0.3),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Status indicator for Active chip
-            if (showStatusIndicator) ...[
-              Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [chipColor, chipColor.withValues(alpha: 0.6)],
-                  ),
-                  boxShadow: isSelected
-                      ? [
-                          BoxShadow(
-                            color: chipColor.withValues(alpha: 0.4),
-                            blurRadius: 4,
-                            spreadRadius: 1,
-                          ),
-                        ]
-                      : null,
-                ),
-                child: Container(
-                  margin: const EdgeInsets.all(2),
-                  decoration: BoxDecoration(
-                    color: chipColor.withValues(alpha: 0.3),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-              SizedBox(width: 6),
-            ] else if (icon != null) ...[
-              Icon(
-                icon,
-                size: 14,
-                color: isSelected ? chipColor : context.textTertiary,
-              ),
-              SizedBox(width: 4),
-            ],
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                color: isSelected ? chipColor : context.textSecondary,
-              ),
-            ),
-            SizedBox(width: 6),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? chipColor.withValues(alpha: 0.3)
-                    : context.border.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                count.toString(),
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: isSelected ? chipColor : context.textTertiary,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
