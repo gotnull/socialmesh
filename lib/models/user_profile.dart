@@ -391,7 +391,7 @@ class UserProfile {
     final now = DateTime.now();
     return UserProfile(
       id: 'guest_${now.millisecondsSinceEpoch}',
-      displayName: 'meshuser',
+      displayName: 'Guest',
       createdAt: now,
       updatedAt: now,
     );
@@ -407,7 +407,7 @@ class UserProfile {
     final now = DateTime.now();
     return UserProfile(
       id: uid,
-      displayName: displayName ?? email?.split('@').first ?? 'MeshUser',
+      displayName: displayName ?? email?.split('@').first ?? 'New User',
       email: email,
       avatarUrl: photoUrl,
       createdAt: now,

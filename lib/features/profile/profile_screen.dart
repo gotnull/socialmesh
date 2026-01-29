@@ -242,7 +242,8 @@ class _ProfileView extends ConsumerWidget {
     // Watch sync error from provider (clears when retry succeeds)
     final syncError = ref.watch(syncErrorProvider);
     // Check if user has all premium features for gold badge
-    final hasAllPremium = ref.watch(hasAllPremiumFeaturesProvider);
+    // Only show badge for SIGNED IN users with all premium features
+    final hasAllPremium = isSignedIn && ref.watch(hasAllPremiumFeaturesProvider);
 
     return SingleChildScrollView(
       child: Column(
@@ -349,11 +350,13 @@ class _ProfileView extends ConsumerWidget {
                         value: user!.uid,
                         copyable: true,
                       ),
-                    _InfoItem(
-                      icon: Icons.calendar_today_outlined,
-                      label: 'Member since',
-                      value: _formatDate(profile.createdAt),
-                    ),
+                    // Only show "Member since" for signed in users
+                    if (isSignedIn)
+                      _InfoItem(
+                        icon: Icons.calendar_today_outlined,
+                        label: 'Member since',
+                        value: _formatDate(profile.createdAt),
+                      ),
                   ],
                 ),
                 const SizedBox(height: 12),

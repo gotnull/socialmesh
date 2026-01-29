@@ -61,7 +61,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
         purchaseState.hasPurchased(RevenueCatConfig.completePackProductId);
 
     return Scaffold(
-      appBar: AppBar(title: Text('Upgrades')),
+      appBar: AppBar(title: Text('Premium')),
       body: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16),

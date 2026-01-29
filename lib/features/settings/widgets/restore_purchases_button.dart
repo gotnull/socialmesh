@@ -21,6 +21,10 @@ class _RestorePurchasesButtonState
     setState(() => _isLocalLoading = true);
     bool success = false;
 
+    // Capture state before restore to detect new purchases
+    final stateBefore = ref.read(purchaseStateProvider);
+    final countBefore = stateBefore.purchasedProductIds.length;
+
     try {
       success = await restorePurchases(ref);
     } catch (e) {
@@ -32,18 +36,25 @@ class _RestorePurchasesButtonState
 
     setState(() => _isLocalLoading = false);
 
+    // Check if new purchases were restored
+    final stateAfter = ref.read(purchaseStateProvider);
+    final countAfter = stateAfter.purchasedProductIds.length;
+    final restoredNew = countAfter > countBefore;
+
     // Post-frame callbacks avoid BuildContext use across async gaps
-    if (success) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        showSuccessSnackBar(context, 'Purchases restored');
-      });
-    } else {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (success && restoredNew) {
+        // New purchases were restored
+        showSuccessSnackBar(context, 'Purchases restored successfully!');
+      } else if (success) {
+        // Purchases exist but none were new
+        showInfoSnackBar(context, 'Your purchases are already active');
+      } else {
+        // No purchases found at all
         showInfoSnackBar(context, 'No purchases found to restore');
-      });
-    }
+      }
+    });
   }
 
   @override

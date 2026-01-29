@@ -898,26 +898,26 @@ class HelpContent {
       HelpStep(
         id: 'profile_intro',
         bubbleText:
-            "This is **your profile**! It's how other mesh users see you when you send messages or share signals.",
+            "This is **your profile**! Customize your mesh identity with a display name, callsign, and avatar.",
         icoMood: MeshBrainMood.speaking,
         canGoBack: false,
       ),
       HelpStep(
         id: 'profile_customize',
         bubbleText:
-            "Add a **display name** and **avatar** so friends can recognize you. Your node ID stays the same underneath!",
+            "Your profile is **optional and private by default**. Only people you share your QR code with can see your details.",
         icoMood: MeshBrainMood.curious,
       ),
       HelpStep(
         id: 'profile_share',
         bubbleText:
-            "Share your **profile QR code** to let others add you as a contact. One scan and they've got your details!",
+            "Share your **profile QR code** to connect with friends. They can save your details to their contacts!",
         icoMood: MeshBrainMood.approving,
       ),
       HelpStep(
         id: 'profile_cloud',
         bubbleText:
-            "Sign in to **sync your profile** across devices. Your settings, contacts, and widgets follow you everywhere!",
+            "**Cloud Sync** backs up your settings across devices. Sign in to keep everything in sync!",
         icoMood: MeshBrainMood.playful,
       ),
     ],

@@ -34,6 +34,7 @@ import '../settings/settings_screen.dart';
 import '../settings/theme_settings_screen.dart';
 import '../settings/ringtone_screen.dart';
 import '../settings/ifttt_config_screen.dart';
+import '../settings/account_subscriptions_screen.dart';
 import '../presence/presence_screen.dart';
 import '../mesh3d/mesh_3d_screen.dart';
 import '../world_mesh/world_mesh_screen.dart';
@@ -358,7 +359,7 @@ class _MainShellState extends ConsumerState<MainShell> {
       label: 'Theme Pack',
       screen: const ThemeSettingsScreen(),
       premiumFeature: PremiumFeature.premiumThemes,
-      sectionHeader: 'PREMIUM FEATURES',
+      sectionHeader: 'PREMIUM',
       iconColor: Colors.purple.shade400,
     ),
     _DrawerMenuItem(
@@ -663,7 +664,7 @@ class _MainShellState extends ConsumerState<MainShell> {
     final syncStatus = ref.watch(syncStatusProvider);
     final isOnline = ref.watch(isOnlineProvider);
 
-    final displayName = profile?.displayName ?? 'MeshUser';
+    final displayName = profile?.displayName ?? 'Guest';
     final initials = profile?.initials ?? '?';
     final avatarUrl = profile?.avatarUrl;
 
@@ -684,12 +685,20 @@ class _MainShellState extends ConsumerState<MainShell> {
         onTap: () {
           ref.haptics.tabChange();
           Navigator.of(context).pop();
-          // Always navigate to ProfileScreen - to view/edit profile or sign in
-          Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (context) => const ProfileScreen(),
-            ),
-          );
+          // Navigate to Account screen if not signed in, Profile screen otherwise
+          if (isSignedIn) {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (context) => const ProfileScreen(),
+              ),
+            );
+          } else {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (context) => const AccountSubscriptionsScreen(),
+              ),
+            );
+          }
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(

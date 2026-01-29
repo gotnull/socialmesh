@@ -255,6 +255,14 @@ class PurchaseService {
 
   /// Purchase a specific product by ID
   /// Returns PurchaseResult indicating success, cancellation, or error
+  ///
+  /// Error handling follows RevenueCat's official recommendations:
+  /// - purchaseCancelledError (1): User cancelled, safe to ignore
+  /// - storeProblemError (2): Store issue, RevenueCat auto-retries, user can retry
+  /// - productAlreadyPurchasedError (6): Sync purchases to recognize ownership
+  /// - invalidReceiptError (8): StoreKit race condition, sync after delay
+  /// - networkError (10): Retryable by the user
+  /// - paymentPendingError (20): Inform user purchase is pending
   Future<PurchaseResult> purchaseProduct(String productId) async {
     AppLogging.subscriptions('💳 purchaseProduct($productId) called');
     if (!_isInitialized) {
@@ -279,46 +287,178 @@ class PurchaseService {
       _updateStateFromCustomerInfo(result.customerInfo);
       return PurchaseResult.success;
     } on PlatformException catch (e) {
+      // Use RevenueCat's official helper to get strongly-typed error codes
+      final errorCode = PurchasesErrorHelper.getErrorCode(e);
       AppLogging.subscriptions(
-        '💳 PlatformException: code=${e.code}, message=${e.message}',
+        '💳 PlatformException: code=${e.code}, errorCode=$errorCode, message=${e.message}',
       );
 
-      // Handle "product already owned" - need to sync with store
-      if (e.code == '6' ||
-          e.message?.contains('already active') == true ||
-          e.message?.contains('ITEM_ALREADY_OWNED') == true) {
+      // Handle StoreKit INVALID_RECEIPT bug (error code 7712)
+      // This occurs when StoreKit hasn't updated the receipt yet but the transaction completed.
+      // The fix is to wait briefly and sync purchases since the store owns the product.
+      if (_isInvalidReceiptError(e)) {
         AppLogging.subscriptions(
-          '💳 Product already owned by store, attempting to sync...',
+          '💳 ⚠️ StoreKit INVALID_RECEIPT bug detected (7712) - transaction completed but receipt not ready',
         );
-        return _handleAlreadyOwned(productId);
+        return _handleInvalidReceiptError(productId);
       }
-      // Handle user cancellation
-      if (e.code == '1' ||
-          e.message?.contains('cancelled') == true ||
-          e.message?.contains('canceled') == true) {
-        AppLogging.subscriptions('💳 User cancelled purchase');
-        return PurchaseResult.canceled;
+
+      // Handle errors using RevenueCat's recommended patterns
+      switch (errorCode) {
+        // User cancelled - safe to ignore
+        case PurchasesErrorCode.purchaseCancelledError:
+          AppLogging.subscriptions('💳 User cancelled purchase');
+          return PurchaseResult.canceled;
+
+        // Product already owned - sync to recognize ownership
+        case PurchasesErrorCode.productAlreadyPurchasedError:
+          AppLogging.subscriptions(
+            '💳 Product already owned by store, syncing...',
+          );
+          return _handleAlreadyOwned(productId);
+
+        // Store problem - RevenueCat auto-retries, user can retry too
+        case PurchasesErrorCode.storeProblemError:
+          AppLogging.subscriptions(
+            '💳 Store problem (RevenueCat will auto-retry). User can retry.',
+          );
+          return PurchaseResult.error;
+
+        // Network error - retryable by user
+        case PurchasesErrorCode.networkError:
+          AppLogging.subscriptions(
+            '💳 Network error - retryable. User should check connection and retry.',
+          );
+          return PurchaseResult.error;
+
+        // Payment pending - inform user
+        case PurchasesErrorCode.paymentPendingError:
+          AppLogging.subscriptions(
+            '💳 Payment pending - purchase started but awaiting completion.',
+          );
+          // Add to store-confirmed as payment will eventually complete
+          await _addStoreConfirmedProduct(productId);
+          return PurchaseResult.success; // Optimistic - payment will complete
+
+        // Invalid receipt - StoreKit race condition
+        case PurchasesErrorCode.invalidReceiptError:
+          AppLogging.subscriptions(
+            '💳 Invalid receipt error - attempting recovery...',
+          );
+          return _handleInvalidReceiptError(productId);
+
+        // All other errors
+        default:
+          // Also check message for ITEM_ALREADY_OWNED (Android specific)
+          if (e.message?.contains('ITEM_ALREADY_OWNED') == true) {
+            AppLogging.subscriptions(
+              '💳 ITEM_ALREADY_OWNED detected in message, syncing...',
+            );
+            return _handleAlreadyOwned(productId);
+          }
+          AppLogging.subscriptions('💳 Purchase error: $errorCode - $e');
+          return PurchaseResult.error;
       }
-      AppLogging.subscriptions('💳 Purchase error: $e');
-      return PurchaseResult.error;
     } on PurchasesErrorCode catch (e) {
-      AppLogging.subscriptions('💳 PurchasesErrorCode: $e');
+      // Direct PurchasesErrorCode thrown (less common path)
+      AppLogging.subscriptions('💳 PurchasesErrorCode thrown directly: $e');
       if (e == PurchasesErrorCode.purchaseCancelledError) {
-        AppLogging.subscriptions('User cancelled purchase');
+        AppLogging.subscriptions('💳 User cancelled purchase');
         return PurchaseResult.canceled;
       } else if (e == PurchasesErrorCode.productAlreadyPurchasedError) {
         AppLogging.subscriptions(
-          '💳 Product already owned (PurchasesErrorCode), attempting to sync...',
+          '💳 Product already owned (PurchasesErrorCode), syncing...',
         );
         return _handleAlreadyOwned(productId);
+      } else if (e == PurchasesErrorCode.paymentPendingError) {
+        AppLogging.subscriptions('💳 Payment pending');
+        await _addStoreConfirmedProduct(productId);
+        return PurchaseResult.success;
       } else {
-        AppLogging.subscriptions('Purchase error: $e');
+        AppLogging.subscriptions('💳 Purchase error: $e');
         return PurchaseResult.error;
       }
     } catch (e) {
-      AppLogging.subscriptions('Purchase error: $e');
+      final errorStr = e.toString();
+      AppLogging.subscriptions('💳 General catch error: $errorStr');
+
+      // Also check for INVALID_RECEIPT in generic exceptions
+      if (errorStr.contains('INVALID_RECEIPT') ||
+          errorStr.contains('7712') ||
+          errorStr.contains('missing in the receipt')) {
+        AppLogging.subscriptions(
+          '💳 ⚠️ StoreKit INVALID_RECEIPT bug detected in generic exception',
+        );
+        return _handleInvalidReceiptError(productId);
+      }
+
+      AppLogging.subscriptions('💳 Purchase error: $e');
       return PurchaseResult.error;
     }
+  }
+
+  /// Check if an exception is the StoreKit INVALID_RECEIPT bug (error 7712)
+  bool _isInvalidReceiptError(PlatformException e) {
+    final message = e.message ?? '';
+    final details = e.details?.toString() ?? '';
+    return message.contains('INVALID_RECEIPT') ||
+        message.contains('7712') ||
+        message.contains('missing in the receipt') ||
+        details.contains('INVALID_RECEIPT') ||
+        details.contains('7712');
+  }
+
+  /// Handle the StoreKit INVALID_RECEIPT bug (error 7712)
+  /// This is a known StoreKit race condition where the receipt isn't updated
+  /// before RevenueCat tries to validate it, even though the transaction completed.
+  /// Solution: Wait briefly and sync purchases since the store owns the product.
+  /// Uses syncPurchases() instead of restorePurchases() to avoid OS sign-in prompts.
+  Future<PurchaseResult> _handleInvalidReceiptError(String productId) async {
+    AppLogging.subscriptions('💳 _handleInvalidReceiptError($productId)');
+    AppLogging.subscriptions(
+      '💳 Waiting 2 seconds for StoreKit receipt to update...',
+    );
+
+    // Wait for StoreKit to update the receipt
+    await Future<void>.delayed(const Duration(seconds: 2));
+
+    // Use syncPurchases (not restorePurchases) to avoid OS-level sign-in prompts
+    // This programmatically syncs the receipt with RevenueCat backend
+    AppLogging.subscriptions(
+      '💳 Calling syncPurchases() after delay (no OS prompts)...',
+    );
+    try {
+      await Purchases.syncPurchases();
+      AppLogging.subscriptions('💳 syncPurchases() completed');
+
+      // Refresh customer info to get updated state
+      final customerInfo = await Purchases.getCustomerInfo();
+      _updateStateFromCustomerInfo(customerInfo);
+    } catch (e) {
+      AppLogging.subscriptions('💳 syncPurchases() error: $e');
+    }
+
+    if (_currentState.hasPurchased(productId)) {
+      AppLogging.subscriptions(
+        '💳 ✅ Product $productId now recognized after INVALID_RECEIPT recovery',
+      );
+      return PurchaseResult.success;
+    }
+
+    // If sync didn't work, the purchase exists in the store but RevenueCat
+    // can't sync it. Force-add it to store-confirmed products.
+    AppLogging.subscriptions(
+      '💳 ⚠️ Product still not in RevenueCat after sync, adding to store-confirmed',
+    );
+    await _addStoreConfirmedProduct(productId);
+
+    final newIds = {..._currentState.purchasedProductIds, productId};
+    _updateState(_currentState.copyWith(purchasedProductIds: newIds));
+
+    AppLogging.subscriptions(
+      '💳 ✅ Manually added $productId after INVALID_RECEIPT recovery',
+    );
+    return PurchaseResult.success;
   }
 
   /// Handle the case where a product is already owned by the store
@@ -326,14 +466,26 @@ class PurchaseService {
   Future<PurchaseResult> _handleAlreadyOwned(String productId) async {
     AppLogging.subscriptions('💳 _handleAlreadyOwned($productId)');
 
-    // First, try to restore purchases from the store
-    final restored = await restorePurchases();
-    AppLogging.subscriptions('💳 restorePurchases returned: $restored');
+    // Use syncPurchases (not restorePurchases) to avoid OS-level sign-in prompts
+    // The user just authenticated with the store, so we don't need another sign-in
+    AppLogging.subscriptions(
+      '💳 Calling syncPurchases() to sync with store (no OS prompts)...',
+    );
+    try {
+      await Purchases.syncPurchases();
+      AppLogging.subscriptions('💳 syncPurchases() completed');
+
+      // Refresh customer info to get updated state
+      final customerInfo = await Purchases.getCustomerInfo();
+      _updateStateFromCustomerInfo(customerInfo);
+    } catch (e) {
+      AppLogging.subscriptions('💳 syncPurchases() error: $e');
+    }
 
     // Check if the product is now recognized
     if (_currentState.hasPurchased(productId)) {
       AppLogging.subscriptions(
-        '💳 ✅ Product $productId now recognized after restore',
+        '💳 ✅ Product $productId now recognized after sync',
       );
       return PurchaseResult.success;
     }
@@ -365,6 +517,47 @@ class PurchaseService {
     );
 
     return PurchaseResult.success;
+  }
+
+  /// Fallback handler for restore errors - tries to get cached customer info
+  /// Used when restorePurchases() fails with retryable errors
+  Future<bool> _handleRestoreFallback() async {
+    AppLogging.subscriptions('💰 ⚠️ Falling back to getCustomerInfo()...');
+    try {
+      final customerInfo = await Purchases.getCustomerInfo();
+      // IMPORTANT: Update state so Riverpod gets the current entitlements
+      _updateStateFromCustomerInfo(customerInfo);
+
+      final hasActiveEntitlements = customerInfo.entitlements.all.values
+          .any((e) => e.isActive);
+      final hasPurchasedProducts =
+          customerInfo.allPurchasedProductIdentifiers.isNotEmpty;
+      // Also check store-confirmed products
+      final hasStoreConfirmed = _storeConfirmedProducts.isNotEmpty;
+
+      AppLogging.subscriptions('💰 ⚠️ Fallback getCustomerInfo succeeded');
+      AppLogging.subscriptions(
+        '💰 ⚠️ hasActiveEntitlements: $hasActiveEntitlements',
+      );
+      AppLogging.subscriptions(
+        '💰 ⚠️ hasPurchasedProducts: $hasPurchasedProducts',
+      );
+      AppLogging.subscriptions(
+        '💰 ⚠️ hasStoreConfirmed: $hasStoreConfirmed',
+      );
+      AppLogging.subscriptions(
+        '💰 ═══════════════════════════════════════════════',
+      );
+      return hasActiveEntitlements || hasPurchasedProducts || hasStoreConfirmed;
+    } catch (fallbackError) {
+      AppLogging.subscriptions(
+        '💰 ❌ Fallback getCustomerInfo also failed: $fallbackError',
+      );
+      AppLogging.subscriptions(
+        '💰 ═══════════════════════════════════════════════',
+      );
+      return false;
+    }
   }
 
   /// Refresh purchases from RevenueCat
@@ -566,58 +759,41 @@ class PurchaseService {
 
       return hasPurchases;
     } on PlatformException catch (e) {
+      final errorCode = PurchasesErrorHelper.getErrorCode(e);
       AppLogging.subscriptions('💰 ❌ RESTORE ERROR (PlatformException):');
-      AppLogging.subscriptions('💰   Code: ${e.code}');
+      AppLogging.subscriptions('💰   Code: ${e.code}, ErrorCode: $errorCode');
       AppLogging.subscriptions('💰   Message: ${e.message}');
       AppLogging.subscriptions('💰   Details: ${e.details}');
 
-      // Handle PaymentPendingError (code 20) - this can happen when there are
-      // old pending purchases (e.g., test transactions). In this case, we should
-      // still try to get the current customer info and check for active entitlements.
-      if (e.code == '20' || e.message?.contains('pending') == true) {
-        AppLogging.subscriptions(
-          '💰 ⚠️ PaymentPendingError detected (old pending purchase)',
-        );
-        AppLogging.subscriptions('💰 ⚠️ Falling back to getCustomerInfo()...');
-        try {
-          final customerInfo = await Purchases.getCustomerInfo();
-          // IMPORTANT: Update state so Riverpod gets the current entitlements
-          _updateStateFromCustomerInfo(customerInfo);
+      // Handle errors using RevenueCat's recommended patterns
+      switch (errorCode) {
+        // Payment pending - fall back to getCustomerInfo
+        case PurchasesErrorCode.paymentPendingError:
+          AppLogging.subscriptions(
+            '💰 ⚠️ PaymentPendingError detected (old pending purchase)',
+          );
+          return _handleRestoreFallback();
 
-          final hasActiveEntitlements = customerInfo.entitlements.all.values
-              .any((e) => e.isActive);
-          final hasPurchasedProducts =
-              customerInfo.allPurchasedProductIdentifiers.isNotEmpty;
-          // Also check store-confirmed products
-          final hasStoreConfirmed = _storeConfirmedProducts.isNotEmpty;
+        // Network error - retryable, but try fallback first
+        case PurchasesErrorCode.networkError:
+          AppLogging.subscriptions(
+            '💰 ⚠️ Network error - trying cached customer info...',
+          );
+          return _handleRestoreFallback();
 
-          AppLogging.subscriptions('💰 ⚠️ Fallback getCustomerInfo succeeded');
+        // Store problem - RevenueCat auto-retries, try fallback
+        case PurchasesErrorCode.storeProblemError:
           AppLogging.subscriptions(
-            '💰 ⚠️ hasActiveEntitlements: $hasActiveEntitlements',
+            '💰 ⚠️ Store problem - trying cached customer info...',
           );
-          AppLogging.subscriptions(
-            '💰 ⚠️ hasPurchasedProducts: $hasPurchasedProducts',
-          );
-          AppLogging.subscriptions(
-            '💰 ⚠️ hasStoreConfirmed: $hasStoreConfirmed',
-          );
+          return _handleRestoreFallback();
+
+        default:
           AppLogging.subscriptions(
             '💰 ═══════════════════════════════════════════════',
           );
-          return hasActiveEntitlements ||
-              hasPurchasedProducts ||
-              hasStoreConfirmed;
-        } catch (fallbackError) {
-          AppLogging.subscriptions(
-            '💰 ❌ Fallback getCustomerInfo also failed: $fallbackError',
-          );
-        }
+          return false;
       }
-
-      AppLogging.subscriptions(
-        '💰 ═══════════════════════════════════════════════',
-      );
-      return false;
     } catch (e, stackTrace) {
       AppLogging.subscriptions('💰 ❌ RESTORE ERROR (Exception):');
       AppLogging.subscriptions('💰   Type: ${e.runtimeType}');

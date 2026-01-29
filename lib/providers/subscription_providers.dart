@@ -367,7 +367,7 @@ Future<bool> syncRevenueCatWithFirebase(WidgetRef ref) async {
     if (success) {
       // Refresh to get any purchases associated with this user
       await service.refreshPurchases();
-      ref.read(purchaseStateProvider.notifier).refresh();
+      await ref.read(purchaseStateProvider.notifier).refresh();
       AppLogging.subscriptions('💳 [SyncRevenueCat] ✅ Sync complete');
     }
 

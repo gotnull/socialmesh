@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1024">
+  <title>Socialmesh Feature Graphic</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=block" rel="stylesheet">
+  <style>
+    :root {
+      /* Brand colors from app */
+      --bg-primary: #1F2633;
+      --bg-secondary: #29303D;
+      --accent-magenta: #E91E8C;
+      --accent-purple: #8B5CF6;
+      --accent-blue: #4F6AF6;
+      --text-primary: #FFFFFF;
+      --text-secondary: #9CA3AF;
+      --text-muted: #6B7280;
+      
+      /* Brand gradients */
+      --gradient-brand: linear-gradient(135deg, #E91E8C 0%, #8B5CF6 50%, #4F6AF6 100%);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 1024px;
+      height: 500px;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Main canvas - exactly 1024x500 */
+    .canvas {
+      width: 1024px;
+      height: 500px;
+      background: var(--bg-primary);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Gradient background overlay */
+    .gradient-bg {
+      position: absolute;
+      inset: 0;
+      background: 
+        radial-gradient(ellipse 80% 60% at 20% 80%, rgba(233, 30, 140, 0.25) 0%, transparent 50%),
+        radial-gradient(ellipse 70% 50% at 80% 20%, rgba(139, 92, 246, 0.25) 0%, transparent 50%),
+        radial-gradient(ellipse 60% 40% at 60% 60%, rgba(79, 106, 246, 0.15) 0%, transparent 50%);
+    }
+
+    /* Subtle mesh pattern SVG background */
+    .mesh-pattern {
+      position: absolute;
+      inset: 0;
+      opacity: 0.08;
+      background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Ccircle stroke='%238B5CF6' stroke-width='1' cx='30' cy='30' r='4'/%3E%3Cpath d='M30 30L10 10M30 30L50 10M30 30L10 50M30 30L50 50' stroke='%238B5CF6' stroke-width='0.5'/%3E%3Ccircle stroke='%238B5CF6' stroke-width='0.5' cx='10' cy='10' r='2'/%3E%3Ccircle stroke='%238B5CF6' stroke-width='0.5' cx='50' cy='10' r='2'/%3E%3Ccircle stroke='%238B5CF6' stroke-width='0.5' cx='10' cy='50' r='2'/%3E%3Ccircle stroke='%238B5CF6' stroke-width='0.5' cx='50' cy='50' r='2'/%3E%3C/g%3E%3C/svg%3E");
+      background-size: 60px 60px;
+    }
+
+    /* Glow effect behind icon */
+    .icon-glow {
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      left: 80px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.5) 0%, rgba(233, 30, 140, 0.3) 40%, transparent 70%);
+      filter: blur(40px);
+    }
+
+    /* Content container with safe area */
+    .content {
+      position: absolute;
+      inset: 80px;
+      display: flex;
+      align-items: center;
+      gap: 60px;
+    }
+
+    /* App icon */
+    .icon-container {
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .app-icon {
+      width: 180px;
+      height: 180px;
+      border-radius: 40px;
+      box-shadow: 
+        0 20px 60px rgba(0, 0, 0, 0.4),
+        0 0 0 2px rgba(255, 255, 255, 0.1);
+    }
+
+    /* Text content */
+    .text-content {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .app-name {
+      font-size: 72px;
+      font-weight: 700;
+      letter-spacing: -2px;
+      background: var(--gradient-brand);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+    }
+
+    .tagline {
+      font-size: 22px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+
+    /* Decorative mesh nodes (right side) */
+    .mesh-nodes {
+      position: absolute;
+      right: 40px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 200px;
+      height: 200px;
+      opacity: 0.4;
+    }
+
+    .mesh-nodes svg {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div class="canvas">
+    <!-- Gradient background -->
+    <div class="gradient-bg"></div>
+    
+    <!-- Mesh pattern overlay -->
+    <div class="mesh-pattern"></div>
+    
+    <!-- Glow behind icon -->
+    <div class="icon-glow"></div>
+    
+    <!-- Main content -->
+    <div class="content">
+      <!-- App icon -->
+      <div class="icon-container">
+        <img class="app-icon" src="../../assets/app_icons/socialmesh_icon_512.png" alt="Socialmesh">
+      </div>
+      
+      <!-- Text -->
+      <div class="text-content">
+        <div class="app-name">Socialmesh</div>
+        <div class="tagline">Off-Grid Communication</div>
+      </div>
+    </div>
+    
+    <!-- Decorative mesh nodes -->
+    <div class="mesh-nodes">
+      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="nodeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#E91E8C;stop-opacity:0.9" />
+            <stop offset="50%" style="stop-color:#8B5CF6;stop-opacity:0.7" />
+            <stop offset="100%" style="stop-color:#4F6AF6;stop-opacity:0.5" />
+          </linearGradient>
+          <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#E91E8C;stop-opacity:0.6" />
+            <stop offset="100%" style="stop-color:#4F6AF6;stop-opacity:0.3" />
+          </linearGradient>
+        </defs>
+        
+        <!-- Circular icosahedron mesh brain - nodes on circle radius 75 from center (100,100) -->
+        <!-- Outer ring connections (pentagon at r=75) -->
+        <line x1="100" y1="25" x2="171" y2="74" stroke="url(#lineGradient)" stroke-width="1"/>
+        <line x1="171" y1="74" x2="144" y2="157" stroke="url(#lineGradient)" stroke-width="1"/>
+        <line x1="144" y1="157" x2="56" y2="157" stroke="url(#lineGradient)" stroke-width="1"/>
+        <line x1="56" y1="157" x2="29" y2="74" stroke="url(#lineGradient)" stroke-width="1"/>
+        <line x1="29" y1="74" x2="100" y2="25" stroke="url(#lineGradient)" stroke-width="1"/>
+        
+        <!-- Inner pentagon connections (r=45, rotated 36deg) -->
+        <line x1="100" y1="55" x2="143" y2="86" stroke="url(#lineGradient)" stroke-width="1"/>
+        <line x1="143" y1="86" x2="126" y2="137" stroke="url(#lineGradient)" stroke-width="1"/>
+        <line x1="126" y1="137" x2="74" y2="137" stroke="url(#lineGradient)" stroke-width="1"/>
+        <line x1="74" y1="137" x2="57" y2="86" stroke="url(#lineGradient)" stroke-width="1"/>
+        <line x1="57" y1="86" x2="100" y2="55" stroke="url(#lineGradient)" stroke-width="1"/>
+        
+        <!-- Connect outer to inner (triangular faces) -->
+        <line x1="100" y1="25" x2="100" y2="55" stroke="url(#lineGradient)" stroke-width="1"/>
+        <line x1="100" y1="25" x2="143" y2="86" stroke="url(#lineGradient)" stroke-width="1"/>
+        <line x1="171" y1="74" x2="143" y2="86" stroke="url(#lineGradient)" stroke-width="1"/>
+        <line x1="171" y1="74" x2="126" y2="137" stroke="url(#lineGradient)" stroke-width="1"/>
+        <line x1="144" y1="157" x2="126" y2="137" stroke="url(#lineGradient)" stroke-width="1"/>
+        <line x1="144" y1="157" x2="74" y2="137" stroke="url(#lineGradient)" stroke-width="1"/>
+        <line x1="56" y1="157" x2="74" y2="137" stroke="url(#lineGradient)" stroke-width="1"/>
+        <line x1="56" y1="157" x2="57" y2="86" stroke="url(#lineGradient)" stroke-width="1"/>
+        <line x1="29" y1="74" x2="57" y2="86" stroke="url(#lineGradient)" stroke-width="1"/>
+        <line x1="29" y1="74" x2="100" y2="55" stroke="url(#lineGradient)" stroke-width="1"/>
+        
+        <!-- Center connections -->
+        <line x1="100" y1="100" x2="100" y2="55" stroke="url(#lineGradient)" stroke-width="0.8" opacity="0.5"/>
+        <line x1="100" y1="100" x2="143" y2="86" stroke="url(#lineGradient)" stroke-width="0.8" opacity="0.5"/>
+        <line x1="100" y1="100" x2="126" y2="137" stroke="url(#lineGradient)" stroke-width="0.8" opacity="0.5"/>
+        <line x1="100" y1="100" x2="74" y2="137" stroke="url(#lineGradient)" stroke-width="0.8" opacity="0.5"/>
+        <line x1="100" y1="100" x2="57" y2="86" stroke="url(#lineGradient)" stroke-width="0.8" opacity="0.5"/>
+        
+        <!-- Outer pentagon nodes -->
+        <circle cx="100" cy="25" r="8" fill="#E91E8C"/>
+        <circle cx="100" cy="25" r="4" fill="#FFFFFF" opacity="0.5"/>
+        <circle cx="171" cy="74" r="7" fill="#C026D3"/>
+        <circle cx="171" cy="74" r="3.5" fill="#FFFFFF" opacity="0.45"/>
+        <circle cx="144" cy="157" r="7" fill="#8B5CF6"/>
+        <circle cx="144" cy="157" r="3.5" fill="#FFFFFF" opacity="0.45"/>
+        <circle cx="56" cy="157" r="7" fill="#6366F1"/>
+        <circle cx="56" cy="157" r="3.5" fill="#FFFFFF" opacity="0.45"/>
+        <circle cx="29" cy="74" r="7" fill="#4F6AF6"/>
+        <circle cx="29" cy="74" r="3.5" fill="#FFFFFF" opacity="0.45"/>
+        
+        <!-- Inner pentagon nodes -->
+        <circle cx="100" cy="55" r="6" fill="#E91E8C" opacity="0.85"/>
+        <circle cx="100" cy="55" r="3" fill="#FFFFFF" opacity="0.4"/>
+        <circle cx="143" cy="86" r="5" fill="#C026D3" opacity="0.8"/>
+        <circle cx="143" cy="86" r="2.5" fill="#FFFFFF" opacity="0.35"/>
+        <circle cx="126" cy="137" r="5" fill="#8B5CF6" opacity="0.8"/>
+        <circle cx="126" cy="137" r="2.5" fill="#FFFFFF" opacity="0.35"/>
+        <circle cx="74" cy="137" r="5" fill="#6366F1" opacity="0.8"/>
+        <circle cx="74" cy="137" r="2.5" fill="#FFFFFF" opacity="0.35"/>
+        <circle cx="57" cy="86" r="5" fill="#4F6AF6" opacity="0.8"/>
+        <circle cx="57" cy="86" r="2.5" fill="#FFFFFF" opacity="0.35"/>
+        
+        <!-- Center node -->
+        <circle cx="100" cy="100" r="6" fill="#A855F7"/>
+        <circle cx="100" cy="100" r="3" fill="#FFFFFF" opacity="0.4"/>
+      </svg>
+    </div>
+  </div>
+</body>
+</html>

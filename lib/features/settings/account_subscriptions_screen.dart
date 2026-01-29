@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/logging.dart';
 import '../../core/theme.dart';
@@ -83,18 +84,18 @@ class _AccountSubscriptionsScreenState
           const SizedBox(height: 24),
 
           // ═══════════════════════════════════════════════════════════════
-          // SUBSCRIPTIONS SECTION - Cloud Sync + Premium
+          // PREMIUM SECTION - Cloud Sync (subscription) + Feature Packs (one-time)
           // ═══════════════════════════════════════════════════════════════
-          _buildSectionHeader('SUBSCRIPTIONS'),
+          _buildSectionHeader('PREMIUM'),
           const SizedBox(height: 8),
 
-          // Cloud Sync subscription card
+          // Cloud Sync subscription card (monthly/yearly)
           _buildCloudSyncCard(),
 
           const SizedBox(height: 12),
 
-          // Premium features card
-          _buildPremiumFeaturesCard(),
+          // Feature packs card (one-time purchases)
+          _buildFeaturePacksCard(),
 
           const SizedBox(height: 24),
 
@@ -117,6 +118,8 @@ class _AccountSubscriptionsScreenState
     AsyncValue<UserProfile?> profileAsync,
     Color accentColor,
   ) {
+    final isSignedIn = ref.watch(isSignedInProvider);
+    
     AppLogging.subscriptions('');
     AppLogging.subscriptions(
       '╔══════════════════════════════════════════════════════════════',
@@ -126,6 +129,7 @@ class _AccountSubscriptionsScreenState
     AppLogging.subscriptions('║    - isLoading: ${profileAsync.isLoading}');
     AppLogging.subscriptions('║    - hasValue: ${profileAsync.hasValue}');
     AppLogging.subscriptions('║    - hasError: ${profileAsync.hasError}');
+    AppLogging.subscriptions('║    - isSignedIn: $isSignedIn');
     if (profileAsync.hasValue && !profileAsync.hasError) {
       AppLogging.subscriptions(
         '║    - value: ${profileAsync.value?.displayName ?? "NULL"}',
@@ -142,10 +146,13 @@ class _AccountSubscriptionsScreenState
         );
         return _ProfilePreviewCard(
           profile: profile,
-          onEditTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const ProfileScreen()),
-          ),
+          isSignedIn: isSignedIn,
+          onEditTap: isSignedIn
+              ? () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                  )
+              : null,
         );
       },
       loading: () {
@@ -156,10 +163,13 @@ class _AccountSubscriptionsScreenState
         AppLogging.subscriptions('║ ❌ profileAsync.when -> error: $e');
         return _ProfilePreviewCard(
           profile: null,
-          onEditTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const ProfileScreen()),
-          ),
+          isSignedIn: isSignedIn,
+          onEditTap: isSignedIn
+              ? () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                  )
+              : null,
         );
       },
     );
@@ -402,27 +412,83 @@ class _AccountSubscriptionsScreenState
 
   Widget _buildCloudSyncCard() {
     final entitlementAsync = ref.watch(cloudSyncEntitlementProvider);
-    final accentColor = context.accentColor;
+    final authState = ref.watch(authStateProvider);
+    final isSignedIn = authState.when(
+      data: (user) => user != null,
+      loading: () => false,
+      error: (_, _) => false,
+    );
 
     return entitlementAsync.when(
       data: (entitlement) {
         final hasAccess = entitlement.hasFullAccess;
         final isGracePeriod =
             entitlement.state == CloudSyncEntitlementState.gracePeriod;
+        final isCancelled =
+            entitlement.state == CloudSyncEntitlementState.cancelled;
         final isExpired =
             entitlement.state == CloudSyncEntitlementState.expired;
+
+        // Format expiration date for cancelled subscriptions
+        String? expiresText;
+        if (isCancelled && entitlement.expiresAt != null) {
+          final expiresAt = entitlement.expiresAt!;
+          final daysLeft = expiresAt.difference(DateTime.now()).inDays;
+          if (daysLeft <= 0) {
+            expiresText = 'Expires today';
+          } else if (daysLeft == 1) {
+            expiresText = 'Expires tomorrow';
+          } else {
+            expiresText =
+                'Expires ${expiresAt.day} ${_monthName(expiresAt.month)}';
+          }
+        }
+
+        // Determine subtitle and colors based on state
+        // Use GREEN consistently for "owned/active" states
+        String subtitle;
+        Color subtitleColor;
+        Color borderColor;
+        String badgeText;
+
+        if (isCancelled) {
+          subtitle = 'Cancelled • $expiresText';
+          subtitleColor = Colors.orange;
+          borderColor = Colors.orange.withValues(alpha: 0.3);
+          badgeText = 'CANCELLED';
+        } else if (isGracePeriod) {
+          subtitle = 'Payment issue - please update';
+          subtitleColor = Colors.orange;
+          borderColor = AccentColors.green.withValues(alpha: 0.3);
+          badgeText = 'ACTIVE';
+        } else if (hasAccess) {
+          subtitle = 'Monthly subscription';
+          subtitleColor = context.textSecondary;
+          borderColor = AccentColors.green.withValues(alpha: 0.3);
+          badgeText = 'ACTIVE';
+        } else if (isExpired) {
+          subtitle = 'Subscription expired';
+          subtitleColor = AppTheme.errorRed;
+          borderColor = AppTheme.errorRed.withValues(alpha: 0.3);
+          badgeText = 'EXPIRED';
+        } else if (!isSignedIn) {
+          // Not signed in - show sign in prompt
+          subtitle = 'Sign in above to enable';
+          subtitleColor = context.textTertiary;
+          borderColor = context.border;
+          badgeText = '';
+        } else {
+          subtitle = 'Sync across all your devices';
+          subtitleColor = context.textSecondary;
+          borderColor = context.border;
+          badgeText = '';
+        }
 
         return Container(
           decoration: BoxDecoration(
             color: context.card,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: hasAccess
-                  ? AccentColors.green.withValues(alpha: 0.3)
-                  : isExpired
-                  ? AppTheme.errorRed.withValues(alpha: 0.3)
-                  : context.border,
-            ),
+            border: Border.all(color: borderColor),
           ),
           child: Column(
             children: [
@@ -431,13 +497,12 @@ class _AccountSubscriptionsScreenState
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: (hasAccess ? AccentColors.green : accentColor)
-                        .withValues(alpha: 0.15),
+                    color: AccentColors.green.withValues(alpha: hasAccess ? 0.15 : 0.08),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
-                    hasAccess ? Icons.cloud_done : Icons.cloud_outlined,
-                    color: hasAccess ? AccentColors.green : accentColor,
+                    Icons.cloud_sync,
+                    color: hasAccess ? AccentColors.green : context.textSecondary,
                     size: 24,
                   ),
                 ),
@@ -449,47 +514,81 @@ class _AccountSubscriptionsScreenState
                   ),
                 ),
                 subtitle: Text(
-                  hasAccess
-                      ? (isGracePeriod
-                            ? 'Payment issue - please update'
-                            : 'Active subscription')
-                      : (isExpired ? 'Subscription expired' : 'Not subscribed'),
+                  subtitle,
                   style: TextStyle(
                     fontSize: 12,
-                    color: hasAccess
-                        ? (isGracePeriod
-                              ? Colors.orange
-                              : context.textSecondary)
-                        : (isExpired
-                              ? AppTheme.errorRed
-                              : context.textSecondary),
+                    color: subtitleColor,
                   ),
                 ),
-                trailing: hasAccess
+                trailing: badgeText.isNotEmpty
                     ? Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 10,
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: AccentColors.green.withValues(alpha: 0.2),
+                          color: (isCancelled
+                                  ? Colors.orange
+                                  : isExpired
+                                      ? AppTheme.errorRed
+                                      : AccentColors.green)
+                              .withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          'ACTIVE',
+                          badgeText,
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: AccentColors.green,
+                            color: isCancelled
+                                ? Colors.orange
+                                : isExpired
+                                    ? AppTheme.errorRed
+                                    : AccentColors.green,
                           ),
                         ),
                       )
                     : null,
               ),
 
-              // Features list (collapsed when active)
-              if (!hasAccess) ...[
+              // Cancelled info banner
+              if (isCancelled) ...[
                 const Divider(height: 1),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: Colors.orange.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        color: Colors.orange,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Your subscription won\'t renew. You can resubscribe anytime.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: context.textPrimary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
+              // Features list (collapsed when active and not cancelled)
+              if (!hasAccess || isCancelled) ...[
+                if (!isCancelled) const Divider(height: 1),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                   child: Column(
@@ -515,25 +614,31 @@ class _AccountSubscriptionsScreenState
                   width: double.infinity,
                   child: hasAccess
                       ? OutlinedButton(
-                          onPressed: _manageSubscription,
-                          child: const Text('Manage Subscription'),
+                          onPressed: () => _manageSubscription(entitlement),
+                          child: Text(isCancelled ? 'Renew Subscription' : 'Manage Subscription'),
                         )
-                      : FilledButton.icon(
-                          onPressed: _isPurchasing
-                              ? null
-                              : _showCloudSyncPaywall,
-                          icon: _isPurchasing
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Icon(Icons.cloud_sync, size: 18),
-                          label: Text(isExpired ? 'Renew' : 'Subscribe'),
-                        ),
+                      : !isSignedIn
+                          // Not signed in - show disabled button with hint
+                          ? OutlinedButton(
+                              onPressed: null, // Disabled
+                              child: const Text('Sign in to subscribe'),
+                            )
+                          : FilledButton.icon(
+                              onPressed: _isPurchasing
+                                  ? null
+                                  : _showCloudSyncPaywall,
+                              icon: _isPurchasing
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Icon(Icons.cloud_sync, size: 18),
+                              label: Text(isExpired ? 'Renew' : 'Subscribe'),
+                            ),
                 ),
               ),
             ],
@@ -545,11 +650,19 @@ class _AccountSubscriptionsScreenState
     );
   }
 
+  String _monthName(int month) {
+    const months = [
+      '', 'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December',
+    ];
+    return months[month];
+  }
+
   // ═══════════════════════════════════════════════════════════════════════════
-  // PREMIUM FEATURES CARD
+  // FEATURE PACKS CARD (One-time purchases)
   // ═══════════════════════════════════════════════════════════════════════════
 
-  Widget _buildPremiumFeaturesCard() {
+  Widget _buildFeaturePacksCard() {
     final purchaseState = ref.watch(purchaseStateProvider);
     final storeProductsAsync = ref.watch(storeProductsProvider);
     final storeProducts = storeProductsAsync.when(
@@ -557,7 +670,6 @@ class _AccountSubscriptionsScreenState
       loading: () => <String, StoreProductInfo>{},
       error: (e, s) => <String, StoreProductInfo>{},
     );
-    final accentColor = context.accentColor;
 
     // Count owned features
     final ownedCount = OneTimePurchases.allPurchases
@@ -572,7 +684,7 @@ class _AccountSubscriptionsScreenState
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: allUnlocked
-              ? accentColor.withValues(alpha: 0.3)
+              ? AccentColors.green.withValues(alpha: 0.3)
               : context.border,
         ),
       ),
@@ -583,17 +695,17 @@ class _AccountSubscriptionsScreenState
             leading: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: accentColor.withValues(alpha: 0.15),
+                color: AccentColors.green.withValues(alpha: allUnlocked ? 0.15 : 0.08),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
-                allUnlocked ? Icons.verified : Icons.rocket_launch_rounded,
-                color: accentColor,
+                Icons.extension,
+                color: allUnlocked ? AccentColors.green : context.textSecondary,
                 size: 24,
               ),
             ),
             title: Text(
-              'Premium Features',
+              'Feature Packs',
               style: TextStyle(
                 fontWeight: FontWeight.w600,
                 color: context.textPrimary,
@@ -602,7 +714,7 @@ class _AccountSubscriptionsScreenState
             subtitle: Text(
               allUnlocked
                   ? 'All features unlocked!'
-                  : '$ownedCount of $totalCount unlocked',
+                  : 'One-time purchases • $ownedCount of $totalCount',
               style: TextStyle(fontSize: 12, color: context.textSecondary),
             ),
             trailing: allUnlocked
@@ -612,15 +724,15 @@ class _AccountSubscriptionsScreenState
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: accentColor.withValues(alpha: 0.2),
+                      color: AccentColors.green.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      'COMPLETE',
+                      'ACTIVE',
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: accentColor,
+                        color: AccentColors.green,
                       ),
                     ),
                   )
@@ -703,6 +815,11 @@ class _AccountSubscriptionsScreenState
               AppLogging.subscriptions(
                 '🔄 User tapped restore from Manage Card',
               );
+
+              // Capture state before restore to detect new purchases
+              final stateBefore = ref.read(purchaseStateProvider);
+              final countBefore = stateBefore.purchasedProductIds.length;
+
               final success = await restorePurchases(ref);
 
               // Refresh cloud entitlement service
@@ -713,8 +830,15 @@ class _AccountSubscriptionsScreenState
               ref.invalidate(cloudSyncEntitlementProvider);
 
               if (mounted) {
-                if (success) {
-                  showSuccessSnackBar(context, 'Purchases restored');
+                // Check if new purchases were restored
+                final stateAfter = ref.read(purchaseStateProvider);
+                final countAfter = stateAfter.purchasedProductIds.length;
+                final restoredNew = countAfter > countBefore;
+
+                if (success && restoredNew) {
+                  showSuccessSnackBar(context, 'Purchases restored successfully!');
+                } else if (success) {
+                  showInfoSnackBar(context, 'Your purchases are already active');
                 } else {
                   showInfoSnackBar(context, 'No purchases found to restore');
                 }
@@ -1050,10 +1174,54 @@ class _AccountSubscriptionsScreenState
     );
   }
 
-  Future<void> _manageSubscription() async {
-    // Open app store subscription management
-    // Note: There's no direct API to open subscription management in RevenueCat
-    // Users need to manage through their respective app stores
+  Future<void> _manageSubscription(CloudSyncEntitlement entitlement) async {
+    // RevenueCat provides a direct URL to the App Store/Play Store subscription management
+    final managementURL = entitlement.managementURL;
+
+    if (managementURL != null && managementURL.isNotEmpty) {
+      // Open the management URL directly
+      final uri = Uri.parse(managementURL);
+      try {
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+          return;
+        }
+      } catch (e) {
+        AppLogging.subscriptions('💰 Error launching management URL: $e');
+      }
+    }
+
+    // Fallback: Open the platform-specific subscription settings
+    if (Platform.isIOS) {
+      // Deep link to iOS subscription settings
+      const iosUrl = 'https://apps.apple.com/account/subscriptions';
+      final uri = Uri.parse(iosUrl);
+      try {
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+          return;
+        }
+      } catch (e) {
+        AppLogging.subscriptions('💰 Error launching iOS subscription URL: $e');
+      }
+    } else if (Platform.isAndroid) {
+      // Deep link to Google Play subscription settings
+      const androidUrl =
+          'https://play.google.com/store/account/subscriptions';
+      final uri = Uri.parse(androidUrl);
+      try {
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+          return;
+        }
+      } catch (e) {
+        AppLogging.subscriptions(
+          '💰 Error launching Android subscription URL: $e',
+        );
+      }
+    }
+
+    // Last resort: Show instructions
     if (mounted) {
       showInfoSnackBar(
         context,
@@ -1072,9 +1240,14 @@ class _AccountSubscriptionsScreenState
 
 class _ProfilePreviewCard extends StatelessWidget {
   final UserProfile? profile;
-  final VoidCallback onEditTap;
+  final bool isSignedIn;
+  final VoidCallback? onEditTap;
 
-  const _ProfilePreviewCard({required this.profile, required this.onEditTap});
+  const _ProfilePreviewCard({
+    required this.profile,
+    required this.isSignedIn,
+    this.onEditTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1091,32 +1264,43 @@ class _ProfilePreviewCard extends StatelessWidget {
     AppLogging.subscriptions('║    - callsign: ${profile?.callsign ?? "NULL"}');
     AppLogging.subscriptions('║    - id: ${profile?.id ?? "NULL"}');
     AppLogging.subscriptions('║    - isSynced: ${profile?.isSynced ?? "NULL"}');
+    AppLogging.subscriptions('║    - isSignedIn: $isSignedIn');
     AppLogging.subscriptions(
       '╚══════════════════════════════════════════════════════════════',
     );
 
     final accentColor = context.accentColor;
-    final displayName = profile?.displayName ?? 'MeshUser';
-    final avatarUrl = profile?.avatarUrl;
-    final initials = profile?.initials ?? '?';
+    final displayName = isSignedIn ? (profile?.displayName ?? 'Guest') : 'Guest';
+    final avatarUrl = isSignedIn ? profile?.avatarUrl : null;
+    final initials = isSignedIn ? (profile?.initials ?? '?') : 'G';
+    final isInteractive = isSignedIn && onEditTap != null;
 
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            accentColor.withValues(alpha: 0.15),
-            accentColor.withValues(alpha: 0.05),
-          ],
+          colors: isSignedIn
+              ? [
+                  accentColor.withValues(alpha: 0.15),
+                  accentColor.withValues(alpha: 0.05),
+                ]
+              : [
+                  context.textTertiary.withValues(alpha: 0.1),
+                  context.textTertiary.withValues(alpha: 0.05),
+                ],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: accentColor.withValues(alpha: 0.3)),
+        border: Border.all(
+          color: isSignedIn
+              ? accentColor.withValues(alpha: 0.3)
+              : context.border,
+        ),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: onEditTap,
+          onTap: isInteractive ? onEditTap : null,
           borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -1128,9 +1312,13 @@ class _ProfilePreviewCard extends StatelessWidget {
                   initials: initials,
                   size: 56,
                   borderWidth: 2,
-                  borderColor: accentColor.withValues(alpha: 0.5),
-                  foregroundColor: accentColor,
-                  backgroundColor: accentColor.withValues(alpha: 0.2),
+                  borderColor: isSignedIn
+                      ? accentColor.withValues(alpha: 0.5)
+                      : context.textTertiary.withValues(alpha: 0.3),
+                  foregroundColor: isSignedIn ? accentColor : context.textTertiary,
+                  backgroundColor: isSignedIn
+                      ? accentColor.withValues(alpha: 0.2)
+                      : context.textTertiary.withValues(alpha: 0.1),
                 ),
                 SizedBox(width: 16),
                 Expanded(
@@ -1142,11 +1330,13 @@ class _ProfilePreviewCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
-                          color: context.textPrimary,
+                          color: isSignedIn
+                              ? context.textPrimary
+                              : context.textSecondary,
                         ),
                       ),
-                      if (profile?.callsign != null) ...[
-                        const SizedBox(height: 2),
+                      const SizedBox(height: 2),
+                      if (isSignedIn && profile?.callsign != null)
                         Text(
                           profile!.callsign!,
                           style: TextStyle(
@@ -1154,19 +1344,24 @@ class _ProfilePreviewCard extends StatelessWidget {
                             color: accentColor,
                             fontWeight: FontWeight.w500,
                           ),
-                        ),
-                      ] else
+                        )
+                      else
                         Text(
-                          'Tap to edit profile',
+                          isSignedIn
+                              ? 'Tap to edit profile'
+                              : 'Sign in to create profile',
                           style: TextStyle(
                             fontSize: 13,
-                            color: context.textSecondary,
+                            color: context.textTertiary,
                           ),
                         ),
                     ],
                   ),
                 ),
-                Icon(Icons.chevron_right, color: accentColor),
+                if (isSignedIn)
+                  Icon(Icons.chevron_right, color: accentColor)
+                else
+                  Icon(Icons.lock_outline, size: 20, color: context.textTertiary),
               ],
             ),
           ),

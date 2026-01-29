@@ -118,13 +118,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     return settingsServiceAsync.maybeWhen(
       data: (settingsService) => [
-        // Upgrades
+        // Premium
         _SearchableSettingItem(
           icon: Icons.rocket_launch_rounded,
-          title: 'Unlock Premium Features',
+          title: 'Unlock Features',
           subtitle: 'Ringtones, themes, automations, IFTTT, widgets',
           keywords: ['premium', 'upgrade', 'purchase', 'buy', 'subscription'],
-          section: 'UPGRADES',
+          section: 'PREMIUM',
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
@@ -137,7 +137,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               'Ringtone Pack',
           subtitle: 'Custom notification sounds',
           keywords: ['sound', 'audio', 'tone', 'music', 'alert'],
-          section: 'UPGRADES',
+          section: 'PREMIUM',
           onTap: () {
             if (purchaseState.hasFeature(PremiumFeature.customRingtones)) {
               Navigator.push(
@@ -175,7 +175,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               'Theme Pack',
           subtitle: 'Accent colors and visual customization',
           keywords: ['color', 'accent', 'visual', 'appearance', 'dark'],
-          section: 'UPGRADES',
+          section: 'PREMIUM',
           onTap: () {
             if (purchaseState.hasFeature(PremiumFeature.premiumThemes)) {
               Navigator.push(
@@ -197,7 +197,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               'Automations Pack',
           subtitle: 'Automated actions and triggers',
           keywords: ['auto', 'trigger', 'action', 'rule', 'automatic'],
-          section: 'UPGRADES',
+          section: 'PREMIUM',
           onTap: () {
             if (purchaseState.hasFeature(PremiumFeature.automations)) {
               Navigator.push(
@@ -219,7 +219,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               'IFTTT Pack',
           subtitle: 'Integration with external services',
           keywords: ['integration', 'webhook', 'external', 'connect'],
-          section: 'UPGRADES',
+          section: 'PREMIUM',
           onTap: () {
             if (purchaseState.hasFeature(PremiumFeature.iftttIntegration)) {
               Navigator.push(
@@ -241,7 +241,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               'Widget Pack',
           subtitle: 'Home screen widgets',
           keywords: ['home', 'widget', 'screen', 'launcher'],
-          section: 'UPGRADES',
+          section: 'PREMIUM',
           onTap: () {
             if (purchaseState.hasFeature(PremiumFeature.homeWidgets)) {
               Navigator.push(
@@ -1062,7 +1062,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Widget _buildUpgradesSection(BuildContext context) {
+  Widget _buildPremiumSection(BuildContext context) {
     final purchaseState = ref.watch(purchaseStateProvider);
     final storeProductsAsync = ref.watch(storeProductsProvider);
     final storeProducts = storeProductsAsync.when(
@@ -1081,8 +1081,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionHeader(title: 'UPGRADES'),
-        // Main Upgrades card with accent highlight
+        const _SectionHeader(title: 'PREMIUM'),
+        // Main Premium card with accent highlight
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
           decoration: BoxDecoration(
@@ -1133,7 +1133,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Unlock Premium Features',
+                            'Unlock Features',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -1143,8 +1143,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           const SizedBox(height: 2),
                           Text(
                             ownedCount == totalCount
-                                ? 'All features unlocked'
-                                : '$ownedCount of $totalCount features unlocked',
+                                ? 'All features unlocked!'
+                                : '$ownedCount of $totalCount unlocked',
                             style: TextStyle(
                               fontSize: 13,
                               color: context.textSecondary,
@@ -1929,7 +1929,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             padding: const EdgeInsets.symmetric(vertical: 8),
                             children: [
                               // Subscription Section
-                              _buildUpgradesSection(context),
+                              _buildPremiumSection(context),
 
                               const SizedBox(height: 16),
 

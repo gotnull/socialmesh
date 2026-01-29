@@ -136,6 +136,15 @@ class ProfileService {
     AppLogging.auth('ProfileService: getOrCreateProfile() - START');
     final existing = await getProfile();
     if (existing != null) {
+      // Migrate legacy "meshuser" name to "Guest" for unsigned-out users
+      if (existing.displayName == 'meshuser' && !existing.isSynced) {
+        AppLogging.auth(
+          'ProfileService: getOrCreateProfile() - 🔄 Migrating legacy meshuser to Guest',
+        );
+        final migrated = existing.copyWith(displayName: 'Guest');
+        await saveProfile(migrated);
+        return migrated;
+      }
       AppLogging.auth(
         'ProfileService: getOrCreateProfile() - ✅ Returning existing: ${existing.displayName}',
       );

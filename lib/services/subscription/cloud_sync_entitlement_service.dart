@@ -12,6 +12,9 @@ enum CloudSyncEntitlementState {
   /// User has active subscription
   active,
 
+  /// User has cancelled but subscription is still active until expiration
+  cancelled,
+
   /// User is in grace period (billing issue but still has access)
   gracePeriod,
 
@@ -34,6 +37,12 @@ class CloudSyncEntitlement {
   final bool canWrite;
   final bool canRead;
 
+  /// Whether subscription will auto-renew (false = cancelled)
+  final bool willRenew;
+
+  /// URL to manage subscription (App Store or Play Store)
+  final String? managementURL;
+
   const CloudSyncEntitlement({
     required this.state,
     this.expiresAt,
@@ -41,6 +50,8 @@ class CloudSyncEntitlement {
     this.productId,
     required this.canWrite,
     required this.canRead,
+    this.willRenew = true,
+    this.managementURL,
   });
 
   /// No access at all
@@ -50,11 +61,15 @@ class CloudSyncEntitlement {
     canRead: false,
   );
 
-  /// Full access (active, grace period, or grandfathered)
+  /// Full access (active, cancelled but active, grace period, or grandfathered)
   bool get hasFullAccess =>
       state == CloudSyncEntitlementState.active ||
+      state == CloudSyncEntitlementState.cancelled ||
       state == CloudSyncEntitlementState.gracePeriod ||
       state == CloudSyncEntitlementState.grandfathered;
+
+  /// Whether the subscription has been cancelled but is still active
+  bool get isCancelled => state == CloudSyncEntitlementState.cancelled;
 
   /// Read-only access (expired but was previously subscribed)
   bool get hasReadOnlyAccess =>
@@ -62,7 +77,7 @@ class CloudSyncEntitlement {
 
   @override
   String toString() =>
-      'CloudSyncEntitlement(state: $state, canWrite: $canWrite, canRead: $canRead)';
+      'CloudSyncEntitlement(state: $state, canWrite: $canWrite, canRead: $canRead, willRenew: $willRenew)';
 }
 
 /// Service to manage cloud sync entitlements
@@ -298,6 +313,8 @@ class CloudSyncEntitlementService {
     if (entitlement.isActive) {
       // Check if in billing retry / grace period
       final billingIssue = entitlement.billingIssueDetectedAt != null;
+      final willRenew = entitlement.willRenew;
+      final managementURL = customerInfo.managementURL;
 
       if (billingIssue) {
         AppLogging.subscriptions(
@@ -312,6 +329,29 @@ class CloudSyncEntitlementService {
           productId: entitlement.productIdentifier,
           canWrite: true,
           canRead: true,
+          willRenew: willRenew,
+          managementURL: managementURL,
+        );
+      }
+
+      // Check if subscription is cancelled but still active
+      if (!willRenew) {
+        AppLogging.subscriptions(
+          '⚠️ [ENTITLEMENT] Subscription CANCELLED but still active until expiration',
+        );
+        AppLogging.subscriptions('   - willRenew: $willRenew');
+        AppLogging.subscriptions('   - expirationDate: ${entitlement.expirationDate}');
+        AppLogging.subscriptions('☁️ Subscription cancelled');
+        return CloudSyncEntitlement(
+          state: CloudSyncEntitlementState.cancelled,
+          expiresAt: entitlement.expirationDate != null
+              ? DateTime.parse(entitlement.expirationDate!)
+              : null,
+          productId: entitlement.productIdentifier,
+          canWrite: true,
+          canRead: true,
+          willRenew: false,
+          managementURL: managementURL,
         );
       }
 
@@ -325,6 +365,8 @@ class CloudSyncEntitlementService {
         productId: entitlement.productIdentifier,
         canWrite: true,
         canRead: true,
+        willRenew: true,
+        managementURL: managementURL,
       );
     }
 
@@ -341,6 +383,8 @@ class CloudSyncEntitlementService {
         productId: entitlement.productIdentifier,
         canWrite: false,
         canRead: true, // Allow reading their synced data
+        willRenew: false,
+        managementURL: customerInfo.managementURL,
       );
     }
 
