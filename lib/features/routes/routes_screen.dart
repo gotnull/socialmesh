@@ -13,7 +13,6 @@ import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/gradient_border_container.dart';
 import '../../core/widgets/ico_help_system.dart';
-import '../../providers/help_providers.dart';
 import '../../models/route.dart' as route_model;
 import '../../providers/app_providers.dart';
 import '../../providers/telemetry_providers.dart';
@@ -51,16 +50,49 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen> {
             ),
           ),
           actions: [
-            IconButton(
-              icon: const Icon(Icons.file_upload_outlined),
-              tooltip: 'Import GPX',
-              onPressed: _importRoute,
-            ),
-            IconButton(
-              icon: const Icon(Icons.help_outline),
-              tooltip: 'Help',
-              onPressed: () =>
-                  ref.read(helpProvider.notifier).startTour('routes_overview'),
+            IcoHelpAppBarButton(topicId: 'routes_overview'),
+            AppBarOverflowMenu<String>(
+              onSelected: (value) {
+                switch (value) {
+                  case 'start':
+                    _startRecording();
+                    break;
+                  case 'import':
+                    _importRoute();
+                    break;
+                }
+              },
+              itemBuilder: (context) => [
+                if (activeRoute == null)
+                  PopupMenuItem<String>(
+                    value: 'start',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.play_arrow,
+                          color: AccentColors.green,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        const Text('Start Route'),
+                      ],
+                    ),
+                  ),
+                PopupMenuItem<String>(
+                  value: 'import',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.file_upload_outlined,
+                        color: context.textSecondary,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      const Text('Import GPX'),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -97,14 +129,6 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen> {
             ),
           ],
         ),
-        floatingActionButton: activeRoute == null
-            ? FloatingActionButton.extended(
-                onPressed: _startRecording,
-                backgroundColor: AccentColors.green,
-                icon: const Icon(Icons.play_arrow),
-                label: const Text('Start Route'),
-              )
-            : null,
       ),
     );
   }

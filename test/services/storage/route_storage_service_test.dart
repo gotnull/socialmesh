@@ -1,16 +1,29 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socialmesh/models/route.dart';
 import 'package:socialmesh/services/storage/route_storage_service.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
-  late SharedPreferences prefs;
+  TestWidgetsFlutterBinding.ensureInitialized();
+  
   late RouteStorageService service;
 
+  setUpAll(() {
+    // Initialize FFI for testing
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  });
+
   setUp(() async {
-    SharedPreferences.setMockInitialValues({});
-    prefs = await SharedPreferences.getInstance();
-    service = RouteStorageService(prefs);
+    // Use in-memory database for testing
+    service = RouteStorageService(testDbPath: inMemoryDatabasePath);
+    await service.init();
+    // Clear any existing data
+    await service.clearAllRoutes();
+  });
+
+  tearDown(() async {
+    await service.clearAllRoutes();
   });
 
   group('RouteStorageService', () {

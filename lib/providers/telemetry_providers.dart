@@ -28,10 +28,11 @@ final telemetryStorageProvider = FutureProvider<TelemetryStorageService>((
   return TelemetryStorageService(prefs);
 });
 
-// Route storage service
+// Route storage service (SQLite-backed)
 final routeStorageProvider = FutureProvider<RouteStorageService>((ref) async {
-  final prefs = await ref.watch(sharedPreferencesProvider.future);
-  return RouteStorageService(prefs);
+  final service = RouteStorageService();
+  await service.init();
+  return service;
 });
 
 // Tapback storage service

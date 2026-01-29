@@ -168,8 +168,43 @@ railway up       # Deploy to Railway (persistent SQLite at /app/data)
 **API**: `/api/nodes` (valid nodes), `/api/node/:nodeNum`, `/api/stats`, `/map` (world map UI)  
 **Key**: `src/mqtt-observer.ts` has per-node rate limiting (300 msgs/min)
 
-## Database Migrations
-**Not implemented** - app hasn't launched. Always reset DB schema in `_createTables()`. No SQLite migrations.
+## Database Migrations (PRODUCTION)
+
+**App is now LIVE** - database schema changes MUST use proper SQLite migrations:
+
+### Migration Rules
+1. **Never** alter existing tables in `_createTables()` - only for new installations
+2. **Always** increment database version when changing schema
+3. **Always** provide migration path in `onUpgrade` callback
+4. **Test** migration from previous version before deploying
+
+### Migration Pattern
+```dart
+_db = await openDatabase(
+  dbPath,
+  version: 7, // Increment for schema changes
+  onCreate: (db, version) async {
+    await _createTables(db); // Full schema for fresh installs
+  },
+  onUpgrade: (db, oldVersion, newVersion) async {
+    // Migrate from each version
+    if (oldVersion < 7) {
+      await db.execute('ALTER TABLE routes ADD COLUMN new_field TEXT');
+    }
+    // Handle multiple version jumps
+    if (oldVersion < 6) {
+      // Migration from v5 to v6
+    }
+  },
+);
+```
+
+### Existing Databases
+- **signals.db** (SignalService) - v6
+- **packet_dedupe.db** (MeshPacketDedupeStore) - v1
+- **routes.db** (RouteStorageService) - v1
+
+⚠️ **Breaking changes require data migration or user warning** - never lose user data!
 
 ## Development Restrictions
 - ❌ Never run `flutter run` (app execution forbidden)

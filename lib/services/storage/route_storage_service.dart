@@ -1,67 +1,160 @@
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import '../../models/route.dart';
 
-/// Storage service for GPS routes
+/// Storage service for GPS routes using SQLite
 class RouteStorageService {
-  static const _routesKey = 'routes';
+  static const _dbName = 'routes.db';
+  static const _routesTable = 'routes';
   static const _activeRouteKey = 'active_route';
 
-  final SharedPreferences _prefs;
+  Database? _db;
+  final String? _testDbPath;
 
-  RouteStorageService(this._prefs);
+  /// Constructor with optional test database path
+  RouteStorageService({String? testDbPath}) : _testDbPath = testDbPath;
+
+  /// Initialize the SQLite database
+  Future<void> init() async {
+    if (_db != null) return;
+
+    final String dbPath;
+    if (_testDbPath != null) {
+      dbPath = _testDbPath;
+    } else {
+      final documentsDir = await getApplicationDocumentsDirectory();
+      dbPath = p.join(documentsDir.path, _dbName);
+    }
+
+    _db = await openDatabase(
+      dbPath,
+      version: 1,
+      onCreate: (db, version) async {
+        await _createTables(db);
+      },
+    );
+  }
+
+  Future<void> _createTables(Database db) async {
+    // Routes table
+    await db.execute('''
+      CREATE TABLE $_routesTable (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        notes TEXT,
+        created_at INTEGER NOT NULL,
+        ended_at INTEGER,
+        locations TEXT NOT NULL
+      )
+    ''');
+
+    // Active route table (single row)
+    await db.execute('''
+      CREATE TABLE $_activeRouteKey (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        route_data TEXT
+      )
+    ''');
+  }
 
   /// Get all saved routes
   Future<List<Route>> getRoutes() async {
-    final jsonList = _prefs.getStringList(_routesKey) ?? [];
-    return jsonList.map((json) => Route.fromJson(jsonDecode(json))).toList();
+    if (_db == null) await init();
+    
+    final List<Map<String, dynamic>> maps = await _db!.query(
+      _routesTable,
+      orderBy: 'created_at DESC',
+    );
+
+    return maps.map((map) {
+      return Route(
+        id: map['id'] as String,
+        name: map['name'] as String,
+        notes: map['notes'] as String?,
+        createdAt: DateTime.fromMillisecondsSinceEpoch(map['created_at'] as int),
+        endedAt: map['ended_at'] != null
+            ? DateTime.fromMillisecondsSinceEpoch(map['ended_at'] as int)
+            : null,
+        locations: (jsonDecode(map['locations'] as String) as List)
+            .map((loc) => RouteLocation.fromJson(loc))
+            .toList(),
+      );
+    }).toList();
   }
 
   /// Save a route
   Future<void> saveRoute(Route route) async {
-    final routes = await getRoutes();
-    final existingIndex = routes.indexWhere((r) => r.id == route.id);
-    if (existingIndex >= 0) {
-      routes[existingIndex] = route;
-    } else {
-      routes.add(route);
-    }
-    await _saveRoutes(routes);
+    if (_db == null) await init();
+
+    await _db!.insert(
+      _routesTable,
+      {
+        'id': route.id,
+        'name': route.name,
+        'notes': route.notes,
+        'created_at': route.createdAt.millisecondsSinceEpoch,
+        'ended_at': route.endedAt?.millisecondsSinceEpoch,
+        'locations': jsonEncode(route.locations.map((l) => l.toJson()).toList()),
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   /// Delete a route
   Future<void> deleteRoute(String routeId) async {
-    final routes = await getRoutes();
-    routes.removeWhere((r) => r.id == routeId);
-    await _saveRoutes(routes);
+    if (_db == null) await init();
+
+    await _db!.delete(
+      _routesTable,
+      where: 'id = ?',
+      whereArgs: [routeId],
+    );
   }
 
   /// Clear all routes
   Future<void> clearAllRoutes() async {
-    await _prefs.remove(_routesKey);
-    await _prefs.remove(_activeRouteKey);
-  }
+    if (_db == null) await init();
 
-  Future<void> _saveRoutes(List<Route> routes) async {
-    await _prefs.setStringList(
-      _routesKey,
-      routes.map((r) => jsonEncode(r.toJson())).toList(),
-    );
+    await _db!.delete(_routesTable);
+    await _db!.delete(_activeRouteKey);
   }
 
   /// Get the currently active route being recorded
   Future<Route?> getActiveRoute() async {
-    final json = _prefs.getString(_activeRouteKey);
-    if (json == null) return null;
-    return Route.fromJson(jsonDecode(json));
+    if (_db == null) await init();
+
+    final List<Map<String, dynamic>> maps = await _db!.query(
+      _activeRouteKey,
+      where: 'id = ?',
+      whereArgs: [1],
+    );
+
+    if (maps.isEmpty || maps.first['route_data'] == null) return null;
+
+    return Route.fromJson(jsonDecode(maps.first['route_data'] as String));
   }
 
   /// Set the active route being recorded
   Future<void> setActiveRoute(Route? route) async {
+    if (_db == null) await init();
+
     if (route == null) {
-      await _prefs.remove(_activeRouteKey);
+      await _db!.delete(
+        _activeRouteKey,
+        where: 'id = ?',
+        whereArgs: [1],
+      );
     } else {
-      await _prefs.setString(_activeRouteKey, jsonEncode(route.toJson()));
+      await _db!.insert(
+        _activeRouteKey,
+        {
+          'id': 1,
+          'route_data': jsonEncode(route.toJson()),
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
     }
   }
 
