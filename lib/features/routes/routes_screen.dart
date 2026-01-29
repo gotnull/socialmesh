@@ -299,93 +299,102 @@ class _ActiveRouteBannerState extends ConsumerState<_ActiveRouteBanner> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
-            children: [
-              Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(
-                  color: AccentColors.green,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AccentColors.green.withValues(alpha: 0.5),
-                      blurRadius: 8,
-                      spreadRadius: 2,
+                children: [
+                  Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: AccentColors.green,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AccentColors.green.withValues(alpha: 0.5),
+                          blurRadius: 8,
+                          spreadRadius: 2,
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Recording',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AccentColors.green,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '${route.locations.length} points',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: context.textSecondary,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              const Text(
-                'Recording',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AccentColors.green,
-                ),
-              ),
-              const Spacer(),
+              const SizedBox(height: 12),
               Text(
-                '${route.locations.length} points',
-                style: TextStyle(fontSize: 12, color: context.textSecondary),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            route.name,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: context.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '${_formatDistance(route.totalDistance)} • ${_formatDuration(DateTime.now().difference(route.createdAt))}',
-            style: TextStyle(fontSize: 14, color: context.textSecondary),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: () {
-                    ref.read(activeRouteProvider.notifier).cancelRecording();
-                  },
-                  icon: const Icon(Icons.close, size: 18, color: Colors.white),
-                  label: const Text(
-                    'Cancel',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppTheme.errorRed,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
+                route.name,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: context.textPrimary,
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: () async {
-                    final completed = await ref
-                        .read(activeRouteProvider.notifier)
-                        .stopRecording();
-                    if (completed != null) {
-                      ref.read(routesProvider.notifier).refresh();
-                    }
-                  },
-                  icon: const Icon(Icons.stop, size: 18),
-                  label: const Text('Stop'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AccentColors.green,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+              const SizedBox(height: 4),
+              Text(
+                '${_formatDistance(route.totalDistance)} • ${_formatDuration(DateTime.now().difference(route.createdAt))}',
+                style: TextStyle(fontSize: 14, color: context.textSecondary),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: () {
+                        ref
+                            .read(activeRouteProvider.notifier)
+                            .cancelRecording();
+                      },
+                      icon: const Icon(
+                        Icons.close,
+                        size: 18,
+                        color: Colors.white,
+                      ),
+                      label: const Text(
+                        'Cancel',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppTheme.errorRed,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: () async {
+                        final completed = await ref
+                            .read(activeRouteProvider.notifier)
+                            .stopRecording();
+                        if (completed != null) {
+                          ref.read(routesProvider.notifier).refresh();
+                        }
+                      },
+                      icon: const Icon(Icons.stop, size: 18),
+                      label: const Text('Stop'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AccentColors.green,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
-          ),
-        ],
           ),
         ),
       ),

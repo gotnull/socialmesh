@@ -131,14 +131,10 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
     // Count nodes by filter for badges
     final allNodes = nodes.values.toList();
     final activeCount = allNodes
-        .where(
-          (n) => _presenceForNode(presenceMap, n).isActive,
-        )
+        .where((n) => _presenceForNode(presenceMap, n).isActive)
         .length;
     final inactiveCount = allNodes
-        .where(
-          (n) => _presenceForNode(presenceMap, n).isInactive,
-        )
+        .where((n) => _presenceForNode(presenceMap, n).isInactive)
         .length;
     final favoritesCount = allNodes.where((n) => n.isFavorite).length;
     final withPositionCount = allNodes
@@ -757,15 +753,11 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
         return nodes;
       case NodeFilter.active:
         return nodes
-            .where(
-              (n) => _presenceForNode(presenceMap, n).isActive,
-            )
+            .where((n) => _presenceForNode(presenceMap, n).isActive)
             .toList();
       case NodeFilter.inactive:
         return nodes
-            .where(
-              (n) => _presenceForNode(presenceMap, n).isInactive,
-            )
+            .where((n) => _presenceForNode(presenceMap, n).isInactive)
             .toList();
       case NodeFilter.favorites:
         return nodes.where((n) => n.isFavorite).toList();
@@ -1389,10 +1381,7 @@ class _NodeCard extends StatelessWidget {
               ? BoxDecoration(
                   color: context.card,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: context.border,
-                    width: 1,
-                  ),
+                  border: Border.all(color: context.border, width: 1),
                 )
               : null,
           child: isMyNode
@@ -1402,22 +1391,37 @@ class _NodeCard extends StatelessWidget {
                   accentOpacity: 1.0,
                   backgroundColor: context.accentColor.withValues(alpha: 0.08),
                   padding: const EdgeInsets.all(16),
-                  child: _buildCardContent(context, signalBars, statusColor, statusText),
+                  child: _buildCardContent(
+                    context,
+                    signalBars,
+                    statusColor,
+                    statusText,
+                  ),
                 )
               : node.isFavorite
-                  ? GradientBorderContainer(
-                      borderRadius: 12,
-                      borderWidth: 2,
-                      accentOpacity: 1.0,
-                      accentColor: AccentColors.yellow,
-                      backgroundColor: context.card,
-                      padding: const EdgeInsets.all(16),
-                      child: _buildCardContent(context, signalBars, statusColor, statusText),
-                    )
-                  : Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: _buildCardContent(context, signalBars, statusColor, statusText),
-                    ),
+              ? GradientBorderContainer(
+                  borderRadius: 12,
+                  borderWidth: 2,
+                  accentOpacity: 1.0,
+                  accentColor: AccentColors.yellow,
+                  backgroundColor: context.card,
+                  padding: const EdgeInsets.all(16),
+                  child: _buildCardContent(
+                    context,
+                    signalBars,
+                    statusColor,
+                    statusText,
+                  ),
+                )
+              : Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: _buildCardContent(
+                    context,
+                    signalBars,
+                    statusColor,
+                    statusText,
+                  ),
+                ),
         ),
       ),
     );
@@ -1430,348 +1434,307 @@ class _NodeCard extends StatelessWidget {
     String statusText,
   ) {
     return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Avatar
-                NodeAvatar(
-                  text: node.avatarName,
-                  color: isMyNode ? context.accentColor : _getAvatarColor(),
-                  size: 56,
-                  showOnlineIndicator: presenceConfidence.isActive,
-                  onlineStatus:
-                      presenceConfidence.isActive ? OnlineStatus.online : null,
-                  batteryLevel: node.batteryLevel,
-                  showBatteryBadge: true,
-                  border: isMyNode
-                      ? Border.all(
-                        color: Colors.white.withValues(alpha: 0.3),
-                        width: 2,
-                      )
-                    : null,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Avatar
+        NodeAvatar(
+          text: node.avatarName,
+          color: isMyNode ? context.accentColor : _getAvatarColor(),
+          size: 56,
+          showOnlineIndicator: presenceConfidence.isActive,
+          onlineStatus: presenceConfidence.isActive
+              ? OnlineStatus.online
+              : null,
+          batteryLevel: node.batteryLevel,
+          showBatteryBadge: true,
+          border: isMyNode
+              ? Border.all(color: Colors.white.withValues(alpha: 0.3), width: 2)
+              : null,
+        ),
+        SizedBox(width: 16),
+        // Info
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  // Lock icon (locked = has PKI public key)
+                  Icon(
+                    node.hasPublicKey ? Icons.lock : Icons.lock_open,
+                    size: 16,
+                    color: node.hasPublicKey
+                        ? context.accentColor
+                        : context.textTertiary,
+                  ),
+                  SizedBox(width: 8),
+                  // Name
+                  Flexible(
+                    child: Text(
+                      node.displayName,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: context.textPrimary,
+                      ),
+                    ),
+                  ),
+                  // "You" badge
+                  if (isMyNode) ...[
+                    SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: context.accentColor,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        'YOU',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
-              SizedBox(width: 16),
-              // Info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              SizedBox(height: 6),
+              // Status - show "This Device" for your own node
+              if (isMyNode)
+                Row(
                   children: [
-                    Row(
-                      children: [
-                        // Lock icon (locked = has PKI public key)
-                        Icon(
-                          node.hasPublicKey ? Icons.lock : Icons.lock_open,
-                          size: 16,
-                          color: node.hasPublicKey
-                              ? context.accentColor
-                              : context.textTertiary,
-                        ),
-                        SizedBox(width: 8),
-                        // Name
-                        Flexible(
-                          child: Text(
-                            node.displayName,
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: context.textPrimary,
-                            ),
-                          ),
-                        ),
-                        // "You" badge
-                        if (isMyNode) ...[
-                          SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: context.accentColor,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              'YOU',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
+                    Icon(
+                      Icons.smartphone,
+                      size: 14,
+                      color: context.accentColor,
                     ),
-                    SizedBox(height: 6),
-                    // Status - show "This Device" for your own node
-                    if (isMyNode)
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.smartphone,
-                            size: 14,
-                            color: context.accentColor,
-                          ),
-                          SizedBox(width: 6),
-                          Text(
-                            'This Device',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: context.accentColor,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      )
-                    else
-                      Row(
-                        children: [
-                          Container(
-                            width: 10,
-                            height: 10,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: RadialGradient(
-                                colors: presenceConfidence.isActive
-                                    ? [
-                                        statusColor,
-                                        statusColor.withValues(alpha: 0.6),
-                                      ]
-                                    : [
-                                        context.textTertiary,
-                                        context.textTertiary.withValues(
-                                          alpha: 0.6,
-                                        ),
-                                      ],
-                              ),
-                              boxShadow: presenceConfidence.isActive
-                                  ? [
-                                      BoxShadow(
-                                        color: statusColor.withValues(
-                                          alpha: 0.3,
-                                        ),
-                                        blurRadius: 4,
-                                        spreadRadius: 1,
-                                      ),
-                                    ]
-                                  : null,
-                            ),
-                            child: Container(
-                              margin: const EdgeInsets.all(2),
-                              decoration: BoxDecoration(
-                                color: presenceConfidence.isActive
-                                    ? statusColor.withValues(alpha: 0.3)
-                                    : context.textTertiary.withValues(
-                                        alpha: 0.3,
-                                      ),
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: 8),
-                          Tooltip(
-                            message: kPresenceInferenceTooltip,
-                            child: Text(
-                              statusText,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: context.textSecondary,
-                              ),
-                            ),
-                          ),
-                        ],
+                    SizedBox(width: 6),
+                    Text(
+                      'This Device',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: context.accentColor,
+                        fontWeight: FontWeight.w500,
                       ),
-                    SizedBox(height: 4),
-                    // Last heard
-                    if (node.lastHeard != null) ...[
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.check,
-                            size: 14,
-                            color: context.accentColor,
-                          ),
-                          SizedBox(width: 6),
-                          Text(
-                            _formatLastHeard(node.lastHeard!),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: context.textTertiary,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 4),
-                    ],
-                    // Role and GPS status
-                    Row(
-                      children: [
-                        if (node.role != null) ...[
-                          Icon(
-                            Icons.smartphone,
-                            size: 14,
-                            color: context.textTertiary,
-                          ),
-                          SizedBox(width: 6),
-                          Text(
-                            node.role!,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: context.textTertiary,
-                            ),
-                          ),
-                          SizedBox(width: 12),
-                        ],
-                        Icon(
-                          Icons.gps_fixed,
-                          size: 14,
-                          color: node.hasPosition
-                              ? context.accentColor
-                              : context.textTertiary,
-                        ),
-                        SizedBox(width: 4),
-                        Text(
-                          node.hasPosition ? 'GPS' : 'No GPS',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: node.hasPosition
-                                ? context.accentColor
-                                : context.textTertiary,
-                          ),
-                        ),
-                      ],
                     ),
-                    // Distance & heading
-                    if (node.distance != null) ...[
-                      SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.near_me,
-                            size: 14,
-                            color: context.textTertiary,
-                          ),
-                          SizedBox(width: 6),
-                          Text(
-                            _formatDistance(node.distance),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: context.textTertiary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                    // Logs indicators
-                    SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.article,
-                          size: 14,
-                          color: context.textTertiary,
+                  ],
+                )
+              else
+                Row(
+                  children: [
+                    Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: presenceConfidence.isActive
+                              ? [
+                                  statusColor,
+                                  statusColor.withValues(alpha: 0.6),
+                                ]
+                              : [
+                                  context.textTertiary,
+                                  context.textTertiary.withValues(alpha: 0.6),
+                                ],
                         ),
-                        SizedBox(width: 4),
-                        Text(
-                          'Logs:',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: context.textTertiary,
-                          ),
-                        ),
-                        SizedBox(width: 8),
-                        Icon(
-                          Icons.message,
-                          size: 14,
-                          color: context.textTertiary,
-                        ),
-                        SizedBox(width: 8),
-                        Icon(
-                          Icons.place,
-                          size: 14,
-                          color: context.textTertiary,
-                        ),
-                      ],
-                    ),
-                    // Signal bars
-                    if (node.rssi != null) ...[
-                      SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.signal_cellular_alt,
-                            size: 14,
-                            color: context.textTertiary,
-                          ),
-                          SizedBox(width: 6),
-                          Text(
-                            'Signal Good',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: context.textTertiary,
-                            ),
-                          ),
-                          SizedBox(width: 12),
-                          // Signal strength bars
-                          Row(
-                            children: List.generate(4, (i) {
-                              return Container(
-                                margin: const EdgeInsets.only(right: 3),
-                                width: 4,
-                                height: 12 + (i * 3.0),
-                                decoration: BoxDecoration(
-                                  color: i < signalBars
-                                      ? context.accentColor
-                                      : context.textTertiary.withValues(
-                                          alpha: 0.3,
-                                        ),
-                                  borderRadius: BorderRadius.circular(1),
+                        boxShadow: presenceConfidence.isActive
+                            ? [
+                                BoxShadow(
+                                  color: statusColor.withValues(alpha: 0.3),
+                                  blurRadius: 4,
+                                  spreadRadius: 1,
                                 ),
-                              );
-                            }),
-                          ),
-                        ],
+                              ]
+                            : null,
                       ),
-                    ],
+                      child: Container(
+                        margin: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: presenceConfidence.isActive
+                              ? statusColor.withValues(alpha: 0.3)
+                              : context.textTertiary.withValues(alpha: 0.3),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Tooltip(
+                      message: kPresenceInferenceTooltip,
+                      child: Text(
+                        statusText,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: context.textSecondary,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
-              ),
-              // Status icons & chevron
-              Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              SizedBox(height: 4),
+              // Last heard
+              if (node.lastHeard != null) ...[
+                Row(
+                  children: [
+                    Icon(Icons.check, size: 14, color: context.accentColor),
+                    SizedBox(width: 6),
+                    Text(
+                      _formatLastHeard(node.lastHeard!),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.textTertiary,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 4),
+              ],
+              // Role and GPS status
+              Row(
                 children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (node.isIgnored)
-                        Padding(
-                          padding: EdgeInsets.only(right: 4),
-                          child: Icon(
-                            Icons.volume_off,
-                            color: AppTheme.errorRed,
-                            size: 20,
-                          ),
-                        ),
-                      if (node.isFavorite)
-                        const Icon(
-                          Icons.star,
-                          color: AccentColors.yellow,
-                          size: 24,
-                        )
-                      else if (!node.isIgnored)
-                        const SizedBox(width: 24),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
+                  if (node.role != null) ...[
+                    Icon(
+                      Icons.smartphone,
+                      size: 14,
+                      color: context.textTertiary,
+                    ),
+                    SizedBox(width: 6),
+                    Text(
+                      node.role!,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.textTertiary,
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                  ],
                   Icon(
-                    Icons.chevron_right,
-                    color: context.textTertiary,
-                    size: 24,
+                    Icons.gps_fixed,
+                    size: 14,
+                    color: node.hasPosition
+                        ? context.accentColor
+                        : context.textTertiary,
+                  ),
+                  SizedBox(width: 4),
+                  Text(
+                    node.hasPosition ? 'GPS' : 'No GPS',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: node.hasPosition
+                          ? context.accentColor
+                          : context.textTertiary,
+                    ),
                   ),
                 ],
               ),
+              // Distance & heading
+              if (node.distance != null) ...[
+                SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(Icons.near_me, size: 14, color: context.textTertiary),
+                    SizedBox(width: 6),
+                    Text(
+                      _formatDistance(node.distance),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.textTertiary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+              // Logs indicators
+              SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(Icons.article, size: 14, color: context.textTertiary),
+                  SizedBox(width: 4),
+                  Text(
+                    'Logs:',
+                    style: TextStyle(fontSize: 12, color: context.textTertiary),
+                  ),
+                  SizedBox(width: 8),
+                  Icon(Icons.message, size: 14, color: context.textTertiary),
+                  SizedBox(width: 8),
+                  Icon(Icons.place, size: 14, color: context.textTertiary),
+                ],
+              ),
+              // Signal bars
+              if (node.rssi != null) ...[
+                SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.signal_cellular_alt,
+                      size: 14,
+                      color: context.textTertiary,
+                    ),
+                    SizedBox(width: 6),
+                    Text(
+                      'Signal Good',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.textTertiary,
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    // Signal strength bars
+                    Row(
+                      children: List.generate(4, (i) {
+                        return Container(
+                          margin: const EdgeInsets.only(right: 3),
+                          width: 4,
+                          height: 12 + (i * 3.0),
+                          decoration: BoxDecoration(
+                            color: i < signalBars
+                                ? context.accentColor
+                                : context.textTertiary.withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(1),
+                          ),
+                        );
+                      }),
+                    ),
+                  ],
+                ),
+              ],
             ],
-          );
+          ),
+        ),
+        // Status icons & chevron
+        Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (node.isIgnored)
+                  Padding(
+                    padding: EdgeInsets.only(right: 4),
+                    child: Icon(
+                      Icons.volume_off,
+                      color: AppTheme.errorRed,
+                      size: 20,
+                    ),
+                  ),
+                if (node.isFavorite)
+                  const Icon(Icons.star, color: AccentColors.yellow, size: 24)
+                else if (!node.isIgnored)
+                  const SizedBox(width: 24),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Icon(Icons.chevron_right, color: context.textTertiary, size: 24),
+          ],
+        ),
+      ],
+    );
   }
 
   Color _presenceColor(BuildContext context, PresenceConfidence confidence) {

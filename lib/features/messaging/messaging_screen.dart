@@ -323,9 +323,8 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
               const SizedBox(width: 8),
               _ContactHeadersToggle(
                 enabled: _showSectionHeaders,
-                onToggle: () => setState(
-                  () => _showSectionHeaders = !_showSectionHeaders,
-                ),
+                onToggle: () =>
+                    setState(() => _showSectionHeaders = !_showSectionHeaders),
               ),
               const SizedBox(width: 12),
             ],
@@ -464,11 +463,17 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
 
     // Build grouped list with section headers
     final sections = _groupContactsIntoSections(contacts);
-    final nonEmptySections = sections.where((s) => s.contacts.isNotEmpty).toList();
+    final nonEmptySections = sections
+        .where((s) => s.contacts.isNotEmpty)
+        .toList();
 
     return CustomScrollView(
       slivers: [
-        for (var sectionIndex = 0; sectionIndex < nonEmptySections.length; sectionIndex++) ...[
+        for (
+          var sectionIndex = 0;
+          sectionIndex < nonEmptySections.length;
+          sectionIndex++
+        ) ...[
           // Sticky header
           SliverPersistentHeader(
             pinned: true,
@@ -479,33 +484,30 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
           ),
           // Section contacts
           SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final contact = nonEmptySections[sectionIndex].contacts[index];
-                return Perspective3DSlide(
-                  index: index,
-                  direction: SlideDirection.left,
-                  enabled: animationsEnabled,
-                  child: _ContactTile(
-                    contact: contact,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ChatScreen(
-                            type: ConversationType.directMessage,
-                            nodeNum: contact.nodeNum,
-                            title: contact.displayName,
-                            avatarColor: contact.avatarColor,
-                          ),
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final contact = nonEmptySections[sectionIndex].contacts[index];
+              return Perspective3DSlide(
+                index: index,
+                direction: SlideDirection.left,
+                enabled: animationsEnabled,
+                child: _ContactTile(
+                  contact: contact,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ChatScreen(
+                          type: ConversationType.directMessage,
+                          nodeNum: contact.nodeNum,
+                          title: contact.displayName,
+                          avatarColor: contact.avatarColor,
                         ),
-                      );
-                    },
-                  ),
-                );
-              },
-              childCount: nonEmptySections[sectionIndex].contacts.length,
-            ),
+                      ),
+                    );
+                  },
+                ),
+              );
+            }, childCount: nonEmptySections[sectionIndex].contacts.length),
           ),
         ],
       ],
@@ -514,9 +516,19 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
 
   List<_ContactSection> _groupContactsIntoSections(List<_Contact> contacts) {
     final favorites = contacts.where((c) => c.isFavorite).toList();
-    final unread = contacts.where((c) => !c.isFavorite && c.unreadCount > 0).toList();
-    final active = contacts.where((c) => !c.isFavorite && c.unreadCount == 0 && c.presence.isActive).toList();
-    final inactive = contacts.where((c) => !c.isFavorite && c.unreadCount == 0 && !c.presence.isActive).toList();
+    final unread = contacts
+        .where((c) => !c.isFavorite && c.unreadCount > 0)
+        .toList();
+    final active = contacts
+        .where(
+          (c) => !c.isFavorite && c.unreadCount == 0 && c.presence.isActive,
+        )
+        .toList();
+    final inactive = contacts
+        .where(
+          (c) => !c.isFavorite && c.unreadCount == 0 && !c.presence.isActive,
+        )
+        .toList();
 
     return [
       if (favorites.isNotEmpty) _ContactSection('Favorites', favorites),
@@ -543,7 +555,11 @@ class _ContactStickyHeaderDelegate extends SliverPersistentHeaderDelegate {
   _ContactStickyHeaderDelegate({required this.title, required this.count});
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
     final showShadow = shrinkOffset > 0;
     return StickyHeaderShadow(
       blurRadius: showShadow ? 8 : 0,
@@ -568,10 +584,7 @@ class _ContactSectionHeader extends StatelessWidget {
   final String title;
   final int count;
 
-  const _ContactSectionHeader({
-    required this.title,
-    required this.count,
-  });
+  const _ContactSectionHeader({required this.title, required this.count});
 
   @override
   Widget build(BuildContext context) {
