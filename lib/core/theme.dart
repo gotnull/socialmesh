@@ -19,6 +19,19 @@ class AccentColors {
   static const pink = Color(0xFFEC4899);
   static const rose = Color(0xFFF43F5E);
 
+  // Gold gradient colors for premium features
+  static const goldDarkYellow = Color(0xFFFFCC00);
+  static const goldMetallic = Color(0xFFD4AF37);
+  static const goldDarkGoldenrod = Color(0xFFB8860B);
+  static const goldBrown = Color(0xFF996515);
+
+  /// Gold gradient for premium buttons
+  static const LinearGradient goldGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [goldDarkYellow, goldMetallic, goldDarkGoldenrod, goldBrown],
+  );
+
   static const List<Color> all = [
     magenta,
     purple,
@@ -32,6 +45,7 @@ class AccentColors {
     red,
     pink,
     rose,
+    goldMetallic, // Special: requires Complete Pack
   ];
 
   static const List<String> names = [
@@ -47,7 +61,11 @@ class AccentColors {
     'Red',
     'Pink',
     'Rose',
+    'Gold', // Special: requires Complete Pack
   ];
+
+  /// Index of the special Gold color that requires Complete Pack
+  static const int goldColorIndex = 12;
 
   /// Gradient colors for each accent (used for story rings, etc.)
   /// Each gradient has 3 colors that blend well with the base accent
@@ -195,6 +213,18 @@ class AccentColors {
       Color(0xFFF55873),
       Color(0xFFF43556),
       Color(0xFFF32245),
+    ],
+
+    // gold (Special: requires Complete Pack)
+    [
+      Color(0xFFD4AF37), // goldMetallic
+      Color(0xFFE6C058),
+      Color(0xFFF7D179),
+      Color(0xFFFFCC00), // goldDarkYellow
+      Color(0xFFF7D179),
+      Color(0xFFE6C058),
+      Color(0xFFB8860B), // goldDarkGoldenrod
+      Color(0xFF996515), // goldBrown
     ],
   ];
 

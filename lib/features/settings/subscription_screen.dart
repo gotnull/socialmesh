@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
 import '../../config/revenuecat_config.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/animated_gold_button.dart';
 import '../../core/widgets/legal_document_sheet.dart';
+import '../../core/widgets/verified_badge.dart';
 import '../../models/subscription_models.dart';
 import '../../providers/subscription_providers.dart';
 import '../../services/audio/rtttl_library_service.dart';
@@ -350,20 +352,30 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
             child: Row(
               children: [
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [context.accentColor, AppTheme.primaryPurple],
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [context.accentColor, AppTheme.primaryPurple],
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Icon(
+                        Icons.all_inclusive,
+                        color: Colors.white,
+                        size: 30,
+                      ),
                     ),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Icon(
-                    Icons.all_inclusive,
-                    color: Colors.white,
-                    size: 30,
-                  ),
+                    const Positioned(
+                      top: -6,
+                      right: -6,
+                      child: SimpleVerifiedBadge(size: 20),
+                    ),
+                  ],
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -447,7 +459,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                   Icons.widgets,
                   storeProducts[RevenueCatConfig.widgetPackProductId]?.title ??
                       'Widget Pack',
-                  '9 dashboard widgets',
+                  'Unlimited custom widgets',
                 ),
                 _buildBundleFeature(
                   Icons.auto_awesome,
@@ -496,27 +508,10 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                     ],
                   ),
                 ),
-                ElevatedButton(
-                  onPressed: isLoading ? null : _purchaseBundle,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: context.accentColor,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 28,
-                      vertical: 14,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: Text(
-                    isLoading ? 'Loading...' : 'Get All',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                AnimatedGoldButton(
+                  text: 'Get All',
+                  isLoading: isLoading,
+                  onTap: _purchaseBundle,
                 ),
               ],
             ),

@@ -3,9 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/verified_badge.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/profile_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
+import '../../providers/subscription_providers.dart';
 import '../../services/storage/storage_service.dart';
 import '../../core/widgets/loading_indicator.dart';
 
@@ -153,6 +155,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
     Color currentColor,
   ) {
     final theme = Theme.of(context);
+    final hasCompletePack = ref.watch(hasAllPremiumFeaturesProvider);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -169,57 +172,83 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
           final color = entry.value;
           final isSelected = color.toARGB32() == currentColor.toARGB32();
           final colorName = AccentColors.names[index];
+          final isGold = index == AccentColors.goldColorIndex;
+          final isLocked = isGold && !hasCompletePack;
 
           return BouncyTap(
-            onTap: () async {
-              HapticFeedback.selectionClick();
-              await ref.read(accentColorProvider.notifier).setColor(color);
-              // Also sync to cloud profile for cross-device persistence
-              ref
-                  .read(userProfileProvider.notifier)
-                  .updateProfile(accentColorIndex: index);
-            },
+            onTap: isLocked
+                ? null
+                : () async {
+                    HapticFeedback.selectionClick();
+                    await ref.read(accentColorProvider.notifier).setColor(color);
+                    // Also sync to cloud profile for cross-device persistence
+                    ref
+                        .read(userProfileProvider.notifier)
+                        .updateProfile(accentColorIndex: index);
+                  },
             scaleFactor: 0.9,
             child: Tooltip(
-              message: colorName,
+              message: isLocked ? '$colorName (Complete Pack only)' : colorName,
               child: AnimatedScale(
                 scale: isSelected ? 1.15 : 1.0,
                 duration: const Duration(milliseconds: 200),
                 curve: Curves.easeOutBack,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: color,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: isSelected
-                          ? Colors.white
-                          : Colors.white.withValues(alpha: 0.2),
-                      width: isSelected ? 3 : 2,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        gradient: isGold
+                            ? AccentColors.goldGradient
+                            : null,
+                        color: isGold ? null : color,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isSelected
+                              ? Colors.white
+                              : Colors.white.withValues(alpha: isLocked ? 0.1 : 0.2),
+                          width: isSelected ? 3 : 2,
+                        ),
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  color: color.withValues(alpha: 0.6),
+                                  blurRadius: 12,
+                                  spreadRadius: 4,
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        child: isLocked
+                            ? Icon(
+                                Icons.lock,
+                                key: const ValueKey('lock'),
+                                color: Colors.white.withValues(alpha: 0.5),
+                                size: 20,
+                              )
+                            : isSelected
+                                ? const Icon(
+                                    Icons.check,
+                                    key: ValueKey('check'),
+                                    color: Colors.white,
+                                    size: 24,
+                                  )
+                                : const SizedBox.shrink(key: ValueKey('empty')),
+                      ),
                     ),
-                    boxShadow: isSelected
-                        ? [
-                            BoxShadow(
-                              color: color.withValues(alpha: 0.6),
-                              blurRadius: 12,
-                              spreadRadius: 4,
-                            ),
-                          ]
-                        : null,
-                  ),
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 200),
-                    child: isSelected
-                        ? const Icon(
-                            Icons.check,
-                            key: ValueKey('check'),
-                            color: Colors.white,
-                            size: 24,
-                          )
-                        : const SizedBox.shrink(key: ValueKey('empty')),
-                  ),
+                    // Verified badge for gold color
+                    if (isGold && !isLocked)
+                      const Positioned(
+                        top: -4,
+                        right: -4,
+                        child: SimpleVerifiedBadge(size: 14, animate: false),
+                      ),
+                  ],
                 ),
               ),
             ),

@@ -28,6 +28,9 @@ final dashboardEditModeProvider =
 class DashboardWidgetsNotifier extends Notifier<List<DashboardWidgetConfig>> {
   static const String _storageKey = 'dashboard_widgets';
 
+  /// Maximum number of widgets allowed on the dashboard
+  static const int maxWidgets = 20;
+
   @override
   List<DashboardWidgetConfig> build() {
     _loadWidgets();
@@ -96,6 +99,7 @@ class DashboardWidgetsNotifier extends Notifier<List<DashboardWidgetConfig>> {
   }
 
   void addWidget(DashboardWidgetType type) {
+    if (state.length >= maxWidgets) return; // Limit reached
     final info = WidgetRegistry.getInfo(type);
     final newWidget = DashboardWidgetConfig(
       id: '${type.name}_${DateTime.now().millisecondsSinceEpoch}',
@@ -109,6 +113,7 @@ class DashboardWidgetsNotifier extends Notifier<List<DashboardWidgetConfig>> {
 
   /// Add a custom widget configuration (for schema-based widgets)
   void addCustomWidget(DashboardWidgetConfig config) {
+    if (state.length >= maxWidgets) return; // Limit reached
     final newWidget = config.copyWith(
       id: 'custom_${DateTime.now().millisecondsSinceEpoch}',
       order: state.length,

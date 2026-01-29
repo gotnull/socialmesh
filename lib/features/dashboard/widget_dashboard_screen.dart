@@ -8,6 +8,7 @@ import '../../core/widgets/gradient_border_container.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../providers/help_providers.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../../utils/snackbar.dart';
 import '../navigation/main_shell.dart';
 import '../widget_builder/storage/widget_storage_service.dart';
 import '../widget_builder/wizard/widget_wizard_screen.dart';
@@ -750,9 +751,25 @@ class _AddWidgetSheet extends ConsumerWidget {
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            'Tap to add or remove widgets from your dashboard',
-            style: TextStyle(fontSize: 13, color: context.textSecondary),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Tap to add or remove widgets from your dashboard',
+                  style: TextStyle(fontSize: 13, color: context.textSecondary),
+                ),
+              ),
+              Text(
+                '${currentConfigs.length}/${DashboardWidgetsNotifier.maxWidgets}',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: currentConfigs.length >= DashboardWidgetsNotifier.maxWidgets
+                      ? AppTheme.errorRed
+                      : context.textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 16),
@@ -800,6 +817,11 @@ class _AddWidgetSheet extends ConsumerWidget {
                       );
                       widgetsNotifier.removeWidget(config.id);
                     } else {
+                      // Check limit before adding
+                      if (currentConfigs.length >= DashboardWidgetsNotifier.maxWidgets) {
+                        showErrorSnackBar(context, 'Widget limit reached (${DashboardWidgetsNotifier.maxWidgets} max)');
+                        return;
+                      }
                       widgetsNotifier.addWidget(type);
                     }
                   },
