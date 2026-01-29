@@ -2582,49 +2582,29 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
                     ),
                     SizedBox(width: 8),
                     // QR Code button
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => _showNodeQrCode(context, node),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          side: BorderSide(color: context.border),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        icon: Icon(Icons.qr_code, size: 20),
-                        label: const Text(
-                          'QR Code',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                    IconButton(
+                      onPressed: () => _showNodeQrCode(context, node),
+                      icon: Icon(
+                        Icons.qr_code,
+                        color: context.textSecondary,
+                        size: 22,
                       ),
+                      tooltip: 'QR Code',
+                      padding: const EdgeInsets.all(12),
+                      constraints: const BoxConstraints(),
                     ),
                     SizedBox(width: 8),
                     // Message button
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () => _sendDirectMessage(context, node),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: context.accentColor,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        icon: Icon(Icons.message, size: 20),
-                        label: const Text(
-                          'Message',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                    IconButton(
+                      onPressed: () => _sendDirectMessage(context, node),
+                      icon: Icon(
+                        Icons.message,
+                        color: context.textSecondary,
+                        size: 22,
                       ),
+                      tooltip: 'QR Code',
+                      padding: const EdgeInsets.all(12),
+                      constraints: const BoxConstraints(),
                     ),
                   ],
                 ),
