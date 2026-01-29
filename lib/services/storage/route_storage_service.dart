@@ -62,7 +62,7 @@ class RouteStorageService {
   /// Get all saved routes
   Future<List<Route>> getRoutes() async {
     if (_db == null) await init();
-    
+
     final List<Map<String, dynamic>> maps = await _db!.query(
       _routesTable,
       orderBy: 'created_at DESC',
@@ -73,7 +73,9 @@ class RouteStorageService {
         id: map['id'] as String,
         name: map['name'] as String,
         notes: map['notes'] as String?,
-        createdAt: DateTime.fromMillisecondsSinceEpoch(map['created_at'] as int),
+        createdAt: DateTime.fromMillisecondsSinceEpoch(
+          map['created_at'] as int,
+        ),
         endedAt: map['ended_at'] != null
             ? DateTime.fromMillisecondsSinceEpoch(map['ended_at'] as int)
             : null,
@@ -88,29 +90,21 @@ class RouteStorageService {
   Future<void> saveRoute(Route route) async {
     if (_db == null) await init();
 
-    await _db!.insert(
-      _routesTable,
-      {
-        'id': route.id,
-        'name': route.name,
-        'notes': route.notes,
-        'created_at': route.createdAt.millisecondsSinceEpoch,
-        'ended_at': route.endedAt?.millisecondsSinceEpoch,
-        'locations': jsonEncode(route.locations.map((l) => l.toJson()).toList()),
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await _db!.insert(_routesTable, {
+      'id': route.id,
+      'name': route.name,
+      'notes': route.notes,
+      'created_at': route.createdAt.millisecondsSinceEpoch,
+      'ended_at': route.endedAt?.millisecondsSinceEpoch,
+      'locations': jsonEncode(route.locations.map((l) => l.toJson()).toList()),
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   /// Delete a route
   Future<void> deleteRoute(String routeId) async {
     if (_db == null) await init();
 
-    await _db!.delete(
-      _routesTable,
-      where: 'id = ?',
-      whereArgs: [routeId],
-    );
+    await _db!.delete(_routesTable, where: 'id = ?', whereArgs: [routeId]);
   }
 
   /// Clear all routes
@@ -141,20 +135,12 @@ class RouteStorageService {
     if (_db == null) await init();
 
     if (route == null) {
-      await _db!.delete(
-        _activeRouteKey,
-        where: 'id = ?',
-        whereArgs: [1],
-      );
+      await _db!.delete(_activeRouteKey, where: 'id = ?', whereArgs: [1]);
     } else {
-      await _db!.insert(
-        _activeRouteKey,
-        {
-          'id': 1,
-          'route_data': jsonEncode(route.toJson()),
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      await _db!.insert(_activeRouteKey, {
+        'id': 1,
+        'route_data': jsonEncode(route.toJson()),
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
     }
   }
 

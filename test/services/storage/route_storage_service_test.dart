@@ -5,7 +5,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  
+
   late RouteStorageService service;
 
   setUpAll(() {

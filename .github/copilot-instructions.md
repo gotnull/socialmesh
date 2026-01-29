@@ -1,11 +1,13 @@
 # Socialmesh - AI Coding Agent Instructions
 
 ## Project Overview
+
 Socialmesh is a Flutter Meshtastic companion app (iOS/Android) for mesh radio communication via BLE and USB. Works fully offline - Firebase is optional for cloud sync, widget marketplace, and profile sharing.
 
 ## Architecture
 
 ### Key Layers & Data Flow
+
 ```
 BleTransport/UsbTransport (raw bytes)
     ↓
@@ -21,16 +23,19 @@ UI (ref.watch for reactive rebuilds)
 **Critical**: `requiresFraming` property on `DeviceTransport` - BLE sends raw protobufs, USB/Serial needs packet framing
 
 ### Core Files
+
 - `lib/core/transport.dart` - Abstract transport interface (`DeviceTransport`)
 - `lib/services/protocol/protocol_service.dart` - Meshtastic protocol implementation
 - `lib/providers/app_providers.dart` - Central Riverpod state (3387 lines)
 - `lib/features/` - Feature modules (32+ features: messaging, nodes, map, automations, device, settings, signals, social, etc.)
 
 ### Generated Protobufs
+
 ```bash
 ./scripts/generate_protos.sh          # Regenerate from existing protos
 ./scripts/generate_protos.sh update   # Update from upstream meshtastic/protobufs
 ```
+
 Output: `lib/generated/meshtastic/*.pb.dart` - excluded from analysis in `analysis_options.yaml`
 
 ## Riverpod 3.x Patterns (CRITICAL)
@@ -38,6 +43,7 @@ Output: `lib/generated/meshtastic/*.pb.dart` - excluded from analysis in `analys
 **NEVER use Riverpod 2.x APIs**: ❌ `StateNotifier`, `StateNotifierProvider`, `StateProvider`, `ChangeNotifierProvider`
 
 ### Correct Patterns
+
 ```dart
 // Synchronous state
 class MyNotifier extends Notifier<MyState> {
@@ -74,7 +80,9 @@ final itemProvider = Provider.family<Item?, String>((ref, id) {
 **Usage**: `ref.watch()` in build methods, `ref.read()` in callbacks, `ref.listen()` for side effects
 
 ## Config Screen Pattern (Device Settings)
+
 All device config screens in `lib/features/device/` MUST follow this pattern:
+
 ```dart
 class _ConfigScreenState extends ConsumerState<ConfigScreen> {
   bool _isLoading = true;
@@ -101,18 +109,23 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
   }
 }
 ```
+
 Verified by `test/codebase_audit_test.dart`
 
 ## Automation System
+
 `AutomationEngine` (`lib/features/automations/automation_engine.dart`) with hysteresis logic:
+
 - **Triggers**: `nodeOnline`, `nodeOffline`, `batteryLow` (hysteresis prevents duplicate alerts), `messageReceived`, `geofenceEnter/Exit`, `silentNode`
 - **Actions**: `sendMessage`, `playSound`, `showNotification`, `triggerIfttt`, `openUrl`
-- **Example**: Battery low only fires on threshold *crossing* (e.g., 30%→20%), resets when >25%
+- **Example**: Battery low only fires on threshold _crossing_ (e.g., 30%→20%), resets when >25%
 
 ## Firebase (Optional - Graceful Degradation)
+
 `main.dart` initializes Firebase in background with timeout - app is fully functional offline.
 
 ### Firestore Collections
+
 - `users/{uid}`, `profiles/{uid}` - User data (split: private/public)
 - `widgets/{id}` - Widget marketplace
 - `shopProducts/{id}` - Device catalog
@@ -123,12 +136,14 @@ Deploy functions: `cd functions && firebase deploy --only functions`
 ## Code Quality (Zero Tolerance)
 
 ### Mandatory Checks
+
 ```bash
 flutter analyze                              # Must have ZERO issues
 flutter test test/codebase_audit_test.dart   # All audits must pass
 ```
 
 ### Banned Practices
+
 - ❌ `TODO`, `FIXME`, `HACK` comments
 - ❌ `// ignore:` or `// noinspection` (except in generated files)
 - ❌ Unimplemented stubs or empty methods
@@ -138,7 +153,9 @@ flutter test test/codebase_audit_test.dart   # All audits must pass
 **Critical**: If you cannot fully implement a feature, DO NOT ADD IT. Every button/action must work completely.
 
 ## Logging
+
 `lib/core/logging.dart` - category-based logging controlled by `.env`:
+
 ```dart
 AppLogging.ble('BLE connected');           // BLE_LOGGING_ENABLED
 AppLogging.protocol('Parsed packet');      // PROTOCOL_LOGGING_ENABLED
@@ -146,17 +163,20 @@ AppLogging.automations('Triggered rule');  // AUTOMATIONS_LOGGING_ENABLED
 ```
 
 ## Code Reuse (Search Before Creating)
+
 - `lib/core/widgets/` - 40+ shared widgets (`NodeAvatar`, `AppBottomSheet`, `InfoTable`, `AnimatedGradientBackground`)
 - `lib/utils/` - Utilities (encoding, permissions, snackbar, validation, text_sanitizer)
 - Feature `widgets/` subdirectories - check for existing components
 
 ## UI Conventions
+
 - **Spacing**: 8dp grid, button padding 16v×24h
 - **Buttons**: Filled (primary), Outlined (secondary) - primary actions on right in dialogs
 - **Theme**: `lib/core/theme.dart` - use `AccentColors.cyan/purple/pink` for accents, `SemanticColors` for meanings
 - **Style**: Sci-fi aesthetic with glowing effects, animations
 
 ## Mesh Observer Backend
+
 `mesh-observer/` - Node.js/TypeScript service consuming Meshtastic MQTT:
 
 ```bash
@@ -173,12 +193,14 @@ railway up       # Deploy to Railway (persistent SQLite at /app/data)
 **App is now LIVE** - database schema changes MUST use proper SQLite migrations:
 
 ### Migration Rules
+
 1. **Never** alter existing tables in `_createTables()` - only for new installations
 2. **Always** increment database version when changing schema
 3. **Always** provide migration path in `onUpgrade` callback
 4. **Test** migration from previous version before deploying
 
 ### Migration Pattern
+
 ```dart
 _db = await openDatabase(
   dbPath,
@@ -200,6 +222,7 @@ _db = await openDatabase(
 ```
 
 ### Existing Databases
+
 - **signals.db** (SignalService) - v6
 - **packet_dedupe.db** (MeshPacketDedupeStore) - v1
 - **routes.db** (RouteStorageService) - v1
@@ -207,6 +230,7 @@ _db = await openDatabase(
 ⚠️ **Breaking changes require data migration or user warning** - never lose user data!
 
 ## Development Restrictions
+
 - ❌ Never run `flutter run` (app execution forbidden)
 - ❌ Never commit or push to git
 - ✅ Always verify with `flutter analyze` and `flutter test`
