@@ -23,7 +23,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  testWidgets('Region screen pops after region confirmation', (
+  testWidgets('Region selection applies region and handles reboot cycle', (
     tester,
   ) async {
     final fakeProtocol = _FakeRegionProtocolService();
@@ -53,13 +53,14 @@ void main() {
       ),
     );
 
-    final observer = _TestNavigatorObserver();
-
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
         child: MaterialApp(
-          navigatorObservers: [observer],
+          // Provide routes so navigation doesn't crash
+          routes: {
+            '/main': (context) => const Scaffold(body: Text('Main')),
+          },
           home: Builder(
             builder: (context) {
               return Center(
@@ -97,36 +98,70 @@ void main() {
     await tester.tap(find.widgetWithText(ElevatedButton, 'Save'));
     await tester.pump();
 
-    // Wait for setRegion to be called
-    await fakeProtocol.regionSetCompleter.future;
+    // A confirmation dialog should appear
+    expect(find.text('Apply Region'), findsOneWidget);
+    expect(find.text('Continue'), findsOneWidget);
 
-    // Emit region confirmation - this completes _awaitRegionConfirmation
-    fakeProtocol.emitRegion(config_pbenum.Config_LoRaConfig_RegionCode.US);
+    // Tap Continue in the dialog
+    await tester.tap(find.text('Continue'));
+    await tester.pump();
 
-    // Use runAsync to process real async continuations:
-    // 1. Stream event propagates to listener
-    // 2. Completer completes in _awaitRegionConfirmation
-    // 3. applyRegion future completes
-    // 4. _saveRegion continuation runs (setRegionConfigured + Navigator.pop)
-    await tester.runAsync(() => Future<void>.delayed(Duration.zero));
-
-    // Pump frames for Navigator.pop animation
+    // For non-initial setup, the screen immediately navigates to /main
+    // before applying the region
     for (var i = 0; i < 10; i++) {
-      await tester.pump(const Duration(milliseconds: 16));
+      await tester.pump(const Duration(milliseconds: 50));
     }
 
-    expect(observer.didPopRoute, isTrue);
+    // Should have navigated to main screen
+    expect(find.text('Main'), findsOneWidget);
+
+    // Wait for setRegion to be called in the background
+    await fakeProtocol.regionSetCompleter.future;
+
+    // Now simulate the disconnect/reconnect cycle that happens during region apply
+    // First, simulate disconnect (device reboot)
+    container.read(deviceConnectionProvider.notifier).setTestState(
+      DeviceConnectionState2(
+        state: DevicePairingState.disconnected,
+        device: DeviceInfo(
+          id: 'device-alpha',
+          name: 'Region Device',
+          type: TransportType.ble,
+        ),
+        connectionSessionId: 1,
+        lastConnectedAt: DateTime.now(),
+      ),
+    );
+
+    // Pump to process disconnect
+    await tester.pump();
+
+    // Simulate reconnect after device reboot
+    container.read(deviceConnectionProvider.notifier).setTestState(
+      DeviceConnectionState2(
+        state: DevicePairingState.connected,
+        device: DeviceInfo(
+          id: 'device-alpha',
+          name: 'Region Device',
+          type: TransportType.ble,
+        ),
+        connectionSessionId: 2, // New session after reconnect
+        lastConnectedAt: DateTime.now(),
+      ),
+    );
+
+    // Pump to process reconnect
+    await tester.pump();
+
+    // Use runAsync to allow the applyRegion future to complete
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 100)));
+
+    // Verify region was applied
+    expect(
+      container.read(regionConfigProvider).applyStatus,
+      RegionApplyStatus.applied,
+    );
   });
-}
-
-class _TestNavigatorObserver extends NavigatorObserver {
-  bool didPopRoute = false;
-
-  @override
-  void didPop(Route route, Route? previousRoute) {
-    didPopRoute = true;
-    super.didPop(route, previousRoute);
-  }
 }
 
 class _FakeRegionProtocolService extends ProtocolService {
@@ -156,7 +191,8 @@ class _FakeRegionProtocolService extends ProtocolService {
   Future<void> setRegion(
     config_pbenum.Config_LoRaConfig_RegionCode region,
   ) async {
-    _currentRegion = region;
+    // Don't immediately set _currentRegion - the real flow waits for device reboot
+    // Region will be set when emitRegion() is called manually in tests
     if (!regionSetCompleter.isCompleted) {
       regionSetCompleter.complete();
     }

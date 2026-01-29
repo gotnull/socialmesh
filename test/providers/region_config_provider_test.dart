@@ -95,6 +95,9 @@ void main() {
       ),
     );
 
+    // Pump event loop to process reconnection
+    await Future<void>.delayed(Duration.zero);
+
     // Wait for the region apply to complete
     await regionFuture;
 
@@ -187,6 +190,9 @@ void main() {
         lastConnectedAt: DateTime.now().add(const Duration(seconds: 1)),
       ),
     );
+
+    // Pump event loop to process reconnection
+    await Future<void>.delayed(Duration.zero);
 
     await regionFuture;
 
@@ -320,7 +326,8 @@ class _FakeRegionProtocolService extends ProtocolService {
   Future<void> setRegion(
     config_pbenum.Config_LoRaConfig_RegionCode region,
   ) async {
-    _currentRegion = region;
+    // Don't immediately set _currentRegion - the real flow waits for device reboot
+    // Region will be set when emitRegion() is called manually in tests
   }
 
   void emitRegion(config_pbenum.Config_LoRaConfig_RegionCode region) {

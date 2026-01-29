@@ -16,12 +16,12 @@ void main() {
       expect(AccentColors.gradients.length, AccentColors.all.length);
     });
 
-    test('each gradient has exactly 3 colors', () {
+    test('each gradient has exactly 8 colors', () {
       for (int i = 0; i < AccentColors.gradients.length; i++) {
         expect(
           AccentColors.gradients[i].length,
-          3,
-          reason: 'Gradient at index $i should have 3 colors',
+          8,
+          reason: 'Gradient at index $i should have 8 colors',
         );
       }
     });
