@@ -37,38 +37,38 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
             ? _buildEmptyState(theme)
             : CustomScrollView(
                 slivers: [
-                // Summary section
-                SliverToBoxAdapter(
-                  child: _buildSummarySection(context, theme, summary),
-                ),
-                // Activity chart
-                SliverToBoxAdapter(
-                  child: _buildActivityChart(theme, presences),
-                ),
-                // Node list header
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
-                    child: Text(
-                      'All Nodes',
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        color: context.textSecondary,
-                        fontWeight: FontWeight.w600,
+                  // Summary section
+                  SliverToBoxAdapter(
+                    child: _buildSummarySection(context, theme, summary),
+                  ),
+                  // Activity chart
+                  SliverToBoxAdapter(
+                    child: _buildActivityChart(theme, presences),
+                  ),
+                  // Node list header
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+                      child: Text(
+                        'All Nodes',
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: context.textSecondary,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                // Node list
-                SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) =>
-                        _buildPresenceCard(theme, presences[index]),
-                    childCount: presences.length,
+                  // Node list
+                  SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) =>
+                          _buildPresenceCard(theme, presences[index]),
+                      childCount: presences.length,
+                    ),
                   ),
-                ),
-                const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
-              ],
-            ),
+                  const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
+                ],
+              ),
       ),
     );
   }

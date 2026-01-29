@@ -24,53 +24,53 @@ class MeshHealthDashboard extends ConsumerWidget {
       stepKeys: const {},
       child: Scaffold(
         backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.background,
-        title: Text(
-          'Mesh Health',
-          style: TextStyle(color: context.textPrimary),
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(
-              healthState.isMonitoring ? Icons.pause : Icons.play_arrow,
-              color: healthState.isMonitoring
-                  ? const Color(0xFF00E5FF)
-                  : context.textSecondary,
+        appBar: AppBar(
+          backgroundColor: context.background,
+          title: Text(
+            'Mesh Health',
+            style: TextStyle(color: context.textPrimary),
+          ),
+          actions: [
+            IconButton(
+              icon: Icon(
+                healthState.isMonitoring ? Icons.pause : Icons.play_arrow,
+                color: healthState.isMonitoring
+                    ? const Color(0xFF00E5FF)
+                    : context.textSecondary,
+              ),
+              tooltip: healthState.isMonitoring ? 'Pause' : 'Resume',
+              onPressed: () {
+                ref.read(meshHealthProvider.notifier).toggleMonitoring();
+              },
             ),
-            tooltip: healthState.isMonitoring ? 'Pause' : 'Resume',
-            onPressed: () {
-              ref.read(meshHealthProvider.notifier).toggleMonitoring();
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Reset Data',
-            onPressed: () {
-              ref.read(meshHealthProvider.notifier).reset();
-            },
-          ),
-          IcoHelpAppBarButton(topicId: 'mesh_health_overview'),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildStatusHeader(healthState),
-            const SizedBox(height: 16),
-            _buildMetricsRow(healthState),
-            const SizedBox(height: 16),
-            _buildUtilizationChart(healthState),
-            const SizedBox(height: 16),
-            _buildIssuesSection(healthState),
-            const SizedBox(height: 16),
-            _buildTopContributors(healthState),
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              tooltip: 'Reset Data',
+              onPressed: () {
+                ref.read(meshHealthProvider.notifier).reset();
+              },
+            ),
+            IcoHelpAppBarButton(topicId: 'mesh_health_overview'),
           ],
         ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildStatusHeader(healthState),
+              const SizedBox(height: 16),
+              _buildMetricsRow(healthState),
+              const SizedBox(height: 16),
+              _buildUtilizationChart(healthState),
+              const SizedBox(height: 16),
+              _buildIssuesSection(healthState),
+              const SizedBox(height: 16),
+              _buildTopContributors(healthState),
+            ],
+          ),
+        ),
       ),
-    ),
     );
   }
 
