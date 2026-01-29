@@ -1,7 +1,7 @@
 import 'dart:io';
 
+import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../core/logging.dart';
 
 /// Permission helper for managing app permissions
@@ -100,17 +100,14 @@ class PermissionHelper {
   /// Open Bluetooth settings directly.
   /// Returns true if settings were opened successfully.
   /// iOS: Opens app settings (Apple doesn't provide documented API for Bluetooth settings)
-  /// Android: Opens Bluetooth settings directly
+  /// Android: Opens Bluetooth settings directly using native Intent
   Future<bool> openBluetoothSettings() async {
     try {
       if (Platform.isAndroid) {
-        // Android supports direct Bluetooth settings intent
-        final bluetoothUrl = Uri.parse('android.settings.BLUETOOTH_SETTINGS');
-        final launched = await launchUrl(
-          bluetoothUrl,
-          mode: LaunchMode.externalApplication,
-        );
-        return launched;
+        // Android: Use platform channel to open Bluetooth settings via Intent
+        const platform = MethodChannel('com.socialmesh/settings');
+        final result = await platform.invokeMethod('openBluetoothSettings');
+        return result == true;
       } else if (Platform.isIOS) {
         // iOS doesn't provide a documented way to open Bluetooth settings
         // Open the app's settings page instead (official API)
