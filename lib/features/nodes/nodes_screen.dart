@@ -1217,16 +1217,17 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      height: 40,
       color: context.background,
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
           Text(
-            title,
+            title.toUpperCase(),
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: context.accentColor,
+              color: context.textSecondary,
               letterSpacing: 0.5,
             ),
           ),
@@ -1234,7 +1235,7 @@ class _SectionHeader extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: context.accentColor.withValues(alpha: 0.15),
+              color: context.card,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
@@ -1242,7 +1243,7 @@ class _SectionHeader extends StatelessWidget {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
-                color: context.accentColor,
+                color: context.textTertiary,
               ),
             ),
           ),
