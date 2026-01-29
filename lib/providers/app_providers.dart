@@ -163,7 +163,8 @@ final settingsRefreshProvider = NotifierProvider<SettingsRefreshNotifier, int>(
 /// App version info from pubspec.yaml
 final appVersionProvider = FutureProvider<String>((ref) async {
   final packageInfo = await PackageInfo.fromPlatform();
-  return '${packageInfo.version}+${packageInfo.buildNumber}';
+  // Just show version - build number is omitted since we use semantic versioning only
+  return packageInfo.version;
 });
 
 /// Cached settings service instance

@@ -2782,11 +2782,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   final appVersion = ref.watch(
                                     appVersionProvider,
                                   );
-                                  final versionString = appVersion.when(
-                                    data: (v) =>
-                                        'Meshtastic companion app • Version $v',
-                                    loading: () => 'Meshtastic companion app',
-                                    error: (_, _) => 'Meshtastic companion app',
+                                  final versionString = appVersion.maybeWhen(
+                                    data: (v) => 'Version $v',
+                                    orElse: () => null,
                                   );
                                   return SecretGestureDetector(
                                     pattern: SecretGesturePattern.sevenTaps,

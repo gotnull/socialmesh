@@ -28,9 +28,10 @@ OUTPUT_DIR = PROJECT_ROOT / "ios" / "Runner" / "Assets.xcassets" / "LaunchImage.
 
 
 def get_version_from_pubspec() -> str:
-    """Extract full version from pubspec.yaml (including build number)."""
+    """Extract version from pubspec.yaml (with or without build number)."""
     content = PUBSPEC_FILE.read_text()
-    match = re.search(r'^version:\s*(\d+\.\d+\.\d+\+\d+)', content, re.MULTILINE)
+    # Match version with optional build number (e.g., 1.11.1 or 1.11.1+89)
+    match = re.search(r'^version:\s*(\d+\.\d+\.\d+(?:\+\d+)?)', content, re.MULTILINE)
     if match:
         return match.group(1)
     return "1.0.0"
