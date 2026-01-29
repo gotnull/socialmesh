@@ -236,6 +236,14 @@ class SettingsService {
       _preferences.getInt('signal_location_radius_meters') ??
       kDefaultSignalLocationRadiusMeters;
 
+  // Maximum number of images allowed per signal (1-4)
+  Future<void> setMaxSignalImages(int count) async {
+    final normalized = count.clamp(1, 4);
+    await _preferences.setInt('max_signal_images', normalized);
+  }
+
+  int get maxSignalImages => _preferences.getInt('max_signal_images') ?? 4;
+
   // Notification: Vibration
   Future<void> setNotificationVibrationEnabled(bool enabled) async {
     await _preferences.setBool('notification_vibration_enabled', enabled);
@@ -272,8 +280,7 @@ class SettingsService {
     await _preferences.setInt('map_tile_style_index', index);
   }
 
-  int get mapTileStyleIndex =>
-      _preferences.getInt('map_tile_style_index') ?? 0;
+  int get mapTileStyleIndex => _preferences.getInt('map_tile_style_index') ?? 0;
 
   // 3D Animations Enabled
   Future<void> setAnimations3DEnabled(bool enabled) async {

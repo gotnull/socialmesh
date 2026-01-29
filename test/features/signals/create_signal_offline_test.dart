@@ -19,7 +19,7 @@ class FakeSignalService extends SignalService {
     int ttlMinutes = SignalTTL.defaultTTL,
     PostLocation? location,
     int? meshNodeId,
-    String? imageLocalPath,
+    List<String>? imageLocalPaths,
     PostAuthorSnapshot? authorSnapshot,
     bool useCloud = true,
   }) async {

@@ -441,7 +441,8 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
   /// Clear the "newly added" flag for a signal after its entrance animation.
   void clearNewlyAdded(String signalId) {
     if (!state.newlyAddedSignalIds.contains(signalId)) return;
-    final newSet = Set<String>.from(state.newlyAddedSignalIds)..remove(signalId);
+    final newSet = Set<String>.from(state.newlyAddedSignalIds)
+      ..remove(signalId);
     state = state.copyWith(newlyAddedSignalIds: newSet);
   }
 
@@ -484,8 +485,8 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
         final reason = signal.isExpired
             ? 'expired'
             : (signal.postMode != PostMode.signal)
-                ? 'post_mode=${signal.postMode.name}'
-                : 'filtered';
+            ? 'post_mode=${signal.postMode.name}'
+            : 'filtered';
         AppLogging.signals(
           'REFRESH_EXCLUDE signalId=${signal.id} reason=$reason',
         );
@@ -544,7 +545,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
     required String content,
     int ttlMinutes = SignalTTL.defaultTTL,
     PostLocation? location,
-    String? imageLocalPath,
+    List<String>? imageLocalPaths,
     bool? useCloud,
   }) async {
     final service = ref.read(signalServiceProvider);
@@ -555,8 +556,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
         .read(signalConnectivityProvider)
         .canUseCloud;
     final meshOnlyDebug = ref.read(meshOnlyDebugModeProvider);
-    final canUseCloud =
-        (useCloud ?? detectedCanUseCloud) && !meshOnlyDebug;
+    final canUseCloud = (useCloud ?? detectedCanUseCloud) && !meshOnlyDebug;
     final safeLocation = LocationPrivacy.coarsenLocation(
       location,
       radiusMeters: settings.signalLocationRadiusMeters,
@@ -564,7 +564,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
 
     AppLogging.signals(
       'Creating new signal: ttl=${ttlMinutes}m, hasLocation=${safeLocation != null}, '
-      'hasImage=${imageLocalPath != null}, canUseCloud=$canUseCloud '
+      'imageCount=${imageLocalPaths?.length ?? 0}, canUseCloud=$canUseCloud '
       'meshOnlyDebug=$meshOnlyDebug',
     );
 
@@ -574,7 +574,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
         ttlMinutes: ttlMinutes,
         location: safeLocation,
         meshNodeId: myNodeNum,
-        imageLocalPath: imageLocalPath,
+        imageLocalPaths: imageLocalPaths ?? [],
         authorSnapshot: profile?.isSynced == true
             ? PostAuthorSnapshot(
                 displayName: profile!.displayName,
@@ -727,8 +727,10 @@ final isSignalFadingProvider = Provider.family<bool, String>((ref, signalId) {
 });
 
 /// Provider to check if a signal was just created (for entrance animation).
-final isSignalNewlyAddedProvider =
-    Provider.family<bool, String>((ref, signalId) {
+final isSignalNewlyAddedProvider = Provider.family<bool, String>((
+  ref,
+  signalId,
+) {
   final feedState = ref.watch(signalFeedProvider);
   return feedState.newlyAddedSignalIds.contains(signalId);
 });
@@ -843,7 +845,9 @@ class CreateSignalNotifier extends Notifier<CreateSignalState> {
         content: state.content.trim(),
         ttlMinutes: state.ttlMinutes,
         location: state.location,
-        imageLocalPath: state.imageLocalPath,
+        imageLocalPaths: state.imageLocalPath != null
+            ? [state.imageLocalPath!]
+            : [],
       );
 
       if (signal != null) {

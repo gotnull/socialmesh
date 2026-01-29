@@ -9,13 +9,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:photo_manager/photo_manager.dart';
 
 import '../../../core/logging.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/content_moderation_warning.dart';
 import '../../../core/widgets/gradient_border_container.dart';
+import '../../../core/widgets/local_image_gallery.dart';
 import '../../../models/social.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/signal_providers.dart';
@@ -55,8 +55,11 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
   bool _cloudBannerHighlight = false;
   int _ttlMinutes = SignalTTL.defaultTTL;
   PostLocation? _location;
-  String? _imageLocalPath;
-  bool _imageHiddenDueToOffline = false; // Track if image was hidden due to going offline
+  final List<String> _imageLocalPaths = [];
+  final Set<int> _removingImageIndices =
+      {}; // Track which images are animating out
+  bool _imageHiddenDueToOffline =
+      false; // Track if image was hidden due to going offline
 
   final ImagePicker _imagePicker = ImagePicker();
   late final AnimationController _bannerShakeController;
@@ -98,13 +101,13 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
       parent: _entryAnimationController,
       curve: Curves.easeOut,
     );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.1),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _entryAnimationController,
-      curve: Curves.easeOutCubic,
-    ));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _entryAnimationController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
     _entryAnimationController.forward();
 
     // Image add/remove animations
@@ -151,7 +154,8 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
 
   Future<void> _handleClose() async {
     _dismissKeyboard();
-    if (_contentController.text.trim().isNotEmpty || _imageLocalPath != null) {
+    if (_contentController.text.trim().isNotEmpty ||
+        _imageLocalPaths.isNotEmpty) {
       final shouldDiscard = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
@@ -201,12 +205,12 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
       return;
     }
 
-    // If an image is still attached but cloud features are not available,
-    // remove the image and refuse to send with only an image.
-    if (_imageLocalPath != null &&
+    // If images are still attached but cloud features are not available,
+    // remove all images and refuse to send with only images.
+    if (_imageLocalPaths.isNotEmpty &&
         (!connectivity.canUseCloud || meshOnlyDebug)) {
-      setState(() => _imageLocalPath = null);
-      showErrorSnackBar(context, 'Images require internet. Image removed.');
+      setState(() => _imageLocalPaths.clear());
+      showErrorSnackBar(context, 'Images require internet. Images removed.');
       return;
     }
 
@@ -318,7 +322,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
             content: _contentController.text.trim(),
             ttlMinutes: _ttlMinutes,
             location: _location,
-            imageLocalPath: _imageLocalPath,
+            imageLocalPaths: _imageLocalPaths,
             // decide cloud usage at time of send
             // note: if offline this will be false
             useCloud: canUseCloudNow,
@@ -359,6 +363,18 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
       return;
     }
 
+    // Check admin-configured limit
+    final settings = await ref.read(settingsServiceProvider.future);
+    final maxImages = settings.maxSignalImages;
+    final remainingSlots = maxImages - _imageLocalPaths.length;
+
+    if (remainingSlots <= 0) {
+      if (mounted) {
+        showErrorSnackBar(context, 'Maximum of $maxImages images allowed');
+      }
+      return;
+    }
+
     // Show media picker bottom sheet
     if (!mounted) return;
     final result = await showModalBottomSheet<_MediaPickerResult?>(
@@ -369,8 +385,10 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
     );
 
     if (result != null && mounted) {
+      List<String> newImagePaths = [];
+
       if (result.isCamera) {
-        // Use camera
+        // Use camera - single image
         if (!mounted) return;
 
         final pickedFile = await _imagePicker.pickImage(
@@ -379,188 +397,243 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
           maxHeight: 1920,
           imageQuality: 85,
         );
-        if (pickedFile != null && mounted) {
-          final validated = await _validateImage(pickedFile.path);
-          if (validated && mounted) {
-            setState(() => _imageLocalPath = pickedFile.path);
-            _imageAnimationController.forward(from: 0);
+        if (pickedFile != null) {
+          newImagePaths.add(pickedFile.path);
+        }
+      } else {
+        // Use gallery
+        if (!mounted) return;
+
+        if (remainingSlots == 1) {
+          // Single image picker for last slot
+          final pickedFile = await _imagePicker.pickImage(
+            source: ImageSource.gallery,
+            maxWidth: 1920,
+            maxHeight: 1920,
+            imageQuality: 85,
+          );
+          if (pickedFile != null) {
+            newImagePaths.add(pickedFile.path);
+          }
+        } else {
+          // Multi-select up to remaining slots
+          final pickedFiles = await _imagePicker.pickMultiImage(
+            maxWidth: 1920,
+            maxHeight: 1920,
+            imageQuality: 85,
+            limit: remainingSlots, // Respect admin-configured max
+          );
+
+          if (pickedFiles.isNotEmpty) {
+            newImagePaths.addAll(pickedFiles.map((f) => f.path));
           }
         }
-      } else if (result.asset != null) {
-        // Use selected asset from gallery
-        final file = await result.asset!.file;
-        if (file != null && mounted) {
-          final validated = await _validateImage(file.path);
-          if (validated && mounted) {
-            setState(() => _imageLocalPath = file.path);
-            _imageAnimationController.forward(from: 0);
+      }
+
+      // Batch validate all new images in parallel
+      if (newImagePaths.isNotEmpty && mounted) {
+        if (newImagePaths.length > 1) {
+          showInfoSnackBar(
+            context,
+            'Validating ${newImagePaths.length} images...',
+          );
+        }
+
+        final results = await _validateImagesInBatch(newImagePaths);
+
+        if (!mounted) return;
+
+        final passedCount = results.where((r) => r).length;
+        final failedCount = results.length - passedCount;
+
+        // Add images that passed validation
+        for (var i = 0; i < results.length; i++) {
+          if (results[i]) {
+            _imageLocalPaths.add(newImagePaths[i]);
           }
+        }
+
+        // Show feedback
+        if (failedCount > 0 && passedCount > 0) {
+          showErrorSnackBar(
+            context,
+            '$failedCount image(s) blocked, $passedCount added',
+          );
+        } else if (failedCount > 0) {
+          showErrorSnackBar(
+            context,
+            failedCount == 1
+                ? 'Image violates content guidelines and was blocked'
+                : '$failedCount images blocked by content guidelines',
+          );
+        } else if (passedCount > 0) {
+          // Only show success if no failures
+          if (passedCount > 1) {
+            showSuccessSnackBar(context, '$passedCount images added');
+          }
+        }
+
+        if (passedCount > 0) {
+          setState(() {}); // Trigger rebuild to show new images
+          _imageAnimationController.forward(from: 0);
         }
       }
     }
   }
 
-  /// Validate image through content moderation before accepting it.
-  /// Returns true if image passes validation, false otherwise.
-  Future<bool> _validateImage(String localPath) async {
+  /// Validate multiple images in parallel through content moderation.
+  /// Returns list of bools indicating which images passed validation.
+  /// Much faster than sequential validation for multiple images.
+  Future<List<bool>> _validateImagesInBatch(List<String> localPaths) async {
+    if (localPaths.isEmpty) return [];
+
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) {
-      // Can't validate without auth - allow image (will be validated on upload)
+      // Can't validate without auth - allow all images (will be validated on upload)
       AppLogging.signals(
-        '[CreateSignal] Skipping image validation: not authenticated',
+        '[CreateSignal] Skipping batch image validation: not authenticated',
       );
-      return true;
+      return List.filled(localPaths.length, true);
     }
 
     setState(() => _isValidatingImage = true);
 
     try {
-      final imageFile = File(localPath);
-      if (!await imageFile.exists()) {
-        AppLogging.signals('[CreateSignal] Image file not found: $localPath');
-        return false;
-      }
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
 
-      // Upload to temp location for moderation
-      final fileName =
-          'temp_${DateTime.now().millisecondsSinceEpoch}_${currentUser.uid}.jpg';
-      final ref = FirebaseStorage.instance
-          .ref()
-          .child('signal_images_temp')
-          .child(fileName);
-
-      // Add metadata with authorId for content moderation
-      final metadata = SettableMetadata(
-        contentType: 'image/jpeg',
-        customMetadata: {
-          'authorId': currentUser.uid,
-          'uploadedAt': DateTime.now().toIso8601String(),
-          'purpose': 'signal_validation',
-        },
-      );
-
+      // PHASE 1: PARALLEL UPLOAD - all images upload simultaneously
       AppLogging.signals(
-        '[CreateSignal] Uploading for validation: signal_images_temp/$fileName',
+        '[CreateSignal] Starting batch upload of ${localPaths.length} images',
       );
 
-      // Debug logging: current auth user and storage bucket
-      final debugUser = FirebaseAuth.instance.currentUser;
-      AppLogging.signals('[CreateSignal] currentUser uid=${debugUser?.uid}');
-      AppLogging.signals(
-        '[CreateSignal] storageBucket=${FirebaseStorage.instance.app.options.storageBucket}',
-      );
+      final uploadFutures = localPaths.asMap().entries.map((entry) async {
+        final index = entry.key;
+        final path = entry.value;
 
-      try {
-        await ref.putFile(imageFile, metadata);
-      } on FirebaseException catch (e) {
-        AppLogging.signals(
-          '[CreateSignal] FirebaseStorage error during putFile: code=${e.code}, message=${e.message}',
-        );
-        rethrow;
-      }
+        final imageFile = File(path);
+        if (!await imageFile.exists()) {
+          AppLogging.signals('[CreateSignal] Image $index not found: $path');
+          return null;
+        }
 
-      // Listen for moderation result from Firestore
-      final moderationDocId = 'post_${fileName.replaceAll('.jpg', '')}';
-      AppLogging.signals(
-        '[CreateSignal] Waiting for moderation result: content_moderation/$moderationDocId',
-      );
+        final fileName = 'temp_${timestamp}_${currentUser.uid}_$index.jpg';
+        final ref = FirebaseStorage.instance
+            .ref()
+            .child('signal_images_temp')
+            .child(fileName);
 
-      // Wait for moderation result with 10s timeout
-      final moderationSnapshot = await FirebaseFirestore.instance
-          .collection('content_moderation')
-          .doc(moderationDocId)
-          .snapshots()
-          .firstWhere(
-            (snapshot) => snapshot.exists && snapshot.data() != null,
-            orElse: () => throw TimeoutException('Moderation timeout'),
-          )
-          .timeout(
-            const Duration(seconds: 10),
-            onTimeout: () => throw TimeoutException('Moderation timeout'),
-          );
-
-      final moderationData = moderationSnapshot.data();
-      if (moderationData == null) {
-        throw Exception('No moderation result');
-      }
-
-      final result = moderationData['result'] as Map<String, dynamic>?;
-      final action = result?['action'] as String?;
-      final passed = result?['passed'] as bool? ?? false;
-
-      AppLogging.signals(
-        '[CreateSignal] Moderation result: action=$action, passed=$passed',
-      );
-
-      // Clean up moderation doc
-      try {
-        await FirebaseFirestore.instance
-            .collection('content_moderation')
-            .doc(moderationDocId)
-            .delete();
-      } catch (_) {
-        // Ignore cleanup errors
-      }
-
-      if (!passed || action == 'reject') {
-        // Image was rejected by moderation
-        AppLogging.signals(
-          '[CreateSignal] Image blocked by content moderation: ${result?['details']}',
+        final metadata = SettableMetadata(
+          contentType: 'image/jpeg',
+          customMetadata: {
+            'authorId': currentUser.uid,
+            'uploadedAt': DateTime.now().toIso8601String(),
+            'purpose': 'signal_validation_batch',
+            'batchIndex': index.toString(),
+            'batchSize': localPaths.length.toString(),
+          },
         );
 
-        // Delete temp file if it still exists
         try {
-          await ref.delete();
-        } catch (_) {
-          // Already deleted by function
-        }
-
-        if (mounted) {
-          showErrorSnackBar(
-            context,
-            'Image violates content guidelines and was blocked.',
+          await ref.putFile(imageFile, metadata);
+          AppLogging.signals(
+            '[CreateSignal] Uploaded image $index: signal_images_temp/$fileName',
           );
+          return fileName;
+        } on FirebaseException catch (e) {
+          AppLogging.signals(
+            '[CreateSignal] Upload error for image $index: ${e.code} - ${e.message}',
+          );
+          return null;
         }
-        return false;
-      }
+      });
 
-      // Image passed - clean up temp file
-      AppLogging.signals('[CreateSignal] Image passed moderation');
-      try {
-        await ref.delete();
-      } catch (_) {
-        // Ignore cleanup errors
-      }
-      return true;
+      final fileNames = await Future.wait(uploadFutures);
+
+      // PHASE 2: PARALLEL MODERATION - wait for all results simultaneously
+      AppLogging.signals(
+        '[CreateSignal] Waiting for ${fileNames.where((f) => f != null).length} moderation results',
+      );
+
+      final moderationFutures = fileNames.map((fileName) async {
+        if (fileName == null) return false; // Upload failed
+
+        final moderationDocId = 'post_${fileName.replaceAll('.jpg', '')}';
+
+        try {
+          final moderationSnapshot = await FirebaseFirestore.instance
+              .collection('content_moderation')
+              .doc(moderationDocId)
+              .snapshots()
+              .firstWhere(
+                (snapshot) => snapshot.exists && snapshot.data() != null,
+                orElse: () => throw TimeoutException('Moderation timeout'),
+              )
+              .timeout(
+                const Duration(seconds: 10),
+                onTimeout: () => throw TimeoutException('Moderation timeout'),
+              );
+
+          final moderationData = moderationSnapshot.data();
+          if (moderationData == null) {
+            AppLogging.signals(
+              '[CreateSignal] No moderation data for $moderationDocId',
+            );
+            return false;
+          }
+
+          final result = moderationData['result'] as Map<String, dynamic>?;
+          final action = result?['action'] as String?;
+          final passed = result?['passed'] as bool? ?? false;
+
+          AppLogging.signals(
+            '[CreateSignal] Moderation for $fileName: action=$action, passed=$passed',
+          );
+
+          // Cleanup moderation doc after reading result
+          await FirebaseFirestore.instance
+              .collection('content_moderation')
+              .doc(moderationDocId)
+              .delete();
+
+          return passed && action != 'reject';
+        } catch (e) {
+          AppLogging.signals(
+            '[CreateSignal] Moderation error for $fileName: $e',
+          );
+          return false;
+        }
+      });
+
+      final results = await Future.wait(moderationFutures);
+
+      // PHASE 3: PARALLEL CLEANUP - delete temp files
+      final cleanupFutures = fileNames
+          .where((fileName) => fileName != null)
+          .map((fileName) {
+            return FirebaseStorage.instance
+                .ref()
+                .child('signal_images_temp')
+                .child(fileName!)
+                .delete()
+                .catchError((_) {}); // Ignore errors
+          });
+
+      Future.wait(cleanupFutures).ignore();
+
+      final passedCount = results.where((r) => r).length;
+      final failedCount = results.length - passedCount;
+
+      AppLogging.signals(
+        '[CreateSignal] Batch validation complete: $passedCount passed, $failedCount failed',
+      );
+
+      return results;
     } catch (e) {
-      AppLogging.signals('[CreateSignal] Image validation error: $e');
-
-      // Check for specific error types
-      if (e is TimeoutException) {
-        if (mounted) {
-          showErrorSnackBar(
-            context,
-            'Image validation timed out. Please try again.',
-          );
-        }
-        return false;
-      }
-
-      if (e is FirebaseException && e.code == 'object-not-found') {
-        if (mounted) {
-          showErrorSnackBar(
-            context,
-            'Image violates content guidelines and was blocked.',
-          );
-        }
-        return false;
-      }
-
-      // Other errors - show generic error
+      AppLogging.signals('[CreateSignal] Batch validation error: $e');
       if (mounted) {
-        showErrorSnackBar(context, 'Failed to validate image');
+        showErrorSnackBar(context, 'Failed to validate images');
       }
-      return false;
+      return List.filled(localPaths.length, false);
     } finally {
       if (mounted) {
         setState(() => _isValidatingImage = false);
@@ -568,12 +641,19 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
     }
   }
 
-  void _removeImage() async {
-    // Animate out before removing
-    await _imageAnimationController.reverse();
+  void _removeImage(int index) async {
+    // Mark image as removing to trigger animation
+    setState(() {
+      _removingImageIndices.add(index);
+    });
+
+    // Wait for animation to complete
+    await Future.delayed(const Duration(milliseconds: 250));
+
     if (mounted) {
       setState(() {
-        _imageLocalPath = null;
+        _imageLocalPaths.removeAt(index);
+        _removingImageIndices.clear(); // Clear all removal states
       });
     }
   }
@@ -606,9 +686,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
             onAction: () {
               if (!context.mounted) return;
               Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const SignalSettingsScreen(),
-                ),
+                MaterialPageRoute(builder: (_) => const SignalSettingsScreen()),
               );
             },
           );
@@ -644,31 +722,272 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
     });
   }
 
-  void _showImagePreview() {
-    if (_imageLocalPath == null) return;
+  void _showImagePreview(int index) {
+    if (index < 0 || index >= _imageLocalPaths.length) return;
 
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => Scaffold(
-          backgroundColor: Colors.black,
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.close, color: Colors.white),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            title: const Text('Preview', style: TextStyle(color: Colors.white)),
-            centerTitle: true,
+    LocalImageGallery.show(
+      context,
+      imagePaths: _imageLocalPaths,
+      initialIndex: index,
+    );
+  }
+
+  Widget _buildImagesGrid() {
+    final imageCount = _imageLocalPaths.length;
+
+    // Single image - full width
+    if (imageCount == 1) {
+      return _buildSingleImageCard(0);
+    }
+
+    // Multiple images - grid layout
+    return Column(
+      children: [
+        // First row - always present
+        Row(
+          children: [
+            Expanded(child: _buildImageThumbnail(0)),
+            if (imageCount >= 2) ...[
+              const SizedBox(width: 8),
+              Expanded(child: _buildImageThumbnail(1)),
+            ],
+          ],
+        ),
+        // Second row - if 3 or 4 images
+        if (imageCount >= 3) ...[
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(child: _buildImageThumbnail(2)),
+              if (imageCount >= 4) ...[
+                const SizedBox(width: 8),
+                Expanded(child: _buildImageThumbnail(3)),
+              ],
+            ],
           ),
-          extendBodyBehindAppBar: true,
-          body: GestureDetector(
-            onTap: () => Navigator.of(context).pop(),
-            child: Center(
-              child: InteractiveViewer(
-                minScale: 0.5,
-                maxScale: 4.0,
-                child: Image.file(File(_imageLocalPath!), fit: BoxFit.contain),
+        ],
+        // Location info below grid if present
+        if (_location != null) ...[
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _InfoPill(
+                  icon: Icons.location_on,
+                  label: _location!.name ?? 'Current location',
+                ),
+              ),
+              const SizedBox(width: 8),
+              BouncyTap(
+                onTap: _isSubmitting ? null : _removeLocation,
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: context.card,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: context.border.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.close,
+                    size: 14,
+                    color: context.textTertiary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildSingleImageCard(int index) {
+    final isRemoving = _removingImageIndices.contains(index);
+
+    return AnimatedScale(
+      scale: isRemoving ? 0.8 : 1.0,
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeInOut,
+      child: AnimatedOpacity(
+        opacity: isRemoving ? 0.0 : 1.0,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeInOut,
+        child: GestureDetector(
+          onTap: _isSubmitting ? null : () => _showImagePreview(index),
+          child: ClipPath(
+            clipper: _SquircleClipper(radius: 48),
+            child: Container(
+              decoration: BoxDecoration(
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.25),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Stack(
+                children: [
+                  // The image
+                  Container(
+                    constraints: const BoxConstraints(maxHeight: 400),
+                    width: double.infinity,
+                    child: Image.file(
+                      File(_imageLocalPaths[index]),
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  // Gradient overlay at bottom for pills
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: Container(
+                      height: 80,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withValues(alpha: 0.7),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Info pills at bottom
+                  Positioned(
+                    left: 12,
+                    right: 12,
+                    bottom: 12,
+                    child: Row(
+                      children: [
+                        // TTL pill
+                        _InfoPill(
+                          icon: Icons.timer_outlined,
+                          label: _getTTLDisplayText(),
+                        ),
+                        const SizedBox(width: 8),
+                        // Location pill with fade animation
+                        IgnorePointer(
+                          ignoring: _location == null,
+                          child: AnimatedOpacity(
+                            duration: const Duration(milliseconds: 200),
+                            opacity: _location != null ? 1.0 : 0.0,
+                            child: GestureDetector(
+                              onTap: _isSubmitting ? null : _removeLocation,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withValues(alpha: 0.55),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: const Icon(
+                                  Icons.location_on,
+                                  size: 14,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const Spacer(),
+                        // Local storage indicator
+                        _InfoPill(icon: Icons.phone_android, label: 'Local'),
+                      ],
+                    ),
+                  ),
+                  // Remove button at top right
+                  if (!_isSubmitting)
+                    Positioned(
+                      top: 12,
+                      right: 12,
+                      child: BouncyTap(
+                        onTap: () => _removeImage(index),
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.5),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.close,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImageThumbnail(int index) {
+    final isRemoving = _removingImageIndices.contains(index);
+
+    return AnimatedScale(
+      scale: isRemoving ? 0.8 : 1.0,
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeInOut,
+      child: AnimatedOpacity(
+        opacity: isRemoving ? 0.0 : 1.0,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeInOut,
+        child: GestureDetector(
+          onTap: _isSubmitting ? null : () => _showImagePreview(index),
+          child: ClipPath(
+            clipper: _SquircleClipper(radius: 32),
+            child: Container(
+              height: 180,
+              decoration: BoxDecoration(
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.file(File(_imageLocalPaths[index]), fit: BoxFit.cover),
+                  // Dark overlay
+                  Container(color: Colors.black.withValues(alpha: 0.1)),
+                  // Remove button
+                  if (!_isSubmitting)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: BouncyTap(
+                        onTap: () => _removeImage(index),
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.6),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.close,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
           ),
@@ -727,10 +1046,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
               const SizedBox(height: 4),
               Text(
                 'How long until your signal fades',
-                style: TextStyle(
-                  color: context.textTertiary,
-                  fontSize: 13,
-                ),
+                style: TextStyle(color: context.textTertiary, fontSize: 13),
               ),
               const SizedBox(height: 20),
               TTLSelector(
@@ -767,7 +1083,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
         _hasValidContent && isDeviceConnected && !_isValidatingImage;
     final submitBlockedReason = _submitBlockedReason(isDeviceConnected);
 
-    // Listen for cloud availability changes - hide/show image accordingly
+    // Listen for cloud availability changes - hide/show images accordingly
     ref.listen<SignalConnectivityState>(signalConnectivityProvider, (
       previous,
       next,
@@ -775,26 +1091,26 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
       final wasOnline = previous?.canUseCloud ?? true;
       final isOnline = next.canUseCloud && !meshOnlyDebug;
 
-      if (wasOnline && !isOnline && _imageLocalPath != null) {
-        // Going offline with an image - mark as hidden but don't remove
+      if (wasOnline && !isOnline && _imageLocalPaths.isNotEmpty) {
+        // Going offline with images - mark as hidden but don't remove
         setState(() => _imageHiddenDueToOffline = true);
         if (mounted) {
           showInfoSnackBar(
             context,
-            'Image hidden while offline. It will return when back online.',
+            'Images hidden while offline. They will return when back online.',
           );
         }
       } else if (!wasOnline && isOnline && _imageHiddenDueToOffline) {
-        // Coming back online - restore the image visibility
+        // Coming back online - restore the images visibility
         setState(() => _imageHiddenDueToOffline = false);
-        if (mounted && _imageLocalPath != null) {
-          showSuccessSnackBar(context, 'Image restored!');
+        if (mounted && _imageLocalPaths.isNotEmpty) {
+          showSuccessSnackBar(context, 'Images restored!');
         }
       }
     });
 
-    // Determine if image should be shown (exists and not hidden due to offline)
-    final showImage = _imageLocalPath != null && !_imageHiddenDueToOffline;
+    // Determine if images should be shown (exist and not hidden due to offline)
+    final showImages = _imageLocalPaths.isNotEmpty && !_imageHiddenDueToOffline;
 
     final gradientColors = AccentColors.gradientFor(context.accentColor);
 
@@ -849,447 +1165,33 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-              if (myNodeNum == null &&
-                  connectivity.isBleConnected &&
-                  Platform.isIOS) ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: context.card,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: context.border.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(
-                        Icons.warning_amber_rounded,
-                        size: 18,
-                        color: context.textTertiary,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Connected to BLE but no mesh traffic detected. On iOS, Airplane Mode can block BLE traffic even when connected. Turn off Airplane Mode or toggle Bluetooth.',
-                          style: TextStyle(
-                            color: context.textTertiary,
-                            fontSize: 12,
-                          ),
+                    if (myNodeNum == null &&
+                        connectivity.isBleConnected &&
+                        Platform.isIOS) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
-
-              // Modern floating input container with gradient accent border
-              FadeTransition(
-                opacity: _fadeAnimation,
-                child: SlideTransition(
-                  position: _slideAnimation,
-                  child: GradientBorderContainer(
-                    borderRadius: 24,
-                    borderWidth: 4,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Text input area
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-                          child: TextField(
-                            controller: _contentController,
-                            focusNode: _contentFocusNode,
-                            enabled: !_isSubmitting,
-                            maxLines: 8,
-                            minLines: 5,
-                            maxLength: _maxLength,
-                            maxLengthEnforcement: MaxLengthEnforcement.enforced,
-                            textCapitalization: TextCapitalization.sentences,
-                            inputFormatters: [
-                              LengthLimitingTextInputFormatter(_maxLength),
-                            ],
-                            style: TextStyle(
-                              color: context.textPrimary,
-                          fontSize: 16,
-                          height: 1.4,
-                        ),
-                        decoration: InputDecoration(
-                          hintText: 'What are you signaling?',
-                          hintStyle: TextStyle(
-                            color: context.textTertiary,
-                            fontSize: 16,
-                          ),
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          disabledBorder: InputBorder.none,
-                          errorBorder: InputBorder.none,
-                          focusedErrorBorder: InputBorder.none,
-                          isDense: true,
-                          contentPadding: EdgeInsets.zero,
-                          counterText: '',
-                        ),
-                        onChanged: (_) => setState(() {}),
-                      ),
-                    ),
-                    // Bottom action bar
-                    Container(
-                      padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-                      child: Row(
-                        children: [
-                          // Image button
-                          if (canUseCloud)
-                            _InputActionButton(
-                              icon: Icons.image_outlined,
-                              isSelected: _imageLocalPath != null,
-                              isLoading: _isValidatingImage,
-                              onTap: () {
-                                if (canUseCloud &&
-                                    !_isSubmitting &&
-                                    !_isValidatingImage) {
-                                  _pickImage();
-                                  return;
-                                }
-                                if (!canUseCloud && connectivity.hasInternet) {
-                                  HapticFeedback.mediumImpact();
-                                  setState(() => _cloudBannerHighlight = true);
-                                  _bannerShakeController.forward(from: 0);
-                                }
-                              },
-                            ),
-                          // Location button (toggle: tap to add or remove)
-                          _InputActionButton(
-                            icon: _location != null
-                                ? Icons.location_off_outlined
-                                : Icons.location_on_outlined,
-                            isSelected: _location != null,
-                            isLoading: _isLoadingLocation,
-                            isEnabled: hasNodeLocation,
-                            onTap: _isSubmitting || _isLoadingLocation || !hasNodeLocation
-                                ? null
-                                : () {
-                                    if (_location != null) {
-                                      _removeLocation();
-                                    } else {
-                                      _getLocation();
-                                    }
-                                  },
-                          ),
-                          // TTL button (shows current selection)
-                          _InputActionButton(
-                            icon: Icons.timer_outlined,
-                            label: _getTTLShortText(),
-                            onTap: _isSubmitting
-                                ? null
-                                : () => _showTTLPicker(context),
-                          ),
-                          // Settings
-                          _InputActionButton(
-                            icon: Icons.tune,
-                            isEnabled: hasNodeLocation,
-                            onTap: _isSubmitting || !hasNodeLocation
-                                ? null
-                                : () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            const SignalSettingsScreen(),
-                                      ),
-                                    );
-                                  },
-                          ),
-                          const Spacer(),
-                          // Character count
-                          SizedBox(
-                            width: 36,
-                            height: 36,
-                            child: Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                CircularProgressIndicator(
-                                  value: (_contentController.text.length /
-                                          _maxLength)
-                                      .clamp(0.0, 1.0),
-                                  strokeWidth: 2.5,
-                                  backgroundColor:
-                                      context.border.withValues(alpha: 0.2),
-                                  color: _remainingChars < 0
-                                      ? Colors.red
-                                      : _remainingChars < 20
-                                          ? Colors.orange
-                                          : context.accentColor,
-                                ),
-                                Text(
-                                  '$_remainingChars',
-                                  style: TextStyle(
-                                    color: _remainingChars < 0
-                                        ? Colors.red
-                                        : _remainingChars < 20
-                                            ? Colors.orange
-                                            : context.textTertiary,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-                ),
-              ),
-
-              // Image preview with overlay info pills
-              if (showImage) ...[
-                const SizedBox(height: 16),
-                ScaleTransition(
-                  scale: _imageScaleAnimation,
-                  child: FadeTransition(
-                    opacity: _imageFadeAnimation,
-                    child: GestureDetector(
-                      onTap: _isSubmitting ? null : () => _showImagePreview(),
-                      child: ClipPath(
-                        clipper: _SquircleClipper(radius: 48),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.25),
-                                blurRadius: 16,
-                                offset: const Offset(0, 6),
-                              ),
-                            ],
-                          ),
-                          child: Stack(
-                            children: [
-                              // The image
-                              Container(
-                                constraints: const BoxConstraints(maxHeight: 400),
-                                width: double.infinity,
-                                child: Image.file(
-                                  File(_imageLocalPath!),
-                                  width: double.infinity,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                              // Gradient overlay at bottom for pills
-                              Positioned(
-                                left: 0,
-                                right: 0,
-                                bottom: 0,
-                                child: Container(
-                                  height: 80,
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                      colors: [
-                                        Colors.transparent,
-                                        Colors.black.withValues(alpha: 0.7),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              // Info pills at bottom
-                              Positioned(
-                                left: 12,
-                                right: 12,
-                                bottom: 12,
-                                child: Row(
-                                  children: [
-                                    // TTL pill
-                                    _InfoPill(
-                                      icon: Icons.timer_outlined,
-                                      label: _getTTLDisplayText(),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    // Location pill with fade animation - always rendered for consistent layout
-                                    IgnorePointer(
-                                      ignoring: _location == null,
-                                      child: AnimatedOpacity(
-                                        duration: const Duration(milliseconds: 200),
-                                        opacity: _location != null ? 1.0 : 0.0,
-                                        child: GestureDetector(
-                                          onTap: _isSubmitting
-                                              ? null
-                                              : _removeLocation,
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 8,
-                                              vertical: 6,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: Colors.black
-                                                  .withValues(alpha: 0.55),
-                                              borderRadius:
-                                                  BorderRadius.circular(16),
-                                            ),
-                                            child: const Icon(
-                                              Icons.location_on,
-                                              size: 14,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    const Spacer(),
-                                    // Local storage indicator
-                                    _InfoPill(
-                                      icon: Icons.phone_android,
-                                      label: 'Local',
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              // Remove button at top right
-                              if (!_isSubmitting)
-                                Positioned(
-                                  top: 12,
-                                  right: 12,
-                                  child: BouncyTap(
-                                    onTap: _removeImage,
-                                    child: Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: Colors.black.withValues(alpha: 0.5),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: const Icon(
-                                        Icons.close,
-                                        color: Colors.white,
-                                        size: 20,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-
-              // Location preview (only if no image - otherwise shown as pill on image)
-              if (_location != null && !showImage) ...[
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: context.card,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: context.border.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.location_on,
-                        size: 18,
-                        color: context.accentColor,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          _location!.name ?? 'Current location',
-                          style: TextStyle(
-                            color: context.textPrimary,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                      BouncyTap(
-                        onTap: _isSubmitting ? null : _removeLocation,
-                        child: Icon(
-                          Icons.close,
-                          size: 18,
-                          color: context.textTertiary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-
-              const SizedBox(height: 16),
-
-              // Privacy note
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    Icons.shield_outlined,
-                    size: 14,
-                    color: context.textTertiary,
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      'Signal location uses mesh device position, rounded to ~${signalRadiusMeters}m.',
-                      style: TextStyle(
-                        color: context.textTertiary,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 16),
-
-              // Cloud availability banner
-              if (!canUseCloud)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Builder(
-                    builder: (context) {
-                      final canTapToSubscribe =
-                          !meshOnlyDebug && connectivity.hasInternet;
-                      final banner = Container(
-                        padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: context.card,
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: _cloudBannerHighlight
-                                ? Colors.red.withOpacity(0.9)
-                                : context.border.withValues(alpha: 0.3),
-                            width: _cloudBannerHighlight ? 2 : 1,
+                            color: context.border.withValues(alpha: 0.3),
                           ),
                         ),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Icon(
-                              Icons.cloud_off,
+                              Icons.warning_amber_rounded,
                               size: 18,
                               color: context.textTertiary,
                             ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                meshOnlyDebug
-                                    ? 'Mesh-only debug mode enabled. Signals use local DB + mesh only.'
-                                    : connectivity.hasInternet
-                                    ? 'Sign in to enable images and cloud features. Text and location still broadcast over mesh.'
-                                    : 'Offline: images and cloud features are unavailable. Text and location still broadcast over mesh.',
+                                'Connected to BLE but no mesh traffic detected. On iOS, Airplane Mode can block BLE traffic even when connected. Turn off Airplane Mode or toggle Bluetooth.',
                                 style: TextStyle(
                                   color: context.textTertiary,
                                   fontSize: 12,
@@ -1298,116 +1200,437 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                             ),
                           ],
                         ),
-                      );
+                      ),
+                      const SizedBox(height: 16),
+                    ],
 
-                      final animatedBanner = AnimatedBuilder(
-                        animation: _bannerShakeAnimation,
-                        builder: (ctx, child) {
-                          final t = _bannerShakeAnimation.value;
-                          final dx = sin(t * pi * 4) * 8; // shake
-                          return Transform.translate(
-                            offset: Offset(dx, 0),
-                            child: child,
-                          );
-                        },
-                        child: banner,
-                      );
-
-                      if (!canTapToSubscribe) {
-                        return GestureDetector(
-                          onTap: _dismissKeyboard,
-                          child: animatedBanner,
-                        );
-                      }
-
-                      return Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(8),
-                          onTap: () {
-                            _dismissKeyboard();
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    const AccountSubscriptionsScreen(),
+                    // Modern floating input container with gradient accent border
+                    FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: SlideTransition(
+                        position: _slideAnimation,
+                        child: GradientBorderContainer(
+                          borderRadius: 24,
+                          borderWidth: 4,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Text input area
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  20,
+                                  16,
+                                  20,
+                                  8,
+                                ),
+                                child: TextField(
+                                  controller: _contentController,
+                                  focusNode: _contentFocusNode,
+                                  enabled: !_isSubmitting,
+                                  maxLines: 8,
+                                  minLines: 5,
+                                  maxLength: _maxLength,
+                                  maxLengthEnforcement:
+                                      MaxLengthEnforcement.enforced,
+                                  textCapitalization:
+                                      TextCapitalization.sentences,
+                                  inputFormatters: [
+                                    LengthLimitingTextInputFormatter(
+                                      _maxLength,
+                                    ),
+                                  ],
+                                  style: TextStyle(
+                                    color: context.textPrimary,
+                                    fontSize: 16,
+                                    height: 1.4,
+                                  ),
+                                  decoration: InputDecoration(
+                                    hintText: 'What are you signaling?',
+                                    hintStyle: TextStyle(
+                                      color: context.textTertiary,
+                                      fontSize: 16,
+                                    ),
+                                    border: InputBorder.none,
+                                    enabledBorder: InputBorder.none,
+                                    focusedBorder: InputBorder.none,
+                                    disabledBorder: InputBorder.none,
+                                    errorBorder: InputBorder.none,
+                                    focusedErrorBorder: InputBorder.none,
+                                    isDense: true,
+                                    contentPadding: EdgeInsets.zero,
+                                    counterText: '',
+                                  ),
+                                  onChanged: (_) => setState(() {}),
+                                ),
                               ),
-                            );
-                          },
-                          child: animatedBanner,
+                              // Bottom action bar
+                              Container(
+                                padding: const EdgeInsets.fromLTRB(
+                                  12,
+                                  0,
+                                  12,
+                                  10,
+                                ),
+                                child: Row(
+                                  children: [
+                                    // Image button
+                                    if (canUseCloud)
+                                      _InputActionButton(
+                                        icon: Icons.image_outlined,
+                                        isSelected: _imageLocalPaths.isNotEmpty,
+                                        isLoading: _isValidatingImage,
+                                        label: _imageLocalPaths.isNotEmpty
+                                            ? '${_imageLocalPaths.length}'
+                                            : null,
+                                        onTap: () {
+                                          if (canUseCloud &&
+                                              !_isSubmitting &&
+                                              !_isValidatingImage) {
+                                            _pickImage();
+                                            return;
+                                          }
+                                          if (!canUseCloud &&
+                                              connectivity.hasInternet) {
+                                            HapticFeedback.mediumImpact();
+                                            setState(
+                                              () =>
+                                                  _cloudBannerHighlight = true,
+                                            );
+                                            _bannerShakeController.forward(
+                                              from: 0,
+                                            );
+                                          }
+                                        },
+                                      ),
+                                    // Location button (toggle: tap to add or remove)
+                                    _InputActionButton(
+                                      icon: _location != null
+                                          ? Icons.location_off_outlined
+                                          : Icons.location_on_outlined,
+                                      isSelected: _location != null,
+                                      isLoading: _isLoadingLocation,
+                                      isEnabled: hasNodeLocation,
+                                      onTap:
+                                          _isSubmitting ||
+                                              _isLoadingLocation ||
+                                              !hasNodeLocation
+                                          ? null
+                                          : () {
+                                              if (_location != null) {
+                                                _removeLocation();
+                                              } else {
+                                                _getLocation();
+                                              }
+                                            },
+                                    ),
+                                    // TTL button (shows current selection)
+                                    _InputActionButton(
+                                      icon: Icons.timer_outlined,
+                                      label: _getTTLShortText(),
+                                      onTap: _isSubmitting
+                                          ? null
+                                          : () => _showTTLPicker(context),
+                                    ),
+                                    // Settings
+                                    _InputActionButton(
+                                      icon: Icons.tune,
+                                      isEnabled: hasNodeLocation,
+                                      onTap: _isSubmitting || !hasNodeLocation
+                                          ? null
+                                          : () {
+                                              Navigator.of(context).push(
+                                                MaterialPageRoute(
+                                                  builder: (_) =>
+                                                      const SignalSettingsScreen(),
+                                                ),
+                                              );
+                                            },
+                                    ),
+                                    const Spacer(),
+                                    // Character count
+                                    SizedBox(
+                                      width: 36,
+                                      height: 36,
+                                      child: Stack(
+                                        alignment: Alignment.center,
+                                        children: [
+                                          CircularProgressIndicator(
+                                            value:
+                                                (_contentController
+                                                            .text
+                                                            .length /
+                                                        _maxLength)
+                                                    .clamp(0.0, 1.0),
+                                            strokeWidth: 2.5,
+                                            backgroundColor: context.border
+                                                .withValues(alpha: 0.2),
+                                            color: _remainingChars < 0
+                                                ? Colors.red
+                                                : _remainingChars < 20
+                                                ? Colors.orange
+                                                : context.accentColor,
+                                          ),
+                                          Text(
+                                            '$_remainingChars',
+                                            style: TextStyle(
+                                              color: _remainingChars < 0
+                                                  ? Colors.red
+                                                  : _remainingChars < 20
+                                                  ? Colors.orange
+                                                  : context.textTertiary,
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      );
-                    },
-                  ),
-                ),
-
-              if (Platform.isIOS &&
-                  !connectivity.hasInternet &&
-                  connectivity.isBleConnected)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: context.card,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: context.border.withValues(alpha: 0.3),
                       ),
                     ),
-                    child: Row(
+
+                    // Images preview grid
+                    if (showImages) ...[
+                      const SizedBox(height: 16),
+                      ScaleTransition(
+                        scale: _imageScaleAnimation,
+                        child: FadeTransition(
+                          opacity: _imageFadeAnimation,
+                          child: _buildImagesGrid(),
+                        ),
+                      ),
+                    ],
+
+                    // Location preview (only if no images - otherwise shown as pill on image)
+                    if (_location != null && !showImages) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: context.card,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: context.border.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.location_on,
+                              size: 18,
+                              color: context.accentColor,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                _location!.name ?? 'Current location',
+                                style: TextStyle(
+                                  color: context.textPrimary,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                            BouncyTap(
+                              onTap: _isSubmitting ? null : _removeLocation,
+                              child: Icon(
+                                Icons.close,
+                                size: 18,
+                                color: context.textTertiary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+
+                    const SizedBox(height: 16),
+
+                    // Privacy note
+                    Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Icon(
-                          Icons.airplanemode_active,
-                          size: 18,
+                          Icons.shield_outlined,
+                          size: 14,
                           color: context.textTertiary,
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 6),
                         Expanded(
                           child: Text(
-                            'iOS Airplane Mode can pause BLE mesh traffic even when connected. If signals stop, turn off Airplane Mode or toggle Bluetooth.',
+                            'Signal location uses mesh device position, rounded to ~${signalRadiusMeters}m.',
                             style: TextStyle(
                               color: context.textTertiary,
-                              fontSize: 12,
+                              fontSize: 11,
                             ),
                           ),
                         ),
                       ],
                     ),
-                  ),
-                ),
 
-              // Info banner
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: context.card,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: context.border.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(
-                      Icons.info_outline,
-                      size: 18,
-                      color: context.textTertiary,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Signals are temporary. They fade automatically and exist only while active.',
-                        style: TextStyle(
-                          color: context.textTertiary,
-                          fontSize: 12,
+                    const SizedBox(height: 16),
+
+                    // Cloud availability banner
+                    if (!canUseCloud)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Builder(
+                          builder: (context) {
+                            final canTapToSubscribe =
+                                !meshOnlyDebug && connectivity.hasInternet;
+                            final banner = Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: context.card,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: _cloudBannerHighlight
+                                      ? Colors.red.withOpacity(0.9)
+                                      : context.border.withValues(alpha: 0.3),
+                                  width: _cloudBannerHighlight ? 2 : 1,
+                                ),
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Icon(
+                                    Icons.cloud_off,
+                                    size: 18,
+                                    color: context.textTertiary,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      meshOnlyDebug
+                                          ? 'Mesh-only debug mode enabled. Signals use local DB + mesh only.'
+                                          : connectivity.hasInternet
+                                          ? 'Sign in to enable images and cloud features. Text and location still broadcast over mesh.'
+                                          : 'Offline: images and cloud features are unavailable. Text and location still broadcast over mesh.',
+                                      style: TextStyle(
+                                        color: context.textTertiary,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+
+                            final animatedBanner = AnimatedBuilder(
+                              animation: _bannerShakeAnimation,
+                              builder: (ctx, child) {
+                                final t = _bannerShakeAnimation.value;
+                                final dx = sin(t * pi * 4) * 8; // shake
+                                return Transform.translate(
+                                  offset: Offset(dx, 0),
+                                  child: child,
+                                );
+                              },
+                              child: banner,
+                            );
+
+                            if (!canTapToSubscribe) {
+                              return GestureDetector(
+                                onTap: _dismissKeyboard,
+                                child: animatedBanner,
+                              );
+                            }
+
+                            return Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(8),
+                                onTap: () {
+                                  _dismissKeyboard();
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          const AccountSubscriptionsScreen(),
+                                    ),
+                                  );
+                                },
+                                child: animatedBanner,
+                              ),
+                            );
+                          },
                         ),
                       ),
+
+                    if (Platform.isIOS &&
+                        !connectivity.hasInternet &&
+                        connectivity.isBleConnected)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: context.card,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: context.border.withValues(alpha: 0.3),
+                            ),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                Icons.airplanemode_active,
+                                size: 18,
+                                color: context.textTertiary,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'iOS Airplane Mode can pause BLE mesh traffic even when connected. If signals stop, turn off Airplane Mode or toggle Bluetooth.',
+                                  style: TextStyle(
+                                    color: context.textTertiary,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                    // Info banner
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: context.card,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: context.border.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            size: 18,
+                            color: context.textTertiary,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Signals are temporary. They fade automatically and exist only while active.',
+                              style: TextStyle(
+                                color: context.textTertiary,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
-                ),
-              ),
                   ],
                 ),
               ),
@@ -1416,13 +1639,20 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
             FadeTransition(
               opacity: _fadeAnimation,
               child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0, 0.3),
-                  end: Offset.zero,
-                ).animate(CurvedAnimation(
-                  parent: _entryAnimationController,
-                  curve: const Interval(0.3, 1.0, curve: Curves.easeOutCubic),
-                )),
+                position:
+                    Tween<Offset>(
+                      begin: const Offset(0, 0.3),
+                      end: Offset.zero,
+                    ).animate(
+                      CurvedAnimation(
+                        parent: _entryAnimationController,
+                        curve: const Interval(
+                          0.3,
+                          1.0,
+                          curve: Curves.easeOutCubic,
+                        ),
+                      ),
+                    ),
                 child: Container(
                   padding: EdgeInsets.fromLTRB(
                     20,
@@ -1450,7 +1680,10 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                               ? LinearGradient(
                                   begin: Alignment.centerLeft,
                                   end: Alignment.centerRight,
-                                  colors: [gradientColors[0], gradientColors[1]],
+                                  colors: [
+                                    gradientColors[0],
+                                    gradientColors[1],
+                                  ],
                                 )
                               : null,
                           color: canSubmit
@@ -1460,7 +1693,9 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                           boxShadow: canSubmit
                               ? [
                                   BoxShadow(
-                                    color: gradientColors[0].withValues(alpha: 0.4),
+                                    color: gradientColors[0].withValues(
+                                      alpha: 0.4,
+                                    ),
                                     blurRadius: 16,
                                     offset: const Offset(0, 4),
                                   ),
@@ -1481,26 +1716,26 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                             : Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                              Icon(
-                                Icons.sensors,
-                                size: 22,
-                                color: canSubmit
-                                    ? Colors.white
-                                    : context.textTertiary,
+                                  Icon(
+                                    Icons.sensors,
+                                    size: 22,
+                                    color: canSubmit
+                                        ? Colors.white
+                                        : context.textTertiary,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Text(
+                                    'Send Signal',
+                                    style: TextStyle(
+                                      color: canSubmit
+                                          ? Colors.white
+                                          : context.textTertiary,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(width: 10),
-                              Text(
-                                'Send Signal',
-                                style: TextStyle(
-                                  color: canSubmit
-                                      ? Colors.white
-                                      : context.textTertiary,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ],
-                          ),
                       ),
                     ),
                   ),
@@ -1511,523 +1746,153 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
         ),
       ),
     );
-  }
-}
-
-/// Album filter type for signal media picker (images only)
-enum _AlbumFilterType { recents, favorites, allAlbums }
-
-extension _AlbumFilterTypeExtension on _AlbumFilterType {
-  String get label {
-    switch (this) {
-      case _AlbumFilterType.recents:
-        return 'Recents';
-      case _AlbumFilterType.favorites:
-        return 'Favorites';
-      case _AlbumFilterType.allAlbums:
-        return 'All Albums';
-    }
-  }
-
-  IconData get icon {
-    switch (this) {
-      case _AlbumFilterType.recents:
-        return Icons.photo_library_outlined;
-      case _AlbumFilterType.favorites:
-        return Icons.favorite_outline;
-      case _AlbumFilterType.allAlbums:
-        return Icons.grid_view_outlined;
-    }
   }
 }
 
 /// Result from media picker
 class _MediaPickerResult {
   final bool isCamera;
-  final AssetEntity? asset;
 
-  _MediaPickerResult.camera() : isCamera = true, asset = null;
-  _MediaPickerResult.asset(this.asset) : isCamera = false;
+  _MediaPickerResult.camera() : isCamera = true;
+  _MediaPickerResult.gallery() : isCamera = false;
 }
 
-/// Media picker bottom sheet
-class _MediaPickerSheet extends StatefulWidget {
+/// Simple media picker bottom sheet with Camera/Gallery options
+class _MediaPickerSheet extends StatelessWidget {
   const _MediaPickerSheet();
-
-  @override
-  State<_MediaPickerSheet> createState() => _MediaPickerSheetState();
-}
-
-class _MediaPickerSheetState extends State<_MediaPickerSheet> {
-  List<AssetEntity> _recentAssets = [];
-  bool _isLoadingAssets = true;
-  bool _hasPermission = true;
-  _AlbumFilterType _selectedFilter = _AlbumFilterType.recents;
-  List<AssetPathEntity> _allAlbums = [];
-  AssetPathEntity? _selectedAlbum;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadAssets();
-  }
-
-  Future<void> _loadAssets() async {
-    setState(() {
-      _isLoadingAssets = true;
-      _hasPermission = true;
-    });
-
-    // Request photo/media permission (handles Android/iOS differences)
-    final permission = await PhotoManager.requestPermissionExtend();
-    if (!permission.isAuth) {
-      // Permission denied - show prompt in UI
-      setState(() {
-        _isLoadingAssets = false;
-        _hasPermission = false;
-      });
-      return;
-    }
-
-    setState(() => _hasPermission = true);
-
-    // Load all albums (prefer images)
-    var allAlbums = await PhotoManager.getAssetPathList(
-      type: RequestType.image,
-      hasAll: true,
-    );
-
-    // Fallback to common if no albums found (some devices treat types differently)
-    if (allAlbums.isEmpty) {
-      allAlbums = await PhotoManager.getAssetPathList(
-        type: RequestType.common,
-        hasAll: true,
-      );
-    }
-    _allAlbums = allAlbums;
-
-    // Load assets based on filter
-    await _loadAssetsForFilter(_selectedFilter);
-  }
-
-  Future<void> _loadAssetsForFilter(_AlbumFilterType filter) async {
-    setState(() => _isLoadingAssets = true);
-
-    List<AssetEntity> assets = [];
-
-    switch (filter) {
-      case _AlbumFilterType.recents:
-        if (_allAlbums.isNotEmpty) {
-          assets = await _allAlbums.first.getAssetListRange(start: 0, end: 100);
-        }
-        break;
-
-      case _AlbumFilterType.favorites:
-        AssetPathEntity? favAlbum;
-        for (final album in _allAlbums) {
-          if (album.name.toLowerCase().contains('favorite') ||
-              album.name.toLowerCase().contains('favourite')) {
-            favAlbum = album;
-            break;
-          }
-        }
-        if (favAlbum != null) {
-          assets = await favAlbum.getAssetListRange(start: 0, end: 100);
-        } else if (_allAlbums.isNotEmpty) {
-          assets = await _allAlbums.first.getAssetListRange(start: 0, end: 100);
-        }
-        break;
-
-      case _AlbumFilterType.allAlbums:
-        if (_selectedAlbum != null) {
-          assets = await _selectedAlbum!.getAssetListRange(start: 0, end: 100);
-        } else if (_allAlbums.isNotEmpty) {
-          assets = await _allAlbums.first.getAssetListRange(start: 0, end: 100);
-        }
-        break;
-    }
-
-    if (mounted) {
-      setState(() {
-        _recentAssets = assets;
-        _isLoadingAssets = false;
-      });
-    }
-  }
-
-  void _changeFilter(_AlbumFilterType filter) {
-    if (filter == _selectedFilter) return;
-    setState(() {
-      _selectedFilter = filter;
-      _selectedAlbum = null;
-    });
-    _loadAssetsForFilter(filter);
-  }
-
-  void _selectAlbum(AssetPathEntity album) {
-    setState(() {
-      _selectedAlbum = album;
-      _selectedFilter = _AlbumFilterType.allAlbums;
-    });
-    _loadAssetsForFilter(_AlbumFilterType.allAlbums);
-  }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: MediaQuery.of(context).size.height * 0.75,
       decoration: BoxDecoration(
         color: Colors.black,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: SafeArea(
-        child: Column(
-          children: [
-            // Header
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  const Expanded(
-                    child: Text(
-                      'Select Photo',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const SizedBox(width: 40),
-                ],
-              ),
-            ),
-
-            // Album filter
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(children: [_buildAlbumDropdown(), const Spacer()]),
-            ),
-
-            // Content
-            Expanded(
-              child: _isLoadingAssets
-                  ? const Center(
-                      child: CircularProgressIndicator(color: Colors.white),
-                    )
-                  : !_hasPermission
-                  ? Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Photo access is required to select images.',
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.8),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          ElevatedButton(
-                            onPressed: () => PhotoManager.openSetting(),
-                            child: const Text('Open settings'),
-                          ),
-                        ],
-                      ),
-                    )
-                  : _selectedFilter == _AlbumFilterType.allAlbums &&
-                        _selectedAlbum == null
-                  ? _buildAlbumsList()
-                  : _buildMediaGrid(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAlbumDropdown() {
-    return PopupMenuButton<_AlbumFilterType>(
-      offset: const Offset(0, 40),
-      color: context.card,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      onSelected: _changeFilter,
-      itemBuilder: (context) => _AlbumFilterType.values.map((filter) {
-        return PopupMenuItem<_AlbumFilterType>(
-          value: filter,
-          child: Row(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                filter.icon,
-                color: filter == _selectedFilter
-                    ? context.accentColor
-                    : context.textPrimary,
-                size: 22,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                filter.label,
+              // Title
+              const Text(
+                'Add Photos',
                 style: TextStyle(
-                  color: filter == _selectedFilter
-                      ? context.accentColor
-                      : context.textPrimary,
-                  fontWeight: filter == _selectedFilter
-                      ? FontWeight.w600
-                      : FontWeight.normal,
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-              if (filter == _selectedFilter) ...[
-                const Spacer(),
-                Icon(Icons.check, color: context.accentColor, size: 20),
-              ],
+              const SizedBox(height: 24),
+
+              // Camera option
+              _PickerOption(
+                icon: Icons.camera_alt,
+                label: 'Take Photo',
+                subtitle: 'Use camera',
+                onTap: () =>
+                    Navigator.pop(context, _MediaPickerResult.camera()),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Gallery option
+              _PickerOption(
+                icon: Icons.photo_library,
+                label: 'Choose from Gallery',
+                subtitle: 'Select up to 4 photos',
+                onTap: () =>
+                    Navigator.pop(context, _MediaPickerResult.gallery()),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Cancel button
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
             ],
           ),
-        );
-      }).toList(),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              _selectedAlbum?.name ?? _selectedFilter.label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-                fontSize: 15,
-              ),
-            ),
-            const SizedBox(width: 4),
-            const Icon(
-              Icons.keyboard_arrow_down,
-              color: Colors.white,
-              size: 20,
-            ),
-          ],
         ),
       ),
-    );
-  }
-
-  Widget _buildAlbumsList() {
-    if (_allAlbums.isEmpty) {
-      return Center(
-        child: Text(
-          'No albums found',
-          style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
-        ),
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      itemCount: _allAlbums.length,
-      itemBuilder: (context, index) {
-        final album = _allAlbums[index];
-        return _AlbumListTile(album: album, onTap: () => _selectAlbum(album));
-      },
-    );
-  }
-
-  Widget _buildMediaGrid() {
-    return GridView.builder(
-      padding: const EdgeInsets.all(2),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        mainAxisSpacing: 2,
-        crossAxisSpacing: 2,
-      ),
-      itemCount: _recentAssets.length + 1, // +1 for camera button
-      itemBuilder: (context, index) {
-        // First item is camera
-        if (index == 0) {
-          return _CameraButton(
-            onTap: () => Navigator.pop(context, _MediaPickerResult.camera()),
-          );
-        }
-
-        final asset = _recentAssets[index - 1];
-        return _MediaThumbnail(
-          asset: asset,
-          onTap: () => Navigator.pop(context, _MediaPickerResult.asset(asset)),
-        );
-      },
     );
   }
 }
 
-/// Camera button as first item in grid
-class _CameraButton extends StatelessWidget {
-  const _CameraButton({required this.onTap});
+/// Option button for picker sheet
+class _PickerOption extends StatelessWidget {
+  const _PickerOption({
+    required this.icon,
+    required this.label,
+    required this.subtitle,
+    required this.onTap,
+  });
 
+  final IconData icon;
+  final String label;
+  final String subtitle;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: const BoxDecoration(gradient: AppTheme.brandGradient),
-        child: const Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.camera_alt, color: Colors.white, size: 32),
-            SizedBox(height: 4),
-            Text(
-              'Camera',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Thumbnail for a media asset in the grid
-class _MediaThumbnail extends StatefulWidget {
-  const _MediaThumbnail({required this.asset, required this.onTap});
-
-  final AssetEntity asset;
-  final VoidCallback onTap;
-
-  @override
-  State<_MediaThumbnail> createState() => _MediaThumbnailState();
-}
-
-class _MediaThumbnailState extends State<_MediaThumbnail> {
-  Uint8List? _thumbnailData;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadThumbnail();
-  }
-
-  Future<void> _loadThumbnail() async {
-    final data = await widget.asset.thumbnailDataWithSize(
-      const ThumbnailSize(200, 200),
-      quality: 80,
-    );
-    if (mounted && data != null) {
-      setState(() => _thumbnailData = data);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: widget.onTap,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          if (_thumbnailData != null)
-            Image.memory(_thumbnailData!, fit: BoxFit.cover)
-          else
-            Container(color: Colors.grey[900]),
-        ],
-      ),
-    );
-  }
-}
-
-/// Album list tile for "All Albums" view
-class _AlbumListTile extends StatefulWidget {
-  const _AlbumListTile({required this.album, required this.onTap});
-
-  final AssetPathEntity album;
-  final VoidCallback onTap;
-
-  @override
-  State<_AlbumListTile> createState() => _AlbumListTileState();
-}
-
-class _AlbumListTileState extends State<_AlbumListTile> {
-  Uint8List? _thumbnailData;
-  int _assetCount = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadAlbumInfo();
-  }
-
-  Future<void> _loadAlbumInfo() async {
-    _assetCount = await widget.album.assetCountAsync;
-
-    if (_assetCount > 0) {
-      final assets = await widget.album.getAssetListRange(start: 0, end: 1);
-      if (assets.isNotEmpty) {
-        final data = await assets.first.thumbnailDataWithSize(
-          const ThumbnailSize(200, 200),
-          quality: 80,
-        );
-        if (mounted && data != null) {
-          setState(() => _thumbnailData = data);
-        }
-      }
-    }
-
-    if (mounted) setState(() {});
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      onTap: widget.onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      leading: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: SizedBox(
-          width: 56,
-          height: 56,
-          child: _thumbnailData != null
-              ? Image.memory(_thumbnailData!, fit: BoxFit.cover)
-              : Container(
-                  color: Colors.grey[800],
-                  child: const Icon(Icons.photo_album, color: Colors.white54),
+    return Material(
+      color: Colors.white.withValues(alpha: 0.05),
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  gradient: AppTheme.brandGradient,
+                  borderRadius: BorderRadius.circular(12),
                 ),
+                child: Icon(icon, color: Colors.white, size: 24),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.6),
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right,
+                color: Colors.white.withValues(alpha: 0.4),
+              ),
+            ],
+          ),
         ),
       ),
-      title: Text(
-        widget.album.name.isEmpty ? 'Untitled Album' : widget.album.name,
-        style: const TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w500,
-        ),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-      subtitle: Text(
-        '$_assetCount items',
-        style: TextStyle(
-          color: Colors.white.withValues(alpha: 0.6),
-          fontSize: 13,
-        ),
-      ),
-      trailing: const Icon(Icons.chevron_right, color: Colors.white54),
     );
   }
 }
 
 /// Info pill widget for image overlay
 class _InfoPill extends StatelessWidget {
-  const _InfoPill({
-    required this.icon,
-    required this.label,
-  });
+  const _InfoPill({required this.icon, required this.label});
 
   final IconData icon;
   final String label;
@@ -2045,8 +1910,7 @@ class _InfoPill extends StatelessWidget {
         children: [
           Icon(icon, size: 14, color: Colors.white),
           const SizedBox(width: 5),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 100),
+          Flexible(
             child: Text(
               label,
               style: const TextStyle(

@@ -1732,12 +1732,13 @@ class _AnimatedSignalItemState extends ConsumerState<AnimatedSignalItem>
       ),
     );
 
-    _newSlideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.15),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _newSignalController, curve: Curves.easeOutCubic),
-    );
+    _newSlideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _newSignalController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
 
     // Fade-out animation controller - smooth cinematic exit
     _fadeOutController = AnimationController(
@@ -1773,16 +1774,9 @@ class _AnimatedSignalItemState extends ConsumerState<AnimatedSignalItem>
   void didUpdateWidget(AnimatedSignalItem oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (widget.isRefreshing && !oldWidget.isRefreshing) {
-      // Slide out when refreshing
-      _enterController.reverse();
-      _newSignalController.reset();
-    } else if (!widget.isRefreshing && oldWidget.isRefreshing) {
-      // Slide back in after refresh
-      Future<void>.delayed(Duration(milliseconds: 50 * widget.index), () {
-        if (mounted) _enterController.forward();
-      });
-    }
+    // Don't animate during refresh - keep signals visible
+    // The refresh indicator provides enough feedback
+    // Removing slide-out prevents signals from disappearing during refresh
   }
 
   @override
@@ -2073,10 +2067,7 @@ class _AnimatedGridItemState extends ConsumerState<AnimatedGridItem>
         builder: (context, animChild) {
           return Transform.scale(
             scale: _newScaleAnimation.value,
-            child: Opacity(
-              opacity: _newFadeAnimation.value,
-              child: animChild,
-            ),
+            child: Opacity(opacity: _newFadeAnimation.value, child: animChild),
           );
         },
         child: widget.child,

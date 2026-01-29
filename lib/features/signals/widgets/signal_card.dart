@@ -92,9 +92,10 @@ class SignalCard extends StatelessWidget {
                 ),
               ),
 
-            // Image
+            // Image(s) - stacked if multiple
             if (signal.mediaUrls.isNotEmpty ||
                 signal.imageLocalPath != null ||
+                signal.imageLocalPaths.isNotEmpty ||
                 signal.hasPendingCloudImage)
               _SignalImage(signal: signal),
 
@@ -133,9 +134,9 @@ class _SignalHeader extends ConsumerWidget {
     final isOwnMeshSignal =
         signal.meshNodeId != null && signal.meshNodeId == myNodeNum;
 
-    AppLogging.signals(
-      'SignalHeader: id=${signal.id}, authorId=${signal.authorId}, isMeshSignal=$isMeshSignal, hasAuthorSnapshot=${signal.authorSnapshot != null}',
-    );
+    // AppLogging.signals(
+    //   'SignalHeader: id=${signal.id}, authorId=${signal.authorId}, isMeshSignal=$isMeshSignal, hasAuthorSnapshot=${signal.authorSnapshot != null}',
+    // );
 
     // Get author info
     String authorName = 'Anonymous';
@@ -326,10 +327,11 @@ class _SignalImage extends ConsumerWidget {
   final Post signal;
 
   void _showFullscreenImage(BuildContext context) {
-    final hasCloudImage = signal.mediaUrls.isNotEmpty;
-    final hasLocalImage = signal.imageLocalPath != null;
+    final hasCloudImages = signal.mediaUrls.isNotEmpty;
+    final hasLocalImages =
+        signal.imageLocalPath != null || signal.imageLocalPaths.isNotEmpty;
 
-    if (hasCloudImage || hasLocalImage) {
+    if (hasCloudImages || hasLocalImages) {
       SignalGalleryView.show(context, signals: [signal], initialIndex: 0);
     }
   }
@@ -342,129 +344,32 @@ class _SignalImage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final hasCloudImage = signal.mediaUrls.isNotEmpty;
-    final hasLocalImage = signal.imageLocalPath != null;
+    // Collect all images (cloud and local)
+    final cloudUrls = signal.mediaUrls;
+
+    // Only use local paths if NO cloud URLs exist (cloud takes priority)
+    final localPaths = cloudUrls.isEmpty && signal.imageLocalPaths.isNotEmpty
+        ? signal.imageLocalPaths
+        : (cloudUrls.isEmpty && signal.imageLocalPath != null
+              ? [signal.imageLocalPath!]
+              : <String>[]);
+
     final hasPendingImage = signal.hasPendingCloudImage;
-    if (!hasCloudImage && !hasLocalImage && !hasPendingImage) {
+    final totalImages = cloudUrls.length + localPaths.length;
+
+    if (totalImages == 0 && !hasPendingImage) {
       return const SizedBox.shrink();
     }
 
     final isSignedIn = ref
         .watch(authStateProvider)
         .maybeWhen(data: (user) => user != null, orElse: () => false);
-    // Watch online status to force image reload when connectivity is restored
     final isOnline = ref.watch(isOnlineProvider);
     final showSignInPlaceholder =
-        !isSignedIn && (hasCloudImage || hasPendingImage);
+        !isSignedIn && (cloudUrls.isNotEmpty || hasPendingImage);
     final onTap = showSignInPlaceholder
         ? () => _openAccountScreen(context)
         : () => _showFullscreenImage(context);
-
-    Widget imageContent;
-    if (showSignInPlaceholder) {
-      imageContent = Container(
-        width: double.infinity,
-        height: 200,
-        color: context.card,
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.image, size: 32, color: context.accentColor),
-              const SizedBox(height: 8),
-              Text(
-                'Sign in to view attached media',
-                style: TextStyle(
-                  color: context.textSecondary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: () => _openAccountScreen(context),
-                style: TextButton.styleFrom(
-                  foregroundColor: context.accentColor,
-                  textStyle: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                ),
-                child: const Text('Sign in'),
-              ),
-            ],
-          ),
-        ),
-      );
-    } else if (hasCloudImage) {
-      // Use a key based on online status to force rebuild when connectivity changes
-      // This causes Image.network to retry loading when coming back online
-      imageContent = Image.network(
-        signal.mediaUrls.first,
-        key: ValueKey('${signal.id}_image_$isOnline'),
-        width: double.infinity,
-        height: 200,
-        fit: BoxFit.cover,
-        loadingBuilder: (ctx, child, progress) {
-          if (progress == null) return child;
-          return Container(
-            width: double.infinity,
-            height: 200,
-            color: context.card,
-            child: Center(
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: context.accentColor,
-              ),
-            ),
-          );
-        },
-        errorBuilder: (ctx, error, stack) => Container(
-          width: double.infinity,
-          height: 200,
-          color: context.card,
-          child: Icon(Icons.broken_image, color: context.textTertiary),
-        ),
-      );
-    } else if (hasLocalImage) {
-      imageContent = Image.file(
-        File(signal.imageLocalPath!),
-        width: double.infinity,
-        height: 200,
-        fit: BoxFit.cover,
-        errorBuilder: (ctx, error, stack) => Container(
-          width: double.infinity,
-          height: 200,
-          color: context.card,
-          child: Icon(Icons.broken_image, color: context.textTertiary),
-        ),
-      );
-    } else {
-      imageContent = Container(
-        width: double.infinity,
-        height: 200,
-        color: context.card,
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.cloud_upload, size: 32, color: context.accentColor),
-              const SizedBox(height: 8),
-              Text(
-                'Image syncing',
-                style: TextStyle(
-                  color: context.textSecondary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      );
-    }
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
@@ -487,67 +392,386 @@ class _SignalImage extends ConsumerWidget {
                 ),
               ],
             ),
-            child: Stack(
-              children: [
-                imageContent,
-                // Gradient overlay at bottom for badge visibility
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: Container(
-                    height: 60,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withValues(alpha: 0.5),
-                        ],
-                      ),
-                    ),
-                  ),
+            child: _buildImageContent(
+              context,
+              cloudUrls,
+              localPaths,
+              showSignInPlaceholder,
+              isOnline,
+              hasPendingImage,
+              totalImages,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImageContent(
+    BuildContext context,
+    List<String> cloudUrls,
+    List<String> localPaths,
+    bool showSignInPlaceholder,
+    bool isOnline,
+    bool hasPendingImage,
+    int totalImages,
+  ) {
+    if (showSignInPlaceholder) {
+      return _buildSignInPlaceholder(context);
+    }
+
+    if (hasPendingImage && cloudUrls.isEmpty && localPaths.isEmpty) {
+      return _buildPendingPlaceholder(context);
+    }
+
+    // Single image - show normally
+    if (totalImages == 1) {
+      final imageWidget = cloudUrls.isNotEmpty
+          ? _buildCloudImage(cloudUrls.first, isOnline)
+          : _buildLocalImage(localPaths.first);
+
+      return _buildImageContainer(
+        context,
+        imageWidget,
+        cloudUrls.isNotEmpty,
+        totalImages,
+      );
+    }
+
+    // Multiple images - stacked layout like the reference image
+    return _buildStackedImages(
+      context,
+      cloudUrls,
+      localPaths,
+      isOnline,
+      totalImages,
+    );
+  }
+
+  Widget _buildStackedImages(
+    BuildContext context,
+    List<String> cloudUrls,
+    List<String> localPaths,
+    bool isOnline,
+    int totalImages,
+  ) {
+    // Show up to 4 images in stacked layout
+    final displayCount = totalImages.clamp(1, 4);
+
+    return SizedBox(
+      width: double.infinity,
+      height: 200,
+      child: Stack(
+        clipBehavior: Clip.hardEdge, // Clip images that extend beyond bounds
+        children: [
+          // Build each image with rotation and offset (render first)
+          for (int i = 0; i < displayCount; i++)
+            _buildStackedImageLayer(
+              context,
+              i,
+              displayCount,
+              cloudUrls,
+              localPaths,
+              isOnline,
+            ),
+
+          // Gradient overlay at bottom (on top of images)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              height: 60,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withValues(alpha: 0.5),
+                  ],
                 ),
-                // Badge
-                Positioned(
-                  bottom: 10,
-                  left: 10,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 5,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          hasCloudImage
-                              ? Icons.cloud_done_rounded
-                              : Icons.phone_android,
-                          size: 12,
-                          color: Colors.white,
-                        ),
-                        const SizedBox(width: 5),
-                        Text(
-                          hasCloudImage ? 'Cloud' : 'Local',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
+              ),
+            ),
+          ),
+
+          // Count badge and storage badge (on top of everything)
+          _buildImageBadges(context, cloudUrls.isNotEmpty, totalImages),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStackedImageLayer(
+    BuildContext context,
+    int index,
+    int totalCount,
+    List<String> cloudUrls,
+    List<String> localPaths,
+    bool isOnline,
+  ) {
+    // Calculate rotation and offset for stacked effect
+    final rotations = [0.0, -2.0, 2.5, -1.5]; // degrees
+    final offsets = [
+      Offset.zero,
+      const Offset(-8, 4),
+      const Offset(8, 6),
+      const Offset(-4, 8),
+    ];
+
+    final rotation = rotations[index % rotations.length];
+    final offset = offsets[index % offsets.length];
+
+    // Get the image source
+    final imageIndex = index;
+    Widget imageWidget;
+
+    if (imageIndex < cloudUrls.length) {
+      imageWidget = _buildCloudImage(cloudUrls[imageIndex], isOnline);
+    } else {
+      final localIndex = imageIndex - cloudUrls.length;
+      if (localIndex < localPaths.length) {
+        imageWidget = _buildLocalImage(localPaths[localIndex]);
+      } else {
+        return const SizedBox.shrink();
+      }
+    }
+
+    return Positioned(
+      left: 10 + offset.dx,
+      top: 10 + offset.dy,
+      right: 10 - offset.dx,
+      bottom: 10 - offset.dy,
+      child: Transform.rotate(
+        angle: rotation * (3.14159 / 180), // Convert to radians
+        child: Container(
+          decoration: BoxDecoration(
+            color: context.card, // Background color for loading state
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.white, width: 3),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(9),
+            child: imageWidget,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImageContainer(
+    BuildContext context,
+    Widget imageWidget,
+    bool isCloud,
+    int totalImages,
+  ) {
+    return Stack(
+      children: [
+        imageWidget,
+        // Gradient overlay at bottom
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: Container(
+            height: 60,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.transparent,
+                  Colors.black.withValues(alpha: 0.5),
+                ],
+              ),
+            ),
+          ),
+        ),
+        _buildImageBadges(context, isCloud, totalImages),
+      ],
+    );
+  }
+
+  Widget _buildImageBadges(
+    BuildContext context,
+    bool isCloud,
+    int totalImages,
+  ) {
+    return Positioned(
+      bottom: 10,
+      left: 10,
+      right: 10,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Storage badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  isCloud ? Icons.cloud_done_rounded : Icons.phone_android,
+                  size: 12,
+                  color: Colors.white,
+                ),
+                const SizedBox(width: 5),
+                Text(
+                  isCloud ? 'Cloud' : 'Local',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
             ),
           ),
+
+          // Count badge (only if multiple images)
+          if (totalImages > 1)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.photo_library, size: 12, color: Colors.white),
+                  const SizedBox(width: 5),
+                  Text(
+                    '$totalImages',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCloudImage(String url, bool isOnline) {
+    return Image.network(
+      url,
+      key: ValueKey('${signal.id}_image_$isOnline'),
+      width: double.infinity,
+      height: 200,
+      fit: BoxFit.cover,
+      loadingBuilder: (ctx, child, progress) {
+        if (progress == null) return child;
+        return Container(
+          width: double.infinity,
+          height: 200,
+          color: ctx.card,
+          child: Center(
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: ctx.accentColor,
+            ),
+          ),
+        );
+      },
+      errorBuilder: (ctx, error, stack) => Container(
+        width: double.infinity,
+        height: 200,
+        color: ctx.card,
+        child: Icon(Icons.broken_image, color: ctx.textTertiary),
+      ),
+    );
+  }
+
+  Widget _buildLocalImage(String path) {
+    return Image.file(
+      File(path),
+      width: double.infinity,
+      height: 200,
+      fit: BoxFit.cover,
+      errorBuilder: (ctx, error, stack) => Container(
+        width: double.infinity,
+        height: 200,
+        color: ctx.card,
+        child: Icon(Icons.broken_image, color: ctx.textTertiary),
+      ),
+    );
+  }
+
+  Widget _buildSignInPlaceholder(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      height: 200,
+      color: context.card,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.image, size: 32, color: context.accentColor),
+            const SizedBox(height: 8),
+            Text(
+              'Sign in to view attached media',
+              style: TextStyle(
+                color: context.textSecondary,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: () => _openAccountScreen(context),
+              style: TextButton.styleFrom(
+                foregroundColor: context.accentColor,
+                textStyle: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+              child: const Text('Sign in'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPendingPlaceholder(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      height: 200,
+      color: context.card,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.cloud_upload, size: 32, color: context.accentColor),
+            const SizedBox(height: 8),
+            Text(
+              'Image syncing',
+              style: TextStyle(
+                color: context.textSecondary,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
       ),
     );

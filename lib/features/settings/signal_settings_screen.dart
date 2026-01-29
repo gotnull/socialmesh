@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
 import '../../providers/splash_mesh_provider.dart';
+import '../../providers/social_providers.dart';
 import '../../core/widgets/animations.dart';
 import '../../providers/app_providers.dart';
 import '../../services/notifications/push_notification_service.dart';
@@ -23,6 +24,7 @@ class _SignalSettingsScreenState extends ConsumerState<SignalSettingsScreen> {
   bool _isLoading = false;
   bool _notificationsLoading = true;
   int _signalLocationRadiusMeters = kDefaultSignalLocationRadiusMeters;
+  int _maxSignalImages = 4;
   bool _signalsEnabled = true;
   bool _votesEnabled = true;
 
@@ -39,6 +41,7 @@ class _SignalSettingsScreenState extends ConsumerState<SignalSettingsScreen> {
       if (!mounted) return;
       setState(() {
         _signalLocationRadiusMeters = settings.signalLocationRadiusMeters;
+        _maxSignalImages = settings.maxSignalImages;
       });
     } catch (_) {
       // Ignore errors - defaults already set
@@ -104,6 +107,9 @@ class _SignalSettingsScreenState extends ConsumerState<SignalSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isAdminAsync = ref.watch(isAdminProvider);
+    final isAdmin = isAdminAsync.value ?? false;
+
     return Scaffold(
       backgroundColor: context.background,
       appBar: AppBar(
@@ -200,6 +206,106 @@ class _SignalSettingsScreenState extends ConsumerState<SignalSettingsScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
+                // Admin-only section
+                if (isAdmin) ...[
+                  const _SectionHeader(title: 'SIGNAL CONTENT'),
+                  Container(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: context.card,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.photo_library_outlined,
+                                color: context.textSecondary,
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Text(
+                                  'Max Images per Signal',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w500,
+                                    color: context.textPrimary,
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: context.accentColor.withValues(
+                                    alpha: 0.2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  '$_maxSignalImages',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: context.accentColor,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'Limit: 1-4 images',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: context.textTertiary,
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          SliderTheme(
+                            data: SliderThemeData(
+                              inactiveTrackColor: context.border,
+                              thumbColor: context.accentColor,
+                              overlayColor: context.accentColor.withValues(
+                                alpha: 0.2,
+                              ),
+                              trackHeight: 4,
+                            ),
+                            child: Slider(
+                              value: _maxSignalImages.toDouble(),
+                              min: 1,
+                              max: 4,
+                              divisions: 3,
+                              onChanged: (value) async {
+                                final newValue = value.toInt();
+                                setState(() => _maxSignalImages = newValue);
+                                HapticFeedback.selectionClick();
+                                try {
+                                  final settings = await ref.read(
+                                    settingsServiceProvider.future,
+                                  );
+                                  await settings.setMaxSignalImages(newValue);
+                                } catch (e) {
+                                  // Error updating setting - ignore silently since UI already updated
+                                }
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 const _SectionHeader(title: 'SIGNAL NOTIFICATIONS'),
                 if (!_notificationsLoading) ...[
                   _SettingsTile(

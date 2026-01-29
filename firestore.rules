@@ -648,6 +648,8 @@ service cloud.firestore {
       // The moderation documents include `userId` (uploader's UID).
       allow read: if isAdmin() || (isAuthenticated() && (resource == null || resource.data.userId == request.auth.uid));
       allow write: if false; // Cloud Functions only
+      // Allow users to delete their own moderation results after reading them
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
 
     // Moderation queue - items pending human review (Cloud Functions write, admin read/update)

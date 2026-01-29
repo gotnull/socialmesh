@@ -80,6 +80,7 @@ class _SignalGalleryViewState extends ConsumerState<SignalGalleryView>
     with SingleTickerProviderStateMixin {
   late PageController _pageController;
   late int _currentIndex;
+  int _currentImageIndex = 0; // Track current image within signal
   late AnimationController _overlayController;
   late Animation<Offset> _overlaySlideAnimation;
   late Animation<double> _overlayFadeAnimation;
@@ -158,11 +159,29 @@ class _SignalGalleryViewState extends ConsumerState<SignalGalleryView>
     // Animate out, change page, animate in
     _overlayController.reverse().then((_) {
       if (mounted) {
-        setState(() => _currentIndex = index);
+        setState(() {
+          _currentIndex = index;
+          _currentImageIndex = 0; // Reset to first image of new signal
+        });
         _setupExpiryTimer(); // Reset timer for new signal
         _overlayController.forward();
       }
     });
+  }
+
+  void _onImageIndexChanged(int imageIndex) {
+    setState(() => _currentImageIndex = imageIndex);
+  }
+
+  int _getImageCount(Post signal) {
+    final cloudUrls = signal.mediaUrls;
+    // Only count local paths if there are NO cloud URLs (same logic as _getAllImagePaths)
+    final localPaths = cloudUrls.isEmpty && signal.imageLocalPaths.isNotEmpty
+        ? signal.imageLocalPaths
+        : (cloudUrls.isEmpty && signal.imageLocalPath != null
+              ? [signal.imageLocalPath!]
+              : <String>[]);
+    return cloudUrls.length + localPaths.length;
   }
 
   @override
@@ -212,7 +231,24 @@ class _SignalGalleryViewState extends ConsumerState<SignalGalleryView>
                 child: _AnimatedImagePage(
                   signal: signal,
                   isActive: index == _currentIndex,
+                  onImageIndexChanged: _onImageIndexChanged,
                   onTap: () => Navigator.of(context).pop(),
+                  onRequestNextSignal: () {
+                    if (_currentIndex < widget.signals.length - 1) {
+                      _pageController.nextPage(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                      );
+                    }
+                  },
+                  onRequestPreviousSignal: () {
+                    if (_currentIndex > 0) {
+                      _pageController.previousPage(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                      );
+                    }
+                  },
                 ),
               );
             },
@@ -240,6 +276,8 @@ class _SignalGalleryViewState extends ConsumerState<SignalGalleryView>
                   child: _TopBar(
                     currentIndex: _currentIndex,
                     total: widget.signals.length,
+                    currentImageIndex: _currentImageIndex,
+                    totalImages: _getImageCount(signal),
                     onClose: () => Navigator.of(context).pop(),
                   ),
                 ),
@@ -282,11 +320,15 @@ class _TopBar extends StatelessWidget {
   const _TopBar({
     required this.currentIndex,
     required this.total,
+    required this.currentImageIndex,
+    required this.totalImages,
     required this.onClose,
   });
 
   final int currentIndex;
   final int total;
+  final int currentImageIndex;
+  final int totalImages;
   final VoidCallback onClose;
 
   @override
@@ -308,7 +350,33 @@ class _TopBar extends StatelessWidget {
             onPressed: onClose,
           ),
           const Spacer(),
-          // Page indicator
+          // Image counter (if multiple images in signal)
+          if (totalImages > 1) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.photo_library, size: 12, color: Colors.white),
+                  const SizedBox(width: 6),
+                  Text(
+                    '${currentImageIndex + 1}/$totalImages',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
+          // Signal counter
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
@@ -338,12 +406,18 @@ class _AnimatedImagePage extends StatefulWidget {
   const _AnimatedImagePage({
     required this.signal,
     required this.isActive,
+    required this.onImageIndexChanged,
     required this.onTap,
+    required this.onRequestNextSignal,
+    required this.onRequestPreviousSignal,
   });
 
   final Post signal;
   final bool isActive;
+  final ValueChanged<int> onImageIndexChanged;
   final VoidCallback onTap;
+  final VoidCallback onRequestNextSignal;
+  final VoidCallback onRequestPreviousSignal;
 
   @override
   State<_AnimatedImagePage> createState() => _AnimatedImagePageState();
@@ -354,10 +428,13 @@ class _AnimatedImagePageState extends State<_AnimatedImagePage>
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
+  late PageController _imagePageController;
+  int _currentImageIndex = 0;
 
   @override
   void initState() {
     super.initState();
+    _imagePageController = PageController();
     _controller = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
@@ -381,40 +458,153 @@ class _AnimatedImagePageState extends State<_AnimatedImagePage>
   @override
   void didUpdateWidget(_AnimatedImagePage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.isActive && !oldWidget.isActive) {
-      _controller.forward(from: 0);
+
+    // Reset to first image when signal changes OR when becoming active
+    final signalChanged = widget.signal.id != oldWidget.signal.id;
+    final becameActive = widget.isActive && !oldWidget.isActive;
+
+    if (signalChanged || becameActive) {
+      if (signalChanged) {
+        // Signal changed - reset animations
+        _controller.forward(from: 0);
+      } else if (becameActive) {
+        // Just became active (scrolled into view)
+        _controller.forward(from: 0);
+      }
+
+      // Reset image index to first image
+      if (_currentImageIndex != 0) {
+        _currentImageIndex = 0;
+        _imagePageController.jumpToPage(0);
+        widget.onImageIndexChanged(0);
+      }
     }
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _imagePageController.dispose();
     super.dispose();
+  }
+
+  List<String> _getAllImagePaths() {
+    final cloudUrls = widget.signal.mediaUrls;
+
+    // Only use local paths if NO cloud URLs exist (cloud takes priority)
+    final localPaths =
+        cloudUrls.isEmpty && widget.signal.imageLocalPaths.isNotEmpty
+        ? widget.signal.imageLocalPaths
+        : (cloudUrls.isEmpty && widget.signal.imageLocalPath != null
+              ? [widget.signal.imageLocalPath!]
+              : <String>[]);
+
+    // DEBUG: Log what we're actually seeing
+    AppLogging.signals(
+      'GALLERY_DEBUG: cloudUrls.length=${cloudUrls.length}, localPaths.length=${localPaths.length}, total=${cloudUrls.length + localPaths.length}',
+    );
+    AppLogging.signals('GALLERY_DEBUG: cloudUrls=$cloudUrls');
+    AppLogging.signals('GALLERY_DEBUG: localPaths=$localPaths');
+
+    return [...cloudUrls, ...localPaths];
   }
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: widget.onTap,
-      child: ScaleTransition(
-        scale: _scaleAnimation,
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: InteractiveViewer(
-            minScale: 0.5,
-            maxScale: 4.0,
-            child: Center(child: _buildImage()),
+    final allImages = _getAllImagePaths();
+
+    if (allImages.isEmpty) {
+      return GestureDetector(
+        onTap: widget.onTap,
+        child: Center(child: _buildErrorWidget()),
+      );
+    }
+
+    // Single image - use InteractiveViewer for zoom
+    if (allImages.length == 1) {
+      return GestureDetector(
+        onTap: widget.onTap,
+        child: ScaleTransition(
+          scale: _scaleAnimation,
+          child: FadeTransition(
+            opacity: _fadeAnimation,
+            child: InteractiveViewer(
+              minScale: 0.5,
+              maxScale: 4.0,
+              child: Center(child: _buildImageWidget(allImages[0])),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Multiple images - use PageView with scroll notification at boundaries
+    return ScaleTransition(
+      scale: _scaleAnimation,
+      child: FadeTransition(
+        opacity: _fadeAnimation,
+        child: NotificationListener<ScrollNotification>(
+          onNotification: (notification) {
+            if (!widget.isActive) return false;
+
+            // Use UserScrollNotification to detect when user is trying to scroll past boundaries
+            if (notification is ScrollUpdateNotification) {
+              final metrics = notification.metrics;
+
+              // At the end and trying to scroll further
+              if (metrics.pixels >= metrics.maxScrollExtent &&
+                  notification.dragDetails != null &&
+                  (notification.dragDetails!.delta.dx < -5)) {
+                debugPrint(
+                  'BOUNDARY_DEBUG: At end, swiping left, going to NEXT signal',
+                );
+                widget.onRequestNextSignal();
+                return true;
+              }
+
+              // At the beginning and trying to scroll back
+              if (metrics.pixels <= metrics.minScrollExtent &&
+                  notification.dragDetails != null &&
+                  (notification.dragDetails!.delta.dx > 5)) {
+                debugPrint(
+                  'BOUNDARY_DEBUG: At start, swiping right, going to PREVIOUS signal',
+                );
+                widget.onRequestPreviousSignal();
+                return true;
+              }
+            }
+            return false;
+          },
+          child: PageView.builder(
+            controller: _imagePageController,
+            physics:
+                const ClampingScrollPhysics(), // Use clamping to detect boundary hits
+            itemCount: allImages.length,
+            onPageChanged: (index) {
+              setState(() => _currentImageIndex = index);
+              widget.onImageIndexChanged(index);
+            },
+            itemBuilder: (context, index) {
+              return GestureDetector(
+                onTap: widget.onTap,
+                child: InteractiveViewer(
+                  minScale: 0.5,
+                  maxScale: 4.0,
+                  child: Center(child: _buildImageWidget(allImages[index])),
+                ),
+              );
+            },
           ),
         ),
       ),
     );
   }
 
-  Widget _buildImage() {
-    // Prefer cloud URLs (same order as grid card and signal card)
-    if (widget.signal.mediaUrls.isNotEmpty) {
+  Widget _buildImageWidget(String path) {
+    // Check if it's a cloud URL or local path
+    if (path.startsWith('http://') || path.startsWith('https://')) {
       return Image.network(
-        widget.signal.mediaUrls.first,
+        path,
         fit: BoxFit.contain,
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) return child;
@@ -424,18 +614,13 @@ class _AnimatedImagePageState extends State<_AnimatedImagePage>
         },
         errorBuilder: (context, error, stackTrace) => _buildErrorWidget(),
       );
-    }
-
-    // Fall back to local path for mesh signals
-    if (widget.signal.imageLocalPath != null) {
+    } else {
       return Image.file(
-        File(widget.signal.imageLocalPath!),
+        File(path),
         fit: BoxFit.contain,
         errorBuilder: (context, error, stackTrace) => _buildErrorWidget(),
       );
     }
-
-    return _buildErrorWidget();
   }
 
   Widget _buildErrorWidget() {

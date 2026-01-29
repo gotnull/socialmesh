@@ -285,10 +285,12 @@ class NodeIdentityNotifier extends Notifier<Map<int, NodeIdentity>> {
     final sanitized = <int, NodeIdentity>{};
     for (final entry in identities.entries) {
       final identity = entry.value;
-      final longIsBle =
-          NodeDisplayNameResolver.isBleDefaultName(identity.longName);
-      final shortIsBle =
-          NodeDisplayNameResolver.isBleDefaultName(identity.shortName);
+      final longIsBle = NodeDisplayNameResolver.isBleDefaultName(
+        identity.longName,
+      );
+      final shortIsBle = NodeDisplayNameResolver.isBleDefaultName(
+        identity.shortName,
+      );
       if (longIsBle || shortIsBle) {
         final bleValue = longIsBle ? identity.longName : identity.shortName;
         if (_bleStripLoggedNodes.add(identity.nodeNum)) {
@@ -308,10 +310,7 @@ class NodeIdentityNotifier extends Notifier<Map<int, NodeIdentity>> {
     return sanitized;
   }
 
-  bool _identitiesEqual(
-    Map<int, NodeIdentity> a,
-    Map<int, NodeIdentity> b,
-  ) {
+  bool _identitiesEqual(Map<int, NodeIdentity> a, Map<int, NodeIdentity> b) {
     if (a.length != b.length) return false;
     for (final entry in a.entries) {
       final other = b[entry.key];
@@ -418,7 +417,14 @@ final connectedDeviceProvider =
 // - connecting: Auto-reconnect is connecting to the device
 // - failed: Auto-reconnect failed (all retries exhausted)
 // - success: Auto-reconnect succeeded
-enum AutoReconnectState { idle, manualConnecting, scanning, connecting, failed, success }
+enum AutoReconnectState {
+  idle,
+  manualConnecting,
+  scanning,
+  connecting,
+  failed,
+  success,
+}
 
 class AutoReconnectStateNotifier extends Notifier<AutoReconnectState> {
   @override
@@ -1167,20 +1173,23 @@ final protocolServiceProvider = Provider<ProtocolService>((ref) {
   final dedupeStore = ref.watch(meshPacketDedupeStoreProvider);
   final service = ProtocolService(transport, dedupeStore: dedupeStore);
 
-  service.onIdentityUpdate = ({
-    required int nodeNum,
-    String? longName,
-    String? shortName,
-    int? lastSeenAtMs,
-  }) {
-    ref.read(nodeIdentityProvider.notifier).upsertIdentity(
-          nodeNum: nodeNum,
-          longName: longName,
-          shortName: shortName,
-          updatedAtMs: DateTime.now().millisecondsSinceEpoch,
-          lastSeenAtMs: lastSeenAtMs,
-        );
-  };
+  service.onIdentityUpdate =
+      ({
+        required int nodeNum,
+        String? longName,
+        String? shortName,
+        int? lastSeenAtMs,
+      }) {
+        ref
+            .read(nodeIdentityProvider.notifier)
+            .upsertIdentity(
+              nodeNum: nodeNum,
+              longName: longName,
+              shortName: shortName,
+              updatedAtMs: DateTime.now().millisecondsSinceEpoch,
+              lastSeenAtMs: lastSeenAtMs,
+            );
+      };
 
   AppLogging.debug(
     '🟢 ProtocolService provider created - instance: ${service.hashCode}',
@@ -2058,10 +2067,8 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
   }
 
   MeshNode _stripBleNamesIfNeeded(MeshNode node) {
-    final longIsBle =
-        NodeDisplayNameResolver.isBleDefaultName(node.longName);
-    final shortIsBle =
-        NodeDisplayNameResolver.isBleDefaultName(node.shortName);
+    final longIsBle = NodeDisplayNameResolver.isBleDefaultName(node.longName);
+    final shortIsBle = NodeDisplayNameResolver.isBleDefaultName(node.shortName);
     if (!longIsBle && !shortIsBle) return node;
 
     final bleValue = longIsBle ? node.longName : node.shortName;
@@ -2072,10 +2079,7 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
       );
     }
 
-    return node.copyWith(
-      clearLongName: longIsBle,
-      clearShortName: shortIsBle,
-    );
+    return node.copyWith(clearLongName: longIsBle, clearShortName: shortIsBle);
   }
 
   void _applyIdentityUpdates(Map<int, NodeIdentity> identities) {
@@ -2738,6 +2742,7 @@ class RegionConfigState {
   final RegionApplyStatus applyStatus;
   final int? lastAttemptAtMs;
   final int connectionSessionId;
+
   /// The device ID we're applying region for. Used to preserve state across
   /// reconnects (device reboots after region change) but reset when switching devices.
   final String? targetDeviceId;
@@ -2761,12 +2766,17 @@ class RegionConfigState {
     bool clearTargetDeviceId = false,
   }) {
     return RegionConfigState(
-      regionChoice: clearRegionChoice ? null : regionChoice ?? this.regionChoice,
+      regionChoice: clearRegionChoice
+          ? null
+          : regionChoice ?? this.regionChoice,
       applyStatus: applyStatus ?? this.applyStatus,
-      lastAttemptAtMs:
-          clearLastAttemptAt ? null : lastAttemptAtMs ?? this.lastAttemptAtMs,
+      lastAttemptAtMs: clearLastAttemptAt
+          ? null
+          : lastAttemptAtMs ?? this.lastAttemptAtMs,
       connectionSessionId: connectionSessionId ?? this.connectionSessionId,
-      targetDeviceId: clearTargetDeviceId ? null : targetDeviceId ?? this.targetDeviceId,
+      targetDeviceId: clearTargetDeviceId
+          ? null
+          : targetDeviceId ?? this.targetDeviceId,
     );
   }
 }
@@ -2776,82 +2786,85 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
   RegionConfigState build() {
     final connectionState = ref.read(deviceConnectionProvider);
 
-    ref.listen<DeviceConnectionState2>(
-      deviceConnectionProvider,
-      (previous, next) {
-        // Check if session ID changed
-        if (previous?.connectionSessionId != next.connectionSessionId) {
-          final currentDeviceId = next.device?.id;
-          final isSameDevice = state.targetDeviceId != null && 
-              currentDeviceId != null && 
-              state.targetDeviceId == currentDeviceId;
-          
-          // IMPORTANT: During region apply, the device reboots and reconnects with a NEW session.
-          // If we're currently applying OR just applied a region to the SAME device,
-          // don't reset state - preserve across the expected reboot/reconnect cycle.
-          if (isSameDevice && (state.applyStatus == RegionApplyStatus.applying || 
-              state.applyStatus == RegionApplyStatus.applied)) {
-            AppLogging.protocol(
-              'REGION_FLOW choose=${state.regionChoice?.name ?? "null"} session=${state.connectionSessionId} '
-              'new_session=${next.connectionSessionId} status=${state.applyStatus.name} reason=session_change_same_device',
-            );
-            // Update the session ID but keep the apply status
-            state = state.copyWith(connectionSessionId: next.connectionSessionId);
-            return;
-          }
-          
-          // Different device or idle state - reset for new session
-          state = RegionConfigState(
-            connectionSessionId: next.connectionSessionId,
-            targetDeviceId: currentDeviceId,
-          );
+    ref.listen<DeviceConnectionState2>(deviceConnectionProvider, (
+      previous,
+      next,
+    ) {
+      // Check if session ID changed
+      if (previous?.connectionSessionId != next.connectionSessionId) {
+        final currentDeviceId = next.device?.id;
+        final isSameDevice =
+            state.targetDeviceId != null &&
+            currentDeviceId != null &&
+            state.targetDeviceId == currentDeviceId;
+
+        // IMPORTANT: During region apply, the device reboots and reconnects with a NEW session.
+        // If we're currently applying OR just applied a region to the SAME device,
+        // don't reset state - preserve across the expected reboot/reconnect cycle.
+        if (isSameDevice &&
+            (state.applyStatus == RegionApplyStatus.applying ||
+                state.applyStatus == RegionApplyStatus.applied)) {
           AppLogging.protocol(
-            'REGION_FLOW choose=null session=${next.connectionSessionId} status=idle reason=new_session device=$currentDeviceId',
+            'REGION_FLOW choose=${state.regionChoice?.name ?? "null"} session=${state.connectionSessionId} '
+            'new_session=${next.connectionSessionId} status=${state.applyStatus.name} reason=session_change_same_device',
+          );
+          // Update the session ID but keep the apply status
+          state = state.copyWith(connectionSessionId: next.connectionSessionId);
+          return;
+        }
+
+        // Different device or idle state - reset for new session
+        state = RegionConfigState(
+          connectionSessionId: next.connectionSessionId,
+          targetDeviceId: currentDeviceId,
+        );
+        AppLogging.protocol(
+          'REGION_FLOW choose=null session=${next.connectionSessionId} status=idle reason=new_session device=$currentDeviceId',
+        );
+        return;
+      }
+
+      if (state.applyStatus == RegionApplyStatus.applying) {
+        if (next.isTerminalInvalidated) {
+          state = state.copyWith(applyStatus: RegionApplyStatus.failed);
+          AppLogging.protocol(
+            'REGION_FLOW choose=${state.regionChoice?.name ?? "null"} session=${state.connectionSessionId} status=failed reason=pairing_invalidated',
           );
           return;
         }
 
-        if (state.applyStatus == RegionApplyStatus.applying) {
-          if (next.isTerminalInvalidated) {
-            state = state.copyWith(applyStatus: RegionApplyStatus.failed);
-            AppLogging.protocol(
-              'REGION_FLOW choose=${state.regionChoice?.name ?? "null"} session=${state.connectionSessionId} status=failed reason=pairing_invalidated',
-            );
-            return;
-          }
-
-          // NOTE: We intentionally DO NOT mark as failed on disconnect during apply.
-          // Setting region causes device reboot, which triggers a temporary disconnect.
-          // The _awaitRegionConfirmation method handles this expected disconnect/reconnect cycle.
-          // Marking as failed here would abort the operation before reconnection can complete.
-          if (previous?.isConnected == true && !next.isConnected) {
-            AppLogging.protocol(
-              'REGION_FLOW choose=${state.regionChoice?.name ?? "null"} session=${state.connectionSessionId} status=applying disconnect_expected=true reason=device_reboot',
-            );
-            // DO NOT set applyStatus to failed - let _awaitRegionConfirmation handle it
-            return;
-          }
+        // NOTE: We intentionally DO NOT mark as failed on disconnect during apply.
+        // Setting region causes device reboot, which triggers a temporary disconnect.
+        // The _awaitRegionConfirmation method handles this expected disconnect/reconnect cycle.
+        // Marking as failed here would abort the operation before reconnection can complete.
+        if (previous?.isConnected == true && !next.isConnected) {
+          AppLogging.protocol(
+            'REGION_FLOW choose=${state.regionChoice?.name ?? "null"} session=${state.connectionSessionId} status=applying disconnect_expected=true reason=device_reboot',
+          );
+          // DO NOT set applyStatus to failed - let _awaitRegionConfirmation handle it
+          return;
         }
-      },
-    );
+      }
+    });
 
-    ref.listen<AsyncValue<config_pbenum.Config_LoRaConfig_RegionCode>>(
-      deviceRegionProvider,
-      (previous, next) {
-        next.whenData((region) {
-          if (state.applyStatus == RegionApplyStatus.applying &&
-              state.regionChoice != null &&
-              region == state.regionChoice) {
-            state = state.copyWith(applyStatus: RegionApplyStatus.applied);
-            AppLogging.protocol(
-              'REGION_FLOW choose=${region.name} session=${state.connectionSessionId} status=applied reason=region_stream',
-            );
-          }
-        });
-      },
-    );
+    ref.listen<
+      AsyncValue<config_pbenum.Config_LoRaConfig_RegionCode>
+    >(deviceRegionProvider, (previous, next) {
+      next.whenData((region) {
+        if (state.applyStatus == RegionApplyStatus.applying &&
+            state.regionChoice != null &&
+            region == state.regionChoice) {
+          state = state.copyWith(applyStatus: RegionApplyStatus.applied);
+          AppLogging.protocol(
+            'REGION_FLOW choose=${region.name} session=${state.connectionSessionId} status=applied reason=region_stream',
+          );
+        }
+      });
+    });
 
-    return RegionConfigState(connectionSessionId: connectionState.connectionSessionId);
+    return RegionConfigState(
+      connectionSessionId: connectionState.connectionSessionId,
+    );
   }
 
   Future<void> applyRegion(
@@ -2915,7 +2928,7 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
       // This means the device rebooted and reconnected, confirming the region was applied.
       // Note: The session ID will have changed because reconnection creates a new session.
       // This is expected behavior - don't treat session change as an error here.
-      
+
       if (!ref.mounted) return;
 
       // The region stream listener might have already set status to applied
@@ -2930,11 +2943,11 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
       );
     } catch (e) {
       if (!ref.mounted) rethrow;
-      
+
       // Check if the region was actually applied despite the error (e.g., timeout during reconnect
       // but region stream already confirmed the change)
       final protocol = ref.read(protocolServiceProvider);
-      if (state.applyStatus == RegionApplyStatus.applied && 
+      if (state.applyStatus == RegionApplyStatus.applied &&
           state.regionChoice == region) {
         AppLogging.protocol(
           'REGION_FLOW choose=${region.name} session=$sessionId status=applied reason=confirmed_despite_error',
@@ -2950,7 +2963,7 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
         );
         return;
       }
-      
+
       // Only set failed if we're still in applying state
       if (state.applyStatus == RegionApplyStatus.applying) {
         state = state.copyWith(applyStatus: RegionApplyStatus.failed);
@@ -2989,7 +3002,7 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
         completer.completeError(error);
       }
     }
-    
+
     // Check if already confirmed (device already has the region)
     // This handles test scenarios where setRegion completes synchronously
     if (protocol.currentRegion == region) {
@@ -3004,56 +3017,65 @@ class RegionConfigNotifier extends Notifier<RegionConfigState> {
     // 1. Connected -> Disconnected (expected reboot)
     // 2. Disconnected -> Connecting -> Connected (auto-reconnect)
     // 3. Once reconnected and protocol is ready, we complete
-    connectionSub = ref.listen<DeviceConnectionState2>(
-      deviceConnectionProvider,
-      (previous, next) {
-        if (!ref.mounted) {
-          completeError(StateError('Region apply canceled'));
-          return;
-        }
-        
-        // Track disconnect (expected during region change)
-        if (!sawDisconnect && !next.isConnected) {
-          sawDisconnect = true;
-          AppLogging.protocol(
-            'REGION_FLOW session=$sessionId disconnect_during_apply (expected for reboot)',
+    connectionSub = ref.listen<DeviceConnectionState2>(deviceConnectionProvider, (
+      previous,
+      next,
+    ) {
+      if (!ref.mounted) {
+        completeError(StateError('Region apply canceled'));
+        return;
+      }
+
+      // Track disconnect (expected during region change)
+      if (!sawDisconnect && !next.isConnected) {
+        sawDisconnect = true;
+        AppLogging.protocol(
+          'REGION_FLOW session=$sessionId disconnect_during_apply (expected for reboot)',
+        );
+        return;
+      }
+
+      // If we see terminal invalidation, that's a real error
+      if (next.isTerminalInvalidated) {
+        completeError(
+          StateError('Region apply canceled - terminal invalidation'),
+        );
+        return;
+      }
+
+      // Track reconnect - but only complete if device is fully connected
+      // (state == DevicePairingState.connected, not just .connecting)
+      if (sawDisconnect &&
+          !sawReconnect &&
+          next.isConnected &&
+          next.state == DevicePairingState.connected) {
+        final reconnectedDeviceId = next.device?.id;
+        if (targetDeviceId != null && reconnectedDeviceId != targetDeviceId) {
+          completeError(
+            StateError(
+              'Region apply canceled - reconnected to different device',
+            ),
           );
           return;
         }
-        
-        // If we see terminal invalidation, that's a real error
-        if (next.isTerminalInvalidated) {
-          completeError(StateError('Region apply canceled - terminal invalidation'));
-          return;
-        }
-        
-        // Track reconnect - but only complete if device is fully connected
-        // (state == DevicePairingState.connected, not just .connecting)
-        if (sawDisconnect && !sawReconnect && next.isConnected && 
-            next.state == DevicePairingState.connected) {
-          final reconnectedDeviceId = next.device?.id;
-          if (targetDeviceId != null && reconnectedDeviceId != targetDeviceId) {
-            completeError(StateError('Region apply canceled - reconnected to different device'));
-            return;
-          }
-          sawReconnect = true;
-          AppLogging.protocol(
-            'REGION_FLOW session=$sessionId reconnected_after_reboot newSession=${next.connectionSessionId}',
-          );
-          
-          // Device is fully reconnected - region change succeeded
-          // The device only reboots after accepting the region, so if we're
-          // connected again, the region was applied successfully.
-          completeSuccess();
-        }
-      },
-    );
+        sawReconnect = true;
+        AppLogging.protocol(
+          'REGION_FLOW session=$sessionId reconnected_after_reboot newSession=${next.connectionSessionId}',
+        );
+
+        // Device is fully reconnected - region change succeeded
+        // The device only reboots after accepting the region, so if we're
+        // connected again, the region was applied successfully.
+        completeSuccess();
+      }
+    });
 
     try {
       await completer.future.timeout(
         const Duration(seconds: 90), // Increased timeout for slow reboots
-        onTimeout: () =>
-            throw TimeoutException('Timed out waiting for device to reconnect after region change'),
+        onTimeout: () => throw TimeoutException(
+          'Timed out waiting for device to reconnect after region change',
+        ),
       );
     } finally {
       connectionSub.close();
@@ -3073,10 +3095,10 @@ final needsRegionSetupProvider = Provider<bool>((ref) {
   final connectionState = ref.watch(deviceConnectionProvider);
   final sessionId = connectionState.connectionSessionId;
   final currentDeviceId = connectionState.device?.id;
-  
+
   // If region data is loading, don't show setup (wait for it)
   if (regionAsync.isLoading) return false;
-  
+
   // Check device region from stream
   final isUnset =
       regionAsync.whenOrNull(
@@ -3085,17 +3107,19 @@ final needsRegionSetupProvider = Provider<bool>((ref) {
       ) ??
       false;
   if (!isUnset) return false;
-  
+
   // If we're applying or just applied region to THIS device, don't show setup
   // This prevents showing region selection during the reboot/reconnect cycle
-  final isSameDevice = regionState.targetDeviceId != null && 
-      currentDeviceId != null && 
+  final isSameDevice =
+      regionState.targetDeviceId != null &&
+      currentDeviceId != null &&
       regionState.targetDeviceId == currentDeviceId;
-  if (isSameDevice && (regionState.applyStatus == RegionApplyStatus.applying || 
-      regionState.applyStatus == RegionApplyStatus.applied)) {
+  if (isSameDevice &&
+      (regionState.applyStatus == RegionApplyStatus.applying ||
+          regionState.applyStatus == RegionApplyStatus.applied)) {
     return false;
   }
-  
+
   // Only need setup if we're idle (not applying/applied) for this session
   if (regionState.connectionSessionId != sessionId) return false;
   return regionState.applyStatus == RegionApplyStatus.idle;

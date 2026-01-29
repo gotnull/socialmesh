@@ -308,10 +308,8 @@ class SignalService {
   /// Signature: `Future<Post?> Function(String signalId)?`
   final Future<Post?> Function(String signalId)? cloudLookupOverride;
 
-  SignalService({
-    this.cloudLookupOverride,
-    MeshPacketDedupeStore? dedupeStore,
-  }) : _dedupeStore = dedupeStore ?? MeshPacketDedupeStore();
+  SignalService({this.cloudLookupOverride, MeshPacketDedupeStore? dedupeStore})
+    : _dedupeStore = dedupeStore ?? MeshPacketDedupeStore();
 
   static const _tableName = 'signals';
   static const _proximityTable = 'node_proximity';
@@ -844,7 +842,7 @@ class SignalService {
     int ttlMinutes = SignalTTL.defaultTTL,
     PostLocation? location,
     int? meshNodeId,
-    String? imageLocalPath,
+    List<String>? imageLocalPaths,
     PostAuthorSnapshot? authorSnapshot,
     // When false, do not attempt any cloud work (no Firestore/Storage calls)
     // Only broadcast over mesh and store locally.
@@ -856,27 +854,40 @@ class SignalService {
     final expiresAt = now.add(Duration(minutes: ttlMinutes));
     final id = _uuid.v4();
 
-    // Copy image to persistent storage if provided
-    String? persistentImagePath;
+    // Copy images to persistent storage if provided
+    final persistentImagePaths = <String>[];
     ImageState imageState = ImageState.none;
-    if (imageLocalPath != null && imageLocalPath.isNotEmpty) {
-      persistentImagePath = await _copyImageToPersistentStorage(
-        imageLocalPath,
-        id,
-      );
-      if (persistentImagePath != null) {
-        imageState = ImageState.local;
-        AppLogging.signals(
-          'Image copied to persistent storage: $persistentImagePath',
+
+    if (imageLocalPaths != null && imageLocalPaths.isNotEmpty) {
+      for (var i = 0; i < imageLocalPaths.length; i++) {
+        final imagePath = imageLocalPaths[i];
+        if (imagePath.isEmpty) continue;
+
+        final persistentPath = await _copyImageToPersistentStorage(
+          imagePath,
+          '${id}_$i', // Unique ID for each image
         );
-      } else {
-        AppLogging.signals('Failed to copy image to persistent storage');
+
+        if (persistentPath != null) {
+          persistentImagePaths.add(persistentPath);
+          AppLogging.signals(
+            'Image $i copied to persistent storage: $persistentPath',
+          );
+        } else {
+          AppLogging.signals('Failed to copy image $i to persistent storage');
+        }
+      }
+
+      if (persistentImagePaths.isNotEmpty) {
+        imageState = ImageState.local;
       }
     }
 
     final authorId =
         _currentUserId ??
-        (meshNodeId != null ? 'mesh_${meshNodeId.toRadixString(16)}' : 'anonymous');
+        (meshNodeId != null
+            ? 'mesh_${meshNodeId.toRadixString(16)}'
+            : 'anonymous');
 
     final signal = Post(
       id: id,
@@ -894,13 +905,16 @@ class SignalService {
       expiresAt: expiresAt,
       meshNodeId: meshNodeId,
       imageState: imageState,
-      imageLocalPath: persistentImagePath,
-      hasPendingCloudImage: persistentImagePath != null,
+      imageLocalPath: persistentImagePaths.isNotEmpty
+          ? persistentImagePaths.first
+          : null,
+      imageLocalPaths: persistentImagePaths,
+      hasPendingCloudImage: persistentImagePaths.isNotEmpty,
     );
 
     AppLogging.signals(
       'Creating signal: id=$id, ttl=${ttlMinutes}m, '
-      'hasImage=${persistentImagePath != null}, meshNode=$meshNodeId',
+      'imageCount=${persistentImagePaths.length}, meshNode=$meshNodeId',
     );
 
     // Store locally first (mesh-first)
@@ -913,7 +927,7 @@ class SignalService {
         AppLogging.signals('SEND: broadcast started for ${signal.id}');
         // If this is mesh-only send (useCloud==false) then use a short timeout
         // so UI doesn't feel stuck waiting for ACKs.
-        final hasImage = persistentImagePath != null;
+        final hasImage = persistentImagePaths.isNotEmpty;
         int? packetId;
         if (!useCloud) {
           try {
@@ -965,12 +979,21 @@ class SignalService {
     // Cloud sync should only happen if useCloud==true AND we have an auth'ed user.
     if (useCloud && _currentUserId != null && !signal.isExpired) {
       AppLogging.signals('SEND: cloud sync queued for ${signal.id}');
-      // Fire-and-forget: schedule cloud save and mark synced on success
+      // Fire-and-forget: schedule cloud save, then auto-upload images
       Future(() async {
         try {
           await _saveSignalToFirebase(signal);
           await _markSignalSynced(signal.id);
           AppLogging.signals('SEND: cloud sync success for ${signal.id}');
+
+          // Now that signal exists in Firestore, upload images if needed
+          if (persistentImagePaths.isNotEmpty &&
+              imageState == ImageState.local) {
+            AppLogging.signals(
+              'SEND: images upload starting for ${signal.id} (${persistentImagePaths.length} images)',
+            );
+            await _autoUploadMultipleImages(signal.id, persistentImagePaths);
+          }
         } catch (e, st) {
           AppLogging.signals(
             'SEND: cloud sync error for ${signal.id}: $e\n$st',
@@ -983,17 +1006,16 @@ class SignalService {
       );
     }
 
-    // Auto-upload image if useCloud allowed AND authenticated and has local image (background)
+    // Note: Image upload now happens inside cloud sync Future above
+    // This ensures signal exists in Firestore before uploadSignalImage queries it
     if (useCloud &&
         _currentUserId != null &&
-        persistentImagePath != null &&
+        persistentImagePaths.isNotEmpty &&
         imageState == ImageState.local) {
-      AppLogging.signals('SEND: image upload queued for ${signal.id}');
-      // Don't await - let upload happen in background
-      _autoUploadImage(signal.id, persistentImagePath);
-    } else if (persistentImagePath != null && !useCloud) {
+      // Image upload moved to cloud sync block above
+    } else if (persistentImagePaths.isNotEmpty && !useCloud) {
       AppLogging.signals(
-        'SEND: image suppressed for ${signal.id} (cloud unavailable)',
+        'SEND: images suppressed for ${signal.id} (cloud unavailable)',
       );
       // If images are suppressed, make sure we don't attempt uploads or set imageState to local-only
       // imageState remains ImageState.local but we don't upload it.
@@ -1011,16 +1033,66 @@ class SignalService {
     return signal;
   }
 
-  /// Auto-upload image to cloud in background.
-  /// Updates local and cloud records with the image URL.
-  Future<void> _autoUploadImage(String signalId, String localPath) async {
-    AppLogging.signals('Auto-uploading image for signal $signalId');
+  /// Auto-upload multiple images to cloud in background.
+  /// Updates local and cloud records with all image URLs.
+  Future<void> _autoUploadMultipleImages(
+    String signalId,
+    List<String> localPaths,
+  ) async {
+    AppLogging.signals(
+      'Auto-uploading ${localPaths.length} images for signal $signalId',
+    );
 
-    final url = await uploadSignalImage(signalId, localPath);
-    if (url != null) {
-      AppLogging.signals('Image auto-uploaded: $signalId -> $url');
-    } else {
-      AppLogging.signals('Image auto-upload failed for signal $signalId');
+    final uploadedUrls = <String>[];
+    for (var i = 0; i < localPaths.length; i++) {
+      final localPath = localPaths[i];
+      final url = await uploadSignalImage(
+        signalId,
+        localPath,
+        storageSuffix: '_$i',
+        skipFirestoreUpdate: true, // Batch update will handle Firestore
+      );
+      if (url != null) {
+        uploadedUrls.add(url);
+        AppLogging.signals('Image $i auto-uploaded: $signalId -> $url');
+      } else {
+        AppLogging.signals('Image $i auto-upload failed for signal $signalId');
+      }
+    }
+
+    if (uploadedUrls.isNotEmpty) {
+      AppLogging.signals(
+        'Uploaded ${uploadedUrls.length}/${localPaths.length} images for $signalId',
+      );
+
+      // Update the signal with all uploaded URLs
+      try {
+        // Update Firestore
+        await _firestore.collection('posts').doc(signalId).update({
+          'mediaUrls': uploadedUrls,
+          'imageState': 'uploaded',
+        });
+
+        // Update local database
+        await init();
+        await _db!.update(
+          'signals',
+          {
+            'mediaUrls': jsonEncode(uploadedUrls), // Store as JSON
+            'imageState': 'uploaded',
+          },
+          where: 'id = ?',
+          whereArgs: [signalId],
+        );
+
+        AppLogging.signals(
+          'Updated signal $signalId with ${uploadedUrls.length} mediaUrls',
+        );
+      } catch (e) {
+        AppLogging.signals(
+          'Failed to update signal $signalId with mediaUrls: $e',
+        );
+      }
     }
   }
 
@@ -1588,16 +1660,38 @@ class SignalService {
           await doc.reference.delete();
         }
 
-        // Delete image from Firebase Storage if it exists
+        // Delete images from Firebase Storage if they exist
         if (signal != null && signal.mediaUrls.isNotEmpty) {
           try {
-            final ref = _storage.ref('signals/$_currentUserId/$signalId.jpg');
-            await ref.delete();
-            AppLogging.signals('Deleted signal image from Storage: $signalId');
-          } catch (storageError) {
-            AppLogging.signals(
-              'Failed to delete signal image from Storage (may not exist): $storageError',
-            );
+            // Delete all images with suffixes (_0, _1, _2, _3)
+            // Only attempt deletion for non-empty URLs
+            for (var i = 0; i < signal.mediaUrls.length; i++) {
+              final url = signal.mediaUrls[i];
+              if (url.isEmpty) continue; // Skip empty URLs
+
+              try {
+                final ref = _storage.ref(
+                  'signals/$_currentUserId/${signalId}_$i.jpg',
+                );
+                await ref.delete();
+                AppLogging.signals(
+                  'Deleted signal image $i from Storage: $signalId',
+                );
+              } catch (storageError) {
+                // Only log if it's not a simple "not found" error
+                if (storageError.toString().contains('object-not-found')) {
+                  AppLogging.signals(
+                    'Signal image $i already deleted: $signalId',
+                  );
+                } else {
+                  AppLogging.signals(
+                    'Failed to delete signal image $i from Storage: $storageError',
+                  );
+                }
+              }
+            }
+          } catch (e) {
+            AppLogging.signals('Error deleting signal images from Storage: $e');
           }
         }
       } catch (e) {
@@ -1721,9 +1815,7 @@ class SignalService {
     );
 
     // Also cleanup old mesh packet entries, proximity data, and comments
-    await _dedupeStore.cleanup(
-      ttl: Duration(minutes: _meshPacketTTLMinutes),
-    );
+    await _dedupeStore.cleanup(ttl: Duration(minutes: _meshPacketTTLMinutes));
     await _cleanupOldProximityData();
     await _cleanupExpiredComments();
 
@@ -1956,7 +2048,15 @@ class SignalService {
   /// 1. User is authenticated
   /// 2. Signal is NOT expired
   /// 3. Image unlock rules are satisfied
-  Future<String?> uploadSignalImage(String signalId, String localPath) async {
+  ///
+  /// Set [skipFirestoreUpdate] to true when doing batch uploads - the caller
+  /// will handle the final Firestore update with all URLs.
+  Future<String?> uploadSignalImage(
+    String signalId,
+    String localPath, {
+    String storageSuffix = '',
+    bool skipFirestoreUpdate = false,
+  }) async {
     final currentUid = _currentUserId;
     if (currentUid == null) {
       AppLogging.signals('Cannot upload image: not authenticated');
@@ -1991,10 +2091,14 @@ class SignalService {
         return null;
       }
 
-      AppLogging.signals('📷 UPLOAD START: signal $signalId, file=$localPath');
+      AppLogging.signals(
+        '📷 UPLOAD START: signal $signalId$storageSuffix, file=$localPath',
+      );
 
       // Step 1: Upload to Firebase Storage
-      final ref = _storage.ref('signals/$currentUid/$signalId.jpg');
+      final ref = _storage.ref(
+        'signals/$currentUid/$signalId$storageSuffix.jpg',
+      );
       final uploadTask = ref.putFile(file);
 
       // Monitor upload progress
@@ -2009,7 +2113,7 @@ class SignalService {
       final url = await ref.getDownloadURL();
 
       AppLogging.signals(
-        '📷 STORAGE UPLOAD SUCCESS: signal $signalId, URL=$url',
+        '📷 STORAGE UPLOAD SUCCESS: signal $signalId$storageSuffix, URL=$url',
       );
 
       // Step 2: Validate image with Cloud Function
@@ -2039,20 +2143,19 @@ class SignalService {
         AppLogging.signals('📷 Image passed validation');
       } catch (e) {
         AppLogging.signals('📷 validateImages error: $e');
-        // Check if image was auto-removed by Cloud Function
+        // Validation service error - delete the image and reject
         try {
-          await ref.getMetadata();
-          // Image still exists - validation service error, allow upload
-          AppLogging.signals('📷 Validation service error, allowing upload');
-        } catch (metadataError) {
-          AppLogging.signals('📷 Image was auto-removed by validation');
-          return null;
+          await ref.delete();
+          AppLogging.signals('📷 Deleted image after validation service error');
+        } catch (deleteError) {
+          AppLogging.signals('📷 Failed to delete image: $deleteError');
         }
+        return null;
       }
 
       // Step 3: Update Firestore FIRST (if not expired)
-      // Only update allowed fields: mediaUrls, imageUrl, imageState
-      if (!signal.isExpired) {
+      // Skip Firestore update during batch uploads - the final batch update will handle it
+      if (!signal.isExpired && !skipFirestoreUpdate) {
         final firestoreSuccess = await _updateFirestoreImageFields(
           signalId: signalId,
           url: url,
@@ -3119,8 +3222,9 @@ class SignalService {
         orElse: () => ImageState.none,
       ),
       imageLocalPath: map['imageLocalPath'] as String?,
-      hasPendingCloudImage:
-          (map['hasPendingCloudImage'] as int?) == 1 ? true : false,
+      hasPendingCloudImage: (map['hasPendingCloudImage'] as int?) == 1
+          ? true
+          : false,
     );
   }
 

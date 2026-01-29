@@ -327,7 +327,12 @@ class Post {
   final ImageState imageState;
 
   /// Local path to image file (before cloud upload).
+  /// DEPRECATED: Use imageLocalPaths for multi-image support.
   final String? imageLocalPath;
+
+  /// Local paths to image files (before cloud upload).
+  /// Supports 1-4 images per signal.
+  final List<String> imageLocalPaths;
 
   /// Signals that have an image pending in Firebase but not yet downloaded locally.
   final bool hasPendingCloudImage;
@@ -360,6 +365,7 @@ class Post {
     this.hopCount,
     this.imageState = ImageState.none,
     this.imageLocalPath,
+    this.imageLocalPaths = const [],
     this.hasPendingCloudImage = false,
   });
 
@@ -404,6 +410,11 @@ class Post {
         orElse: () => ImageState.none,
       ),
       imageLocalPath: data['imageLocalPath'] as String?,
+      imageLocalPaths:
+          (data['imageLocalPaths'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
       hasPendingCloudImage: false,
     );
   }
@@ -450,6 +461,7 @@ class Post {
     int? hopCount,
     ImageState? imageState,
     String? imageLocalPath,
+    List<String>? imageLocalPaths,
     bool? hasPendingCloudImage,
   }) {
     return Post(
@@ -470,8 +482,8 @@ class Post {
       hopCount: hopCount ?? this.hopCount,
       imageState: imageState ?? this.imageState,
       imageLocalPath: imageLocalPath ?? this.imageLocalPath,
-      hasPendingCloudImage:
-          hasPendingCloudImage ?? this.hasPendingCloudImage,
+      imageLocalPaths: imageLocalPaths ?? this.imageLocalPaths,
+      hasPendingCloudImage: hasPendingCloudImage ?? this.hasPendingCloudImage,
     );
   }
 

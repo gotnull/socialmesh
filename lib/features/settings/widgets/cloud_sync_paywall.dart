@@ -4,6 +4,7 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 
 import '../../../core/logging.dart';
 import '../../../providers/cloud_sync_entitlement_providers.dart';
+import '../../../providers/subscription_providers.dart';
 import '../../../services/subscription/cloud_sync_entitlement_service.dart';
 import '../../../utils/snackbar.dart';
 
@@ -76,19 +77,37 @@ class _CloudSyncPaywallState extends ConsumerState<CloudSyncPaywall> {
     setState(() => _isLoading = true);
 
     try {
-      await Purchases.restorePurchases();
+      AppLogging.subscriptions('☁️ Cloud Sync: Starting restore purchases');
+
+      // Use the same restore flow as packs for consistency
+      final success = await restorePurchases(ref);
+
+      if (!mounted) return;
+
+      // Refresh cloud sync entitlement after restore
       final service = ref.read(cloudSyncEntitlementServiceProvider);
       await service.refreshEntitlement();
 
+      if (!mounted) return;
+
       if (service.currentEntitlement.hasFullAccess) {
+        AppLogging.subscriptions(
+          '☁️ Cloud Sync: Restore successful - full access granted',
+        );
+        showSuccessSnackBar(context, 'Subscription restored');
         widget.onSubscribed?.call();
+      } else if (success) {
+        // User has purchases but no cloud sync entitlement
+        AppLogging.subscriptions(
+          '☁️ Cloud Sync: Restore found purchases but no cloud sync entitlement',
+        );
+        showInfoSnackBar(context, 'No Cloud Sync subscription found');
       } else {
-        if (mounted) {
-          showInfoSnackBar(context, 'No active subscription found');
-        }
+        AppLogging.subscriptions('☁️ Cloud Sync: Restore found no purchases');
+        showInfoSnackBar(context, 'No purchases found to restore');
       }
     } catch (e) {
-      AppLogging.subscriptions('☁️ Restore error: $e');
+      AppLogging.subscriptions('☁️ Cloud Sync: Restore error: $e');
       if (mounted) {
         showErrorSnackBar(context, 'Restore failed. Please try again.');
       }
