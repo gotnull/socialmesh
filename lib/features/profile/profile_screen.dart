@@ -243,7 +243,8 @@ class _ProfileView extends ConsumerWidget {
     final syncError = ref.watch(syncErrorProvider);
     // Check if user has all premium features for gold badge
     // Only show badge for SIGNED IN users with all premium features
-    final hasAllPremium = isSignedIn && ref.watch(hasAllPremiumFeaturesProvider);
+    final hasAllPremium =
+        isSignedIn && ref.watch(hasAllPremiumFeaturesProvider);
 
     return SingleChildScrollView(
       child: Column(

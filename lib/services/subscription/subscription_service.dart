@@ -528,8 +528,9 @@ class PurchaseService {
       // IMPORTANT: Update state so Riverpod gets the current entitlements
       _updateStateFromCustomerInfo(customerInfo);
 
-      final hasActiveEntitlements = customerInfo.entitlements.all.values
-          .any((e) => e.isActive);
+      final hasActiveEntitlements = customerInfo.entitlements.all.values.any(
+        (e) => e.isActive,
+      );
       final hasPurchasedProducts =
           customerInfo.allPurchasedProductIdentifiers.isNotEmpty;
       // Also check store-confirmed products
@@ -542,9 +543,7 @@ class PurchaseService {
       AppLogging.subscriptions(
         '💰 ⚠️ hasPurchasedProducts: $hasPurchasedProducts',
       );
-      AppLogging.subscriptions(
-        '💰 ⚠️ hasStoreConfirmed: $hasStoreConfirmed',
-      );
+      AppLogging.subscriptions('💰 ⚠️ hasStoreConfirmed: $hasStoreConfirmed');
       AppLogging.subscriptions(
         '💰 ═══════════════════════════════════════════════',
       );

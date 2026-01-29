@@ -712,7 +712,7 @@ final isProfileCompleteProvider = Provider<bool>((ref) {
   if (profile == null) return false;
 
   // Profile is considered complete if it has at least a display name
-  return profile.displayName.isNotEmpty && 
+  return profile.displayName.isNotEmpty &&
       profile.displayName != 'Guest' &&
       profile.displayName != 'New User';
 });

@@ -1021,7 +1021,8 @@ class _MainShellState extends ConsumerState<MainShell> {
                       .read(deviceConnectionProvider.notifier)
                       .startBackgroundConnection();
                 },
-                onGoToScanner: () => Navigator.of(context).pushNamed('/scanner'),
+                onGoToScanner: () =>
+                    Navigator.of(context).pushNamed('/scanner'),
                 deviceState: deviceState,
               ),
             ),

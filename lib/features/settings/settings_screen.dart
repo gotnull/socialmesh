@@ -1017,33 +1017,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 subtitle: item.subtitle,
                 trailing: item.switchBuilder != null
                     ? settingsServiceAsync.when(
-                        data:
-                            (settingsService) =>
-                                item.switchBuilder!(
-                                  context,
-                                  ref,
-                                  settingsService,
-                                ),
-                        loading:
-                            () => Icon(
-                              Icons.toggle_on_outlined,
-                              color: context.textTertiary,
-                              size: 24,
-                            ),
-                        error:
-                            (_, _) => Icon(
-                              Icons.toggle_on_outlined,
-                              color: context.textTertiary,
-                              size: 24,
-                            ),
+                        data: (settingsService) =>
+                            item.switchBuilder!(context, ref, settingsService),
+                        loading: () => Icon(
+                          Icons.toggle_on_outlined,
+                          color: context.textTertiary,
+                          size: 24,
+                        ),
+                        error: (_, _) => Icon(
+                          Icons.toggle_on_outlined,
+                          color: context.textTertiary,
+                          size: 24,
+                        ),
                       )
                     : item.hasSwitch
-                        ? Icon(
-                            Icons.toggle_on_outlined,
-                            color: context.textTertiary,
-                            size: 24,
-                          )
-                        : null,
+                    ? Icon(
+                        Icons.toggle_on_outlined,
+                        color: context.textTertiary,
+                        size: 24,
+                      )
+                    : null,
                 onTap:
                     item.onTap ??
                     () {
@@ -4102,7 +4095,8 @@ class _SearchableSettingItem {
   final String section;
   final VoidCallback? onTap;
   final bool hasSwitch;
-  final Widget Function(BuildContext, WidgetRef, SettingsService)? switchBuilder;
+  final Widget Function(BuildContext, WidgetRef, SettingsService)?
+  switchBuilder;
 
   const _SearchableSettingItem({
     required this.icon,

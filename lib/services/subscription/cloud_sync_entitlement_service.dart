@@ -340,7 +340,9 @@ class CloudSyncEntitlementService {
           '⚠️ [ENTITLEMENT] Subscription CANCELLED but still active until expiration',
         );
         AppLogging.subscriptions('   - willRenew: $willRenew');
-        AppLogging.subscriptions('   - expirationDate: ${entitlement.expirationDate}');
+        AppLogging.subscriptions(
+          '   - expirationDate: ${entitlement.expirationDate}',
+        );
         AppLogging.subscriptions('☁️ Subscription cancelled');
         return CloudSyncEntitlement(
           state: CloudSyncEntitlementState.cancelled,

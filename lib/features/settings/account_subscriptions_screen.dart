@@ -119,7 +119,7 @@ class _AccountSubscriptionsScreenState
     Color accentColor,
   ) {
     final isSignedIn = ref.watch(isSignedInProvider);
-    
+
     AppLogging.subscriptions('');
     AppLogging.subscriptions(
       '╔══════════════════════════════════════════════════════════════',
@@ -149,9 +149,9 @@ class _AccountSubscriptionsScreenState
           isSignedIn: isSignedIn,
           onEditTap: isSignedIn
               ? () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const ProfileScreen()),
-                  )
+                  context,
+                  MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                )
               : null,
         );
       },
@@ -166,9 +166,9 @@ class _AccountSubscriptionsScreenState
           isSignedIn: isSignedIn,
           onEditTap: isSignedIn
               ? () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const ProfileScreen()),
-                  )
+                  context,
+                  MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                )
               : null,
         );
       },
@@ -497,12 +497,16 @@ class _AccountSubscriptionsScreenState
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AccentColors.green.withValues(alpha: hasAccess ? 0.15 : 0.08),
+                    color: AccentColors.green.withValues(
+                      alpha: hasAccess ? 0.15 : 0.08,
+                    ),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
                     Icons.cloud_sync,
-                    color: hasAccess ? AccentColors.green : context.textSecondary,
+                    color: hasAccess
+                        ? AccentColors.green
+                        : context.textSecondary,
                     size: 24,
                   ),
                 ),
@@ -515,10 +519,7 @@ class _AccountSubscriptionsScreenState
                 ),
                 subtitle: Text(
                   subtitle,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: subtitleColor,
-                  ),
+                  style: TextStyle(fontSize: 12, color: subtitleColor),
                 ),
                 trailing: badgeText.isNotEmpty
                     ? Container(
@@ -527,12 +528,13 @@ class _AccountSubscriptionsScreenState
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: (isCancelled
-                                  ? Colors.orange
-                                  : isExpired
+                          color:
+                              (isCancelled
+                                      ? Colors.orange
+                                      : isExpired
                                       ? AppTheme.errorRed
                                       : AccentColors.green)
-                              .withValues(alpha: 0.2),
+                                  .withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -543,8 +545,8 @@ class _AccountSubscriptionsScreenState
                             color: isCancelled
                                 ? Colors.orange
                                 : isExpired
-                                    ? AppTheme.errorRed
-                                    : AccentColors.green,
+                                ? AppTheme.errorRed
+                                : AccentColors.green,
                           ),
                         ),
                       )
@@ -556,7 +558,10 @@ class _AccountSubscriptionsScreenState
                 const Divider(height: 1),
                 Container(
                   padding: const EdgeInsets.all(12),
-                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.orange.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
@@ -566,11 +571,7 @@ class _AccountSubscriptionsScreenState
                   ),
                   child: Row(
                     children: [
-                      Icon(
-                        Icons.info_outline,
-                        color: Colors.orange,
-                        size: 20,
-                      ),
+                      Icon(Icons.info_outline, color: Colors.orange, size: 20),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -615,30 +616,34 @@ class _AccountSubscriptionsScreenState
                   child: hasAccess
                       ? OutlinedButton(
                           onPressed: () => _manageSubscription(entitlement),
-                          child: Text(isCancelled ? 'Renew Subscription' : 'Manage Subscription'),
+                          child: Text(
+                            isCancelled
+                                ? 'Renew Subscription'
+                                : 'Manage Subscription',
+                          ),
                         )
                       : !isSignedIn
-                          // Not signed in - show disabled button with hint
-                          ? OutlinedButton(
-                              onPressed: null, // Disabled
-                              child: const Text('Sign in to subscribe'),
-                            )
-                          : FilledButton.icon(
-                              onPressed: _isPurchasing
-                                  ? null
-                                  : _showCloudSyncPaywall,
-                              icon: _isPurchasing
-                                  ? const SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : const Icon(Icons.cloud_sync, size: 18),
-                              label: Text(isExpired ? 'Renew' : 'Subscribe'),
-                            ),
+                      // Not signed in - show disabled button with hint
+                      ? OutlinedButton(
+                          onPressed: null, // Disabled
+                          child: const Text('Sign in to subscribe'),
+                        )
+                      : FilledButton.icon(
+                          onPressed: _isPurchasing
+                              ? null
+                              : _showCloudSyncPaywall,
+                          icon: _isPurchasing
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Icon(Icons.cloud_sync, size: 18),
+                          label: Text(isExpired ? 'Renew' : 'Subscribe'),
+                        ),
                 ),
               ),
             ],
@@ -652,8 +657,19 @@ class _AccountSubscriptionsScreenState
 
   String _monthName(int month) {
     const months = [
-      '', 'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December',
+      '',
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
     return months[month];
   }
@@ -695,7 +711,9 @@ class _AccountSubscriptionsScreenState
             leading: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AccentColors.green.withValues(alpha: allUnlocked ? 0.15 : 0.08),
+                color: AccentColors.green.withValues(
+                  alpha: allUnlocked ? 0.15 : 0.08,
+                ),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
@@ -836,9 +854,15 @@ class _AccountSubscriptionsScreenState
                 final restoredNew = countAfter > countBefore;
 
                 if (success && restoredNew) {
-                  showSuccessSnackBar(context, 'Purchases restored successfully!');
+                  showSuccessSnackBar(
+                    context,
+                    'Purchases restored successfully!',
+                  );
                 } else if (success) {
-                  showInfoSnackBar(context, 'Your purchases are already active');
+                  showInfoSnackBar(
+                    context,
+                    'Your purchases are already active',
+                  );
                 } else {
                   showInfoSnackBar(context, 'No purchases found to restore');
                 }
@@ -1206,8 +1230,7 @@ class _AccountSubscriptionsScreenState
       }
     } else if (Platform.isAndroid) {
       // Deep link to Google Play subscription settings
-      const androidUrl =
-          'https://play.google.com/store/account/subscriptions';
+      const androidUrl = 'https://play.google.com/store/account/subscriptions';
       final uri = Uri.parse(androidUrl);
       try {
         if (await canLaunchUrl(uri)) {
@@ -1270,7 +1293,9 @@ class _ProfilePreviewCard extends StatelessWidget {
     );
 
     final accentColor = context.accentColor;
-    final displayName = isSignedIn ? (profile?.displayName ?? 'Guest') : 'Guest';
+    final displayName = isSignedIn
+        ? (profile?.displayName ?? 'Guest')
+        : 'Guest';
     final avatarUrl = isSignedIn ? profile?.avatarUrl : null;
     final initials = isSignedIn ? (profile?.initials ?? '?') : 'G';
     final isInteractive = isSignedIn && onEditTap != null;
@@ -1315,7 +1340,9 @@ class _ProfilePreviewCard extends StatelessWidget {
                   borderColor: isSignedIn
                       ? accentColor.withValues(alpha: 0.5)
                       : context.textTertiary.withValues(alpha: 0.3),
-                  foregroundColor: isSignedIn ? accentColor : context.textTertiary,
+                  foregroundColor: isSignedIn
+                      ? accentColor
+                      : context.textTertiary,
                   backgroundColor: isSignedIn
                       ? accentColor.withValues(alpha: 0.2)
                       : context.textTertiary.withValues(alpha: 0.1),
@@ -1361,7 +1388,11 @@ class _ProfilePreviewCard extends StatelessWidget {
                 if (isSignedIn)
                   Icon(Icons.chevron_right, color: accentColor)
                 else
-                  Icon(Icons.lock_outline, size: 20, color: context.textTertiary),
+                  Icon(
+                    Icons.lock_outline,
+                    size: 20,
+                    color: context.textTertiary,
+                  ),
               ],
             ),
           ),
