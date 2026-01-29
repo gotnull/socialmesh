@@ -119,7 +119,8 @@ class _AnimatedGoldButtonState extends State<AnimatedGoldButton>
                       AccentColors.goldBrown,
                       AccentColors.goldDarkGoldenrod,
                       AccentColors.goldMetallic,
-                      AccentColors.goldDarkYellow, // Bright gold shimmer - no white!
+                      AccentColors
+                          .goldDarkYellow, // Bright gold shimmer - no white!
                       AccentColors.goldMetallic,
                       AccentColors.goldDarkGoldenrod,
                       AccentColors.goldBrown,
