@@ -1133,7 +1133,7 @@ class _IcoSpeechBubbleWithArrowState
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
-                                    'ICO',
+                                    'Ico',
                                     style: TextStyle(
                                       color: context.accentColor,
                                       fontSize: 13,

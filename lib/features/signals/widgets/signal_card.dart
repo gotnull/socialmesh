@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -755,24 +756,64 @@ class _SignalImage extends ConsumerWidget {
     return Container(
       width: double.infinity,
       height: 200,
-      color: context.card,
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.cloud_upload, size: 32, color: context.accentColor),
-            const SizedBox(height: 8),
-            Text(
-              'Image syncing',
-              style: TextStyle(
-                color: context.textSecondary,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-              textAlign: TextAlign.center,
-            ),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            context.accentColor.withValues(alpha: 0.15),
+            context.accentColor.withValues(alpha: 0.05),
+            context.card,
           ],
         ),
+      ),
+      child: Stack(
+        children: [
+          // Animated mesh pattern background
+          Positioned.fill(
+            child: CustomPaint(
+              painter: _SyncingMeshPainter(
+                color: context.accentColor.withValues(alpha: 0.1),
+              ),
+            ),
+          ),
+          // Pulsing glow effect
+          Center(
+            child: _PulsingGlow(
+              color: context.accentColor,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Animated cloud icon with arrow
+                  _SyncingCloudIcon(color: context.accentColor),
+                  const SizedBox(height: 12),
+                  // Animated text
+                  ShaderMask(
+                    shaderCallback: (bounds) => LinearGradient(
+                      colors: [
+                        context.accentColor,
+                        context.accentColor.withValues(alpha: 0.6),
+                        context.accentColor,
+                      ],
+                    ).createShader(bounds),
+                    child: Text(
+                      'Syncing media',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  // Animated dots
+                  _AnimatedDots(color: context.textTertiary),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -903,4 +944,233 @@ class _SignalLocation extends StatelessWidget {
       ),
     );
   }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SYNCING ANIMATION WIDGETS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/// Pulsing glow effect wrapper
+class _PulsingGlow extends StatefulWidget {
+  const _PulsingGlow({required this.color, required this.child});
+
+  final Color color;
+  final Widget child;
+
+  @override
+  State<_PulsingGlow> createState() => _PulsingGlowState();
+}
+
+class _PulsingGlowState extends State<_PulsingGlow>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final glowOpacity = 0.1 + (_controller.value * 0.15);
+        return Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: widget.color.withValues(alpha: glowOpacity),
+                blurRadius: 40 + (_controller.value * 20),
+                spreadRadius: 10 + (_controller.value * 10),
+              ),
+            ],
+          ),
+          child: child,
+        );
+      },
+      child: widget.child,
+    );
+  }
+}
+
+/// Animated cloud icon with bouncing arrow
+class _SyncingCloudIcon extends StatefulWidget {
+  const _SyncingCloudIcon({required this.color});
+
+  final Color color;
+
+  @override
+  State<_SyncingCloudIcon> createState() => _SyncingCloudIconState();
+}
+
+class _SyncingCloudIconState extends State<_SyncingCloudIcon>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final bounce = Curves.easeInOut.transform(_controller.value) * 6;
+        return Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                widget.color.withValues(alpha: 0.3),
+                widget.color.withValues(alpha: 0.15),
+              ],
+            ),
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: widget.color.withValues(alpha: 0.4),
+              width: 1.5,
+            ),
+          ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Icon(
+                Icons.cloud_outlined,
+                size: 28,
+                color: widget.color.withValues(alpha: 0.6),
+              ),
+              Transform.translate(
+                offset: Offset(0, -bounce),
+                child: Icon(
+                  Icons.arrow_upward_rounded,
+                  size: 18,
+                  color: widget.color,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Animated typing dots
+class _AnimatedDots extends StatefulWidget {
+  const _AnimatedDots({required this.color});
+
+  final Color color;
+
+  @override
+  State<_AnimatedDots> createState() => _AnimatedDotsState();
+}
+
+class _AnimatedDotsState extends State<_AnimatedDots>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: List.generate(3, (index) {
+            final delay = index * 0.2;
+            final progress = (_controller.value - delay).clamp(0.0, 1.0);
+            final opacity = (math.sin(progress * math.pi)).clamp(0.3, 1.0);
+            return Container(
+              width: 6,
+              height: 6,
+              margin: const EdgeInsets.symmetric(horizontal: 2),
+              decoration: BoxDecoration(
+                color: widget.color.withValues(alpha: opacity),
+                shape: BoxShape.circle,
+              ),
+            );
+          }),
+        );
+      },
+    );
+  }
+}
+
+/// Mesh pattern painter for background
+class _SyncingMeshPainter extends CustomPainter {
+  _SyncingMeshPainter({required this.color});
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 0.5
+      ..style = PaintingStyle.stroke;
+
+    const spacing = 30.0;
+
+    // Draw diagonal lines
+    for (double i = -size.height; i < size.width + size.height; i += spacing) {
+      canvas.drawLine(
+        Offset(i, 0),
+        Offset(i + size.height, size.height),
+        paint,
+      );
+    }
+    for (double i = -size.height; i < size.width + size.height; i += spacing) {
+      canvas.drawLine(
+        Offset(i + size.height, 0),
+        Offset(i, size.height),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_SyncingMeshPainter oldDelegate) =>
+      oldDelegate.color != color;
 }

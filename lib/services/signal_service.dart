@@ -1302,18 +1302,17 @@ class SignalService {
               'RECV: override lookup exists=${cloudSignal != null} mediaUrls=${cloudSignal?.mediaUrls.length ?? 0}',
             );
             if (cloudSignal != null && cloudSignal.mediaUrls.isNotEmpty) {
-              final cloudImageUrl = cloudSignal.mediaUrls.first;
               final existing = await getSignalById(signal.id);
               if (existing != null) {
                 final updated = existing.copyWith(
-                  mediaUrls: [cloudImageUrl],
+                  mediaUrls: cloudSignal.mediaUrls,
                   imageState: ImageState.cloud,
                   commentCount: cloudSignal.commentCount,
                   hasPendingCloudImage: false,
                 );
                 await updateSignal(updated);
                 AppLogging.signals(
-                  'RECV: override lookup updated local signal with cloud image for ${signal.id}',
+                  'RECV: override lookup updated local signal with ${cloudSignal.mediaUrls.length} cloud images for ${signal.id}',
                 );
               }
             }
@@ -1378,29 +1377,27 @@ class SignalService {
         return null;
       }
 
-      // Determine the best available cloud image URL
-      // Priority: mediaUrls[0] > imageUrl > mediaUrl (fallback)
-      String? cloudImageUrl;
+      // Determine cloud image URLs
+      // Priority: mediaUrls (multi-image) > imageUrl > mediaUrl (fallback)
+      List<String> cloudMediaUrls = [];
       String usedField = 'none';
 
       if (signal.mediaUrls.isNotEmpty) {
-        cloudImageUrl = signal.mediaUrls.first;
-        usedField = 'mediaUrls';
+        cloudMediaUrls = signal.mediaUrls;
+        usedField = 'mediaUrls (${cloudMediaUrls.length} images)';
       } else if (imageUrl != null && imageUrl.isNotEmpty) {
-        cloudImageUrl = imageUrl;
+        cloudMediaUrls = [imageUrl];
         usedField = 'imageUrl';
       } else if (mediaUrl != null && mediaUrl.isNotEmpty) {
-        cloudImageUrl = mediaUrl;
+        cloudMediaUrls = [mediaUrl];
         usedField = 'mediaUrl (fallback)';
       }
 
-      if (cloudImageUrl != null) {
-        AppLogging.signals(
-          '📷 Cloud image detected via $usedField: $cloudImageUrl',
-        );
-        // Return signal with the detected image URL
+      if (cloudMediaUrls.isNotEmpty) {
+        AppLogging.signals('📷 Cloud images detected via $usedField');
+        // Return signal with all detected image URLs
         return signal.copyWith(
-          mediaUrls: [cloudImageUrl],
+          mediaUrls: cloudMediaUrls,
           imageState: ImageState.cloud,
           hasPendingCloudImage: false,
         );
@@ -1445,11 +1442,15 @@ class SignalService {
       await File(localPath).writeAsBytes(response.bodyBytes);
 
       // Update local signal with cached path and cloud state
+      // Preserve existing mediaUrls - don't overwrite with single URL
       final signal = await getSignalById(signalId);
       if (signal != null) {
         final updated = signal.copyWith(
           imageLocalPath: localPath,
-          mediaUrls: [imageUrl],
+          // Keep existing mediaUrls if present, otherwise use the downloaded URL
+          mediaUrls: signal.mediaUrls.isNotEmpty
+              ? signal.mediaUrls
+              : [imageUrl],
           imageState: ImageState.cloud,
           hasPendingCloudImage: false,
         );
@@ -1939,15 +1940,13 @@ class SignalService {
         final cloudSignal = await _lookupCloudSignal(signal.id);
 
         if (cloudSignal != null && cloudSignal.mediaUrls.isNotEmpty) {
-          final cloudImageUrl = cloudSignal.mediaUrls.first;
-
           AppLogging.signals(
-            '📡 Cloud retry: found image for ${signal.id}: $cloudImageUrl',
+            '📡 Cloud retry: found ${cloudSignal.mediaUrls.length} images for ${signal.id}',
           );
 
-          // Update local signal with cloud data
+          // Update local signal with cloud data (all images)
           final updated = signal.copyWith(
-            mediaUrls: [cloudImageUrl],
+            mediaUrls: cloudSignal.mediaUrls,
             imageState: ImageState.cloud,
             commentCount: cloudSignal.commentCount,
             hasPendingCloudImage: false,
@@ -2165,8 +2164,13 @@ class SignalService {
 
         if (firestoreSuccess) {
           // Step 4: Only update local DB after Firestore succeeds
+          // Preserve existing mediaUrls and add new one if not already present
+          final existingUrls = signal.mediaUrls.toList();
+          if (!existingUrls.contains(url)) {
+            existingUrls.add(url);
+          }
           final updated = signal.copyWith(
-            mediaUrls: [url],
+            mediaUrls: existingUrls.isEmpty ? [url] : existingUrls,
             imageState: ImageState.cloud,
             hasPendingCloudImage: false,
           );
@@ -2311,8 +2315,13 @@ class SignalService {
 
       if (success) {
         // Update local DB now that Firestore succeeded
+        // Preserve existing mediaUrls and add new one if not already present
+        final existingUrls = signal.mediaUrls.toList();
+        if (!existingUrls.contains(pending.url)) {
+          existingUrls.add(pending.url);
+        }
         final updated = signal.copyWith(
-          mediaUrls: [pending.url],
+          mediaUrls: existingUrls.isEmpty ? [pending.url] : existingUrls,
           imageState: ImageState.cloud,
           hasPendingCloudImage: false,
         );
@@ -2599,20 +2608,20 @@ class SignalService {
             final mediaUrl = data['mediaUrl'] as String?;
             final cloudCommentCount = data['commentCount'] as int? ?? 0;
 
-            // Determine best available cloud image URL
-            String? cloudImageUrl;
+            // Determine cloud image URLs (support multiple images)
+            List<String> cloudMediaUrls = [];
             if (mediaUrls != null && mediaUrls.isNotEmpty) {
-              cloudImageUrl = mediaUrls.first as String?;
+              cloudMediaUrls = mediaUrls.map((e) => e as String).toList();
             } else if (imageUrl != null && imageUrl.isNotEmpty) {
-              cloudImageUrl = imageUrl;
+              cloudMediaUrls = [imageUrl];
             } else if (mediaUrl != null && mediaUrl.isNotEmpty) {
-              cloudImageUrl = mediaUrl;
+              cloudMediaUrls = [mediaUrl];
             }
 
             AppLogging.signals(
               '📡 Post listener: doc posts/$signalId exists: '
-              'mediaUrls.length=${mediaUrls?.length ?? 0}, '
-              'hasCloudImage=${cloudImageUrl != null}, '
+              'mediaUrls.length=${cloudMediaUrls.length}, '
+              'hasCloudImages=${cloudMediaUrls.isNotEmpty}, '
               'commentCount=$cloudCommentCount',
             );
 
@@ -2646,19 +2655,19 @@ class SignalService {
               needsUpdate = true;
             }
 
-            // Handle image: check if cloud has image and we don't have it locally
+            // Handle images: check if cloud has images and we don't have them locally
             final hasLocalImage =
                 signal.imageLocalPath != null &&
                 signal.imageLocalPath!.isNotEmpty;
 
-            if (cloudImageUrl != null && !hasLocalImage) {
+            if (cloudMediaUrls.isNotEmpty && !hasLocalImage) {
               AppLogging.signals(
-                '📡 Post listener: cloud image detected, local missing',
+                '📡 Post listener: ${cloudMediaUrls.length} cloud images detected, local missing',
               );
 
-              // Update signal with cloud URL + mark as cloud (persist)
+              // Update signal with all cloud URLs + mark as cloud (persist)
               updatedSignal = updatedSignal.copyWith(
-                mediaUrls: [cloudImageUrl],
+                mediaUrls: cloudMediaUrls,
                 imageState: ImageState.cloud,
                 hasPendingCloudImage: false,
               );

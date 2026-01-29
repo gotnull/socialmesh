@@ -36,7 +36,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       description:
           'The most advanced Meshtastic companion app.\nBuilt for professionals. Designed for everyone.',
       advisorText:
-          "I'm Ico, your mesh intelligence. I'll guide you through a communication platform that works when nothing else does.",
+          "I'm Ico, and I'll be your guide. Let me show you a communication platform that works when nothing else does.",
       mood: MeshBrainMood.focused,
       accentColor: AppTheme.primaryMagenta,
     ),
@@ -649,15 +649,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                     ],
                   ),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: color.withValues(alpha: 0.3),
-                  ),
+                  border: Border.all(color: color.withValues(alpha: 0.3)),
                 ),
-                child: Icon(
-                  icon,
-                  size: 20,
-                  color: color,
-                ),
+                child: Icon(icon, size: 20, color: color),
               ),
               const Spacer(),
               if (isPopular)
@@ -765,7 +759,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
               children: [
                 _buildSignalCard(
                   authorName: 'Sarah',
-                  content: 'Just reached the summit! Signal is crystal clear up here.',
+                  content:
+                      'Just reached the summit! Signal is crystal clear up here.',
                   hasImage: true,
                   ttlMinutes: 23,
                   hopCount: 1,
@@ -848,11 +843,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                     color: color.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(
-                    Icons.person,
-                    color: color,
-                    size: 20,
-                  ),
+                  child: Icon(Icons.person, color: color, size: 20),
                 ),
                 const SizedBox(width: 10),
                 // Name and hop count
@@ -882,7 +873,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
-                          hopCount == 0 ? 'Direct' : '$hopCount hop${hopCount > 1 ? 's' : ''}',
+                          hopCount == 0
+                              ? 'Direct'
+                              : '$hopCount hop${hopCount > 1 ? 's' : ''}',
                           style: TextStyle(
                             fontSize: 9,
                             fontWeight: FontWeight.w500,
@@ -965,10 +958,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   const SizedBox(width: 4),
                   Text(
                     'Location shared',
-                    style: TextStyle(
-                      color: AccentColors.green,
-                      fontSize: 11,
-                    ),
+                    style: TextStyle(color: AccentColors.green, fontSize: 11),
                   ),
                 ],
               ),
@@ -1096,9 +1086,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
         color: context.card,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isEnabled
-              ? color.withValues(alpha: 0.3)
-              : context.border,
+          color: isEnabled ? color.withValues(alpha: 0.3) : context.border,
         ),
         boxShadow: isEnabled
             ? [
@@ -1137,9 +1125,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                 width: 36,
                 height: 20,
                 decoration: BoxDecoration(
-                  color: isEnabled
-                      ? AccentColors.green
-                      : context.surface,
+                  color: isEnabled ? AccentColors.green : context.surface,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Align(
@@ -1174,10 +1160,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
           const SizedBox(height: 2),
           AutoScrollText(
             description,
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.grey,
-            ),
+            style: TextStyle(fontSize: 11, color: Colors.grey),
             maxLines: 1,
             velocity: 25,
             delayBefore: const Duration(seconds: 3),
@@ -1199,9 +1182,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
           decoration: BoxDecoration(
             color: context.card,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: page.accentColor.withValues(alpha: 0.3),
-            ),
+            border: Border.all(color: page.accentColor.withValues(alpha: 0.3)),
             boxShadow: [
               BoxShadow(
                 color: page.accentColor.withValues(alpha: glowIntensity * 0.3),
@@ -1334,10 +1315,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
           ),
           Text(
             label,
-            style: TextStyle(
-              fontSize: 9,
-              color: context.textSecondary,
-            ),
+            style: TextStyle(fontSize: 9, color: context.textSecondary),
             textAlign: TextAlign.center,
           ),
         ],
@@ -1347,12 +1325,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 }
 
 /// Types of showcases available in onboarding
-enum ShowcaseType {
-  devices,
-  signals,
-  automations,
-  widgets,
-}
+enum ShowcaseType { devices, signals, automations, widgets }
 
 /// Data class for onboarding pages
 class _OnboardingPage {

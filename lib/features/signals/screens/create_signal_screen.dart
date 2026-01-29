@@ -48,6 +48,9 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
   final TextEditingController _contentController = TextEditingController();
   final FocusNode _contentFocusNode = FocusNode();
 
+  // Track if we've shown the cloud banner animation this session
+  static bool _hasShownCloudBannerHint = false;
+
   static const int _maxLength = 280;
   bool _isSubmitting = false;
   bool _isLoadingLocation = false;
@@ -70,6 +73,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
   late final AnimationController _imageAnimationController;
   late final Animation<double> _imageScaleAnimation;
   late final Animation<double> _imageFadeAnimation;
+  late final AnimationController _locationLoadingController;
 
   @override
   void initState() {
@@ -110,6 +114,13 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
         );
     _entryAnimationController.forward();
 
+    // Show cloud banner hint animation once per session if not signed in
+    _entryAnimationController.addStatusListener((status) {
+      if (status == AnimationStatus.completed && !_hasShownCloudBannerHint) {
+        _maybeShowCloudBannerHint();
+      }
+    });
+
     // Image add/remove animations
     _imageAnimationController = AnimationController(
       vsync: this,
@@ -125,6 +136,12 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
       parent: _imageAnimationController,
       curve: Curves.easeOut,
     );
+
+    // Location loading card animation
+    _locationLoadingController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
   }
 
   @override
@@ -134,7 +151,29 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
     _bannerShakeController.dispose();
     _entryAnimationController.dispose();
     _imageAnimationController.dispose();
+    _locationLoadingController.dispose();
     super.dispose();
+  }
+
+  /// Show the cloud banner hint animation once per session if user isn't signed in
+  void _maybeShowCloudBannerHint() {
+    if (!mounted) return;
+    final connectivity = ref.read(signalConnectivityProvider);
+    final meshOnlyDebug = ref.read(meshOnlyDebugModeProvider);
+    final canUseCloud = connectivity.canUseCloud && !meshOnlyDebug;
+
+    // Only show if not signed in and has internet (can sign in)
+    if (!canUseCloud && connectivity.hasInternet) {
+      _hasShownCloudBannerHint = true;
+      // Small delay so user can see the screen first
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) {
+          HapticFeedback.lightImpact();
+          setState(() => _cloudBannerHighlight = true);
+          _bannerShakeController.forward(from: 0);
+        }
+      });
+    }
   }
 
   /// Check basic content requirements (text not empty, within length limit)
@@ -660,6 +699,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
 
   Future<void> _getLocation() async {
     setState(() => _isLoadingLocation = true);
+    _locationLoadingController.forward();
 
     try {
       final settings = await ref.read(settingsServiceProvider.future);
@@ -711,7 +751,11 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
       }
     } finally {
       if (mounted) {
-        setState(() => _isLoadingLocation = false);
+        // Fade out the loading card, then update state
+        await _locationLoadingController.reverse();
+        if (mounted) {
+          setState(() => _isLoadingLocation = false);
+        }
       }
     }
   }
@@ -1406,6 +1450,47 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                       ),
                     ],
 
+                    // Location loading indicator
+                    if (_isLoadingLocation && _location == null) ...[
+                      const SizedBox(height: 12),
+                      FadeTransition(
+                        opacity: _locationLoadingController,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: context.card,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: context.border.withValues(alpha: 0.3),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: context.accentColor,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                'Retrieving device location...',
+                                style: TextStyle(
+                                  color: context.textSecondary,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+
                     // Location preview (only if no images - otherwise shown as pill on image)
                     if (_location != null && !showImages) ...[
                       const SizedBox(height: 12),
@@ -1488,12 +1573,14 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                             final banner = Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: context.card,
-                                borderRadius: BorderRadius.circular(8),
+                                color: context.accentColor.withValues(
+                                  alpha: 0.15,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: _cloudBannerHighlight
-                                      ? Colors.red.withOpacity(0.9)
-                                      : context.border.withValues(alpha: 0.3),
+                                  color: context.accentColor.withValues(
+                                    alpha: 0.4,
+                                  ),
                                   width: _cloudBannerHighlight ? 2 : 1,
                                 ),
                               ),
@@ -1503,7 +1590,7 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                                   Icon(
                                     Icons.cloud_off,
                                     size: 18,
-                                    color: context.textTertiary,
+                                    color: context.accentColor,
                                   ),
                                   const SizedBox(width: 8),
                                   Expanded(
@@ -1511,14 +1598,22 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                                       meshOnlyDebug
                                           ? 'Mesh-only debug mode enabled. Signals use local DB + mesh only.'
                                           : connectivity.hasInternet
-                                          ? 'Sign in to enable images and cloud features. Text and location still broadcast over mesh.'
-                                          : 'Offline: images and cloud features are unavailable. Text and location still broadcast over mesh.',
+                                          ? 'Sign in to enable images and cloud features.'
+                                          : 'Offline: images and cloud features unavailable.',
                                       style: TextStyle(
-                                        color: context.textTertiary,
+                                        color: context.textSecondary,
                                         fontSize: 12,
                                       ),
                                     ),
                                   ),
+                                  if (canTapToSubscribe) ...[
+                                    const SizedBox(width: 8),
+                                    Icon(
+                                      Icons.chevron_right,
+                                      size: 20,
+                                      color: context.accentColor,
+                                    ),
+                                  ],
                                 ],
                               ),
                             );
@@ -1543,21 +1638,17 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                               );
                             }
 
-                            return Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(8),
-                                onTap: () {
-                                  _dismissKeyboard();
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) =>
-                                          const AccountSubscriptionsScreen(),
-                                    ),
-                                  );
-                                },
-                                child: animatedBanner,
-                              ),
+                            return BouncyTap(
+                              onTap: () {
+                                _dismissKeyboard();
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        const AccountSubscriptionsScreen(),
+                                  ),
+                                );
+                              },
+                              child: animatedBanner,
                             );
                           },
                         ),
