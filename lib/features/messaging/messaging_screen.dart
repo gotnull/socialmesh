@@ -769,11 +769,6 @@ class _ContactTile extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    // Favorite star icon
-                    if (contact.isFavorite) ...[
-                      SizedBox(width: 4),
-                      Icon(Icons.star, color: AccentColors.yellow, size: 18),
-                    ],
                     if (contact.unreadCount > 0) ...[
                       SizedBox(width: 8),
                       Container(
@@ -819,6 +814,12 @@ class _ContactTile extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
+          // Favorite star icon (matches nodes screen position)
+          if (contact.isFavorite)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Icon(Icons.star, color: AccentColors.yellow, size: 20),
+            ),
           Icon(Icons.chevron_right, color: context.textTertiary),
         ],
       ),
