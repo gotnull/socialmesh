@@ -2789,7 +2789,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   return SecretGestureDetector(
                                     pattern: SecretGesturePattern.sevenTaps,
                                     showFeedback: false,
-                                    enableHaptics: true,
+                                    enableHaptics: false,
                                     onSecretUnlocked: _onSecretGestureUnlocked,
                                     child: _SettingsTile(
                                       icon: Icons.info,

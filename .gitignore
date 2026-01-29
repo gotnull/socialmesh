@@ -14,7 +14,7 @@ migrate_working_dir/
 meshtastic-ios/
 .venv/
 .firebase
-
+android/.kotlin/sessions/
 .github/copilot-instructions.md
 
 # Environment files (keep .env.example)
