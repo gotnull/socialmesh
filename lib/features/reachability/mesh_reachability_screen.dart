@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/ico_help_system.dart';
 import '../../models/reachability_models.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/reachability_provider.dart';
@@ -96,6 +97,7 @@ class _MeshReachabilityScreenState
               tooltip: 'About Reachability',
               onPressed: () => _showInfoDialog(context),
             ),
+            IcoHelpAppBarButton(topicId: 'reachability_overview'),
           ],
         ),
         body: Column(

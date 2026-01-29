@@ -7,11 +7,20 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socialmesh/core/transport.dart';
 import 'package:socialmesh/providers/app_providers.dart';
 import 'package:socialmesh/providers/connection_providers.dart';
+import 'package:socialmesh/providers/telemetry_providers.dart';
 import 'package:socialmesh/services/mesh_packet_dedupe_store.dart';
 import 'package:socialmesh/services/storage/storage_service.dart';
+import 'package:socialmesh/services/storage/telemetry_storage_service.dart';
+import 'package:socialmesh/services/storage/route_storage_service.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUpAll(() {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  });
 
   setUp(() {
     SharedPreferences.setMockInitialValues({
@@ -24,6 +33,20 @@ void main() {
   test('saved device invalidates after repeated missing scans', () async {
     final s = SettingsService();
     await s.init();
+    
+    final prefs = await SharedPreferences.getInstance();
+
+    // Initialize storage services with in-memory databases
+    final messageStorage = MessageStorageService();
+    await messageStorage.init();
+    
+    final nodeStorage = NodeStorageService();
+    await nodeStorage.init();
+    
+    final telemetryStorage = TelemetryStorageService(prefs);
+    
+    final routeStorage = RouteStorageService(testDbPath: inMemoryDatabasePath);
+    await routeStorage.init();
 
     final container = ProviderContainer(
       overrides: [
@@ -32,6 +55,10 @@ void main() {
           MeshPacketDedupeStore(dbPathOverride: ':memory:'),
         ),
         settingsServiceProvider.overrideWithValue(AsyncValue.data(s)),
+        messageStorageProvider.overrideWithValue(AsyncValue.data(messageStorage)),
+        nodeStorageProvider.overrideWithValue(AsyncValue.data(nodeStorage)),
+        telemetryStorageProvider.overrideWithValue(AsyncValue.data(telemetryStorage)),
+        routeStorageProvider.overrideWithValue(AsyncValue.data(routeStorage)),
       ],
     );
     addTearDown(container.dispose);
@@ -66,6 +93,20 @@ void main() {
     () async {
       final s = SettingsService();
       await s.init();
+      
+      final prefs = await SharedPreferences.getInstance();
+
+      // Initialize storage services with in-memory databases
+      final messageStorage = MessageStorageService();
+      await messageStorage.init();
+      
+      final nodeStorage = NodeStorageService();
+      await nodeStorage.init();
+      
+      final telemetryStorage = TelemetryStorageService(prefs);
+      
+      final routeStorage = RouteStorageService(testDbPath: inMemoryDatabasePath);
+      await routeStorage.init();
 
       final container = ProviderContainer(
         overrides: [
@@ -74,6 +115,10 @@ void main() {
             MeshPacketDedupeStore(dbPathOverride: ':memory:'),
           ),
           settingsServiceProvider.overrideWithValue(AsyncValue.data(s)),
+          messageStorageProvider.overrideWithValue(AsyncValue.data(messageStorage)),
+          nodeStorageProvider.overrideWithValue(AsyncValue.data(nodeStorage)),
+          telemetryStorageProvider.overrideWithValue(AsyncValue.data(telemetryStorage)),
+          routeStorageProvider.overrideWithValue(AsyncValue.data(routeStorage)),
         ],
       );
       addTearDown(container.dispose);

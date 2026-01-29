@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
+import '../../../core/widgets/ico_help_system.dart';
 import '../../../services/mesh_health/mesh_health_models.dart';
 import '../../../services/mesh_health/mesh_health_providers.dart';
 
@@ -46,6 +47,7 @@ class MeshHealthDashboard extends ConsumerWidget {
               ref.read(meshHealthProvider.notifier).reset();
             },
           ),
+          IcoHelpAppBarButton(topicId: 'mesh_health_overview'),
         ],
       ),
       body: SingleChildScrollView(

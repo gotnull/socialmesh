@@ -40,27 +40,27 @@ void main() {
     );
     addTearDown(container.dispose);
 
-    container.read(deviceConnectionProvider.notifier).setTestState(
-      DeviceConnectionState2(
-        state: DevicePairingState.connected,
-        device: DeviceInfo(
-          id: 'device-alpha',
-          name: 'Region Device',
-          type: TransportType.ble,
-        ),
-        lastConnectedAt: DateTime.now(),
-        connectionSessionId: 1,
-      ),
-    );
+    container
+        .read(deviceConnectionProvider.notifier)
+        .setTestState(
+          DeviceConnectionState2(
+            state: DevicePairingState.connected,
+            device: DeviceInfo(
+              id: 'device-alpha',
+              name: 'Region Device',
+              type: TransportType.ble,
+            ),
+            lastConnectedAt: DateTime.now(),
+            connectionSessionId: 1,
+          ),
+        );
 
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
         child: MaterialApp(
           // Provide routes so navigation doesn't crash
-          routes: {
-            '/main': (context) => const Scaffold(body: Text('Main')),
-          },
+          routes: {'/main': (context) => const Scaffold(body: Text('Main'))},
           home: Builder(
             builder: (context) {
               return Center(
@@ -120,41 +120,47 @@ void main() {
 
     // Now simulate the disconnect/reconnect cycle that happens during region apply
     // First, simulate disconnect (device reboot)
-    container.read(deviceConnectionProvider.notifier).setTestState(
-      DeviceConnectionState2(
-        state: DevicePairingState.disconnected,
-        device: DeviceInfo(
-          id: 'device-alpha',
-          name: 'Region Device',
-          type: TransportType.ble,
-        ),
-        connectionSessionId: 1,
-        lastConnectedAt: DateTime.now(),
-      ),
-    );
+    container
+        .read(deviceConnectionProvider.notifier)
+        .setTestState(
+          DeviceConnectionState2(
+            state: DevicePairingState.disconnected,
+            device: DeviceInfo(
+              id: 'device-alpha',
+              name: 'Region Device',
+              type: TransportType.ble,
+            ),
+            connectionSessionId: 1,
+            lastConnectedAt: DateTime.now(),
+          ),
+        );
 
     // Pump to process disconnect
     await tester.pump();
 
     // Simulate reconnect after device reboot
-    container.read(deviceConnectionProvider.notifier).setTestState(
-      DeviceConnectionState2(
-        state: DevicePairingState.connected,
-        device: DeviceInfo(
-          id: 'device-alpha',
-          name: 'Region Device',
-          type: TransportType.ble,
-        ),
-        connectionSessionId: 2, // New session after reconnect
-        lastConnectedAt: DateTime.now(),
-      ),
-    );
+    container
+        .read(deviceConnectionProvider.notifier)
+        .setTestState(
+          DeviceConnectionState2(
+            state: DevicePairingState.connected,
+            device: DeviceInfo(
+              id: 'device-alpha',
+              name: 'Region Device',
+              type: TransportType.ble,
+            ),
+            connectionSessionId: 2, // New session after reconnect
+            lastConnectedAt: DateTime.now(),
+          ),
+        );
 
     // Pump to process reconnect
     await tester.pump();
 
     // Use runAsync to allow the applyRegion future to complete
-    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 100)));
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 100)),
+    );
 
     // Verify region was applied
     expect(
@@ -168,7 +174,7 @@ class _FakeRegionProtocolService extends ProtocolService {
   final Completer<void> regionSetCompleter = Completer<void>();
   config_pbenum.Config_LoRaConfig_RegionCode? _currentRegion;
   final StreamController<config_pbenum.Config_LoRaConfig_RegionCode>
-      _regionController = StreamController.broadcast();
+  _regionController = StreamController.broadcast();
   final StreamController<config_pb.Config_LoRaConfig> _loraController =
       StreamController.broadcast();
 

@@ -19,94 +19,100 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  test('Region apply sets applying and disconnect-reconnect completes successfully',
-      () async {
-    final fakeProtocol = _FakeRegionProtocolService(
-      initialRegion: config_pbenum.Config_LoRaConfig_RegionCode.UNSET,
-    );
+  test(
+    'Region apply sets applying and disconnect-reconnect completes successfully',
+    () async {
+      final fakeProtocol = _FakeRegionProtocolService(
+        initialRegion: config_pbenum.Config_LoRaConfig_RegionCode.UNSET,
+      );
 
-    final container = ProviderContainer(
-      overrides: [
-        protocolServiceProvider.overrideWithValue(fakeProtocol),
-      ],
-    );
-    addTearDown(container.dispose);
+      final container = ProviderContainer(
+        overrides: [protocolServiceProvider.overrideWithValue(fakeProtocol)],
+      );
+      addTearDown(container.dispose);
 
-    // Use setTestState to set connection state directly
-    container.read(deviceConnectionProvider.notifier).setTestState(
-      DeviceConnectionState2(
-        state: DevicePairingState.connected,
-        device: DeviceInfo(
-          id: 'device-alpha',
-          name: 'Region Device',
-          type: TransportType.ble,
-        ),
-        connectionSessionId: 1,
-        lastConnectedAt: DateTime.now(),
-      ),
-    );
+      // Use setTestState to set connection state directly
+      container
+          .read(deviceConnectionProvider.notifier)
+          .setTestState(
+            DeviceConnectionState2(
+              state: DevicePairingState.connected,
+              device: DeviceInfo(
+                id: 'device-alpha',
+                name: 'Region Device',
+                type: TransportType.ble,
+              ),
+              connectionSessionId: 1,
+              lastConnectedAt: DateTime.now(),
+            ),
+          );
 
-    final regionFuture = container
-        .read(regionConfigProvider.notifier)
-        .applyRegion(config_pbenum.Config_LoRaConfig_RegionCode.ANZ);
+      final regionFuture = container
+          .read(regionConfigProvider.notifier)
+          .applyRegion(config_pbenum.Config_LoRaConfig_RegionCode.ANZ);
 
-    // Let the event loop run so applyRegion progresses past setRegion
-    // and registers its confirmation listener
-    await Future<void>.delayed(Duration.zero);
+      // Let the event loop run so applyRegion progresses past setRegion
+      // and registers its confirmation listener
+      await Future<void>.delayed(Duration.zero);
 
-    expect(
-      container.read(regionConfigProvider).applyStatus,
-      RegionApplyStatus.applying,
-    );
+      expect(
+        container.read(regionConfigProvider).applyStatus,
+        RegionApplyStatus.applying,
+      );
 
-    // Simulate disconnect (device reboot) - status should STAY applying, not fail
-    container.read(deviceConnectionProvider.notifier).setTestState(
-      DeviceConnectionState2(
-        state: DevicePairingState.disconnected,
-        device: DeviceInfo(
-          id: 'device-alpha',
-          name: 'Region Device',
-          type: TransportType.ble,
-        ),
-        connectionSessionId: 1,
-        lastConnectedAt: DateTime.now(),
-      ),
-    );
+      // Simulate disconnect (device reboot) - status should STAY applying, not fail
+      container
+          .read(deviceConnectionProvider.notifier)
+          .setTestState(
+            DeviceConnectionState2(
+              state: DevicePairingState.disconnected,
+              device: DeviceInfo(
+                id: 'device-alpha',
+                name: 'Region Device',
+                type: TransportType.ble,
+              ),
+              connectionSessionId: 1,
+              lastConnectedAt: DateTime.now(),
+            ),
+          );
 
-    await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
 
-    // Status should still be applying - disconnect during region apply is expected
-    expect(
-      container.read(regionConfigProvider).applyStatus,
-      RegionApplyStatus.applying,
-    );
+      // Status should still be applying - disconnect during region apply is expected
+      expect(
+        container.read(regionConfigProvider).applyStatus,
+        RegionApplyStatus.applying,
+      );
 
-    // Simulate reconnect after device reboot - this completes the region apply
-    container.read(deviceConnectionProvider.notifier).setTestState(
-      DeviceConnectionState2(
-        state: DevicePairingState.connected,
-        device: DeviceInfo(
-          id: 'device-alpha',
-          name: 'Region Device',
-          type: TransportType.ble,
-        ),
-        connectionSessionId: 2, // New session after reconnect
-        lastConnectedAt: DateTime.now(),
-      ),
-    );
+      // Simulate reconnect after device reboot - this completes the region apply
+      container
+          .read(deviceConnectionProvider.notifier)
+          .setTestState(
+            DeviceConnectionState2(
+              state: DevicePairingState.connected,
+              device: DeviceInfo(
+                id: 'device-alpha',
+                name: 'Region Device',
+                type: TransportType.ble,
+              ),
+              connectionSessionId: 2, // New session after reconnect
+              lastConnectedAt: DateTime.now(),
+            ),
+          );
 
-    // Pump event loop to process reconnection
-    await Future<void>.delayed(Duration.zero);
+      // Pump event loop to process reconnection
+      await Future<void>.delayed(Duration.zero);
 
-    // Wait for the region apply to complete
-    await regionFuture;
+      // Wait for the region apply to complete
+      await regionFuture;
 
-    expect(
-      container.read(regionConfigProvider).applyStatus,
-      RegionApplyStatus.applied,
-    );
-    expect(container.read(needsRegionSetupProvider), isFalse);
-  });
+      expect(
+        container.read(regionConfigProvider).applyStatus,
+        RegionApplyStatus.applied,
+      );
+      expect(container.read(needsRegionSetupProvider), isFalse);
+    },
+  );
 
   test('Region picker stays closed until new session id', () async {
     final fakeProtocol = _FakeRegionProtocolService(
@@ -114,33 +120,31 @@ void main() {
     );
 
     final container = ProviderContainer(
-      overrides: [
-        protocolServiceProvider.overrideWithValue(fakeProtocol),
-      ],
+      overrides: [protocolServiceProvider.overrideWithValue(fakeProtocol)],
     );
     addTearDown(container.dispose);
 
-    container.read(deviceConnectionProvider.notifier).setTestState(
-      DeviceConnectionState2(
-        state: DevicePairingState.connected,
-        device: DeviceInfo(
-          id: 'device-alpha',
-          name: 'Region Device',
-          type: TransportType.ble,
-        ),
-        connectionSessionId: 1,
-        lastConnectedAt: DateTime.now(),
-      ),
-    );
+    container
+        .read(deviceConnectionProvider.notifier)
+        .setTestState(
+          DeviceConnectionState2(
+            state: DevicePairingState.connected,
+            device: DeviceInfo(
+              id: 'device-alpha',
+              name: 'Region Device',
+              type: TransportType.ble,
+            ),
+            connectionSessionId: 1,
+            lastConnectedAt: DateTime.now(),
+          ),
+        );
 
     final regionSub = container.listen(
       deviceRegionProvider,
       (previous, next) {},
       fireImmediately: true,
     );
-    fakeProtocol.emitRegion(
-      config_pbenum.Config_LoRaConfig_RegionCode.UNSET,
-    );
+    fakeProtocol.emitRegion(config_pbenum.Config_LoRaConfig_RegionCode.UNSET);
     await Future<void>.delayed(Duration.zero);
 
     expect(container.read(needsRegionSetupProvider), isTrue);
@@ -155,18 +159,20 @@ void main() {
     await Future<void>.delayed(Duration.zero);
 
     // Simulate disconnect (device reboot) - status should stay applying
-    container.read(deviceConnectionProvider.notifier).setTestState(
-      DeviceConnectionState2(
-        state: DevicePairingState.disconnected,
-        device: DeviceInfo(
-          id: 'device-alpha',
-          name: 'Region Device',
-          type: TransportType.ble,
-        ),
-        connectionSessionId: 1,
-        lastConnectedAt: DateTime.now(),
-      ),
-    );
+    container
+        .read(deviceConnectionProvider.notifier)
+        .setTestState(
+          DeviceConnectionState2(
+            state: DevicePairingState.disconnected,
+            device: DeviceInfo(
+              id: 'device-alpha',
+              name: 'Region Device',
+              type: TransportType.ble,
+            ),
+            connectionSessionId: 1,
+            lastConnectedAt: DateTime.now(),
+          ),
+        );
 
     await Future<void>.delayed(Duration.zero);
 
@@ -178,18 +184,20 @@ void main() {
     expect(container.read(needsRegionSetupProvider), isFalse);
 
     // Simulate reconnect with new session - this completes the region apply
-    container.read(deviceConnectionProvider.notifier).setTestState(
-      DeviceConnectionState2(
-        state: DevicePairingState.connected,
-        device: DeviceInfo(
-          id: 'device-alpha',
-          name: 'Region Device',
-          type: TransportType.ble,
-        ),
-        connectionSessionId: 2,
-        lastConnectedAt: DateTime.now().add(const Duration(seconds: 1)),
-      ),
-    );
+    container
+        .read(deviceConnectionProvider.notifier)
+        .setTestState(
+          DeviceConnectionState2(
+            state: DevicePairingState.connected,
+            device: DeviceInfo(
+              id: 'device-alpha',
+              name: 'Region Device',
+              type: TransportType.ble,
+            ),
+            connectionSessionId: 2,
+            lastConnectedAt: DateTime.now().add(const Duration(seconds: 1)),
+          ),
+        );
 
     // Pump event loop to process reconnection
     await Future<void>.delayed(Duration.zero);
@@ -210,25 +218,25 @@ void main() {
     );
 
     final container = ProviderContainer(
-      overrides: [
-        protocolServiceProvider.overrideWithValue(fakeProtocol),
-      ],
+      overrides: [protocolServiceProvider.overrideWithValue(fakeProtocol)],
     );
     addTearDown(container.dispose);
 
     // Connect to Device A
-    container.read(deviceConnectionProvider.notifier).setTestState(
-      DeviceConnectionState2(
-        state: DevicePairingState.connected,
-        device: DeviceInfo(
-          id: 'device-A',
-          name: 'Device A',
-          type: TransportType.ble,
-        ),
-        connectionSessionId: 1,
-        lastConnectedAt: DateTime.now(),
-      ),
-    );
+    container
+        .read(deviceConnectionProvider.notifier)
+        .setTestState(
+          DeviceConnectionState2(
+            state: DevicePairingState.connected,
+            device: DeviceInfo(
+              id: 'device-A',
+              name: 'Device A',
+              type: TransportType.ble,
+            ),
+            connectionSessionId: 1,
+            lastConnectedAt: DateTime.now(),
+          ),
+        );
 
     final regionSub = container.listen(
       deviceRegionProvider,
@@ -246,51 +254,71 @@ void main() {
     await Future<void>.delayed(Duration.zero);
 
     // Simulate disconnect (device reboot)
-    container.read(deviceConnectionProvider.notifier).setTestState(
-      DeviceConnectionState2(
-        state: DevicePairingState.disconnected,
-        device: DeviceInfo(id: 'device-A', name: 'Device A', type: TransportType.ble),
-        connectionSessionId: 1,
-        lastConnectedAt: DateTime.now(),
-      ),
-    );
+    container
+        .read(deviceConnectionProvider.notifier)
+        .setTestState(
+          DeviceConnectionState2(
+            state: DevicePairingState.disconnected,
+            device: DeviceInfo(
+              id: 'device-A',
+              name: 'Device A',
+              type: TransportType.ble,
+            ),
+            connectionSessionId: 1,
+            lastConnectedAt: DateTime.now(),
+          ),
+        );
 
     await Future<void>.delayed(Duration.zero);
 
     // Simulate reconnect after reboot (same device)
-    container.read(deviceConnectionProvider.notifier).setTestState(
-      DeviceConnectionState2(
-        state: DevicePairingState.connected,
-        device: DeviceInfo(id: 'device-A', name: 'Device A', type: TransportType.ble),
-        connectionSessionId: 2,
-        lastConnectedAt: DateTime.now(),
-      ),
-    );
+    container
+        .read(deviceConnectionProvider.notifier)
+        .setTestState(
+          DeviceConnectionState2(
+            state: DevicePairingState.connected,
+            device: DeviceInfo(
+              id: 'device-A',
+              name: 'Device A',
+              type: TransportType.ble,
+            ),
+            connectionSessionId: 2,
+            lastConnectedAt: DateTime.now(),
+          ),
+        );
 
     await regionFuture;
-    expect(container.read(regionConfigProvider).applyStatus, RegionApplyStatus.applied);
+    expect(
+      container.read(regionConfigProvider).applyStatus,
+      RegionApplyStatus.applied,
+    );
     expect(container.read(regionConfigProvider).targetDeviceId, 'device-A');
 
     // Now connect to Device B (different device)
-    container.read(deviceConnectionProvider.notifier).setTestState(
-      DeviceConnectionState2(
-        state: DevicePairingState.connected,
-        device: DeviceInfo(
-          id: 'device-B',
-          name: 'Device B',
-          type: TransportType.ble,
-        ),
-        connectionSessionId: 3,
-        lastConnectedAt: DateTime.now(),
-      ),
-    );
+    container
+        .read(deviceConnectionProvider.notifier)
+        .setTestState(
+          DeviceConnectionState2(
+            state: DevicePairingState.connected,
+            device: DeviceInfo(
+              id: 'device-B',
+              name: 'Device B',
+              type: TransportType.ble,
+            ),
+            connectionSessionId: 3,
+            lastConnectedAt: DateTime.now(),
+          ),
+        );
 
     await Future<void>.delayed(Duration.zero);
 
     // State should reset to idle for the new device
-    expect(container.read(regionConfigProvider).applyStatus, RegionApplyStatus.idle);
+    expect(
+      container.read(regionConfigProvider).applyStatus,
+      RegionApplyStatus.idle,
+    );
     expect(container.read(regionConfigProvider).targetDeviceId, 'device-B');
-    
+
     // Since region is still UNSET and we're idle for Device B, need setup should be true
     expect(container.read(needsRegionSetupProvider), isTrue);
 
@@ -301,7 +329,7 @@ void main() {
 class _FakeRegionProtocolService extends ProtocolService {
   config_pbenum.Config_LoRaConfig_RegionCode? _currentRegion;
   final StreamController<config_pbenum.Config_LoRaConfig_RegionCode>
-      _regionController = StreamController.broadcast();
+  _regionController = StreamController.broadcast();
   final StreamController<config_pb.Config_LoRaConfig> _loraController =
       StreamController.broadcast();
 

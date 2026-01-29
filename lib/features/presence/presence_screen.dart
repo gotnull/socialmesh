@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
+import '../../core/widgets/ico_help_system.dart';
 import '../../models/mesh_models.dart';
 import '../../models/presence_confidence.dart';
 import '../../providers/presence_providers.dart';
 import '../../utils/presence_utils.dart';
+
 
 class PresenceScreen extends ConsumerStatefulWidget {
   const PresenceScreen({super.key});
@@ -27,6 +29,9 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
         backgroundColor: Colors.transparent,
         centerTitle: true,
         title: const Text('Presence'),
+        actions: [
+          IcoHelpAppBarButton(topicId: 'presence_overview'),
+        ],
       ),
       body: presences.isEmpty
           ? _buildEmptyState(theme)
@@ -112,13 +117,16 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Row(
-        children: PresenceConfidence.values.map((status) {
+        children: PresenceConfidence.values.asMap().entries.map((entry) {
+          final status = entry.value;
+          final index = entry.key;
           final count = summary[status] ?? 0;
           final color = _statusColor(status);
+          final isLast = index == PresenceConfidence.values.length - 1;
           return Expanded(
             child: Container(
               margin: EdgeInsets.only(
-                right: status != PresenceConfidence.unknown ? 12 : 0,
+                right: isLast ? 0 : 8,
               ),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
