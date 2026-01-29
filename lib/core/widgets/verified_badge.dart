@@ -71,14 +71,41 @@ class SimpleVerifiedBadge extends StatelessWidget {
   /// Whether to enable the coin spin and sparkle animations
   final bool animate;
 
-  const SimpleVerifiedBadge({super.key, this.size = 16, this.animate = true});
+  /// Whether to show a drop shadow behind the badge
+  final bool showShadow;
+
+  const SimpleVerifiedBadge({
+    super.key,
+    this.size = 16,
+    this.animate = true,
+    this.showShadow = false,
+  });
 
   @override
   Widget build(BuildContext context) {
+    Widget badge;
     if (animate) {
-      return _AnimatedGoldBadge(size: size);
+      badge = _AnimatedGoldBadge(size: size);
+    } else {
+      badge = _GoldGradientBadge(size: size);
     }
-    return _GoldGradientBadge(size: size);
+
+    if (showShadow) {
+      return Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.4),
+              spreadRadius: 0,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: badge,
+      );
+    }
+    return badge;
   }
 }
 

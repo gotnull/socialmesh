@@ -8,16 +8,22 @@ import 'package:socialmesh/core/logging.dart';
 class AccentColors {
   static const magenta = Color(0xFFE91E8C);
   static const purple = Color(0xFF8B5CF6);
+  static const indigo = Color(0xFF6366F1);
   static const blue = Color(0xFF4F6AF6);
+  static const sky = Color(0xFF0EA5E9);
   static const cyan = Color(0xFF06B6D4);
   static const teal = Color(0xFF14B8A6);
+  static const emerald = Color(0xFF10B981);
   static const green = Color(0xFF22C55E);
   static const lime = Color(0xFF84CC16);
   static const yellow = Color(0xFFEAB308);
   static const orange = Color(0xFFF97316);
+  static const coral = Color(0xFFFF6B6B);
   static const red = Color(0xFFEF4444);
   static const pink = Color(0xFFEC4899);
   static const rose = Color(0xFFF43F5E);
+  static const lavender = Color(0xFFA78BFA);
+  static const slate = Color(0xFF64748B);
 
   // Gold gradient colors for premium features
   static const goldDarkYellow = Color(0xFFFFCC00);
@@ -35,37 +41,47 @@ class AccentColors {
   static const List<Color> all = [
     magenta,
     purple,
+    indigo,
     blue,
+    sky,
     cyan,
     teal,
+    emerald,
     green,
     lime,
-    yellow,
     orange,
+    coral,
     red,
     pink,
     rose,
+    lavender,
+    slate,
     goldMetallic, // Special: requires Complete Pack
   ];
 
   static const List<String> names = [
     'Magenta',
     'Purple',
+    'Indigo',
     'Blue',
+    'Sky',
     'Cyan',
     'Teal',
+    'Emerald',
     'Green',
     'Lime',
-    'Yellow',
     'Orange',
+    'Coral',
     'Red',
     'Pink',
     'Rose',
+    'Lavender',
+    'Slate',
     'Gold', // Special: requires Complete Pack
   ];
 
   /// Index of the special Gold color that requires Complete Pack
-  static const int goldColorIndex = 12;
+  static const int goldColorIndex = 17;
 
   /// Gradient colors for each accent (used for story rings, etc.)
   /// Each gradient has 3 colors that blend well with the base accent
@@ -95,6 +111,18 @@ class AccentColors {
       Color(0xFF763FF5),
     ],
 
+    // indigo (0xFF6366F1)
+    [
+      Color(0xFF6366F1),
+      Color(0xFF7A7DF3),
+      Color(0xFF9194F5),
+      Color(0xFFACAEF7),
+      Color(0xFF9194F5),
+      Color(0xFF7A7DF3),
+      Color(0xFF5558EF),
+      Color(0xFF4447ED),
+    ],
+
     // blue (0xFF4F6AF6)
     [
       Color(0xFF4F6AF6),
@@ -105,6 +133,18 @@ class AccentColors {
       Color(0xFF687FF7),
       Color(0xFF4562F6),
       Color(0xFF3251F5),
+    ],
+
+    // sky (0xFF0EA5E9)
+    [
+      Color(0xFF0EA5E9),
+      Color(0xFF22B4F0),
+      Color(0xFF38C3F7),
+      Color(0xFF52CFFB),
+      Color(0xFF38C3F7),
+      Color(0xFF22B4F0),
+      Color(0xFF0C9AD9),
+      Color(0xFF0A8AC5),
     ],
 
     // cyan (0xFF06B6D4)
@@ -131,6 +171,18 @@ class AccentColors {
       Color(0xFF119D8D),
     ],
 
+    // emerald (0xFF10B981)
+    [
+      Color(0xFF10B981),
+      Color(0xFF14CC91),
+      Color(0xFF1ADFA1),
+      Color(0xFF38E5AF),
+      Color(0xFF1ADFA1),
+      Color(0xFF14CC91),
+      Color(0xFF0EAE79),
+      Color(0xFF0C9B6B),
+    ],
+
     // green (0xFF22C55E)
     [
       Color(0xFF22C55E),
@@ -155,18 +207,6 @@ class AccentColors {
       Color(0xFF72B113),
     ],
 
-    // yellow (0xFFEAB308)
-    [
-      Color(0xFFEAB308),
-      Color(0xFFF6C015),
-      Color(0xFFF7C62E),
-      Color(0xFFF7CE4C),
-      Color(0xFFF7C62E),
-      Color(0xFFF6C015),
-      Color(0xFFE0AC08),
-      Color(0xFFCD9D07),
-    ],
-
     // orange (0xFFF97316)
     [
       Color(0xFFF97316),
@@ -177,6 +217,18 @@ class AccentColors {
       Color(0xFFF9822F),
       Color(0xFFF96D0C),
       Color(0xFFEB6406),
+    ],
+
+    // coral (0xFFFF6B6B)
+    [
+      Color(0xFFFF6B6B),
+      Color(0xFFFF8080),
+      Color(0xFFFF9595),
+      Color(0xFFFFADAD),
+      Color(0xFFFF9595),
+      Color(0xFFFF8080),
+      Color(0xFFFF5C5C),
+      Color(0xFFFF4A4A),
     ],
 
     // red (0xFFEF4444)
@@ -213,6 +265,30 @@ class AccentColors {
       Color(0xFFF55873),
       Color(0xFFF43556),
       Color(0xFFF32245),
+    ],
+
+    // lavender (0xFFA78BFA)
+    [
+      Color(0xFFA78BFA),
+      Color(0xFFB59FFB),
+      Color(0xFFC3B3FC),
+      Color(0xFFD4CAFD),
+      Color(0xFFC3B3FC),
+      Color(0xFFB59FFB),
+      Color(0xFF9D7FF9),
+      Color(0xFF906FF8),
+    ],
+
+    // slate (0xFF64748B)
+    [
+      Color(0xFF64748B),
+      Color(0xFF768599),
+      Color(0xFF8896A7),
+      Color(0xFF9DAAB8),
+      Color(0xFF8896A7),
+      Color(0xFF768599),
+      Color(0xFF5A6A80),
+      Color(0xFF4E5D72),
     ],
 
     // gold (Special: requires Complete Pack)

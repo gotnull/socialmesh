@@ -119,11 +119,13 @@ class _AnimatedGoldButtonState extends State<AnimatedGoldButton>
                       AccentColors.goldBrown,
                       AccentColors.goldDarkGoldenrod,
                       AccentColors.goldMetallic,
-                      AccentColors.goldMetallic
-                          .withValues(alpha: 0.9), // Transparent shimmer
+                      AccentColors.goldMetallic.withValues(
+                        alpha: 0.9,
+                      ), // Transparent shimmer
                       Colors.white.withValues(alpha: 0.6), // Transparent white
-                      AccentColors.goldMetallic
-                          .withValues(alpha: 0.9), // Transparent shimmer
+                      AccentColors.goldMetallic.withValues(
+                        alpha: 0.9,
+                      ), // Transparent shimmer
                       AccentColors.goldMetallic,
                       AccentColors.goldDarkGoldenrod,
                       AccentColors.goldBrown,
@@ -143,8 +145,8 @@ class _AnimatedGoldButtonState extends State<AnimatedGoldButton>
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: AccentColors.goldMetallic.withValues(alpha: 0.5),
-                      blurRadius: 12,
+                      color: AccentColors.goldBrown.withValues(alpha: 0.5),
+                      blurRadius: 8,
                       spreadRadius: 0,
                     ),
                   ],
@@ -154,14 +156,7 @@ class _AnimatedGoldButtonState extends State<AnimatedGoldButton>
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF3D2600), // Dark brown for contrast on gold
-                    shadows: [
-                      Shadow(
-                        color: Color(0x40FFFFFF),
-                        offset: Offset(0, 1),
-                        blurRadius: 0,
-                      ),
-                    ],
+                    color: Color(0xFF4A3000), // Dark brown - always visible
                   ),
                 ),
               );

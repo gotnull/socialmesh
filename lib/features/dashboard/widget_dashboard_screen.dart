@@ -224,80 +224,80 @@ class _WidgetDashboardScreenState extends ConsumerState<WidgetDashboardScreen> {
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
-            );
-          },
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        context.accentColor.withValues(alpha: 0.3),
-                        context.accentColor.withValues(alpha: 0.1),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+              );
+            },
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          context.accentColor.withValues(alpha: 0.3),
+                          context.accentColor.withValues(alpha: 0.1),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: context.accentColor.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.widgets_rounded,
+                      color: context.accentColor,
+                      size: 24,
+                    ),
+                  ),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Unlock $premiumWidgetCount More Widgets',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: context.accentColor,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Battery, messages, map, and more',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: context.textSecondary,
+                          ),
+                        ),
                       ],
                     ),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: context.accentColor.withValues(alpha: 0.3),
+                  ),
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: context.accentColor.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.arrow_forward_ios,
+                      size: 14,
+                      color: context.accentColor,
                     ),
                   ),
-                  child: Icon(
-                    Icons.widgets_rounded,
-                    color: context.accentColor,
-                    size: 24,
-                  ),
-                ),
-                SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Unlock $premiumWidgetCount More Widgets',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: context.accentColor,
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Battery, messages, map, and more',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: context.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: context.accentColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.arrow_forward_ios,
-                    size: 14,
-                    color: context.accentColor,
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
         ),
       ),
     );
@@ -763,7 +763,9 @@ class _AddWidgetSheet extends ConsumerWidget {
                 '${currentConfigs.length}/${DashboardWidgetsNotifier.maxWidgets}',
                 style: TextStyle(
                   fontSize: 13,
-                  color: currentConfigs.length >= DashboardWidgetsNotifier.maxWidgets
+                  color:
+                      currentConfigs.length >=
+                          DashboardWidgetsNotifier.maxWidgets
                       ? AppTheme.errorRed
                       : context.textSecondary,
                   fontWeight: FontWeight.w600,
@@ -818,8 +820,12 @@ class _AddWidgetSheet extends ConsumerWidget {
                       widgetsNotifier.removeWidget(config.id);
                     } else {
                       // Check limit before adding
-                      if (currentConfigs.length >= DashboardWidgetsNotifier.maxWidgets) {
-                        showErrorSnackBar(context, 'Widget limit reached (${DashboardWidgetsNotifier.maxWidgets} max)');
+                      if (currentConfigs.length >=
+                          DashboardWidgetsNotifier.maxWidgets) {
+                        showErrorSnackBar(
+                          context,
+                          'Widget limit reached (${DashboardWidgetsNotifier.maxWidgets} max)',
+                        );
                         return;
                       }
                       widgetsNotifier.addWidget(type);
@@ -867,60 +873,68 @@ class _AddWidgetSheet extends ConsumerWidget {
           child: Row(
             children: [
               Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: context.accentColor.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              Icons.auto_awesome,
-              color: context.accentColor,
-              size: 22,
-            ),
-          ),
-          SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Unlock All Widgets',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: context.textPrimary,
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: context.accentColor.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.auto_awesome,
+                  color: context.accentColor,
+                  size: 22,
+                ),
+              ),
+              SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Unlock All Widgets',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: context.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Get $widgetPackName for ${DashboardWidgetType.values.length - _freeWidgetTypes.length} more widgets',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const SubscriptionScreen(),
+                    ),
+                  );
+                },
+                style: TextButton.styleFrom(
+                  backgroundColor: context.accentColor,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  'Get $widgetPackName for ${DashboardWidgetType.values.length - _freeWidgetTypes.length} more widgets',
-                  style: TextStyle(fontSize: 12, color: context.textSecondary),
+                child: Text(
+                  'Unlock',
+                  style: TextStyle(fontWeight: FontWeight.w600),
                 ),
-              ],
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
-              );
-            },
-            style: TextButton.styleFrom(
-              backgroundColor: context.accentColor,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
               ),
-            ),
-            child: Text(
-              'Unlock',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
+            ],
           ),
         ),
       ),

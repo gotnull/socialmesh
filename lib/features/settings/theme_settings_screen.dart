@@ -180,7 +180,9 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
                 ? null
                 : () async {
                     HapticFeedback.selectionClick();
-                    await ref.read(accentColorProvider.notifier).setColor(color);
+                    await ref
+                        .read(accentColorProvider.notifier)
+                        .setColor(color);
                     // Also sync to cloud profile for cross-device persistence
                     ref
                         .read(userProfileProvider.notifier)
@@ -201,15 +203,15 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        gradient: isGold
-                            ? AccentColors.goldGradient
-                            : null,
+                        gradient: isGold ? AccentColors.goldGradient : null,
                         color: isGold ? null : color,
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: isSelected
                               ? Colors.white
-                              : Colors.white.withValues(alpha: isLocked ? 0.1 : 0.2),
+                              : Colors.white.withValues(
+                                  alpha: isLocked ? 0.1 : 0.2,
+                                ),
                           width: isSelected ? 3 : 2,
                         ),
                         boxShadow: isSelected
@@ -232,13 +234,13 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
                                 size: 20,
                               )
                             : isSelected
-                                ? const Icon(
-                                    Icons.check,
-                                    key: ValueKey('check'),
-                                    color: Colors.white,
-                                    size: 24,
-                                  )
-                                : const SizedBox.shrink(key: ValueKey('empty')),
+                            ? const Icon(
+                                Icons.check,
+                                key: ValueKey('check'),
+                                color: Colors.white,
+                                size: 24,
+                              )
+                            : const SizedBox.shrink(key: ValueKey('empty')),
                       ),
                     ),
                     // Verified badge for gold color
