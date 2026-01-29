@@ -555,7 +555,7 @@ class _AnimatedImagePageState extends State<_AnimatedImagePage>
               if (metrics.pixels >= metrics.maxScrollExtent &&
                   notification.dragDetails != null &&
                   (notification.dragDetails!.delta.dx < -5)) {
-                debugPrint(
+                AppLogging.signals(
                   'BOUNDARY_DEBUG: At end, swiping left, going to NEXT signal',
                 );
                 widget.onRequestNextSignal();
@@ -566,7 +566,7 @@ class _AnimatedImagePageState extends State<_AnimatedImagePage>
               if (metrics.pixels <= metrics.minScrollExtent &&
                   notification.dragDetails != null &&
                   (notification.dragDetails!.delta.dx > 5)) {
-                debugPrint(
+                AppLogging.signals(
                   'BOUNDARY_DEBUG: At start, swiping right, going to PREVIOUS signal',
                 );
                 widget.onRequestPreviousSignal();

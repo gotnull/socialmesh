@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:socialmesh/core/logging.dart';
 
 import '../../core/widgets/snappable.dart';
 
@@ -194,7 +195,7 @@ class _SnapEffectScreenState extends State<SnapEffectScreen> {
       randomDislocationOffset: const Offset(40, 20),
       numberOfBuckets: 24,
       onSnapped: () {
-        debugPrint('Card ${card.title} snapped!');
+        AppLogging.signals('Card ${card.title} snapped!');
       },
       child: GestureDetector(
         onTap: () => _snapCard(index),
