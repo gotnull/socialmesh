@@ -307,6 +307,23 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
       );
     }
 
+    // Calculate actual discount from store prices (localized)
+    final bundlePrice =
+        storeProducts[RevenueCatConfig.completePackProductId]?.price;
+    final individualTotal = [
+      RevenueCatConfig.themePackProductId,
+      RevenueCatConfig.ringtonePackProductId,
+      RevenueCatConfig.widgetPackProductId,
+      RevenueCatConfig.automationsPackProductId,
+      RevenueCatConfig.iftttPackProductId,
+    ].fold<double>(0, (sum, id) => sum + (storeProducts[id]?.price ?? 0));
+
+    // Use actual store prices if available, otherwise fall back to model
+    final discountPercent =
+        (bundlePrice != null && individualTotal > 0)
+            ? ((1 - bundlePrice / individualTotal) * 100).round()
+            : OneTimePurchases.bundleDiscountPercent;
+
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -378,7 +395,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
-                              'SAVE ${OneTimePurchases.bundleDiscountPercent}%',
+                              'SAVE $discountPercent%',
                               style: const TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w800,
