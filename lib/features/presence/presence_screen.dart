@@ -8,7 +8,6 @@ import '../../models/presence_confidence.dart';
 import '../../providers/presence_providers.dart';
 import '../../utils/presence_utils.dart';
 
-
 class PresenceScreen extends ConsumerStatefulWidget {
   const PresenceScreen({super.key});
 
@@ -29,9 +28,7 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
         backgroundColor: Colors.transparent,
         centerTitle: true,
         title: const Text('Presence'),
-        actions: [
-          IcoHelpAppBarButton(topicId: 'presence_overview'),
-        ],
+        actions: [IcoHelpAppBarButton(topicId: 'presence_overview')],
       ),
       body: presences.isEmpty
           ? _buildEmptyState(theme)
@@ -125,16 +122,12 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
           final isLast = index == PresenceConfidence.values.length - 1;
           return Expanded(
             child: Container(
-              margin: EdgeInsets.only(
-                right: isLast ? 0 : 8,
-              ),
+              margin: EdgeInsets.only(right: isLast ? 0 : 8),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: color.withAlpha(26),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: color.withAlpha(77),
-                ),
+                border: Border.all(color: color.withAlpha(77)),
               ),
               child: Column(
                 children: [
@@ -150,9 +143,7 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
                   const SizedBox(height: 4),
                   Text(
                     status.label,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: color,
-                    ),
+                    style: theme.textTheme.bodySmall?.copyWith(color: color),
                   ),
                 ],
               ),

@@ -33,18 +33,18 @@ void main() {
   test('saved device invalidates after repeated missing scans', () async {
     final s = SettingsService();
     await s.init();
-    
+
     final prefs = await SharedPreferences.getInstance();
 
     // Initialize storage services with in-memory databases
     final messageStorage = MessageStorageService();
     await messageStorage.init();
-    
+
     final nodeStorage = NodeStorageService();
     await nodeStorage.init();
-    
+
     final telemetryStorage = TelemetryStorageService(prefs);
-    
+
     final routeStorage = RouteStorageService(testDbPath: inMemoryDatabasePath);
     await routeStorage.init();
 
@@ -55,9 +55,13 @@ void main() {
           MeshPacketDedupeStore(dbPathOverride: ':memory:'),
         ),
         settingsServiceProvider.overrideWithValue(AsyncValue.data(s)),
-        messageStorageProvider.overrideWithValue(AsyncValue.data(messageStorage)),
+        messageStorageProvider.overrideWithValue(
+          AsyncValue.data(messageStorage),
+        ),
         nodeStorageProvider.overrideWithValue(AsyncValue.data(nodeStorage)),
-        telemetryStorageProvider.overrideWithValue(AsyncValue.data(telemetryStorage)),
+        telemetryStorageProvider.overrideWithValue(
+          AsyncValue.data(telemetryStorage),
+        ),
         routeStorageProvider.overrideWithValue(AsyncValue.data(routeStorage)),
       ],
     );
@@ -93,19 +97,21 @@ void main() {
     () async {
       final s = SettingsService();
       await s.init();
-      
+
       final prefs = await SharedPreferences.getInstance();
 
       // Initialize storage services with in-memory databases
       final messageStorage = MessageStorageService();
       await messageStorage.init();
-      
+
       final nodeStorage = NodeStorageService();
       await nodeStorage.init();
-      
+
       final telemetryStorage = TelemetryStorageService(prefs);
-      
-      final routeStorage = RouteStorageService(testDbPath: inMemoryDatabasePath);
+
+      final routeStorage = RouteStorageService(
+        testDbPath: inMemoryDatabasePath,
+      );
       await routeStorage.init();
 
       final container = ProviderContainer(
@@ -115,9 +121,13 @@ void main() {
             MeshPacketDedupeStore(dbPathOverride: ':memory:'),
           ),
           settingsServiceProvider.overrideWithValue(AsyncValue.data(s)),
-          messageStorageProvider.overrideWithValue(AsyncValue.data(messageStorage)),
+          messageStorageProvider.overrideWithValue(
+            AsyncValue.data(messageStorage),
+          ),
           nodeStorageProvider.overrideWithValue(AsyncValue.data(nodeStorage)),
-          telemetryStorageProvider.overrideWithValue(AsyncValue.data(telemetryStorage)),
+          telemetryStorageProvider.overrideWithValue(
+            AsyncValue.data(telemetryStorage),
+          ),
           routeStorageProvider.overrideWithValue(AsyncValue.data(routeStorage)),
         ],
       );
