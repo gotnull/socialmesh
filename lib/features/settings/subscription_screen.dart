@@ -319,10 +319,9 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     ].fold<double>(0, (sum, id) => sum + (storeProducts[id]?.price ?? 0));
 
     // Use actual store prices if available, otherwise fall back to model
-    final discountPercent =
-        (bundlePrice != null && individualTotal > 0)
-            ? ((1 - bundlePrice / individualTotal) * 100).round()
-            : OneTimePurchases.bundleDiscountPercent;
+    final discountPercent = (bundlePrice != null && individualTotal > 0)
+        ? ((1 - bundlePrice / individualTotal) * 100).round()
+        : OneTimePurchases.bundleDiscountPercent;
 
     return Container(
       decoration: BoxDecoration(
