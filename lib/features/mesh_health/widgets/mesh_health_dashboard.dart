@@ -19,8 +19,11 @@ class MeshHealthDashboard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final healthState = ref.watch(meshHealthProvider);
 
-    return Scaffold(
-      backgroundColor: context.background,
+    return HelpTourController(
+      topicId: 'mesh_health_overview',
+      stepKeys: const {},
+      child: Scaffold(
+        backgroundColor: context.background,
       appBar: AppBar(
         backgroundColor: context.background,
         title: Text(
@@ -67,6 +70,7 @@ class MeshHealthDashboard extends ConsumerWidget {
           ],
         ),
       ),
+    ),
     );
   }
 

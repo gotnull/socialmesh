@@ -1140,6 +1140,150 @@ class HelpContent {
   );
 
   // ============================================================================
+  // PRESENCE HELP
+  // ============================================================================
+
+  static final HelpTopic presenceOverview = HelpTopic(
+    id: 'presence_overview',
+    title: 'Node Presence',
+    description: 'Track which nodes are active on your mesh',
+    icon: Icons.people,
+    category: catNodes,
+    priority: 25,
+    steps: [
+      HelpStep(
+        id: 'presence_intro',
+        bubbleText:
+            "**Presence** shows which nodes are active, recently seen, or inactive on your mesh network.",
+        icoMood: MeshBrainMood.speaking,
+        canGoBack: false,
+      ),
+      HelpStep(
+        id: 'presence_active',
+        bubbleText:
+            "**Active** nodes (green) sent a message in the last 2 minutes. They're definitely online!",
+        icoMood: MeshBrainMood.approving,
+      ),
+      HelpStep(
+        id: 'presence_recent',
+        bubbleText:
+            "**Recently seen** nodes (yellow) were active 2-10 minutes ago. Probably still around.",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'presence_inactive',
+        bubbleText:
+            "**Inactive** nodes (gray) haven't been heard from in over 10 minutes. They might be out of range or powered off.",
+        icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
+        id: 'presence_chart',
+        bubbleText:
+            "The **activity chart** shows recent node activity over time. Watch the mesh come alive!",
+        icoMood: MeshBrainMood.excited,
+      ),
+    ],
+  );
+
+  // ============================================================================
+  // REACHABILITY HELP
+  // ============================================================================
+
+  static final HelpTopic reachabilityOverview = HelpTopic(
+    id: 'reachability_overview',
+    title: 'Mesh Reachability',
+    description: 'Understand which nodes you can reach',
+    icon: Icons.hub,
+    category: catNetwork,
+    priority: 30,
+    steps: [
+      HelpStep(
+        id: 'reachability_intro',
+        bubbleText:
+            "**Reachability** estimates how likely you are to reach each node. This is based on passively observed mesh data.",
+        icoMood: MeshBrainMood.speaking,
+        canGoBack: false,
+      ),
+      HelpStep(
+        id: 'reachability_beta',
+        bubbleText:
+            "This is **BETA** - we don't send test packets! Everything is estimated from messages we see flowing through the mesh.",
+        icoMood: MeshBrainMood.alert,
+      ),
+      HelpStep(
+        id: 'reachability_high',
+        bubbleText:
+            "**High** reachability (bright) means we've seen lots of communication with that node. Messages will probably get through!",
+        icoMood: MeshBrainMood.approving,
+      ),
+      HelpStep(
+        id: 'reachability_medium',
+        bubbleText:
+            "**Medium** reachability (dimmer) means some communication but not consistent. Messages might make it.",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'reachability_low',
+        bubbleText:
+            "**Low** reachability (very dim) means we rarely see communication. The node might be too far or behind obstacles.",
+        icoMood: MeshBrainMood.speaking,
+      ),
+    ],
+  );
+
+  // ============================================================================
+  // MESH HEALTH HELP
+  // ============================================================================
+
+  static final HelpTopic meshHealthOverview = HelpTopic(
+    id: 'mesh_health_overview',
+    title: 'Mesh Health',
+    description: 'Monitor your mesh network health',
+    icon: Icons.monitor_heart,
+    category: catNetwork,
+    priority: 35,
+    steps: [
+      HelpStep(
+        id: 'health_intro',
+        bubbleText:
+            "**Mesh Health** monitors your network for issues like congestion, packet loss, and problematic nodes.",
+        icoMood: MeshBrainMood.speaking,
+        canGoBack: false,
+      ),
+      HelpStep(
+        id: 'health_status',
+        bubbleText:
+            "The **status indicator** shows overall mesh health. Green = healthy, yellow = issues detected, red = critical problems.",
+        icoMood: MeshBrainMood.approving,
+      ),
+      HelpStep(
+        id: 'health_metrics',
+        bubbleText:
+            "**Metrics** show packet counts, retransmissions, and hop counts. Watch for high retransmit rates!",
+        icoMood: MeshBrainMood.curious,
+      ),
+      HelpStep(
+        id: 'health_utilization',
+        bubbleText:
+            "The **utilization chart** shows how busy your mesh is over time. Spikes might indicate problems.",
+        icoMood: MeshBrainMood.speaking,
+      ),
+      HelpStep(
+        id: 'health_issues',
+        bubbleText:
+            "**Issues** section highlights specific problems and suggests fixes. Check here if things seem slow!",
+        icoMood: MeshBrainMood.alert,
+      ),
+      HelpStep(
+        id: 'health_monitoring',
+        bubbleText:
+            "Use the **pause** button to stop monitoring if you want to save battery. Hit **reset** to clear the data and start fresh!",
+        icoMood: MeshBrainMood.excited,
+      ),
+    ],
+  );
+
+  // ============================================================================
   // ALL TOPICS
   // ============================================================================
 
@@ -1154,6 +1298,9 @@ class HelpContent {
     mapOverview,
     messageRouting,
     automationsOverview,
+    presenceOverview,
+    reachabilityOverview,
+    meshHealthOverview,
     gpsSettings,
     signalMetrics,
     dashboardOverview,

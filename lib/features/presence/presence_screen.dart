@@ -22,18 +22,21 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
     final presences = ref.watch(presenceListProvider);
     final summary = ref.watch(presenceSummaryProvider);
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        centerTitle: true,
-        title: const Text('Presence'),
-        actions: [IcoHelpAppBarButton(topicId: 'presence_overview')],
-      ),
-      body: presences.isEmpty
-          ? _buildEmptyState(theme)
-          : CustomScrollView(
-              slivers: [
+    return HelpTourController(
+      topicId: 'presence_overview',
+      stepKeys: const {},
+      child: Scaffold(
+        backgroundColor: context.background,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          centerTitle: true,
+          title: const Text('Presence'),
+          actions: [IcoHelpAppBarButton(topicId: 'presence_overview')],
+        ),
+        body: presences.isEmpty
+            ? _buildEmptyState(theme)
+            : CustomScrollView(
+                slivers: [
                 // Summary section
                 SliverToBoxAdapter(
                   child: _buildSummarySection(context, theme, summary),
@@ -66,6 +69,7 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
                 const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
               ],
             ),
+      ),
     );
   }
 
@@ -122,14 +126,17 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
           final isLast = index == PresenceConfidence.values.length - 1;
           return Expanded(
             child: Container(
+              height: 130,
               margin: EdgeInsets.only(right: isLast ? 0 : 8),
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
               decoration: BoxDecoration(
                 color: color.withAlpha(26),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: color.withAlpha(77)),
               ),
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(_statusIcon(status), color: color, size: 24),
                   const SizedBox(height: 8),
@@ -144,6 +151,9 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
                   Text(
                     status.label,
                     style: theme.textTheme.bodySmall?.copyWith(color: color),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),

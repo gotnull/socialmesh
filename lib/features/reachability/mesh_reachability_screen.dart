@@ -51,10 +51,13 @@ class _MeshReachabilityScreenState
       }).toList();
     }
 
-    return GestureDetector(
-      onTap: _dismissKeyboard,
-      child: Scaffold(
-        backgroundColor: context.background,
+    return HelpTourController(
+      topicId: 'reachability_overview',
+      stepKeys: const {},
+      child: GestureDetector(
+        onTap: _dismissKeyboard,
+        child: Scaffold(
+          backgroundColor: context.background,
         appBar: AppBar(
           backgroundColor: context.background,
           centerTitle: true,
@@ -62,7 +65,7 @@ class _MeshReachabilityScreenState
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Mesh Reachability',
+                'Reachability',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
@@ -173,6 +176,7 @@ class _MeshReachabilityScreenState
           ],
         ),
       ),
+    ),
     );
   }
 

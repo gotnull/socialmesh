@@ -1,8 +1,8 @@
 name: socialmesh
 description: "Socialmesh - Meshtastic companion app with BLE and USB serial support."
-publish_to: 'none'
+publish_to: "none"
 
-version: 1.11.0+85
+version: 1.11.0+86
 
 environment:
   sdk: ^3.10.0
@@ -10,21 +10,21 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  
+
   # State Management (3.x with updated API)
   flutter_riverpod: ^3.0.3
   riverpod_annotation: ^3.0.3
-  
+
   # BLE Communication
   flutter_blue_plus: ^2.0.2
-  
+
   # USB Serial Communication
   usb_serial: ^0.5.2
-  
+
   # Protobuf
   protobuf: ^6.0.0
   fixnum: ^1.1.0
-  
+
   # Storage
   flutter_secure_storage: ^9.2.2
   shared_preferences: ^2.5.4
@@ -34,11 +34,11 @@ dependencies:
   file_picker: ^8.3.7
   image_picker: ^1.1.2
   photo_manager: ^3.6.3
-  
+
   # QR Code
   qr_flutter: ^4.1.0
   mobile_scanner: ^7.0.0
-  
+
   # UI/UX
   cupertino_icons: ^1.0.8
   flutter_map: ^8.2.2
@@ -50,7 +50,7 @@ dependencies:
   share_plus: ^10.1.4
   social_media_buttons: ^1.0.0
   sticker_view: ^0.0.4
-  
+
   # Utilities
   logger: ^2.5.0
   uuid: ^4.5.1
@@ -66,13 +66,13 @@ dependencies:
   just_audio: ^0.10.5
   live_activities: ^2.4.3
   package_info_plus: ^8.0.0
-  
+
   # In-App Purchases (RevenueCat)
   purchases_flutter: ^9.9.10
-  
+
   # 3D Globe (CesiumJS via WebView - flutter_inappwebview already included)
   three_js: ^0.2.6
-  
+
   # Animations
   animations: ^2.1.1
   skeletonizer: ^2.1.2
@@ -94,10 +94,10 @@ dependencies:
   ditredi: ^2.0.2
   vector_math: ^2.2.0
   cryptography: ^2.9.0
-  
+
   # Camera for AR
   camera: ^0.11.0
-  
+
   # Deep linking
   app_links: ^6.3.3
   timeago: ^3.7.1
@@ -109,10 +109,10 @@ dev_dependencies:
   sqflite_common_ffi: ^2.4.0+2
   flutter_lints: ^6.0.0
   fake_async: ^1.3.2
-  
+
   # Launcher icons generator
   flutter_launcher_icons: ^0.14.3
-  
+
   # Code generation (3.x to match riverpod 3.x)
   build_runner: ^2.4.13
   riverpod_generator: ^3.0.3
@@ -123,7 +123,6 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
-
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
@@ -171,8 +170,8 @@ flutter:
 # Flutter launcher icons configuration
 flutter_launcher_icons:
   android: true
-  ios: false  # iOS icons are already correct
+  ios: false # iOS icons are already correct
   image_path: "assets/app_icons/source/socialmesh_icon_v4_1024.png"
-  adaptive_icon_background: "#1F2633"  # Dark background matching app theme
+  adaptive_icon_background: "#1F2633" # Dark background matching app theme
   adaptive_icon_foreground: "assets/app_icons/source/socialmesh_icon_v4_1024.png"
   min_sdk_android: 21
