@@ -1385,7 +1385,7 @@ class _NodeCard extends StatelessWidget {
         opacity: cardOpacity,
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          decoration: !isMyNode
+          decoration: !isMyNode && !node.isFavorite
               ? BoxDecoration(
                   color: context.card,
                   borderRadius: BorderRadius.circular(12),
@@ -1404,10 +1404,20 @@ class _NodeCard extends StatelessWidget {
                   padding: const EdgeInsets.all(16),
                   child: _buildCardContent(context, signalBars, statusColor, statusText),
                 )
-              : Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: _buildCardContent(context, signalBars, statusColor, statusText),
-                ),
+              : node.isFavorite
+                  ? GradientBorderContainer(
+                      borderRadius: 12,
+                      borderWidth: 2,
+                      accentOpacity: 1.0,
+                      accentColor: AccentColors.yellow,
+                      backgroundColor: context.card,
+                      padding: const EdgeInsets.all(16),
+                      child: _buildCardContent(context, signalBars, statusColor, statusText),
+                    )
+                  : Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: _buildCardContent(context, signalBars, statusColor, statusText),
+                    ),
         ),
       ),
     );
@@ -1745,7 +1755,7 @@ class _NodeCard extends StatelessWidget {
                       if (node.isFavorite)
                         const Icon(
                           Icons.star,
-                          color: Color(0xFFFFD700),
+                          color: AccentColors.yellow,
                           size: 24,
                         )
                       else if (!node.isIgnored)

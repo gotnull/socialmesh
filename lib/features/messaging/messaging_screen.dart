@@ -21,6 +21,7 @@ import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/auto_scroll_text.dart';
 import '../../core/widgets/edge_fade.dart';
+import '../../core/widgets/gradient_border_container.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../core/widgets/node_avatar.dart';
 import '../../generated/meshtastic/channel.pb.dart' as channel_pb;
@@ -57,6 +58,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
   ContactFilter _currentFilter = ContactFilter.all;
+  bool _showSectionHeaders = true;
 
   @override
   void dispose() {
@@ -163,9 +165,13 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
       );
     }
 
-    // Sort: online first, then by name
+    // Sort: favorites first, then unread, then online, then by name
     contacts.sort((a, b) {
-      // Unread messages first
+      // Favorites first
+      if (a.isFavorite != b.isFavorite) {
+        return a.isFavorite ? -1 : 1;
+      }
+      // Unread messages next
       if (a.unreadCount > 0 && b.unreadCount == 0) return -1;
       if (b.unreadCount > 0 && a.unreadCount == 0) return 1;
       // Then active nodes
@@ -256,7 +262,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
                 child: EdgeFade.end(
                   child: ListView(
                     scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.only(left: 16),
                     children: [
                       _ContactFilterChip(
                         label: 'All',
@@ -308,10 +314,20 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
                           () => _currentFilter = ContactFilter.favorites,
                         ),
                       ),
+                      const SizedBox(width: 8),
                     ],
                   ),
                 ),
               ),
+              // Static toggle at end
+              const SizedBox(width: 8),
+              _ContactHeadersToggle(
+                enabled: _showSectionHeaders,
+                onToggle: () => setState(
+                  () => _showSectionHeaders = !_showSectionHeaders,
+                ),
+              ),
+              const SizedBox(width: 12),
             ],
           ),
         ),
@@ -371,36 +387,7 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
                     ],
                   ),
                 )
-              : ListView.builder(
-                  itemCount: filteredContacts.length,
-                  itemBuilder: (context, index) {
-                    final contact = filteredContacts[index];
-                    final animationsEnabled = ref.watch(
-                      animationsEnabledProvider,
-                    );
-                    return Perspective3DSlide(
-                      index: index,
-                      direction: SlideDirection.left,
-                      enabled: animationsEnabled,
-                      child: _ContactTile(
-                        contact: contact,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => ChatScreen(
-                                type: ConversationType.directMessage,
-                                nodeNum: contact.nodeNum,
-                                title: contact.displayName,
-                                avatarColor: contact.avatarColor,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    );
-                  },
-                ),
+              : _buildContactsList(filteredContacts),
         ),
       ],
     );
@@ -437,6 +424,189 @@ class _MessagingScreenState extends ConsumerState<MessagingScreen> {
           ),
           body: bodyContent,
         ),
+      ),
+    );
+  }
+
+  Widget _buildContactsList(List<_Contact> contacts) {
+    final animationsEnabled = ref.watch(animationsEnabledProvider);
+
+    if (!_showSectionHeaders) {
+      // Simple list without headers
+      return ListView.builder(
+        itemCount: contacts.length,
+        itemBuilder: (context, index) {
+          final contact = contacts[index];
+          return Perspective3DSlide(
+            index: index,
+            direction: SlideDirection.left,
+            enabled: animationsEnabled,
+            child: _ContactTile(
+              contact: contact,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ChatScreen(
+                      type: ConversationType.directMessage,
+                      nodeNum: contact.nodeNum,
+                      title: contact.displayName,
+                      avatarColor: contact.avatarColor,
+                    ),
+                  ),
+                );
+              },
+            ),
+          );
+        },
+      );
+    }
+
+    // Build grouped list with section headers
+    final sections = _groupContactsIntoSections(contacts);
+    final nonEmptySections = sections.where((s) => s.contacts.isNotEmpty).toList();
+
+    return CustomScrollView(
+      slivers: [
+        for (var sectionIndex = 0; sectionIndex < nonEmptySections.length; sectionIndex++) ...[
+          // Sticky header
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _ContactStickyHeaderDelegate(
+              title: nonEmptySections[sectionIndex].title,
+              count: nonEmptySections[sectionIndex].contacts.length,
+            ),
+          ),
+          // Section contacts
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final contact = nonEmptySections[sectionIndex].contacts[index];
+                return Perspective3DSlide(
+                  index: index,
+                  direction: SlideDirection.left,
+                  enabled: animationsEnabled,
+                  child: _ContactTile(
+                    contact: contact,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ChatScreen(
+                            type: ConversationType.directMessage,
+                            nodeNum: contact.nodeNum,
+                            title: contact.displayName,
+                            avatarColor: contact.avatarColor,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                );
+              },
+              childCount: nonEmptySections[sectionIndex].contacts.length,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  List<_ContactSection> _groupContactsIntoSections(List<_Contact> contacts) {
+    final favorites = contacts.where((c) => c.isFavorite).toList();
+    final unread = contacts.where((c) => !c.isFavorite && c.unreadCount > 0).toList();
+    final active = contacts.where((c) => !c.isFavorite && c.unreadCount == 0 && c.presence.isActive).toList();
+    final inactive = contacts.where((c) => !c.isFavorite && c.unreadCount == 0 && !c.presence.isActive).toList();
+
+    return [
+      if (favorites.isNotEmpty) _ContactSection('Favorites', favorites),
+      if (unread.isNotEmpty) _ContactSection('Unread', unread),
+      if (active.isNotEmpty) _ContactSection('Active', active),
+      if (inactive.isNotEmpty) _ContactSection('Inactive', inactive),
+    ];
+  }
+}
+
+/// Helper class for contact section grouping
+class _ContactSection {
+  final String title;
+  final List<_Contact> contacts;
+
+  _ContactSection(this.title, this.contacts);
+}
+
+/// Sticky header delegate for contact sections
+class _ContactStickyHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final String title;
+  final int count;
+
+  _ContactStickyHeaderDelegate({required this.title, required this.count});
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    final showShadow = shrinkOffset > 0;
+    return StickyHeaderShadow(
+      blurRadius: showShadow ? 8 : 0,
+      offsetY: showShadow ? 2 : 0,
+      child: _ContactSectionHeader(title: title, count: count),
+    );
+  }
+
+  @override
+  double get maxExtent => 40;
+
+  @override
+  double get minExtent => 40;
+
+  @override
+  bool shouldRebuild(covariant _ContactStickyHeaderDelegate oldDelegate) {
+    return title != oldDelegate.title || count != oldDelegate.count;
+  }
+}
+
+class _ContactSectionHeader extends StatelessWidget {
+  final String title;
+  final int count;
+
+  const _ContactSectionHeader({
+    required this.title,
+    required this.count,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 40,
+      color: context.background,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          Text(
+            title.toUpperCase(),
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: context.textSecondary,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: context.card,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              count.toString(),
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: context.textTertiary,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -490,6 +660,40 @@ class _Contact {
   bool get hasMessages => lastMessage != null;
 }
 
+/// Toggle button for section headers in contacts list
+class _ContactHeadersToggle extends StatelessWidget {
+  final bool enabled;
+  final VoidCallback onToggle;
+
+  const _ContactHeadersToggle({required this.enabled, required this.onToggle});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onToggle,
+      child: Container(
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: enabled
+              ? context.accentColor.withValues(alpha: 0.2)
+              : context.card,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: enabled
+                ? context.accentColor.withValues(alpha: 0.5)
+                : context.border.withValues(alpha: 0.3),
+          ),
+        ),
+        child: Icon(
+          Icons.view_agenda_outlined,
+          size: 16,
+          color: enabled ? context.accentColor : context.textTertiary,
+        ),
+      ),
+    );
+  }
+}
+
 class _ContactTile extends StatelessWidget {
   final _Contact contact;
   final VoidCallback onTap;
@@ -498,119 +702,137 @@ class _ContactTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cardContent = Padding(
+      padding: const EdgeInsets.all(12),
+      child: Row(
+        children: [
+          // Avatar with online indicator
+          Stack(
+            children: [
+              NodeAvatar(
+                text:
+                    contact.shortName ??
+                    (contact.displayName.length >= 2
+                        ? contact.displayName.substring(0, 2)
+                        : contact.displayName),
+                color: contact.avatarColor != null
+                    ? Color(contact.avatarColor!)
+                    : AppTheme.graphPurple,
+                size: 48,
+              ),
+              if (contact.presence.isActive)
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    width: 14,
+                    height: 14,
+                    decoration: BoxDecoration(
+                      color: AppTheme.successGreen,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: context.card, width: 2),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          SizedBox(width: 12),
+          // Content
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        contact.displayName,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: context.textPrimary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    // Favorite star icon
+                    if (contact.isFavorite) ...[
+                      SizedBox(width: 4),
+                      Icon(Icons.star, color: AccentColors.yellow, size: 18),
+                    ],
+                    if (contact.unreadCount > 0) ...[
+                      SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: context.accentColor,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          '${contact.unreadCount}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                SizedBox(height: 4),
+                Text(
+                  contact.lastMessage ??
+                      presenceStatusText(
+                        contact.presence,
+                        contact.lastHeardAge,
+                      ),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: contact.lastMessage != null
+                        ? context.textSecondary
+                        : (contact.presence.isActive
+                              ? AppTheme.successGreen
+                              : context.textTertiary),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Icon(Icons.chevron_right, color: context.textTertiary),
+        ],
+      ),
+    );
+
     return BouncyTap(
       onTap: onTap,
       scaleFactor: 0.98,
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        decoration: BoxDecoration(
-          color: context.card,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: context.border),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              // Avatar with online indicator
-              Stack(
-                children: [
-                  NodeAvatar(
-                    text:
-                        contact.shortName ??
-                        (contact.displayName.length >= 2
-                            ? contact.displayName.substring(0, 2)
-                            : contact.displayName),
-                    color: contact.avatarColor != null
-                        ? Color(contact.avatarColor!)
-                        : AppTheme.graphPurple,
-                    size: 48,
-                  ),
-                  if (contact.presence.isActive)
-                    Positioned(
-                      right: 0,
-                      bottom: 0,
-                      child: Container(
-                        width: 14,
-                        height: 14,
-                        decoration: BoxDecoration(
-                          color: AppTheme.successGreen,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: context.card, width: 2),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              SizedBox(width: 12),
-              // Content
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            contact.displayName,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: context.textPrimary,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        if (contact.unreadCount > 0) ...[
-                          SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: context.accentColor,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              '${contact.unreadCount}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      contact.lastMessage ??
-                          presenceStatusText(
-                            contact.presence,
-                            contact.lastHeardAge,
-                          ),
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: contact.lastMessage != null
-                            ? context.textSecondary
-                            : (contact.presence.isActive
-                                  ? AppTheme.successGreen
-                                  : context.textTertiary),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Icon(Icons.chevron_right, color: context.textTertiary),
-            ],
-          ),
-        ),
+        decoration: !contact.isFavorite
+            ? BoxDecoration(
+                color: context.card,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: context.border),
+              )
+            : null,
+        child: contact.isFavorite
+            ? GradientBorderContainer(
+                borderRadius: 12,
+                borderWidth: 2,
+                accentOpacity: 1.0,
+                accentColor: AccentColors.yellow,
+                backgroundColor: context.card,
+                child: cardContent,
+              )
+            : cardContent,
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -244,13 +245,38 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen> {
   }
 }
 
-class _ActiveRouteBanner extends ConsumerWidget {
+class _ActiveRouteBanner extends ConsumerStatefulWidget {
   final route_model.Route route;
 
   const _ActiveRouteBanner({required this.route});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_ActiveRouteBanner> createState() => _ActiveRouteBannerState();
+}
+
+class _ActiveRouteBannerState extends ConsumerState<_ActiveRouteBanner> {
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    // Update every second to show live elapsed time
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) {
+        setState(() {});
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final route = widget.route;
     return Container(
       margin: const EdgeInsets.all(16),
       child: GradientBorderContainer(
@@ -258,8 +284,8 @@ class _ActiveRouteBanner extends ConsumerWidget {
         borderWidth: 2,
         accentColor: AccentColors.green,
         accentOpacity: 0.5,
-        padding: const EdgeInsets.all(16),
         child: Container(
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
@@ -267,7 +293,7 @@ class _ActiveRouteBanner extends ConsumerWidget {
                 AccentColors.teal.withValues(alpha: 0.2),
               ],
             ),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(14),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
