@@ -371,8 +371,8 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                       ),
                     ),
                     const Positioned(
-                      top: -10,
-                      right: -10,
+                      top: -14,
+                      right: -14,
                       child: SimpleVerifiedBadge(size: 24),
                     ),
                   ],

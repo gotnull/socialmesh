@@ -115,32 +115,16 @@ class _AnimatedGoldButtonState extends State<AnimatedGoldButton>
                   gradient: LinearGradient(
                     begin: Alignment(-1 + _shimmerAnimation.value, -1),
                     end: Alignment(1 + _shimmerAnimation.value, 1),
-                    colors: [
+                    colors: const [
                       AccentColors.goldBrown,
                       AccentColors.goldDarkGoldenrod,
                       AccentColors.goldMetallic,
-                      AccentColors.goldMetallic.withValues(
-                        alpha: 0.9,
-                      ), // Transparent shimmer
-                      Colors.white.withValues(alpha: 0.6), // Transparent white
-                      AccentColors.goldMetallic.withValues(
-                        alpha: 0.9,
-                      ), // Transparent shimmer
+                      AccentColors.goldDarkYellow, // Bright gold shimmer - no white!
                       AccentColors.goldMetallic,
                       AccentColors.goldDarkGoldenrod,
                       AccentColors.goldBrown,
                     ],
-                    stops: const [
-                      0.0,
-                      0.15,
-                      0.3,
-                      0.4,
-                      0.5,
-                      0.6,
-                      0.7,
-                      0.85,
-                      1.0,
-                    ],
+                    stops: [0.0, 0.2, 0.4, 0.5, 0.6, 0.8, 1.0],
                   ),
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
