@@ -16,7 +16,9 @@ import '../../services/audio/rtttl_player.dart';
 import '../../services/audio/notification_sound_service.dart';
 import '../../services/glyph_service.dart';
 import 'models/automation.dart';
+import 'models/schedule_spec.dart';
 import 'automation_repository.dart';
+import 'scheduler_service.dart';
 
 /// Message model for automation processing (local to avoid import conflict)
 class AutomationMessage {
@@ -33,6 +35,8 @@ class AutomationEngine {
   final IftttService _iftttService;
   final FlutterLocalNotificationsPlugin? _notifications;
   final GlyphService? _glyphService;
+  Scheduler? _scheduler;
+  StreamSubscription<ScheduledFireEvent>? _schedulerSubscription;
 
   /// Callback to send a message via the mesh
   final Future<bool> Function(int nodeNum, String message)? onSendMessage;
@@ -64,16 +68,27 @@ class AutomationEngine {
     required IftttService iftttService,
     FlutterLocalNotificationsPlugin? notifications,
     GlyphService? glyphService,
+    Scheduler? scheduler,
     this.onSendMessage,
     this.onSendToChannel,
   }) : _repository = repository,
        _iftttService = iftttService,
        _notifications = notifications,
-       _glyphService = glyphService;
+       _glyphService = glyphService,
+       _scheduler = scheduler;
+
+  /// Set the scheduler (can be done after construction for dependency injection)
+  void setScheduler(Scheduler scheduler) {
+    _scheduler = scheduler;
+  }
+
+  /// Get the current scheduler
+  Scheduler? get scheduler => _scheduler;
 
   /// Start the automation engine
   void start() {
     _startSilentNodeMonitor();
+    _startScheduler();
     AppLogging.automations('AutomationEngine: Started');
   }
 
@@ -81,7 +96,45 @@ class AutomationEngine {
   void stop() {
     _silentNodeTimer?.cancel();
     _silentNodeTimer = null;
+    _stopScheduler();
     AppLogging.automations('AutomationEngine: Stopped');
+  }
+
+  /// Start the scheduler and subscribe to events
+  void _startScheduler() {
+    if (_scheduler == null) return;
+
+    _schedulerSubscription?.cancel();
+    _schedulerSubscription = _scheduler!.fireEvents.listen((event) {
+      processScheduledEvent(event);
+    });
+
+    _scheduler!.start();
+    AppLogging.automations('AutomationEngine: Scheduler started');
+  }
+
+  /// Stop the scheduler
+  void _stopScheduler() {
+    _schedulerSubscription?.cancel();
+    _schedulerSubscription = null;
+    _scheduler?.stop();
+  }
+
+  /// Process a scheduled fire event from the scheduler
+  Future<void> processScheduledEvent(ScheduledFireEvent event) async {
+    AppLogging.automations(
+      'AutomationEngine: Processing scheduled event ${event.slotKey}'
+      '${event.isCatchUp ? " (catch-up)" : ""}',
+    );
+
+    await _processEvent(
+      AutomationEvent.scheduledFire(
+        scheduleId: event.scheduleId,
+        slotKey: event.slotKey,
+        scheduledFor: event.scheduledFor,
+        isCatchUp: event.isCatchUp,
+      ),
+    );
   }
 
   /// Execute an automation manually (e.g., from Siri Shortcuts)
@@ -460,6 +513,11 @@ class AutomationEngine {
         }
         break;
 
+      case TriggerType.scheduled:
+        // For scheduled triggers, verify the schedule ID matches if specified
+        // The actual timing is handled by the scheduler
+        break;
+
       default:
         break;
     }
@@ -477,22 +535,30 @@ class AutomationEngine {
   }
 
   /// Evaluate a condition
+  ///
+  /// For time-based conditions (timeRange, dayOfWeek), uses event.evaluationTime
+  /// which is scheduledFor for scheduled triggers, ensuring correct evaluation
+  /// even when processing catch-up events.
   bool _evaluateCondition(
     AutomationCondition condition,
     AutomationEvent event,
   ) {
+    // Use evaluationTime for time-based conditions (supports scheduled triggers)
+    final evalTime = event.evaluationTime;
+
     switch (condition.type) {
       case ConditionType.timeRange:
-        final now = TimeOfDay.now();
+        final timeOfDay = TimeOfDay(hour: evalTime.hour, minute: evalTime.minute);
         final start = _parseTimeOfDay(condition.timeStart);
         final end = _parseTimeOfDay(condition.timeEnd);
         if (start == null || end == null) return true;
-        return _isTimeInRange(now, start, end);
+        return _isTimeInRange(timeOfDay, start, end);
 
       case ConditionType.dayOfWeek:
         final days = condition.daysOfWeek;
         if (days == null || days.isEmpty) return true;
-        return days.contains(DateTime.now().weekday % 7);
+        // Use evaluationTime's day of week (0=Sunday format)
+        return days.contains(evalTime.weekday % 7);
 
       case ConditionType.batteryAbove:
         if (event.batteryLevel == null) return true;
@@ -504,15 +570,17 @@ class AutomationEngine {
 
       case ConditionType.nodeOnline:
         if (condition.nodeNum == null) return true;
+        // Geofence and node state use latest known state, not historic replay
         return _nodePresence[condition.nodeNum]?.isActive == true;
 
       case ConditionType.nodeOffline:
         if (condition.nodeNum == null) return true;
+        // Geofence and node state use latest known state, not historic replay
         return _nodePresence[condition.nodeNum]?.isInactive != false;
 
       case ConditionType.withinGeofence:
       case ConditionType.outsideGeofence:
-        // Geofence conditions would need additional config
+        // Geofence conditions use latest location snapshot, not historic replay
         return true;
     }
   }

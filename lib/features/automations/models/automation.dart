@@ -668,6 +668,20 @@ class AutomationEvent {
   final bool? sensorDetected;
   final DateTime timestamp;
 
+  // Scheduled trigger fields
+  /// Schedule ID that fired this event (for TriggerType.scheduled)
+  final String? scheduleId;
+
+  /// Stable slot key for deduplication (e.g., "daily:2026-01-30T09:00+11:00")
+  final String? slotKey;
+
+  /// The intended fire time (not necessarily "now") for scheduled triggers
+  /// Conditions like timeRange and dayOfWeek should evaluate against this
+  final DateTime? scheduledFor;
+
+  /// Whether this is a catch-up execution (missed schedule)
+  final bool isCatchUp;
+
   AutomationEvent({
     required this.type,
     this.nodeNum,
@@ -681,7 +695,32 @@ class AutomationEvent {
     this.sensorName,
     this.sensorDetected,
     DateTime? timestamp,
+    this.scheduleId,
+    this.slotKey,
+    this.scheduledFor,
+    this.isCatchUp = false,
   }) : timestamp = timestamp ?? DateTime.now();
+
+  /// Factory for creating a scheduled fire event
+  factory AutomationEvent.scheduledFire({
+    required String scheduleId,
+    required String slotKey,
+    required DateTime scheduledFor,
+    bool isCatchUp = false,
+  }) {
+    return AutomationEvent(
+      type: TriggerType.scheduled,
+      scheduleId: scheduleId,
+      slotKey: slotKey,
+      scheduledFor: scheduledFor,
+      timestamp: DateTime.now(),
+      isCatchUp: isCatchUp,
+    );
+  }
+
+  /// Get the time to use for condition evaluation
+  /// For scheduled triggers, use scheduledFor; otherwise use timestamp
+  DateTime get evaluationTime => scheduledFor ?? timestamp;
 }
 
 /// Automation execution log entry

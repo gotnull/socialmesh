@@ -4,12 +4,13 @@
 
 This document outlines the comprehensive testing strategy for the Socialmesh Automation Engine, ensuring complete coverage of all TriggerTypes, ActionTypes, and ConditionTypes.
 
-**Total Tests: 172**
+**Total Tests: 207+**
 
 - automation_engine_test.dart: 76 tests
 - automation_repository_test.dart: 35 tests
 - automation_test.dart (models): 59 tests
 - presence_detection_test.dart: 2 tests
+- scheduled_trigger_test.dart: 35+ tests
 
 ## Architecture Summary
 
@@ -20,15 +21,19 @@ This document outlines the comprehensive testing strategy for the Socialmesh Aut
 - `AutomationEngine.processDetectionSensorEvent()` - Sensor telemetry
 - `AutomationEngine.processPresenceUpdate()` - Online/offline transitions
 - `AutomationEngine.executeAutomationManually()` - Manual/Shortcut triggers
+- `AutomationEngine.processScheduledEvent()` - Scheduled trigger fires
 - `AutomationEngine._checkSilentNodes()` - Timer-based silent node detection
 
 ### Key Files
 
-| File                                                  | Purpose             |
-| ----------------------------------------------------- | ------------------- |
-| `lib/features/automations/automation_engine.dart`     | Core engine logic   |
-| `lib/features/automations/models/automation.dart`     | Data models & enums |
-| `lib/features/automations/automation_repository.dart` | Persistence layer   |
+| File                                                  | Purpose                      |
+| ----------------------------------------------------- | ---------------------------- |
+| `lib/features/automations/automation_engine.dart`     | Core engine logic            |
+| `lib/features/automations/models/automation.dart`     | Data models & enums          |
+| `lib/features/automations/models/schedule_spec.dart`  | Scheduled trigger data model |
+| `lib/features/automations/scheduler_service.dart`     | In-app scheduler service     |
+| `lib/features/automations/platform_scheduler.dart`    | Platform scheduler stubs     |
+| `lib/features/automations/automation_repository.dart` | Persistence layer            |
 
 ---
 
@@ -48,7 +53,7 @@ This document outlines the comprehensive testing strategy for the Socialmesh Aut
 | `geofenceEnter`   | ✅ Tested          | 2          | Enter zone detection                           |
 | `geofenceExit`    | ✅ Tested          | 2          | Exit zone detection                            |
 | `nodeSilent`      | ✅ Tested          | 3          | Silent threshold, node filter, config duration |
-| `scheduled`       | ⚠️ Not Implemented | 0          | Enum exists but no timer/cron support          |
+| `scheduled`       | ✅ Tested          | 35+        | One-shot, interval, daily, weekly, DST, catch-up |
 | `signalWeak`      | ✅ Tested          | 2          | SNR threshold                                  |
 | `channelActivity` | ✅ Tested          | 1          | Channel-specific triggers                      |
 | `detectionSensor` | ✅ Tested          | 9          | Sensor name/state filters, node filter         |
@@ -289,6 +294,7 @@ test/features/automations/
 ├── automation_engine_test.dart      # Core engine tests
 ├── automation_repository_test.dart  # Persistence tests
 ├── presence_detection_test.dart     # Presence calculation
+├── scheduled_trigger_test.dart      # Scheduled trigger tests (deterministic)
 ├── models/
 │   └── automation_test.dart         # Model serialization
 └── utils/
@@ -300,20 +306,94 @@ test/features/automations/
 ---
 
 ## Notes
+### Scheduled Triggers
 
+The `TriggerType.scheduled` is now fully implemented with comprehensive support for time-based automations.
+
+#### Schedule Kinds
+
+| Kind       | Description                                    | Example                        |
+| ---------- | ---------------------------------------------- | ------------------------------ |
+| `oneShot`  | Fires exactly once at a specific time          | "Remind me at 3pm tomorrow"    |
+| `interval` | Fires repeatedly at fixed intervals            | "Every 15 minutes"             |
+| `daily`    | Fires once per day at a specific time          | "Every day at 9:00 AM"         |
+| `weekly`   | Fires on specific days of the week at a time   | "Mon, Wed, Fri at 8:00 AM"     |
+
+#### DST (Daylight Saving Time) Handling
+
+Scheduled triggers use **Australia/Melbourne** as the default timezone (IANA identifier). The implementation correctly handles DST transitions:
+
+- **Spring Forward**: When clocks advance (e.g., 2:00 AM → 3:00 AM), schedules targeting the skipped hour fire at the wall-clock equivalent (3:00 AM).
+- **Fall Back**: When clocks repeat (e.g., 2:00 AM occurs twice), schedules use slot keys that include the UTC offset to deduplicate correctly.
+
+**Slot Key Format**: `{kind}:{isoTimestamp}` where timestamp includes timezone offset (e.g., `daily:2026-01-30T09:00+11:00`)
+
+#### Catch-Up Policies
+
+When the app resumes after being suspended (or after a device reboot), missed scheduled fires are handled according to the configured `CatchUpPolicy`:
+
+| Policy             | Behavior                                               | Use Case                    |
+| ------------------ | ------------------------------------------------------ | --------------------------- |
+| `none`             | Silently discard all missed fires                      | Non-critical notifications  |
+| `lastOnly`         | Execute only the most recent missed fire               | Status updates              |
+| `allWithinWindow`  | Execute all missed fires within the catch-up window    | Time-critical actions       |
+
+**Safety Limits**:
+- `maxCatchUpExecutions`: Hard cap on catch-up fires (default: 10)
+- `catchUpWindowDuration`: Maximum lookback window (default: 1 hour)
+
+#### Jitter Support
+
+To prevent thundering herd problems when many automations fire at the same time, schedules support optional jitter:
+
+```dart
+ScheduleSpec.interval(
+  automationId: 'check-battery',
+  interval: Duration(minutes: 15),
+  maxJitterMs: 5000, // Random 0-5 second delay
+)
+```
+
+Jitter is deterministic in tests using seeded `Random` and `FakeClock`.
+
+#### Integration with Conditions
+
+Scheduled triggers integrate with existing conditions (`timeRange`, `dayOfWeek`) using the `evaluationTime` concept:
+
+- For scheduled triggers: conditions evaluate against `scheduledFor` (the intended fire time)
+- For other triggers: conditions evaluate against `timestamp` (when the event occurred)
+
+This ensures that a daily schedule set for 9:00 AM correctly passes a "9:00-10:00 AM" time range condition, even if the actual execution is slightly delayed.
+
+#### Persistence
+
+Schedules are persisted via `AutomationRepository`:
+- `_schedulesKey`: JSON list of all active schedules
+- Each schedule tracks `firedSlots` (Set of slot keys already executed)
+- On app restart, `InAppScheduler.resyncFromStore()` rebuilds the priority queue
+
+#### Platform Schedulers (Future)
+
+Platform-specific background execution is scaffolded but not yet implemented:
+- **Android**: `AndroidWorkManagerScheduler` (WorkManager integration)
+- **iOS**: `IOSBGTaskScheduler` (BGTaskScheduler integration)
+
+These will enable schedules to fire even when the app is suspended.
+
+---
 ### Known Limitations
 
-1. **Scheduled Triggers**: `TriggerType.scheduled` enum exists but has no implementation. No cron/timer support beyond silent node monitoring.
+1. **Geofence Conditions**: `withinGeofence` and `outsideGeofence` conditions always return `true`. The geofence _triggers_ work, but conditions don't.
 
-2. **Geofence Conditions**: `withinGeofence` and `outsideGeofence` conditions always return `true`. The geofence _triggers_ work, but conditions don't.
+2. **Widget Updates**: `ActionType.updateWidget` is a no-op stub awaiting WidgetKit integration.
 
-3. **Widget Updates**: `ActionType.updateWidget` is a no-op stub awaiting WidgetKit integration.
+3. **Platform Schedulers**: `AndroidWorkManagerScheduler` and `IOSBGTaskScheduler` are scaffolded but not implemented. Scheduled triggers only fire while the app is active.
 
 ### Dependencies for Testing
 
 - `flutter_test` - Built-in test framework
 - `mocktail` or `mockito` - Mock generation (if needed)
-- `fake_async` - Time manipulation
+- `fake_async` - Time manipulation (deterministic scheduled trigger tests)
 
 ### CI Integration
 

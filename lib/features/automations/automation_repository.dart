@@ -4,25 +4,30 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'models/automation.dart';
+import 'models/schedule_spec.dart';
 
 /// Repository for storing and retrieving automations
 class AutomationRepository extends ChangeNotifier {
   static const String _automationsKey = 'automations';
   static const String _logKey = 'automation_log';
+  static const String _schedulesKey = 'automation_schedules';
   static const int _maxLogEntries = 100;
 
   SharedPreferences? _prefs;
   List<Automation> _automations = [];
   List<AutomationLogEntry> _log = [];
+  List<ScheduleSpec> _schedules = [];
 
   List<Automation> get automations => List.unmodifiable(_automations);
   List<AutomationLogEntry> get log => List.unmodifiable(_log);
+  List<ScheduleSpec> get schedules => List.unmodifiable(_schedules);
 
   /// Initialize the repository
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
     await _loadAutomations();
     await _loadLog();
+    await _loadSchedules();
   }
 
   Future<void> _loadAutomations() async {
@@ -63,6 +68,26 @@ class AutomationRepository extends ChangeNotifier {
     }
   }
 
+  Future<void> _loadSchedules() async {
+    final jsonString = _prefs?.getString(_schedulesKey);
+    if (jsonString != null && jsonString.isNotEmpty) {
+      try {
+        final list = jsonDecode(jsonString) as List;
+        _schedules = list
+            .map((item) => ScheduleSpec.fromJson(item as Map<String, dynamic>))
+            .toList();
+        AppLogging.automations(
+          'AutomationRepository: Loaded ${_schedules.length} schedules',
+        );
+      } catch (e) {
+        AppLogging.automations(
+          'AutomationRepository: Error loading schedules: $e',
+        );
+        _schedules = [];
+      }
+    }
+  }
+
   Future<void> _saveAutomations() async {
     final jsonString = jsonEncode(_automations.map((a) => a.toJson()).toList());
     await _prefs?.setString(_automationsKey, jsonString);
@@ -71,6 +96,73 @@ class AutomationRepository extends ChangeNotifier {
   Future<void> _saveLog() async {
     final jsonString = jsonEncode(_log.map((l) => l.toJson()).toList());
     await _prefs?.setString(_logKey, jsonString);
+  }
+
+  Future<void> _saveSchedules() async {
+    final jsonString = jsonEncode(_schedules.map((s) => s.toJson()).toList());
+    await _prefs?.setString(_schedulesKey, jsonString);
+  }
+
+  // ============== Schedule Management ==============
+
+  /// Add a new schedule
+  Future<void> addSchedule(ScheduleSpec schedule) async {
+    _schedules.add(schedule);
+    await _saveSchedules();
+    notifyListeners();
+    AppLogging.automations(
+      'AutomationRepository: Added schedule "${schedule.id}" (${schedule.kind})',
+    );
+  }
+
+  /// Update an existing schedule
+  Future<void> updateSchedule(ScheduleSpec schedule) async {
+    final index = _schedules.indexWhere((s) => s.id == schedule.id);
+    if (index != -1) {
+      _schedules[index] = schedule;
+      await _saveSchedules();
+      notifyListeners();
+    }
+  }
+
+  /// Delete a schedule
+  Future<void> deleteSchedule(String id) async {
+    _schedules.removeWhere((s) => s.id == id);
+    await _saveSchedules();
+    notifyListeners();
+    AppLogging.automations('AutomationRepository: Deleted schedule $id');
+  }
+
+  /// Get a schedule by ID
+  ScheduleSpec? getSchedule(String id) {
+    try {
+      return _schedules.firstWhere((s) => s.id == id);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Get schedules by automation ID (if linked)
+  List<ScheduleSpec> getSchedulesForAutomation(String automationId) {
+    return _schedules.where((s) => s.id.startsWith(automationId)).toList();
+  }
+
+  /// Get all active schedules
+  List<ScheduleSpec> get activeSchedules {
+    final now = DateTime.now();
+    return _schedules.where((s) => s.isActive(now)).toList();
+  }
+
+  /// Persist all schedules (called by scheduler after updates)
+  Future<void> persistSchedules(List<ScheduleSpec> schedules) async {
+    _schedules = List.from(schedules);
+    await _saveSchedules();
+  }
+
+  /// Load schedules for scheduler resync
+  Future<List<ScheduleSpec>> loadSchedules() async {
+    await _loadSchedules();
+    return List.from(_schedules);
   }
 
   /// Export automations as JSON string for cloud sync
