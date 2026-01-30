@@ -34,6 +34,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
   bool _tripleClickEnabled =
       true; // Note: protobuf is "disableTripleClick" (inverted)
   String _tzdef = '';
+  config_pbenum.Config_DeviceConfig_BuzzerMode? _buzzerMode;
   StreamSubscription<config_pb.Config_DeviceConfig>? _configSubscription;
 
   @override
@@ -63,6 +64,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
       _doubleTapAsButtonPress = config.doubleTapAsButtonPress;
       _tripleClickEnabled = !config.disableTripleClick;
       _tzdef = config.tzdef;
+      _buzzerMode = config.buzzerMode;
     });
   }
 
@@ -118,6 +120,8 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
         buzzerGpio: _buzzerGpio,
         disableTripleClick: !_tripleClickEnabled,
         tzdef: _tzdef,
+        buzzerMode: _buzzerMode ?? 
+            config_pbenum.Config_DeviceConfig_BuzzerMode.ALL_ENABLED,
         targetNodeNum: targetNodeNum,
       );
 
@@ -326,6 +330,9 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
+                const _SectionHeader(title: 'BUZZER'),
+                _buildBuzzerModeSelector(),
+                const SizedBox(height: 16),
                 const _SectionHeader(title: 'GPIO'),
                 _buildGpioSettings(),
                 const SizedBox(height: 16),
@@ -484,6 +491,103 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
             style: TextStyle(color: context.textSecondary, fontSize: 13),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildBuzzerModeSelector() {
+    final buzzerModes = [
+      (
+        config_pbenum.Config_DeviceConfig_BuzzerMode.ALL_ENABLED,
+        'All Enabled',
+        'All feedback including buttons and alerts',
+        Icons.volume_up,
+      ),
+      (
+        config_pbenum.Config_DeviceConfig_BuzzerMode.NOTIFICATIONS_ONLY,
+        'Notifications Only',
+        'Only notifications and alerts, not buttons',
+        Icons.notifications_active,
+      ),
+      (
+        config_pbenum.Config_DeviceConfig_BuzzerMode.DIRECT_MSG_ONLY,
+        'Direct Messages Only',
+        'Only direct messages and alerts',
+        Icons.message,
+      ),
+      (
+        config_pbenum.Config_DeviceConfig_BuzzerMode.SYSTEM_ONLY,
+        'System Only',
+        'Button presses and startup/shutdown only',
+        Icons.settings_applications,
+      ),
+      (
+        config_pbenum.Config_DeviceConfig_BuzzerMode.DISABLED,
+        'Disabled',
+        'All buzzer audio disabled',
+        Icons.volume_off,
+      ),
+    ];
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: buzzerModes.asMap().entries.map((entry) {
+          final index = entry.key;
+          final (mode, title, subtitle, icon) = entry.value;
+          final isSelected = _buzzerMode == mode;
+          final isFirst = index == 0;
+          final isLast = index == buzzerModes.length - 1;
+
+          return Column(
+            children: [
+              ListTile(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(
+                    top: isFirst ? const Radius.circular(12) : Radius.zero,
+                    bottom: isLast ? const Radius.circular(12) : Radius.zero,
+                  ),
+                ),
+                leading: Icon(
+                  icon,
+                  color: isSelected ? context.accentColor : context.textSecondary,
+                ),
+                title: Text(
+                  title,
+                  style: TextStyle(
+                    color: isSelected ? context.textPrimary : context.textSecondary,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  ),
+                ),
+                subtitle: Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: context.textTertiary,
+                    fontSize: 12,
+                  ),
+                ),
+                trailing: isSelected
+                    ? Icon(Icons.check_circle, color: context.accentColor)
+                    : null,
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  setState(() => _buzzerMode = mode);
+                },
+              ),
+              if (!isLast)
+                Divider(
+                  height: 1,
+                  indent: 56,
+                  endIndent: 16,
+                  color: context.border.withValues(alpha: 0.3),
+                ),
+            ],
+          );
+        }).toList(),
       ),
     );
   }
