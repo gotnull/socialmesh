@@ -44,7 +44,9 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
   bool _notificationExpanded = false;
   bool _quickTestsExpanded = false;
   bool _adminToolsExpanded = false;
+  bool _adminModeEnabled = false;
   bool _meshOnlyDebugMode = false;
+  bool _premiumUpsellEnabled = false;
 
   // Mesh node playground state - defaults match user requirements
   MeshNodeAnimationType _animationType = MeshNodeAnimationType.tumble;
@@ -138,7 +140,9 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
       _enablePullToStretch = _settingsService!.splashMeshEnablePullToStretch;
       _touchIntensity = _settingsService!.splashMeshTouchIntensity;
       _stretchIntensity = _settingsService!.splashMeshStretchIntensity;
+      _adminModeEnabled = _settingsService!.adminModeEnabled;
       _meshOnlyDebugMode = _settingsService!.meshOnlyDebugMode;
+      _premiumUpsellEnabled = _settingsService!.premiumUpsellEnabled;
       _hasUnsavedChanges = false;
     });
   }
@@ -1579,6 +1583,40 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
             setState(() => _meshOnlyDebugMode = value);
           },
         ),
+        const SizedBox(height: 8),
+        SwitchListTile.adaptive(
+          value: _adminModeEnabled,
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Admin mode'),
+          subtitle: const Text('Show admin-only sections in debug tools'),
+          onChanged: (value) async {
+            if (_settingsService == null) return;
+            await _settingsService!.setAdminModeEnabled(value);
+            // Update static AdminConfig for legacy usages
+            AdminConfig.setEnabled(value);
+            ref.read(settingsRefreshProvider.notifier).refresh();
+            if (!mounted) return;
+            setState(() => _adminModeEnabled = value);
+          },
+        ),
+        const SizedBox(height: 8),
+        SwitchListTile.adaptive(
+          value: _premiumUpsellEnabled,
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Premium upsell mode'),
+          subtitle: const Text(
+            'Allow exploring premium features with upsell on actions',
+          ),
+          onChanged: (value) async {
+            if (_settingsService == null) return;
+            await _settingsService!.setPremiumUpsellEnabled(value);
+            // Update static AdminConfig for legacy usages
+            AdminConfig.setPremiumUpsellEnabled(value);
+            ref.read(settingsRefreshProvider.notifier).refresh();
+            if (!mounted) return;
+            setState(() => _premiumUpsellEnabled = value);
+          },
+        ),
         const SizedBox(height: 12),
         _buildQuickTestButton(
           icon: Icons.bug_report_rounded,
@@ -1709,8 +1747,8 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
           ),
         ),
 
-        // Debug section (Admin-only)
-        if (AdminConfig.isEnabled) ...[
+        // Debug section (shown when admin mode is enabled)
+        if (_adminModeEnabled) ...[
           const SizedBox(height: 16),
           _buildSectionLabel('DEBUG'),
           const SizedBox(height: 12),

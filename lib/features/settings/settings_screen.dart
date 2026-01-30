@@ -1165,7 +1165,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             final hasFeature = purchaseState.hasFeature(
               PremiumFeature.customRingtones,
             );
-            if (hasFeature) {
+            // Allow navigation when user owns feature OR upsell mode is enabled
+            final upsellEnabled = ref.read(premiumUpsellEnabledProvider);
+            if (hasFeature || upsellEnabled) {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const RingtoneScreen()),
@@ -1188,7 +1190,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             final hasFeature = purchaseState.hasFeature(
               PremiumFeature.premiumThemes,
             );
-            if (hasFeature) {
+            final upsellEnabled = ref.read(premiumUpsellEnabledProvider);
+            if (hasFeature || upsellEnabled) {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const ThemeSettingsScreen()),
@@ -1211,7 +1214,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             final hasFeature = purchaseState.hasFeature(
               PremiumFeature.automations,
             );
-            if (hasFeature) {
+            final upsellEnabled = ref.read(premiumUpsellEnabledProvider);
+            if (hasFeature || upsellEnabled) {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const AutomationsScreen()),
@@ -1234,7 +1238,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             final hasFeature = purchaseState.hasFeature(
               PremiumFeature.iftttIntegration,
             );
-            if (hasFeature) {
+            final upsellEnabled = ref.read(premiumUpsellEnabledProvider);
+            if (hasFeature || upsellEnabled) {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const IftttConfigScreen()),
@@ -1257,7 +1262,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             final hasFeature = purchaseState.hasFeature(
               PremiumFeature.homeWidgets,
             );
-            if (hasFeature) {
+            final upsellEnabled = ref.read(premiumUpsellEnabledProvider);
+            if (hasFeature || upsellEnabled) {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const WidgetBuilderScreen()),
@@ -3398,8 +3404,12 @@ class _PremiumFeatureTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final purchaseState = ref.watch(purchaseStateProvider);
     final hasFeature = purchaseState.hasFeature(feature);
+    final upsellEnabled = ref.watch(premiumUpsellEnabledProvider);
     final accentColor = context.accentColor;
     final purchase = OneTimePurchases.getByFeature(feature);
+
+    // When upsell is enabled, non-owned features should look explorable (not locked)
+    final isExplorable = hasFeature || upsellEnabled;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
@@ -3423,7 +3433,7 @@ class _PremiumFeatureTile extends ConsumerWidget {
               children: [
                 Icon(
                   icon,
-                  color: hasFeature ? accentColor : context.textTertiary,
+                  color: isExplorable ? accentColor : context.textTertiary,
                 ),
                 SizedBox(width: 16),
                 Expanded(
@@ -3432,7 +3442,7 @@ class _PremiumFeatureTile extends ConsumerWidget {
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
-                      color: hasFeature
+                      color: isExplorable
                           ? context.textPrimary
                           : context.textSecondary,
                     ),
@@ -3447,6 +3457,8 @@ class _PremiumFeatureTile extends ConsumerWidget {
                   decoration: BoxDecoration(
                     color: hasFeature
                         ? accentColor.withValues(alpha: 0.2)
+                        : upsellEnabled
+                        ? Colors.amber.withValues(alpha: 0.2)
                         : context.textTertiary.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -3460,6 +3472,18 @@ class _PremiumFeatureTile extends ConsumerWidget {
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
                             color: accentColor,
+                          ),
+                        ),
+                      ] else if (upsellEnabled) ...[
+                        // Show "TRY IT" badge when upsell is enabled
+                        Icon(Icons.star, size: 12, color: Colors.amber),
+                        SizedBox(width: 4),
+                        Text(
+                          'TRY IT',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.amber,
                           ),
                         ),
                       ] else ...[
@@ -3482,7 +3506,7 @@ class _PremiumFeatureTile extends ConsumerWidget {
                 SizedBox(width: 8),
                 Icon(
                   Icons.chevron_right,
-                  color: hasFeature ? accentColor : context.textTertiary,
+                  color: isExplorable ? accentColor : context.textTertiary,
                 ),
               ],
             ),

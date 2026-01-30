@@ -226,6 +226,23 @@ class SettingsService {
   bool get meshOnlyDebugMode =>
       _preferences.getBool('mesh_only_debug_mode') ?? false;
 
+  // Debug: Premium upsell mode (explore features before purchase)
+  Future<void> setPremiumUpsellEnabled(bool enabled) async {
+    await _preferences.setBool('premium_upsell_enabled', enabled);
+  }
+
+  bool get premiumUpsellEnabled =>
+      _preferences.getBool('premium_upsell_enabled') ?? false;
+
+  // Debug: Admin mode (full debug features visible)
+  // This is unlocked via secret 7-tap gesture + PIN, stored in SharedPreferences
+  Future<void> setAdminModeEnabled(bool enabled) async {
+    await _preferences.setBool('admin_mode_enabled', enabled);
+  }
+
+  bool get adminModeEnabled =>
+      _preferences.getBool('admin_mode_enabled') ?? false;
+
   // Privacy: Signal location approximation radius (meters)
   Future<void> setSignalLocationRadiusMeters(int meters) async {
     final normalized = LocationPrivacy.normalizeRadiusMeters(meters);

@@ -1,16 +1,29 @@
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-
 /// Configuration for admin/debug features.
-/// These features are hidden behind .env flags and are only
-/// available for development and testing purposes.
+/// These features are controlled via the debug settings screen,
+/// accessed by secret 7-tap gesture + PIN. No env vars used for security.
 class AdminConfig {
   AdminConfig._();
 
+  // Mutable state controlled via debug settings screen
+  static bool _isEnabled = false;
+  static bool _premiumUpsellEnabled = false;
+
   /// Whether admin/debug mode is enabled.
-  /// Set ADMIN_DEBUG_MODE=true in .env to enable.
-  static bool get isEnabled {
-    final value = dotenv.env['ADMIN_DEBUG_MODE']?.toLowerCase();
-    return value == 'true' || value == '1';
+  /// Set via debug settings screen after secret gesture unlock.
+  static bool get isEnabled => _isEnabled;
+
+  /// Update admin mode (called from settings provider initialization).
+  static void setEnabled(bool value) {
+    _isEnabled = value;
+  }
+
+  /// Whether premium upsell mode is enabled.
+  /// When true, users can explore premium features with upsell on actions.
+  static bool get premiumUpsellEnabled => _premiumUpsellEnabled;
+
+  /// Update premium upsell mode (called from settings provider initialization).
+  static void setPremiumUpsellEnabled(bool value) {
+    _premiumUpsellEnabled = value;
   }
 
   /// Whether to show the animated mesh node playground in settings.

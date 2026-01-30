@@ -5,6 +5,7 @@ import 'package:collection/collection.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import '../config/admin_config.dart';
 import '../core/logging.dart';
 import '../core/transport.dart';
 import '../services/transport/ble_transport.dart';
@@ -177,12 +178,22 @@ final settingsServiceProvider = FutureProvider<SettingsService>((ref) async {
 
   // Return cached instance if available (already initialized)
   if (_cachedSettingsService != null) {
+    // Sync AdminConfig static flags with persisted settings
+    AdminConfig.setEnabled(_cachedSettingsService!.adminModeEnabled);
+    AdminConfig.setPremiumUpsellEnabled(
+      _cachedSettingsService!.premiumUpsellEnabled,
+    );
     return _cachedSettingsService!;
   }
 
   final service = SettingsService();
   await service.init();
   _cachedSettingsService = service;
+
+  // Initialize AdminConfig static flags from persisted settings
+  AdminConfig.setEnabled(service.adminModeEnabled);
+  AdminConfig.setPremiumUpsellEnabled(service.premiumUpsellEnabled);
+
   return service;
 });
 
@@ -215,6 +226,26 @@ final meshOnlyDebugModeProvider = Provider<bool>((ref) {
   final settingsAsync = ref.watch(settingsServiceProvider);
   return settingsAsync.maybeWhen(
     data: (settings) => settings.meshOnlyDebugMode,
+    orElse: () => false,
+  );
+});
+
+/// Debug setting: premium upsell mode (explore features before purchase).
+/// When enabled, users can navigate to premium features but see upsell on actions.
+final premiumUpsellEnabledProvider = Provider<bool>((ref) {
+  final settingsAsync = ref.watch(settingsServiceProvider);
+  return settingsAsync.maybeWhen(
+    data: (settings) => settings.premiumUpsellEnabled,
+    orElse: () => false,
+  );
+});
+
+/// Debug setting: admin mode enabled (full debug features visible).
+/// Unlocked via secret 7-tap gesture + PIN, persisted in SharedPreferences.
+final adminModeEnabledProvider = Provider<bool>((ref) {
+  final settingsAsync = ref.watch(settingsServiceProvider);
+  return settingsAsync.maybeWhen(
+    data: (settings) => settings.adminModeEnabled,
     orElse: () => false,
   );
 });

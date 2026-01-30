@@ -553,6 +553,11 @@ class _MainShellState extends ConsumerState<MainShell> {
                   !isPremium ||
                   ref.watch(hasFeatureProvider(item.premiumFeature!));
 
+              // When upsell mode is enabled, allow navigation to premium features
+              // The feature screen itself handles the upsell gate on actions
+              final upsellEnabled = ref.watch(premiumUpsellEnabledProvider);
+              final allowNavigation = hasAccess || upsellEnabled;
+
               // Check if item requires connection but we're not connected
               final needsConnection = item.requiresConnection && !isConnected;
 
@@ -563,7 +568,8 @@ class _MainShellState extends ConsumerState<MainShell> {
                     label: item.label,
                     isSelected: false, // Never selected, items push new screens
                     isPremium: isPremium,
-                    isLocked: isPremium && !hasAccess,
+                    // Show locked state only when upsell is disabled
+                    isLocked: isPremium && !hasAccess && !upsellEnabled,
                     isDisabled: needsConnection,
                     iconColor: item.iconColor,
                     onTap: needsConnection
@@ -572,7 +578,8 @@ class _MainShellState extends ConsumerState<MainShell> {
                             ref.haptics.tabChange();
                             Navigator.of(context).pop();
 
-                            if (isPremium && !hasAccess) {
+                            if (isPremium && !allowNavigation) {
+                              // Upsell disabled - redirect to subscription screen
                               Navigator.of(context).push(
                                 MaterialPageRoute<void>(
                                   builder: (context) =>
@@ -581,6 +588,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                               );
                             } else {
                               // Push screen with back button for consistent navigation
+                              // If upsell is enabled, the screen handles gating on actions
                               Navigator.of(context).push(
                                 MaterialPageRoute<void>(
                                   builder: (context) => item.screen,
