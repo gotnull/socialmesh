@@ -146,13 +146,17 @@ class DetectionSensorEvent {
   });
 
   /// Parse from mesh packet payload (text format: "sensorName: state")
-  factory DetectionSensorEvent.fromPayload(int senderNodeId, List<int> payload) {
+  factory DetectionSensorEvent.fromPayload(
+    int senderNodeId,
+    List<int> payload,
+  ) {
     final text = utf8.decode(payload);
     // Detection sensor format is typically "SensorName: Detected" or "SensorName: Clear"
     final parts = text.split(':');
     final sensorName = parts.isNotEmpty ? parts[0].trim() : 'Unknown Sensor';
     final stateText = parts.length > 1 ? parts[1].trim().toLowerCase() : '';
-    final detected = stateText.contains('detect') ||
+    final detected =
+        stateText.contains('detect') ||
         stateText.contains('trigger') ||
         stateText.contains('motion') ||
         stateText.contains('open') ||

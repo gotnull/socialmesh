@@ -76,33 +76,33 @@ final automationEngineProvider = Provider<AutomationEngine>((ref) {
   );
 
   // Subscribe to detection sensor events and forward to automation engine
-  final detectionSensorSubscription =
-      protocol.detectionSensorEventStream.listen((event) async {
-    // Forward to automation engine
-    engine.processDetectionSensorEvent(
-      nodeNum: event.senderNodeId,
-      sensorName: event.sensorName,
-      detected: event.detected,
-    );
+  final detectionSensorSubscription = protocol.detectionSensorEventStream
+      .listen((event) async {
+        // Forward to automation engine
+        engine.processDetectionSensorEvent(
+          nodeNum: event.senderNodeId,
+          sensorName: event.sensorName,
+          detected: event.detected,
+        );
 
-    // Check if notifications are enabled and show one
-    final prefs = await SharedPreferences.getInstance();
-    final notificationsEnabled =
-        prefs.getBool('enableDetectionNotifications') ?? false;
+        // Check if notifications are enabled and show one
+        final prefs = await SharedPreferences.getInstance();
+        final notificationsEnabled =
+            prefs.getBool('enableDetectionNotifications') ?? false;
 
-    if (notificationsEnabled) {
-      // Get node name for display
-      final nodes = ref.read(nodesProvider);
-      final nodeName = nodes[event.senderNodeId]?.displayName;
+        if (notificationsEnabled) {
+          // Get node name for display
+          final nodes = ref.read(nodesProvider);
+          final nodeName = nodes[event.senderNodeId]?.displayName;
 
-      await NotificationService().showDetectionSensorNotification(
-        sensorName: event.sensorName,
-        detected: event.detected,
-        nodeNum: event.senderNodeId,
-        nodeName: nodeName,
-      );
-    }
-  });
+          await NotificationService().showDetectionSensorNotification(
+            sensorName: event.sensorName,
+            detected: event.detected,
+            nodeNum: event.senderNodeId,
+            nodeName: nodeName,
+          );
+        }
+      });
 
   ref.onDispose(() {
     engine.stop();

@@ -546,7 +546,9 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
                   label: Text('Backup'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: context.accentColor,
-                    side: BorderSide(color: context.accentColor.withValues(alpha: 0.5)),
+                    side: BorderSide(
+                      color: context.accentColor.withValues(alpha: 0.5),
+                    ),
                   ),
                 ),
               ),
@@ -595,10 +597,7 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
         aOptions: AndroidOptions(encryptedSharedPreferences: true),
       );
 
-      await storage.write(
-        key: 'PrivateKeyNode$nodeNum',
-        value: _privateKey,
-      );
+      await storage.write(key: 'PrivateKeyNode$nodeNum', value: _privateKey);
 
       AppLogging.settings('Backed up private key for node $nodeNum');
       if (mounted) {
@@ -661,7 +660,10 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: context.surface,
-        title: Text('Delete Backup?', style: TextStyle(color: context.textPrimary)),
+        title: Text(
+          'Delete Backup?',
+          style: TextStyle(color: context.textPrimary),
+        ),
         content: Text(
           'This will permanently delete the backed up private key from secure storage. This cannot be undone.',
           style: TextStyle(color: context.textSecondary),

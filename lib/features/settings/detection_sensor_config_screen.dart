@@ -512,7 +512,9 @@ class _DetectionSensorConfigScreenState
           ListTile(
             leading: Icon(
               Icons.notifications_active,
-              color: _notificationsEnabled ? context.accentColor : context.textSecondary,
+              color: _notificationsEnabled
+                  ? context.accentColor
+                  : context.textSecondary,
             ),
             title: Text(
               'Enable Notifications',
