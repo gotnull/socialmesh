@@ -10,6 +10,7 @@ import '../../core/widgets/top_status_banner.dart';
 import '../../core/widgets/user_avatar.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/legal_document_sheet.dart';
+import '../../generated/meshtastic/mesh.pbenum.dart';
 import '../../models/subscription_models.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/auth_providers.dart';
@@ -20,6 +21,7 @@ import '../../providers/signal_providers.dart';
 import '../../providers/social_providers.dart';
 import '../../providers/subscription_providers.dart';
 import '../../services/haptic_service.dart';
+import '../../utils/snackbar.dart';
 import '../messaging/messages_container_screen.dart';
 import '../nodes/nodes_screen.dart';
 import '../map/map_screen.dart';
@@ -927,6 +929,26 @@ class _MainShellState extends ConsumerState<MainShell> {
     final isReconnecting =
         autoReconnectState == AutoReconnectState.scanning ||
         autoReconnectState == AutoReconnectState.connecting;
+
+    // Listen for firmware client notifications (errors, warnings)
+    // These are important messages that need to be shown to the user
+    ref.listen(clientNotificationStreamProvider, (previous, next) {
+      next.whenData((notification) {
+        final level = notification.level;
+        final message = notification.message;
+
+        // Show appropriate snackbar based on severity level
+        if (level == LogRecord_Level.ERROR ||
+            level == LogRecord_Level.CRITICAL) {
+          showErrorSnackBar(context, 'Firmware: $message');
+        } else if (level == LogRecord_Level.WARNING) {
+          showWarningSnackBar(context, 'Firmware: $message');
+        } else if (level == LogRecord_Level.INFO) {
+          showInfoSnackBar(context, 'Firmware: $message');
+        }
+        // DEBUG and TRACE levels are not shown to user
+      });
+    });
 
     // Check if we need to show the "Connect Device" screen
     // ONLY show scanner on first launch (never paired before) AND auto-reconnect disabled

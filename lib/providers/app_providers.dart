@@ -27,6 +27,7 @@ import '../features/automations/automation_providers.dart';
 import '../features/automations/automation_engine.dart';
 import '../models/mesh_models.dart';
 import '../generated/meshtastic/config.pbenum.dart' as config_pbenum;
+import '../generated/meshtastic/mesh.pb.dart' as mesh_pb;
 import 'social_providers.dart';
 import 'telemetry_providers.dart';
 import 'connection_providers.dart';
@@ -1225,6 +1226,14 @@ final protocolServiceProvider = Provider<ProtocolService>((ref) {
 
   return service;
 });
+
+/// Stream provider for client notifications from firmware.
+/// These are important messages (errors, warnings) that should be shown to the user.
+final clientNotificationStreamProvider =
+    StreamProvider<mesh_pb.ClientNotification>((ref) {
+      final protocol = ref.watch(protocolServiceProvider);
+      return protocol.clientNotificationStream;
+    });
 
 // Location service - provides phone GPS to mesh devices
 // Like iOS Meshtastic app, sends phone GPS coordinates to mesh

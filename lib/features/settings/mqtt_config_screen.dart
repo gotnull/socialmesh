@@ -426,17 +426,26 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
                       ),
                     ),
                     _SettingsTile(
-                      icon: Icons.swap_horiz,
+                      icon: Icons.phone_android,
                       iconColor: _proxyToClientEnabled
                           ? context.accentColor
                           : null,
-                      title: 'Proxy to Client',
-                      subtitle: 'Forward MQTT messages to connected clients',
+                      title: 'MQTT Client Proxy',
+                      subtitle:
+                          "Use phone's network for MQTT\n(Required for devices without WiFi)",
                       trailing: ThemedSwitch(
                         value: _proxyToClientEnabled,
                         onChanged: (value) {
                           HapticFeedback.selectionClick();
-                          setState(() => _proxyToClientEnabled = value);
+                          setState(() {
+                            _proxyToClientEnabled = value;
+                            // When using phone proxy, JSON and TLS are handled by
+                            // the phone, not the device - disable them
+                            if (value) {
+                              _jsonEnabled = false;
+                              _tlsEnabled = false;
+                            }
+                          });
                         },
                       ),
                     ),

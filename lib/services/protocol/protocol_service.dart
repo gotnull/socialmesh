@@ -89,7 +89,8 @@ class MeshSignalPacket {
       longitude: lng,
       hopCount: hopCount,
       receivedAt: DateTime.now(),
-      hasImage: _extractBool(json['i']) ||
+      hasImage:
+          _extractBool(json['i']) ||
           _extractBool(json['hasImage']) ||
           _extractBool(json['has_image']),
     );
@@ -200,6 +201,7 @@ class ProtocolService {
   _externalNotificationConfigController;
   final StreamController<module_pb.ModuleConfig_CannedMessageConfig>
   _cannedMessageConfigController;
+  final StreamController<pb.ClientNotification> _clientNotificationController;
 
   StreamSubscription<List<int>>? _dataSubscription;
   StreamSubscription<DeviceConnectionState>? _transportStateSubscription;
@@ -315,6 +317,8 @@ class ProtocolService {
           StreamController<
             module_pb.ModuleConfig_CannedMessageConfig
           >.broadcast(),
+      _clientNotificationController =
+          StreamController<pb.ClientNotification>.broadcast(),
       _dedupeStore = dedupeStore ?? MeshPacketDedupeStore();
 
   /// Set the BLE device name for hardware model inference
@@ -353,6 +357,10 @@ class ProtocolService {
 
   /// Stream of received mesh signal packets (PRIVATE_APP portnum)
   Stream<MeshSignalPacket> get signalStream => _signalController.stream;
+
+  /// Stream of client notifications (firmware errors, warnings, config validation)
+  Stream<pb.ClientNotification> get clientNotificationStream =>
+      _clientNotificationController.stream;
 
   /// Stream of region updates
   Stream<config_pbenum.Config_LoRaConfig_RegionCode> get regionStream =>
@@ -750,6 +758,8 @@ class ProtocolService {
         _handleFromRadioConfig(fromRadio.config);
       } else if (fromRadio.hasMetadata()) {
         _handleFromRadioMetadata(fromRadio.metadata);
+      } else if (fromRadio.hasClientNotification()) {
+        _handleClientNotification(fromRadio.clientNotification);
       } else if (fromRadio.hasConfigCompleteId()) {
         AppLogging.protocol(
           'Configuration complete! ID: ${fromRadio.configCompleteId}',
@@ -1262,8 +1272,12 @@ class ProtocolService {
 
           final newNode = MeshNode(
             nodeNum: packet.from,
-            longName: user.longName.isNotEmpty ? sanitizeUtf16(user.longName) : null,
-            shortName: user.shortName.isNotEmpty ? sanitizeUtf16(user.shortName) : null,
+            longName: user.longName.isNotEmpty
+                ? sanitizeUtf16(user.longName)
+                : null,
+            shortName: user.shortName.isNotEmpty
+                ? sanitizeUtf16(user.shortName)
+                : null,
             userId: user.hasId() ? user.id : null,
             hardwareModel: hwModel,
             role: user.hasRole() ? user.role.name : 'CLIENT',
@@ -1357,6 +1371,26 @@ class ProtocolService {
     }
   }
 
+  /// Handle ClientNotification from firmware (config errors, warnings, etc.)
+  /// These are important messages that should be displayed to the user.
+  void _handleClientNotification(pb.ClientNotification notification) {
+    final levelName = notification.level.name;
+    final message = notification.message;
+
+    // Log with appropriate level
+    if (notification.level == pb.LogRecord_Level.ERROR ||
+        notification.level == pb.LogRecord_Level.CRITICAL) {
+      AppLogging.protocol('⚠️ Client Notification [ERROR]: $message');
+    } else if (notification.level == pb.LogRecord_Level.WARNING) {
+      AppLogging.protocol('⚠️ Client Notification [WARNING]: $message');
+    } else {
+      AppLogging.protocol('ℹ️ Client Notification [$levelName]: $message');
+    }
+
+    // Emit to stream so UI can display to user
+    _clientNotificationController.add(notification);
+  }
+
   /// Handle DeviceMetadata from FromRadio (sent during initial config)
   void _handleFromRadioMetadata(pb.DeviceMetadata metadata) {
     AppLogging.debug(
@@ -1416,7 +1450,9 @@ class ProtocolService {
   /// Handle text message
   void _handleTextMessage(pb.MeshPacket packet, pb.Data data) {
     try {
-      final text = sanitizeUtf16(utf8.decode(data.payload, allowMalformed: true));
+      final text = sanitizeUtf16(
+        utf8.decode(data.payload, allowMalformed: true),
+      );
       AppLogging.protocol('Text message from ${packet.from}: $text');
 
       // Look up sender node info to cache in message
@@ -2285,8 +2321,12 @@ class ProtocolService {
     if (nodeInfo.hasUser()) {
       final user = nodeInfo.user;
       // Sanitize names for the callback as well
-      final sanitizedLongName = user.longName.isNotEmpty ? sanitizeUtf16(user.longName) : null;
-      final sanitizedShortName = user.shortName.isNotEmpty ? sanitizeUtf16(user.shortName) : null;
+      final sanitizedLongName = user.longName.isNotEmpty
+          ? sanitizeUtf16(user.longName)
+          : null;
+      final sanitizedShortName = user.shortName.isNotEmpty
+          ? sanitizeUtf16(user.shortName)
+          : null;
       onIdentityUpdate?.call(
         nodeNum: nodeInfo.num,
         longName: sanitizedLongName,
@@ -3067,7 +3107,7 @@ class ProtocolService {
   /// Set owner config (name and/or role) in a single admin message.
   /// This is preferred over calling setUserName and setDeviceRole separately
   /// because the device will reboot after each setOwner call.
-  /// 
+  ///
   /// After calling this, the device will save the config and reboot.
   /// The caller should expect a disconnection.
   Future<void> setOwnerConfig({
@@ -3472,7 +3512,9 @@ class ProtocolService {
       throw StateError('Cannot factory reset config: not connected');
     }
 
-    AppLogging.protocol('Factory resetting configuration (delay: ${delaySeconds}s)');
+    AppLogging.protocol(
+      'Factory resetting configuration (delay: ${delaySeconds}s)',
+    );
 
     final adminMsg = admin.AdminMessage()..factoryResetConfig = delaySeconds;
 
@@ -3502,7 +3544,9 @@ class ProtocolService {
       throw StateError('Cannot factory reset device: not connected');
     }
 
-    AppLogging.protocol('Factory resetting entire device (delay: ${delaySeconds}s)');
+    AppLogging.protocol(
+      'Factory resetting entire device (delay: ${delaySeconds}s)',
+    );
 
     final adminMsg = admin.AdminMessage()..factoryResetDevice = delaySeconds;
 
@@ -5203,5 +5247,6 @@ class ProtocolService {
     await _signalController.close();
     await _deliveryController.close();
     await _regionController.close();
+    await _clientNotificationController.close();
   }
 }
