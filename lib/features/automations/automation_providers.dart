@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -14,6 +15,9 @@ import 'automation_debug_service.dart';
 import 'automation_engine.dart';
 import 'automation_repository.dart';
 import 'models/automation.dart';
+import 'models/schedule_spec.dart';
+import 'platform_scheduler.dart';
+import 'scheduler_service.dart';
 
 /// Provider for the automation repository
 final automationRepositoryProvider = Provider<AutomationRepository>((ref) {
@@ -112,6 +116,63 @@ final automationEngineProvider = Provider<AutomationEngine>((ref) {
   return engine;
 });
 
+/// Provider for the InAppScheduler
+///
+/// This is the single source of truth for schedule timing and execution.
+final inAppSchedulerProvider = Provider<InAppScheduler>((ref) {
+  final repository = ref.read(automationRepositoryProvider);
+
+  final scheduler = InAppScheduler(
+    onPersist: (schedules) => repository.persistSchedules(schedules),
+    onLoad: () => repository.loadSchedules(),
+  );
+
+  ref.onDispose(() {
+    scheduler.dispose();
+  });
+
+  return scheduler;
+});
+
+/// Provider for the PlatformScheduler (Android WorkManager / iOS background_fetch)
+final platformSchedulerProvider = Provider<PlatformScheduler?>((ref) {
+  final notifications = FlutterLocalNotificationsPlugin();
+  return createPlatformScheduler(notifications: notifications);
+});
+
+/// Provider for the SchedulerBridge
+///
+/// Coordinates between InAppScheduler and platform schedulers.
+final schedulerBridgeProvider = Provider<SchedulerBridge>((ref) {
+  final inAppScheduler = ref.read(inAppSchedulerProvider);
+  final platformScheduler = ref.read(platformSchedulerProvider);
+
+  return SchedulerBridge(
+    inAppScheduler: inAppScheduler,
+    platformScheduler: platformScheduler,
+  );
+});
+
+/// Provider for initializing the SchedulerBridge
+final schedulerBridgeInitProvider = FutureProvider<SchedulerBridge>((
+  ref,
+) async {
+  final bridge = ref.read(schedulerBridgeProvider);
+
+  // Initialize platform scheduler (registers callbacks)
+  await bridge.initialize();
+
+  // Resync schedules from storage
+  await bridge.inAppScheduler.resyncFromStore();
+
+  // Start the in-app scheduler
+  bridge.inAppScheduler.start();
+
+  AppLogging.automations('SchedulerBridge: Fully initialized');
+
+  return bridge;
+});
+
 /// Provider for initializing the automation engine
 /// This ensures the repository is initialized and the engine is started
 final automationEngineInitProvider = FutureProvider<AutomationEngine>((
@@ -120,8 +181,14 @@ final automationEngineInitProvider = FutureProvider<AutomationEngine>((
   // First, ensure the repository is initialized
   await ref.read(automationRepositoryInitProvider.future);
 
+  // Initialize the scheduler bridge (includes platform scheduler)
+  final bridge = await ref.read(schedulerBridgeInitProvider.future);
+
   // Get the engine (repository is now initialized)
   final engine = ref.read(automationEngineProvider);
+
+  // Wire up the scheduler to the engine
+  engine.setScheduler(bridge.inAppScheduler);
 
   // Start the engine (for silent node monitoring, etc.)
   engine.start();
@@ -217,24 +284,134 @@ class AutomationsNotifier extends Notifier<AsyncValue<List<Automation>>> {
     await _repository.addAutomation(automation);
     state = AsyncValue.data(_repository.automations);
     await _syncToCloud();
+
+    // Register schedule if this is a scheduled trigger
+    if (automation.enabled &&
+        automation.trigger.type == TriggerType.scheduled) {
+      await _registerSchedule(automation);
+    }
   }
 
   Future<void> updateAutomation(Automation automation) async {
+    // Unregister old schedule first (if any)
+    await _unregisterSchedule(automation.id);
+
     await _repository.updateAutomation(automation);
     state = AsyncValue.data(_repository.automations);
     await _syncToCloud();
+
+    // Register new schedule if enabled and scheduled
+    if (automation.enabled &&
+        automation.trigger.type == TriggerType.scheduled) {
+      await _registerSchedule(automation);
+    }
   }
 
   Future<void> deleteAutomation(String id) async {
+    // Unregister schedule before deleting
+    await _unregisterSchedule(id);
+
     await _repository.deleteAutomation(id);
     state = AsyncValue.data(_repository.automations);
     await _syncToCloud();
   }
 
   Future<void> toggleAutomation(String id, bool enabled) async {
+    final automation = _repository.automations.firstWhereOrNull(
+      (a) => a.id == id,
+    );
+
     await _repository.toggleAutomation(id, enabled);
     state = AsyncValue.data(_repository.automations);
     await _syncToCloud();
+
+    // Handle schedule registration/unregistration
+    if (automation?.trigger.type == TriggerType.scheduled) {
+      if (enabled) {
+        final updated = _repository.automations.firstWhereOrNull(
+          (a) => a.id == id,
+        );
+        if (updated != null) {
+          await _registerSchedule(updated);
+        }
+      } else {
+        await _unregisterSchedule(id);
+      }
+    }
+  }
+
+  /// Register a scheduled automation with the platform scheduler
+  Future<void> _registerSchedule(Automation automation) async {
+    final scheduleSpec = _createScheduleSpec(automation);
+    if (scheduleSpec == null) {
+      AppLogging.automations(
+        'Failed to create ScheduleSpec for automation ${automation.id}',
+      );
+      return;
+    }
+
+    try {
+      final bridge = ref.read(schedulerBridgeProvider);
+      await bridge.registerSchedule(scheduleSpec);
+      AppLogging.automations(
+        'Registered schedule for automation ${automation.id}: ${scheduleSpec.id}',
+      );
+    } catch (e) {
+      AppLogging.automations('Failed to register schedule: $e');
+    }
+  }
+
+  /// Unregister a scheduled automation from the platform scheduler
+  Future<void> _unregisterSchedule(String automationId) async {
+    try {
+      final bridge = ref.read(schedulerBridgeProvider);
+      // Schedule ID matches automation ID for direct lookup
+      await bridge.unregisterSchedule(automationId);
+      AppLogging.automations(
+        'Unregistered schedule for automation $automationId',
+      );
+    } catch (e) {
+      AppLogging.automations('Failed to unregister schedule: $e');
+    }
+  }
+
+  /// Create a ScheduleSpec from automation trigger config
+  ScheduleSpec? _createScheduleSpec(Automation automation) {
+    final config = automation.trigger.config;
+    final scheduleType = config['scheduleType'] as String? ?? 'daily';
+    final hour = config['hour'] as int? ?? 9;
+    final minute = config['minute'] as int? ?? 0;
+
+    switch (scheduleType) {
+      case 'daily':
+        return ScheduleSpec.daily(
+          id: automation.id,
+          hour: hour,
+          minute: minute,
+        );
+
+      case 'weekly':
+        final daysOfWeek =
+            (config['daysOfWeek'] as List<dynamic>?)?.cast<int>() ??
+            [DateTime.monday];
+        return ScheduleSpec.weekly(
+          id: automation.id,
+          hour: hour,
+          minute: minute,
+          daysOfWeek: daysOfWeek,
+        );
+
+      case 'interval':
+        final intervalMinutes = config['intervalMinutes'] as int? ?? 60;
+        return ScheduleSpec.interval(
+          id: automation.id,
+          every: Duration(minutes: intervalMinutes),
+        );
+
+      default:
+        AppLogging.automations('Unknown schedule type: $scheduleType');
+        return null;
+    }
   }
 
   Future<void> addFromTemplate(String templateId) async {

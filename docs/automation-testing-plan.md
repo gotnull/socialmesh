@@ -375,14 +375,14 @@ Schedules are persisted via `AutomationRepository`:
 - Each schedule tracks `firedSlots` (Set of slot keys already executed)
 - On app restart, `InAppScheduler.resyncFromStore()` rebuilds the priority queue
 
-#### Platform Schedulers (Future)
+#### Platform Schedulers
 
-Platform-specific background execution is scaffolded but not yet implemented:
+Platform-specific background execution is now fully implemented:
 
 - **Android**: `AndroidWorkManagerScheduler` (WorkManager integration)
-- **iOS**: `IOSBGTaskScheduler` (BGTaskScheduler integration)
+- **iOS**: `IOSBGTaskScheduler` (background_fetch + local notifications)
 
-These will enable schedules to fire even when the app is suspended.
+These enable schedules to fire even when the app is suspended. See "Scheduled Triggers in Background" section below for details.
 
 ---
 
@@ -392,7 +392,7 @@ These will enable schedules to fire even when the app is suspended.
 
 2. **Widget Updates**: `ActionType.updateWidget` is a no-op stub awaiting WidgetKit integration.
 
-3. **Platform Schedulers**: `AndroidWorkManagerScheduler` and `IOSBGTaskScheduler` are scaffolded but not implemented. Scheduled triggers only fire while the app is active.
+3. **Platform Scheduler Timing**: Both Android WorkManager and iOS background_fetch provide best-effort timing. Exact execution times are not guaranteed due to OS battery optimization.
 
 ### Dependencies for Testing
 
@@ -408,3 +408,162 @@ Add to GitHub Actions workflow:
 - name: Run Automation Tests
   run: flutter test test/features/automations/ --coverage
 ```
+
+---
+
+## Scheduled Triggers in Background
+
+### Overview
+
+Scheduled automations can now fire when the app is in the background or terminated, using platform-specific schedulers:
+
+- **Android**: WorkManager for reliable background work
+- **iOS**: background_fetch for periodic wake-ups, plus local notifications for exact-time UX
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        SchedulerBridge                          │
+│  (Coordinates in-app scheduler with platform schedulers)        │
+└─────────────┬───────────────────────────────────┬───────────────┘
+              │                                   │
+              ▼                                   ▼
+┌─────────────────────────┐       ┌──────────────────────────────┐
+│     InAppScheduler      │       │     PlatformScheduler        │
+│  (Single source of      │       │  (Wakes app in background)   │
+│   truth for timing)     │       │                              │
+└─────────────────────────┘       └──────────────────────────────┘
+                                              │
+                          ┌───────────────────┴───────────────────┐
+                          ▼                                       ▼
+                ┌─────────────────────┐               ┌───────────────────────┐
+                │ AndroidWorkManager  │               │   IOSBGTaskScheduler  │
+                │   Scheduler         │               │ (background_fetch)    │
+                └─────────────────────┘               └───────────────────────┘
+```
+
+### Key Design Principles
+
+1. **InAppScheduler is authoritative**: The in-app scheduler owns all timing calculations, catch-up policies, and deduplication logic. Platform schedulers only exist to wake the app.
+
+2. **No duplicate logic**: Platform schedulers don't compute next fire times or handle catch-up. They simply call `InAppScheduler.tick()` when they wake.
+
+3. **Stable task IDs**: Platform task IDs match schedule IDs for easy tracking and cancellation.
+
+4. **Persistent tracking**: Both platforms lack reliable APIs to query "is this task scheduled?", so we track scheduled task IDs in SharedPreferences.
+
+### Android (WorkManager)
+
+**Package**: `workmanager: ^0.5.2`
+
+**How it works**:
+- One-shot schedules → `registerOneOffTask` with computed delay
+- Interval schedules → `registerPeriodicTask` (minimum 15 minutes)
+- Daily/weekly schedules → `registerOneOffTask` for next occurrence, re-registered after firing
+
+**Constraints**:
+- Minimum periodic interval: 15 minutes (enforced by Android)
+- Exact timing not guaranteed (battery optimization, Doze mode)
+- Tasks may be deferred by system
+
+**Callback dispatcher**:
+```dart
+@pragma('vm:entry-point')
+void workManagerCallbackDispatcher() {
+  Workmanager().executeTask((taskName, inputData) async {
+    // Delegates to SchedulerBridge._handlePlatformTask
+    // which calls InAppScheduler.tick()
+    return true;
+  });
+}
+```
+
+### iOS (background_fetch + Local Notifications)
+
+**Package**: `background_fetch: ^1.3.7`
+
+**How it works**:
+- background_fetch provides periodic wake-ups (system-determined, ~15 min minimum)
+- On each wake, all due schedules are processed via `InAppScheduler.tick()`
+- For exact-time UX, local notifications alert the user (but don't execute code)
+
+**Constraints**:
+- iOS determines when to wake the app (not configurable per-task)
+- Limited execution time (~30 seconds)
+- System may skip wakes based on app usage patterns
+- Headless execution available but with restrictions
+
+**One-shot strategy**:
+- Store target fire times in SharedPreferences
+- Check on each background fetch if any are due
+- Optionally schedule a local notification for UX
+
+**Configuration required** (Info.plist):
+```xml
+<key>UIBackgroundModes</key>
+<array>
+  <string>fetch</string>
+  <string>processing</string>
+</array>
+```
+
+### Lifecycle Wiring
+
+When app **goes to background**:
+```dart
+SchedulerBridge.syncToPlatform()
+// Cancels all existing platform tasks
+// Re-registers all active schedules
+```
+
+When app **returns to foreground**:
+```dart
+SchedulerBridge.processOnResume()
+// Calls InAppScheduler.tick() to process any missed schedules
+```
+
+### Testing Strategy
+
+**Unit tests** (`scheduler_bridge_test.dart`):
+- `MockPlatformScheduler` tracks all calls without platform dependencies
+- Tests verify correct registration, cancellation, and sync behavior
+- Integration tests simulate platform callbacks
+
+**Manual testing**:
+1. Create daily schedule for time in ~2 minutes
+2. Background app, wait for schedule time
+3. Verify notification (iOS) or app wake (Android)
+4. Return to foreground, verify schedule fired
+
+### Platform Limitations Summary
+
+| Feature | Android | iOS |
+|---------|---------|-----|
+| Minimum periodic interval | 15 minutes | ~15 minutes (system-determined) |
+| Exact timing | No (best effort) | No (use local notifications for UX) |
+| Task query API | No (tracked manually) | No (tracked manually) |
+| Execution time limit | 10 minutes | ~30 seconds |
+| Headless execution | Yes | Limited |
+| Cold start callback | Yes | Yes |
+
+### How to Enable
+
+**Android** (`android/app/build.gradle.kts`):
+No additional configuration needed. WorkManager is automatically initialized.
+
+**iOS** (`ios/Runner/Info.plist`):
+```xml
+<key>UIBackgroundModes</key>
+<array>
+  <string>fetch</string>
+  <string>processing</string>
+</array>
+<key>BGTaskSchedulerPermittedIdentifiers</key>
+<array>
+  <string>com.socialmesh.scheduled_automation</string>
+</array>
+```
+
+**iOS** (`ios/Runner/AppDelegate.swift`):
+The background_fetch package handles registration automatically.

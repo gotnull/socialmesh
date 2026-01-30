@@ -567,6 +567,14 @@ class InAppScheduler implements Scheduler {
     }
   }
 
+  /// Public API: Compute the next occurrence for a schedule after the given time
+  ///
+  /// This is used by SchedulerBridge to register platform tasks with accurate
+  /// fire times. Uses the same calculation logic as the internal tick mechanism.
+  DateTime? computeNextOccurrence(ScheduleSpec spec, DateTime now) {
+    return _computeNextOccurrenceAtOrAfter(spec, now);
+  }
+
   /// Find the most recent missed slot for lastOnly policy
   _ScheduleEntry? _findMostRecentMissedSlot(
     ScheduleSpec spec,

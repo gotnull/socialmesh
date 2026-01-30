@@ -224,6 +224,8 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       _handleAppResumed();
       // Set user online when app returns to foreground
       ref.read(userPresenceServiceProvider).setOnline();
+      // Process any due scheduled automations on resume
+      _processScheduledAutomationsOnResume();
     } else if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive ||
         state == AppLifecycleState.detached) {
@@ -231,6 +233,36 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       ref.read(lifecycleCommandManagerProvider).setAppActive(false);
       // Set user offline when app goes to background
       ref.read(userPresenceServiceProvider).setOffline();
+      // Sync scheduled automations to platform scheduler for background execution
+      _syncScheduledAutomationsToPlatform();
+    }
+  }
+
+  /// Sync scheduled automations to platform scheduler when app goes to background
+  Future<void> _syncScheduledAutomationsToPlatform() async {
+    try {
+      final bridgeAsync = ref.read(schedulerBridgeInitProvider);
+      if (bridgeAsync.hasValue) {
+        final bridge = bridgeAsync.value!;
+        await bridge.syncToPlatform();
+        AppLogging.automations('Synced schedules to platform on background');
+      }
+    } catch (e) {
+      AppLogging.automations('Failed to sync schedules to platform: $e');
+    }
+  }
+
+  /// Process any due scheduled automations when app returns to foreground
+  void _processScheduledAutomationsOnResume() {
+    try {
+      final bridgeAsync = ref.read(schedulerBridgeInitProvider);
+      if (bridgeAsync.hasValue) {
+        final bridge = bridgeAsync.value!;
+        bridge.processOnResume();
+        AppLogging.automations('Processed scheduled automations on resume');
+      }
+    } catch (e) {
+      AppLogging.automations('Failed to process schedules on resume: $e');
     }
   }
 
@@ -1142,7 +1174,9 @@ class _BlockedRouteScreen extends ConsumerWidget {
     final isInvalidated = deviceState.isTerminalInvalidated;
 
     // Customize UI based on whether pairing was invalidated (factory reset, etc.)
-    final iconData = isInvalidated ? Icons.error_outline : Icons.bluetooth_disabled;
+    final iconData = isInvalidated
+        ? Icons.error_outline
+        : Icons.bluetooth_disabled;
     final iconColor = isInvalidated ? Colors.red : Colors.orange;
     final bgColor = isInvalidated
         ? Colors.red.withValues(alpha: 0.1)
@@ -1168,11 +1202,7 @@ class _BlockedRouteScreen extends ConsumerWidget {
                     color: bgColor,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
-                    iconData,
-                    size: 40,
-                    color: iconColor,
-                  ),
+                  child: Icon(iconData, size: 40, color: iconColor),
                 ),
                 const SizedBox(height: 24),
                 Text(
@@ -1195,7 +1225,9 @@ class _BlockedRouteScreen extends ConsumerWidget {
                     Navigator.of(context).pushNamed('/scanner');
                   },
                   icon: const Icon(Icons.bluetooth_searching),
-                  label: Text(isInvalidated ? 'Scan for Devices' : 'Connect Device'),
+                  label: Text(
+                    isInvalidated ? 'Scan for Devices' : 'Connect Device',
+                  ),
                 ),
                 const SizedBox(height: 12),
                 TextButton(

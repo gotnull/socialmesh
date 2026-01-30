@@ -1202,6 +1202,9 @@ PODS:
     - PromisesObjC (~> 2.4)
   - audio_session (0.0.1):
     - Flutter
+  - background_fetch (1.5.0):
+    - Flutter
+    - TSBackgroundFetch (~> 4.0)
   - BoringSSL-GRPC (0.0.37):
     - BoringSSL-GRPC/Implementation (= 0.0.37)
     - BoringSSL-GRPC/Interface (= 0.0.37)
@@ -1658,12 +1661,16 @@ PODS:
   - SwiftyGif (5.4.5)
   - three_js_sensors (0.1.2):
     - Flutter
+  - TSBackgroundFetch (4.0.6)
   - url_launcher_ios (0.0.1):
+    - Flutter
+  - workmanager (0.0.1):
     - Flutter
 
 DEPENDENCIES:
   - app_links (from `.symlinks/plugins/app_links/ios`)
   - audio_session (from `.symlinks/plugins/audio_session/ios`)
+  - background_fetch (from `.symlinks/plugins/background_fetch/ios`)
   - camera_avfoundation (from `.symlinks/plugins/camera_avfoundation/ios`)
   - cloud_firestore (from `.symlinks/plugins/cloud_firestore/ios`)
   - cloud_functions (from `.symlinks/plugins/cloud_functions/ios`)
@@ -1702,6 +1709,7 @@ DEPENDENCIES:
   - sticker_view (from `.symlinks/plugins/sticker_view/ios`)
   - three_js_sensors (from `.symlinks/plugins/three_js_sensors/ios`)
   - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
+  - workmanager (from `.symlinks/plugins/workmanager/ios`)
 
 SPEC REPOS:
   trunk:
@@ -1751,12 +1759,15 @@ SPEC REPOS:
     - RevenueCat
     - SDWebImage
     - SwiftyGif
+    - TSBackgroundFetch
 
 EXTERNAL SOURCES:
   app_links:
     :path: ".symlinks/plugins/app_links/ios"
   audio_session:
     :path: ".symlinks/plugins/audio_session/ios"
+  background_fetch:
+    :path: ".symlinks/plugins/background_fetch/ios"
   camera_avfoundation:
     :path: ".symlinks/plugins/camera_avfoundation/ios"
   cloud_firestore:
@@ -1833,6 +1844,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/three_js_sensors/ios"
   url_launcher_ios:
     :path: ".symlinks/plugins/url_launcher_ios/ios"
+  workmanager:
+    :path: ".symlinks/plugins/workmanager/ios"
 
 SPEC CHECKSUMS:
   abseil: a05cc83bf02079535e17169a73c5be5ba47f714b
@@ -1840,6 +1853,7 @@ SPEC CHECKSUMS:
   AppAuth: d4f13a8fe0baf391b2108511793e4b479691fb73
   AppCheckCore: cc8fd0a3a230ddd401f326489c99990b013f0c4f
   audio_session: 9bb7f6c970f21241b19f5a3658097ae459681ba0
+  background_fetch: 7457cb2c7be3086b37d87207866f30bed2f9fb58
   BoringSSL-GRPC: dded2a44897e45f28f08ae87a55ee4bcd19bc508
   camera_avfoundation: 5675ca25298b6f81fa0a325188e7df62cc217741
   cloud_firestore: 7a6d8a533ec7418a7fe46b3a5dabf55661a5b298
@@ -1920,8 +1934,10 @@ SPEC CHECKSUMS:
   sticker_view: 70c8064192685c6f50213e1e9dc3d93728e91def
   SwiftyGif: 706c60cf65fa2bc5ee0313beece843c8eb8194d4
   three_js_sensors: f516b092803411e05b1e3dc7625efa36acd8f455
+  TSBackgroundFetch: 0afbeaae4e1132866e1d4b6e55265af26b5958ae
   url_launcher_ios: 7a95fa5b60cc718a708b8f2966718e93db0cef1b
+  workmanager: 01be2de7f184bd15de93a1812936a2b7f42ef07e
 
-PODFILE CHECKSUM: 1857a7cdb7dfafe45f2b0e9a9af44644190f7506
+PODFILE CHECKSUM: 6ddd6b941a48f6adbf220fe8001c07755d54416e
 
 COCOAPODS: 1.16.2

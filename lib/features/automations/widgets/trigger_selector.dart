@@ -235,8 +235,17 @@ class _TriggerSelectorState extends State<TriggerSelector> {
           ],
         );
 
-      default:
-        return const SizedBox.shrink();
+      case TriggerType.scheduled:
+        return _buildScheduledConfig(context);
+
+      case TriggerType.channelActivity:
+        return _buildChannelActivityConfig(context);
+
+      case TriggerType.manual:
+        return _buildManualTriggerInfo(context);
+
+      case TriggerType.messageReceived:
+        return _buildNodeFilterConfig(context);
     }
   }
 
@@ -382,10 +391,16 @@ class _TriggerSelectorState extends State<TriggerSelector> {
           ),
           const SizedBox(height: 8),
           SegmentedButton<bool?>(
-            segments: const [
-              ButtonSegment(value: null, label: Text('Any')),
-              ButtonSegment(value: true, label: Text('Detected')),
-              ButtonSegment(value: false, label: Text('Clear')),
+            segments: [
+              const ButtonSegment(value: null, label: Text('Any')),
+              ButtonSegment(
+                value: true,
+                label: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: const Text('Detected'),
+                ),
+              ),
+              const ButtonSegment(value: false, label: Text('Clear')),
             ],
             selected: {detectedStateFilter},
             onSelectionChanged: (selected) {
@@ -677,6 +692,306 @@ class _TriggerSelectorState extends State<TriggerSelector> {
               icon: const Icon(Icons.map, size: 18),
               label: const Text('Pick on Map'),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScheduledConfig(BuildContext context) {
+    final scheduleType = widget.trigger.config['scheduleType'] as String? ?? 'daily';
+    final hour = widget.trigger.config['hour'] as int? ?? 9;
+    final minute = widget.trigger.config['minute'] as int? ?? 0;
+    final daysOfWeek = (widget.trigger.config['daysOfWeek'] as List<dynamic>?)
+            ?.cast<int>() ??
+        [1, 2, 3, 4, 5]; // Weekdays default
+    final intervalMinutes = widget.trigger.config['intervalMinutes'] as int? ?? 60;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: context.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Schedule Type',
+            style: TextStyle(color: Colors.grey),
+          ),
+          const SizedBox(height: 8),
+          SegmentedButton<String>(
+            segments: [
+              const ButtonSegment(value: 'daily', label: Text('Daily')),
+              const ButtonSegment(value: 'weekly', label: Text('Weekly')),
+              ButtonSegment(
+                value: 'interval',
+                label: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: const Text('Interval'),
+                ),
+              ),
+            ],
+            selected: {scheduleType},
+            onSelectionChanged: (selected) {
+              final newConfig = Map<String, dynamic>.from(widget.trigger.config);
+              newConfig['scheduleType'] = selected.first;
+              // Also update the schedule string for validation
+              newConfig['schedule'] = _buildScheduleString(
+                selected.first,
+                hour,
+                minute,
+                daysOfWeek,
+                intervalMinutes,
+              );
+              widget.onChanged(widget.trigger.copyWith(config: newConfig));
+            },
+          ),
+          const SizedBox(height: 16),
+
+          // Time picker for daily/weekly
+          if (scheduleType == 'daily' || scheduleType == 'weekly') ...[
+            const Text('Time', style: TextStyle(color: Colors.grey)),
+            const SizedBox(height: 8),
+            BouncyTap(
+              onTap: () async {
+                final time = await showTimePicker(
+                  context: context,
+                  initialTime: TimeOfDay(hour: hour, minute: minute),
+                );
+                if (time != null) {
+                  final newConfig = Map<String, dynamic>.from(widget.trigger.config);
+                  newConfig['hour'] = time.hour;
+                  newConfig['minute'] = time.minute;
+                  newConfig['schedule'] = _buildScheduleString(
+                    scheduleType,
+                    time.hour,
+                    time.minute,
+                    daysOfWeek,
+                    intervalMinutes,
+                  );
+                  widget.onChanged(widget.trigger.copyWith(config: newConfig));
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  border: Border.all(color: context.border),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      TimeOfDay(hour: hour, minute: minute).format(context),
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                    const Icon(Icons.access_time, color: Colors.grey),
+                  ],
+                ),
+              ),
+            ),
+          ],
+
+          // Days of week picker for weekly
+          if (scheduleType == 'weekly') ...[
+            const SizedBox(height: 16),
+            const Text('Days', style: TextStyle(color: Colors.grey)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              children: [
+                for (final day in [
+                  (1, 'Mon'),
+                  (2, 'Tue'),
+                  (3, 'Wed'),
+                  (4, 'Thu'),
+                  (5, 'Fri'),
+                  (6, 'Sat'),
+                  (0, 'Sun'),
+                ])
+                  FilterChip(
+                    label: Text(day.$2),
+                    selected: daysOfWeek.contains(day.$1),
+                    onSelected: (selected) {
+                      final newDays = List<int>.from(daysOfWeek);
+                      if (selected) {
+                        if (!newDays.contains(day.$1)) newDays.add(day.$1);
+                      } else {
+                        newDays.remove(day.$1);
+                      }
+                      // Ensure at least one day is selected
+                      if (newDays.isEmpty) return;
+                      final newConfig = Map<String, dynamic>.from(widget.trigger.config);
+                      newConfig['daysOfWeek'] = newDays;
+                      newConfig['schedule'] = _buildScheduleString(
+                        scheduleType,
+                        hour,
+                        minute,
+                        newDays,
+                        intervalMinutes,
+                      );
+                      widget.onChanged(widget.trigger.copyWith(config: newConfig));
+                    },
+                  ),
+              ],
+            ),
+          ],
+
+          // Interval picker for interval type
+          if (scheduleType == 'interval') ...[
+            const SizedBox(height: 16),
+            _buildSliderConfig(
+              context,
+              label: 'Repeat every',
+              value: intervalMinutes.toDouble(),
+              min: 15, // WorkManager minimum
+              max: 1440, // 24 hours
+              suffix: ' min',
+              divisions: 95,
+              onChanged: (value) {
+                final newConfig = Map<String, dynamic>.from(widget.trigger.config);
+                newConfig['intervalMinutes'] = value.round();
+                newConfig['schedule'] = _buildScheduleString(
+                  scheduleType,
+                  hour,
+                  minute,
+                  daysOfWeek,
+                  value.round(),
+                );
+                widget.onChanged(widget.trigger.copyWith(config: newConfig));
+              },
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _formatInterval(intervalMinutes),
+              style: TextStyle(color: Colors.grey[600], fontSize: 12),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  String _buildScheduleString(
+    String scheduleType,
+    int hour,
+    int minute,
+    List<int> daysOfWeek,
+    int intervalMinutes,
+  ) {
+    switch (scheduleType) {
+      case 'daily':
+        return 'daily:$hour:$minute';
+      case 'weekly':
+        final days = daysOfWeek.join(',');
+        return 'weekly:$hour:$minute:$days';
+      case 'interval':
+        return 'interval:$intervalMinutes';
+      default:
+        return '';
+    }
+  }
+
+  String _formatInterval(int minutes) {
+    if (minutes < 60) return 'Every $minutes minutes';
+    final hours = minutes ~/ 60;
+    final mins = minutes % 60;
+    if (mins == 0) {
+      return 'Every $hours hour${hours > 1 ? 's' : ''}';
+    }
+    return 'Every $hours hour${hours > 1 ? 's' : ''} $mins minutes';
+  }
+
+  Widget _buildChannelActivityConfig(BuildContext context) {
+    final channelIndex = widget.trigger.config['channelIndex'] as int?;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: context.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Channel (optional)',
+            style: TextStyle(color: Colors.grey),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Leave empty to trigger for any channel activity',
+            style: TextStyle(color: Colors.grey[600], fontSize: 12),
+          ),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<int?>(
+            value: channelIndex,
+            decoration: InputDecoration(
+              hintText: 'Any channel',
+              isDense: true,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: context.border),
+              ),
+            ),
+            items: [
+              const DropdownMenuItem<int?>(
+                value: null,
+                child: Text('Any channel'),
+              ),
+              for (var i = 0; i < 8; i++)
+                DropdownMenuItem<int>(
+                  value: i,
+                  child: Text('Channel $i'),
+                ),
+            ],
+            onChanged: (value) {
+              final newConfig = Map<String, dynamic>.from(widget.trigger.config);
+              if (value == null) {
+                newConfig.remove('channelIndex');
+              } else {
+                newConfig['channelIndex'] = value;
+              }
+              widget.onChanged(widget.trigger.copyWith(config: newConfig));
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildManualTriggerInfo(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: context.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.info_outline, color: Colors.blue[400], size: 20),
+              const SizedBox(width: 8),
+              const Text(
+                'Manual Trigger',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'This automation can be triggered manually from:\n'
+            '• The Automations screen (tap the play button)\n'
+            '• Siri Shortcuts\n'
+            '• Widgets',
+            style: TextStyle(color: Colors.grey[400], fontSize: 13, height: 1.5),
           ),
         ],
       ),
