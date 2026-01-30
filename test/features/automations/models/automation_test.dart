@@ -769,6 +769,7 @@ void main() {
         'Location',
         'Time',
         'Signal',
+        'Sensors',
         'Manual',
       };
       for (final type in TriggerType.values) {

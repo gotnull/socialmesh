@@ -226,6 +226,15 @@ class _TriggerSelectorState extends State<TriggerSelector> {
       case TriggerType.nodeOffline:
         return _buildNodeFilterConfig(context);
 
+      case TriggerType.detectionSensor:
+        return Column(
+          children: [
+            _buildDetectionSensorConfig(context),
+            const SizedBox(height: 8),
+            _buildNodeFilterConfig(context),
+          ],
+        );
+
       default:
         return const SizedBox.shrink();
     }
@@ -310,6 +319,87 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                 borderSide: BorderSide(color: context.border),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetectionSensorConfig(BuildContext context) {
+    final sensorNameFilter = widget.trigger.sensorNameFilter ?? '';
+    final detectedStateFilter = widget.trigger.detectedStateFilter;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: context.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Sensor name filter (optional)',
+            style: TextStyle(color: Colors.grey),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Leave empty to trigger for any sensor',
+            style: TextStyle(color: Colors.grey[600], fontSize: 12),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: TextEditingController(text: sensorNameFilter),
+            onChanged: (value) {
+              final newConfig = Map<String, dynamic>.from(
+                widget.trigger.config,
+              );
+              if (value.isEmpty) {
+                newConfig.remove('sensorNameFilter');
+              } else {
+                newConfig['sensorNameFilter'] = value;
+              }
+              widget.onChanged(widget.trigger.copyWith(config: newConfig));
+            },
+            decoration: InputDecoration(
+              hintText: 'e.g., Motion, Door, Window',
+              isDense: true,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: context.border),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: context.border),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Trigger when sensor is',
+            style: TextStyle(color: Colors.grey),
+          ),
+          const SizedBox(height: 8),
+          SegmentedButton<bool?>(
+            segments: const [
+              ButtonSegment(value: null, label: Text('Any')),
+              ButtonSegment(value: true, label: Text('Detected')),
+              ButtonSegment(value: false, label: Text('Clear')),
+            ],
+            selected: {detectedStateFilter},
+            onSelectionChanged: (selected) {
+              final newConfig = Map<String, dynamic>.from(
+                widget.trigger.config,
+              );
+              final value = selected.first;
+              if (value == null) {
+                newConfig.remove('detectedStateFilter');
+              } else {
+                newConfig['detectedStateFilter'] = value;
+              }
+              widget.onChanged(widget.trigger.copyWith(config: newConfig));
+            },
           ),
         ],
       ),

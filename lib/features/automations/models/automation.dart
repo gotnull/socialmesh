@@ -335,6 +335,12 @@ class AutomationTrigger {
   /// Signal threshold (SNR) for signalWeak trigger
   int get signalThreshold => config['signalThreshold'] as int? ?? -10;
 
+  /// Sensor name filter for detectionSensor trigger (null = any sensor)
+  String? get sensorNameFilter => config['sensorNameFilter'] as String?;
+
+  /// Detected state filter for detectionSensor trigger (null = any, true = detected, false = clear)
+  bool? get detectedStateFilter => config['detectedStateFilter'] as bool?;
+
   /// Validate trigger configuration and return error message if invalid
   String? validate() {
     switch (type) {

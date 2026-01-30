@@ -436,6 +436,30 @@ class AutomationEngine {
         }
         break;
 
+      case TriggerType.detectionSensor:
+        // Check sensor name filter
+        final sensorFilter = trigger.sensorNameFilter;
+        if (sensorFilter != null && sensorFilter.isNotEmpty) {
+          if (event.sensorName == null ||
+              !event.sensorName!.toLowerCase().contains(
+                sensorFilter.toLowerCase(),
+              )) {
+            AppLogging.automations(
+              '🤖 _shouldTrigger: detectionSensor - sensor name mismatch (filter=$sensorFilter, event=${event.sensorName})',
+            );
+            return false;
+          }
+        }
+        // Check detected state filter
+        final stateFilter = trigger.detectedStateFilter;
+        if (stateFilter != null && event.sensorDetected != stateFilter) {
+          AppLogging.automations(
+            '🤖 _shouldTrigger: detectionSensor - state mismatch (filter=$stateFilter, event=${event.sensorDetected})',
+          );
+          return false;
+        }
+        break;
+
       default:
         break;
     }
@@ -1018,7 +1042,12 @@ class AutomationEngine {
               : 'Unknown',
         )
         .replaceAll('{{message}}', event.messageText ?? '')
-        .replaceAll('{{time}}', DateTime.now().toIso8601String());
+        .replaceAll('{{time}}', DateTime.now().toIso8601String())
+        .replaceAll('{{sensor.name}}', event.sensorName ?? 'Unknown')
+        .replaceAll(
+          '{{sensor.state}}',
+          event.sensorDetected == true ? 'detected' : 'clear',
+        );
 
     // Trigger-specific context variables
     if (trigger != null) {

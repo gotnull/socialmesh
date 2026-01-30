@@ -547,6 +547,7 @@ class _AddAutomationSheet extends StatelessWidget {
     'Location',
     'Time',
     'Signal',
+    'Sensors',
     'Manual',
   ];
 
@@ -828,6 +829,8 @@ class _AddAutomationSheet extends StatelessWidget {
         return Icons.schedule;
       case 'Signal':
         return Icons.signal_cellular_alt;
+      case 'Sensors':
+        return Icons.sensors;
       case 'Manual':
         return Icons.touch_app;
       default:
@@ -849,6 +852,8 @@ class _AddAutomationSheet extends StatelessWidget {
         return Colors.cyan;
       case 'Signal':
         return Colors.orange;
+      case 'Sensors':
+        return Colors.red;
       case 'Manual':
         return Theme.of(context).colorScheme.primary;
       default:
