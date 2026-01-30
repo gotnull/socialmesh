@@ -458,16 +458,19 @@ Scheduled automations can now fire when the app is in the background or terminat
 **Package**: `workmanager: ^0.5.2`
 
 **How it works**:
+
 - One-shot schedules → `registerOneOffTask` with computed delay
 - Interval schedules → `registerPeriodicTask` (minimum 15 minutes)
 - Daily/weekly schedules → `registerOneOffTask` for next occurrence, re-registered after firing
 
 **Constraints**:
+
 - Minimum periodic interval: 15 minutes (enforced by Android)
 - Exact timing not guaranteed (battery optimization, Doze mode)
 - Tasks may be deferred by system
 
 **Callback dispatcher**:
+
 ```dart
 @pragma('vm:entry-point')
 void workManagerCallbackDispatcher() {
@@ -484,22 +487,26 @@ void workManagerCallbackDispatcher() {
 **Package**: `background_fetch: ^1.3.7`
 
 **How it works**:
+
 - background_fetch provides periodic wake-ups (system-determined, ~15 min minimum)
 - On each wake, all due schedules are processed via `InAppScheduler.tick()`
 - For exact-time UX, local notifications alert the user (but don't execute code)
 
 **Constraints**:
+
 - iOS determines when to wake the app (not configurable per-task)
 - Limited execution time (~30 seconds)
 - System may skip wakes based on app usage patterns
 - Headless execution available but with restrictions
 
 **One-shot strategy**:
+
 - Store target fire times in SharedPreferences
 - Check on each background fetch if any are due
 - Optionally schedule a local notification for UX
 
 **Configuration required** (Info.plist):
+
 ```xml
 <key>UIBackgroundModes</key>
 <array>
@@ -511,6 +518,7 @@ void workManagerCallbackDispatcher() {
 ### Lifecycle Wiring
 
 When app **goes to background**:
+
 ```dart
 SchedulerBridge.syncToPlatform()
 // Cancels all existing platform tasks
@@ -518,6 +526,7 @@ SchedulerBridge.syncToPlatform()
 ```
 
 When app **returns to foreground**:
+
 ```dart
 SchedulerBridge.processOnResume()
 // Calls InAppScheduler.tick() to process any missed schedules
@@ -526,11 +535,13 @@ SchedulerBridge.processOnResume()
 ### Testing Strategy
 
 **Unit tests** (`scheduler_bridge_test.dart`):
+
 - `MockPlatformScheduler` tracks all calls without platform dependencies
 - Tests verify correct registration, cancellation, and sync behavior
 - Integration tests simulate platform callbacks
 
 **Manual testing**:
+
 1. Create daily schedule for time in ~2 minutes
 2. Background app, wait for schedule time
 3. Verify notification (iOS) or app wake (Android)
@@ -538,14 +549,14 @@ SchedulerBridge.processOnResume()
 
 ### Platform Limitations Summary
 
-| Feature | Android | iOS |
-|---------|---------|-----|
-| Minimum periodic interval | 15 minutes | ~15 minutes (system-determined) |
-| Exact timing | No (best effort) | No (use local notifications for UX) |
-| Task query API | No (tracked manually) | No (tracked manually) |
-| Execution time limit | 10 minutes | ~30 seconds |
-| Headless execution | Yes | Limited |
-| Cold start callback | Yes | Yes |
+| Feature                   | Android               | iOS                                 |
+| ------------------------- | --------------------- | ----------------------------------- |
+| Minimum periodic interval | 15 minutes            | ~15 minutes (system-determined)     |
+| Exact timing              | No (best effort)      | No (use local notifications for UX) |
+| Task query API            | No (tracked manually) | No (tracked manually)               |
+| Execution time limit      | 10 minutes            | ~30 seconds                         |
+| Headless execution        | Yes                   | Limited                             |
+| Cold start callback       | Yes                   | Yes                                 |
 
 ### How to Enable
 
@@ -553,6 +564,7 @@ SchedulerBridge.processOnResume()
 No additional configuration needed. WorkManager is automatically initialized.
 
 **iOS** (`ios/Runner/Info.plist`):
+
 ```xml
 <key>UIBackgroundModes</key>
 <array>

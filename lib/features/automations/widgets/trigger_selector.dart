@@ -699,13 +699,15 @@ class _TriggerSelectorState extends State<TriggerSelector> {
   }
 
   Widget _buildScheduledConfig(BuildContext context) {
-    final scheduleType = widget.trigger.config['scheduleType'] as String? ?? 'daily';
+    final scheduleType =
+        widget.trigger.config['scheduleType'] as String? ?? 'daily';
     final hour = widget.trigger.config['hour'] as int? ?? 9;
     final minute = widget.trigger.config['minute'] as int? ?? 0;
-    final daysOfWeek = (widget.trigger.config['daysOfWeek'] as List<dynamic>?)
-            ?.cast<int>() ??
+    final daysOfWeek =
+        (widget.trigger.config['daysOfWeek'] as List<dynamic>?)?.cast<int>() ??
         [1, 2, 3, 4, 5]; // Weekdays default
-    final intervalMinutes = widget.trigger.config['intervalMinutes'] as int? ?? 60;
+    final intervalMinutes =
+        widget.trigger.config['intervalMinutes'] as int? ?? 60;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -717,10 +719,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Schedule Type',
-            style: TextStyle(color: Colors.grey),
-          ),
+          const Text('Schedule Type', style: TextStyle(color: Colors.grey)),
           const SizedBox(height: 8),
           SegmentedButton<String>(
             segments: [
@@ -736,7 +735,9 @@ class _TriggerSelectorState extends State<TriggerSelector> {
             ],
             selected: {scheduleType},
             onSelectionChanged: (selected) {
-              final newConfig = Map<String, dynamic>.from(widget.trigger.config);
+              final newConfig = Map<String, dynamic>.from(
+                widget.trigger.config,
+              );
               newConfig['scheduleType'] = selected.first;
               // Also update the schedule string for validation
               newConfig['schedule'] = _buildScheduleString(
@@ -762,7 +763,9 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                   initialTime: TimeOfDay(hour: hour, minute: minute),
                 );
                 if (time != null) {
-                  final newConfig = Map<String, dynamic>.from(widget.trigger.config);
+                  final newConfig = Map<String, dynamic>.from(
+                    widget.trigger.config,
+                  );
                   newConfig['hour'] = time.hour;
                   newConfig['minute'] = time.minute;
                   newConfig['schedule'] = _buildScheduleString(
@@ -776,7 +779,10 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                 }
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   border: Border.all(color: context.border),
                   borderRadius: BorderRadius.circular(8),
@@ -824,7 +830,9 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                       }
                       // Ensure at least one day is selected
                       if (newDays.isEmpty) return;
-                      final newConfig = Map<String, dynamic>.from(widget.trigger.config);
+                      final newConfig = Map<String, dynamic>.from(
+                        widget.trigger.config,
+                      );
                       newConfig['daysOfWeek'] = newDays;
                       newConfig['schedule'] = _buildScheduleString(
                         scheduleType,
@@ -833,7 +841,9 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                         newDays,
                         intervalMinutes,
                       );
-                      widget.onChanged(widget.trigger.copyWith(config: newConfig));
+                      widget.onChanged(
+                        widget.trigger.copyWith(config: newConfig),
+                      );
                     },
                   ),
               ],
@@ -852,7 +862,9 @@ class _TriggerSelectorState extends State<TriggerSelector> {
               suffix: ' min',
               divisions: 95,
               onChanged: (value) {
-                final newConfig = Map<String, dynamic>.from(widget.trigger.config);
+                final newConfig = Map<String, dynamic>.from(
+                  widget.trigger.config,
+                );
                 newConfig['intervalMinutes'] = value.round();
                 newConfig['schedule'] = _buildScheduleString(
                   scheduleType,
@@ -944,13 +956,12 @@ class _TriggerSelectorState extends State<TriggerSelector> {
                 child: Text('Any channel'),
               ),
               for (var i = 0; i < 8; i++)
-                DropdownMenuItem<int>(
-                  value: i,
-                  child: Text('Channel $i'),
-                ),
+                DropdownMenuItem<int>(value: i, child: Text('Channel $i')),
             ],
             onChanged: (value) {
-              final newConfig = Map<String, dynamic>.from(widget.trigger.config);
+              final newConfig = Map<String, dynamic>.from(
+                widget.trigger.config,
+              );
               if (value == null) {
                 newConfig.remove('channelIndex');
               } else {
@@ -991,7 +1002,11 @@ class _TriggerSelectorState extends State<TriggerSelector> {
             '• The Automations screen (tap the play button)\n'
             '• Siri Shortcuts\n'
             '• Widgets',
-            style: TextStyle(color: Colors.grey[400], fontSize: 13, height: 1.5),
+            style: TextStyle(
+              color: Colors.grey[400],
+              fontSize: 13,
+              height: 1.5,
+            ),
           ),
         ],
       ),

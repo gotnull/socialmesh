@@ -128,14 +128,14 @@ class AndroidWorkManagerScheduler implements PlatformScheduler {
 
   /// Handler function called when a background task fires
   static Future<bool> Function(String taskId, Map<String, dynamic>? inputData)?
-      _taskHandler;
+  _taskHandler;
 
   /// Set the handler for background task execution
   ///
   /// Must be called during app initialization before any tasks fire.
   static void setTaskHandler(
     Future<bool> Function(String taskId, Map<String, dynamic>? inputData)
-        handler,
+    handler,
   ) {
     _taskHandler = handler;
   }
@@ -181,9 +181,7 @@ class AndroidWorkManagerScheduler implements PlatformScheduler {
       initialDelay: delay,
       inputData: taskData,
       existingWorkPolicy: wm.ExistingWorkPolicy.replace,
-      constraints: wm.Constraints(
-        networkType: wm.NetworkType.not_required,
-      ),
+      constraints: wm.Constraints(networkType: wm.NetworkType.not_required),
     );
 
     // Track scheduled task
@@ -225,9 +223,7 @@ class AndroidWorkManagerScheduler implements PlatformScheduler {
       frequency: effectiveInterval,
       inputData: taskData,
       existingWorkPolicy: wm.ExistingWorkPolicy.replace,
-      constraints: wm.Constraints(
-        networkType: wm.NetworkType.not_required,
-      ),
+      constraints: wm.Constraints(networkType: wm.NetworkType.not_required),
     );
 
     // Track scheduled task
@@ -254,9 +250,7 @@ class AndroidWorkManagerScheduler implements PlatformScheduler {
     await wm.Workmanager().cancelAll();
     await _clearAllTrackedTasks();
 
-    AppLogging.automations(
-      'AndroidWorkManagerScheduler: Cancelled all tasks',
-    );
+    AppLogging.automations('AndroidWorkManagerScheduler: Cancelled all tasks');
   }
 
   @override
@@ -329,7 +323,7 @@ class IOSBGTaskScheduler implements PlatformScheduler {
   bool _initialized = false;
 
   IOSBGTaskScheduler({FlutterLocalNotificationsPlugin? notifications})
-      : _notifications = notifications;
+    : _notifications = notifications;
 
   /// Set the handler for background fetch events
   ///
@@ -548,10 +542,11 @@ class IOSBGTaskScheduler implements PlatformScheduler {
 
   Future<void> _storeOneShotTime(String taskId, DateTime scheduledFor) async {
     final prefs = await SharedPreferences.getInstance();
-    final times =
-        Map<String, String>.from(prefs.getString(_iosOneShotTimesKey) != null
-            ? _parseTimesJson(prefs.getString(_iosOneShotTimesKey)!)
-            : {});
+    final times = Map<String, String>.from(
+      prefs.getString(_iosOneShotTimesKey) != null
+          ? _parseTimesJson(prefs.getString(_iosOneShotTimesKey)!)
+          : {},
+    );
     times[taskId] = scheduledFor.toIso8601String();
     await prefs.setString(_iosOneShotTimesKey, _encodeTimesJson(times));
   }
@@ -764,7 +759,9 @@ class SchedulerBridge {
   void processOnResume() {
     final now = _now();
     inAppScheduler.tick(now);
-    AppLogging.automations('SchedulerBridge: Processed due schedules on resume');
+    AppLogging.automations(
+      'SchedulerBridge: Processed due schedules on resume',
+    );
   }
 
   /// Handle platform task callback (Android WorkManager)
