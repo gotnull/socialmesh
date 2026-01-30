@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,8 +6,11 @@ import '../../core/logging.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/info_table.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
+import '../../generated/meshtastic/config.pb.dart' as config_pb;
 import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
+import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
 import '../../utils/validation.dart';
 
 /// Device role options with descriptions
@@ -76,6 +80,85 @@ final deviceRoles = [
   ),
 ];
 
+/// Rebroadcast mode options with descriptions
+class RebroadcastModeOption {
+  final config_pbenum.Config_DeviceConfig_RebroadcastMode mode;
+  final String displayName;
+  final String description;
+
+  const RebroadcastModeOption(this.mode, this.displayName, this.description);
+}
+
+final rebroadcastModes = [
+  RebroadcastModeOption(
+    config_pbenum.Config_DeviceConfig_RebroadcastMode.ALL,
+    'All',
+    'Rebroadcast any observed message. Default behavior.',
+  ),
+  RebroadcastModeOption(
+    config_pbenum.Config_DeviceConfig_RebroadcastMode.ALL_SKIP_DECODING,
+    'All (Skip Decoding)',
+    'Rebroadcast all messages without decoding. Faster, less CPU.',
+  ),
+  RebroadcastModeOption(
+    config_pbenum.Config_DeviceConfig_RebroadcastMode.LOCAL_ONLY,
+    'Local Only',
+    'Only rebroadcast messages from local senders. Good for isolated networks.',
+  ),
+  RebroadcastModeOption(
+    config_pbenum.Config_DeviceConfig_RebroadcastMode.KNOWN_ONLY,
+    'Known Only',
+    'Only rebroadcast messages from nodes in the node database.',
+  ),
+  RebroadcastModeOption(
+    config_pbenum.Config_DeviceConfig_RebroadcastMode.CORE_PORTNUMS_ONLY,
+    'Core Port Numbers Only',
+    'Rebroadcast only core Meshtastic packets (position, telemetry, etc).',
+  ),
+  RebroadcastModeOption(
+    config_pbenum.Config_DeviceConfig_RebroadcastMode.NONE,
+    'None',
+    'Do not rebroadcast any messages. Node only receives.',
+  ),
+];
+
+/// Buzzer mode options with descriptions
+class BuzzerModeOption {
+  final config_pbenum.Config_DeviceConfig_BuzzerMode mode;
+  final String displayName;
+  final String description;
+
+  const BuzzerModeOption(this.mode, this.displayName, this.description);
+}
+
+final buzzerModes = [
+  BuzzerModeOption(
+    config_pbenum.Config_DeviceConfig_BuzzerMode.ALL_ENABLED,
+    'All Enabled',
+    'Buzzer sounds for all feedback including buttons and alerts.',
+  ),
+  BuzzerModeOption(
+    config_pbenum.Config_DeviceConfig_BuzzerMode.NOTIFICATIONS_ONLY,
+    'Notifications Only',
+    'Buzzer only for notifications and alerts, not button presses.',
+  ),
+  BuzzerModeOption(
+    config_pbenum.Config_DeviceConfig_BuzzerMode.DIRECT_MSG_ONLY,
+    'Direct Messages Only',
+    'Buzzer only for direct messages and alerts.',
+  ),
+  BuzzerModeOption(
+    config_pbenum.Config_DeviceConfig_BuzzerMode.SYSTEM_ONLY,
+    'System Only',
+    'Button presses, startup, shutdown sounds only. No alerts.',
+  ),
+  BuzzerModeOption(
+    config_pbenum.Config_DeviceConfig_BuzzerMode.DISABLED,
+    'Disabled',
+    'All buzzer audio feedback is disabled.',
+  ),
+];
+
 class DeviceConfigScreen extends ConsumerStatefulWidget {
   const DeviceConfigScreen({super.key});
 
@@ -88,13 +171,35 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
   config_pbenum.Config_DeviceConfig_Role? _originalRole;
   bool _isSaving = false;
   bool _hasChanges = false;
+  bool _isLoading = true;
   ProviderSubscription? _deviceSub;
+  StreamSubscription<config_pb.Config_DeviceConfig>? _configSubscription;
 
   // Name editing
   late TextEditingController _longNameController;
   late TextEditingController _shortNameController;
   String? _originalLongName;
   String? _originalShortName;
+
+  // Device Config fields
+  config_pbenum.Config_DeviceConfig_RebroadcastMode? _rebroadcastMode;
+  config_pbenum.Config_DeviceConfig_RebroadcastMode? _originalRebroadcastMode;
+  int _nodeInfoBroadcastSecs = 900;
+  int _originalNodeInfoBroadcastSecs = 900;
+  bool _doubleTapAsButtonPress = false;
+  bool _originalDoubleTapAsButtonPress = false;
+  bool _disableTripleClick = false;
+  bool _originalDisableTripleClick = false;
+  bool _ledHeartbeatDisabled = false;
+  bool _originalLedHeartbeatDisabled = false;
+  String _tzdef = '';
+  String _originalTzdef = '';
+  int _buttonGpio = 0;
+  int _originalButtonGpio = 0;
+  int _buzzerGpio = 0;
+  int _originalBuzzerGpio = 0;
+  config_pbenum.Config_DeviceConfig_BuzzerMode? _buzzerMode;
+  config_pbenum.Config_DeviceConfig_BuzzerMode? _originalBuzzerMode;
 
   @override
   void initState() {
@@ -114,12 +219,51 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
   void dispose() {
     AppLogging.protocol('DeviceConfigScreen: dispose');
     _deviceSub?.close();
+    _configSubscription?.cancel();
     _longNameController.dispose();
     _shortNameController.dispose();
     super.dispose();
   }
 
-  void _loadCurrentConfig() {
+  void _applyDeviceConfig(config_pb.Config_DeviceConfig config) {
+    setState(() {
+      // Rebroadcast mode
+      _rebroadcastMode = config.rebroadcastMode;
+      _originalRebroadcastMode = config.rebroadcastMode;
+      
+      // Node info broadcast interval
+      _nodeInfoBroadcastSecs = config.nodeInfoBroadcastSecs > 0 
+          ? config.nodeInfoBroadcastSecs 
+          : 900;
+      _originalNodeInfoBroadcastSecs = _nodeInfoBroadcastSecs;
+      
+      // Boolean settings
+      _doubleTapAsButtonPress = config.doubleTapAsButtonPress;
+      _originalDoubleTapAsButtonPress = config.doubleTapAsButtonPress;
+      _disableTripleClick = config.disableTripleClick;
+      _originalDisableTripleClick = config.disableTripleClick;
+      _ledHeartbeatDisabled = config.ledHeartbeatDisabled;
+      _originalLedHeartbeatDisabled = config.ledHeartbeatDisabled;
+      
+      // Timezone
+      _tzdef = config.tzdef;
+      _originalTzdef = config.tzdef;
+      
+      // GPIO settings
+      _buttonGpio = config.buttonGpio;
+      _originalButtonGpio = config.buttonGpio;
+      _buzzerGpio = config.buzzerGpio;
+      _originalBuzzerGpio = config.buzzerGpio;
+      
+      // Buzzer mode
+      _buzzerMode = config.buzzerMode;
+      _originalBuzzerMode = config.buzzerMode;
+    });
+  }
+
+  Future<void> _loadCurrentConfig() async {
+    setState(() => _isLoading = true);
+    
     final myNodeNum = ref.read(myNodeNumProvider);
     final nodes = ref.read(nodesProvider);
     final myNode = myNodeNum != null ? nodes[myNodeNum] : null;
@@ -163,6 +307,47 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
       _selectedRole = config_pbenum.Config_DeviceConfig_Role.CLIENT;
       _originalRole = _selectedRole;
     }
+
+    // Load device config from protocol service
+    try {
+      final protocol = ref.read(protocolServiceProvider);
+
+      // Apply cached config immediately if available
+      final cached = protocol.currentDeviceConfig;
+      if (cached != null) {
+        _applyDeviceConfig(cached);
+      } else {
+        // Set defaults if no cached config
+        _rebroadcastMode = config_pbenum.Config_DeviceConfig_RebroadcastMode.ALL;
+        _originalRebroadcastMode = _rebroadcastMode;
+        _buzzerMode = config_pbenum.Config_DeviceConfig_BuzzerMode.ALL_ENABLED;
+        _originalBuzzerMode = _buzzerMode;
+      }
+
+      // Only request from device if connected
+      if (protocol.isConnected) {
+        // Listen for config response
+        _configSubscription = protocol.deviceConfigStream.listen((config) {
+          if (mounted) _applyDeviceConfig(config);
+        });
+
+        // Request fresh config from device
+        await protocol.getConfig(
+          admin_pbenum.AdminMessage_ConfigType.DEVICE_CONFIG,
+        );
+      }
+    } catch (e) {
+      AppLogging.protocol('DeviceConfigScreen: Error loading device config: $e');
+      // Set defaults on error
+      _rebroadcastMode = config_pbenum.Config_DeviceConfig_RebroadcastMode.ALL;
+      _originalRebroadcastMode = _rebroadcastMode;
+      _buzzerMode = config_pbenum.Config_DeviceConfig_BuzzerMode.ALL_ENABLED;
+      _originalBuzzerMode = _buzzerMode;
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   void _checkForChanges() {
@@ -170,8 +355,21 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
         _longNameController.text != _originalLongName ||
         _shortNameController.text != _originalShortName;
     final roleChanged = _selectedRole != _originalRole;
+    final rebroadcastChanged = _rebroadcastMode != _originalRebroadcastMode;
+    final nodeInfoChanged = _nodeInfoBroadcastSecs != _originalNodeInfoBroadcastSecs;
+    final doubleTapChanged = _doubleTapAsButtonPress != _originalDoubleTapAsButtonPress;
+    final tripleClickChanged = _disableTripleClick != _originalDisableTripleClick;
+    final ledChanged = _ledHeartbeatDisabled != _originalLedHeartbeatDisabled;
+    final tzdefChanged = _tzdef != _originalTzdef;
+    final buttonGpioChanged = _buttonGpio != _originalButtonGpio;
+    final buzzerGpioChanged = _buzzerGpio != _originalBuzzerGpio;
+    final buzzerModeChanged = _buzzerMode != _originalBuzzerMode;
+    
     setState(() {
-      _hasChanges = nameChanged || roleChanged;
+      _hasChanges = nameChanged || roleChanged || rebroadcastChanged ||
+          nodeInfoChanged || doubleTapChanged || tripleClickChanged ||
+          ledChanged || tzdefChanged || buttonGpioChanged ||
+          buzzerGpioChanged || buzzerModeChanged;
     });
   }
 
@@ -236,12 +434,22 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
           _longNameController.text != _originalLongName ||
           _shortNameController.text != _originalShortName;
       final roleChanged = _selectedRole != _originalRole;
+      final deviceConfigChanged = _rebroadcastMode != _originalRebroadcastMode ||
+          _nodeInfoBroadcastSecs != _originalNodeInfoBroadcastSecs ||
+          _doubleTapAsButtonPress != _originalDoubleTapAsButtonPress ||
+          _disableTripleClick != _originalDisableTripleClick ||
+          _ledHeartbeatDisabled != _originalLedHeartbeatDisabled ||
+          _tzdef != _originalTzdef ||
+          _buttonGpio != _originalButtonGpio ||
+          _buzzerGpio != _originalBuzzerGpio ||
+          _buzzerMode != _originalBuzzerMode;
 
       AppLogging.protocol(
-        'DeviceConfigScreen: Changes - nameChanged=$nameChanged, roleChanged=$roleChanged',
+        'DeviceConfigScreen: Changes - nameChanged=$nameChanged, '
+        'roleChanged=$roleChanged, deviceConfigChanged=$deviceConfigChanged',
       );
 
-      if (!nameChanged && !roleChanged) {
+      if (!nameChanged && !roleChanged && !deviceConfigChanged) {
         AppLogging.protocol('DeviceConfigScreen: No changes to save');
         if (mounted) {
           Navigator.pop(context);
@@ -249,13 +457,33 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
         return;
       }
 
-      // Use combined setOwnerConfig to send all changes in one message
-      // This prevents multiple reboots if both name and role changed
-      await protocol.setOwnerConfig(
-        longName: nameChanged ? _longNameController.text : null,
-        shortName: nameChanged ? _shortNameController.text : null,
-        role: roleChanged ? _selectedRole : null,
-      );
+      // Save name and role changes via setOwnerConfig
+      if (nameChanged || roleChanged) {
+        await protocol.setOwnerConfig(
+          longName: nameChanged ? _longNameController.text : null,
+          shortName: nameChanged ? _shortNameController.text : null,
+          role: roleChanged ? _selectedRole : null,
+        );
+      }
+
+      // Save device config changes
+      if (deviceConfigChanged) {
+        await protocol.setDeviceConfig(
+          role: _selectedRole ?? config_pbenum.Config_DeviceConfig_Role.CLIENT,
+          rebroadcastMode: _rebroadcastMode ?? 
+              config_pbenum.Config_DeviceConfig_RebroadcastMode.ALL,
+          serialEnabled: true, // Keep serial enabled by default
+          nodeInfoBroadcastSecs: _nodeInfoBroadcastSecs,
+          ledHeartbeatDisabled: _ledHeartbeatDisabled,
+          doubleTapAsButtonPress: _doubleTapAsButtonPress,
+          buttonGpio: _buttonGpio,
+          buzzerGpio: _buzzerGpio,
+          disableTripleClick: _disableTripleClick,
+          tzdef: _tzdef,
+          buzzerMode: _buzzerMode ?? 
+              config_pbenum.Config_DeviceConfig_BuzzerMode.ALL_ENABLED,
+        );
+      }
 
       AppLogging.protocol('DeviceConfigScreen: Config saved, device will reboot');
 
@@ -287,6 +515,24 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
     final nodes = ref.watch(nodesProvider);
     final myNode = myNodeNum != null ? nodes[myNodeNum] : null;
     final connectedDevice = ref.watch(connectedDeviceProvider);
+
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: context.background,
+        appBar: AppBar(
+          backgroundColor: context.background,
+          title: Text(
+            'Device Config',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
+            ),
+          ),
+        ),
+        body: const ScreenLoadingIndicator(),
+      );
+    }
 
     return Scaffold(
       backgroundColor: context.background,
@@ -501,6 +747,48 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
 
           const SizedBox(height: 32),
 
+          // Rebroadcast Mode Section
+          _buildSectionHeader('Rebroadcast Mode'),
+          _buildRebroadcastModeSelector(),
+
+          const SizedBox(height: 24),
+
+          // Node Info Broadcast Section
+          _buildSectionHeader('Node Info Broadcast'),
+          _buildNodeInfoBroadcastSetting(),
+
+          const SizedBox(height: 24),
+
+          // Button & Input Section
+          _buildSectionHeader('Button & Input'),
+          _buildButtonInputSettings(),
+
+          const SizedBox(height: 24),
+
+          // Buzzer Section
+          _buildSectionHeader('Buzzer'),
+          _buildBuzzerSettings(),
+
+          const SizedBox(height: 24),
+
+          // LED & Display Section
+          _buildSectionHeader('LED'),
+          _buildLedSettings(),
+
+          const SizedBox(height: 24),
+
+          // Timezone Section
+          _buildSectionHeader('Timezone'),
+          _buildTimezoneSettings(),
+
+          const SizedBox(height: 24),
+
+          // GPIO Section (Advanced)
+          _buildSectionHeader('GPIO (Advanced)'),
+          _buildGpioSettings(),
+
+          const SizedBox(height: 24),
+
           // Warning
           Container(
             padding: const EdgeInsets.all(16),
@@ -521,7 +809,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Device role determines how your node behaves in the mesh network.',
+                    'Changes to device configuration will cause the device to reboot.',
                     style: TextStyle(
                       fontSize: 13,
                       color: AppTheme.primaryBlue.withValues(alpha: 0.9),
@@ -533,6 +821,512 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
           ),
 
           const SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRebroadcastModeSelector() {
+    return Container(
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: context.border),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        child: Column(
+          children: rebroadcastModes.asMap().entries.map((entry) {
+            final index = entry.key;
+            final option = entry.value;
+            final isSelected = _rebroadcastMode == option.mode;
+
+            return Column(
+              children: [
+                InkWell(
+                  borderRadius: index == 0
+                      ? const BorderRadius.vertical(top: Radius.circular(12))
+                      : index == rebroadcastModes.length - 1
+                          ? const BorderRadius.vertical(bottom: Radius.circular(12))
+                          : BorderRadius.zero,
+                  onTap: () {
+                    setState(() => _rebroadcastMode = option.mode);
+                    _checkForChanges();
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: isSelected ? context.accentColor : context.border,
+                              width: 2,
+                            ),
+                            color: isSelected ? context.accentColor : Colors.transparent,
+                          ),
+                          child: isSelected
+                              ? const Icon(Icons.check, color: Colors.white, size: 16)
+                              : null,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                option.displayName,
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                                  color: isSelected ? context.textPrimary : context.textSecondary,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                option.description,
+                                style: TextStyle(fontSize: 12, color: context.textTertiary),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                if (index < rebroadcastModes.length - 1) _buildDivider(),
+              ],
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNodeInfoBroadcastSetting() {
+    return Container(
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: context.border),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.broadcast_on_personal, color: context.accentColor, size: 20),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Broadcast Interval',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: context.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'How often to broadcast node info (default: 15 min)',
+                      style: TextStyle(fontSize: 12, color: context.textTertiary),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            _nodeInfoBroadcastSecs == 0 
+                ? 'Disabled' 
+                : '${(_nodeInfoBroadcastSecs / 60).round()} minutes',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: context.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              activeTrackColor: context.accentColor,
+              inactiveTrackColor: context.border,
+              thumbColor: context.accentColor,
+              overlayColor: context.accentColor.withValues(alpha: 0.2),
+            ),
+            child: Slider(
+              value: _nodeInfoBroadcastSecs.toDouble(),
+              min: 0,
+              max: 3600, // 0 to 60 minutes
+              divisions: 60,
+              onChanged: (value) {
+                setState(() => _nodeInfoBroadcastSecs = value.round());
+                _checkForChanges();
+              },
+            ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Off', style: TextStyle(fontSize: 11, color: context.textTertiary)),
+              Text('60 min', style: TextStyle(fontSize: 11, color: context.textTertiary)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildButtonInputSettings() {
+    return Container(
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: context.border),
+      ),
+      child: Column(
+        children: [
+          _buildToggleRow(
+            icon: Icons.touch_app,
+            label: 'Double Tap as Button',
+            subtitle: 'Treat accelerometer double-tap as button press',
+            value: _doubleTapAsButtonPress,
+            onChanged: (value) {
+              setState(() => _doubleTapAsButtonPress = value);
+              _checkForChanges();
+            },
+          ),
+          _buildDivider(),
+          _buildToggleRow(
+            icon: Icons.touch_app_outlined,
+            label: 'Disable Triple Click',
+            subtitle: 'Disable triple-click to toggle GPS',
+            value: _disableTripleClick,
+            onChanged: (value) {
+              setState(() => _disableTripleClick = value);
+              _checkForChanges();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBuzzerSettings() {
+    return Container(
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: context.border),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        child: Column(
+          children: buzzerModes.asMap().entries.map((entry) {
+            final index = entry.key;
+            final option = entry.value;
+            final isSelected = _buzzerMode == option.mode;
+
+            return Column(
+              children: [
+                InkWell(
+                  borderRadius: index == 0
+                      ? const BorderRadius.vertical(top: Radius.circular(12))
+                      : index == buzzerModes.length - 1
+                          ? const BorderRadius.vertical(bottom: Radius.circular(12))
+                          : BorderRadius.zero,
+                  onTap: () {
+                    setState(() => _buzzerMode = option.mode);
+                    _checkForChanges();
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: isSelected ? context.accentColor : context.border,
+                              width: 2,
+                            ),
+                            color: isSelected ? context.accentColor : Colors.transparent,
+                          ),
+                          child: isSelected
+                              ? const Icon(Icons.check, color: Colors.white, size: 16)
+                              : null,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                option.displayName,
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                                  color: isSelected ? context.textPrimary : context.textSecondary,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                option.description,
+                                style: TextStyle(fontSize: 12, color: context.textTertiary),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                if (index < buzzerModes.length - 1) _buildDivider(),
+              ],
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLedSettings() {
+    return Container(
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: context.border),
+      ),
+      child: _buildToggleRow(
+        icon: Icons.lightbulb_outline,
+        label: 'Disable LED Heartbeat',
+        subtitle: 'Turn off the blinking status LED',
+        value: _ledHeartbeatDisabled,
+        onChanged: (value) {
+          setState(() => _ledHeartbeatDisabled = value);
+          _checkForChanges();
+        },
+      ),
+    );
+  }
+
+  Widget _buildTimezoneSettings() {
+    return Container(
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: context.border),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.schedule, color: context.accentColor, size: 20),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'POSIX Timezone',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: context.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'e.g. EST5EDT,M3.2.0,M11.1.0',
+                      style: TextStyle(fontSize: 12, color: context.textTertiary),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: TextEditingController(text: _tzdef),
+            style: TextStyle(fontSize: 14, color: context.textPrimary),
+            decoration: InputDecoration(
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              hintText: 'Leave empty for UTC',
+              hintStyle: TextStyle(color: context.textTertiary),
+              filled: true,
+              fillColor: context.background,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: context.border),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: context.border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: context.accentColor),
+              ),
+            ),
+            onChanged: (value) {
+              _tzdef = value;
+              _checkForChanges();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGpioSettings() {
+    return Container(
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: context.border),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Only change these if you know your hardware requires custom GPIO pins.',
+            style: TextStyle(fontSize: 12, color: context.textTertiary),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _buildGpioField(
+                  label: 'Button GPIO',
+                  value: _buttonGpio,
+                  onChanged: (value) {
+                    _buttonGpio = value;
+                    _checkForChanges();
+                  },
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildGpioField(
+                  label: 'Buzzer GPIO',
+                  value: _buzzerGpio,
+                  onChanged: (value) {
+                    _buzzerGpio = value;
+                    _checkForChanges();
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGpioField({
+    required String label,
+    required int value,
+    required ValueChanged<int> onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: context.textSecondary,
+          ),
+        ),
+        const SizedBox(height: 6),
+        TextField(
+          controller: TextEditingController(text: value == 0 ? '' : value.toString()),
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          style: TextStyle(fontSize: 14, color: context.textPrimary),
+          decoration: InputDecoration(
+            isDense: true,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            hintText: '0',
+            hintStyle: TextStyle(color: context.textTertiary),
+            filled: true,
+            fillColor: context.background,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: context.border),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: context.border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: context.accentColor),
+            ),
+          ),
+          onChanged: (text) {
+            onChanged(int.tryParse(text) ?? 0);
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildToggleRow({
+    required IconData icon,
+    required String label,
+    required String subtitle,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Icon(icon, color: context.accentColor, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: context.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: TextStyle(fontSize: 12, color: context.textTertiary),
+                ),
+              ],
+            ),
+          ),
+          Switch.adaptive(
+            value: value,
+            onChanged: onChanged,
+            activeColor: context.accentColor,
+          ),
         ],
       ),
     );
