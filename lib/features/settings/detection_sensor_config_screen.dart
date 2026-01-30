@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/logging.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
@@ -33,6 +34,7 @@ class _DetectionSensorConfigScreenState
 
   bool _isSaving = false;
   bool _isLoading = true;
+  bool _notificationsEnabled = false; // App-side notification preference
 
   final _nameController = TextEditingController();
   final _pinController = TextEditingController();
@@ -53,6 +55,13 @@ class _DetectionSensorConfigScreenState
   Future<void> _loadCurrentConfig() async {
     AppLogging.settings('[DetectionSensor] Loading config...');
     final protocol = ref.read(protocolServiceProvider);
+
+    // Load app-side notification preference
+    final prefs = await SharedPreferences.getInstance();
+    final notifEnabled = prefs.getBool('enableDetectionNotifications') ?? false;
+    if (mounted) {
+      setState(() => _notificationsEnabled = notifEnabled);
+    }
 
     // Only request from device if connected
     if (!protocol.isConnected) {
@@ -173,6 +182,12 @@ class _DetectionSensorConfigScreenState
                   // Timing settings
                   _buildSectionTitle('Timing'),
                   _buildTimingCard(),
+
+                  const SizedBox(height: 16),
+
+                  // Client options (app-side settings)
+                  _buildSectionTitle('Client Options'),
+                  _buildClientOptionsCard(),
                 ],
               ],
             ),
@@ -479,6 +494,45 @@ class _DetectionSensorConfigScreenState
                       : null,
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildClientOptionsCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          ListTile(
+            leading: Icon(
+              Icons.notifications_active,
+              color: _notificationsEnabled ? context.accentColor : context.textSecondary,
+            ),
+            title: Text(
+              'Enable Notifications',
+              style: TextStyle(color: context.textPrimary),
+            ),
+            subtitle: Text(
+              'Show notifications when sensor events are received',
+              style: TextStyle(color: context.textTertiary, fontSize: 12),
+            ),
+            trailing: ThemedSwitch(
+              value: _notificationsEnabled,
+              onChanged: (value) async {
+                setState(() => _notificationsEnabled = value);
+                // Save preference immediately
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.setBool('enableDetectionNotifications', value);
+                AppLogging.settings(
+                  '[DetectionSensor] Notifications ${value ? "enabled" : "disabled"}',
+                );
+              },
             ),
           ),
         ],

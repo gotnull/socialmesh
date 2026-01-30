@@ -321,6 +321,27 @@ class AutomationEngine {
     }
   }
 
+  /// Process a detection sensor event from the mesh
+  Future<void> processDetectionSensorEvent({
+    required int nodeNum,
+    required String sensorName,
+    required bool detected,
+  }) async {
+    AppLogging.automations(
+      'AutomationEngine: Detection sensor event from $nodeNum: $sensorName = $detected',
+    );
+
+    await _processEvent(
+      AutomationEvent(
+        type: TriggerType.detectionSensor,
+        nodeNum: nodeNum,
+        nodeName: _nodeNames[nodeNum] ?? 'Node ${nodeNum.toRadixString(16)}',
+        sensorName: sensorName,
+        sensorDetected: detected,
+      ),
+    );
+  }
+
   /// Process an automation event
   Future<void> _processEvent(AutomationEvent event) async {
     final automations = _repository.automations

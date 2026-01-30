@@ -130,6 +130,45 @@ class MeshSignalPacket {
   }
 }
 
+/// Detection sensor event received from DETECTION_SENSOR_APP portnum.
+/// Represents a motion/door/window sensor state change from the mesh.
+class DetectionSensorEvent {
+  final int senderNodeId;
+  final String sensorName;
+  final bool detected;
+  final DateTime receivedAt;
+
+  const DetectionSensorEvent({
+    required this.senderNodeId,
+    required this.sensorName,
+    required this.detected,
+    required this.receivedAt,
+  });
+
+  /// Parse from mesh packet payload (text format: "sensorName: state")
+  factory DetectionSensorEvent.fromPayload(int senderNodeId, List<int> payload) {
+    final text = utf8.decode(payload);
+    // Detection sensor format is typically "SensorName: Detected" or "SensorName: Clear"
+    final parts = text.split(':');
+    final sensorName = parts.isNotEmpty ? parts[0].trim() : 'Unknown Sensor';
+    final stateText = parts.length > 1 ? parts[1].trim().toLowerCase() : '';
+    final detected = stateText.contains('detect') ||
+        stateText.contains('trigger') ||
+        stateText.contains('motion') ||
+        stateText.contains('open') ||
+        stateText == '1' ||
+        stateText == 'true' ||
+        stateText == 'high';
+
+    return DetectionSensorEvent(
+      senderNodeId: senderNodeId,
+      sensorName: sensorName,
+      detected: detected,
+      receivedAt: DateTime.now(),
+    );
+  }
+}
+
 /// Debug flags to control verbose logging
 class ProtocolDebugFlags {
   /// Log RSSI polling updates
@@ -203,6 +242,7 @@ class ProtocolService {
   _cannedMessageConfigController;
   final StreamController<pb.ClientNotification> _clientNotificationController;
   final StreamController<pb.User> _userConfigController;
+  final StreamController<DetectionSensorEvent> _detectionSensorEventController;
 
   StreamSubscription<List<int>>? _dataSubscription;
   StreamSubscription<DeviceConnectionState>? _transportStateSubscription;
@@ -322,6 +362,8 @@ class ProtocolService {
       _clientNotificationController =
           StreamController<pb.ClientNotification>.broadcast(),
       _userConfigController = StreamController<pb.User>.broadcast(),
+      _detectionSensorEventController =
+          StreamController<DetectionSensorEvent>.broadcast(),
       _dedupeStore = dedupeStore ?? MeshPacketDedupeStore();
 
   /// Set the BLE device name for hardware model inference
@@ -360,6 +402,10 @@ class ProtocolService {
 
   /// Stream of received mesh signal packets (PRIVATE_APP portnum)
   Stream<MeshSignalPacket> get signalStream => _signalController.stream;
+
+  /// Stream of detection sensor events (DETECTION_SENSOR_APP portnum)
+  Stream<DetectionSensorEvent> get detectionSensorEventStream =>
+      _detectionSensorEventController.stream;
 
   /// Stream of client notifications (firmware errors, warnings, config validation)
   Stream<pb.ClientNotification> get clientNotificationStream =>
@@ -915,6 +961,9 @@ class ProtocolService {
         case pn.PortNum.PRIVATE_APP:
           _handleSignalMessage(packet, data);
           break;
+        case pn.PortNum.DETECTION_SENSOR_APP:
+          _handleDetectionSensorMessage(packet, data);
+          break;
         default:
           AppLogging.protocol(
             'Received message with portnum: ${data.portnum} (${data.portnum.value})',
@@ -967,6 +1016,27 @@ class ProtocolService {
       _signalController.add(signalPacket);
     } catch (e) {
       AppLogging.signals('Failed to parse signal packet: $e');
+    }
+  }
+
+  /// Handle detection sensor events (DETECTION_SENSOR_APP portnum)
+  void _handleDetectionSensorMessage(pb.MeshPacket packet, pb.Data data) {
+    try {
+      AppLogging.protocol(
+        'RX_DETECTION_SENSOR from=${packet.from.toRadixString(16)} '
+        'bytes=${data.payload.length}',
+      );
+
+      final event = DetectionSensorEvent.fromPayload(packet.from, data.payload);
+
+      AppLogging.protocol(
+        'Detection sensor event: ${event.sensorName} = '
+        '${event.detected ? "DETECTED" : "CLEAR"} from !${packet.from.toRadixString(16)}',
+      );
+
+      _detectionSensorEventController.add(event);
+    } catch (e) {
+      AppLogging.protocol('Failed to parse detection sensor message: $e');
     }
   }
 

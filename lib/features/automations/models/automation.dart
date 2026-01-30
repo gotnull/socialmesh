@@ -106,6 +106,7 @@ enum TriggerType {
   scheduled,
   signalWeak,
   channelActivity,
+  detectionSensor, // Detection sensor triggered (motion, door, etc.)
   manual, // Triggered manually via Siri Shortcuts or UI
 }
 
@@ -138,6 +139,8 @@ extension TriggerTypeExtension on TriggerType {
         return 'Signal strength drops';
       case TriggerType.channelActivity:
         return 'Activity on channel';
+      case TriggerType.detectionSensor:
+        return 'Detection sensor triggered';
       case TriggerType.manual:
         return 'Manual trigger';
     }
@@ -171,6 +174,8 @@ extension TriggerTypeExtension on TriggerType {
         return Icons.signal_cellular_alt;
       case TriggerType.channelActivity:
         return Icons.forum;
+      case TriggerType.detectionSensor:
+        return Icons.sensors;
       case TriggerType.manual:
         return Icons.play_arrow;
     }
@@ -189,6 +194,8 @@ extension TriggerTypeExtension on TriggerType {
       case TriggerType.messageContains:
       case TriggerType.channelActivity:
         return 'Messages';
+      case TriggerType.detectionSensor:
+        return 'Sensors';
       case TriggerType.positionChanged:
       case TriggerType.geofenceEnter:
       case TriggerType.geofenceExit:
@@ -231,6 +238,8 @@ extension TriggerTypeExtension on TriggerType {
         return 'Triggered when signal strength drops';
       case TriggerType.channelActivity:
         return 'Triggered when activity on channel';
+      case TriggerType.detectionSensor:
+        return 'Triggered when detection sensor activates';
       case TriggerType.manual:
         return 'Triggered manually via Shortcuts or UI';
     }
@@ -265,6 +274,8 @@ extension TriggerTypeExtension on TriggerType {
         return '{{node.name}} signal weak';
       case TriggerType.channelActivity:
         return 'Activity on {{channel.name}}: {{message}}';
+      case TriggerType.detectionSensor:
+        return '{{sensor.name}}: {{sensor.state}}';
       case TriggerType.manual:
         return 'Automation triggered manually';
     }
@@ -647,6 +658,8 @@ class AutomationEvent {
   final String? messageText;
   final int? channelIndex;
   final int? snr;
+  final String? sensorName;
+  final bool? sensorDetected;
   final DateTime timestamp;
 
   AutomationEvent({
@@ -659,6 +672,8 @@ class AutomationEvent {
     this.messageText,
     this.channelIndex,
     this.snr,
+    this.sensorName,
+    this.sensorDetected,
     DateTime? timestamp,
   }) : timestamp = timestamp ?? DateTime.now();
 }

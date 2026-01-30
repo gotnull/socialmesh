@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../core/widgets/animations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../core/logging.dart';
 import '../../core/theme.dart';
@@ -513,9 +514,201 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
             'Generate a new key pair (public key will be automatically derived)',
             style: TextStyle(color: context.textSecondary, fontSize: 12),
           ),
+
+          Divider(height: 24, color: context.border),
+
+          // Key Backup Section
+          Row(
+            children: [
+              Icon(Icons.cloud_upload, color: context.textSecondary, size: 20),
+              SizedBox(width: 8),
+              Text(
+                'Key Backup',
+                style: TextStyle(
+                  color: context.textPrimary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Backup your private key to secure storage for recovery. Keys are stored in the device keychain with iCloud sync enabled.',
+            style: TextStyle(color: context.textSecondary, fontSize: 12),
+          ),
+          SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _privateKey.isEmpty ? null : _backupPrivateKey,
+                  icon: Icon(Icons.backup, size: 18),
+                  label: Text('Backup'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: context.accentColor,
+                    side: BorderSide(color: context.accentColor.withValues(alpha: 0.5)),
+                  ),
+                ),
+              ),
+              SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _restorePrivateKey,
+                  icon: Icon(Icons.restore, size: 18),
+                  label: Text('Restore'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: context.textSecondary,
+                    side: BorderSide(color: context.border),
+                  ),
+                ),
+              ),
+              SizedBox(width: 8),
+              IconButton(
+                onPressed: _deleteBackup,
+                icon: Icon(Icons.delete_outline, size: 20),
+                color: AppTheme.errorRed,
+                tooltip: 'Delete backup',
+              ),
+            ],
+          ),
         ],
       ),
     );
+  }
+
+  /// Backup private key to secure storage
+  Future<void> _backupPrivateKey() async {
+    if (_privateKey.isEmpty) return;
+
+    try {
+      final nodeNum = ref.read(protocolServiceProvider).myNodeNum;
+      if (nodeNum == null) {
+        if (mounted) showErrorSnackBar(context, 'No connected device');
+        return;
+      }
+
+      const storage = FlutterSecureStorage(
+        iOptions: IOSOptions(
+          accessibility: KeychainAccessibility.first_unlock,
+          synchronizable: true, // Enable iCloud Keychain sync
+        ),
+        aOptions: AndroidOptions(encryptedSharedPreferences: true),
+      );
+
+      await storage.write(
+        key: 'PrivateKeyNode$nodeNum',
+        value: _privateKey,
+      );
+
+      AppLogging.settings('Backed up private key for node $nodeNum');
+      if (mounted) {
+        showSuccessSnackBar(context, 'Private key backed up to secure storage');
+      }
+    } catch (e) {
+      AppLogging.settings('Failed to backup private key: $e');
+      if (mounted) {
+        showErrorSnackBar(context, 'Failed to backup key: $e');
+      }
+    }
+  }
+
+  /// Restore private key from secure storage
+  Future<void> _restorePrivateKey() async {
+    try {
+      final nodeNum = ref.read(protocolServiceProvider).myNodeNum;
+      if (nodeNum == null) {
+        if (mounted) showErrorSnackBar(context, 'No connected device');
+        return;
+      }
+
+      const storage = FlutterSecureStorage(
+        iOptions: IOSOptions(
+          accessibility: KeychainAccessibility.first_unlock,
+          synchronizable: true,
+        ),
+        aOptions: AndroidOptions(encryptedSharedPreferences: true),
+      );
+
+      final storedKey = await storage.read(key: 'PrivateKeyNode$nodeNum');
+      if (storedKey == null) {
+        if (mounted) {
+          showErrorSnackBar(context, 'No backup found for this device');
+        }
+        return;
+      }
+
+      setState(() {
+        _privateKey = storedKey;
+        _privateKeyVisible = true;
+      });
+      await _recalculatePublicKey();
+
+      AppLogging.settings('Restored private key for node $nodeNum');
+      if (mounted) {
+        showSuccessSnackBar(context, 'Private key restored from backup');
+      }
+    } catch (e) {
+      AppLogging.settings('Failed to restore private key: $e');
+      if (mounted) {
+        showErrorSnackBar(context, 'Failed to restore key: $e');
+      }
+    }
+  }
+
+  /// Delete backed up private key
+  Future<void> _deleteBackup() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: context.surface,
+        title: Text('Delete Backup?', style: TextStyle(color: context.textPrimary)),
+        content: Text(
+          'This will permanently delete the backed up private key from secure storage. This cannot be undone.',
+          style: TextStyle(color: context.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: AppTheme.errorRed),
+            child: Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      final nodeNum = ref.read(protocolServiceProvider).myNodeNum;
+      if (nodeNum == null) {
+        if (mounted) showErrorSnackBar(context, 'No connected device');
+        return;
+      }
+
+      const storage = FlutterSecureStorage(
+        iOptions: IOSOptions(
+          accessibility: KeychainAccessibility.first_unlock,
+          synchronizable: true,
+        ),
+        aOptions: AndroidOptions(encryptedSharedPreferences: true),
+      );
+
+      await storage.delete(key: 'PrivateKeyNode$nodeNum');
+
+      AppLogging.settings('Deleted private key backup for node $nodeNum');
+      if (mounted) {
+        showSuccessSnackBar(context, 'Backup deleted');
+      }
+    } catch (e) {
+      AppLogging.settings('Failed to delete backup: $e');
+      if (mounted) {
+        showErrorSnackBar(context, 'Failed to delete backup: $e');
+      }
+    }
   }
 
   Widget _buildAdminKeysSection() {

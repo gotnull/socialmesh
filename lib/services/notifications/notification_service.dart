@@ -358,6 +358,68 @@ class NotificationService {
     );
   }
 
+  /// Show notification for detection sensor event
+  Future<void> showDetectionSensorNotification({
+    required String sensorName,
+    required bool detected,
+    required int nodeNum,
+    String? nodeName,
+    bool playSound = true,
+    bool vibrate = true,
+  }) async {
+    if (!_initialized) {
+      AppLogging.notifications(
+        '🔔 NotificationService not initialized, skipping detection notification',
+      );
+      return;
+    }
+
+    final displayName = nodeName ?? '!${nodeNum.toRadixString(16)}';
+    final state = detected ? 'Triggered' : 'Clear';
+
+    final androidDetails = AndroidNotificationDetails(
+      'detection_sensor',
+      'Detection Sensors',
+      channelDescription: 'Notifications for detection sensor events',
+      importance: Importance.high,
+      priority: Priority.high,
+      icon: '@mipmap/ic_launcher',
+      groupKey: 'detection_sensors',
+      playSound: playSound,
+      enableVibration: vibrate,
+      color: detected ? const Color(0xFFFF6B6B) : const Color(0xFF4ECB71),
+    );
+
+    final iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: playSound,
+      threadIdentifier: 'detection_sensors',
+    );
+
+    final notificationDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+      macOS: iosDetails,
+    );
+
+    // Use combination of node and timestamp for unique ID
+    final notificationId =
+        (nodeNum + DateTime.now().millisecondsSinceEpoch) % 100000000;
+
+    await _notifications.show(
+      notificationId,
+      '$sensorName: $state',
+      'From $displayName',
+      notificationDetails,
+      payload: 'detection:$nodeNum:$detected',
+    );
+
+    AppLogging.notifications(
+      '🔔 Showed detection sensor notification: $sensorName = $state',
+    );
+  }
+
   /// Show notification for new message
   Future<void> showNewMessageNotification({
     required String senderName,

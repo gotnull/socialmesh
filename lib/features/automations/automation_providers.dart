@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socialmesh/core/logging.dart';
 
 import '../../models/mesh_models.dart';
@@ -8,6 +9,7 @@ import '../../providers/app_providers.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/profile_providers.dart';
 import '../../providers/glyph_provider.dart';
+import '../../services/notifications/notification_service.dart';
 import 'automation_debug_service.dart';
 import 'automation_engine.dart';
 import 'automation_repository.dart';
@@ -73,8 +75,38 @@ final automationEngineProvider = Provider<AutomationEngine>((ref) {
     },
   );
 
+  // Subscribe to detection sensor events and forward to automation engine
+  final detectionSensorSubscription =
+      protocol.detectionSensorEventStream.listen((event) async {
+    // Forward to automation engine
+    engine.processDetectionSensorEvent(
+      nodeNum: event.senderNodeId,
+      sensorName: event.sensorName,
+      detected: event.detected,
+    );
+
+    // Check if notifications are enabled and show one
+    final prefs = await SharedPreferences.getInstance();
+    final notificationsEnabled =
+        prefs.getBool('enableDetectionNotifications') ?? false;
+
+    if (notificationsEnabled) {
+      // Get node name for display
+      final nodes = ref.read(nodesProvider);
+      final nodeName = nodes[event.senderNodeId]?.displayName;
+
+      await NotificationService().showDetectionSensorNotification(
+        sensorName: event.sensorName,
+        detected: event.detected,
+        nodeNum: event.senderNodeId,
+        nodeName: nodeName,
+      );
+    }
+  });
+
   ref.onDispose(() {
     engine.stop();
+    detectionSensorSubscription.cancel();
   });
 
   return engine;
