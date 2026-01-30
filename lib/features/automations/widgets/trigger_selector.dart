@@ -1059,6 +1059,18 @@ class _TriggerSelectorState extends State<TriggerSelector> {
     );
   }
 
+  /// Category order for consistent display
+  static const _categoryOrder = [
+    'Node Status',
+    'Battery',
+    'Messages',
+    'Location',
+    'Time',
+    'Signal',
+    'Sensors',
+    'Manual',
+  ];
+
   List<Widget> _buildTriggerList(BuildContext context) {
     final grouped = <String, List<TriggerType>>{};
     for (final type in TriggerType.values) {
@@ -1066,12 +1078,15 @@ class _TriggerSelectorState extends State<TriggerSelector> {
     }
 
     final widgets = <Widget>[];
-    for (final entry in grouped.entries) {
+    for (final category in _categoryOrder) {
+      final triggers = grouped[category];
+      if (triggers == null || triggers.isEmpty) continue;
+
       widgets.add(
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
           child: Text(
-            entry.key,
+            category,
             style: const TextStyle(
               color: Colors.grey,
               fontWeight: FontWeight.w600,
@@ -1081,7 +1096,7 @@ class _TriggerSelectorState extends State<TriggerSelector> {
         ),
       );
 
-      for (final type in entry.value) {
+      for (final type in triggers) {
         widgets.add(
           ListTile(
             leading: Container(
