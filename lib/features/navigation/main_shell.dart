@@ -21,6 +21,7 @@ import '../../providers/signal_providers.dart';
 import '../../providers/social_providers.dart';
 import '../../providers/subscription_providers.dart';
 import '../../services/haptic_service.dart';
+import '../../services/notifications/notification_service.dart';
 import '../../utils/snackbar.dart';
 import '../messaging/messages_container_screen.dart';
 import '../nodes/nodes_screen.dart';
@@ -52,6 +53,7 @@ import '../social/screens/reported_content_screen.dart';
 import '../settings/admin_follow_requests_screen.dart';
 import '../signals/signals.dart';
 import '../profile/profile_screen.dart';
+import '../debug/device_logs_screen.dart';
 
 /// Combined admin notification count provider
 /// Uses FutureProvider to properly handle the async stream states
@@ -352,6 +354,13 @@ class _MainShellState extends ConsumerState<MainShell> {
       label: 'Mesh Health',
       screen: const MeshHealthDashboard(),
       iconColor: Colors.pink.shade400,
+      requiresConnection: true,
+    ),
+    _DrawerMenuItem(
+      icon: Icons.terminal,
+      label: 'Device Logs',
+      screen: const DeviceLogsScreen(),
+      iconColor: Colors.grey.shade500,
       requiresConnection: true,
     ),
 
@@ -936,13 +945,27 @@ class _MainShellState extends ConsumerState<MainShell> {
       next.whenData((notification) {
         final level = notification.level;
         final message = notification.message;
+        final levelName = level.name;
 
         // Show appropriate snackbar based on severity level
         if (level == LogRecord_Level.ERROR ||
             level == LogRecord_Level.CRITICAL) {
           showErrorSnackBar(context, 'Firmware: $message');
+          // Also show a local push notification for critical errors
+          // This ensures user sees the error even if app is backgrounded
+          NotificationService().showFirmwareNotification(
+            title: 'Meshtastic Device Error',
+            message: message,
+            level: levelName,
+          );
         } else if (level == LogRecord_Level.WARNING) {
           showWarningSnackBar(context, 'Firmware: $message');
+          // Push notification for warnings too - they're important
+          NotificationService().showFirmwareNotification(
+            title: 'Meshtastic Device Warning',
+            message: message,
+            level: levelName,
+          );
         } else if (level == LogRecord_Level.INFO) {
           showInfoSnackBar(context, 'Firmware: $message');
         }

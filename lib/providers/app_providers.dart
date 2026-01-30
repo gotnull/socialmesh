@@ -1235,6 +1235,20 @@ final clientNotificationStreamProvider =
       return protocol.clientNotificationStream;
     });
 
+/// Stream provider for device firmware debug logs (from LogRadio BLE characteristic).
+/// Only available when connected via BLE.
+final deviceLogStreamProvider = StreamProvider<mesh_pb.LogRecord>((ref) {
+  final transport = ref.watch(transportProvider);
+
+  // Device logs are only available via BLE transport
+  if (transport is BleTransport) {
+    return transport.deviceLogStream;
+  }
+
+  // Return an empty stream for non-BLE transports
+  return const Stream.empty();
+});
+
 // Location service - provides phone GPS to mesh devices
 // Like iOS Meshtastic app, sends phone GPS coordinates to mesh
 // when device doesn't have its own GPS hardware

@@ -4,19 +4,23 @@ import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 import '../../core/logging.dart';
 import '../../core/transport.dart';
+import '../../generated/meshtastic/mesh.pb.dart' as pb;
 
 /// BLE implementation of DeviceTransport
 class BleTransport implements DeviceTransport {
   final StreamController<DeviceConnectionState> _stateController;
   final StreamController<List<int>> _dataController;
+  final StreamController<pb.LogRecord> _deviceLogController;
 
   BluetoothDevice? _device;
   BluetoothCharacteristic? _txCharacteristic;
   BluetoothCharacteristic? _rxCharacteristic;
   BluetoothCharacteristic? _fromNumCharacteristic;
+  BluetoothCharacteristic? _logRadioCharacteristic;
   StreamSubscription? _deviceStateSubscription;
   StreamSubscription? _characteristicSubscription;
   StreamSubscription? _fromNumSubscription;
+  StreamSubscription? _logRadioSubscription;
   Timer? _pollingTimer;
 
   DeviceConnectionState _state = DeviceConnectionState.disconnected;
@@ -27,6 +31,8 @@ class BleTransport implements DeviceTransport {
   static const String _toRadioUuid = 'f75c76d2-129e-4dad-a1dd-7866124401e7';
   static const String _fromRadioUuid = '2c55e69e-4993-11ed-b878-0242ac120002';
   static const String _fromNumUuid = 'ed9da18c-a800-4f66-a670-aa7547e34453';
+  // LogRadio characteristic - streams LogRecord protobufs from device firmware
+  static const String _logRadioUuid = '5a3d6e49-06e6-4423-9944-e9de8cdf9547';
 
   // Device Information Service UUIDs (standard BLE)
   static const String _deviceInfoServiceUuid = '180a';
@@ -47,10 +53,14 @@ class BleTransport implements DeviceTransport {
 
   BleTransport()
     : _stateController = StreamController<DeviceConnectionState>.broadcast(),
-      _dataController = StreamController<List<int>>.broadcast();
+      _dataController = StreamController<List<int>>.broadcast(),
+      _deviceLogController = StreamController<pb.LogRecord>.broadcast();
 
   @override
   TransportType get type => TransportType.ble;
+
+  /// Stream of device firmware log records (from LogRadio BLE characteristic)
+  Stream<pb.LogRecord> get deviceLogStream => _deviceLogController.stream;
 
   @override
   bool get requiresFraming => false; // BLE uses raw protobufs, no framing
@@ -369,7 +379,9 @@ class BleTransport implements DeviceTransport {
         license: License.free,
         autoConnect: false,
         mtu: null, // Skip auto MTU request - we'll do it manually with retry
-        timeout: const Duration(seconds: 15), // Give device more time to stabilize
+        timeout: const Duration(
+          seconds: 15,
+        ), // Give device more time to stabilize
       );
 
       // Longer delay to let connection fully stabilize before ANY operations
@@ -473,6 +485,9 @@ class BleTransport implements DeviceTransport {
         } else if (uuid == _fromNumUuid.toLowerCase()) {
           _fromNumCharacteristic = characteristic;
           AppLogging.ble('Found fromNum characteristic');
+        } else if (uuid == _logRadioUuid.toLowerCase()) {
+          _logRadioCharacteristic = characteristic;
+          AppLogging.ble('Found logRadio characteristic (device logs)');
         }
       }
 
@@ -628,6 +643,9 @@ class BleTransport implements DeviceTransport {
         },
       );
       AppLogging.ble('fromNum notifications enabled');
+
+      // Subscribe to logRadio for device firmware debug logs
+      await _subscribeToLogRadio();
     } catch (e) {
       AppLogging.ble('⚠️ Error enabling notifications: $e');
       if (_isAuthenticationError(e)) {
@@ -663,6 +681,48 @@ class BleTransport implements DeviceTransport {
         AppLogging.ble('⚠️ Polling error: $e');
       }
     });
+  }
+
+  /// Subscribe to the LogRadio characteristic for device firmware debug logs
+  Future<void> _subscribeToLogRadio() async {
+    if (_logRadioCharacteristic == null) {
+      AppLogging.ble('⚠️ logRadio characteristic not found, skipping');
+      return;
+    }
+
+    try {
+      final canNotify = _logRadioCharacteristic!.properties.notify;
+      if (!canNotify) {
+        AppLogging.ble('⚠️ logRadio does not support notifications');
+        return;
+      }
+
+      await _logRadioCharacteristic!.setNotifyValue(true);
+      AppLogging.ble('BLE_NOTIFY_SUBSCRIBED logRadio');
+
+      _logRadioSubscription = _logRadioCharacteristic!.lastValueStream.listen(
+        (value) {
+          if (value.isEmpty) return;
+
+          try {
+            // Parse the LogRecord protobuf
+            final logRecord = pb.LogRecord.fromBuffer(value);
+            AppLogging.ble(
+              'DEVICE_LOG [${logRecord.level.name}] ${logRecord.source}: ${logRecord.message}',
+            );
+            _deviceLogController.add(logRecord);
+          } catch (e) {
+            AppLogging.ble('⚠️ Error parsing LogRecord: $e');
+          }
+        },
+        onError: (error) {
+          AppLogging.ble('⚠️ logRadio error: $error');
+        },
+      );
+      AppLogging.ble('logRadio notifications enabled (device logs)');
+    } catch (e) {
+      AppLogging.ble('⚠️ Error enabling logRadio notifications: $e');
+    }
   }
 
   /// Track consecutive auth errors for polling
@@ -718,6 +778,10 @@ class BleTransport implements DeviceTransport {
         await _fromNumSubscription?.cancel();
         AppLogging.ble('BLE_NOTIFY_UNSUBSCRIBED fromNum');
       }
+      if (_logRadioSubscription != null) {
+        await _logRadioSubscription?.cancel();
+        AppLogging.ble('BLE_NOTIFY_UNSUBSCRIBED logRadio');
+      }
       await _deviceStateSubscription?.cancel();
 
       if (_device != null) {
@@ -731,9 +795,11 @@ class BleTransport implements DeviceTransport {
       _device = null;
       _txCharacteristic = null;
       _rxCharacteristic = null;
+      _logRadioCharacteristic = null;
       _characteristicSubscription = null;
       _deviceStateSubscription = null;
       _fromNumSubscription = null;
+      _logRadioSubscription = null;
       _consecutiveAuthErrors = 0;
 
       if (!wasDisconnected) {
@@ -819,5 +885,6 @@ class BleTransport implements DeviceTransport {
     await disconnect();
     await _stateController.close();
     await _dataController.close();
+    await _deviceLogController.close();
   }
 }

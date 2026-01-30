@@ -1,6 +1,7 @@
 import '../../core/logging.dart';
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui' show Color;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../../models/mesh_models.dart';
 
@@ -287,6 +288,74 @@ class NotificationService {
     );
 
     AppLogging.notifications('🔔 Showed notification for node: $nodeName');
+  }
+
+  /// Show notification for firmware alert (errors, warnings from device)
+  /// These are important notifications that should be shown even when app is in background
+  Future<void> showFirmwareNotification({
+    required String title,
+    required String message,
+    required String level,
+    bool playSound = true,
+    bool vibrate = true,
+  }) async {
+    if (!_initialized) {
+      AppLogging.notifications(
+        '🔔 NotificationService not initialized, skipping firmware notification',
+      );
+      return;
+    }
+
+    // Determine urgency based on level
+    final isError = level == 'ERROR' || level == 'CRITICAL';
+    final isWarning = level == 'WARNING';
+
+    final androidDetails = AndroidNotificationDetails(
+      'firmware_alerts',
+      'Firmware Alerts',
+      channelDescription: 'Important notifications from your Meshtastic device',
+      importance: isError ? Importance.max : Importance.high,
+      priority: isError ? Priority.max : Priority.high,
+      icon: '@mipmap/ic_launcher',
+      groupKey: 'firmware_alerts',
+      playSound: playSound,
+      enableVibration: vibrate,
+      // Use different colors for different severity levels
+      color: isError
+          ? const Color(0xFFE53935) // Red for errors
+          : isWarning
+          ? const Color(0xFFFFA000) // Amber for warnings
+          : const Color(0xFF1E88E5), // Blue for info
+    );
+
+    final iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: playSound,
+      // Add threadIdentifier for grouping
+      threadIdentifier: 'firmware_alerts',
+    );
+
+    final notificationDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+      macOS: iosDetails,
+    );
+
+    // Use timestamp-based ID to avoid collision
+    final notificationId = DateTime.now().millisecondsSinceEpoch % 100000000;
+
+    await _notifications.show(
+      notificationId,
+      title,
+      message,
+      notificationDetails,
+      payload: 'firmware:$level',
+    );
+
+    AppLogging.notifications(
+      '🔔 Showed firmware notification: [$level] $message',
+    );
   }
 
   /// Show notification for new message
