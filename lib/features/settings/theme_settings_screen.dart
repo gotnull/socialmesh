@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
-import '../../core/widgets/verified_badge.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/profile_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
@@ -243,13 +242,6 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
                             : const SizedBox.shrink(key: ValueKey('empty')),
                       ),
                     ),
-                    // Verified badge for gold color
-                    if (isGold && !isLocked)
-                      const Positioned(
-                        top: -4,
-                        right: -4,
-                        child: SimpleVerifiedBadge(size: 14, animate: false),
-                      ),
                   ],
                 ),
               ),
