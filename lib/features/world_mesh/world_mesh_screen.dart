@@ -899,13 +899,21 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                   highlight: hasFilters,
                 ),
                 const SizedBox(width: 16),
-                _buildStatItem(theme, Icons.cloud_done, state.nodeCount, 'total'),
+                _buildStatItem(
+                  theme,
+                  Icons.cloud_done,
+                  state.nodeCount,
+                  'total',
+                ),
                 const Spacer(),
                 if (state.lastUpdated != null)
                   GestureDetector(
                     onTap: () {
                       ref.read(worldMeshMapProvider.notifier).forceRefresh();
-                      showInfoSnackBar(context, 'Refreshing world mesh data...');
+                      showInfoSnackBar(
+                        context,
+                        'Refreshing world mesh data...',
+                      );
                     },
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -916,8 +924,9 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                             child: Icon(
                               Icons.cloud_off,
                               size: 12,
-                              color:
-                                  theme.colorScheme.error.withValues(alpha: 0.7),
+                              color: theme.colorScheme.error.withValues(
+                                alpha: 0.7,
+                              ),
                             ),
                           ),
                         Text(
@@ -934,8 +943,9 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                         Icon(
                           Icons.refresh,
                           size: 14,
-                          color:
-                              theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.4,
+                          ),
                         ),
                       ],
                     ),

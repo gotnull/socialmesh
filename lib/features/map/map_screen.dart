@@ -288,16 +288,12 @@ class _MapScreenState extends ConsumerState<MapScreen>
         break;
       case NodeFilter.active:
         filtered = filtered
-            .where(
-              (n) => presenceConfidenceFor(presenceMap, n.node).isActive,
-            )
+            .where((n) => presenceConfidenceFor(presenceMap, n.node).isActive)
             .toList();
         break;
       case NodeFilter.inactive:
         filtered = filtered
-            .where(
-              (n) => presenceConfidenceFor(presenceMap, n.node).isInactive,
-            )
+            .where((n) => presenceConfidenceFor(presenceMap, n.node).isInactive)
             .toList();
         break;
       case NodeFilter.withGps:
@@ -1171,15 +1167,20 @@ class _MapScreenState extends ConsumerState<MapScreen>
                         left: 8,
                         bottom: 8,
                         child: GestureDetector(
-                          onTap: () => launchUrl(Uri.parse(
-                            _mapStyle == MapTileStyle.satellite
-                                ? 'https://www.esri.com'
-                                : _mapStyle == MapTileStyle.terrain
-                                    ? 'https://opentopomap.org'
-                                    : 'https://carto.com/attributions',
-                          )),
+                          onTap: () => launchUrl(
+                            Uri.parse(
+                              _mapStyle == MapTileStyle.satellite
+                                  ? 'https://www.esri.com'
+                                  : _mapStyle == MapTileStyle.terrain
+                                  ? 'https://opentopomap.org'
+                                  : 'https://carto.com/attributions',
+                            ),
+                          ),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 3,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.black.withValues(alpha: 0.5),
                               borderRadius: BorderRadius.circular(4),
@@ -1188,8 +1189,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
                               _mapStyle == MapTileStyle.satellite
                                   ? '© Esri'
                                   : _mapStyle == MapTileStyle.terrain
-                                      ? '© OpenTopoMap © OSM'
-                                      : '© OSM © CARTO',
+                                  ? '© OpenTopoMap © OSM'
+                                  : '© OSM © CARTO',
                               style: const TextStyle(
                                 color: Colors.white70,
                                 fontSize: 9,
@@ -2263,10 +2264,7 @@ class _NodeListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final node = nodeWithPos.node;
     final statusColor = _presenceColor(context, presence);
-    final statusText = presenceStatusText(
-      presence,
-      lastHeardAge,
-    );
+    final statusText = presenceStatusText(presence, lastHeardAge);
     final baseColor = isMyNode
         ? context.accentColor
         : _presenceColor(context, presence);
@@ -2355,11 +2353,11 @@ class _NodeListItem extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
-                                color: isSelected
-                                    ? Colors.white
-                                    : (presence.isActive
-                                          ? context.textPrimary
-                                          : context.textSecondary),
+                              color: isSelected
+                                  ? Colors.white
+                                  : (presence.isActive
+                                        ? context.textPrimary
+                                        : context.textSecondary),
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -2406,10 +2404,7 @@ class _NodeListItem extends StatelessWidget {
                           message: kPresenceInferenceTooltip,
                           child: Text(
                             statusText,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: statusColor,
-                            ),
+                            style: TextStyle(fontSize: 11, color: statusColor),
                           ),
                         ),
                         if (nodeWithPos.isStale) ...[
