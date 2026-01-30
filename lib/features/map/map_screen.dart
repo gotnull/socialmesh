@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/map_config.dart';
@@ -2513,7 +2514,7 @@ class _FilterBar extends StatelessWidget {
               ),
               const Spacer(),
               Text(
-                '$filteredCount / $totalCount',
+                '${NumberFormat.decimalPattern().format(filteredCount)} / ${NumberFormat.decimalPattern().format(totalCount)}',
                 style: TextStyle(fontSize: 12, color: context.textTertiary),
               ),
             ],

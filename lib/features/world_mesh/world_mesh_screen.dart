@@ -294,11 +294,11 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
             ],
           ),
           body: meshMapState.when(
-            loading: () => Center(child: LoadingIndicator(size: 100)),
+            loading: () => Center(child: LoadingIndicator(size: 32)),
             error: (error, _) => _buildErrorState(theme, error.toString()),
             data: (state) {
               if (state.isLoading && state.nodes.isEmpty) {
-                return Center(child: LoadingIndicator(size: 48));
+                return Center(child: LoadingIndicator(size: 32));
               }
               if (state.error != null && state.nodes.isEmpty) {
                 return _buildErrorState(theme, state.error!);

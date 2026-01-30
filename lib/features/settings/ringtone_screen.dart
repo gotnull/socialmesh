@@ -1138,45 +1138,26 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
             icon: Icon(Icons.help_outline, color: context.textSecondary),
             tooltip: 'RTTTL Help',
           ),
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: TextButton(
-              // Disable the button when premium is required and user doesn't have it
-              onPressed: _saving || needsPremiumForSave
-                  ? (needsPremiumForSave
-                        ? () => showPremiumInfoSheet(
-                            context: context,
-                            ref: ref,
-                            feature: PremiumFeature.customRingtones,
-                          )
-                        : null)
-                  : _saveRingtone,
-              child: _saving
-                  ? LoadingIndicator(size: 20)
-                  : Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (needsPremiumForSave) ...[
-                          Icon(
-                            Icons.lock,
-                            size: 14,
-                            color: context.textSecondary,
-                          ),
-                          const SizedBox(width: 4),
-                        ],
-                        Text(
-                          'Save',
-                          style: TextStyle(
-                            color: needsPremiumForSave
-                                ? context.textSecondary
-                                : context.accentColor,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-            ),
-          ),
+          if (_saving)
+            const Padding(
+              padding: EdgeInsets.only(right: 16),
+              child: LoadingIndicator(size: 20),
+            )
+          else if (needsPremiumForSave)
+            TextButton.icon(
+              onPressed: () => showPremiumInfoSheet(
+                context: context,
+                ref: ref,
+                feature: PremiumFeature.customRingtones,
+              ),
+              icon: const Icon(Icons.lock, size: 14, color: Colors.grey),
+              label: Text(
+                'Save',
+                style: TextStyle(color: context.textSecondary),
+              ),
+            )
+          else
+            TextButton(onPressed: _saveRingtone, child: const Text('Save')),
         ],
       ),
       body: GestureDetector(
