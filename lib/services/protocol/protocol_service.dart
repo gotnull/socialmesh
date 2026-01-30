@@ -4113,7 +4113,7 @@ class ProtocolService {
     int buzzerGpio = 0,
     bool disableTripleClick = false,
     String tzdef = '',
-    config_pbenum.Config_DeviceConfig_BuzzerMode buzzerMode = 
+    config_pbenum.Config_DeviceConfig_BuzzerMode buzzerMode =
         config_pbenum.Config_DeviceConfig_BuzzerMode.ALL_ENABLED,
     int? targetNodeNum,
   }) async {

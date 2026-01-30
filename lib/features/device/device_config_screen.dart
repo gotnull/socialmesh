@@ -230,13 +230,13 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
       // Rebroadcast mode
       _rebroadcastMode = config.rebroadcastMode;
       _originalRebroadcastMode = config.rebroadcastMode;
-      
+
       // Node info broadcast interval
-      _nodeInfoBroadcastSecs = config.nodeInfoBroadcastSecs > 0 
-          ? config.nodeInfoBroadcastSecs 
+      _nodeInfoBroadcastSecs = config.nodeInfoBroadcastSecs > 0
+          ? config.nodeInfoBroadcastSecs
           : 900;
       _originalNodeInfoBroadcastSecs = _nodeInfoBroadcastSecs;
-      
+
       // Boolean settings
       _doubleTapAsButtonPress = config.doubleTapAsButtonPress;
       _originalDoubleTapAsButtonPress = config.doubleTapAsButtonPress;
@@ -244,17 +244,17 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
       _originalDisableTripleClick = config.disableTripleClick;
       _ledHeartbeatDisabled = config.ledHeartbeatDisabled;
       _originalLedHeartbeatDisabled = config.ledHeartbeatDisabled;
-      
+
       // Timezone
       _tzdef = config.tzdef;
       _originalTzdef = config.tzdef;
-      
+
       // GPIO settings
       _buttonGpio = config.buttonGpio;
       _originalButtonGpio = config.buttonGpio;
       _buzzerGpio = config.buzzerGpio;
       _originalBuzzerGpio = config.buzzerGpio;
-      
+
       // Buzzer mode
       _buzzerMode = config.buzzerMode;
       _originalBuzzerMode = config.buzzerMode;
@@ -263,11 +263,11 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
 
   Future<void> _loadCurrentConfig() async {
     setState(() => _isLoading = true);
-    
+
     final myNodeNum = ref.read(myNodeNumProvider);
     final nodes = ref.read(nodesProvider);
     final myNode = myNodeNum != null ? nodes[myNodeNum] : null;
-    
+
     AppLogging.protocol(
       'DeviceConfigScreen: _loadCurrentConfig - myNodeNum=$myNodeNum, '
       'myNode=${myNode != null ? "found" : "null"}',
@@ -279,7 +279,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
       _originalShortName = myNode.shortName ?? '';
       _longNameController.text = _originalLongName!;
       _shortNameController.text = _originalShortName!;
-      
+
       AppLogging.protocol(
         'DeviceConfigScreen: Loaded names - long="$_originalLongName", short="$_originalShortName"',
       );
@@ -294,7 +294,9 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                 orElse: () => config_pbenum.Config_DeviceConfig_Role.CLIENT,
               );
           _originalRole = _selectedRole;
-          AppLogging.protocol('DeviceConfigScreen: Loaded role - ${_selectedRole?.name}');
+          AppLogging.protocol(
+            'DeviceConfigScreen: Loaded role - ${_selectedRole?.name}',
+          );
         } catch (e) {
           _selectedRole = config_pbenum.Config_DeviceConfig_Role.CLIENT;
           _originalRole = _selectedRole;
@@ -318,7 +320,8 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
         _applyDeviceConfig(cached);
       } else {
         // Set defaults if no cached config
-        _rebroadcastMode = config_pbenum.Config_DeviceConfig_RebroadcastMode.ALL;
+        _rebroadcastMode =
+            config_pbenum.Config_DeviceConfig_RebroadcastMode.ALL;
         _originalRebroadcastMode = _rebroadcastMode;
         _buzzerMode = config_pbenum.Config_DeviceConfig_BuzzerMode.ALL_ENABLED;
         _originalBuzzerMode = _buzzerMode;
@@ -337,7 +340,9 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
         );
       }
     } catch (e) {
-      AppLogging.protocol('DeviceConfigScreen: Error loading device config: $e');
+      AppLogging.protocol(
+        'DeviceConfigScreen: Error loading device config: $e',
+      );
       // Set defaults on error
       _rebroadcastMode = config_pbenum.Config_DeviceConfig_RebroadcastMode.ALL;
       _originalRebroadcastMode = _rebroadcastMode;
@@ -356,20 +361,31 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
         _shortNameController.text != _originalShortName;
     final roleChanged = _selectedRole != _originalRole;
     final rebroadcastChanged = _rebroadcastMode != _originalRebroadcastMode;
-    final nodeInfoChanged = _nodeInfoBroadcastSecs != _originalNodeInfoBroadcastSecs;
-    final doubleTapChanged = _doubleTapAsButtonPress != _originalDoubleTapAsButtonPress;
-    final tripleClickChanged = _disableTripleClick != _originalDisableTripleClick;
+    final nodeInfoChanged =
+        _nodeInfoBroadcastSecs != _originalNodeInfoBroadcastSecs;
+    final doubleTapChanged =
+        _doubleTapAsButtonPress != _originalDoubleTapAsButtonPress;
+    final tripleClickChanged =
+        _disableTripleClick != _originalDisableTripleClick;
     final ledChanged = _ledHeartbeatDisabled != _originalLedHeartbeatDisabled;
     final tzdefChanged = _tzdef != _originalTzdef;
     final buttonGpioChanged = _buttonGpio != _originalButtonGpio;
     final buzzerGpioChanged = _buzzerGpio != _originalBuzzerGpio;
     final buzzerModeChanged = _buzzerMode != _originalBuzzerMode;
-    
+
     setState(() {
-      _hasChanges = nameChanged || roleChanged || rebroadcastChanged ||
-          nodeInfoChanged || doubleTapChanged || tripleClickChanged ||
-          ledChanged || tzdefChanged || buttonGpioChanged ||
-          buzzerGpioChanged || buzzerModeChanged;
+      _hasChanges =
+          nameChanged ||
+          roleChanged ||
+          rebroadcastChanged ||
+          nodeInfoChanged ||
+          doubleTapChanged ||
+          tripleClickChanged ||
+          ledChanged ||
+          tzdefChanged ||
+          buttonGpioChanged ||
+          buzzerGpioChanged ||
+          buzzerModeChanged;
     });
   }
 
@@ -387,10 +403,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
           children: [
             Icon(Icons.warning_amber_rounded, color: context.accentColor),
             const SizedBox(width: 12),
-            Text(
-              'Save Changes?',
-              style: TextStyle(color: context.textPrimary),
-            ),
+            Text('Save Changes?', style: TextStyle(color: context.textPrimary)),
           ],
         ),
         content: Text(
@@ -408,9 +421,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: context.accentColor,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: context.accentColor),
             child: const Text('Save & Reboot'),
           ),
         ],
@@ -434,7 +445,8 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
           _longNameController.text != _originalLongName ||
           _shortNameController.text != _originalShortName;
       final roleChanged = _selectedRole != _originalRole;
-      final deviceConfigChanged = _rebroadcastMode != _originalRebroadcastMode ||
+      final deviceConfigChanged =
+          _rebroadcastMode != _originalRebroadcastMode ||
           _nodeInfoBroadcastSecs != _originalNodeInfoBroadcastSecs ||
           _doubleTapAsButtonPress != _originalDoubleTapAsButtonPress ||
           _disableTripleClick != _originalDisableTripleClick ||
@@ -470,7 +482,8 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
       if (deviceConfigChanged) {
         await protocol.setDeviceConfig(
           role: _selectedRole ?? config_pbenum.Config_DeviceConfig_Role.CLIENT,
-          rebroadcastMode: _rebroadcastMode ?? 
+          rebroadcastMode:
+              _rebroadcastMode ??
               config_pbenum.Config_DeviceConfig_RebroadcastMode.ALL,
           serialEnabled: true, // Keep serial enabled by default
           nodeInfoBroadcastSecs: _nodeInfoBroadcastSecs,
@@ -480,12 +493,15 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
           buzzerGpio: _buzzerGpio,
           disableTripleClick: _disableTripleClick,
           tzdef: _tzdef,
-          buzzerMode: _buzzerMode ?? 
+          buzzerMode:
+              _buzzerMode ??
               config_pbenum.Config_DeviceConfig_BuzzerMode.ALL_ENABLED,
         );
       }
 
-      AppLogging.protocol('DeviceConfigScreen: Config saved, device will reboot');
+      AppLogging.protocol(
+        'DeviceConfigScreen: Config saved, device will reboot',
+      );
 
       if (mounted) {
         setState(() => _hasChanges = false);
@@ -848,14 +864,17 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                   borderRadius: index == 0
                       ? const BorderRadius.vertical(top: Radius.circular(12))
                       : index == rebroadcastModes.length - 1
-                          ? const BorderRadius.vertical(bottom: Radius.circular(12))
-                          : BorderRadius.zero,
+                      ? const BorderRadius.vertical(bottom: Radius.circular(12))
+                      : BorderRadius.zero,
                   onTap: () {
                     setState(() => _rebroadcastMode = option.mode);
                     _checkForChanges();
                   },
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
                     child: Row(
                       children: [
                         Container(
@@ -864,13 +883,21 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: isSelected ? context.accentColor : context.border,
+                              color: isSelected
+                                  ? context.accentColor
+                                  : context.border,
                               width: 2,
                             ),
-                            color: isSelected ? context.accentColor : Colors.transparent,
+                            color: isSelected
+                                ? context.accentColor
+                                : Colors.transparent,
                           ),
                           child: isSelected
-                              ? const Icon(Icons.check, color: Colors.white, size: 16)
+                              ? const Icon(
+                                  Icons.check,
+                                  color: Colors.white,
+                                  size: 16,
+                                )
                               : null,
                         ),
                         const SizedBox(width: 12),
@@ -882,14 +909,21 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                                 option.displayName,
                                 style: TextStyle(
                                   fontSize: 15,
-                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                                  color: isSelected ? context.textPrimary : context.textSecondary,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.w500,
+                                  color: isSelected
+                                      ? context.textPrimary
+                                      : context.textSecondary,
                                 ),
                               ),
                               const SizedBox(height: 2),
                               Text(
                                 option.description,
-                                style: TextStyle(fontSize: 12, color: context.textTertiary),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: context.textTertiary,
+                                ),
                               ),
                             ],
                           ),
@@ -920,7 +954,11 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.broadcast_on_personal, color: context.accentColor, size: 20),
+              Icon(
+                Icons.broadcast_on_personal,
+                color: context.accentColor,
+                size: 20,
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -937,7 +975,10 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                     const SizedBox(height: 2),
                     Text(
                       'How often to broadcast node info (default: 15 min)',
-                      style: TextStyle(fontSize: 12, color: context.textTertiary),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.textTertiary,
+                      ),
                     ),
                   ],
                 ),
@@ -946,8 +987,8 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            _nodeInfoBroadcastSecs == 0 
-                ? 'Disabled' 
+            _nodeInfoBroadcastSecs == 0
+                ? 'Disabled'
                 : '${(_nodeInfoBroadcastSecs / 60).round()} minutes',
             style: TextStyle(
               fontSize: 14,
@@ -977,8 +1018,14 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Off', style: TextStyle(fontSize: 11, color: context.textTertiary)),
-              Text('60 min', style: TextStyle(fontSize: 11, color: context.textTertiary)),
+              Text(
+                'Off',
+                style: TextStyle(fontSize: 11, color: context.textTertiary),
+              ),
+              Text(
+                '60 min',
+                style: TextStyle(fontSize: 11, color: context.textTertiary),
+              ),
             ],
           ),
         ],
@@ -1043,14 +1090,17 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                   borderRadius: index == 0
                       ? const BorderRadius.vertical(top: Radius.circular(12))
                       : index == buzzerModes.length - 1
-                          ? const BorderRadius.vertical(bottom: Radius.circular(12))
-                          : BorderRadius.zero,
+                      ? const BorderRadius.vertical(bottom: Radius.circular(12))
+                      : BorderRadius.zero,
                   onTap: () {
                     setState(() => _buzzerMode = option.mode);
                     _checkForChanges();
                   },
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
                     child: Row(
                       children: [
                         Container(
@@ -1059,13 +1109,21 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: isSelected ? context.accentColor : context.border,
+                              color: isSelected
+                                  ? context.accentColor
+                                  : context.border,
                               width: 2,
                             ),
-                            color: isSelected ? context.accentColor : Colors.transparent,
+                            color: isSelected
+                                ? context.accentColor
+                                : Colors.transparent,
                           ),
                           child: isSelected
-                              ? const Icon(Icons.check, color: Colors.white, size: 16)
+                              ? const Icon(
+                                  Icons.check,
+                                  color: Colors.white,
+                                  size: 16,
+                                )
                               : null,
                         ),
                         const SizedBox(width: 12),
@@ -1077,14 +1135,21 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                                 option.displayName,
                                 style: TextStyle(
                                   fontSize: 15,
-                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                                  color: isSelected ? context.textPrimary : context.textSecondary,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.w500,
+                                  color: isSelected
+                                      ? context.textPrimary
+                                      : context.textSecondary,
                                 ),
                               ),
                               const SizedBox(height: 2),
                               Text(
                                 option.description,
-                                style: TextStyle(fontSize: 12, color: context.textTertiary),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: context.textTertiary,
+                                ),
                               ),
                             ],
                           ),
@@ -1152,7 +1217,10 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                     const SizedBox(height: 2),
                     Text(
                       'e.g. EST5EDT,M3.2.0,M11.1.0',
-                      style: TextStyle(fontSize: 12, color: context.textTertiary),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.textTertiary,
+                      ),
                     ),
                   ],
                 ),
@@ -1165,7 +1233,10 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
             style: TextStyle(fontSize: 14, color: context.textPrimary),
             decoration: InputDecoration(
               isDense: true,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
               hintText: 'Leave empty for UTC',
               hintStyle: TextStyle(color: context.textTertiary),
               filled: true,
@@ -1257,13 +1328,18 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
         ),
         const SizedBox(height: 6),
         TextField(
-          controller: TextEditingController(text: value == 0 ? '' : value.toString()),
+          controller: TextEditingController(
+            text: value == 0 ? '' : value.toString(),
+          ),
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           style: TextStyle(fontSize: 14, color: context.textPrimary),
           decoration: InputDecoration(
             isDense: true,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 10,
+            ),
             hintText: '0',
             hintStyle: TextStyle(color: context.textTertiary),
             filled: true,
