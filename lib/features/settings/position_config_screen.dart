@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../core/widgets/animations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -55,6 +56,7 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
   final _latController = TextEditingController();
   final _lonController = TextEditingController();
   final _altController = TextEditingController(text: '0');
+  bool _isGettingLocation = false;
 
   @override
   void initState() {
@@ -69,6 +71,67 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
     _lonController.dispose();
     _altController.dispose();
     super.dispose();
+  }
+
+  Future<void> _useCurrentLocation() async {
+    setState(() => _isGettingLocation = true);
+    try {
+      // Check if location services are enabled
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        if (mounted) {
+          showErrorSnackBar(context, 'Location services are disabled');
+        }
+        return;
+      }
+
+      // Check and request permission
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          if (mounted) {
+            showErrorSnackBar(context, 'Location permission denied');
+          }
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        if (mounted) {
+          showErrorSnackBar(
+            context,
+            'Location permission permanently denied. Enable in settings.',
+          );
+        }
+        return;
+      }
+
+      // Get the current position
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 30),
+        ),
+      );
+
+      if (mounted) {
+        setState(() {
+          _latController.text = position.latitude.toStringAsFixed(6);
+          _lonController.text = position.longitude.toStringAsFixed(6);
+          _altController.text = position.altitude.toInt().toString();
+        });
+        showSuccessSnackBar(context, 'Location updated from phone GPS');
+      }
+    } catch (e) {
+      if (mounted) {
+        showErrorSnackBar(context, 'Failed to get location: $e');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isGettingLocation = false);
+      }
+    }
   }
 
   Future<void> _loadCurrentConfig() async {
@@ -549,6 +612,48 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                             ),
                           ),
                         ],
+                      ),
+                    ),
+                    // Use Current Location Button
+                    Container(
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: _isGettingLocation
+                            ? null
+                            : _useCurrentLocation,
+                        icon: _isGettingLocation
+                            ? SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: context.accentColor,
+                                ),
+                              )
+                            : Icon(
+                                Icons.my_location,
+                                color: context.accentColor,
+                              ),
+                        label: Text(
+                          _isGettingLocation
+                              ? 'Getting Location...'
+                              : 'Use Current Location',
+                          style: TextStyle(
+                            color: context.accentColor,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: context.accentColor),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
                       ),
                     ),
                     Container(

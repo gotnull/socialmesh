@@ -202,6 +202,7 @@ class ProtocolService {
   final StreamController<module_pb.ModuleConfig_CannedMessageConfig>
   _cannedMessageConfigController;
   final StreamController<pb.ClientNotification> _clientNotificationController;
+  final StreamController<pb.User> _userConfigController;
 
   StreamSubscription<List<int>>? _dataSubscription;
   StreamSubscription<DeviceConnectionState>? _transportStateSubscription;
@@ -233,6 +234,7 @@ class ProtocolService {
   module_pb.ModuleConfig_ExternalNotificationConfig?
   _currentExternalNotificationConfig;
   module_pb.ModuleConfig_CannedMessageConfig? _currentCannedMessageConfig;
+  pb.User? _currentUserConfig;
   final Map<int, MeshNode> _nodes = {};
   final List<ChannelConfig> _channels = [];
   final Random _random = Random();
@@ -319,6 +321,7 @@ class ProtocolService {
           >.broadcast(),
       _clientNotificationController =
           StreamController<pb.ClientNotification>.broadcast(),
+      _userConfigController = StreamController<pb.User>.broadcast(),
       _dedupeStore = dedupeStore ?? MeshPacketDedupeStore();
 
   /// Set the BLE device name for hardware model inference
@@ -495,6 +498,12 @@ class ProtocolService {
   /// Current canned message config
   module_pb.ModuleConfig_CannedMessageConfig? get currentCannedMessageConfig =>
       _currentCannedMessageConfig;
+
+  /// Stream of user (owner) config updates
+  Stream<pb.User> get userConfigStream => _userConfigController.stream;
+
+  /// Current user (owner) config for connected device
+  pb.User? get currentUserConfig => _currentUserConfig;
 
   /// Stream of RSSI updates
   Stream<int> get rssiStream => _rssiController.stream;
@@ -2224,6 +2233,15 @@ class ProtocolService {
       }
       // Check if user has a public key set (for PKI encryption)
       hasPublicKey = user.hasPublicKey() && user.publicKey.isNotEmpty;
+
+      // Emit user config if this is our own node
+      if (_myNodeNum != null && nodeInfo.num == _myNodeNum) {
+        _currentUserConfig = user;
+        _userConfigController.add(user);
+        AppLogging.protocol(
+          'Emitted user config for myNode: isUnmessagable=${user.isUnmessagable}, isLicensed=${user.isLicensed}',
+        );
+      }
     } else {
       AppLogging.protocol('NodeInfo has no user data');
     }
@@ -3114,6 +3132,8 @@ class ProtocolService {
     String? longName,
     String? shortName,
     config_pb.Config_DeviceConfig_Role? role,
+    bool? isUnmessagable,
+    bool? isLicensed,
   }) async {
     // Validate we're ready to send
     if (_myNodeNum == null) {
@@ -3126,7 +3146,11 @@ class ProtocolService {
     }
 
     // Must have at least one field to update
-    if (longName == null && shortName == null && role == null) {
+    if (longName == null &&
+        shortName == null &&
+        role == null &&
+        isUnmessagable == null &&
+        isLicensed == null) {
       AppLogging.protocol('setOwnerConfig called with no changes');
       return;
     }
@@ -3144,7 +3168,9 @@ class ProtocolService {
         'Setting owner config: '
         'longName=${trimmedLong ?? "(unchanged)"}, '
         'shortName=${trimmedShort ?? "(unchanged)"}, '
-        'role=${role?.name ?? "(unchanged)"}',
+        'role=${role?.name ?? "(unchanged)"}, '
+        'isUnmessagable=${isUnmessagable ?? "(unchanged)"}, '
+        'isLicensed=${isLicensed ?? "(unchanged)"}',
       );
 
       // Build User object with all provided fields
@@ -3152,6 +3178,8 @@ class ProtocolService {
       if (trimmedLong != null) user.longName = trimmedLong;
       if (trimmedShort != null) user.shortName = trimmedShort;
       if (role != null) user.role = role;
+      if (isUnmessagable != null) user.isUnmessagable = isUnmessagable;
+      if (isLicensed != null) user.isLicensed = isLicensed;
 
       final adminMsg = admin.AdminMessage()..setOwner = user;
 
@@ -4261,6 +4289,7 @@ class ProtocolService {
     config_pb.Config_NetworkConfig_AddressMode addressMode =
         config_pb.Config_NetworkConfig_AddressMode.DHCP,
     String rsyslogServer = '',
+    int enabledProtocols = 0,
     int? targetNodeNum,
   }) async {
     AppLogging.protocol('Setting network config');
@@ -4272,7 +4301,8 @@ class ProtocolService {
       ..ethEnabled = ethEnabled
       ..ntpServer = ntpServer
       ..addressMode = addressMode
-      ..rsyslogServer = rsyslogServer;
+      ..rsyslogServer = rsyslogServer
+      ..enabledProtocols = enabledProtocols;
 
     final config = config_pb.Config()..network = networkConfig;
     await setConfig(config, targetNodeNum: targetNodeNum);
@@ -5262,5 +5292,6 @@ class ProtocolService {
     await _deliveryController.close();
     await _regionController.close();
     await _clientNotificationController.close();
+    await _userConfigController.close();
   }
 }

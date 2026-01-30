@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/logging.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/animations.dart';
 import '../../core/widgets/info_table.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
@@ -11,6 +12,7 @@ import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/config.pb.dart' as config_pb;
 import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
+import '../../generated/meshtastic/mesh.pb.dart' as pb;
 import '../../utils/validation.dart';
 
 /// Device role options with descriptions
@@ -174,6 +176,7 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
   bool _isLoading = true;
   ProviderSubscription? _deviceSub;
   StreamSubscription<config_pb.Config_DeviceConfig>? _configSubscription;
+  StreamSubscription<pb.User>? _userConfigSubscription;
 
   // Name editing
   late TextEditingController _longNameController;
@@ -201,12 +204,24 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
   config_pbenum.Config_DeviceConfig_BuzzerMode? _buzzerMode;
   config_pbenum.Config_DeviceConfig_BuzzerMode? _originalBuzzerMode;
 
+  // User flags
+  bool _isUnmessagable = false;
+  bool _originalIsUnmessagable = false;
+  bool _isLicensed = false;
+  bool _originalIsLicensed = false;
+
+  // Ham mode fields (only used when _isLicensed is true)
+  late TextEditingController _frequencyOverrideController;
+  int _txPower = 0;
+  final int _originalTxPower = 0;
+
   @override
   void initState() {
     super.initState();
     AppLogging.protocol('DeviceConfigScreen: initState');
     _longNameController = TextEditingController();
     _shortNameController = TextEditingController();
+    _frequencyOverrideController = TextEditingController();
     _loadCurrentConfig();
 
     // Listen for device changes and force rebuild
@@ -220,8 +235,10 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
     AppLogging.protocol('DeviceConfigScreen: dispose');
     _deviceSub?.close();
     _configSubscription?.cancel();
+    _userConfigSubscription?.cancel();
     _longNameController.dispose();
     _shortNameController.dispose();
+    _frequencyOverrideController.dispose();
     super.dispose();
   }
 
@@ -258,6 +275,18 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
       // Buzzer mode
       _buzzerMode = config.buzzerMode;
       _originalBuzzerMode = config.buzzerMode;
+    });
+  }
+
+  void _applyUserConfig(pb.User user) {
+    setState(() {
+      _isUnmessagable = user.isUnmessagable;
+      _originalIsUnmessagable = user.isUnmessagable;
+      _isLicensed = user.isLicensed;
+      _originalIsLicensed = user.isLicensed;
+      AppLogging.protocol(
+        'DeviceConfigScreen: Applied user config - isUnmessagable=$_isUnmessagable, isLicensed=$_isLicensed',
+      );
     });
   }
 
@@ -334,6 +363,17 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
           if (mounted) _applyDeviceConfig(config);
         });
 
+        // Listen for user config response (for isUnmessagable/isLicensed)
+        _userConfigSubscription = protocol.userConfigStream.listen((user) {
+          if (mounted) _applyUserConfig(user);
+        });
+
+        // Apply cached user config if available
+        final cachedUser = protocol.currentUserConfig;
+        if (cachedUser != null) {
+          _applyUserConfig(cachedUser);
+        }
+
         // Request fresh config from device
         await protocol.getConfig(
           admin_pbenum.AdminMessage_ConfigType.DEVICE_CONFIG,
@@ -372,6 +412,9 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
     final buttonGpioChanged = _buttonGpio != _originalButtonGpio;
     final buzzerGpioChanged = _buzzerGpio != _originalBuzzerGpio;
     final buzzerModeChanged = _buzzerMode != _originalBuzzerMode;
+    final unmessagableChanged = _isUnmessagable != _originalIsUnmessagable;
+    final licensedChanged = _isLicensed != _originalIsLicensed;
+    final txPowerChanged = _isLicensed && _txPower != _originalTxPower;
 
     setState(() {
       _hasChanges =
@@ -385,7 +428,10 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
           tzdefChanged ||
           buttonGpioChanged ||
           buzzerGpioChanged ||
-          buzzerModeChanged;
+          buzzerModeChanged ||
+          unmessagableChanged ||
+          licensedChanged ||
+          txPowerChanged;
     });
   }
 
@@ -455,13 +501,22 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
           _buttonGpio != _originalButtonGpio ||
           _buzzerGpio != _originalBuzzerGpio ||
           _buzzerMode != _originalBuzzerMode;
+      final userFlagsChanged =
+          _isUnmessagable != _originalIsUnmessagable ||
+          _isLicensed != _originalIsLicensed;
+      final hamModeChanged = _isLicensed && _txPower != _originalTxPower;
 
       AppLogging.protocol(
         'DeviceConfigScreen: Changes - nameChanged=$nameChanged, '
-        'roleChanged=$roleChanged, deviceConfigChanged=$deviceConfigChanged',
+        'roleChanged=$roleChanged, deviceConfigChanged=$deviceConfigChanged, '
+        'userFlagsChanged=$userFlagsChanged, hamModeChanged=$hamModeChanged',
       );
 
-      if (!nameChanged && !roleChanged && !deviceConfigChanged) {
+      if (!nameChanged &&
+          !roleChanged &&
+          !deviceConfigChanged &&
+          !userFlagsChanged &&
+          !hamModeChanged) {
         AppLogging.protocol('DeviceConfigScreen: No changes to save');
         if (mounted) {
           Navigator.pop(context);
@@ -469,12 +524,25 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
         return;
       }
 
-      // Save name and role changes via setOwnerConfig
-      if (nameChanged || roleChanged) {
+      // Save name, role, and user flags changes via setOwnerConfig
+      if (nameChanged || roleChanged || userFlagsChanged) {
         await protocol.setOwnerConfig(
           longName: nameChanged ? _longNameController.text : null,
           shortName: nameChanged ? _shortNameController.text : null,
           role: roleChanged ? _selectedRole : null,
+          isUnmessagable: _isUnmessagable,
+          isLicensed: _isLicensed,
+        );
+      }
+
+      // If licensed mode is enabled, set HAM mode parameters
+      if (_isLicensed && hamModeChanged) {
+        final frequency =
+            double.tryParse(_frequencyOverrideController.text) ?? 0.0;
+        await protocol.setHamMode(
+          callSign: _longNameController.text,
+          txPower: _txPower,
+          frequency: frequency,
         );
       }
 
@@ -624,6 +692,12 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
               style: TextStyle(fontSize: 12, color: context.textTertiary),
             ),
           ),
+
+          SizedBox(height: 24),
+
+          // User Flags Section
+          _buildSectionHeader('User Flags'),
+          _buildUserFlagsSettings(),
 
           SizedBox(height: 24),
 
@@ -1549,6 +1623,239 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
               },
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUserFlagsSettings() {
+    return Container(
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: context.border),
+      ),
+      child: Column(
+        children: [
+          // Unmessagable toggle
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.speaker_notes_off,
+                  color: _isUnmessagable
+                      ? context.accentColor
+                      : context.textSecondary,
+                  size: 22,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Unmessagable',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: context.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Mark as infrastructure node that won\'t respond to messages',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: context.textTertiary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                ThemedSwitch(
+                  value: _isUnmessagable,
+                  onChanged: (value) {
+                    HapticFeedback.selectionClick();
+                    setState(() => _isUnmessagable = value);
+                    _checkForChanges();
+                  },
+                ),
+              ],
+            ),
+          ),
+          Divider(height: 1, color: context.border.withValues(alpha: 0.5)),
+          // Licensed operator toggle
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.badge,
+                  color: _isLicensed
+                      ? context.accentColor
+                      : context.textSecondary,
+                  size: 22,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Licensed Operator (Ham)',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: context.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Enable ham radio mode with call sign',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: context.textTertiary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                ThemedSwitch(
+                  value: _isLicensed,
+                  onChanged: (value) {
+                    HapticFeedback.selectionClick();
+                    setState(() => _isLicensed = value);
+                    _checkForChanges();
+                  },
+                ),
+              ],
+            ),
+          ),
+          // Ham mode settings (only shown when licensed)
+          if (_isLicensed) ...[
+            Divider(height: 1, color: context.border.withValues(alpha: 0.5)),
+            Container(
+              margin: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: context.accentColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: context.accentColor.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        color: context.accentColor,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Ham mode uses your long name as call sign (max 8 chars), '
+                          'overrides frequency/power, and disables encryption.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: context.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // Frequency override
+                  Text(
+                    'Frequency Override (MHz)',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: context.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _frequencyOverrideController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    style: TextStyle(color: context.textPrimary, fontSize: 14),
+                    decoration: InputDecoration(
+                      hintText: '0.0 (use default)',
+                      hintStyle: TextStyle(color: context.textTertiary),
+                      filled: true,
+                      fillColor: context.background,
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: context.border),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: context.border),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: context.accentColor),
+                      ),
+                    ),
+                    onChanged: (_) => _checkForChanges(),
+                  ),
+                  const SizedBox(height: 16),
+                  // TX Power
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'TX Power',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: context.textPrimary,
+                        ),
+                      ),
+                      Text(
+                        '$_txPower dBm',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: context.accentColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      activeTrackColor: context.accentColor,
+                      inactiveTrackColor: context.border,
+                      thumbColor: context.accentColor,
+                      overlayColor: context.accentColor.withValues(alpha: 0.2),
+                    ),
+                    child: Slider(
+                      value: _txPower.toDouble(),
+                      min: 1,
+                      max: 30,
+                      divisions: 29,
+                      onChanged: (value) {
+                        setState(() => _txPower = value.toInt());
+                        _checkForChanges();
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );

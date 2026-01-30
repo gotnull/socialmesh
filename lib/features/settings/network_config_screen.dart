@@ -22,6 +22,7 @@ class NetworkConfigScreen extends ConsumerStatefulWidget {
 class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
   bool _wifiEnabled = false;
   bool _ethEnabled = false;
+  bool _udpEnabled = false;
   bool _saving = false;
   bool _loading = false;
   bool _obscurePassword = true;
@@ -62,6 +63,8 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
           : 'pool.ntp.org';
       _addressMode = config.addressMode;
       _rsyslogController.text = config.rsyslogServer;
+      // UDP broadcast is stored as a bitmask in enabledProtocols (bit 0 = UDP_BROADCAST)
+      _udpEnabled = (config.enabledProtocols & 1) != 0;
     });
   }
 
@@ -109,6 +112,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
         ntpServer: ntp.isNotEmpty ? ntp : 'pool.ntp.org',
         addressMode: _addressMode,
         rsyslogServer: rsyslog,
+        enabledProtocols: _udpEnabled ? 1 : 0,
       );
 
       if (mounted) {
@@ -364,6 +368,57 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                       ],
                     ),
                   ),
+                  SizedBox(height: 16),
+
+                  // UDP Broadcast Section
+                  const _SectionHeader(title: 'UDP BROADCAST'),
+                  _SettingsTile(
+                    icon: Icons.cell_tower,
+                    iconColor: _udpEnabled ? context.accentColor : null,
+                    title: 'UDP Broadcast',
+                    subtitle: 'Broadcast packets over local network',
+                    trailing: ThemedSwitch(
+                      value: _udpEnabled,
+                      onChanged: (value) {
+                        HapticFeedback.selectionClick();
+                        setState(() => _udpEnabled = value);
+                      },
+                    ),
+                  ),
+                  if (_udpEnabled)
+                    Container(
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: context.accentColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: context.accentColor.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      padding: const EdgeInsets.all(12),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            color: context.accentColor.withValues(alpha: 0.8),
+                            size: 18,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'Enables broadcasting mesh packets via UDP over the local network when WiFi or Ethernet is connected.',
+                              style: TextStyle(
+                                color: context.textSecondary,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   SizedBox(height: 16),
 
                   // Rsyslog Server Section
