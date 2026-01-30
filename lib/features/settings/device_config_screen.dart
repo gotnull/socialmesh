@@ -529,7 +529,10 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
           children: [
             Icon(Icons.warning_rounded, color: Colors.red),
             const SizedBox(width: 12),
-            Text('Factory Reset', style: TextStyle(color: dialogContext.textPrimary)),
+            Text(
+              'Factory Reset',
+              style: TextStyle(color: dialogContext.textPrimary),
+            ),
           ],
         ),
         content: Text(
