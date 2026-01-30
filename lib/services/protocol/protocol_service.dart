@@ -4241,6 +4241,7 @@ class ProtocolService {
         config_pb.Config_DisplayConfig_OledType.OLED_AUTO,
     config_pb.Config_DisplayConfig_CompassOrientation compassOrientation =
         config_pb.Config_DisplayConfig_CompassOrientation.DEGREES_0,
+    bool compassNorthTop = false,
     int? targetNodeNum,
   }) async {
     AppLogging.protocol('Setting display config');
@@ -4255,7 +4256,8 @@ class ProtocolService {
       ..wakeOnTapOrMotion = wakeOnTapOrMotion
       ..use12hClock = use12hClock
       ..oled = oledType
-      ..compassOrientation = compassOrientation;
+      ..compassOrientation = compassOrientation
+      ..compassNorthTop = compassNorthTop;
 
     final config = config_pb.Config()..display = displayConfig;
     await setConfig(config, targetNodeNum: targetNodeNum);
@@ -4680,6 +4682,7 @@ class ProtocolService {
     int? records,
     int? historyReturnMax,
     int? historyReturnWindow,
+    bool? isServer,
     int? targetNodeNum,
   }) async {
     AppLogging.protocol('Setting store & forward config');
@@ -4692,6 +4695,7 @@ class ProtocolService {
     if (historyReturnWindow != null) {
       sfConfig.historyReturnWindow = historyReturnWindow;
     }
+    if (isServer != null) sfConfig.isServer = isServer;
 
     final moduleConfig = module_pb.ModuleConfig()..storeForward = sfConfig;
     await setModuleConfig(moduleConfig, targetNodeNum: targetNodeNum);

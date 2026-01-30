@@ -40,15 +40,21 @@ class _CannedMessageModuleConfigScreenState
   StreamSubscription<module_pb.ModuleConfig_CannedMessageConfig>?
   _configSubscription;
 
+  // Device-side canned messages (pipe-separated)
+  late TextEditingController _messagesController;
+  bool _messagesChanged = false;
+
   @override
   void initState() {
     super.initState();
+    _messagesController = TextEditingController();
     _loadCurrentConfig();
   }
 
   @override
   void dispose() {
     _configSubscription?.cancel();
+    _messagesController.dispose();
     super.dispose();
   }
 
@@ -130,6 +136,11 @@ class _CannedMessageModuleConfigScreenState
             module_pb.ModuleConfig_CannedMessageConfig_InputEventChar.NONE,
       );
 
+      // Save messages separately if changed
+      if (_messagesChanged && _messagesController.text.isNotEmpty) {
+        await protocol.setCannedMessages(_messagesController.text.trim());
+      }
+
       if (mounted) {
         showSuccessSnackBar(context, 'Canned message configuration saved');
         Navigator.pop(context);
@@ -203,6 +214,8 @@ class _CannedMessageModuleConfigScreenState
               children: [
                 _buildOptionsSection(),
                 const SizedBox(height: 24),
+                _buildMessagesSection(),
+                const SizedBox(height: 24),
                 _buildPresetSection(),
                 const SizedBox(height: 24),
                 if (_configPreset == 0) ...[
@@ -264,6 +277,80 @@ class _CannedMessageModuleConfigScreenState
                 setState(() => _sendBell = value);
               },
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMessagesSection() {
+    return Container(
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'DEVICE MESSAGES',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: context.textTertiary,
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Icon(Icons.message, size: 20, color: context.accentColor),
+              const SizedBox(width: 12),
+              Text(
+                'Messages',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: context.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _messagesController,
+            maxLines: 4,
+            maxLength: 198,
+            style: TextStyle(color: context.textPrimary),
+            decoration: InputDecoration(
+              hintText: 'Message 1|Message 2|Message 3',
+              hintStyle: TextStyle(color: context.textTertiary),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: context.border),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: context.border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: context.accentColor),
+              ),
+              filled: true,
+              fillColor: context.surface,
+              counterStyle: TextStyle(color: context.textTertiary),
+            ),
+            onChanged: (value) {
+              setState(() => _messagesChanged = true);
+            },
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Separate messages with | (pipe). These messages will be stored '
+            'on the device for use with the canned message input controls.',
+            style: TextStyle(fontSize: 12, color: context.textTertiary),
           ),
         ],
       ),

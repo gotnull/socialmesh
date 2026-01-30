@@ -31,6 +31,7 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
   bool _wakeOnTapOrMotion = false;
   // New fields from iOS
   bool _use12hClock = false;
+  bool _compassNorthTop = false;
   config_pbenum.Config_DisplayConfig_OledType? _oledType;
   config_pbenum.Config_DisplayConfig_CompassOrientation? _compassOrientation;
   StreamSubscription<config_pb.Config_DisplayConfig>? _configSubscription;
@@ -58,6 +59,7 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
       _wakeOnTapOrMotion = config.wakeOnTapOrMotion;
       // New fields
       _use12hClock = config.use12hClock;
+      _compassNorthTop = config.compassNorthTop;
       _oledType = config.oled;
       _compassOrientation = config.compassOrientation;
     });
@@ -111,6 +113,7 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
         compassOrientation:
             _compassOrientation ??
             config_pbenum.Config_DisplayConfig_CompassOrientation.DEGREES_0,
+        compassNorthTop: _compassNorthTop,
       );
 
       if (mounted) {
@@ -336,6 +339,20 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
               onChanged: (value) {
                 HapticFeedback.selectionClick();
                 setState(() => _use12hClock = value);
+              },
+            ),
+          ),
+          SizedBox(height: 16),
+          _SettingsTile(
+            icon: Icons.explore,
+            title: 'Compass Always Points North',
+            subtitle:
+                'The compass heading outside the circle always points north',
+            trailing: ThemedSwitch(
+              value: _compassNorthTop,
+              onChanged: (value) {
+                HapticFeedback.selectionClick();
+                setState(() => _compassNorthTop = value);
               },
             ),
           ),

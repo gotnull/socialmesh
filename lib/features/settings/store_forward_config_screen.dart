@@ -54,6 +54,7 @@ class _StoreForwardConfigScreenState
       if (config != null && mounted) {
         setState(() {
           _enabled = config.enabled;
+          _isServer = config.isServer;
           _heartbeat = config.heartbeat;
           _records = config.records;
           _historyReturnMax = config.historyReturnMax > 0
@@ -85,6 +86,7 @@ class _StoreForwardConfigScreenState
       final protocol = ref.read(protocolServiceProvider);
       await protocol.setStoreForwardConfig(
         enabled: _enabled,
+        isServer: _isServer,
         heartbeat: _heartbeat,
         records: _records,
         historyReturnMax: _historyReturnMax,
