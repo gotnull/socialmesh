@@ -36,51 +36,51 @@ This document outlines the comprehensive testing strategy for the Socialmesh Aut
 
 ### TriggerTypes (16 total) - ✅ ALL IMPLEMENTED TRIGGERS TESTED
 
-| TriggerType       | Status                 | Test Count | Notes                                          |
-| ----------------- | ---------------------- | ---------- | ---------------------------------------------- |
-| `nodeOnline`      | ✅ Tested              | 4          | Online transitions, node filter, disabled auto |
-| `nodeOffline`     | ✅ Tested              | 2          | Offline transitions, node filter               |
-| `batteryLow`      | ✅ Tested              | 6          | Threshold crossing, hysteresis, custom         |
-| `batteryFull`     | ✅ Tested              | 1          | Full charge detection                          |
-| `messageReceived` | ✅ Tested              | 2          | Any message trigger                            |
-| `messageContains` | ✅ Tested              | 3          | Keyword matching, case-insensitive             |
-| `positionChanged` | ✅ Tested              | 2          | Position update detection                      |
-| `geofenceEnter`   | ✅ Tested              | 2          | Enter zone detection                           |
-| `geofenceExit`    | ✅ Tested              | 2          | Exit zone detection                            |
-| `nodeSilent`      | ✅ Tested              | 3          | Silent threshold, node filter, config duration |
-| `scheduled`       | ⚠️ Not Implemented     | 0          | Enum exists but no timer/cron support          |
-| `signalWeak`      | ✅ Tested              | 2          | SNR threshold                                  |
-| `channelActivity` | ✅ Tested              | 1          | Channel-specific triggers                      |
-| `detectionSensor` | ✅ Tested              | 9          | Sensor name/state filters, node filter         |
-| `manual`          | ✅ Tested              | 3          | Manual execution, context passing              |
+| TriggerType       | Status             | Test Count | Notes                                          |
+| ----------------- | ------------------ | ---------- | ---------------------------------------------- |
+| `nodeOnline`      | ✅ Tested          | 4          | Online transitions, node filter, disabled auto |
+| `nodeOffline`     | ✅ Tested          | 2          | Offline transitions, node filter               |
+| `batteryLow`      | ✅ Tested          | 6          | Threshold crossing, hysteresis, custom         |
+| `batteryFull`     | ✅ Tested          | 1          | Full charge detection                          |
+| `messageReceived` | ✅ Tested          | 2          | Any message trigger                            |
+| `messageContains` | ✅ Tested          | 3          | Keyword matching, case-insensitive             |
+| `positionChanged` | ✅ Tested          | 2          | Position update detection                      |
+| `geofenceEnter`   | ✅ Tested          | 2          | Enter zone detection                           |
+| `geofenceExit`    | ✅ Tested          | 2          | Exit zone detection                            |
+| `nodeSilent`      | ✅ Tested          | 3          | Silent threshold, node filter, config duration |
+| `scheduled`       | ⚠️ Not Implemented | 0          | Enum exists but no timer/cron support          |
+| `signalWeak`      | ✅ Tested          | 2          | SNR threshold                                  |
+| `channelActivity` | ✅ Tested          | 1          | Channel-specific triggers                      |
+| `detectionSensor` | ✅ Tested          | 9          | Sensor name/state filters, node filter         |
+| `manual`          | ✅ Tested          | 3          | Manual execution, context passing              |
 
 ### ActionTypes (10 total) - ✅ ALL TESTED
 
-| ActionType         | Status    | Test Count | Notes                                    |
-| ------------------ | --------- | ---------- | ---------------------------------------- |
-| `sendMessage`      | ✅ Tested | 5          | Variable interpolation, error handling   |
-| `sendToChannel`    | ✅ Tested | 2          | Channel sending                          |
-| `playSound`        | ✅ Tested | 2          | Missing config handling, RTTTL calls     |
-| `vibrate`          | ✅ Tested | 1          | Haptic feedback                          |
-| `pushNotification` | ✅ Tested | 2          | Title/body interpolation                 |
-| `triggerWebhook`   | ✅ Tested | 4          | IFTTT integration, error handling        |
-| `logEvent`         | ✅ Tested | 1          | Always succeeds (no-op)                  |
-| `updateWidget`     | ✅ Tested | 1          | Stub implementation (WidgetKit pending)  |
-| `triggerShortcut`  | ✅ Tested | 2          | URL scheme, missing name handling        |
-| `glyphPattern`     | ✅ Tested | 2          | Pattern validation, default handling     |
+| ActionType         | Status    | Test Count | Notes                                   |
+| ------------------ | --------- | ---------- | --------------------------------------- |
+| `sendMessage`      | ✅ Tested | 5          | Variable interpolation, error handling  |
+| `sendToChannel`    | ✅ Tested | 2          | Channel sending                         |
+| `playSound`        | ✅ Tested | 2          | Missing config handling, RTTTL calls    |
+| `vibrate`          | ✅ Tested | 1          | Haptic feedback                         |
+| `pushNotification` | ✅ Tested | 2          | Title/body interpolation                |
+| `triggerWebhook`   | ✅ Tested | 4          | IFTTT integration, error handling       |
+| `logEvent`         | ✅ Tested | 1          | Always succeeds (no-op)                 |
+| `updateWidget`     | ✅ Tested | 1          | Stub implementation (WidgetKit pending) |
+| `triggerShortcut`  | ✅ Tested | 2          | URL scheme, missing name handling       |
+| `glyphPattern`     | ✅ Tested | 2          | Pattern validation, default handling    |
 
 ### ConditionTypes (8 total) - ✅ ALL TESTED
 
-| ConditionType     | Status    | Test Count | Notes                          |
-| ----------------- | --------- | ---------- | ------------------------------ |
-| `timeRange`       | ✅ Tested | 4          | In range, out of range         |
-| `dayOfWeek`       | ✅ Tested | 2          | Matching/non-matching days     |
-| `batteryAbove`    | ✅ Tested | 2          | Threshold comparison           |
-| `batteryBelow`    | ✅ Tested | 2          | Threshold comparison           |
-| `nodeOnline`      | ✅ Tested | 2          | Presence-based condition       |
-| `nodeOffline`     | ✅ Tested | 2          | Inverse presence condition     |
-| `withinGeofence`  | ✅ Tested | 1          | Stub (always true) - documented|
-| `outsideGeofence` | ✅ Tested | 1          | Stub (always true) - documented|
+| ConditionType     | Status    | Test Count | Notes                           |
+| ----------------- | --------- | ---------- | ------------------------------- |
+| `timeRange`       | ✅ Tested | 4          | In range, out of range          |
+| `dayOfWeek`       | ✅ Tested | 2          | Matching/non-matching days      |
+| `batteryAbove`    | ✅ Tested | 2          | Threshold comparison            |
+| `batteryBelow`    | ✅ Tested | 2          | Threshold comparison            |
+| `nodeOnline`      | ✅ Tested | 2          | Presence-based condition        |
+| `nodeOffline`     | ✅ Tested | 2          | Inverse presence condition      |
+| `withinGeofence`  | ✅ Tested | 1          | Stub (always true) - documented |
+| `outsideGeofence` | ✅ Tested | 1          | Stub (always true) - documented |
 
 ---
 
