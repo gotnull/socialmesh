@@ -120,7 +120,8 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
         buzzerGpio: _buzzerGpio,
         disableTripleClick: !_tripleClickEnabled,
         tzdef: _tzdef,
-        buzzerMode: _buzzerMode ?? 
+        buzzerMode:
+            _buzzerMode ??
             config_pbenum.Config_DeviceConfig_BuzzerMode.ALL_ENABLED,
         targetNodeNum: targetNodeNum,
       );
@@ -554,21 +555,22 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                 ),
                 leading: Icon(
                   icon,
-                  color: isSelected ? context.accentColor : context.textSecondary,
+                  color: isSelected
+                      ? context.accentColor
+                      : context.textSecondary,
                 ),
                 title: Text(
                   title,
                   style: TextStyle(
-                    color: isSelected ? context.textPrimary : context.textSecondary,
+                    color: isSelected
+                        ? context.textPrimary
+                        : context.textSecondary,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                   ),
                 ),
                 subtitle: Text(
                   subtitle,
-                  style: TextStyle(
-                    color: context.textTertiary,
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: context.textTertiary, fontSize: 12),
                 ),
                 trailing: isSelected
                     ? Icon(Icons.check_circle, color: context.accentColor)
