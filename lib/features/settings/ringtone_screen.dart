@@ -1144,12 +1144,12 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
               // Disable the button when premium is required and user doesn't have it
               onPressed: _saving || needsPremiumForSave
                   ? (needsPremiumForSave
-                      ? () => showPremiumInfoSheet(
+                        ? () => showPremiumInfoSheet(
                             context: context,
                             ref: ref,
                             feature: PremiumFeature.customRingtones,
                           )
-                      : null)
+                        : null)
                   : _saveRingtone,
               child: _saving
                   ? LoadingIndicator(size: 20)
@@ -1157,7 +1157,11 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         if (needsPremiumForSave) ...[
-                          Icon(Icons.lock, size: 14, color: context.textSecondary),
+                          Icon(
+                            Icons.lock,
+                            size: 14,
+                            color: context.textSecondary,
+                          ),
                           const SizedBox(width: 4),
                         ],
                         Text(

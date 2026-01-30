@@ -65,7 +65,8 @@ class PremiumPreviewBanner extends ConsumerWidget {
     if (hasPremium) return const SizedBox.shrink();
 
     return GestureDetector(
-      onTap: () => showPremiumInfoSheet(context: context, ref: ref, feature: feature),
+      onTap: () =>
+          showPremiumInfoSheet(context: context, ref: ref, feature: feature),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -163,10 +164,26 @@ class LockOverlay extends ConsumerWidget {
           ),
           if (showLockBadge)
             Positioned(
-              top: badgeAlignment == Alignment.topRight || badgeAlignment == Alignment.topLeft ? -6 : null,
-              bottom: badgeAlignment == Alignment.bottomRight || badgeAlignment == Alignment.bottomLeft ? -6 : null,
-              right: badgeAlignment == Alignment.topRight || badgeAlignment == Alignment.bottomRight ? -6 : null,
-              left: badgeAlignment == Alignment.topLeft || badgeAlignment == Alignment.bottomLeft ? -6 : null,
+              top:
+                  badgeAlignment == Alignment.topRight ||
+                      badgeAlignment == Alignment.topLeft
+                  ? -6
+                  : null,
+              bottom:
+                  badgeAlignment == Alignment.bottomRight ||
+                      badgeAlignment == Alignment.bottomLeft
+                  ? -6
+                  : null,
+              right:
+                  badgeAlignment == Alignment.topRight ||
+                      badgeAlignment == Alignment.bottomRight
+                  ? -6
+                  : null,
+              left:
+                  badgeAlignment == Alignment.topLeft ||
+                      badgeAlignment == Alignment.bottomLeft
+                  ? -6
+                  : null,
               child: const _LockBadge(),
             ),
         ],
@@ -247,17 +264,10 @@ class DisabledControlWithLock extends ConsumerWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Opacity(
-            opacity: 0.5,
-            child: IgnorePointer(child: child),
-          ),
+          Opacity(opacity: 0.5, child: IgnorePointer(child: child)),
           if (showInlineLock) ...[
             const SizedBox(width: 6),
-            Icon(
-              Icons.lock,
-              size: 14,
-              color: Colors.grey.shade500,
-            ),
+            Icon(Icons.lock, size: 14, color: Colors.grey.shade500),
           ],
         ],
       ),
@@ -305,7 +315,11 @@ class PremiumButton extends ConsumerWidget {
         ? FilledButton.icon(
             onPressed: () {
               HapticFeedback.lightImpact();
-              showPremiumInfoSheet(context: context, ref: ref, feature: feature);
+              showPremiumInfoSheet(
+                context: context,
+                ref: ref,
+                feature: feature,
+              );
             },
             style: style?.copyWith(
               backgroundColor: WidgetStateProperty.all(Colors.grey.shade600),
@@ -316,7 +330,11 @@ class PremiumButton extends ConsumerWidget {
         : OutlinedButton.icon(
             onPressed: () {
               HapticFeedback.lightImpact();
-              showPremiumInfoSheet(context: context, ref: ref, feature: feature);
+              showPremiumInfoSheet(
+                context: context,
+                ref: ref,
+                feature: feature,
+              );
             },
             style: style,
             icon: Icon(Icons.lock, size: 16, color: Colors.grey.shade500),
@@ -409,7 +427,11 @@ class PremiumTextField extends ConsumerWidget {
           child: TextField(
             controller: controller,
             decoration: baseDecoration.copyWith(
-              suffixIcon: Icon(Icons.lock, size: 18, color: Colors.grey.shade500),
+              suffixIcon: Icon(
+                Icons.lock,
+                size: 18,
+                color: Colors.grey.shade500,
+              ),
             ),
             maxLines: maxLines,
             enabled: false,
@@ -470,7 +492,8 @@ class PremiumInfoSheet extends ConsumerStatefulWidget {
 class _PremiumInfoSheetState extends ConsumerState<PremiumInfoSheet> {
   bool _isLoading = false;
 
-  OneTimePurchase? get _purchase => OneTimePurchases.getByFeature(widget.feature);
+  OneTimePurchase? get _purchase =>
+      OneTimePurchases.getByFeature(widget.feature);
 
   IconData get _featureIcon {
     switch (widget.feature) {
@@ -523,32 +546,80 @@ class _PremiumInfoSheetState extends ConsumerState<PremiumInfoSheet> {
     switch (widget.feature) {
       case PremiumFeature.automations:
         return [
-          const _Benefit(Icons.notifications_active, 'Smart Alerts', 'Battery low, node offline, and more'),
-          const _Benefit(Icons.schedule, 'Scheduled Actions', 'Run at specific times'),
-          const _Benefit(Icons.location_on, 'Geofence Triggers', 'React to location events'),
+          const _Benefit(
+            Icons.notifications_active,
+            'Smart Alerts',
+            'Battery low, node offline, and more',
+          ),
+          const _Benefit(
+            Icons.schedule,
+            'Scheduled Actions',
+            'Run at specific times',
+          ),
+          const _Benefit(
+            Icons.location_on,
+            'Geofence Triggers',
+            'React to location events',
+          ),
         ];
       case PremiumFeature.iftttIntegration:
         return [
-          const _Benefit(Icons.home, 'Smart Home', 'Control lights, locks, and devices'),
-          const _Benefit(Icons.notifications, 'Cross-Platform', 'Slack, Discord, email alerts'),
-          const _Benefit(Icons.table_chart, 'Logging', 'Save events to spreadsheets'),
+          const _Benefit(
+            Icons.home,
+            'Smart Home',
+            'Control lights, locks, and devices',
+          ),
+          const _Benefit(
+            Icons.notifications,
+            'Cross-Platform',
+            'Slack, Discord, email alerts',
+          ),
+          const _Benefit(
+            Icons.table_chart,
+            'Logging',
+            'Save events to spreadsheets',
+          ),
         ];
       case PremiumFeature.homeWidgets:
         return [
-          const _Benefit(Icons.show_chart, 'Live Charts', 'Real-time data visualization'),
-          const _Benefit(Icons.battery_full, 'Monitoring', 'Battery, sensors, telemetry'),
-          const _Benefit(Icons.dashboard_customize, 'Custom Layouts', 'Build your own views'),
+          const _Benefit(
+            Icons.show_chart,
+            'Live Charts',
+            'Real-time data visualization',
+          ),
+          const _Benefit(
+            Icons.battery_full,
+            'Monitoring',
+            'Battery, sensors, telemetry',
+          ),
+          const _Benefit(
+            Icons.dashboard_customize,
+            'Custom Layouts',
+            'Build your own views',
+          ),
         ];
       case PremiumFeature.customRingtones:
         return [
-          const _Benefit(Icons.library_music, '10,000+ Tones', 'Massive searchable library'),
-          const _Benefit(Icons.search, 'Easy Search', 'Find any tune instantly'),
+          const _Benefit(
+            Icons.library_music,
+            '10,000+ Tones',
+            'Massive searchable library',
+          ),
+          const _Benefit(
+            Icons.search,
+            'Easy Search',
+            'Find any tune instantly',
+          ),
           const _Benefit(Icons.star, 'Custom Presets', 'Save your favorites'),
         ];
       case PremiumFeature.premiumThemes:
         return [
           const _Benefit(Icons.palette, '15 Colors', 'Premium accent options'),
-          const _Benefit(Icons.auto_awesome, 'Exclusive', 'Unique combinations'),
+          const _Benefit(
+            Icons.auto_awesome,
+            'Exclusive',
+            'Unique combinations',
+          ),
         ];
     }
   }
@@ -620,7 +691,8 @@ class _PremiumInfoSheetState extends ConsumerState<PremiumInfoSheet> {
     final storePrice = storeProductsAsync.whenOrNull(
       data: (products) => products[_purchase?.productId]?.priceString,
     );
-    final displayPrice = storePrice ?? '\$${_purchase?.price.toStringAsFixed(2) ?? "3.99"}';
+    final displayPrice =
+        storePrice ?? '\$${_purchase?.price.toStringAsFixed(2) ?? "3.99"}';
 
     return DraggableScrollableSheet(
       initialChildSize: 0.65,
@@ -656,7 +728,10 @@ class _PremiumInfoSheetState extends ConsumerState<PremiumInfoSheet> {
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [context.accentColor, context.accentColor.withValues(alpha: 0.7)],
+                        colors: [
+                          context.accentColor,
+                          context.accentColor.withValues(alpha: 0.7),
+                        ],
                       ),
                       shape: BoxShape.circle,
                       boxShadow: [
@@ -693,38 +768,50 @@ class _PremiumInfoSheetState extends ConsumerState<PremiumInfoSheet> {
                 const SizedBox(height: 24),
 
                 // Benefits
-                ..._benefits.map((b) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: context.accentColor.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(10),
+                ..._benefits.map(
+                  (b) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: context.accentColor.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(
+                            b.icon,
+                            color: context.accentColor,
+                            size: 20,
+                          ),
                         ),
-                        child: Icon(b.icon, color: context.accentColor, size: 20),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              b.title,
-                              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                            ),
-                            Text(
-                              b.subtitle,
-                              style: TextStyle(color: context.textSecondary, fontSize: 12),
-                            ),
-                          ],
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                b.title,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              Text(
+                                b.subtitle,
+                                style: TextStyle(
+                                  color: context.textSecondary,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                )),
+                ),
                 const SizedBox(height: 20),
 
                 // Purchase button
@@ -735,7 +822,10 @@ class _PremiumInfoSheetState extends ConsumerState<PremiumInfoSheet> {
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [context.accentColor, context.accentColor.withValues(alpha: 0.8)],
+                        colors: [
+                          context.accentColor,
+                          context.accentColor.withValues(alpha: 0.8),
+                        ],
                       ),
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
@@ -751,13 +841,19 @@ class _PremiumInfoSheetState extends ConsumerState<PremiumInfoSheet> {
                             child: SizedBox(
                               width: 24,
                               height: 24,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             ),
                           )
                         : Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.star_rounded, color: Colors.white),
+                              const Icon(
+                                Icons.star_rounded,
+                                color: Colors.white,
+                              ),
                               const SizedBox(width: 8),
                               Text(
                                 'Unlock for $displayPrice',
@@ -789,7 +885,10 @@ class _PremiumInfoSheetState extends ConsumerState<PremiumInfoSheet> {
                       onPressed: _isLoading ? null : _handleRestore,
                       child: Text(
                         'Restore Purchases',
-                        style: TextStyle(color: context.textSecondary, fontSize: 13),
+                        style: TextStyle(
+                          color: context.textSecondary,
+                          fontSize: 13,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -797,7 +896,10 @@ class _PremiumInfoSheetState extends ConsumerState<PremiumInfoSheet> {
                       onPressed: () => Navigator.of(context).pop(false),
                       child: Text(
                         'Not now',
-                        style: TextStyle(color: context.textTertiary, fontSize: 13),
+                        style: TextStyle(
+                          color: context.textTertiary,
+                          fontSize: 13,
+                        ),
                       ),
                     ),
                   ],
@@ -859,7 +961,7 @@ class PremiumExplanationCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final hasPremium = ref.watch(hasFeatureProvider(feature));
-    
+
     // Hide if premium is unlocked
     if (hasPremium) return const SizedBox.shrink();
 
@@ -883,7 +985,11 @@ class PremiumExplanationCard extends ConsumerWidget {
           childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           iconColor: context.textSecondary,
           collapsedIconColor: context.textSecondary,
-          leading: Icon(Icons.lock_outline, color: context.textSecondary, size: 24),
+          leading: Icon(
+            Icons.lock_outline,
+            color: context.textSecondary,
+            size: 24,
+          ),
           title: Text(
             title,
             style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
@@ -907,7 +1013,11 @@ class PremiumExplanationCard extends ConsumerWidget {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.lightbulb_outline, size: 16, color: context.accentColor),
+                        Icon(
+                          Icons.lightbulb_outline,
+                          size: 16,
+                          color: context.accentColor,
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           'Example',
@@ -922,12 +1032,18 @@ class PremiumExplanationCard extends ConsumerWidget {
                     const SizedBox(height: 8),
                     Text(
                       exampleTitle!,
-                      style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       exampleDescription!,
-                      style: TextStyle(color: context.textSecondary, fontSize: 13),
+                      style: TextStyle(
+                        color: context.textSecondary,
+                        fontSize: 13,
+                      ),
                     ),
                   ],
                 ),

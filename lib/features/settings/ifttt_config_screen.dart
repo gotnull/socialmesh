@@ -94,7 +94,9 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
 
   Future<void> _saveConfig() async {
     // Check premium when enabling IFTTT
-    final hasPremium = ref.read(hasFeatureProvider(PremiumFeature.iftttIntegration));
+    final hasPremium = ref.read(
+      hasFeatureProvider(PremiumFeature.iftttIntegration),
+    );
     if (_enabled && !hasPremium) {
       showPremiumInfoSheet(
         context: context,
@@ -235,7 +237,10 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                   feature: PremiumFeature.iftttIntegration,
                 ),
                 icon: const Icon(Icons.lock, size: 14, color: Colors.grey),
-                label: Text('Save', style: TextStyle(color: context.textSecondary)),
+                label: Text(
+                  'Save',
+                  style: TextStyle(color: context.textSecondary),
+                ),
               ),
           ],
         ),
@@ -249,9 +254,11 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
                 child: PremiumExplanationCard(
                   feature: PremiumFeature.iftttIntegration,
                   title: 'Connect to 700+ Services',
-                  description: 'Trigger smart home devices, log events to spreadsheets, send Discord/Slack messages, and more.',
+                  description:
+                      'Trigger smart home devices, log events to spreadsheets, send Discord/Slack messages, and more.',
                   exampleTitle: 'Node goes offline',
-                  exampleDescription: 'Automatically turn on a smart light or send yourself a notification when your node is no longer heard.',
+                  exampleDescription:
+                      'Automatically turn on a smart light or send yourself a notification when your node is no longer heard.',
                   initiallyExpanded: true,
                 ),
               ),
@@ -286,8 +293,10 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
   }
 
   Widget _buildEnableTile() {
-    final hasPremium = ref.watch(hasFeatureProvider(PremiumFeature.iftttIntegration));
-    
+    final hasPremium = ref.watch(
+      hasFeatureProvider(PremiumFeature.iftttIntegration),
+    );
+
     return _SettingsTile(
       icon: Icons.webhook,
       iconColor: _enabled && hasPremium ? context.accentColor : null,

@@ -624,7 +624,9 @@ class _AutomationEditorScreenState
     // Check premium before saving (new automations only)
     // Editing existing automations is always allowed to not break user's workflows
     if (!_isEditing) {
-      final hasPremium = ref.read(hasFeatureProvider(PremiumFeature.automations));
+      final hasPremium = ref.read(
+        hasFeatureProvider(PremiumFeature.automations),
+      );
 
       if (!hasPremium) {
         showPremiumInfoSheet(

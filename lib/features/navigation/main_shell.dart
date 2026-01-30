@@ -268,9 +268,9 @@ void _navigateFromDrawer(BuildContext context, Widget screen) {
   // Use post-frame callback to ensure drawer animation completes
   WidgetsBinding.instance.addPostFrameCallback((_) {
     if (context.mounted) {
-      Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => screen),
-      );
+      Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: (_) => screen));
     }
   });
 }
@@ -593,7 +593,10 @@ class _MainShellState extends ConsumerState<MainShell> {
                             ref.haptics.tabChange();
                             if (isPremium && !allowNavigation) {
                               // Upsell disabled - redirect to subscription screen
-                              _navigateFromDrawer(context, const SubscriptionScreen());
+                              _navigateFromDrawer(
+                                context,
+                                const SubscriptionScreen(),
+                              );
                             } else {
                               // Push screen with back button for consistent navigation
                               // If upsell is enabled, the screen handles gating on actions

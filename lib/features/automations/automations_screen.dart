@@ -246,10 +246,7 @@ class AutomationsScreen extends ConsumerWidget {
                 children: [
                   const Text(
                     'Create from Scratch',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -1054,9 +1051,7 @@ class _AddAutomationSheet extends ConsumerWidget {
                             children: [
                               const Text(
                                 'Create from Scratch',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                ),
+                                style: TextStyle(fontWeight: FontWeight.w600),
                               ),
                               const SizedBox(height: 4),
                               const Text(

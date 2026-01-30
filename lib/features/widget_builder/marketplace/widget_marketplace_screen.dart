@@ -725,9 +725,11 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
             // Install button
             Builder(
               builder: (context) {
-                final hasPremium = ref.watch(hasFeatureProvider(PremiumFeature.homeWidgets));
+                final hasPremium = ref.watch(
+                  hasFeatureProvider(PremiumFeature.homeWidgets),
+                );
                 final isLocked = !hasPremium && !isAlreadyInstalled;
-                
+
                 return SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -738,8 +740,8 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
                       backgroundColor: isAlreadyInstalled
                           ? context.textSecondary.withValues(alpha: 0.3)
                           : isLocked
-                              ? Colors.grey.shade600
-                              : context.accentColor,
+                          ? Colors.grey.shade600
+                          : context.accentColor,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -769,7 +771,8 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
                                   color: Colors.white70,
                                   size: 18,
                                 ),
-                              if (isAlreadyInstalled || isLocked) const SizedBox(width: 8),
+                              if (isAlreadyInstalled || isLocked)
+                                const SizedBox(width: 8),
                               Text(
                                 isAlreadyInstalled
                                     ? 'Already Installed'
