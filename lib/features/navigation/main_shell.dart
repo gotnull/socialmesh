@@ -260,6 +260,21 @@ class _DrawerMenuItem {
   });
 }
 
+/// Helper to navigate from drawer items.
+/// Closes drawer first, then navigates after a brief delay to ensure
+/// the drawer close animation completes smoothly.
+void _navigateFromDrawer(BuildContext context, Widget screen) {
+  Navigator.of(context).pop(); // Close drawer
+  // Use post-frame callback to ensure drawer animation completes
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (context.mounted) {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (_) => screen),
+      );
+    }
+  });
+}
+
 /// Main navigation shell with bottom navigation bar
 // Global key to reference the existing PresenceFeedScreen instance when it's
 // part of the MainShell. This allows other widgets to instruct the presence
@@ -576,24 +591,13 @@ class _MainShellState extends ConsumerState<MainShell> {
                         ? null
                         : () {
                             ref.haptics.tabChange();
-                            Navigator.of(context).pop();
-
                             if (isPremium && !allowNavigation) {
                               // Upsell disabled - redirect to subscription screen
-                              Navigator.of(context).push(
-                                MaterialPageRoute<void>(
-                                  builder: (context) =>
-                                      const SubscriptionScreen(),
-                                ),
-                              );
+                              _navigateFromDrawer(context, const SubscriptionScreen());
                             } else {
                               // Push screen with back button for consistent navigation
                               // If upsell is enabled, the screen handles gating on actions
-                              Navigator.of(context).push(
-                                MaterialPageRoute<void>(
-                                  builder: (context) => item.screen,
-                                ),
-                              );
+                              _navigateFromDrawer(context, item.screen);
                             }
                           },
                   ),
@@ -659,12 +663,7 @@ class _MainShellState extends ConsumerState<MainShell> {
               isSelected: false,
               onTap: () {
                 ref.haptics.tabChange();
-                Navigator.of(context).pop();
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (context) => _drawerMenuItems[0].screen,
-                  ),
-                );
+                _navigateFromDrawer(context, _drawerMenuItems[0].screen);
               },
             ),
           ),
@@ -703,20 +702,11 @@ class _MainShellState extends ConsumerState<MainShell> {
       child: InkWell(
         onTap: () {
           ref.haptics.tabChange();
-          Navigator.of(context).pop();
           // Navigate to Account screen if not signed in, Profile screen otherwise
           if (isSignedIn) {
-            Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (context) => const ProfileScreen(),
-              ),
-            );
+            _navigateFromDrawer(context, const ProfileScreen());
           } else {
-            Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (context) => const AccountSubscriptionsScreen(),
-              ),
-            );
+            _navigateFromDrawer(context, const AccountSubscriptionsScreen());
           }
         },
         borderRadius: BorderRadius.circular(12),
@@ -845,10 +835,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                   SliverToBoxAdapter(
                     child: _DrawerAdminSection(
                       onNavigate: (screen) {
-                        Navigator.of(context).pop();
-                        Navigator.of(
-                          context,
-                        ).push(MaterialPageRoute(builder: (_) => screen));
+                        _navigateFromDrawer(context, screen);
                       },
                     ),
                   ),
@@ -904,10 +891,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                 alignment: Alignment.centerLeft,
                 child: _SettingsButton(
                   onTap: () {
-                    Navigator.of(context).pop();
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                    );
+                    _navigateFromDrawer(context, const SettingsScreen());
                   },
                 ),
               ),
@@ -1368,7 +1352,7 @@ class _DrawerMenuTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final accentColor = theme.colorScheme.primary;
-    final goldColor = Colors.amber.shade600;
+    final lockedColor = Colors.grey.shade600;
     final disabledAlpha = 0.35;
 
     return BouncyTap(
@@ -1383,13 +1367,13 @@ class _DrawerMenuTile extends StatelessWidget {
           color: isSelected
               ? accentColor.withValues(alpha: 0.15)
               : isLocked
-              ? goldColor.withValues(alpha: 0.05)
+              ? lockedColor.withValues(alpha: 0.05)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
           border: isSelected
               ? Border.all(color: accentColor.withValues(alpha: 0.3))
               : isLocked
-              ? Border.all(color: goldColor.withValues(alpha: 0.2))
+              ? Border.all(color: lockedColor.withValues(alpha: 0.15))
               : null,
         ),
         child: Opacity(
@@ -1403,7 +1387,7 @@ class _DrawerMenuTile extends StatelessWidget {
                   color: isSelected
                       ? accentColor.withValues(alpha: 0.2)
                       : isLocked
-                      ? goldColor.withValues(alpha: 0.1)
+                      ? lockedColor.withValues(alpha: 0.1)
                       : theme.colorScheme.surface,
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -1416,7 +1400,7 @@ class _DrawerMenuTile extends StatelessWidget {
                       color: isSelected
                           ? accentColor
                           : isLocked
-                          ? goldColor
+                          ? lockedColor
                           : iconColor ??
                                 theme.colorScheme.onSurface.withValues(
                                   alpha: 0.6,
@@ -1483,12 +1467,12 @@ class _DrawerMenuTile extends StatelessWidget {
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [goldColor, goldColor.withValues(alpha: 0.8)],
+                      colors: [lockedColor, lockedColor.withValues(alpha: 0.8)],
                     ),
                     borderRadius: BorderRadius.circular(8),
                     boxShadow: [
                       BoxShadow(
-                        color: goldColor.withValues(alpha: 0.3),
+                        color: lockedColor.withValues(alpha: 0.3),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),
@@ -1822,7 +1806,7 @@ class _DrawerAdminSection extends ConsumerWidget {
                     icon: Icons.store,
                     label: 'Device Shop',
                     isSelected: false,
-                    iconColor: Colors.amber.shade600,
+                    iconColor: Colors.teal.shade400,
                     onTap: () {
                       ref.haptics.tabChange();
                       onNavigate(const DeviceShopScreen());
@@ -1834,7 +1818,7 @@ class _DrawerAdminSection extends ConsumerWidget {
                     icon: Icons.rate_review_outlined,
                     label: 'Review Moderation',
                     isSelected: false,
-                    iconColor: Colors.amber.shade600,
+                    iconColor: Colors.blue.shade400,
                     badgeCount: ref
                         .watch(pendingReviewCountProvider)
                         .when(

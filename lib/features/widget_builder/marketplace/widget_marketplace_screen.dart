@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/widgets/ico_help_system.dart';
+import '../../../core/widgets/premium_gating.dart';
+import '../../../models/subscription_models.dart';
 import '../../../providers/help_providers.dart';
+import '../../../providers/subscription_providers.dart';
 import '../marketplace/widget_marketplace_service.dart';
 import '../models/widget_schema.dart';
 import '../renderer/widget_renderer.dart';
 import '../storage/widget_storage_service.dart';
-import '../widget_builder_screen.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/widget_preview_card.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
@@ -721,55 +723,70 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
             ],
             SizedBox(height: 32),
             // Install button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _isInstalling || isAlreadyInstalled
-                    ? null
-                    : _installWidget,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: isAlreadyInstalled
-                      ? context.textSecondary.withValues(alpha: 0.3)
-                      : context.accentColor,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: _isInstalling
-                    ? const SizedBox(
-                        height: 24,
-                        width: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.5,
-                          color: Colors.white,
-                        ),
-                      )
-                    : Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          if (isAlreadyInstalled)
-                            const Icon(
-                              Icons.check_circle,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          if (isAlreadyInstalled) const SizedBox(width: 8),
-                          Text(
-                            isAlreadyInstalled
-                                ? 'Already Installed'
-                                : 'Install Widget',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: isAlreadyInstalled
-                                  ? context.textSecondary
-                                  : Colors.white,
-                            ),
-                          ),
-                        ],
+            Builder(
+              builder: (context) {
+                final hasPremium = ref.watch(hasFeatureProvider(PremiumFeature.homeWidgets));
+                final isLocked = !hasPremium && !isAlreadyInstalled;
+                
+                return SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _isInstalling || isAlreadyInstalled
+                        ? null
+                        : _installWidget,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: isAlreadyInstalled
+                          ? context.textSecondary.withValues(alpha: 0.3)
+                          : isLocked
+                              ? Colors.grey.shade600
+                              : context.accentColor,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-              ),
+                    ),
+                    child: _isInstalling
+                        ? const SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              if (isAlreadyInstalled)
+                                const Icon(
+                                  Icons.check_circle,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                              if (isLocked)
+                                const Icon(
+                                  Icons.lock,
+                                  color: Colors.white70,
+                                  size: 18,
+                                ),
+                              if (isAlreadyInstalled || isLocked) const SizedBox(width: 8),
+                              Text(
+                                isAlreadyInstalled
+                                    ? 'Already Installed'
+                                    : 'Install Widget',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: isAlreadyInstalled || isLocked
+                                      ? Colors.white70
+                                      : Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                  ),
+                );
+              },
             ),
           ],
         ),
@@ -791,6 +808,17 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
   }
 
   Future<void> _installWidget() async {
+    // Check premium before allowing widget install
+    final hasPremium = ref.read(hasFeatureProvider(PremiumFeature.homeWidgets));
+    if (!hasPremium) {
+      showPremiumInfoSheet(
+        context: context,
+        ref: ref,
+        feature: PremiumFeature.homeWidgets,
+      );
+      return;
+    }
+
     setState(() => _isInstalling = true);
 
     try {
@@ -818,11 +846,15 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
           context,
           '${widget.marketplaceWidget.name} installed!',
         );
-        // Navigate to My Widgets screen, replacing the entire marketplace stack
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const WidgetBuilderScreen()),
-          (route) => route.isFirst,
-        );
+        // Pop back to Widget Builder screen (2 pops: detail sheet + marketplace)
+        // This preserves the navigation stack better than pushAndRemoveUntil
+        var popCount = 0;
+        Navigator.of(context).popUntil((route) {
+          popCount++;
+          // Pop until we're at the WidgetBuilderScreen (usually 2 routes back)
+          // or until we can't pop anymore
+          return popCount > 2 || !Navigator.of(context).canPop();
+        });
       }
     } catch (e) {
       if (mounted) {

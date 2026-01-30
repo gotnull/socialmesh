@@ -4,8 +4,8 @@ import 'package:socialmesh/core/theme.dart';
 
 void main() {
   group('AccentColors', () {
-    test('all list contains 12 colors', () {
-      expect(AccentColors.all.length, 12);
+    test('all list contains 18 colors', () {
+      expect(AccentColors.all.length, 18);
     });
 
     test('names list has same length as all list', () {

@@ -100,7 +100,7 @@ class _PremiumUpsellSheetState extends ConsumerState<PremiumUpsellSheet> {
         return [
           _FeatureBenefit(
             icon: Icons.library_music,
-            title: '10,000+ Ringtones',
+            title: '7,000+ Ringtones',
             description: 'Classic melodies, TV themes, games & more',
           ),
           _FeatureBenefit(

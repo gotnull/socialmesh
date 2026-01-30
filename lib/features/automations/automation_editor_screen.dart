@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
-import '../../core/widgets/premium_feature_gate.dart';
+import '../../core/widgets/premium_gating.dart';
 import '../../models/subscription_models.dart';
 import '../../providers/subscription_providers.dart';
 import '../../utils/snackbar.dart';
@@ -411,20 +411,13 @@ class _AutomationEditorScreenState
     );
   }
 
-  /// Build the save button with premium indicator for new automations
+  /// Build the save button
   Widget _buildSaveButton() {
-    final hasAutomationsPack = ref.watch(
-      hasFeatureProvider(PremiumFeature.automations),
-    );
-    final showPremiumBadge = !_isEditing && !hasAutomationsPack;
-
-    // Use premium gradient for non-premium users creating new automations
-    final gradientColors = showPremiumBadge
-        ? [Colors.amber.shade400, Colors.orange.shade600]
-        : [
-            Theme.of(context).colorScheme.primary,
-            Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
-          ];
+    final theme = Theme.of(context);
+    final gradientColors = [
+      theme.colorScheme.primary,
+      theme.colorScheme.primary.withValues(alpha: 0.8),
+    ];
 
     return SafeArea(
       child: Padding(
@@ -437,33 +430,15 @@ class _AutomationEditorScreenState
             decoration: BoxDecoration(
               gradient: LinearGradient(colors: gradientColors),
               borderRadius: BorderRadius.circular(12),
-              boxShadow: showPremiumBadge
-                  ? [
-                      BoxShadow(
-                        color: Colors.amber.withValues(alpha: 0.3),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ]
-                  : null,
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                if (showPremiumBadge) ...[
-                  const Icon(Icons.star_rounded, color: Colors.white, size: 20),
-                  const SizedBox(width: 8),
-                ],
-                Text(
-                  _isEditing ? 'Save Changes' : 'Create Automation',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                  ),
-                ),
-              ],
+            child: Text(
+              _isEditing ? 'Save Changes' : 'Create Automation',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+              ),
             ),
           ),
         ),
@@ -649,16 +624,17 @@ class _AutomationEditorScreenState
     // Check premium before saving (new automations only)
     // Editing existing automations is always allowed to not break user's workflows
     if (!_isEditing) {
-      final hasAccess = await checkPremiumOrShowUpsell(
-        context: context,
-        ref: ref,
-        feature: PremiumFeature.automations,
-        featureDescription:
-            'Save this automation and unlock powerful automatic alerts, smart messages, and scheduled actions.',
-      );
+      final hasPremium = ref.read(hasFeatureProvider(PremiumFeature.automations));
 
-      if (!hasAccess) {
-        // User didn't purchase - their config is preserved so they can try again
+      if (!hasPremium) {
+        showPremiumInfoSheet(
+          context: context,
+          ref: ref,
+          feature: PremiumFeature.automations,
+          customDescription:
+              'Create powerful automatic alerts, smart messages, and scheduled actions that run in the background.',
+        );
+        // User doesn't have premium - their config is preserved so they can try again after purchase
         return;
       }
     }

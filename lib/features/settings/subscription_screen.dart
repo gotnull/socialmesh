@@ -39,7 +39,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   }
 
   String get _ringtoneCountFormatted {
-    if (_ringtoneCount == 0) return '10,000+';
+    if (_ringtoneCount == 0) return '7,000+';
     if (_ringtoneCount >= 1000) {
       return '${(_ringtoneCount / 1000).toStringAsFixed(1)}k+'.replaceAll(
         '.0',

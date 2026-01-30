@@ -8,7 +8,7 @@ import 'package:latlong2/latlong.dart';
 import '../../core/map_config.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/mesh_map_widget.dart';
-import '../../core/widgets/premium_feature_gate.dart';
+import '../../core/widgets/premium_gating.dart';
 import '../../models/subscription_models.dart';
 import '../../models/user_profile.dart';
 import '../../providers/app_providers.dart';
@@ -93,14 +93,15 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
   }
 
   Future<void> _saveConfig() async {
-    // Check premium before saving (allow disabling without premium)
-    if (_enabled) {
-      final hasPremium = await checkPremiumOrShowUpsell(
+    // Check premium when enabling IFTTT
+    final hasPremium = ref.read(hasFeatureProvider(PremiumFeature.iftttIntegration));
+    if (_enabled && !hasPremium) {
+      showPremiumInfoSheet(
         context: context,
         ref: ref,
         feature: PremiumFeature.iftttIntegration,
       );
-      if (!hasPremium || !mounted) return;
+      return;
     }
 
     // Require valid webhook key when IFTTT is enabled
@@ -222,25 +223,41 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
       child: Scaffold(
         backgroundColor: context.background,
         appBar: AppBar(
-          title: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('IFTTT Integration'),
-              if (!hasPremium) ...[
-                const SizedBox(width: 8),
-                const PremiumBadge(size: 16),
-              ],
-            ],
-          ),
+          title: const Text('IFTTT Integration'),
           actions: [
-            TextButton(onPressed: _saveConfig, child: const Text('Save')),
+            if (hasPremium)
+              TextButton(onPressed: _saveConfig, child: const Text('Save'))
+            else
+              TextButton.icon(
+                onPressed: () => showPremiumInfoSheet(
+                  context: context,
+                  ref: ref,
+                  feature: PremiumFeature.iftttIntegration,
+                ),
+                icon: const Icon(Icons.lock, size: 14, color: Colors.grey),
+                label: Text('Save', style: TextStyle(color: context.textSecondary)),
+              ),
           ],
         ),
         body: ListView(
           padding: const EdgeInsets.symmetric(vertical: 8),
           children: [
+            // Premium explanation card (only shown when not premium)
+            if (!hasPremium)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                child: PremiumExplanationCard(
+                  feature: PremiumFeature.iftttIntegration,
+                  title: 'Connect to 700+ Services',
+                  description: 'Trigger smart home devices, log events to spreadsheets, send Discord/Slack messages, and more.',
+                  exampleTitle: 'Node goes offline',
+                  exampleDescription: 'Automatically turn on a smart light or send yourself a notification when your node is no longer heard.',
+                  initiallyExpanded: true,
+                ),
+              ),
             _buildEnableTile(),
-            if (_enabled) ...[
+            // Only show form fields when premium AND enabled
+            if (hasPremium && _enabled) ...[
               const SizedBox(height: 16),
               const _SectionHeader(title: 'WEBHOOK'),
               _buildWebhookSection(),
@@ -259,9 +276,9 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
             ],
             const SizedBox(height: 16),
             _buildInfoCard(),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             _buildEventNamesCard(),
-            SizedBox(height: 32),
+            const SizedBox(height: 32),
           ],
         ),
       ),
@@ -269,18 +286,36 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
   }
 
   Widget _buildEnableTile() {
+    final hasPremium = ref.watch(hasFeatureProvider(PremiumFeature.iftttIntegration));
+    
     return _SettingsTile(
       icon: Icons.webhook,
-      iconColor: _enabled ? context.accentColor : null,
+      iconColor: _enabled && hasPremium ? context.accentColor : null,
       title: 'Enable IFTTT',
       subtitle: 'Send events to IFTTT Webhooks service',
-      trailing: ThemedSwitch(
-        value: _enabled,
-        onChanged: (value) {
-          HapticFeedback.selectionClick();
-          setState(() => _enabled = value);
-        },
-      ),
+      trailing: hasPremium
+          ? ThemedSwitch(
+              value: _enabled,
+              onChanged: (value) {
+                HapticFeedback.selectionClick();
+                setState(() => _enabled = value);
+              },
+            )
+          : GestureDetector(
+              onTap: () => showPremiumInfoSheet(
+                context: context,
+                ref: ref,
+                feature: PremiumFeature.iftttIntegration,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.lock, size: 16, color: context.textSecondary),
+                  const SizedBox(width: 8),
+                  ThemedSwitch(value: false, onChanged: null),
+                ],
+              ),
+            ),
     );
   }
 

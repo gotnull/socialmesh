@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/premium_feature_gate.dart';
+import '../../core/widgets/premium_gating.dart';
 import '../../models/subscription_models.dart';
 import '../../models/user_profile.dart';
 import '../../providers/app_providers.dart';
@@ -886,7 +887,24 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
     }
   }
 
+  /// Returns true if premium is required for the current selection and user doesn't have it.
+  bool get _requiresPremiumForSave {
+    // Saving library or custom ringtones requires premium
+    return (_selectedSource == 'library' || _selectedSource == 'custom') &&
+        !ref.read(hasFeatureProvider(PremiumFeature.customRingtones));
+  }
+
   Future<void> _saveRingtone() async {
+    // Check if premium is required for saving this ringtone
+    if (_requiresPremiumForSave) {
+      showPremiumInfoSheet(
+        context: context,
+        ref: ref,
+        feature: PremiumFeature.customRingtones,
+      );
+      return;
+    }
+
     final validation = _validateRtttl(_rtttlController.text);
     if (validation != null) {
       showErrorSnackBar(context, validation);
@@ -1100,6 +1118,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
   @override
   Widget build(BuildContext context) {
     final customRingtones = ref.watch(customRingtonesProvider);
+    final needsPremiumForSave = _requiresPremiumForSave;
 
     return Scaffold(
       backgroundColor: context.background,
@@ -1122,15 +1141,35 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: TextButton(
-              onPressed: _saving ? null : _saveRingtone,
+              // Disable the button when premium is required and user doesn't have it
+              onPressed: _saving || needsPremiumForSave
+                  ? (needsPremiumForSave
+                      ? () => showPremiumInfoSheet(
+                            context: context,
+                            ref: ref,
+                            feature: PremiumFeature.customRingtones,
+                          )
+                      : null)
+                  : _saveRingtone,
               child: _saving
                   ? LoadingIndicator(size: 20)
-                  : Text(
-                      'Save',
-                      style: TextStyle(
-                        color: context.accentColor,
-                        fontWeight: FontWeight.w600,
-                      ),
+                  : Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (needsPremiumForSave) ...[
+                          Icon(Icons.lock, size: 14, color: context.textSecondary),
+                          const SizedBox(width: 4),
+                        ],
+                        Text(
+                          'Save',
+                          style: TextStyle(
+                            color: needsPremiumForSave
+                                ? context.textSecondary
+                                : context.accentColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
             ),
           ),
@@ -1320,23 +1359,14 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                   SizedBox(height: 24),
 
                   // Browse Library section
-                  Row(
-                    children: [
-                      Text(
-                        'RINGTONE LIBRARY',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: context.textTertiary,
-                          letterSpacing: 1,
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      if (!ref.watch(
-                        hasFeatureProvider(PremiumFeature.customRingtones),
-                      ))
-                        const PremiumBadge(size: 16),
-                    ],
+                  Text(
+                    'RINGTONE LIBRARY',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: context.textTertiary,
+                      letterSpacing: 1,
+                    ),
                   ),
                   SizedBox(height: 12),
                   InkWell(
@@ -1738,13 +1768,16 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                           letterSpacing: 1,
                         ),
                       ),
-                      TextButton.icon(
-                        onPressed: _showAddCustomDialog,
-                        icon: Icon(Icons.add, size: 18),
-                        label: Text('Add'),
-                        style: TextButton.styleFrom(
-                          foregroundColor: context.accentColor,
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                      DisabledControlWithLock(
+                        feature: PremiumFeature.customRingtones,
+                        child: TextButton.icon(
+                          onPressed: _showAddCustomDialog,
+                          icon: const Icon(Icons.add, size: 18),
+                          label: const Text('Add'),
+                          style: TextButton.styleFrom(
+                            foregroundColor: context.accentColor,
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                          ),
                         ),
                       ),
                     ],

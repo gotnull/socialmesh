@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
-import '../../core/widgets/premium_feature_gate.dart';
+import '../../core/widgets/premium_gating.dart';
 import '../../models/subscription_models.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/help_providers.dart';
@@ -144,6 +144,8 @@ class AutomationsScreen extends ConsumerWidget {
 
   /// Hero section explaining what automations are
   Widget _buildHeroSection(BuildContext context, bool hasAutomationsPack) {
+    final theme = Theme.of(context);
+    final accentColor = theme.colorScheme.primary;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -151,12 +153,12 @@ class AutomationsScreen extends ConsumerWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Colors.amber.withValues(alpha: 0.15),
-            Colors.orange.withValues(alpha: 0.05),
+            accentColor.withValues(alpha: 0.1),
+            accentColor.withValues(alpha: 0.03),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+        border: Border.all(color: accentColor.withValues(alpha: 0.2)),
       ),
       child: Column(
         children: [
@@ -165,12 +167,12 @@ class AutomationsScreen extends ConsumerWidget {
             height: 80,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.amber.shade400, Colors.orange.shade600],
+                colors: [accentColor, accentColor.withValues(alpha: 0.7)],
               ),
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.amber.withValues(alpha: 0.3),
+                  color: accentColor.withValues(alpha: 0.25),
                   blurRadius: 16,
                   spreadRadius: 2,
                 ),
@@ -193,10 +195,6 @@ class AutomationsScreen extends ConsumerWidget {
               context,
             ).textTheme.bodyMedium?.copyWith(color: context.textSecondary),
           ),
-          if (!hasAutomationsPack) ...[
-            const SizedBox(height: 12),
-            const PremiumChip(label: 'PREMIUM'),
-          ],
         ],
       ),
     );
@@ -246,20 +244,12 @@ class AutomationsScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      const Text(
-                        'Create from Scratch',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      if (!hasAutomationsPack) ...[
-                        const SizedBox(width: 8),
-                        const PremiumChip(compact: true),
-                      ],
-                    ],
+                  const Text(
+                    'Create from Scratch',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -330,47 +320,43 @@ class AutomationsScreen extends ConsumerWidget {
                 final template = templates[index];
                 return BouncyTap(
                   onTap: () => _addFromTemplate(context, ref, template.id),
-                  child: PremiumFeatureGate(
-                    feature: PremiumFeature.automations,
-                    showBadge: !hasAutomationsPack,
-                    child: Container(
-                      width: 140,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: context.card,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: context.border),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: _getTemplateColor(
-                                template.id,
-                              ).withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(
-                              template.icon,
-                              size: 20,
-                              color: _getTemplateColor(template.id),
-                            ),
+                  child: Container(
+                    width: 140,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: context.card,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: context.border),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: _getTemplateColor(
+                              template.id,
+                            ).withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                          const Spacer(),
-                          Text(
-                            template.name,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                          child: Icon(
+                            template.icon,
+                            size: 20,
+                            color: _getTemplateColor(template.id),
                           ),
-                        ],
-                      ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          template.name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
                   ),
                 );
@@ -477,31 +463,26 @@ class AutomationsScreen extends ConsumerWidget {
                   children: triggers.map((type) {
                     return BouncyTap(
                       onTap: () => _createWithTrigger(context, ref, type),
-                      child: PremiumFeatureGate(
-                        feature: PremiumFeature.automations,
-                        showBadge: !hasAutomationsPack,
-                        badgeAlignment: Alignment.topRight,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: context.card,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: context.border),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(type.icon, size: 16),
-                              const SizedBox(width: 6),
-                              Text(
-                                type.displayName,
-                                style: const TextStyle(fontSize: 13),
-                              ),
-                            ],
-                          ),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: context.card,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: context.border),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(type.icon, size: 16),
+                            const SizedBox(width: 6),
+                            Text(
+                              type.displayName,
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                          ],
                         ),
                       ),
                     );
@@ -692,6 +673,17 @@ class AutomationsScreen extends ConsumerWidget {
   }
 
   void _showAddAutomation(BuildContext context, WidgetRef ref) {
+    // Check premium before allowing automation creation
+    final hasPremium = ref.read(hasFeatureProvider(PremiumFeature.automations));
+    if (!hasPremium) {
+      showPremiumInfoSheet(
+        context: context,
+        ref: ref,
+        feature: PremiumFeature.automations,
+      );
+      return;
+    }
+
     showModalBottomSheet(
       context: context,
       backgroundColor: context.surface,
@@ -717,6 +709,17 @@ class AutomationsScreen extends ConsumerWidget {
   }
 
   void _createNewAutomation(BuildContext context, WidgetRef ref) {
+    // Check premium before allowing automation creation
+    final hasPremium = ref.read(hasFeatureProvider(PremiumFeature.automations));
+    if (!hasPremium) {
+      showPremiumInfoSheet(
+        context: context,
+        ref: ref,
+        feature: PremiumFeature.automations,
+      );
+      return;
+    }
+
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const AutomationEditorScreen()),
@@ -728,6 +731,17 @@ class AutomationsScreen extends ConsumerWidget {
     WidgetRef ref,
     TriggerType triggerType,
   ) {
+    // Check premium before allowing automation creation
+    final hasPremium = ref.read(hasFeatureProvider(PremiumFeature.automations));
+    if (!hasPremium) {
+      showPremiumInfoSheet(
+        context: context,
+        ref: ref,
+        feature: PremiumFeature.automations,
+      );
+      return;
+    }
+
     // Create a new automation with pre-filled trigger type
     final automation = Automation(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -766,14 +780,15 @@ class AutomationsScreen extends ConsumerWidget {
     String templateId,
   ) async {
     // Check premium before adding template
-    final hasAccess = await checkPremiumOrShowUpsell(
-      context: context,
-      ref: ref,
-      feature: PremiumFeature.automations,
-      featureDescription: 'Create this automation instantly from a template.',
-    );
-
-    if (!hasAccess) return;
+    final hasPremium = ref.read(hasFeatureProvider(PremiumFeature.automations));
+    if (!hasPremium) {
+      showPremiumInfoSheet(
+        context: context,
+        ref: ref,
+        feature: PremiumFeature.automations,
+      );
+      return;
+    }
 
     await ref.read(automationsProvider.notifier).addFromTemplate(templateId);
     if (context.mounted) {
@@ -952,10 +967,6 @@ class _AddAutomationSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final hasAutomationsPack = ref.watch(
-      hasFeatureProvider(PremiumFeature.automations),
-    );
-
     return DraggableScrollableSheet(
       initialChildSize: 0.85,
       minChildSize: 0.4,
@@ -986,10 +997,6 @@ class _AddAutomationSheet extends ConsumerWidget {
                     context,
                   ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
-                if (!hasAutomationsPack) ...[
-                  const SizedBox(width: 8),
-                  const PremiumChip(label: 'PREMIUM'),
-                ],
               ],
             ),
           ),
@@ -1045,19 +1052,11 @@ class _AddAutomationSheet extends ConsumerWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                children: [
-                                  const Text(
-                                    'Create from Scratch',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  if (!hasAutomationsPack) ...[
-                                    const SizedBox(width: 6),
-                                    const PremiumChip(compact: true),
-                                  ],
-                                ],
+                              const Text(
+                                'Create from Scratch',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                               const SizedBox(height: 4),
                               const Text(

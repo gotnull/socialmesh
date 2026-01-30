@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:socialmesh/core/logging.dart';
 import '../../core/widgets/ico_help_system.dart';
-import '../../core/widgets/premium_feature_gate.dart';
+import '../../core/widgets/premium_gating.dart';
 import '../../models/subscription_models.dart';
 import '../../providers/help_providers.dart';
 import '../../providers/subscription_providers.dart';
@@ -23,7 +23,6 @@ import '../../utils/share_utils.dart';
 import '../../utils/snackbar.dart';
 import '../dashboard/models/dashboard_widget_config.dart';
 import '../dashboard/providers/dashboard_providers.dart';
-import '../dashboard/widget_dashboard_screen.dart';
 
 /// Main widget builder screen - list and manage custom widgets
 class WidgetBuilderScreen extends ConsumerStatefulWidget {
@@ -184,17 +183,6 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
               onPressed: _createNewWidget,
               tooltip: 'Create Widget',
             ),
-            IconButton(
-              icon: const Icon(Icons.dashboard),
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const WidgetDashboardScreen(),
-                  ),
-                );
-              },
-              tooltip: 'Dashboard',
-            ),
             AppBarOverflowMenu<String>(
               onSelected: (value) {
                 switch (value) {
@@ -233,10 +221,6 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
   }
 
   Widget _buildWidgetList() {
-    final hasPremium = ref.watch(
-      hasFeatureProvider(PremiumFeature.homeWidgets),
-    );
-
     if (_myWidgets.isEmpty) {
       return _buildEmptyState(
         icon: Icons.widgets_outlined,
@@ -263,10 +247,6 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
                     ),
                   ),
                 ),
-                if (!hasPremium) ...[
-                  SizedBox(width: 8),
-                  const PremiumBadge(size: 16),
-                ],
               ],
             ),
             SizedBox(height: 12),
@@ -489,6 +469,17 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
 
   void _createNewWidget() async {
     AppLogging.widgetBuilder('[WidgetBuilder] _createNewWidget called');
+
+    // Check premium before allowing widget creation
+    final hasPremium = ref.read(hasFeatureProvider(PremiumFeature.homeWidgets));
+    if (!hasPremium) {
+      showPremiumInfoSheet(
+        context: context,
+        ref: ref,
+        feature: PremiumFeature.homeWidgets,
+      );
+      return;
+    }
 
     final result = await Navigator.push<WidgetWizardResult>(
       context,
