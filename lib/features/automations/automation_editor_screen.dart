@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
+import '../../core/widgets/premium_feature_gate.dart';
+import '../../models/subscription_models.dart';
+import '../../providers/subscription_providers.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/animations.dart';
 import '../../providers/app_providers.dart';
@@ -404,34 +407,63 @@ class _AutomationEditorScreenState
           ),
         ),
       ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: BouncyTap(
-            onTap: _save,
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Theme.of(context).colorScheme.primary,
-                    Theme.of(
-                      context,
-                    ).colorScheme.primary.withValues(alpha: 0.8),
-                  ],
+      bottomNavigationBar: _buildSaveButton(),
+    );
+  }
+
+  /// Build the save button with premium indicator for new automations
+  Widget _buildSaveButton() {
+    final hasAutomationsPack = ref.watch(
+      hasFeatureProvider(PremiumFeature.automations),
+    );
+    final showPremiumBadge = !_isEditing && !hasAutomationsPack;
+
+    // Use premium gradient for non-premium users creating new automations
+    final gradientColors = showPremiumBadge
+        ? [Colors.amber.shade400, Colors.orange.shade600]
+        : [
+            Theme.of(context).colorScheme.primary,
+            Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
+          ];
+
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: BouncyTap(
+          onTap: _save,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(colors: gradientColors),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: showPremiumBadge
+                  ? [
+                      BoxShadow(
+                        color: Colors.amber.withValues(alpha: 0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ]
+                  : null,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (showPremiumBadge) ...[
+                  const Icon(Icons.star_rounded, color: Colors.white, size: 20),
+                  const SizedBox(width: 8),
+                ],
+                Text(
+                  _isEditing ? 'Save Changes' : 'Create Automation',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
                 ),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                _isEditing ? 'Save Changes' : 'Create Automation',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16,
-                ),
-              ),
+              ],
             ),
           ),
         ),
@@ -611,6 +643,23 @@ class _AutomationEditorScreenState
           );
           return;
         }
+      }
+    }
+
+    // Check premium before saving (new automations only)
+    // Editing existing automations is always allowed to not break user's workflows
+    if (!_isEditing) {
+      final hasAccess = await checkPremiumOrShowUpsell(
+        context: context,
+        ref: ref,
+        feature: PremiumFeature.automations,
+        featureDescription:
+            'Save this automation and unlock powerful automatic alerts, smart messages, and scheduled actions.',
+      );
+
+      if (!hasAccess) {
+        // User didn't purchase - their config is preserved so they can try again
+        return;
       }
     }
 

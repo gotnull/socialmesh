@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:socialmesh/core/logging.dart';
 import '../../core/widgets/ico_help_system.dart';
+import '../../core/widgets/premium_feature_gate.dart';
+import '../../models/subscription_models.dart';
 import '../../providers/help_providers.dart';
+import '../../providers/subscription_providers.dart';
 import 'models/widget_schema.dart';
 import 'storage/widget_storage_service.dart';
 import 'wizard/widget_wizard_screen.dart';
@@ -230,6 +233,10 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
   }
 
   Widget _buildWidgetList() {
+    final hasPremium = ref.watch(
+      hasFeatureProvider(PremiumFeature.homeWidgets),
+    );
+
     if (_myWidgets.isEmpty) {
       return _buildEmptyState(
         icon: Icons.widgets_outlined,
@@ -238,20 +245,29 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
         action: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ElevatedButton.icon(
-              onPressed: _createNewWidget,
-              icon: Icon(Icons.add, color: Colors.white),
-              label: Text(
-                'Create Widget',
-                style: TextStyle(color: Colors.white),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: context.accentColor,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: _createNewWidget,
+                  icon: Icon(Icons.add, color: Colors.white),
+                  label: Text(
+                    'Create Widget',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: context.accentColor,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
+                  ),
                 ),
-              ),
+                if (!hasPremium) ...[
+                  SizedBox(width: 8),
+                  const PremiumBadge(size: 16),
+                ],
+              ],
             ),
             SizedBox(height: 12),
             TextButton.icon(

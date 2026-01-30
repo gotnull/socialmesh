@@ -4,9 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
+import '../../core/widgets/premium_feature_gate.dart';
+import '../../models/subscription_models.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/help_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
+import '../../providers/subscription_providers.dart';
 import '../../utils/snackbar.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/edge_fade.dart';
@@ -102,94 +105,480 @@ class AutomationsScreen extends ConsumerWidget {
     );
   }
 
+  /// Build the first-visit/empty state as a guided automation builder
+  /// This transforms "empty list" into "invitation to create"
   Widget _buildEmptyState(BuildContext context, WidgetRef ref) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+    final hasAutomationsPack = ref.watch(
+      hasFeatureProvider(PremiumFeature.automations),
+    );
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Hero section - What this is
+          _buildHeroSection(context, hasAutomationsPack),
+
+          const SizedBox(height: 24),
+
+          // Create from scratch CTA - Primary action
+          _buildCreateFromScratchCard(context, ref, hasAutomationsPack),
+
+          const SizedBox(height: 24),
+
+          // Quick Start Templates - Secondary inspiration
+          _buildTemplatesSection(context, ref, hasAutomationsPack),
+
+          const SizedBox(height: 24),
+
+          // Start with a Trigger - Exploration path
+          _buildTriggerCategoriesSection(context, ref, hasAutomationsPack),
+
+          // Bottom padding
+          SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
+        ],
+      ),
+    );
+  }
+
+  /// Hero section explaining what automations are
+  Widget _buildHeroSection(BuildContext context, bool hasAutomationsPack) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.amber.withValues(alpha: 0.15),
+            Colors.orange.withValues(alpha: 0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.amber.shade400, Colors.orange.shade600],
+              ),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.amber.withValues(alpha: 0.3),
+                  blurRadius: 16,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: const Icon(Icons.bolt, size: 44, color: Colors.white),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Automate Your Mesh',
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Create automations to trigger actions automatically when events occur on your mesh network.',
+            textAlign: TextAlign.center,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: context.textSecondary),
+          ),
+          if (!hasAutomationsPack) ...[
+            const SizedBox(height: 12),
+            const PremiumChip(label: 'PREMIUM'),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// Primary CTA to create from scratch
+  Widget _buildCreateFromScratchCard(
+    BuildContext context,
+    WidgetRef ref,
+    bool hasAutomationsPack,
+  ) {
+    return BouncyTap(
+      onTap: () => _createNewAutomation(context, ref),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+              Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+          ),
+        ),
+        child: Row(
           children: [
             Container(
-              width: 120,
-              height: 120,
+              width: 56,
+              height: 56,
               decoration: BoxDecoration(
-                color: context.card,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.bolt,
-                size: 64,
                 color: Theme.of(
                   context,
-                ).colorScheme.primary.withValues(alpha: 0.5),
+                ).colorScheme.primary.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(
+                Icons.add,
+                size: 28,
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
-            SizedBox(height: 24),
-            Text(
-              'No Automations Yet',
-              style: Theme.of(
-                context,
-              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Create automations to trigger actions automatically when events occur on your mesh network.',
-              textAlign: TextAlign.center,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: Colors.grey),
-            ),
-            const SizedBox(height: 32),
-            // Quick start templates
-            Text(
-              'Quick Start Templates',
-              style: Theme.of(
-                context,
-              ).textTheme.titleSmall?.copyWith(color: Colors.grey),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 44,
-              child: EdgeFade.horizontal(
-                fadeSize: 24,
-                fadeColor: context.background,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: AutomationRepository.templates.length,
-                  separatorBuilder: (_, _) => const SizedBox(width: 8),
-                  itemBuilder: (context, index) {
-                    final template = AutomationRepository.templates[index];
-                    return BouncyTap(
-                      onTap: () => _addFromTemplate(context, ref, template.id),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        decoration: BoxDecoration(
-                          color: context.card,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: context.border),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(template.icon, size: 20),
-                            const SizedBox(width: 8),
-                            Text(template.name),
-                          ],
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Text(
+                        'Create from Scratch',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
                         ),
                       ),
-                    );
-                  },
-                ),
+                      if (!hasAutomationsPack) ...[
+                        const SizedBox(width: 8),
+                        const PremiumChip(compact: true),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Build a custom automation with full control over triggers and actions',
+                    style: TextStyle(
+                      color: context.textSecondary,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
               ),
             ),
+            Icon(Icons.chevron_right, color: context.textTertiary),
           ],
         ),
       ),
     );
+  }
+
+  /// Quick Start Templates section
+  Widget _buildTemplatesSection(
+    BuildContext context,
+    WidgetRef ref,
+    bool hasAutomationsPack,
+  ) {
+    final templates = AutomationRepository.templates;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: Row(
+            children: [
+              Icon(Icons.flash_on, size: 18, color: Colors.amber),
+              const SizedBox(width: 6),
+              Text(
+                'Quick Start Templates',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 4),
+        Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: Text(
+            'One-tap setup for common use cases',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: context.textTertiary),
+          ),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 110,
+          child: EdgeFade.horizontal(
+            fadeSize: 24,
+            fadeColor: context.background,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              itemCount: templates.length,
+              separatorBuilder: (context, index) => const SizedBox(width: 12),
+              itemBuilder: (context, index) {
+                final template = templates[index];
+                return BouncyTap(
+                  onTap: () => _addFromTemplate(context, ref, template.id),
+                  child: PremiumFeatureGate(
+                    feature: PremiumFeature.automations,
+                    showBadge: !hasAutomationsPack,
+                    child: Container(
+                      width: 140,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: context.card,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: context.border),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: _getTemplateColor(
+                                template.id,
+                              ).withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              template.icon,
+                              size: 20,
+                              color: _getTemplateColor(template.id),
+                            ),
+                          ),
+                          const Spacer(),
+                          Text(
+                            template.name,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Get color for template based on its type
+  Color _getTemplateColor(String templateId) {
+    switch (templateId) {
+      case 'low_battery_alert':
+        return Colors.amber;
+      case 'node_offline_alert':
+        return Colors.red;
+      case 'geofence_exit':
+        return Colors.purple;
+      case 'sos_response':
+        return Colors.red.shade700;
+      case 'dead_mans_switch':
+        return Colors.orange;
+      default:
+        return Colors.blue;
+    }
+  }
+
+  /// Trigger categories section for exploration
+  Widget _buildTriggerCategoriesSection(
+    BuildContext context,
+    WidgetRef ref,
+    bool hasAutomationsPack,
+  ) {
+    final triggersByCategory = _getTriggersByCategory();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: Row(
+            children: [
+              Icon(Icons.explore, size: 18, color: context.accentColor),
+              const SizedBox(width: 6),
+              Text(
+                'Start with a Trigger',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 4),
+        Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: Text(
+            'Choose what event starts your automation',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: context.textTertiary),
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Build categories
+        ..._categoryOrder.map((category) {
+          final triggers = triggersByCategory[category];
+          if (triggers == null || triggers.isEmpty) {
+            return const SizedBox.shrink();
+          }
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Category header
+                Row(
+                  children: [
+                    Icon(
+                      _categoryIcon(category),
+                      size: 14,
+                      color: _categoryColor(context, category),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      category,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: _categoryColor(context, category),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                // Trigger chips
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: triggers.map((type) {
+                    return BouncyTap(
+                      onTap: () => _createWithTrigger(context, ref, type),
+                      child: PremiumFeatureGate(
+                        feature: PremiumFeature.automations,
+                        showBadge: !hasAutomationsPack,
+                        badgeAlignment: Alignment.topRight,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: context.card,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: context.border),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(type.icon, size: 16),
+                              const SizedBox(width: 6),
+                              Text(
+                                type.displayName,
+                                style: const TextStyle(fontSize: 13),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  Map<String, List<TriggerType>> _getTriggersByCategory() {
+    final grouped = <String, List<TriggerType>>{};
+    for (final type in TriggerType.values) {
+      final category = type.category;
+      grouped.putIfAbsent(category, () => []).add(type);
+    }
+    return grouped;
+  }
+
+  static const _categoryOrder = [
+    'Node Status',
+    'Battery',
+    'Messages',
+    'Location',
+    'Time',
+    'Signal',
+    'Sensors',
+    'Manual',
+  ];
+
+  IconData _categoryIcon(String category) {
+    switch (category) {
+      case 'Node Status':
+        return Icons.router;
+      case 'Battery':
+        return Icons.battery_std;
+      case 'Messages':
+        return Icons.chat;
+      case 'Location':
+        return Icons.location_on;
+      case 'Time':
+        return Icons.schedule;
+      case 'Signal':
+        return Icons.signal_cellular_alt;
+      case 'Sensors':
+        return Icons.sensors;
+      case 'Manual':
+        return Icons.touch_app;
+      default:
+        return Icons.bolt;
+    }
+  }
+
+  Color _categoryColor(BuildContext context, String category) {
+    switch (category) {
+      case 'Node Status':
+        return Colors.blue;
+      case 'Battery':
+        return Colors.amber;
+      case 'Messages':
+        return Colors.green;
+      case 'Location':
+        return Colors.purple;
+      case 'Time':
+        return Colors.cyan;
+      case 'Signal':
+        return Colors.orange;
+      case 'Sensors':
+        return Colors.red;
+      case 'Manual':
+        return Theme.of(context).colorScheme.primary;
+      default:
+        return Colors.grey;
+    }
   }
 
   Widget _buildAutomationsList(
@@ -376,6 +765,16 @@ class AutomationsScreen extends ConsumerWidget {
     WidgetRef ref,
     String templateId,
   ) async {
+    // Check premium before adding template
+    final hasAccess = await checkPremiumOrShowUpsell(
+      context: context,
+      ref: ref,
+      feature: PremiumFeature.automations,
+      featureDescription: 'Create this automation instantly from a template.',
+    );
+
+    if (!hasAccess) return;
+
     await ref.read(automationsProvider.notifier).addFromTemplate(templateId);
     if (context.mounted) {
       showSuccessSnackBar(context, 'Automation created from template');
@@ -517,8 +916,8 @@ class AutomationsScreen extends ConsumerWidget {
   }
 }
 
-/// Bottom sheet for adding automations
-class _AddAutomationSheet extends StatelessWidget {
+/// Bottom sheet for adding automations (when user has existing automations)
+class _AddAutomationSheet extends ConsumerWidget {
   final VoidCallback onCreateNew;
   final void Function(String templateId) onSelectTemplate;
   final void Function(TriggerType triggerType) onSelectTrigger;
@@ -552,7 +951,11 @@ class _AddAutomationSheet extends StatelessWidget {
   ];
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final hasAutomationsPack = ref.watch(
+      hasFeatureProvider(PremiumFeature.automations),
+    );
+
     return DraggableScrollableSheet(
       initialChildSize: 0.85,
       minChildSize: 0.4,
@@ -572,17 +975,22 @@ class _AddAutomationSheet extends StatelessWidget {
               ),
             ),
           ),
-          // Title
+          // Title with premium badge if needed
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Add Automation',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-              ),
+            child: Row(
+              children: [
+                Text(
+                  'Add Automation',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                if (!hasAutomationsPack) ...[
+                  const SizedBox(width: 8),
+                  const PremiumChip(label: 'PREMIUM'),
+                ],
+              ],
             ),
           ),
           const SizedBox(height: 16),
@@ -637,12 +1045,22 @@ class _AddAutomationSheet extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'Create from Scratch',
-                                style: TextStyle(fontWeight: FontWeight.w600),
+                              Row(
+                                children: [
+                                  const Text(
+                                    'Create from Scratch',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  if (!hasAutomationsPack) ...[
+                                    const SizedBox(width: 6),
+                                    const PremiumChip(compact: true),
+                                  ],
+                                ],
                               ),
-                              SizedBox(height: 4),
-                              Text(
+                              const SizedBox(height: 4),
+                              const Text(
                                 'Build a custom automation with full control',
                                 style: TextStyle(
                                   color: Colors.grey,

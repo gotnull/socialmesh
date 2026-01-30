@@ -8,10 +8,13 @@ import 'package:latlong2/latlong.dart';
 import '../../core/map_config.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/mesh_map_widget.dart';
+import '../../core/widgets/premium_feature_gate.dart';
+import '../../models/subscription_models.dart';
 import '../../models/user_profile.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/profile_providers.dart';
+import '../../providers/subscription_providers.dart';
 import '../../utils/snackbar.dart';
 import '../../services/ifttt/ifttt_service.dart';
 import 'geofence_picker_screen.dart';
@@ -90,8 +93,19 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
   }
 
   Future<void> _saveConfig() async {
+    // Check premium before saving (allow disabling without premium)
+    if (_enabled) {
+      final hasPremium = await checkPremiumOrShowUpsell(
+        context: context,
+        ref: ref,
+        feature: PremiumFeature.iftttIntegration,
+      );
+      if (!hasPremium || !mounted) return;
+    }
+
     // Require valid webhook key when IFTTT is enabled
     if (_enabled && _webhookKeyController.text.trim().isEmpty) {
+      if (!mounted) return;
       showErrorSnackBar(
         context,
         'Please enter your Webhook Key to enable IFTTT',
@@ -199,12 +213,25 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final hasPremium = ref.watch(
+      hasFeatureProvider(PremiumFeature.iftttIntegration),
+    );
+
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         backgroundColor: context.background,
         appBar: AppBar(
-          title: const Text('IFTTT Integration'),
+          title: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('IFTTT Integration'),
+              if (!hasPremium) ...[
+                const SizedBox(width: 8),
+                const PremiumBadge(size: 16),
+              ],
+            ],
+          ),
           actions: [
             TextButton(onPressed: _saveConfig, child: const Text('Save')),
           ],

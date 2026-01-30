@@ -3,9 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../../core/widgets/premium_feature_gate.dart';
+import '../../models/subscription_models.dart';
 import '../../models/user_profile.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/profile_providers.dart';
+import '../../providers/subscription_providers.dart';
 import '../../services/audio/rtttl_library_service.dart';
 import '../../services/audio/rtttl_player.dart';
 import '../../utils/snackbar.dart';
@@ -943,7 +946,16 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
     );
   }
 
-  void _showLibraryBrowser() {
+  void _showLibraryBrowser() async {
+    // Check premium before showing library
+    final hasPremium = await checkPremiumOrShowUpsell(
+      context: context,
+      ref: ref,
+      feature: PremiumFeature.customRingtones,
+    );
+    if (!hasPremium) return;
+
+    if (!mounted) return;
     AppBottomSheet.showScrollable(
       context: context,
       initialChildSize: 0.85,
@@ -1308,14 +1320,23 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                   SizedBox(height: 24),
 
                   // Browse Library section
-                  Text(
-                    'RINGTONE LIBRARY',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: context.textTertiary,
-                      letterSpacing: 1,
-                    ),
+                  Row(
+                    children: [
+                      Text(
+                        'RINGTONE LIBRARY',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: context.textTertiary,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      if (!ref.watch(
+                        hasFeatureProvider(PremiumFeature.customRingtones),
+                      ))
+                        const PremiumBadge(size: 16),
+                    ],
                   ),
                   SizedBox(height: 12),
                   InkWell(
@@ -1352,13 +1373,29 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  'Browse ${_libraryToneCount > 0 ? '${(_libraryToneCount / 1000).toStringAsFixed(1).replaceAll('.0', '')}k+' : ''} Ringtones',
-                                  style: TextStyle(
-                                    color: context.textPrimary,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      'Browse ${_libraryToneCount > 0 ? '${(_libraryToneCount / 1000).toStringAsFixed(1).replaceAll('.0', '')}k+' : ''} Ringtones',
+                                      style: TextStyle(
+                                        color: context.textPrimary,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    if (!ref.watch(
+                                      hasFeatureProvider(
+                                        PremiumFeature.customRingtones,
+                                      ),
+                                    )) ...[
+                                      SizedBox(width: 8),
+                                      Icon(
+                                        Icons.star,
+                                        color: context.accentColor,
+                                        size: 16,
+                                      ),
+                                    ],
+                                  ],
                                 ),
                                 const SizedBox(height: 4),
                                 Text(

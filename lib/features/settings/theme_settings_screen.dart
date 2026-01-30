@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/premium_feature_gate.dart';
+import '../../models/subscription_models.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/profile_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
@@ -154,7 +156,12 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
     Color currentColor,
   ) {
     final theme = Theme.of(context);
+    final hasThemePack = ref.watch(
+      hasFeatureProvider(PremiumFeature.premiumThemes),
+    );
     final hasCompletePack = ref.watch(hasAllPremiumFeaturesProvider);
+    // Free colors: first 3 (cyan, magenta, purple) are always available
+    const freeColorCount = 3;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -172,24 +179,35 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
           final isSelected = color.toARGB32() == currentColor.toARGB32();
           final colorName = AccentColors.names[index];
           final isGold = index == AccentColors.goldColorIndex;
-          final isLocked = isGold && !hasCompletePack;
+          // Gold requires complete pack, other premium colors require theme pack
+          final isPremiumColor = index >= freeColorCount;
+          final isLocked = isGold
+              ? !hasCompletePack
+              : (isPremiumColor && !hasThemePack);
 
           return BouncyTap(
-            onTap: isLocked
-                ? null
-                : () async {
-                    HapticFeedback.selectionClick();
-                    await ref
-                        .read(accentColorProvider.notifier)
-                        .setColor(color);
-                    // Also sync to cloud profile for cross-device persistence
-                    ref
-                        .read(userProfileProvider.notifier)
-                        .updateProfile(accentColorIndex: index);
-                  },
+            onTap: () async {
+              if (isLocked) {
+                // Show premium upsell
+                final purchased = await checkPremiumOrShowUpsell(
+                  context: context,
+                  ref: ref,
+                  feature: PremiumFeature.premiumThemes,
+                );
+                if (!purchased) return;
+              }
+              HapticFeedback.selectionClick();
+              await ref.read(accentColorProvider.notifier).setColor(color);
+              // Also sync to cloud profile for cross-device persistence
+              ref
+                  .read(userProfileProvider.notifier)
+                  .updateProfile(accentColorIndex: index);
+            },
             scaleFactor: 0.9,
             child: Tooltip(
-              message: isLocked ? '$colorName (Complete Pack only)' : colorName,
+              message: isGold
+                  ? '$colorName (Complete Pack only)'
+                  : (isLocked ? '$colorName (Theme Pack)' : colorName),
               child: AnimatedScale(
                 scale: isSelected ? 1.15 : 1.0,
                 duration: const Duration(milliseconds: 200),

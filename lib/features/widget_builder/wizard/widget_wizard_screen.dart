@@ -5,6 +5,8 @@ import '../models/data_binding.dart';
 import '../renderer/widget_renderer.dart';
 import '../../../core/logging.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/premium_feature_gate.dart';
+import '../../../models/subscription_models.dart';
 import '../../../providers/app_providers.dart';
 import '../../../utils/snackbar.dart';
 
@@ -4142,12 +4144,24 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   void _create() async {
     AppLogging.widgetBuilder('[WidgetWizard] _create called');
 
+    // Check premium for new widgets (editing existing widgets is always allowed)
+    final isNewWidget = widget.initialSchema == null;
+    if (isNewWidget) {
+      final hasPremium = await checkPremiumOrShowUpsell(
+        context: context,
+        ref: ref,
+        feature: PremiumFeature.homeWidgets,
+      );
+      if (!hasPremium || !mounted) return;
+    }
+
     // Final validation check
     final validationError = _getValidationError();
     if (validationError != null) {
       AppLogging.widgetBuilder(
         '[WidgetWizard] Validation failed: $validationError',
       );
+      if (!mounted) return;
       showErrorSnackBar(context, validationError);
       return;
     }
