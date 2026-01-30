@@ -44,6 +44,11 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
   bool _includeHeading = false;
   bool _includeSpeed = false;
 
+  // GPS GPIO pins
+  int _rxGpio = 0;
+  int _txGpio = 0;
+  int _gpsEnGpio = 0;
+
   StreamSubscription<config_pb.Config_PositionConfig>? _configSubscription;
 
   // Fixed position values
@@ -131,9 +136,13 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
       _includeTimestamp = (flags & 128) != 0;
       _includeHeading = (flags & 256) != 0;
       _includeSpeed = (flags & 512) != 0;
+
+      // GPS GPIO pins
+      _rxGpio = config.rxGpio;
+      _txGpio = config.txGpio;
+      _gpsEnGpio = config.gpsEnGpio;
     });
   }
-
 
   int _buildPositionFlags() {
     int flags = 0;
@@ -183,6 +192,9 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
         broadcastSmartMinimumDistance: _smartMinimumDistance,
         broadcastSmartMinimumIntervalSecs: _smartMinimumIntervalSecs,
         positionFlags: _buildPositionFlags(),
+        rxGpio: _rxGpio,
+        txGpio: _txGpio,
+        gpsEnGpio: _gpsEnGpio,
       );
 
       if (mounted) {
@@ -799,6 +811,9 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                     ),
                   ),
                   SizedBox(height: 16),
+                  const _SectionHeader(title: 'GPS GPIO'),
+                  _buildGpioSettings(),
+                  SizedBox(height: 16),
                   const _SectionHeader(title: 'POSITION FLAGS'),
                   Container(
                     margin: const EdgeInsets.symmetric(
@@ -925,6 +940,147 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
         ),
         if (!isLast) Divider(height: 16, color: context.border),
       ],
+    );
+  }
+
+  Widget _buildGpioSettings() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // RX GPIO
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'GPS RX GPIO',
+                style: TextStyle(
+                  color: context.textPrimary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  color: context.background,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: context.border),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: DropdownButton<int>(
+                  underline: const SizedBox.shrink(),
+                  dropdownColor: context.card,
+                  style: TextStyle(color: context.textPrimary),
+                  value: _rxGpio,
+                  items: List.generate(49, (i) {
+                    return DropdownMenuItem(
+                      value: i,
+                      child: Text(i == 0 ? 'Unset' : 'Pin $i'),
+                    );
+                  }),
+                  onChanged: (value) {
+                    if (value != null) setState(() => _rxGpio = value);
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'GPIO pin for GPS RX signal',
+            style: TextStyle(color: context.textSecondary, fontSize: 13),
+          ),
+          Divider(height: 24, color: context.border),
+          // TX GPIO
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'GPS TX GPIO',
+                style: TextStyle(
+                  color: context.textPrimary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  color: context.background,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: context.border),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: DropdownButton<int>(
+                  underline: const SizedBox.shrink(),
+                  dropdownColor: context.card,
+                  style: TextStyle(color: context.textPrimary),
+                  value: _txGpio,
+                  items: List.generate(49, (i) {
+                    return DropdownMenuItem(
+                      value: i,
+                      child: Text(i == 0 ? 'Unset' : 'Pin $i'),
+                    );
+                  }),
+                  onChanged: (value) {
+                    if (value != null) setState(() => _txGpio = value);
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'GPIO pin for GPS TX signal',
+            style: TextStyle(color: context.textSecondary, fontSize: 13),
+          ),
+          Divider(height: 24, color: context.border),
+          // GPS Enable GPIO
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'GPS Enable GPIO',
+                style: TextStyle(
+                  color: context.textPrimary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  color: context.background,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: context.border),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: DropdownButton<int>(
+                  underline: const SizedBox.shrink(),
+                  dropdownColor: context.card,
+                  style: TextStyle(color: context.textPrimary),
+                  value: _gpsEnGpio,
+                  items: List.generate(49, (i) {
+                    return DropdownMenuItem(
+                      value: i,
+                      child: Text(i == 0 ? 'Unset' : 'Pin $i'),
+                    );
+                  }),
+                  onChanged: (value) {
+                    if (value != null) setState(() => _gpsEnGpio = value);
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'GPIO pin to control GPS power',
+            style: TextStyle(color: context.textSecondary, fontSize: 13),
+          ),
+        ],
+      ),
     );
   }
 

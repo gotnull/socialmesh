@@ -4147,6 +4147,9 @@ class ProtocolService {
     int broadcastSmartMinimumDistance = 100,
     int broadcastSmartMinimumIntervalSecs = 30,
     int positionFlags = 811,
+    int rxGpio = 0,
+    int txGpio = 0,
+    int gpsEnGpio = 0,
     int? targetNodeNum,
   }) async {
     AppLogging.protocol('Setting position config: gpsMode=$gpsMode');
@@ -4161,7 +4164,10 @@ class ProtocolService {
       ..gpsAttemptTime = gpsAttemptTime
       ..broadcastSmartMinimumDistance = broadcastSmartMinimumDistance
       ..broadcastSmartMinimumIntervalSecs = broadcastSmartMinimumIntervalSecs
-      ..positionFlags = positionFlags;
+      ..positionFlags = positionFlags
+      ..rxGpio = rxGpio
+      ..txGpio = txGpio
+      ..gpsEnGpio = gpsEnGpio;
 
     final config = config_pb.Config()..position = posConfig;
     await setConfig(config, targetNodeNum: targetNodeNum);
@@ -4252,6 +4258,9 @@ class ProtocolService {
     required String wifiPsk,
     required bool ethEnabled,
     required String ntpServer,
+    config_pb.Config_NetworkConfig_AddressMode addressMode =
+        config_pb.Config_NetworkConfig_AddressMode.DHCP,
+    String rsyslogServer = '',
     int? targetNodeNum,
   }) async {
     AppLogging.protocol('Setting network config');
@@ -4261,7 +4270,9 @@ class ProtocolService {
       ..wifiSsid = wifiSsid
       ..wifiPsk = wifiPsk
       ..ethEnabled = ethEnabled
-      ..ntpServer = ntpServer;
+      ..ntpServer = ntpServer
+      ..addressMode = addressMode
+      ..rsyslogServer = rsyslogServer;
 
     final config = config_pb.Config()..network = networkConfig;
     await setConfig(config, targetNodeNum: targetNodeNum);

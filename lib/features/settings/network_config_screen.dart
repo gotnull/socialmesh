@@ -25,11 +25,14 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
   bool _saving = false;
   bool _loading = false;
   bool _obscurePassword = true;
+  config_pb.Config_NetworkConfig_AddressMode _addressMode =
+      config_pb.Config_NetworkConfig_AddressMode.DHCP;
   StreamSubscription<config_pb.Config_NetworkConfig>? _configSubscription;
 
   final _ssidController = TextEditingController();
   final _passwordController = TextEditingController();
   final _ntpController = TextEditingController();
+  final _rsyslogController = TextEditingController();
 
   @override
   void initState() {
@@ -44,6 +47,7 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
     _ssidController.dispose();
     _passwordController.dispose();
     _ntpController.dispose();
+    _rsyslogController.dispose();
     super.dispose();
   }
 
@@ -56,6 +60,8 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
       _ntpController.text = config.ntpServer.isNotEmpty
           ? config.ntpServer
           : 'pool.ntp.org';
+      _addressMode = config.addressMode;
+      _rsyslogController.text = config.rsyslogServer;
     });
   }
 
@@ -94,12 +100,15 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
 
     try {
       final ntp = _ntpController.text.trim();
+      final rsyslog = _rsyslogController.text.trim();
       await protocol.setNetworkConfig(
         wifiEnabled: _wifiEnabled,
         wifiSsid: _ssidController.text,
         wifiPsk: _passwordController.text,
         ethEnabled: _ethEnabled,
         ntpServer: ntp.isNotEmpty ? ntp : 'pool.ntp.org',
+        addressMode: _addressMode,
+        rsyslogServer: rsyslog,
       );
 
       if (mounted) {
@@ -285,6 +294,11 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                   ),
                   SizedBox(height: 16),
 
+                  // Address Mode Section
+                  const _SectionHeader(title: 'IP ADDRESS'),
+                  _buildAddressModeSelector(),
+                  SizedBox(height: 16),
+
                   // NTP Server Section
                   const _SectionHeader(title: 'TIME SYNC'),
 
@@ -352,6 +366,11 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                   ),
                   SizedBox(height: 16),
 
+                  // Rsyslog Server Section
+                  const _SectionHeader(title: 'LOGGING'),
+                  _buildRsyslogSettings(),
+                  SizedBox(height: 16),
+
                   // Info card
                   Container(
                     margin: const EdgeInsets.symmetric(
@@ -390,6 +409,148 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                   const SizedBox(height: 32),
                 ],
               ),
+      ),
+    );
+  }
+
+  Widget _buildAddressModeSelector() {
+    final modes = [
+      (
+        config_pb.Config_NetworkConfig_AddressMode.DHCP,
+        'DHCP',
+        'Automatically obtain IP address',
+        Icons.auto_awesome,
+      ),
+      (
+        config_pb.Config_NetworkConfig_AddressMode.STATIC,
+        'Static',
+        'Use manually configured IP address',
+        Icons.edit,
+      ),
+    ];
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: modes.map((m) {
+          final isSelected = _addressMode == m.$1;
+          return InkWell(
+            onTap: () {
+              HapticFeedback.selectionClick();
+              setState(() => _addressMode = m.$1);
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                children: [
+                  Icon(
+                    isSelected
+                        ? Icons.radio_button_checked
+                        : Icons.radio_button_unchecked,
+                    color: isSelected
+                        ? context.accentColor
+                        : context.textSecondary,
+                  ),
+                  const SizedBox(width: 12),
+                  Icon(
+                    m.$4,
+                    color: isSelected
+                        ? context.accentColor
+                        : context.textSecondary,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          m.$2,
+                          style: TextStyle(
+                            color: isSelected
+                                ? context.textPrimary
+                                : context.textSecondary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        Text(
+                          m.$3,
+                          style: TextStyle(
+                            color: context.textTertiary,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildRsyslogSettings() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Rsyslog Server',
+            style: TextStyle(
+              color: context.textPrimary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _rsyslogController,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => FocusScope.of(context).unfocus(),
+            style: TextStyle(color: context.textPrimary),
+            decoration: InputDecoration(
+              hintText: 'e.g., 192.168.1.100:514',
+              hintStyle: TextStyle(color: context.textTertiary),
+              filled: true,
+              fillColor: context.background,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: context.border),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: context.border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: context.accentColor),
+              ),
+              prefixIcon: Icon(
+                Icons.description_outlined,
+                color: context.textSecondary,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Remote syslog server for device logs',
+            style: TextStyle(color: context.textSecondary, fontSize: 13),
+          ),
+        ],
       ),
     );
   }

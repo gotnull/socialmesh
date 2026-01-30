@@ -16,6 +16,7 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
   bool _serialEnabled = false;
   bool _rxdGpioEnabled = false;
   bool _txdGpioEnabled = false;
+  bool _overrideConsoleSerialPort = false;
   int _baudRate = 115200;
   int _timeout = 5;
   String _mode = 'SIMPLE';
@@ -75,6 +76,7 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
         _serialEnabled = config.enabled;
         _rxdGpioEnabled = config.rxd > 0;
         _txdGpioEnabled = config.txd > 0;
+        _overrideConsoleSerialPort = config.overrideConsoleSerialPort;
         // baud is stored as index
         if (config.baud.value >= 0 && config.baud.value < _baudRates.length) {
           _baudRate = _baudRates[config.baud.value];
@@ -124,6 +126,7 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
         baud: _baudRates.indexOf(_baudRate),
         timeout: _timeout,
         mode: _modeValues[_mode] ?? 0,
+        overrideConsoleSerialPort: _overrideConsoleSerialPort,
       );
 
       if (mounted) {
@@ -238,6 +241,17 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
                   value: _txdGpioEnabled,
                   onChanged: (value) {
                     setState(() => _txdGpioEnabled = value);
+                    _markChanged();
+                  },
+                ),
+                _buildDivider(),
+                _buildSwitchTile(
+                  icon: Icons.terminal,
+                  title: 'Override Console Serial',
+                  subtitle: 'Use serial module instead of console',
+                  value: _overrideConsoleSerialPort,
+                  onChanged: (value) {
+                    setState(() => _overrideConsoleSerialPort = value);
                     _markChanged();
                   },
                 ),

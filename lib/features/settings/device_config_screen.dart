@@ -339,10 +339,239 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
                 const SizedBox(height: 16),
                 const _SectionHeader(title: 'DEBUG'),
                 _buildTimezoneSettings(),
+                const SizedBox(height: 16),
+                const _SectionHeader(title: 'DANGER ZONE'),
+                _buildResetButtons(),
                 const SizedBox(height: 32),
               ],
             ),
     );
+  }
+
+  Widget _buildResetButtons() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          // NodeDB Reset
+          InkWell(
+            onTap: _showNodeDbResetDialog,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(Icons.refresh, color: Colors.orange, size: 20),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Reset Node Database',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            color: context.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Clear all stored node information',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: context.textTertiary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_right, color: context.textTertiary),
+                ],
+              ),
+            ),
+          ),
+          Divider(
+            height: 1,
+            indent: 70,
+            color: context.border.withValues(alpha: 0.3),
+          ),
+          // Factory Reset
+          InkWell(
+            onTap: _showFactoryResetDialog,
+            borderRadius: const BorderRadius.vertical(
+              bottom: Radius.circular(12),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.red.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.warning_rounded,
+                      color: Colors.red,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Factory Reset',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.red,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Reset device to factory defaults',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: context.textTertiary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_right, color: context.textTertiary),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showNodeDbResetDialog() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: dialogContext.card,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(Icons.refresh, color: Colors.orange),
+            const SizedBox(width: 12),
+            Text(
+              'Reset Node Database',
+              style: TextStyle(color: dialogContext.textPrimary),
+            ),
+          ],
+        ),
+        content: Text(
+          'This will clear all stored node information from the device. '
+          'The mesh network will need to rediscover all nodes.\n\n'
+          'Are you sure you want to continue?',
+          style: TextStyle(color: dialogContext.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: dialogContext.textSecondary),
+            ),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.orange),
+            child: const Text('Reset'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        final protocol = ref.read(protocolServiceProvider);
+        await protocol.nodeDbReset();
+        if (mounted) {
+          showSuccessSnackBar(context, 'Node database reset initiated');
+        }
+      } catch (e) {
+        if (mounted) {
+          showErrorSnackBar(context, 'Failed to reset: $e');
+        }
+      }
+    }
+  }
+
+  Future<void> _showFactoryResetDialog() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: dialogContext.card,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(Icons.warning_rounded, color: Colors.red),
+            const SizedBox(width: 12),
+            Text('Factory Reset', style: TextStyle(color: dialogContext.textPrimary)),
+          ],
+        ),
+        content: Text(
+          'This will reset ALL device settings to factory defaults, '
+          'including channels, configuration, and stored data.\n\n'
+          'This action cannot be undone!\n\n'
+          'Are you absolutely sure?',
+          style: TextStyle(color: dialogContext.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: dialogContext.textSecondary),
+            ),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Factory Reset'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        final protocol = ref.read(protocolServiceProvider);
+        await protocol.factoryResetDevice();
+        if (mounted) {
+          showSuccessSnackBar(
+            context,
+            'Factory reset initiated - device will restart',
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          showErrorSnackBar(context, 'Failed to reset: $e');
+        }
+      }
+    }
   }
 
   Widget _buildRemoteAdminBanner(

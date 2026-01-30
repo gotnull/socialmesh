@@ -22,6 +22,7 @@ class _AmbientLightingConfigScreenState
   int _red = 255;
   int _green = 255;
   int _blue = 255;
+  int _current = 10; // LED brightness/current (default 10)
   bool _hasChanges = false;
   bool _isSaving = false;
   bool _isLoading = true;
@@ -61,6 +62,7 @@ class _AmbientLightingConfigScreenState
         _red = config.red;
         _green = config.green;
         _blue = config.blue;
+        _current = config.current > 0 ? config.current : 10;
         _currentColor = (0xFF << 24) | (_red << 16) | (_green << 8) | _blue;
         _isLoading = false;
       });
@@ -86,6 +88,7 @@ class _AmbientLightingConfigScreenState
         red: _red,
         green: _green,
         blue: _blue,
+        current: _current,
       );
 
       setState(() => _hasChanges = false);
@@ -322,6 +325,88 @@ class _AmbientLightingConfigScreenState
                 _updateColor();
               });
             },
+          ),
+
+          const SizedBox(height: 24),
+
+          // LED Brightness/Current
+          Text(
+            'LED Brightness',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: context.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: context.card,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Current',
+                      style: TextStyle(
+                        color: context.textPrimary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: context.accentColor.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        '$_current mA',
+                        style: TextStyle(
+                          color: context.accentColor,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'LED drive current (brightness)',
+                  style: TextStyle(color: context.textSecondary, fontSize: 12),
+                ),
+                const SizedBox(height: 8),
+                SliderTheme(
+                  data: SliderThemeData(
+                    activeTrackColor: context.accentColor,
+                    inactiveTrackColor: context.border,
+                    thumbColor: context.accentColor,
+                    overlayColor: context.accentColor.withValues(alpha: 0.2),
+                    trackHeight: 4,
+                  ),
+                  child: Slider(
+                    value: _current.toDouble(),
+                    min: 1,
+                    max: 31,
+                    divisions: 30,
+                    onChanged: (value) {
+                      setState(() {
+                        _current = value.toInt();
+                        _hasChanges = true;
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
 
           SizedBox(height: 24),
