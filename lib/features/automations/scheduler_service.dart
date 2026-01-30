@@ -25,7 +25,7 @@ class FakeClock implements Clock {
   DateTime _now;
 
   FakeClock([DateTime? initialTime])
-      : _now = initialTime ?? DateTime(2026, 1, 30, 9, 0, 0);
+    : _now = initialTime ?? DateTime(2026, 1, 30, 9, 0, 0);
 
   @override
   DateTime now() => _now;
@@ -104,13 +104,12 @@ class _ScheduleEntry implements Comparable<_ScheduleEntry> {
   }
 
   @override
-  String toString() =>
-      '_ScheduleEntry($scheduleId, $nextFireTime, $slotKey)';
+  String toString() => '_ScheduleEntry($scheduleId, $nextFireTime, $slotKey)';
 }
 
 /// Callback for persisting schedule state
-typedef SchedulePersistCallback = Future<void> Function(
-    List<ScheduleSpec> schedules);
+typedef SchedulePersistCallback =
+    Future<void> Function(List<ScheduleSpec> schedules);
 
 /// Callback for loading schedule state
 typedef ScheduleLoadCallback = Future<List<ScheduleSpec>> Function();
@@ -152,9 +151,9 @@ class InAppScheduler implements Scheduler {
     Clock? clock,
     SchedulePersistCallback? onPersist,
     ScheduleLoadCallback? onLoad,
-  })  : _clock = clock ?? const SystemClock(),
-        _onPersist = onPersist,
-        _onLoad = onLoad;
+  }) : _clock = clock ?? const SystemClock(),
+       _onPersist = onPersist,
+       _onLoad = onLoad;
 
   @override
   Stream<ScheduledFireEvent> get fireEvents => _fireController.stream;
@@ -204,7 +203,8 @@ class InAppScheduler implements Scheduler {
     }
 
     AppLogging.automations(
-        'InAppScheduler: Registered schedule ${spec.id} (${spec.kind})');
+      'InAppScheduler: Registered schedule ${spec.id} (${spec.kind})',
+    );
   }
 
   @override
@@ -250,7 +250,8 @@ class InAppScheduler implements Scheduler {
     }
 
     AppLogging.automations(
-        'InAppScheduler: Resynced ${loaded.length} schedules from store');
+      'InAppScheduler: Resynced ${loaded.length} schedules from store',
+    );
   }
 
   @override
@@ -267,7 +268,8 @@ class InAppScheduler implements Scheduler {
     final processedScheduleIds = <String>{};
     const maxProcessPerTick = 100; // Safety limit
 
-    while (_queue.isNotEmpty && processedScheduleIds.length < maxProcessPerTick) {
+    while (_queue.isNotEmpty &&
+        processedScheduleIds.length < maxProcessPerTick) {
       final entry = _queue.first;
 
       // Check if it's time to fire (or past due)
@@ -303,7 +305,8 @@ class InAppScheduler implements Scheduler {
 
     if (events.isNotEmpty) {
       AppLogging.automations(
-          'InAppScheduler: Tick processed ${events.length} events');
+        'InAppScheduler: Tick processed ${events.length} events',
+      );
     }
 
     return events;
@@ -370,7 +373,8 @@ class InAppScheduler implements Scheduler {
             final nextSlotKey = spec.generateSlotKey(nextAtOrAfterNow);
             if (!spec.hasSlotFired(nextSlotKey) &&
                 spec.isWithinBoundaries(nextAtOrAfterNow) &&
-                now.difference(nextAtOrAfterNow) <= const Duration(minutes: 5)) {
+                now.difference(nextAtOrAfterNow) <=
+                    const Duration(minutes: 5)) {
               final nextEntry = _ScheduleEntry(
                 scheduleId: spec.id,
                 nextFireTime: nextAtOrAfterNow,
@@ -381,7 +385,11 @@ class InAppScheduler implements Scheduler {
               final updatedSpec = spec.recordFiredSlot(nextSlotKey, now);
               _schedules[spec.id] = updatedSpec;
               // Schedule the NEXT occurrence
-              final next = _calculateNextEntry(updatedSpec, now, after: nextEntry);
+              final next = _calculateNextEntry(
+                updatedSpec,
+                now,
+                after: nextEntry,
+              );
               if (next != null) {
                 _enqueue(next);
               }
@@ -409,11 +417,14 @@ class InAppScheduler implements Scheduler {
             !spec.hasSlotFired(mostRecentSlot.slotKey) &&
             spec.isWithinBoundaries(mostRecentSlot.nextFireTime)) {
           events.add(_createEvent(spec, mostRecentSlot, now, isCatchUp: true));
-          final updatedSpec =
-              spec.recordFiredSlot(mostRecentSlot.slotKey, now);
+          final updatedSpec = spec.recordFiredSlot(mostRecentSlot.slotKey, now);
           _schedules[spec.id] = updatedSpec;
           // Schedule next occurrence after the most recent
-          final next = _calculateNextEntry(updatedSpec, now, after: mostRecentSlot);
+          final next = _calculateNextEntry(
+            updatedSpec,
+            now,
+            after: mostRecentSlot,
+          );
           if (next != null) {
             _enqueue(next);
           }
@@ -443,8 +454,11 @@ class InAppScheduler implements Scheduler {
           // Check if this entry is within the catch-up window
           if (currentEntry.nextFireTime.isBefore(windowStart)) {
             // Too old, skip to next
-            final next =
-                _calculateNextEntry(currentSpec, now, after: currentEntry);
+            final next = _calculateNextEntry(
+              currentSpec,
+              now,
+              after: currentEntry,
+            );
             if (next == null || next.nextFireTime.isAfter(now)) {
               break;
             }
@@ -462,17 +476,28 @@ class InAppScheduler implements Scheduler {
           // Fire if not already fired and within boundaries
           if (!currentSpec.hasSlotFired(currentEntry.slotKey) &&
               currentSpec.isWithinBoundaries(currentEntry.nextFireTime)) {
-            events.add(_createEvent(
-                currentSpec, currentEntry, now, isCatchUp: fireCount > 0));
-            currentSpec =
-                currentSpec.recordFiredSlot(currentEntry.slotKey, now);
+            events.add(
+              _createEvent(
+                currentSpec,
+                currentEntry,
+                now,
+                isCatchUp: fireCount > 0,
+              ),
+            );
+            currentSpec = currentSpec.recordFiredSlot(
+              currentEntry.slotKey,
+              now,
+            );
             _schedules[spec.id] = currentSpec;
             fireCount++;
           }
 
           // Move to next occurrence
-          final next =
-              _calculateNextEntry(currentSpec, now, after: currentEntry);
+          final next = _calculateNextEntry(
+            currentSpec,
+            now,
+            after: currentEntry,
+          );
           if (next == null) {
             break;
           }
@@ -509,7 +534,8 @@ class InAppScheduler implements Scheduler {
       scheduleId: spec.id,
       slotKey: entry.slotKey,
       scheduledFor: entry.nextFireTime,
-      isCatchUp: isCatchUp ??
+      isCatchUp:
+          isCatchUp ??
           (entry.nextFireTime.isBefore(now) &&
               now.difference(entry.nextFireTime) > const Duration(seconds: 5)),
       intervalCount: entry.intervalCount,
@@ -527,7 +553,8 @@ class InAppScheduler implements Scheduler {
         final startTime = spec.startAt ?? spec.lastEvaluatedAt ?? now;
         final elapsed = now.difference(startTime);
         if (elapsed.isNegative) return startTime;
-        final intervalsPassed = elapsed.inMilliseconds ~/ spec.every!.inMilliseconds;
+        final intervalsPassed =
+            elapsed.inMilliseconds ~/ spec.every!.inMilliseconds;
         var nextFire = startTime.add(spec.every! * intervalsPassed);
         if (nextFire.isBefore(now)) {
           nextFire = startTime.add(spec.every! * (intervalsPassed + 1));
@@ -608,7 +635,8 @@ class InAppScheduler implements Scheduler {
         } else if (spec.lastEvaluatedAt != null) {
           // Resume from last evaluation
           final elapsed = now.difference(startTime);
-          final intervalsPassed = elapsed.inMilliseconds ~/ spec.every!.inMilliseconds;
+          final intervalsPassed =
+              elapsed.inMilliseconds ~/ spec.every!.inMilliseconds;
           intervalCount = intervalsPassed;
           nextFireTime = startTime.add(spec.every! * intervalCount);
 
@@ -623,7 +651,10 @@ class InAppScheduler implements Scheduler {
           nextFireTime = now.add(spec.every!);
           intervalCount = 1;
         }
-        slotKey = spec.generateSlotKey(nextFireTime, intervalCount: intervalCount);
+        slotKey = spec.generateSlotKey(
+          nextFireTime,
+          intervalCount: intervalCount,
+        );
         break;
 
       case ScheduleKind.daily:
@@ -663,8 +694,7 @@ class InAppScheduler implements Scheduler {
     // Start from the day after the last fire time, or today
     DateTime startDate;
     if (afterTime != null) {
-      startDate = DateTime(
-          afterTime.year, afterTime.month, afterTime.day + 1);
+      startDate = DateTime(afterTime.year, afterTime.month, afterTime.day + 1);
     } else {
       startDate = DateTime(now.year, now.month, now.day);
     }
@@ -712,8 +742,7 @@ class InAppScheduler implements Scheduler {
     // Start from the day after the last fire time, or today
     DateTime startDate;
     if (afterTime != null) {
-      startDate = DateTime(
-          afterTime.year, afterTime.month, afterTime.day + 1);
+      startDate = DateTime(afterTime.year, afterTime.month, afterTime.day + 1);
     } else {
       startDate = DateTime(now.year, now.month, now.day);
     }
@@ -745,7 +774,7 @@ class InAppScheduler implements Scheduler {
     return null;
   }
 
-/// Dispose the scheduler
+  /// Dispose the scheduler
   void dispose() {
     stop();
     _fireController.close();

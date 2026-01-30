@@ -120,30 +120,30 @@ class ScheduleSpec {
     this.lastFiredSlotKey,
     this.lastEvaluatedAt,
     this.enabled = true,
-  })  : id = id ?? const Uuid().v4(),
-        assert(
-          kind != ScheduleKind.oneShot || runAt != null,
-          'oneShot requires runAt',
-        ),
-        assert(
-          kind != ScheduleKind.interval || every != null,
-          'interval requires every',
-        ),
-        assert(
-          kind != ScheduleKind.interval ||
-              every == null ||
-              every.inSeconds >= 10,
-          'interval must be >= 10 seconds',
-        ),
-        assert(
-          kind != ScheduleKind.daily || (hour != null && minute != null),
-          'daily requires hour and minute',
-        ),
-        assert(
-          kind != ScheduleKind.weekly ||
-              (hour != null && minute != null && daysOfWeek != null),
-          'weekly requires hour, minute, and daysOfWeek',
-        );
+  }) : id = id ?? const Uuid().v4(),
+       assert(
+         kind != ScheduleKind.oneShot || runAt != null,
+         'oneShot requires runAt',
+       ),
+       assert(
+         kind != ScheduleKind.interval || every != null,
+         'interval requires every',
+       ),
+       assert(
+         kind != ScheduleKind.interval ||
+             every == null ||
+             every.inSeconds >= 10,
+         'interval must be >= 10 seconds',
+       ),
+       assert(
+         kind != ScheduleKind.daily || (hour != null && minute != null),
+         'daily requires hour and minute',
+       ),
+       assert(
+         kind != ScheduleKind.weekly ||
+             (hour != null && minute != null && daysOfWeek != null),
+         'weekly requires hour, minute, and daysOfWeek',
+       );
 
   /// Factory for one-shot schedule
   factory ScheduleSpec.oneShot({
@@ -285,12 +285,12 @@ class ScheduleSpec {
     final offset = dt.timeZoneOffset;
     final sign = offset.isNegative ? '-' : '+';
     final hours = offset.inHours.abs().toString().padLeft(2, '0');
-    final minutes =
-        (offset.inMinutes.abs() % 60).toString().padLeft(2, '0');
+    final minutes = (offset.inMinutes.abs() % 60).toString().padLeft(2, '0');
     final date = dt.toIso8601String().split('T')[0];
     final time =
         '${hour?.toString().padLeft(2, '0')}:${minute?.toString().padLeft(2, '0')}';
-    return '$date' 'T$time$sign$hours:$minutes';
+    return '$date'
+        'T$time$sign$hours:$minutes';
   }
 
   /// Check if a slot key has already been fired
@@ -301,10 +301,7 @@ class ScheduleSpec {
 
   /// Record that a slot was fired
   ScheduleSpec recordFiredSlot(String slotKey, DateTime evaluatedAt) {
-    return copyWith(
-      lastFiredSlotKey: slotKey,
-      lastEvaluatedAt: evaluatedAt,
-    );
+    return copyWith(lastFiredSlotKey: slotKey, lastEvaluatedAt: evaluatedAt);
   }
 
   /// Apply jitter to a scheduled time
@@ -377,25 +374,25 @@ class ScheduleSpec {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'kind': kind.name,
-        'tz': tz,
-        'runAt': runAt?.toIso8601String(),
-        'everySeconds': every?.inSeconds,
-        'hour': hour,
-        'minute': minute,
-        'daysOfWeek': daysOfWeek,
-        'startAt': startAt?.toIso8601String(),
-        'endAt': endAt?.toIso8601String(),
-        'jitterMs': jitterMs,
-        'catchUpPolicy': catchUpPolicy.name,
-        'catchUpWindowSeconds': catchUpWindow.inSeconds,
-        'maxCatchUpExecutions': maxCatchUpExecutions,
-        'dedupeKeyStrategy': dedupeKeyStrategy.name,
-        'lastFiredSlotKey': lastFiredSlotKey,
-        'lastEvaluatedAt': lastEvaluatedAt?.toIso8601String(),
-        'enabled': enabled,
-      };
+    'id': id,
+    'kind': kind.name,
+    'tz': tz,
+    'runAt': runAt?.toIso8601String(),
+    'everySeconds': every?.inSeconds,
+    'hour': hour,
+    'minute': minute,
+    'daysOfWeek': daysOfWeek,
+    'startAt': startAt?.toIso8601String(),
+    'endAt': endAt?.toIso8601String(),
+    'jitterMs': jitterMs,
+    'catchUpPolicy': catchUpPolicy.name,
+    'catchUpWindowSeconds': catchUpWindow.inSeconds,
+    'maxCatchUpExecutions': maxCatchUpExecutions,
+    'dedupeKeyStrategy': dedupeKeyStrategy.name,
+    'lastFiredSlotKey': lastFiredSlotKey,
+    'lastEvaluatedAt': lastEvaluatedAt?.toIso8601String(),
+    'enabled': enabled,
+  };
 
   factory ScheduleSpec.fromJson(Map<String, dynamic> json) {
     return ScheduleSpec(
@@ -484,12 +481,12 @@ class ScheduledFireEvent {
   });
 
   Map<String, dynamic> toJson() => {
-        'scheduleId': scheduleId,
-        'slotKey': slotKey,
-        'scheduledFor': scheduledFor.toIso8601String(),
-        'isCatchUp': isCatchUp,
-        'intervalCount': intervalCount,
-      };
+    'scheduleId': scheduleId,
+    'slotKey': slotKey,
+    'scheduledFor': scheduledFor.toIso8601String(),
+    'isCatchUp': isCatchUp,
+    'intervalCount': intervalCount,
+  };
 
   factory ScheduledFireEvent.fromJson(Map<String, dynamic> json) {
     return ScheduledFireEvent(

@@ -85,10 +85,7 @@ void main() {
   group('ScheduleSpec Model', () {
     test('oneShot factory creates valid spec', () {
       final runAt = DateTime(2026, 1, 30, 9, 0, 0);
-      final spec = ScheduleSpec.oneShot(
-        id: 'test-oneshot',
-        runAt: runAt,
-      );
+      final spec = ScheduleSpec.oneShot(id: 'test-oneshot', runAt: runAt);
 
       expect(spec.id, 'test-oneshot');
       expect(spec.kind, ScheduleKind.oneShot);
@@ -109,19 +106,13 @@ void main() {
 
     test('interval enforces minimum duration', () {
       expect(
-        () => ScheduleSpec.interval(
-          every: const Duration(seconds: 5),
-        ),
+        () => ScheduleSpec.interval(every: const Duration(seconds: 5)),
         throwsA(isA<AssertionError>()),
       );
     });
 
     test('daily factory creates valid spec', () {
-      final spec = ScheduleSpec.daily(
-        id: 'test-daily',
-        hour: 9,
-        minute: 0,
-      );
+      final spec = ScheduleSpec.daily(id: 'test-daily', hour: 9, minute: 0);
 
       expect(spec.id, 'test-daily');
       expect(spec.kind, ScheduleKind.daily);
@@ -193,9 +184,7 @@ void main() {
     });
 
     test('isActive returns false after oneShot fires', () {
-      final spec = ScheduleSpec.oneShot(
-        runAt: DateTime(2026, 1, 30, 9, 0, 0),
-      );
+      final spec = ScheduleSpec.oneShot(runAt: DateTime(2026, 1, 30, 9, 0, 0));
 
       expect(spec.isActive(DateTime(2026, 1, 30, 8, 0, 0)), isTrue);
 
@@ -240,9 +229,7 @@ void main() {
       final clock = FakeClock(DateTime(2026, 1, 30, 9, 0, 0));
       final events = <ScheduledFireEvent>[];
 
-      final scheduler = InAppScheduler(
-        clock: clock,
-      );
+      final scheduler = InAppScheduler(clock: clock);
 
       scheduler.fireEvents.listen(events.add);
       scheduler.start();
@@ -392,11 +379,7 @@ void main() {
       scheduler.start();
 
       // Register daily at 09:00
-      final spec = ScheduleSpec.daily(
-        id: 'test-daily',
-        hour: 9,
-        minute: 0,
-      );
+      final spec = ScheduleSpec.daily(id: 'test-daily', hour: 9, minute: 0);
       scheduler.register(spec);
 
       // Advance 1 minute - should fire
@@ -448,8 +431,7 @@ void main() {
       expect(events.last.slotKey, contains('2026-01-31'));
 
       // Verify exactly one fire per day
-      final slotDates =
-          events.map((e) => e.slotKey.split('T')[0]).toSet();
+      final slotDates = events.map((e) => e.slotKey.split('T')[0]).toSet();
       expect(slotDates.length, 2);
 
       scheduler.dispose();
@@ -552,18 +534,16 @@ void main() {
       final automation = Automation(
         id: 'monday-automation',
         name: 'Monday Alert',
-        trigger: const AutomationTrigger(
-          type: TriggerType.scheduled,
-        ),
+        trigger: const AutomationTrigger(type: TriggerType.scheduled),
         conditions: const [
           AutomationCondition(
             type: ConditionType.dayOfWeek,
-            config: {'daysOfWeek': [1]}, // Monday
+            config: {
+              'daysOfWeek': [1],
+            }, // Monday
           ),
         ],
-        actions: const [
-          AutomationAction(type: ActionType.vibrate),
-        ],
+        actions: const [AutomationAction(type: ActionType.vibrate)],
       );
       mockRepository.addTestAutomation(automation);
 
@@ -603,16 +583,17 @@ void main() {
       scheduler.fireEvents.listen(events.add);
       scheduler.start();
 
-      final spec = ScheduleSpec.daily(
-        id: 'test-no-catchup',
-        hour: 9,
-        minute: 0,
-        catchUpPolicy: CatchUpPolicy.none,
-        lastEvaluatedAt: DateTime(2026, 1, 30, 9, 0, 0),
-      ).recordFiredSlot(
-        'daily:2026-01-30T09:00+11:00',
-        DateTime(2026, 1, 30, 9, 0, 0),
-      );
+      final spec =
+          ScheduleSpec.daily(
+            id: 'test-no-catchup',
+            hour: 9,
+            minute: 0,
+            catchUpPolicy: CatchUpPolicy.none,
+            lastEvaluatedAt: DateTime(2026, 1, 30, 9, 0, 0),
+          ).recordFiredSlot(
+            'daily:2026-01-30T09:00+11:00',
+            DateTime(2026, 1, 30, 9, 0, 0),
+          );
       scheduler.register(spec);
 
       // Jump forward 7 days to Feb 6 at 12:00 (past 09:00)
@@ -626,38 +607,42 @@ void main() {
       scheduler.dispose();
     });
 
-    test('catchUpPolicy.none does not fire if past the scheduled time even within minutes', () {
-      // Start at Jan 30 09:00 with slot already fired
-      final clock = FakeClock(DateTime(2026, 1, 30, 9, 0, 0));
-      final events = <ScheduledFireEvent>[];
+    test(
+      'catchUpPolicy.none does not fire if past the scheduled time even within minutes',
+      () {
+        // Start at Jan 30 09:00 with slot already fired
+        final clock = FakeClock(DateTime(2026, 1, 30, 9, 0, 0));
+        final events = <ScheduledFireEvent>[];
 
-      final scheduler = InAppScheduler(clock: clock);
-      scheduler.fireEvents.listen(events.add);
-      scheduler.start();
+        final scheduler = InAppScheduler(clock: clock);
+        scheduler.fireEvents.listen(events.add);
+        scheduler.start();
 
-      final spec = ScheduleSpec.daily(
-        id: 'test-no-catchup-grace',
-        hour: 9,
-        minute: 0,
-        catchUpPolicy: CatchUpPolicy.none,
-        lastEvaluatedAt: DateTime(2026, 1, 30, 9, 0, 0),
-      ).recordFiredSlot(
-        'daily:2026-01-30T09:00+11:00',
-        DateTime(2026, 1, 30, 9, 0, 0),
-      );
-      scheduler.register(spec);
+        final spec =
+            ScheduleSpec.daily(
+              id: 'test-no-catchup-grace',
+              hour: 9,
+              minute: 0,
+              catchUpPolicy: CatchUpPolicy.none,
+              lastEvaluatedAt: DateTime(2026, 1, 30, 9, 0, 0),
+            ).recordFiredSlot(
+              'daily:2026-01-30T09:00+11:00',
+              DateTime(2026, 1, 30, 9, 0, 0),
+            );
+        scheduler.register(spec);
 
-      // Jump forward 7 days to Feb 6 at 09:02 (past today's 09:00)
-      // With catchUpPolicy.none, since 09:00 already passed, it should NOT fire
-      // The next occurrence is scheduled for Feb 7 09:00
-      clock.setTime(DateTime(2026, 2, 6, 9, 2, 0));
-      scheduler.tick(clock.now());
+        // Jump forward 7 days to Feb 6 at 09:02 (past today's 09:00)
+        // With catchUpPolicy.none, since 09:00 already passed, it should NOT fire
+        // The next occurrence is scheduled for Feb 7 09:00
+        clock.setTime(DateTime(2026, 2, 6, 9, 2, 0));
+        scheduler.tick(clock.now());
 
-      // Should fire 0 - past today's 09:00 slot, next is tomorrow
-      expect(events.length, 0);
+        // Should fire 0 - past today's 09:00 slot, next is tomorrow
+        expect(events.length, 0);
 
-      scheduler.dispose();
-    });
+        scheduler.dispose();
+      },
+    );
 
     test('catchUpPolicy.lastOnly fires once for most recent missed slot', () {
       final clock = FakeClock(DateTime(2026, 1, 30, 9, 0, 0));
@@ -667,16 +652,17 @@ void main() {
       scheduler.fireEvents.listen(events.add);
       scheduler.start();
 
-      final spec = ScheduleSpec.daily(
-        id: 'test-lastonly-catchup',
-        hour: 9,
-        minute: 0,
-        catchUpPolicy: CatchUpPolicy.lastOnly,
-        lastEvaluatedAt: DateTime(2026, 1, 30, 9, 0, 0),
-      ).recordFiredSlot(
-        'daily:2026-01-30T09:00+11:00',
-        DateTime(2026, 1, 30, 9, 0, 0),
-      );
+      final spec =
+          ScheduleSpec.daily(
+            id: 'test-lastonly-catchup',
+            hour: 9,
+            minute: 0,
+            catchUpPolicy: CatchUpPolicy.lastOnly,
+            lastEvaluatedAt: DateTime(2026, 1, 30, 9, 0, 0),
+          ).recordFiredSlot(
+            'daily:2026-01-30T09:00+11:00',
+            DateTime(2026, 1, 30, 9, 0, 0),
+          );
       scheduler.register(spec);
 
       // Jump forward 7 days to Feb 6 at 12:00 (past 09:00)
@@ -699,18 +685,19 @@ void main() {
       scheduler.fireEvents.listen(events.add);
       scheduler.start();
 
-      final spec = ScheduleSpec.daily(
-        id: 'test-all-catchup',
-        hour: 9,
-        minute: 0,
-        catchUpPolicy: CatchUpPolicy.allWithinWindow,
-        catchUpWindow: const Duration(days: 7),
-        maxCatchUpExecutions: 5,
-        lastEvaluatedAt: DateTime(2026, 1, 30, 9, 0, 0),
-      ).recordFiredSlot(
-        'daily:2026-01-30T09:00+11:00',
-        DateTime(2026, 1, 30, 9, 0, 0),
-      );
+      final spec =
+          ScheduleSpec.daily(
+            id: 'test-all-catchup',
+            hour: 9,
+            minute: 0,
+            catchUpPolicy: CatchUpPolicy.allWithinWindow,
+            catchUpWindow: const Duration(days: 7),
+            maxCatchUpExecutions: 5,
+            lastEvaluatedAt: DateTime(2026, 1, 30, 9, 0, 0),
+          ).recordFiredSlot(
+            'daily:2026-01-30T09:00+11:00',
+            DateTime(2026, 1, 30, 9, 0, 0),
+          );
       scheduler.register(spec);
 
       // Jump forward 3 days to Feb 2 at 09:00
@@ -733,18 +720,19 @@ void main() {
       scheduler.fireEvents.listen(events.add);
       scheduler.start();
 
-      final spec = ScheduleSpec.daily(
-        id: 'test-limited-catchup',
-        hour: 9,
-        minute: 0,
-        catchUpPolicy: CatchUpPolicy.allWithinWindow,
-        catchUpWindow: const Duration(days: 365),
-        maxCatchUpExecutions: 5, // Limit to 5
-        lastEvaluatedAt: DateTime(2026, 1, 1, 9, 0, 0),
-      ).recordFiredSlot(
-        'daily:2026-01-01T09:00+11:00',
-        DateTime(2026, 1, 1, 9, 0, 0),
-      );
+      final spec =
+          ScheduleSpec.daily(
+            id: 'test-limited-catchup',
+            hour: 9,
+            minute: 0,
+            catchUpPolicy: CatchUpPolicy.allWithinWindow,
+            catchUpWindow: const Duration(days: 365),
+            maxCatchUpExecutions: 5, // Limit to 5
+            lastEvaluatedAt: DateTime(2026, 1, 1, 9, 0, 0),
+          ).recordFiredSlot(
+            'daily:2026-01-01T09:00+11:00',
+            DateTime(2026, 1, 1, 9, 0, 0),
+          );
       scheduler.register(spec);
 
       // Jump forward 30 days
@@ -827,11 +815,7 @@ void main() {
       scheduler.start();
 
       // Register daily schedule
-      final spec = ScheduleSpec.daily(
-        id: 'persist-daily',
-        hour: 9,
-        minute: 0,
-      );
+      final spec = ScheduleSpec.daily(id: 'persist-daily', hour: 9, minute: 0);
       scheduler.register(spec);
 
       // Fire today
@@ -950,19 +934,21 @@ void main() {
       scheduler.start();
 
       // Register multiple schedules
-      scheduler.register(ScheduleSpec.oneShot(
-        id: 'oneshot-1',
-        runAt: DateTime(2026, 1, 30, 9, 0, 0),
-      ));
-      scheduler.register(ScheduleSpec.oneShot(
-        id: 'oneshot-2',
-        runAt: DateTime(2026, 1, 30, 9, 5, 0),
-      ));
-      scheduler.register(ScheduleSpec.daily(
-        id: 'daily-1',
-        hour: 9,
-        minute: 10,
-      ));
+      scheduler.register(
+        ScheduleSpec.oneShot(
+          id: 'oneshot-1',
+          runAt: DateTime(2026, 1, 30, 9, 0, 0),
+        ),
+      );
+      scheduler.register(
+        ScheduleSpec.oneShot(
+          id: 'oneshot-2',
+          runAt: DateTime(2026, 1, 30, 9, 5, 0),
+        ),
+      );
+      scheduler.register(
+        ScheduleSpec.daily(id: 'daily-1', hour: 9, minute: 10),
+      );
 
       // Advance to 9:15
       clock.advance(const Duration(minutes: 20));

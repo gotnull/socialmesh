@@ -41,23 +41,23 @@ This document outlines the comprehensive testing strategy for the Socialmesh Aut
 
 ### TriggerTypes (16 total) - ✅ ALL IMPLEMENTED TRIGGERS TESTED
 
-| TriggerType       | Status             | Test Count | Notes                                          |
-| ----------------- | ------------------ | ---------- | ---------------------------------------------- |
-| `nodeOnline`      | ✅ Tested          | 4          | Online transitions, node filter, disabled auto |
-| `nodeOffline`     | ✅ Tested          | 2          | Offline transitions, node filter               |
-| `batteryLow`      | ✅ Tested          | 6          | Threshold crossing, hysteresis, custom         |
-| `batteryFull`     | ✅ Tested          | 1          | Full charge detection                          |
-| `messageReceived` | ✅ Tested          | 2          | Any message trigger                            |
-| `messageContains` | ✅ Tested          | 3          | Keyword matching, case-insensitive             |
-| `positionChanged` | ✅ Tested          | 2          | Position update detection                      |
-| `geofenceEnter`   | ✅ Tested          | 2          | Enter zone detection                           |
-| `geofenceExit`    | ✅ Tested          | 2          | Exit zone detection                            |
-| `nodeSilent`      | ✅ Tested          | 3          | Silent threshold, node filter, config duration |
-| `scheduled`       | ✅ Tested          | 35+        | One-shot, interval, daily, weekly, DST, catch-up |
-| `signalWeak`      | ✅ Tested          | 2          | SNR threshold                                  |
-| `channelActivity` | ✅ Tested          | 1          | Channel-specific triggers                      |
-| `detectionSensor` | ✅ Tested          | 9          | Sensor name/state filters, node filter         |
-| `manual`          | ✅ Tested          | 3          | Manual execution, context passing              |
+| TriggerType       | Status    | Test Count | Notes                                            |
+| ----------------- | --------- | ---------- | ------------------------------------------------ |
+| `nodeOnline`      | ✅ Tested | 4          | Online transitions, node filter, disabled auto   |
+| `nodeOffline`     | ✅ Tested | 2          | Offline transitions, node filter                 |
+| `batteryLow`      | ✅ Tested | 6          | Threshold crossing, hysteresis, custom           |
+| `batteryFull`     | ✅ Tested | 1          | Full charge detection                            |
+| `messageReceived` | ✅ Tested | 2          | Any message trigger                              |
+| `messageContains` | ✅ Tested | 3          | Keyword matching, case-insensitive               |
+| `positionChanged` | ✅ Tested | 2          | Position update detection                        |
+| `geofenceEnter`   | ✅ Tested | 2          | Enter zone detection                             |
+| `geofenceExit`    | ✅ Tested | 2          | Exit zone detection                              |
+| `nodeSilent`      | ✅ Tested | 3          | Silent threshold, node filter, config duration   |
+| `scheduled`       | ✅ Tested | 35+        | One-shot, interval, daily, weekly, DST, catch-up |
+| `signalWeak`      | ✅ Tested | 2          | SNR threshold                                    |
+| `channelActivity` | ✅ Tested | 1          | Channel-specific triggers                        |
+| `detectionSensor` | ✅ Tested | 9          | Sensor name/state filters, node filter           |
+| `manual`          | ✅ Tested | 3          | Manual execution, context passing                |
 
 ### ActionTypes (10 total) - ✅ ALL TESTED
 
@@ -306,18 +306,19 @@ test/features/automations/
 ---
 
 ## Notes
+
 ### Scheduled Triggers
 
 The `TriggerType.scheduled` is now fully implemented with comprehensive support for time-based automations.
 
 #### Schedule Kinds
 
-| Kind       | Description                                    | Example                        |
-| ---------- | ---------------------------------------------- | ------------------------------ |
-| `oneShot`  | Fires exactly once at a specific time          | "Remind me at 3pm tomorrow"    |
-| `interval` | Fires repeatedly at fixed intervals            | "Every 15 minutes"             |
-| `daily`    | Fires once per day at a specific time          | "Every day at 9:00 AM"         |
-| `weekly`   | Fires on specific days of the week at a time   | "Mon, Wed, Fri at 8:00 AM"     |
+| Kind       | Description                                  | Example                     |
+| ---------- | -------------------------------------------- | --------------------------- |
+| `oneShot`  | Fires exactly once at a specific time        | "Remind me at 3pm tomorrow" |
+| `interval` | Fires repeatedly at fixed intervals          | "Every 15 minutes"          |
+| `daily`    | Fires once per day at a specific time        | "Every day at 9:00 AM"      |
+| `weekly`   | Fires on specific days of the week at a time | "Mon, Wed, Fri at 8:00 AM"  |
 
 #### DST (Daylight Saving Time) Handling
 
@@ -332,13 +333,14 @@ Scheduled triggers use **Australia/Melbourne** as the default timezone (IANA ide
 
 When the app resumes after being suspended (or after a device reboot), missed scheduled fires are handled according to the configured `CatchUpPolicy`:
 
-| Policy             | Behavior                                               | Use Case                    |
-| ------------------ | ------------------------------------------------------ | --------------------------- |
-| `none`             | Silently discard all missed fires                      | Non-critical notifications  |
-| `lastOnly`         | Execute only the most recent missed fire               | Status updates              |
-| `allWithinWindow`  | Execute all missed fires within the catch-up window    | Time-critical actions       |
+| Policy            | Behavior                                            | Use Case                   |
+| ----------------- | --------------------------------------------------- | -------------------------- |
+| `none`            | Silently discard all missed fires                   | Non-critical notifications |
+| `lastOnly`        | Execute only the most recent missed fire            | Status updates             |
+| `allWithinWindow` | Execute all missed fires within the catch-up window | Time-critical actions      |
 
 **Safety Limits**:
+
 - `maxCatchUpExecutions`: Hard cap on catch-up fires (default: 10)
 - `catchUpWindowDuration`: Maximum lookback window (default: 1 hour)
 
@@ -368,6 +370,7 @@ This ensures that a daily schedule set for 9:00 AM correctly passes a "9:00-10:0
 #### Persistence
 
 Schedules are persisted via `AutomationRepository`:
+
 - `_schedulesKey`: JSON list of all active schedules
 - Each schedule tracks `firedSlots` (Set of slot keys already executed)
 - On app restart, `InAppScheduler.resyncFromStore()` rebuilds the priority queue
@@ -375,12 +378,14 @@ Schedules are persisted via `AutomationRepository`:
 #### Platform Schedulers (Future)
 
 Platform-specific background execution is scaffolded but not yet implemented:
+
 - **Android**: `AndroidWorkManagerScheduler` (WorkManager integration)
 - **iOS**: `IOSBGTaskScheduler` (BGTaskScheduler integration)
 
 These will enable schedules to fire even when the app is suspended.
 
 ---
+
 ### Known Limitations
 
 1. **Geofence Conditions**: `withinGeofence` and `outsideGeofence` conditions always return `true`. The geofence _triggers_ work, but conditions don't.

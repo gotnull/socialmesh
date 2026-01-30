@@ -548,7 +548,10 @@ class AutomationEngine {
 
     switch (condition.type) {
       case ConditionType.timeRange:
-        final timeOfDay = TimeOfDay(hour: evalTime.hour, minute: evalTime.minute);
+        final timeOfDay = TimeOfDay(
+          hour: evalTime.hour,
+          minute: evalTime.minute,
+        );
         final start = _parseTimeOfDay(condition.timeStart);
         final end = _parseTimeOfDay(condition.timeEnd);
         if (start == null || end == null) return true;

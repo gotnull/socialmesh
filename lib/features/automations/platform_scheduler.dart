@@ -141,7 +141,10 @@ class AndroidWorkManagerScheduler implements PlatformScheduler {
   }
 
   @override
-  Future<bool> handleTask(String taskId, Map<String, dynamic>? inputData) async {
+  Future<bool> handleTask(
+    String taskId,
+    Map<String, dynamic>? inputData,
+  ) async {
     // TODO: Implement task handling
     // This would be called from the callbackDispatcher
     return true;
@@ -223,7 +226,10 @@ class IOSBGTaskScheduler implements PlatformScheduler {
   }
 
   @override
-  Future<bool> handleTask(String taskId, Map<String, dynamic>? inputData) async {
+  Future<bool> handleTask(
+    String taskId,
+    Map<String, dynamic>? inputData,
+  ) async {
     // TODO: Implement task handling
     // Should complete quickly (<30 seconds)
     // Call task.setTaskCompleted(success: true) when done
@@ -241,10 +247,7 @@ class SchedulerBridge {
   final InAppScheduler inAppScheduler;
   final PlatformScheduler? platformScheduler;
 
-  SchedulerBridge({
-    required this.inAppScheduler,
-    this.platformScheduler,
-  });
+  SchedulerBridge({required this.inAppScheduler, this.platformScheduler});
 
   /// Initialize both schedulers
   Future<void> initialize() async {
