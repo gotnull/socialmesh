@@ -13,6 +13,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Scan for secrets
+        run: bash ./tool/secret_scan.sh
+
       - name: Create .env for CI
         run: cp .env.ci .env
 

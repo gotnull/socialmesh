@@ -21,10 +21,19 @@ android/.kotlin/sessions/
 mesh-observer/
 functions/
 
-# Environment files (keep .env.example)
+# Environment files (keep .env.example and .env.ci for CI)
 .env
 .env.local
 .env.*.local
+!.env.example
+!.env.ci
+
+# Signing keys and certificates
+*.keystore
+*.jks
+*.p12
+*.pem
+!*.pem.example
 
 # Firebase/GCP service account keys (NEVER commit these!)
 *-firebase-adminsdk-*.json

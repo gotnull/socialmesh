@@ -64,3 +64,20 @@ Contributions to improve offline functionality, mesh protocol support, and local
 ## Questions
 
 For questions about backend services or commercial licensing, contact the maintainers directly.
+
+## Secrets and Configuration
+
+**Do not commit secrets to this repository.**
+
+- API keys, tokens, and credentials must never be committed
+- Use environment variables or local untracked config files (`.env`)
+- Firebase config files (`google-services.json`, `GoogleService-Info.plist`) are gitignored by default
+- Service account JSON files are gitignored and must not be added
+
+For development without backend configuration, use demo mode:
+
+```bash
+flutter run --dart-define=SOCIALMESH_DEMO=1
+```
+
+CI runs an automated secret scan on every push and pull request. Commits containing detected secrets will fail the build.
