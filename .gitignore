@@ -16,6 +16,7 @@ meshtastic-ios/
 .firebase
 android/.kotlin/sessions/
 .github/copilot-instructions.md
+scripts/generate_launch_screens.py 
 
 # Backend services (proprietary, not part of public repo)
 mesh-observer/
