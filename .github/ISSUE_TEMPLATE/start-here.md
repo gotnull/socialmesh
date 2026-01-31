@@ -39,17 +39,18 @@ PRs that attempt to reimplement backend services or add new cloud dependencies w
 
 ### Where to go
 
-| I want to...                     | Go here                                      |
-| -------------------------------- | -------------------------------------------- |
-| Report a bug                     | Use the **Bug Report** template              |
-| Request a feature                | Use the **Feature Request** template         |
-| Ask a question about the code    | Open a **Discussion** (if enabled) or issue  |
-| Ask about Meshtastic firmware    | [meshtastic/firmware](https://github.com/meshtastic/firmware) |
-| Report a security vulnerability  | See [SECURITY.md](../SECURITY.md)            |
+| I want to...                    | Go here                                                       |
+| ------------------------------- | ------------------------------------------------------------- |
+| Report a bug                    | Use the **Bug Report** template                               |
+| Request a feature               | Use the **Feature Request** template                          |
+| Ask a question about the code   | Open a **Discussion** (if enabled) or issue                   |
+| Ask about Meshtastic firmware   | [meshtastic/firmware](https://github.com/meshtastic/firmware) |
+| Report a security vulnerability | See [SECURITY.md](../SECURITY.md)                             |
 
 ### Not sure if your issue belongs here?
 
 If your issue involves:
+
 - Cloud sync, profiles, or widget marketplace: These are optional Firebase features. The app works fully offline without them.
 - Meshtastic device behavior: This is firmware-level, not app-level.
 - Backend API changes: Out of scope for this repository.

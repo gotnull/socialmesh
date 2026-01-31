@@ -20,10 +20,10 @@ A clear description of what the bug is.
 
 ## Steps to Reproduce
 
-1. 
-2. 
-3. 
-4. 
+1.
+2.
+3.
+4.
 
 ## Expected Behavior
 
@@ -35,14 +35,14 @@ What actually happened.
 
 ## Environment
 
-| Field                | Value                              |
-| -------------------- | ---------------------------------- |
-| Platform             | Android / iOS                      |
-| Device               | [e.g., iPhone 15, Pixel 8]         |
-| OS Version           | [e.g., iOS 17.2, Android 14]       |
-| App Version          | [e.g., 1.2.3]                      |
-| Meshtastic Firmware  | [e.g., 2.3.0]                      |
-| Connection Type      | BLE / USB                          |
+| Field               | Value                        |
+| ------------------- | ---------------------------- |
+| Platform            | Android / iOS                |
+| Device              | [e.g., iPhone 15, Pixel 8]   |
+| OS Version          | [e.g., iOS 17.2, Android 14] |
+| App Version         | [e.g., 1.2.3]                |
+| Meshtastic Firmware | [e.g., 2.3.0]                |
+| Connection Type     | BLE / USB                    |
 
 ## Logs / Screenshots
 

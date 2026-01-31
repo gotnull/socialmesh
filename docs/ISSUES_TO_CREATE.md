@@ -11,6 +11,7 @@ These are concrete, well-scoped issues suitable for new contributors. Create the
 **Description**: The `PacketFramer` class in `lib/core/packet_framer.dart` handles USB serial packet framing with 0x94/0xC3 markers. It currently lacks comprehensive unit tests.
 
 **Acceptance Criteria**:
+
 - [ ] Test valid packet encoding with start/end markers
 - [ ] Test packet decoding with correct boundary detection
 - [ ] Test handling of malformed packets (missing markers, truncated data)
@@ -26,6 +27,7 @@ These are concrete, well-scoped issues suitable for new contributors. Create the
 **Description**: The app uses Riverpod 3.x with many interdependent providers in `lib/providers/app_providers.dart`. New contributors need a visual or textual guide to understand provider relationships.
 
 **Acceptance Criteria**:
+
 - [ ] Create `docs/PROVIDERS.md` with a list of core providers
 - [ ] Document which providers depend on which
 - [ ] Include a simple dependency diagram (ASCII or Mermaid)
@@ -40,6 +42,7 @@ These are concrete, well-scoped issues suitable for new contributors. Create the
 **Description**: Source files in `lib/` have SPDX license headers, but test files in `test/` may be missing them. All Dart files should have consistent headers.
 
 **Acceptance Criteria**:
+
 - [ ] Audit all `.dart` files in `test/` directory
 - [ ] Add SPDX header to any file missing it
 - [ ] Header format: `// SPDX-License-Identifier: GPL-3.0-or-later`
@@ -54,6 +57,7 @@ These are concrete, well-scoped issues suitable for new contributors. Create the
 **Description**: When BLE connection fails, the error messages shown to users could be more helpful. Review `lib/core/ble_transport.dart` and related UI for opportunities to clarify error states.
 
 **Acceptance Criteria**:
+
 - [ ] Identify current error message locations
 - [ ] Propose clearer messages for: device not found, connection timeout, disconnection
 - [ ] Update strings without changing connection logic
@@ -68,6 +72,7 @@ These are concrete, well-scoped issues suitable for new contributors. Create the
 **Description**: Create an integration test that verifies the message composition and display flow using mock data. This does not require a real device.
 
 **Acceptance Criteria**:
+
 - [ ] Test creates a mock message
 - [ ] Test verifies message appears in message list
 - [ ] Test verifies message metadata (timestamp, sender) displays correctly
@@ -82,6 +87,7 @@ These are concrete, well-scoped issues suitable for new contributors. Create the
 **Description**: Over time, some imports may have become unused. Run analysis and clean up any unused imports to reduce noise.
 
 **Acceptance Criteria**:
+
 - [ ] Run `dart fix --apply` to auto-fix simple cases
 - [ ] Manually review any remaining unused import warnings
 - [ ] Verify `flutter analyze` shows no unused import warnings
@@ -96,6 +102,7 @@ These are concrete, well-scoped issues suitable for new contributors. Create the
 **Description**: The `NodeAvatar` widget in `lib/core/widgets/` is used throughout the app to display node identities. It should have widget tests covering its rendering states.
 
 **Acceptance Criteria**:
+
 - [ ] Test renders correctly with valid node data
 - [ ] Test renders fallback for missing/null node
 - [ ] Test handles long node names gracefully
@@ -110,6 +117,7 @@ These are concrete, well-scoped issues suitable for new contributors. Create the
 **Description**: The automation system supports various triggers (`nodeOnline`, `batteryLow`, etc.) and actions. Create documentation explaining each type for users and contributors.
 
 **Acceptance Criteria**:
+
 - [ ] Create `docs/AUTOMATIONS.md`
 - [ ] List all trigger types with descriptions
 - [ ] List all action types with descriptions
