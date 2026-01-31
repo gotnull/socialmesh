@@ -17,6 +17,10 @@ meshtastic-ios/
 android/.kotlin/sessions/
 .github/copilot-instructions.md
 
+# Backend services (proprietary, not part of public repo)
+mesh-observer/
+functions/
+
 # Environment files (keep .env.example)
 .env
 .env.local
