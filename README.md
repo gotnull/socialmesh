@@ -147,6 +147,13 @@ These features are available via one-time in-app purchases:
 
 ---
 
+## Documentation
+
+- [Architecture Overview](docs/ARCHITECTURE.md) — How the app is structured
+- [Backend Boundary](docs/BACKEND.md) — What requires cloud services
+
+---
+
 ## Getting Started
 
 ### Prerequisites
