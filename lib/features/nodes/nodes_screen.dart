@@ -217,6 +217,8 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
             ),
           ],
           slivers: [
+            // Top padding to push content below the glass app bar
+            const SliverToBoxAdapter(child: SizedBox(height: 8)),
             // Pinned search and filter controls
             SliverPersistentHeader(
               pinned: true,
@@ -826,10 +828,10 @@ class _NodesControlsHeaderDelegate extends SliverPersistentHeaderDelegate {
   });
 
   @override
-  double get minExtent => 112; // Search bar + filter chips + divider
+  double get minExtent => 125; // Search bar (56) + padding (16) + filter chips (44) + divider (1) + spacing (8)
 
   @override
-  double get maxExtent => 112;
+  double get maxExtent => 125;
 
   @override
   Widget build(
@@ -960,6 +962,7 @@ class _NodesControlsHeaderDelegate extends SliverPersistentHeaderDelegate {
               ],
             ),
           ),
+          const SizedBox(height: 8), // Spacing before divider
           // Divider
           Container(height: 1, color: context.border.withValues(alpha: 0.3)),
         ],

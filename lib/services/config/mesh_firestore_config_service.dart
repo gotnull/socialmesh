@@ -119,6 +119,9 @@ class MeshConfigData {
   final int secretGestureTimeWindowMs;
   final bool secretGestureShowFeedback;
   final bool secretGestureEnableHaptics;
+  // Debug mode settings (synced globally for admin access)
+  final bool premiumUpsellEnabled;
+  final bool adminModeEnabled;
 
   const MeshConfigData({
     this.size = 600,
@@ -140,6 +143,8 @@ class MeshConfigData {
     this.secretGestureTimeWindowMs = 3000,
     this.secretGestureShowFeedback = true,
     this.secretGestureEnableHaptics = true,
+    this.premiumUpsellEnabled = false,
+    this.adminModeEnabled = false,
   });
 
   factory MeshConfigData.fromJson(Map<String, dynamic> json) {
@@ -169,6 +174,8 @@ class MeshConfigData {
           json['secretGestureShowFeedback'] as bool? ?? true,
       secretGestureEnableHaptics:
           json['secretGestureEnableHaptics'] as bool? ?? true,
+      premiumUpsellEnabled: json['premiumUpsellEnabled'] as bool? ?? false,
+      adminModeEnabled: json['adminModeEnabled'] as bool? ?? false,
     );
   }
 
@@ -193,6 +200,8 @@ class MeshConfigData {
       'secretGestureTimeWindowMs': secretGestureTimeWindowMs,
       'secretGestureShowFeedback': secretGestureShowFeedback,
       'secretGestureEnableHaptics': secretGestureEnableHaptics,
+      'premiumUpsellEnabled': premiumUpsellEnabled,
+      'adminModeEnabled': adminModeEnabled,
     };
   }
 

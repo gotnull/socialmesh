@@ -828,18 +828,24 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
 
     // Build the reply input widget
     Widget buildReplyInput() {
-      return Container(
-        decoration: BoxDecoration(
-          color: context.card,
-          border: Border(
-            top: BorderSide(color: context.border.withValues(alpha: 0.5)),
-          ),
+      return AnimatedPadding(
+        duration: const Duration(milliseconds: 100),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
-        child: SafeArea(
-          top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
+        child: Container(
+          decoration: BoxDecoration(
+            color: context.card,
+            border: Border(
+              top: BorderSide(color: context.border.withValues(alpha: 0.5)),
+            ),
+          ),
+          child: SafeArea(
+            top: false,
+            bottom: MediaQuery.of(context).viewInsets.bottom == 0,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
               // Reply indicator
               if (_replyingToAuthor != null)
                 Container(
@@ -939,6 +945,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
             ],
           ),
         ),
+        ),
       );
     }
 
@@ -947,6 +954,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
       centerTitle: false,
       actions: [_buildSignalMenu(context, signal)],
       controller: _scrollController,
+      resizeToAvoidBottomInset: false, // We handle keyboard insets manually in buildReplyInput
       bottomNavigationBar: buildReplyInput(),
       slivers: [
         SliverPadding(

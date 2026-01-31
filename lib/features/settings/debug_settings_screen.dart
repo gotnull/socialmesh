@@ -108,9 +108,17 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
           _enablePullToStretch = remoteConfig.enablePullToStretch;
           _touchIntensity = remoteConfig.touchIntensity;
           _stretchIntensity = remoteConfig.stretchIntensity;
+          // Debug mode settings from global config
+          _premiumUpsellEnabled = remoteConfig.premiumUpsellEnabled;
+          _adminModeEnabled = remoteConfig.adminModeEnabled;
           _hasUnsavedChanges = false;
           _saveLocation = MeshConfigSaveLocation.global;
         });
+        // Also apply to local storage and AdminConfig
+        await _settingsService!.setPremiumUpsellEnabled(_premiumUpsellEnabled);
+        await _settingsService!.setAdminModeEnabled(_adminModeEnabled);
+        AdminConfig.setPremiumUpsellEnabled(_premiumUpsellEnabled);
+        AdminConfig.setEnabled(_adminModeEnabled);
         return;
       }
     } catch (e) {
@@ -206,6 +214,8 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
         enablePullToStretch: _enablePullToStretch,
         touchIntensity: _touchIntensity,
         stretchIntensity: _stretchIntensity,
+        premiumUpsellEnabled: _premiumUpsellEnabled,
+        adminModeEnabled: _adminModeEnabled,
       );
 
       await MeshFirestoreConfigService.instance.initialize();
@@ -257,8 +267,17 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
           _enablePullToStretch = remoteConfig.enablePullToStretch;
           _touchIntensity = remoteConfig.touchIntensity;
           _stretchIntensity = remoteConfig.stretchIntensity;
+          // Debug mode settings from global config
+          _premiumUpsellEnabled = remoteConfig.premiumUpsellEnabled;
+          _adminModeEnabled = remoteConfig.adminModeEnabled;
           _hasUnsavedChanges = true;
         });
+
+        // Also apply to local storage and AdminConfig
+        await _settingsService!.setPremiumUpsellEnabled(_premiumUpsellEnabled);
+        await _settingsService!.setAdminModeEnabled(_adminModeEnabled);
+        AdminConfig.setPremiumUpsellEnabled(_premiumUpsellEnabled);
+        AdminConfig.setEnabled(_adminModeEnabled);
 
         if (mounted) {
           showSuccessSnackBar(context, '✅ Loaded config from Firestore');
@@ -1578,7 +1597,11 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
           value: _adminModeEnabled,
           contentPadding: EdgeInsets.zero,
           title: const Text('Admin mode'),
-          subtitle: const Text('Show admin-only sections in debug tools'),
+          subtitle: Text(
+            _saveLocation == MeshConfigSaveLocation.global
+                ? 'Synced globally • Show admin-only sections'
+                : 'Show admin-only sections in debug tools',
+          ),
           onChanged: (value) async {
             if (_settingsService == null) return;
             await _settingsService!.setAdminModeEnabled(value);
@@ -1586,7 +1609,10 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
             AdminConfig.setEnabled(value);
             ref.read(settingsRefreshProvider.notifier).refresh();
             if (!mounted) return;
-            setState(() => _adminModeEnabled = value);
+            setState(() {
+              _adminModeEnabled = value;
+              _hasUnsavedChanges = true;
+            });
           },
         ),
         const SizedBox(height: 8),
@@ -1594,8 +1620,10 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
           value: _premiumUpsellEnabled,
           contentPadding: EdgeInsets.zero,
           title: const Text('Premium upsell mode'),
-          subtitle: const Text(
-            'Allow exploring premium features with upsell on actions',
+          subtitle: Text(
+            _saveLocation == MeshConfigSaveLocation.global
+                ? 'Synced globally • Explore features with upsell'
+                : 'Allow exploring premium features with upsell on actions',
           ),
           onChanged: (value) async {
             if (_settingsService == null) return;
@@ -1604,7 +1632,10 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
             AdminConfig.setPremiumUpsellEnabled(value);
             ref.read(settingsRefreshProvider.notifier).refresh();
             if (!mounted) return;
-            setState(() => _premiumUpsellEnabled = value);
+            setState(() {
+              _premiumUpsellEnabled = value;
+              _hasUnsavedChanges = true;
+            });
           },
         ),
         const SizedBox(height: 12),
