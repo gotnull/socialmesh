@@ -20,12 +20,15 @@ EXCLUDE_DIRS=(
     "build"
     ".dart_tool"
     "ios/Pods"
+    "macos/Pods"
     "android/.gradle"
     "android/build"
     ".pub-cache"
     "lib/generated"
     "node_modules"
     ".git"
+    ".venv"
+    "functions/lib"
 )
 
 # Build grep exclude arguments
