@@ -695,7 +695,9 @@ void main() {
         maxCatchUpExecutions: 5,
         lastEvaluatedAt: DateTime(2026, 1, 30, 9, 0, 0),
       );
-      final jan30SlotKey = baseSpec.generateSlotKey(DateTime(2026, 1, 30, 9, 0));
+      final jan30SlotKey = baseSpec.generateSlotKey(
+        DateTime(2026, 1, 30, 9, 0),
+      );
       final spec = baseSpec.recordFiredSlot(
         jan30SlotKey,
         DateTime(2026, 1, 30, 9, 0, 0),
