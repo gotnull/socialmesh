@@ -846,105 +846,105 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-              // Reply indicator
-              if (_replyingToAuthor != null)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
+                // Reply indicator
+                if (_replyingToAuthor != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    color: context.accentColor.withValues(alpha: 0.1),
+                    child: Row(
+                      children: [
+                        Icon(Icons.reply, size: 16, color: context.accentColor),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Replying to $_replyingToAuthor',
+                          style: TextStyle(
+                            color: context.textSecondary,
+                            fontSize: 13,
+                          ),
+                        ),
+                        const Spacer(),
+                        GestureDetector(
+                          onTap: _cancelReply,
+                          child: Icon(
+                            Icons.close,
+                            size: 18,
+                            color: context.textTertiary,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  color: context.accentColor.withValues(alpha: 0.1),
+
+                // Input field
+                Padding(
+                  padding: const EdgeInsets.all(12),
                   child: Row(
                     children: [
-                      Icon(Icons.reply, size: 16, color: context.accentColor),
+                      Expanded(
+                        child: TextField(
+                          controller: _replyController,
+                          focusNode: _replyFocusNode,
+                          enabled: !_isSubmittingReply,
+                          style: TextStyle(color: context.textPrimary),
+                          decoration: InputDecoration(
+                            hintText: _replyingToAuthor != null
+                                ? 'Write a reply...'
+                                : 'Respond to this signal...',
+                            hintStyle: TextStyle(color: context.textTertiary),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(24),
+                              borderSide: BorderSide.none,
+                            ),
+                            filled: true,
+                            fillColor: context.background,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
+                          ),
+                          maxLines: 1,
+                          textInputAction: TextInputAction.send,
+                          onSubmitted: (_) => _submitReply(),
+                          textCapitalization: TextCapitalization.sentences,
+                          onChanged: (_) => setState(() {}),
+                        ),
+                      ),
                       const SizedBox(width: 8),
-                      Text(
-                        'Replying to $_replyingToAuthor',
-                        style: TextStyle(
-                          color: context.textSecondary,
-                          fontSize: 13,
-                        ),
-                      ),
-                      const Spacer(),
-                      GestureDetector(
-                        onTap: _cancelReply,
-                        child: Icon(
-                          Icons.close,
-                          size: 18,
-                          color: context.textTertiary,
-                        ),
-                      ),
+                      _isSubmittingReply
+                          ? SizedBox(
+                              width: 48,
+                              height: 48,
+                              child: Center(
+                                child: SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: context.accentColor,
+                                  ),
+                                ),
+                              ),
+                            )
+                          : IconButton(
+                              onPressed: _replyController.text.trim().isNotEmpty
+                                  ? _submitReply
+                                  : null,
+                              icon: Icon(
+                                Icons.send,
+                                color: _replyController.text.trim().isNotEmpty
+                                    ? context.accentColor
+                                    : context.textTertiary,
+                              ),
+                            ),
                     ],
                   ),
                 ),
-
-              // Input field
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _replyController,
-                        focusNode: _replyFocusNode,
-                        enabled: !_isSubmittingReply,
-                        style: TextStyle(color: context.textPrimary),
-                        decoration: InputDecoration(
-                          hintText: _replyingToAuthor != null
-                              ? 'Write a reply...'
-                              : 'Respond to this signal...',
-                          hintStyle: TextStyle(color: context.textTertiary),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(24),
-                            borderSide: BorderSide.none,
-                          ),
-                          filled: true,
-                          fillColor: context.background,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 10,
-                          ),
-                        ),
-                        maxLines: 1,
-                        textInputAction: TextInputAction.send,
-                        onSubmitted: (_) => _submitReply(),
-                        textCapitalization: TextCapitalization.sentences,
-                        onChanged: (_) => setState(() {}),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    _isSubmittingReply
-                        ? SizedBox(
-                            width: 48,
-                            height: 48,
-                            child: Center(
-                              child: SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: context.accentColor,
-                                ),
-                              ),
-                            ),
-                          )
-                        : IconButton(
-                            onPressed: _replyController.text.trim().isNotEmpty
-                                ? _submitReply
-                                : null,
-                            icon: Icon(
-                              Icons.send,
-                              color: _replyController.text.trim().isNotEmpty
-                                  ? context.accentColor
-                                  : context.textTertiary,
-                            ),
-                          ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
         ),
       );
     }
@@ -954,7 +954,8 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
       centerTitle: false,
       actions: [_buildSignalMenu(context, signal)],
       controller: _scrollController,
-      resizeToAvoidBottomInset: false, // We handle keyboard insets manually in buildReplyInput
+      resizeToAvoidBottomInset:
+          false, // We handle keyboard insets manually in buildReplyInput
       bottomNavigationBar: buildReplyInput(),
       slivers: [
         SliverPadding(
