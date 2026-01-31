@@ -1356,6 +1356,10 @@ final isDeviceConnectedProvider = Provider<bool>((ref) {
       deviceState.state == DevicePairingState.configuring) {
     return true;
   }
+  // Also check the transport directly as a fallback - the transport may be
+  // connected even if deviceConnectionProvider hasn't updated yet
+  final transport = ref.watch(transportProvider);
+  if (transport.isConnected) return true;
   return false;
 });
 

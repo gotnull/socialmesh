@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/logging.dart';
 import '../../core/theme.dart';
-import '../../core/transport.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
@@ -145,11 +144,7 @@ class _DeviceManagementScreenState
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final protocol = ref.watch(protocolServiceProvider);
-    final connectionStateAsync = ref.watch(connectionStateProvider);
-    final isConnected = connectionStateAsync.maybeWhen(
-      data: (state) => state == DeviceConnectionState.connected,
-      orElse: () => false,
-    );
+    final isConnected = protocol.isConnected;
 
     return GlassScaffold(
       title: 'Device Management',
