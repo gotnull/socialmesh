@@ -5,6 +5,7 @@
 Signals are Socialmesh's mesh-first, ephemeral content system. Think of them as time-limited "presence broadcasts" - short messages that propagate across the mesh network and automatically expire. Unlike traditional social posts, Signals are designed for real-time, proximity-aware communication without the complexity of follower graphs, likes, or feed algorithms.
 
 **Core Philosophy:**
+
 - Mesh-First: Signals transmit over Meshtastic mesh radio BEFORE any cloud sync
 - Ephemeral: All signals have a TTL (Time-To-Live) and auto-expire
 - Local-First: Stored in SQLite immediately; Firebase is optional
@@ -28,7 +29,7 @@ class Post {
   final PostLocation? location;       // Optional GPS (coarsened for privacy)
   final DateTime createdAt;
   final int commentCount;             // Cloud Function maintained
-  
+
   // Signal-specific fields:
   final PostMode postMode;            // signal or social
   final SignalOrigin origin;          // mesh or cloud
@@ -70,13 +71,15 @@ class SignalResponse {
 ## TTL System
 
 ### TTL Options (`SignalTTL` class)
+
 - 15 minutes
-- 30 minutes  
+- 30 minutes
 - 1 hour (default)
 - 6 hours
 - 24 hours
 
 ### Expiry Behavior
+
 - Signals auto-cleanup from local DB when expired
 - UI shows countdown with urgency colors (orange <5min, red <1min)
 - Pulsing text animation when expiring soon
@@ -105,6 +108,7 @@ class MeshSignalPacket {
 ```
 
 **JSON Keys (Compressed):**
+
 - `id`: Signal UUID
 - `c`: Content
 - `t`: TTL in minutes
@@ -120,6 +124,7 @@ class MeshSignalPacket {
 ### Image Unlock Rules
 
 Images require either:
+
 1. **Auth unlock**: User is authenticated, OR
 2. **Proximity unlock**: Sender node seen within last 15 minutes at ≤2 hops
 
@@ -132,11 +137,13 @@ class ImageUnlockRules {
 ```
 
 ### Image States
+
 - `none`: No image
 - `local`: Stored locally, not uploaded
 - `cloud`: Uploaded to Firebase Storage
 
 ### Upload Flow
+
 1. Images copied to persistent storage on creation
 2. Mesh packet sent immediately (includes `hasImage` flag)
 3. Cloud upload happens async if authenticated
@@ -150,6 +157,7 @@ class ImageUnlockRules {
 ### Local (SQLite - `signals.db`)
 
 Tables:
+
 - `signals`: Main signal storage with all Post fields
 - `node_proximity`: Tracks when nodes were seen (for image unlock)
 - `comments`: Local cache of cloud comments
@@ -159,12 +167,14 @@ Indexes on `expiresAt`, `meshNodeId`
 ### Cloud (Firebase)
 
 **Firestore:**
+
 - `posts/{signalId}`: Signal document
 - `posts/{signalId}/comments/{commentId}`: Comments
 - `posts/{signalId}/comments/{commentId}/votes/{uid}`: User votes
 - `users/{uid}/saved_signals/{signalId}`: Bookmarks
 
 **Storage:**
+
 - `signals/{userId}/{signalId}_0.jpg` (etc.): Signal images
 
 ---
@@ -174,6 +184,7 @@ Indexes on `expiresAt`, `meshNodeId`
 ### SignalService (`lib/services/signal_service.dart`)
 
 3260+ lines handling:
+
 - SQLite persistence
 - Firestore sync
 - Image upload/download
@@ -183,6 +194,7 @@ Indexes on `expiresAt`, `meshNodeId`
 - Real-time listeners
 
 Key Methods:
+
 ```dart
 Future<Post> createSignal({...})           // Create new signal
 Future<Post?> createSignalFromMesh({...})  // Process received mesh signal
@@ -213,6 +225,7 @@ Stream<MeshSignalPacket> get signalStream
 ## Provider Layer (`lib/providers/signal_providers.dart`)
 
 ### SignalFeedState
+
 ```dart
 class SignalFeedState {
   final Map<String, Post> _signalMap;      // Single source of truth
@@ -227,6 +240,7 @@ class SignalFeedState {
 ### SignalFeedNotifier
 
 Features:
+
 - Periodic cleanup (every minute)
 - Auto-refresh (every 30 seconds)
 - Global countdown timer (every second)
@@ -235,6 +249,7 @@ Features:
 - Remote deletion handling
 
 ### Key Providers
+
 ```dart
 signalFeedProvider           // Main feed state
 signalServiceProvider        // Service singleton
@@ -255,12 +270,14 @@ hiddenSignalsProvider        // Manually hidden signals
 ### Screens
 
 **PresenceFeedScreen** (`lib/features/signals/screens/presence_feed_screen.dart`)
+
 - Main signal feed with filtering/sorting
 - View modes: List, Grid, Gallery, Map
 - Search across content, author, node ID
 - Filters: All, Saved, Nearby, Mesh-only, With media, With location, With comments, Expiring soon, Hidden
 
 **CreateSignalScreen** (`lib/features/signals/screens/create_signal_screen.dart`)
+
 - 280 char limit with counter
 - TTL selector chips
 - Optional location (coarsened)
@@ -268,6 +285,7 @@ hiddenSignalsProvider        // Manually hidden signals
 - Content moderation pre-check
 
 **SignalDetailScreen** (`lib/features/signals/screens/signal_detail_screen.dart`)
+
 - Full signal view
 - Threaded comments with voting
 - Reply functionality
@@ -291,12 +309,14 @@ hiddenSignalsProvider        // Manually hidden signals
 ## Sorting & Filtering
 
 ### Default Sort Order
+
 1. Own device signals first (`meshNodeId == myNodeNum`)
 2. Hop count ascending (closer first, null = lowest priority)
 3. Expiry time ascending (expiring soon first)
 4. Creation time descending (newest first)
 
 ### Filter Options
+
 ```dart
 enum SignalFilter {
   all,
@@ -324,6 +344,7 @@ enum SignalSortOrder {
 ### Location Coarsening
 
 Signals use randomized location within a configurable radius:
+
 ```dart
 PostLocation.coarseFromCoordinates(
   latitude: exactLat,
@@ -333,6 +354,7 @@ PostLocation.coarseFromCoordinates(
 ```
 
 ### Signal Settings (`SignalSettingsScreen`)
+
 - Location radius: 100m, 250m, 500m, 1km, 5km
 - Max images per signal: 1-4
 - Notification preferences (signals, votes)
@@ -342,11 +364,14 @@ PostLocation.coarseFromCoordinates(
 ## Cloud Functions Integration
 
 ### Comment Voting
+
 Votes are processed by Cloud Functions to maintain atomic counters:
+
 - `posts/{signalId}/comments/{commentId}/votes/{uid}`: Vote document
 - Cloud Function updates `score`, `upvoteCount`, `downvoteCount` on parent comment
 
 ### Content Moderation
+
 Images uploaded to `signal_images_temp/` trigger moderation check before being moved to final location.
 
 ---
@@ -354,10 +379,12 @@ Images uploaded to `signal_images_temp/` trigger moderation check before being m
 ## Duplicate Detection
 
 ### Mesh Level
+
 - `MeshPacketDedupeStore`: Tracks `(packetType, senderNodeId, packetId)` tuples
 - TTL: 30 minutes
 
 ### Signal Level
+
 - Dedupe by `signalId` in SQLite signals table
 - Prevents processing same signal twice from different routes
 
@@ -370,13 +397,14 @@ class SignalConnectivity {
   final bool hasInternet;
   final bool isAuthenticated;
   final bool isBleConnected;
-  
+
   bool get canUseCloud => hasInternet && isAuthenticated;
   bool get canUseMesh => isBleConnected;
 }
 ```
 
 Signals work in three modes:
+
 1. **Full mode**: Mesh + Cloud (authenticated with internet)
 2. **Mesh-only mode**: No cloud sync (offline or debug mode)
 3. **Cloud-only mode**: No mesh device connected
@@ -386,6 +414,7 @@ Signals work in three modes:
 ## Testing
 
 Key test files:
+
 - `test/providers/signal_bookmark_provider_test.dart`
 - `test/providers/signal_countdown_test.dart`
 - `test/services/protocol/mesh_signal_packet_test.dart`
