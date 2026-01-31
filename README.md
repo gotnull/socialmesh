@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/app_icons/app_icon.png" width="120" alt="Socialmesh">
+  <img src="assets/app_icons/socialmesh_icon_512.png" width="120" alt="Socialmesh">
 </p>
 
 <h1 align="center">Socialmesh</h1>
@@ -249,6 +249,29 @@ Socialmesh registers `socialmesh://` for deep linking:
 socialmesh://channel/<base64>   # Import channel configuration
 socialmesh://node/<base64>      # Import node information
 ```
+
+---
+
+## Project Status
+
+Socialmesh is a fully functional Meshtastic companion app available on iOS and Android. The codebase is stable and actively maintained.
+
+### Contributions Welcome
+
+- Bug fixes and performance improvements
+- New device configuration options as Meshtastic firmware evolves
+- UI/UX polish and accessibility improvements
+- Documentation and translations
+- Test coverage
+
+### Out of Scope
+
+The following are intentionally excluded from this repository:
+
+- Backend services, cloud functions, and APIs (proprietary)
+- Payment processing and subscription infrastructure
+- App Store/Play Store publishing workflows
+- Marketing materials and promotional content
 
 ---
 
