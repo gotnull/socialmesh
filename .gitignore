@@ -22,10 +22,12 @@ android/.kotlin/sessions/
 .env.local
 .env.*.local
 
-# Firebase Admin SDK service account keys (NEVER commit these!)
+# Firebase/GCP service account keys (NEVER commit these!)
 *-firebase-adminsdk-*.json
 firebase-service-account.json
-scripts/social-mesh-app-9e8f26071bf7.json
+**/service-account*.json
+**/*-service-account.json
+scripts/*.json
 
 # IntelliJ related
 *.iml
