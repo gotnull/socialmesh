@@ -6,25 +6,50 @@ labels: bug
 assignees: ""
 ---
 
-**Describe the bug**
+## Prerequisites
+
+- [ ] I have read [CONTRIBUTING.md](../CONTRIBUTING.md)
+- [ ] I have searched existing issues to ensure this is not a duplicate
+- [ ] This is a bug in the mobile app, not in Meshtastic firmware or backend services
+
+---
+
+## Bug Description
+
 A clear description of what the bug is.
 
-**To Reproduce**
-Steps to reproduce:
+## Steps to Reproduce
 
-1.
-2.
-3.
+1. 
+2. 
+3. 
+4. 
 
-**Expected behavior**
+## Expected Behavior
+
 What you expected to happen.
 
-**Environment**
+## Actual Behavior
 
-- Device: [e.g., iPhone 15, Pixel 8]
-- OS: [e.g., iOS 17.2, Android 14]
-- Meshtastic firmware: [e.g., 2.3.0]
-- App version: [e.g., 1.2.3]
+What actually happened.
 
-**Additional context**
-Any other relevant information, screenshots, or logs.
+## Environment
+
+| Field                | Value                              |
+| -------------------- | ---------------------------------- |
+| Platform             | Android / iOS                      |
+| Device               | [e.g., iPhone 15, Pixel 8]         |
+| OS Version           | [e.g., iOS 17.2, Android 14]       |
+| App Version          | [e.g., 1.2.3]                      |
+| Meshtastic Firmware  | [e.g., 2.3.0]                      |
+| Connection Type      | BLE / USB                          |
+
+## Logs / Screenshots
+
+Attach any relevant logs, screenshots, or screen recordings.
+
+If reporting a crash, include the stack trace from the device logs.
+
+---
+
+**Note**: Issues without clear reproduction steps may be closed. If you cannot reliably reproduce the bug, describe when it occurs and any patterns you have noticed.
