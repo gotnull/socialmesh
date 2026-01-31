@@ -7,6 +7,7 @@ A Meshtastic companion app for iOS and Android. Connect to your mesh radio, exch
 ## Features
 
 ### 📡 Messaging
+
 - **Channel Messaging** — Send and receive on multiple channels
 - **Direct Messages** — Private node-to-node communication
 - **Quick Responses** — Pre-configured canned messages for fast replies
@@ -14,6 +15,7 @@ A Meshtastic companion app for iOS and Android. Connect to your mesh radio, exch
 - **Offline Queue** — Messages queued when disconnected, sent when reconnected
 
 ### 🌐 Network & Nodes
+
 - **Node Discovery** — See all nodes on your mesh with signal strength, battery, and location
 - **Network Topology** — Visual graph showing how nodes connect to each other
 - **Traceroute** — Trace the path packets take to reach any node
@@ -21,12 +23,14 @@ A Meshtastic companion app for iOS and Android. Connect to your mesh radio, exch
 - **Favorites** — Pin important nodes for quick access
 
 ### 🗺️ Maps & Location
+
 - **Node Map** — Interactive map showing all nodes with GPS
 - **Waypoints** — Drop, share, and navigate to waypoints
 - **Location Sharing** — Broadcast your position to the mesh
 - **Multiple Map Styles** — Street, satellite, and terrain views
 
 ### ⚙️ Device Configuration
+
 - **LoRa Settings** — Region, modem preset, hop limit, frequency slot
 - **Power Management** — Sleep mode, shutdown timeout, power saving
 - **Position Settings** — GPS mode, broadcast interval, smart position
@@ -37,16 +41,19 @@ A Meshtastic companion app for iOS and Android. Connect to your mesh radio, exch
 - **Canned Messages** — Configure quick response messages on device
 
 ### 🔊 Audio
+
 - **Ringtone Library** — Browse 7,000+ RTTTL ringtones organized by category
 - **Preview & Set** — Listen before sending to your device
 - **Custom Ringtones** — Create and save your own RTTTL compositions
 
 ### 🔗 Integrations
+
 - **IFTTT Webhooks** — Trigger automations on node events and geofence alerts
 - **MQTT** — Configure MQTT bridge for internet uplink
 - **QR Codes** — Import/export channels and share node info via QR
 
 ### ��️ Safety
+
 - **Emergency SOS** — One-tap emergency broadcast with optional GPS
 - **Geofence Alerts** — Get notified when nodes leave a defined area
 - **Battery Alerts** — Low battery notifications for tracked nodes
@@ -54,7 +61,7 @@ A Meshtastic companion app for iOS and Android. Connect to your mesh radio, exch
 ## Tech Stack
 
 - **Flutter** — Cross-platform UI framework
-- **Riverpod** — Reactive state management  
+- **Riverpod** — Reactive state management
 - **Protocol Buffers** — Meshtastic protocol implementation
 - **SQLite** — Local data persistence
 - **Firebase** — Analytics and crash reporting

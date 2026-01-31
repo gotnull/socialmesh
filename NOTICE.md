@@ -27,6 +27,7 @@ This application uses Google Protocol Buffers for serialization.
 This application is built with Flutter and uses various open-source Dart packages. Each package's license can be found in the `pubspec.yaml` dependencies and their respective repositories.
 
 Notable packages:
+
 - `flutter_blue_plus` — BSD-3-Clause
 - `protobuf` (Dart) — BSD-3-Clause
 - `flutter_riverpod` — MIT
@@ -34,6 +35,7 @@ Notable packages:
 - `flutter_map` — BSD-3-Clause
 
 For a complete list of dependencies and their licenses, run:
+
 ```bash
 flutter pub deps
 ```
