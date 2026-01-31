@@ -82,6 +82,8 @@ void main() {
           isDeviceConnectedProvider.overrideWithValue(true),
           // inject fake signal service
           signalServiceProvider.overrideWithValue(fake),
+          // Mock auth state to avoid Firebase dependency
+          authStateProvider.overrideWithValue(const AsyncValue.data(null)),
         ],
       );
 
