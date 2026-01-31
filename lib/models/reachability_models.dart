@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // Mesh Reachability Models
 //
 // Data structures for probabilistic node reachability assessment.

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // Mesh Health Riverpod Providers
 //
 // Follows app's Riverpod 3.x patterns with Notifier classes.

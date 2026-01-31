@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 import '../../../models/mesh_models.dart';
 import '../../../models/presence_confidence.dart';
 import '../models/widget_schema.dart';

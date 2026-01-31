@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 bool _isHighSurrogate(int codeUnit) => codeUnit >= 0xD800 && codeUnit <= 0xDBFF;
 bool _isLowSurrogate(int codeUnit) => codeUnit >= 0xDC00 && codeUnit <= 0xDFFF;
 

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // Compact Mesh Health Indicator Widget
 //
 // A small, embeddable widget showing mesh health at a glance.

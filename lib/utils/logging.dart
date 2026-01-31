@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:logger/logger.dart';
 
 /// Creates a logger instance with standard formatting

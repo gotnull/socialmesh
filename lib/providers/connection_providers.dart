@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // Connection State Management
 //
 // This file implements the deferred connection architecture where:

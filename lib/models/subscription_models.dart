@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // One-time purchase definitions and feature flags for monetization
 
 import '../config/revenuecat_config.dart';

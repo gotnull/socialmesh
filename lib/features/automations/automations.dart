@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // Automation feature exports
 export 'models/automation.dart';
 export 'automation_engine.dart';

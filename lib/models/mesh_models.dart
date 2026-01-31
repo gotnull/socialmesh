@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:uuid/uuid.dart';
 import 'presence_confidence.dart';
 import '../features/nodes/node_display_name_resolver.dart';

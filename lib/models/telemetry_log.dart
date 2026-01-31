@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:uuid/uuid.dart';
 
 /// Helper to sanitize double values for JSON encoding

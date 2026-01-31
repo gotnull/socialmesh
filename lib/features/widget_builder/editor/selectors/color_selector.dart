@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 import '../../../../core/theme.dart';
 import '../../../../core/widgets/app_bottom_sheet.dart' as app_sheets;

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // Glass Scaffold
 //
 // A scaffold wrapper that provides a glassmorphic app bar with consistent

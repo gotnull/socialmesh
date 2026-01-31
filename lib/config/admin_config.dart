@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 /// Configuration for admin/debug features.
 /// These features are controlled via the debug settings screen,
 /// accessed by secret 7-tap gesture + PIN. No env vars used for security.

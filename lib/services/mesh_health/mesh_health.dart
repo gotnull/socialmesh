@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 /// Mesh Health Module
 ///
 /// Real-time mesh network health detection and diagnostics.

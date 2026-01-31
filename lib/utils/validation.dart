@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/services.dart';
 
 /// Meshtastic protocol validation utilities

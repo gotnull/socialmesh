@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 /// Signals module - mesh-first ephemeral content
 ///
 /// Signals are v1's mesh-first alternative to social posts:

@@ -103,4 +103,17 @@ Socialmesh registers the `socialmesh://` URL scheme:
 
 ## License
 
-Private repository. All rights reserved.
+This mobile application is licensed under the **GNU General Public License v3.0** (GPL-3.0-or-later).
+
+You are free to use, modify, and distribute this software under the terms of the GPL-3.0. See the [LICENSE](LICENSE) file for details.
+
+### Scope
+
+- **Mobile app (this repository):** GPL-3.0 — source code is provided here.
+- **Backend services, cloud functions, and APIs:** Proprietary and not included in this repository.
+
+The source distribution requirement of GPL-3.0 is satisfied by this public repository.
+
+### Third-Party Notices
+
+See [NOTICE.md](NOTICE.md) for attribution of third-party components including Meshtastic protobufs.

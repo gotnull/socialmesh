@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // AR Calibration Service
 //
 // Handles camera FOV detection, compass calibration, magnetic declination,

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 class NodeDisplayNameResolver {
   static final RegExp _bleDefaultPattern = RegExp(
     r'^Meshtastic_[0-9a-fA-F]{4}$',

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 import '../../core/logging.dart';
 import 'dart:async';
 import '../../models/mesh_models.dart';

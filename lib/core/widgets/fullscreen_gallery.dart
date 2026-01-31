@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 
 /// A fullscreen image gallery with swipe navigation and pinch-to-zoom.

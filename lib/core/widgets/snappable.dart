@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // Snappable library - Thanos snap effect in Flutter
 // Ported from https://github.com/MarcinusX/snappable (pub.dev/packages/snappable)
 // Copyright 2019 Fidev Marcin Szalek - BSD 2-Clause License

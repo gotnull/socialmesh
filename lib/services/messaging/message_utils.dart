@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import '../../models/mesh_models.dart';

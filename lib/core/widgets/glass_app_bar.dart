@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // Glass App Bar
 //
 // Glassmorphic app bar components with backdrop blur effect.

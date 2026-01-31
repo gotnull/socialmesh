@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // Mesh Health Dashboard Widget
 //
 // Live display of mesh network health metrics, utilization graphs,

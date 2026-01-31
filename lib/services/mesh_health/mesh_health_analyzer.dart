@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // Mesh Network Health Analyzer Service
 //
 // Pure Dart service for analyzing mesh network telemetry.

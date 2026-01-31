@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // Device configuration models for Meshtastic admin operations
 
 /// Device configuration

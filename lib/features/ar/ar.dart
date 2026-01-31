@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // AR Node Radar - Production Augmented Reality mesh node visualization
 //
 // This module provides AR visualization of mesh nodes at their real-world

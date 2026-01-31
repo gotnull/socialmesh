@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 export 'animations/aliens_tracker_animation.dart';
 export 'animations/aurora_borealis_animation.dart';
 export 'animations/bacteria_colony_animation.dart';

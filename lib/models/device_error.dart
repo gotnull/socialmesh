@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 /// Device error codes from Meshtastic
 enum DeviceErrorCode {
   none,

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
 
 /// A widget that adds a gradient fade effect at the edges of its child.

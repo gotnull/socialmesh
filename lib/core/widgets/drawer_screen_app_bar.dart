@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // Drawer Screen App Bar
 //
 // Standardized AppBar for drawer menu screens with hamburger button,

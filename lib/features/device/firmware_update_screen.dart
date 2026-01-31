@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 import '../../core/logging.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';

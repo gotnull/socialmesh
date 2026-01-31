@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:socialmesh/core/theme.dart';
 import 'dart:async';
 import 'dart:math' as math;

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:just_audio/just_audio.dart';

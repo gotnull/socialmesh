@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 import 'presence_confidence.dart';
 
 /// Model for nodes from mesh-observer's nodes.json API

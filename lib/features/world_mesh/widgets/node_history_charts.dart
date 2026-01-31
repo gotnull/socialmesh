@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:math' as math;
 
 import 'package:fl_chart/fl_chart.dart';
