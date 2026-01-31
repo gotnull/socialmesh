@@ -84,7 +84,7 @@ void main() {
 
   group('CloudSyncEntitlementState', () {
     test('all states are properly defined', () {
-      expect(CloudSyncEntitlementState.values, hasLength(5));
+      expect(CloudSyncEntitlementState.values, hasLength(6));
       expect(
         CloudSyncEntitlementState.values,
         contains(CloudSyncEntitlementState.active),

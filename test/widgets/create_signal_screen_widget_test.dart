@@ -70,7 +70,7 @@ void main() {
 
     // Offline banner should be visible
     expect(
-      find.textContaining('Offline: images and cloud features are unavailable'),
+      find.textContaining('Offline: images and cloud features unavailable'),
       findsOneWidget,
     );
 
@@ -84,7 +84,7 @@ void main() {
 
     // Banner should disappear
     expect(
-      find.textContaining('Offline: images and cloud features are unavailable'),
+      find.textContaining('Offline: images and cloud features unavailable'),
       findsNothing,
     );
 
