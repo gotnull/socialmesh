@@ -123,9 +123,20 @@ To enable Firebase features, add your own `google-services.json` (Android) and `
 ### Build commands
 
 ```bash
+# Install dependencies
 flutter pub get
-./scripts/generate_protos.sh   # Generate Meshtastic protobufs
-flutter build ios              # or: flutter build apk
+
+# Generate Meshtastic protobufs
+./scripts/generate_protos.sh
+
+# iOS
+cd ios && pod install && cd ..
+flutter build ios
+
+# Android
+flutter build apk                    # Debug APK
+flutter build apk --release          # Release APK
+flutter build appbundle --release    # Play Store bundle
 ```
 
 Missing backend configuration disables cloud features but does not block the build.
