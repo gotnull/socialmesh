@@ -106,10 +106,9 @@ class DebugExportService {
         'activeCount': nodes.values
             .where((n) => presenceConfidenceFor(presenceMap, n).isActive)
             .length,
-        'list':
-            nodes.values
-                .map((n) => _nodeToDebugMap(n, presenceMap))
-                .toList(),
+        'list': nodes.values
+            .map((n) => _nodeToDebugMap(n, presenceMap))
+            .toList(),
       };
     } catch (e) {
       export['nodes'] = {'error': e.toString()};
@@ -271,10 +270,14 @@ class DebugExportService {
       'channelUtilization': node.channelUtilization,
       'airUtilTx': node.airUtilTx,
       'uptimeSeconds': node.uptimeSeconds,
+      'numTxDropped': node.numTxDropped,
+      'noiseFloor': node.noiseFloor,
+      'nodeStatus': node.nodeStatus,
       'temperature': node.temperature,
       'humidity': node.humidity,
       'lastHeard': node.lastHeard?.toIso8601String(),
       'lastHeardAgo': lastHeardAge?.inSeconds,
+      'isMuted': node.isMuted,
     };
   }
 

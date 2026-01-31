@@ -4,6 +4,12 @@
 
 // @dart = 3.3
 
+// ignore_for_file: annotate_overrides, camel_case_types, comment_references
+// ignore_for_file: constant_identifier_names
+// ignore_for_file: curly_braces_in_flow_control_structures
+// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
+
 import 'dart:core' as $core;
 
 import 'package:fixnum/fixnum.dart' as $fixnum;
@@ -1196,6 +1202,7 @@ class LocalStats extends $pb.GeneratedMessage {
     $core.int? heapTotalBytes,
     $core.int? heapFreeBytes,
     $core.int? numTxDropped,
+    $core.int? noiseFloor,
   }) {
     final result = create();
     if (uptimeSeconds != null) result.uptimeSeconds = uptimeSeconds;
@@ -1214,6 +1221,7 @@ class LocalStats extends $pb.GeneratedMessage {
     if (heapTotalBytes != null) result.heapTotalBytes = heapTotalBytes;
     if (heapFreeBytes != null) result.heapFreeBytes = heapFreeBytes;
     if (numTxDropped != null) result.numTxDropped = numTxDropped;
+    if (noiseFloor != null) result.noiseFloor = noiseFloor;
     return result;
   }
 
@@ -1256,6 +1264,7 @@ class LocalStats extends $pb.GeneratedMessage {
         fieldType: $pb.PbFieldType.OU3)
     ..aI(14, _omitFieldNames ? '' : 'numTxDropped',
         fieldType: $pb.PbFieldType.OU3)
+    ..aI(15, _omitFieldNames ? '' : 'noiseFloor')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1431,6 +1440,17 @@ class LocalStats extends $pb.GeneratedMessage {
   $core.bool hasNumTxDropped() => $_has(13);
   @$pb.TagNumber(14)
   void clearNumTxDropped() => $_clearField(14);
+
+  ///
+  ///  Noise floor value measured in dBm
+  @$pb.TagNumber(15)
+  $core.int get noiseFloor => $_getIZ(14);
+  @$pb.TagNumber(15)
+  set noiseFloor($core.int value) => $_setSignedInt32(14, value);
+  @$pb.TagNumber(15)
+  $core.bool hasNoiseFloor() => $_has(14);
+  @$pb.TagNumber(15)
+  void clearNoiseFloor() => $_clearField(15);
 }
 
 ///

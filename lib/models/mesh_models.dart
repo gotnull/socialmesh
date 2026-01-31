@@ -254,7 +254,9 @@ class MeshNode {
   final String? role; // 'CLIENT', 'ROUTER', etc.
   final double? distance; // distance in meters
   final bool isFavorite;
-  final bool isIgnored; // Whether node is muted/ignored
+  final bool isIgnored; // Whether node is muted/ignored (local app setting)
+  final bool
+  isMuted; // Whether node is muted on the device (device-side setting)
   final int? avatarColor; // Color value for avatar
   final bool hasPublicKey; // Whether node has encryption key set
 
@@ -315,6 +317,11 @@ class MeshNode {
   final int? numPacketsRxBad; // Bad packets received
   final int? numOnlineNodes; // Online node count
   final int? numTotalNodes; // Total node count
+  final int? numTxDropped; // Packets dropped due to full TX queue
+  final int? noiseFloor; // Noise floor in dBm
+
+  // Node Status (v2.7.18)
+  final String? nodeStatus; // Status message from NODE_STATUS_APP
 
   // GPS/Position Extended Fields
   final int? satsInView; // Number of satellites in view
@@ -349,6 +356,7 @@ class MeshNode {
     this.distance,
     this.isFavorite = false,
     this.isIgnored = false,
+    this.isMuted = false,
     this.avatarColor,
     this.hasPublicKey = false,
     // Device Metrics
@@ -404,6 +412,10 @@ class MeshNode {
     this.numPacketsRxBad,
     this.numOnlineNodes,
     this.numTotalNodes,
+    this.numTxDropped,
+    this.noiseFloor,
+    // Node Status (v2.7.18)
+    this.nodeStatus,
     // GPS/Position Extended Fields
     this.satsInView,
     this.gpsAccuracy,
@@ -439,6 +451,7 @@ class MeshNode {
     double? distance,
     bool? isFavorite,
     bool? isIgnored,
+    bool? isMuted,
     int? avatarColor,
     bool? hasPublicKey,
     // Device Metrics
@@ -494,6 +507,10 @@ class MeshNode {
     int? numPacketsRxBad,
     int? numOnlineNodes,
     int? numTotalNodes,
+    int? numTxDropped,
+    int? noiseFloor,
+    // Node Status (v2.7.18)
+    String? nodeStatus,
     // GPS/Position Extended Fields
     int? satsInView,
     double? gpsAccuracy,
@@ -526,6 +543,7 @@ class MeshNode {
       distance: distance ?? this.distance,
       isFavorite: isFavorite ?? this.isFavorite,
       isIgnored: isIgnored ?? this.isIgnored,
+      isMuted: isMuted ?? this.isMuted,
       avatarColor: avatarColor ?? this.avatarColor,
       hasPublicKey: hasPublicKey ?? this.hasPublicKey,
       // Device Metrics
@@ -581,6 +599,10 @@ class MeshNode {
       numPacketsRxBad: numPacketsRxBad ?? this.numPacketsRxBad,
       numOnlineNodes: numOnlineNodes ?? this.numOnlineNodes,
       numTotalNodes: numTotalNodes ?? this.numTotalNodes,
+      numTxDropped: numTxDropped ?? this.numTxDropped,
+      noiseFloor: noiseFloor ?? this.noiseFloor,
+      // Node Status (v2.7.18)
+      nodeStatus: nodeStatus ?? this.nodeStatus,
       // GPS/Position Extended Fields
       satsInView: satsInView ?? this.satsInView,
       gpsAccuracy: gpsAccuracy ?? this.gpsAccuracy,

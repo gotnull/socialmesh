@@ -4,6 +4,13 @@
 
 // @dart = 3.3
 
+// ignore_for_file: annotate_overrides, camel_case_types, comment_references
+// ignore_for_file: constant_identifier_names
+// ignore_for_file: curly_braces_in_flow_control_structures
+// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
+// ignore_for_file: unused_import
+
 import 'dart:convert' as $convert;
 import 'dart:core' as $core;
 import 'dart:typed_data' as $typed_data;
@@ -387,6 +394,14 @@ const AdminMessage$json = {
       '10': 'removeIgnoredNode'
     },
     {
+      '1': 'toggle_muted_node',
+      '3': 49,
+      '4': 1,
+      '5': 13,
+      '9': 0,
+      '10': 'toggleMutedNode'
+    },
+    {
       '1': 'begin_edit_settings',
       '3': 64,
       '4': 1,
@@ -419,15 +434,6 @@ const AdminMessage$json = {
       '6': '.meshtastic.KeyVerificationAdmin',
       '9': 0,
       '10': 'keyVerification'
-    },
-    {
-      '1': 'reboot_ota_mode',
-      '3': 68,
-      '4': 1,
-      '5': 14,
-      '6': '.meshtastic.OTAMode',
-      '9': 0,
-      '10': 'rebootOtaMode'
     },
     {
       '1': 'factory_reset_device',
@@ -486,8 +492,17 @@ const AdminMessage$json = {
       '9': 0,
       '10': 'nodedbReset'
     },
+    {
+      '1': 'ota_request',
+      '3': 102,
+      '4': 1,
+      '5': 11,
+      '6': '.meshtastic.AdminMessage.OTAEvent',
+      '9': 0,
+      '10': 'otaRequest'
+    },
   ],
-  '3': [AdminMessage_InputEvent$json],
+  '3': [AdminMessage_InputEvent$json, AdminMessage_OTAEvent$json],
   '4': [
     AdminMessage_ConfigType$json,
     AdminMessage_ModuleConfigType$json,
@@ -506,6 +521,22 @@ const AdminMessage_InputEvent$json = {
     {'1': 'kb_char', '3': 2, '4': 1, '5': 13, '10': 'kbChar'},
     {'1': 'touch_x', '3': 3, '4': 1, '5': 13, '10': 'touchX'},
     {'1': 'touch_y', '3': 4, '4': 1, '5': 13, '10': 'touchY'},
+  ],
+};
+
+@$core.Deprecated('Use adminMessageDescriptor instead')
+const AdminMessage_OTAEvent$json = {
+  '1': 'OTAEvent',
+  '2': [
+    {
+      '1': 'reboot_ota_mode',
+      '3': 1,
+      '4': 1,
+      '5': 14,
+      '6': '.meshtastic.OTAMode',
+      '10': 'rebootOtaMode'
+    },
+    {'1': 'ota_hash', '3': 2, '4': 1, '5': 12, '10': 'otaHash'},
   ],
 };
 
@@ -543,6 +574,7 @@ const AdminMessage_ModuleConfigType$json = {
     {'1': 'AMBIENTLIGHTING_CONFIG', '2': 10},
     {'1': 'DETECTIONSENSOR_CONFIG', '2': 11},
     {'1': 'PAXCOUNTER_CONFIG', '2': 12},
+    {'1': 'STATUSMESSAGE_CONFIG', '2': 13},
   ],
 };
 
@@ -611,31 +643,35 @@ final $typed_data.Uint8List adminMessageDescriptor = $convert.base64Decode(
     'FzdGljLkRldmljZVVJQ29uZmlnSABSE2dldFVpQ29uZmlnUmVzcG9uc2USRAoPc3RvcmVfdWlf'
     'Y29uZmlnGC4gASgLMhoubWVzaHRhc3RpYy5EZXZpY2VVSUNvbmZpZ0gAUg1zdG9yZVVpQ29uZm'
     'lnEioKEHNldF9pZ25vcmVkX25vZGUYLyABKA1IAFIOc2V0SWdub3JlZE5vZGUSMAoTcmVtb3Zl'
-    'X2lnbm9yZWRfbm9kZRgwIAEoDUgAUhFyZW1vdmVJZ25vcmVkTm9kZRIwChNiZWdpbl9lZGl0X3'
-    'NldHRpbmdzGEAgASgISABSEWJlZ2luRWRpdFNldHRpbmdzEjIKFGNvbW1pdF9lZGl0X3NldHRp'
-    'bmdzGEEgASgISABSEmNvbW1pdEVkaXRTZXR0aW5ncxI8CgthZGRfY29udGFjdBhCIAEoCzIZLm'
-    '1lc2h0YXN0aWMuU2hhcmVkQ29udGFjdEgAUgphZGRDb250YWN0Ek0KEGtleV92ZXJpZmljYXRp'
-    'b24YQyABKAsyIC5tZXNodGFzdGljLktleVZlcmlmaWNhdGlvbkFkbWluSABSD2tleVZlcmlmaW'
-    'NhdGlvbhI9Cg9yZWJvb3Rfb3RhX21vZGUYRCABKA4yEy5tZXNodGFzdGljLk9UQU1vZGVIAFIN'
-    'cmVib290T3RhTW9kZRIyChRmYWN0b3J5X3Jlc2V0X2RldmljZRheIAEoBUgAUhJmYWN0b3J5Um'
-    'VzZXREZXZpY2USMgoScmVib290X290YV9zZWNvbmRzGF8gASgFQgIYAUgAUhByZWJvb3RPdGFT'
-    'ZWNvbmRzEicKDmV4aXRfc2ltdWxhdG9yGGAgASgISABSDWV4aXRTaW11bGF0b3ISJwoOcmVib2'
-    '90X3NlY29uZHMYYSABKAVIAFINcmVib290U2Vjb25kcxIrChBzaHV0ZG93bl9zZWNvbmRzGGIg'
-    'ASgFSABSD3NodXRkb3duU2Vjb25kcxIyChRmYWN0b3J5X3Jlc2V0X2NvbmZpZxhjIAEoBUgAUh'
-    'JmYWN0b3J5UmVzZXRDb25maWcSIwoMbm9kZWRiX3Jlc2V0GGQgASgISABSC25vZGVkYlJlc2V0'
-    'GnYKCklucHV0RXZlbnQSHQoKZXZlbnRfY29kZRgBIAEoDVIJZXZlbnRDb2RlEhcKB2tiX2NoYX'
-    'IYAiABKA1SBmtiQ2hhchIXCgd0b3VjaF94GAMgASgNUgZ0b3VjaFgSFwoHdG91Y2hfeRgEIAEo'
-    'DVIGdG91Y2hZItYBCgpDb25maWdUeXBlEhEKDURFVklDRV9DT05GSUcQABITCg9QT1NJVElPTl'
-    '9DT05GSUcQARIQCgxQT1dFUl9DT05GSUcQAhISCg5ORVRXT1JLX0NPTkZJRxADEhIKDkRJU1BM'
-    'QVlfQ09ORklHEAQSDwoLTE9SQV9DT05GSUcQBRIUChBCTFVFVE9PVEhfQ09ORklHEAYSEwoPU0'
-    'VDVVJJVFlfQ09ORklHEAcSFQoRU0VTU0lPTktFWV9DT05GSUcQCBITCg9ERVZJQ0VVSV9DT05G'
-    'SUcQCSK7AgoQTW9kdWxlQ29uZmlnVHlwZRIPCgtNUVRUX0NPTkZJRxAAEhEKDVNFUklBTF9DT0'
-    '5GSUcQARITCg9FWFROT1RJRl9DT05GSUcQAhIXChNTVE9SRUZPUldBUkRfQ09ORklHEAMSFAoQ'
-    'UkFOR0VURVNUX0NPTkZJRxAEEhQKEFRFTEVNRVRSWV9DT05GSUcQBRIUChBDQU5ORURNU0dfQ0'
-    '9ORklHEAYSEAoMQVVESU9fQ09ORklHEAcSGQoVUkVNT1RFSEFSRFdBUkVfQ09ORklHEAgSFwoT'
-    'TkVJR0hCT1JJTkZPX0NPTkZJRxAJEhoKFkFNQklFTlRMSUdIVElOR19DT05GSUcQChIaChZERV'
-    'RFQ1RJT05TRU5TT1JfQ09ORklHEAsSFQoRUEFYQ09VTlRFUl9DT05GSUcQDCIjCg5CYWNrdXBM'
-    'b2NhdGlvbhIJCgVGTEFTSBAAEgYKAlNEEAFCEQoPcGF5bG9hZF92YXJpYW50');
+    'X2lnbm9yZWRfbm9kZRgwIAEoDUgAUhFyZW1vdmVJZ25vcmVkTm9kZRIsChF0b2dnbGVfbXV0ZW'
+    'Rfbm9kZRgxIAEoDUgAUg90b2dnbGVNdXRlZE5vZGUSMAoTYmVnaW5fZWRpdF9zZXR0aW5ncxhA'
+    'IAEoCEgAUhFiZWdpbkVkaXRTZXR0aW5ncxIyChRjb21taXRfZWRpdF9zZXR0aW5ncxhBIAEoCE'
+    'gAUhJjb21taXRFZGl0U2V0dGluZ3MSPAoLYWRkX2NvbnRhY3QYQiABKAsyGS5tZXNodGFzdGlj'
+    'LlNoYXJlZENvbnRhY3RIAFIKYWRkQ29udGFjdBJNChBrZXlfdmVyaWZpY2F0aW9uGEMgASgLMi'
+    'AubWVzaHRhc3RpYy5LZXlWZXJpZmljYXRpb25BZG1pbkgAUg9rZXlWZXJpZmljYXRpb24SMgoU'
+    'ZmFjdG9yeV9yZXNldF9kZXZpY2UYXiABKAVIAFISZmFjdG9yeVJlc2V0RGV2aWNlEjIKEnJlYm'
+    '9vdF9vdGFfc2Vjb25kcxhfIAEoBUICGAFIAFIQcmVib290T3RhU2Vjb25kcxInCg5leGl0X3Np'
+    'bXVsYXRvchhgIAEoCEgAUg1leGl0U2ltdWxhdG9yEicKDnJlYm9vdF9zZWNvbmRzGGEgASgFSA'
+    'BSDXJlYm9vdFNlY29uZHMSKwoQc2h1dGRvd25fc2Vjb25kcxhiIAEoBUgAUg9zaHV0ZG93blNl'
+    'Y29uZHMSMgoUZmFjdG9yeV9yZXNldF9jb25maWcYYyABKAVIAFISZmFjdG9yeVJlc2V0Q29uZm'
+    'lnEiMKDG5vZGVkYl9yZXNldBhkIAEoCEgAUgtub2RlZGJSZXNldBJECgtvdGFfcmVxdWVzdBhm'
+    'IAEoCzIhLm1lc2h0YXN0aWMuQWRtaW5NZXNzYWdlLk9UQUV2ZW50SABSCm90YVJlcXVlc3Qadg'
+    'oKSW5wdXRFdmVudBIdCgpldmVudF9jb2RlGAEgASgNUglldmVudENvZGUSFwoHa2JfY2hhchgC'
+    'IAEoDVIGa2JDaGFyEhcKB3RvdWNoX3gYAyABKA1SBnRvdWNoWBIXCgd0b3VjaF95GAQgASgNUg'
+    'Z0b3VjaFkaYgoIT1RBRXZlbnQSOwoPcmVib290X290YV9tb2RlGAEgASgOMhMubWVzaHRhc3Rp'
+    'Yy5PVEFNb2RlUg1yZWJvb3RPdGFNb2RlEhkKCG90YV9oYXNoGAIgASgMUgdvdGFIYXNoItYBCg'
+    'pDb25maWdUeXBlEhEKDURFVklDRV9DT05GSUcQABITCg9QT1NJVElPTl9DT05GSUcQARIQCgxQ'
+    'T1dFUl9DT05GSUcQAhISCg5ORVRXT1JLX0NPTkZJRxADEhIKDkRJU1BMQVlfQ09ORklHEAQSDw'
+    'oLTE9SQV9DT05GSUcQBRIUChBCTFVFVE9PVEhfQ09ORklHEAYSEwoPU0VDVVJJVFlfQ09ORklH'
+    'EAcSFQoRU0VTU0lPTktFWV9DT05GSUcQCBITCg9ERVZJQ0VVSV9DT05GSUcQCSLVAgoQTW9kdW'
+    'xlQ29uZmlnVHlwZRIPCgtNUVRUX0NPTkZJRxAAEhEKDVNFUklBTF9DT05GSUcQARITCg9FWFRO'
+    'T1RJRl9DT05GSUcQAhIXChNTVE9SRUZPUldBUkRfQ09ORklHEAMSFAoQUkFOR0VURVNUX0NPTk'
+    'ZJRxAEEhQKEFRFTEVNRVRSWV9DT05GSUcQBRIUChBDQU5ORURNU0dfQ09ORklHEAYSEAoMQVVE'
+    'SU9fQ09ORklHEAcSGQoVUkVNT1RFSEFSRFdBUkVfQ09ORklHEAgSFwoTTkVJR0hCT1JJTkZPX0'
+    'NPTkZJRxAJEhoKFkFNQklFTlRMSUdIVElOR19DT05GSUcQChIaChZERVRFQ1RJT05TRU5TT1Jf'
+    'Q09ORklHEAsSFQoRUEFYQ09VTlRFUl9DT05GSUcQDBIYChRTVEFUVVNNRVNTQUdFX0NPTkZJRx'
+    'ANIiMKDkJhY2t1cExvY2F0aW9uEgkKBUZMQVNIEAASBgoCU0QQAUIRCg9wYXlsb2FkX3Zhcmlh'
+    'bnQ=');
 
 @$core.Deprecated('Use hamParametersDescriptor instead')
 const HamParameters$json = {

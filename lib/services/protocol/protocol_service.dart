@@ -968,6 +968,9 @@ class ProtocolService {
         case pn.PortNum.DETECTION_SENSOR_APP:
           _handleDetectionSensorMessage(packet, data);
           break;
+        case pn.PortNum.NODE_STATUS_APP:
+          _handleNodeStatusMessage(packet, data);
+          break;
         default:
           AppLogging.protocol(
             'Received message with portnum: ${data.portnum} (${data.portnum.value})',
@@ -1041,6 +1044,43 @@ class ProtocolService {
       _detectionSensorEventController.add(event);
     } catch (e) {
       AppLogging.protocol('Failed to parse detection sensor message: $e');
+    }
+  }
+
+  /// Handle node status messages (NODE_STATUS_APP portnum - v2.7.18)
+  void _handleNodeStatusMessage(pb.MeshPacket packet, pb.Data data) {
+    try {
+      final statusMsg = pb.StatusMessage.fromBuffer(data.payload);
+      final status = statusMsg.hasStatus() ? statusMsg.status : null;
+
+      AppLogging.protocol(
+        'RX_NODE_STATUS from=${packet.from.toRadixString(16)} '
+        'status="${status ?? "empty"}"',
+      );
+
+      if (status != null && status.isNotEmpty) {
+        // Update node with status message
+        final existingNode = _nodes[packet.from];
+        if (existingNode != null) {
+          final updatedNode = existingNode.copyWith(
+            nodeStatus: status,
+            lastHeard: DateTime.now(),
+          );
+          _nodes[packet.from] = updatedNode;
+          _nodeController.add(updatedNode);
+        } else {
+          // Create a minimal node entry if we don't have one
+          final newNode = MeshNode(
+            nodeNum: packet.from,
+            nodeStatus: status,
+            lastHeard: DateTime.now(),
+          );
+          _nodes[packet.from] = newNode;
+          _nodeController.add(newNode);
+        }
+      }
+    } catch (e) {
+      AppLogging.protocol('Failed to parse node status message: $e');
     }
   }
 
@@ -1926,6 +1966,8 @@ class ProtocolService {
               numTotalNodes: stats.hasNumTotalNodes()
                   ? stats.numTotalNodes
                   : null,
+              numTxDropped: stats.hasNumTxDropped() ? stats.numTxDropped : null,
+              noiseFloor: stats.hasNoiseFloor() ? stats.noiseFloor : null,
               lastHeard: DateTime.now(),
             );
             _nodes[packet.from] = updatedStatsNode;
@@ -2373,6 +2415,9 @@ class ProtocolService {
         role: role,
         avatarColor: existingNode.avatarColor,
         hasPublicKey: hasPublicKey,
+        isMuted: nodeInfo.hasIsMuted()
+            ? nodeInfo.isMuted
+            : existingNode.isMuted,
       );
     } else {
       // Use null for empty strings to trigger fallback display logic, sanitize to prevent UTF-16 crashes
@@ -2405,6 +2450,7 @@ class ProtocolService {
         avatarColor: avatarColor,
         isFavorite: false,
         hasPublicKey: hasPublicKey,
+        isMuted: nodeInfo.hasIsMuted() ? nodeInfo.isMuted : false,
       );
     }
 
@@ -3978,6 +4024,39 @@ class ProtocolService {
     AppLogging.protocol('Removing node $nodeNum from ignored list');
 
     final adminMsg = admin.AdminMessage()..removeIgnoredNode = nodeNum;
+
+    final data = pb.Data()
+      ..portnum = pn.PortNum.ADMIN_APP
+      ..payload = adminMsg.writeToBuffer();
+
+    final packet = pb.MeshPacket()
+      ..from = _myNodeNum!
+      ..to = _myNodeNum!
+      ..decoded = data
+      ..id = _generatePacketId()
+      ..priority = pbenum.MeshPacket_Priority.RELIABLE
+      ..wantAck = true;
+
+    final toRadio = pb.ToRadio()..packet = packet;
+    await _transport.send(_prepareForSend(toRadio.writeToBuffer()));
+  }
+
+  /// Toggle muted status for a node on the device (v2.7.18)
+  ///
+  /// This is different from setIgnoredNode - toggleMutedNode sets the
+  /// device-side mute flag (isMuted in NodeInfo), while setIgnoredNode
+  /// sets the local app ignore flag.
+  Future<void> toggleMutedNode(int nodeNum) async {
+    if (_myNodeNum == null) {
+      throw StateError('Cannot toggle muted: device not ready');
+    }
+    if (!_transport.isConnected) {
+      throw StateError('Cannot toggle muted: not connected');
+    }
+
+    AppLogging.protocol('Toggling muted status for node $nodeNum');
+
+    final adminMsg = admin.AdminMessage()..toggleMutedNode = nodeNum;
 
     final data = pb.Data()
       ..portnum = pn.PortNum.ADMIN_APP

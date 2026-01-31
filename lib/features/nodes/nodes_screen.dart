@@ -2451,6 +2451,13 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
                       label: 'Firmware',
                       value: node.firmwareVersion!,
                     ),
+                  // Node Status (v2.7.18)
+                  if (node.nodeStatus != null && node.nodeStatus!.isNotEmpty)
+                    InfoTableRow(
+                      icon: Icons.info_outline,
+                      label: 'Status',
+                      value: node.nodeStatus!,
+                    ),
                   if (node.batteryLevel != null)
                     InfoTableRow(
                       icon: _getBatteryIcon(node.batteryLevel!),
@@ -2471,6 +2478,12 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
                       icon: Icons.wifi,
                       label: 'SNR',
                       value: '${node.snr} dB',
+                    ),
+                  if (node.noiseFloor != null)
+                    InfoTableRow(
+                      icon: Icons.graphic_eq,
+                      label: 'Noise Floor',
+                      value: '${node.noiseFloor} dBm',
                     ),
                   if (node.distance != null)
                     InfoTableRow(
@@ -2508,6 +2521,14 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
                     label: 'Encryption',
                     value: node.hasPublicKey ? 'PKI Enabled' : 'No Public Key',
                   ),
+                  // Device-side mute status (v2.7.18)
+                  if (node.isMuted)
+                    InfoTableRow(
+                      icon: Icons.volume_off,
+                      iconColor: context.textTertiary,
+                      label: 'Muted',
+                      value: 'Device-side mute enabled',
+                    ),
                 ],
               ),
             ),

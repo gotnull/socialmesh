@@ -4,6 +4,12 @@
 
 // @dart = 3.3
 
+// ignore_for_file: annotate_overrides, camel_case_types, comment_references
+// ignore_for_file: constant_identifier_names
+// ignore_for_file: curly_braces_in_flow_control_structures
+// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
+
 import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
@@ -142,6 +148,14 @@ class PortNum extends $pb.ProtobufEnum {
       PortNum._(35, _omitEnumNames ? '' : 'STORE_FORWARD_PLUSPLUS_APP');
 
   ///
+  ///  Node Status module
+  ///  ENCODING: protobuf
+  ///  This module allows setting an extra string of status for a node.
+  ///  Broadcasts on change and on a timer, possibly once a day.
+  static const PortNum NODE_STATUS_APP =
+      PortNum._(36, _omitEnumNames ? '' : 'NODE_STATUS_APP');
+
+  ///
   ///  Provides a hardware serial interface to send and receive from the Meshtastic network.
   ///  Connect to the RX/TX pins of a device with 38400 8N1. Packets received from the Meshtastic
   ///  network is forwarded to the RX pin while sending a packet to TX will go out to the Mesh network.
@@ -265,6 +279,7 @@ class PortNum extends $pb.ProtobufEnum {
     IP_TUNNEL_APP,
     PAXCOUNTER_APP,
     STORE_FORWARD_PLUSPLUS_APP,
+    NODE_STATUS_APP,
     SERIAL_APP,
     STORE_FORWARD_APP,
     RANGE_TEST_APP,

@@ -4,6 +4,12 @@
 
 // @dart = 3.3
 
+// ignore_for_file: annotate_overrides, camel_case_types, comment_references
+// ignore_for_file: constant_identifier_names
+// ignore_for_file: curly_braces_in_flow_control_structures
+// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
+
 import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
@@ -184,9 +190,9 @@ class HardwareModel extends $pb.ProtobufEnum {
       HardwareModel._(32, _omitEnumNames ? '' : 'LORA_RELAY_V1');
 
   ///
-  ///  TODO: REPLACE
-  static const HardwareModel NRF52840DK =
-      HardwareModel._(33, _omitEnumNames ? '' : 'NRF52840DK');
+  ///  T-Echo Plus device from LilyGo
+  static const HardwareModel T_ECHO_PLUS =
+      HardwareModel._(33, _omitEnumNames ? '' : 'T_ECHO_PLUS');
 
   ///
   ///  TODO: REPLACE
@@ -642,6 +648,21 @@ class HardwareModel extends $pb.ProtobufEnum {
       HardwareModel._(120, _omitEnumNames ? '' : 'THINKNODE_M6');
 
   ///
+  ///  Elecrow Meshstick 1262
+  static const HardwareModel MESHSTICK_1262 =
+      HardwareModel._(121, _omitEnumNames ? '' : 'MESHSTICK_1262');
+
+  ///
+  ///  LilyGo T-Beam 1W
+  static const HardwareModel TBEAM_1_WATT =
+      HardwareModel._(122, _omitEnumNames ? '' : 'TBEAM_1_WATT');
+
+  ///
+  ///  LilyGo T5 S3 ePaper Pro (V1 and V2)
+  static const HardwareModel T5_S3_EPAPER_PRO =
+      HardwareModel._(123, _omitEnumNames ? '' : 'T5_S3_EPAPER_PRO');
+
+  ///
   ///  ------------------------------------------------------------------------------------------------------------------------------------------
   ///  Reserved ID For developing private Ports. These will show up in live traffic sparsely, so we can use a high number. Keep it within 8 bits.
   ///  ------------------------------------------------------------------------------------------------------------------------------------------
@@ -682,7 +703,7 @@ class HardwareModel extends $pb.ProtobufEnum {
     RP2040_LORA,
     STATION_G2,
     LORA_RELAY_V1,
-    NRF52840DK,
+    T_ECHO_PLUS,
     PPR,
     GENIEBLOCKS,
     NRF52_UNKNOWN,
@@ -770,6 +791,9 @@ class HardwareModel extends $pb.ProtobufEnum {
     RAK6421,
     THINKNODE_M4,
     THINKNODE_M6,
+    MESHSTICK_1262,
+    TBEAM_1_WATT,
+    T5_S3_EPAPER_PRO,
     PRIVATE_HW,
   ];
 
@@ -1257,6 +1281,12 @@ class Routing_Error extends $pb.ProtobufEnum {
   static const Routing_Error RATE_LIMIT_EXCEEDED =
       Routing_Error._(38, _omitEnumNames ? '' : 'RATE_LIMIT_EXCEEDED');
 
+  ///
+  ///  PKI encryption failed, due to no public key for the remote node
+  ///  This is different from PKI_UNKNOWN_PUBKEY which indicates a failure upon receiving a packet
+  static const Routing_Error PKI_SEND_FAIL_PUBLIC_KEY =
+      Routing_Error._(39, _omitEnumNames ? '' : 'PKI_SEND_FAIL_PUBLIC_KEY');
+
   static const $core.List<Routing_Error> values = <Routing_Error>[
     NONE,
     NO_ROUTE,
@@ -1275,6 +1305,7 @@ class Routing_Error extends $pb.ProtobufEnum {
     ADMIN_BAD_SESSION_KEY,
     ADMIN_PUBLIC_KEY_UNAUTHORIZED,
     RATE_LIMIT_EXCEEDED,
+    PKI_SEND_FAIL_PUBLIC_KEY,
   ];
 
   static final $core.Map<$core.int, Routing_Error> _byValue =

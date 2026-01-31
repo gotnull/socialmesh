@@ -4,6 +4,12 @@
 
 // @dart = 3.3
 
+// ignore_for_file: annotate_overrides, camel_case_types, comment_references
+// ignore_for_file: constant_identifier_names
+// ignore_for_file: curly_braces_in_flow_control_structures
+// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
+
 import 'dart:core' as $core;
 
 import 'package:fixnum/fixnum.dart' as $fixnum;
@@ -122,6 +128,83 @@ class AdminMessage_InputEvent extends $pb.GeneratedMessage {
   void clearTouchY() => $_clearField(4);
 }
 
+///
+///  User is requesting an over the air update.
+///  Node will reboot into the OTA loader
+class AdminMessage_OTAEvent extends $pb.GeneratedMessage {
+  factory AdminMessage_OTAEvent({
+    OTAMode? rebootOtaMode,
+    $core.List<$core.int>? otaHash,
+  }) {
+    final result = create();
+    if (rebootOtaMode != null) result.rebootOtaMode = rebootOtaMode;
+    if (otaHash != null) result.otaHash = otaHash;
+    return result;
+  }
+
+  AdminMessage_OTAEvent._();
+
+  factory AdminMessage_OTAEvent.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory AdminMessage_OTAEvent.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'AdminMessage.OTAEvent',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aE<OTAMode>(1, _omitFieldNames ? '' : 'rebootOtaMode',
+        enumValues: OTAMode.values)
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'otaHash', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  AdminMessage_OTAEvent clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  AdminMessage_OTAEvent copyWith(
+          void Function(AdminMessage_OTAEvent) updates) =>
+      super.copyWith((message) => updates(message as AdminMessage_OTAEvent))
+          as AdminMessage_OTAEvent;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static AdminMessage_OTAEvent create() => AdminMessage_OTAEvent._();
+  @$core.override
+  AdminMessage_OTAEvent createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static AdminMessage_OTAEvent getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<AdminMessage_OTAEvent>(create);
+  static AdminMessage_OTAEvent? _defaultInstance;
+
+  ///
+  ///  Tell the node to reboot into OTA mode for firmware update via BLE or WiFi (ESP32 only for now)
+  @$pb.TagNumber(1)
+  OTAMode get rebootOtaMode => $_getN(0);
+  @$pb.TagNumber(1)
+  set rebootOtaMode(OTAMode value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRebootOtaMode() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRebootOtaMode() => $_clearField(1);
+
+  ///
+  ///  A 32 byte hash of the OTA firmware.
+  ///  Used to verify the integrity of the firmware before applying an update.
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get otaHash => $_getN(1);
+  @$pb.TagNumber(2)
+  set otaHash($core.List<$core.int> value) => $_setBytes(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasOtaHash() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearOtaHash() => $_clearField(2);
+}
+
 enum AdminMessage_PayloadVariant {
   getChannelRequest,
   getChannelResponse,
@@ -166,11 +249,11 @@ enum AdminMessage_PayloadVariant {
   storeUiConfig,
   setIgnoredNode,
   removeIgnoredNode,
+  toggleMutedNode,
   beginEditSettings,
   commitEditSettings,
   addContact,
   keyVerification,
-  rebootOtaMode,
   factoryResetDevice,
   rebootOtaSeconds,
   exitSimulator,
@@ -178,6 +261,7 @@ enum AdminMessage_PayloadVariant {
   shutdownSeconds,
   factoryResetConfig,
   nodedbReset,
+  otaRequest,
   notSet
 }
 
@@ -230,11 +314,11 @@ class AdminMessage extends $pb.GeneratedMessage {
     $5.DeviceUIConfig? storeUiConfig,
     $core.int? setIgnoredNode,
     $core.int? removeIgnoredNode,
+    $core.int? toggleMutedNode,
     $core.bool? beginEditSettings,
     $core.bool? commitEditSettings,
     SharedContact? addContact,
     KeyVerificationAdmin? keyVerification,
-    OTAMode? rebootOtaMode,
     $core.int? factoryResetDevice,
     @$core.Deprecated('This field is deprecated.') $core.int? rebootOtaSeconds,
     $core.bool? exitSimulator,
@@ -243,6 +327,7 @@ class AdminMessage extends $pb.GeneratedMessage {
     $core.int? factoryResetConfig,
     $core.bool? nodedbReset,
     $core.List<$core.int>? sessionPasskey,
+    AdminMessage_OTAEvent? otaRequest,
   }) {
     final result = create();
     if (getChannelRequest != null) result.getChannelRequest = getChannelRequest;
@@ -316,12 +401,12 @@ class AdminMessage extends $pb.GeneratedMessage {
     if (storeUiConfig != null) result.storeUiConfig = storeUiConfig;
     if (setIgnoredNode != null) result.setIgnoredNode = setIgnoredNode;
     if (removeIgnoredNode != null) result.removeIgnoredNode = removeIgnoredNode;
+    if (toggleMutedNode != null) result.toggleMutedNode = toggleMutedNode;
     if (beginEditSettings != null) result.beginEditSettings = beginEditSettings;
     if (commitEditSettings != null)
       result.commitEditSettings = commitEditSettings;
     if (addContact != null) result.addContact = addContact;
     if (keyVerification != null) result.keyVerification = keyVerification;
-    if (rebootOtaMode != null) result.rebootOtaMode = rebootOtaMode;
     if (factoryResetDevice != null)
       result.factoryResetDevice = factoryResetDevice;
     if (rebootOtaSeconds != null) result.rebootOtaSeconds = rebootOtaSeconds;
@@ -332,6 +417,7 @@ class AdminMessage extends $pb.GeneratedMessage {
       result.factoryResetConfig = factoryResetConfig;
     if (nodedbReset != null) result.nodedbReset = nodedbReset;
     if (sessionPasskey != null) result.sessionPasskey = sessionPasskey;
+    if (otaRequest != null) result.otaRequest = otaRequest;
     return result;
   }
 
@@ -389,11 +475,11 @@ class AdminMessage extends $pb.GeneratedMessage {
     46: AdminMessage_PayloadVariant.storeUiConfig,
     47: AdminMessage_PayloadVariant.setIgnoredNode,
     48: AdminMessage_PayloadVariant.removeIgnoredNode,
+    49: AdminMessage_PayloadVariant.toggleMutedNode,
     64: AdminMessage_PayloadVariant.beginEditSettings,
     65: AdminMessage_PayloadVariant.commitEditSettings,
     66: AdminMessage_PayloadVariant.addContact,
     67: AdminMessage_PayloadVariant.keyVerification,
-    68: AdminMessage_PayloadVariant.rebootOtaMode,
     94: AdminMessage_PayloadVariant.factoryResetDevice,
     95: AdminMessage_PayloadVariant.rebootOtaSeconds,
     96: AdminMessage_PayloadVariant.exitSimulator,
@@ -401,6 +487,7 @@ class AdminMessage extends $pb.GeneratedMessage {
     98: AdminMessage_PayloadVariant.shutdownSeconds,
     99: AdminMessage_PayloadVariant.factoryResetConfig,
     100: AdminMessage_PayloadVariant.nodedbReset,
+    102: AdminMessage_PayloadVariant.otaRequest,
     0: AdminMessage_PayloadVariant.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
@@ -451,18 +538,19 @@ class AdminMessage extends $pb.GeneratedMessage {
       46,
       47,
       48,
+      49,
       64,
       65,
       66,
       67,
-      68,
       94,
       95,
       96,
       97,
       98,
       99,
-      100
+      100,
+      102
     ])
     ..aI(1, _omitFieldNames ? '' : 'getChannelRequest',
         fieldType: $pb.PbFieldType.OU3)
@@ -542,14 +630,14 @@ class AdminMessage extends $pb.GeneratedMessage {
         fieldType: $pb.PbFieldType.OU3)
     ..aI(48, _omitFieldNames ? '' : 'removeIgnoredNode',
         fieldType: $pb.PbFieldType.OU3)
+    ..aI(49, _omitFieldNames ? '' : 'toggleMutedNode',
+        fieldType: $pb.PbFieldType.OU3)
     ..aOB(64, _omitFieldNames ? '' : 'beginEditSettings')
     ..aOB(65, _omitFieldNames ? '' : 'commitEditSettings')
     ..aOM<SharedContact>(66, _omitFieldNames ? '' : 'addContact',
         subBuilder: SharedContact.create)
     ..aOM<KeyVerificationAdmin>(67, _omitFieldNames ? '' : 'keyVerification',
         subBuilder: KeyVerificationAdmin.create)
-    ..aE<OTAMode>(68, _omitFieldNames ? '' : 'rebootOtaMode',
-        enumValues: OTAMode.values)
     ..aI(94, _omitFieldNames ? '' : 'factoryResetDevice')
     ..aI(95, _omitFieldNames ? '' : 'rebootOtaSeconds')
     ..aOB(96, _omitFieldNames ? '' : 'exitSimulator')
@@ -559,6 +647,8 @@ class AdminMessage extends $pb.GeneratedMessage {
     ..aOB(100, _omitFieldNames ? '' : 'nodedbReset')
     ..a<$core.List<$core.int>>(
         101, _omitFieldNames ? '' : 'sessionPasskey', $pb.PbFieldType.OY)
+    ..aOM<AdminMessage_OTAEvent>(102, _omitFieldNames ? '' : 'otaRequest',
+        subBuilder: AdminMessage_OTAEvent.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -623,11 +713,11 @@ class AdminMessage extends $pb.GeneratedMessage {
   @$pb.TagNumber(46)
   @$pb.TagNumber(47)
   @$pb.TagNumber(48)
+  @$pb.TagNumber(49)
   @$pb.TagNumber(64)
   @$pb.TagNumber(65)
   @$pb.TagNumber(66)
   @$pb.TagNumber(67)
-  @$pb.TagNumber(68)
   @$pb.TagNumber(94)
   @$pb.TagNumber(95)
   @$pb.TagNumber(96)
@@ -635,6 +725,7 @@ class AdminMessage extends $pb.GeneratedMessage {
   @$pb.TagNumber(98)
   @$pb.TagNumber(99)
   @$pb.TagNumber(100)
+  @$pb.TagNumber(102)
   AdminMessage_PayloadVariant whichPayloadVariant() =>
       _AdminMessage_PayloadVariantByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
@@ -680,11 +771,11 @@ class AdminMessage extends $pb.GeneratedMessage {
   @$pb.TagNumber(46)
   @$pb.TagNumber(47)
   @$pb.TagNumber(48)
+  @$pb.TagNumber(49)
   @$pb.TagNumber(64)
   @$pb.TagNumber(65)
   @$pb.TagNumber(66)
   @$pb.TagNumber(67)
-  @$pb.TagNumber(68)
   @$pb.TagNumber(94)
   @$pb.TagNumber(95)
   @$pb.TagNumber(96)
@@ -692,6 +783,7 @@ class AdminMessage extends $pb.GeneratedMessage {
   @$pb.TagNumber(98)
   @$pb.TagNumber(99)
   @$pb.TagNumber(100)
+  @$pb.TagNumber(102)
   void clearPayloadVariant() => $_clearField($_whichOneof(0));
 
   ///
@@ -1223,64 +1315,64 @@ class AdminMessage extends $pb.GeneratedMessage {
   void clearRemoveIgnoredNode() => $_clearField(48);
 
   ///
+  ///  Set specified node-num to be muted
+  @$pb.TagNumber(49)
+  $core.int get toggleMutedNode => $_getIZ(43);
+  @$pb.TagNumber(49)
+  set toggleMutedNode($core.int value) => $_setUnsignedInt32(43, value);
+  @$pb.TagNumber(49)
+  $core.bool hasToggleMutedNode() => $_has(43);
+  @$pb.TagNumber(49)
+  void clearToggleMutedNode() => $_clearField(49);
+
+  ///
   ///  Begins an edit transaction for config, module config, owner, and channel settings changes
   ///  This will delay the standard *implicit* save to the file system and subsequent reboot behavior until committed (commit_edit_settings)
   @$pb.TagNumber(64)
-  $core.bool get beginEditSettings => $_getBF(43);
+  $core.bool get beginEditSettings => $_getBF(44);
   @$pb.TagNumber(64)
-  set beginEditSettings($core.bool value) => $_setBool(43, value);
+  set beginEditSettings($core.bool value) => $_setBool(44, value);
   @$pb.TagNumber(64)
-  $core.bool hasBeginEditSettings() => $_has(43);
+  $core.bool hasBeginEditSettings() => $_has(44);
   @$pb.TagNumber(64)
   void clearBeginEditSettings() => $_clearField(64);
 
   ///
   ///  Commits an open transaction for any edits made to config, module config, owner, and channel settings
   @$pb.TagNumber(65)
-  $core.bool get commitEditSettings => $_getBF(44);
+  $core.bool get commitEditSettings => $_getBF(45);
   @$pb.TagNumber(65)
-  set commitEditSettings($core.bool value) => $_setBool(44, value);
+  set commitEditSettings($core.bool value) => $_setBool(45, value);
   @$pb.TagNumber(65)
-  $core.bool hasCommitEditSettings() => $_has(44);
+  $core.bool hasCommitEditSettings() => $_has(45);
   @$pb.TagNumber(65)
   void clearCommitEditSettings() => $_clearField(65);
 
   ///
   ///  Add a contact (User) to the nodedb
   @$pb.TagNumber(66)
-  SharedContact get addContact => $_getN(45);
+  SharedContact get addContact => $_getN(46);
   @$pb.TagNumber(66)
   set addContact(SharedContact value) => $_setField(66, value);
   @$pb.TagNumber(66)
-  $core.bool hasAddContact() => $_has(45);
+  $core.bool hasAddContact() => $_has(46);
   @$pb.TagNumber(66)
   void clearAddContact() => $_clearField(66);
   @$pb.TagNumber(66)
-  SharedContact ensureAddContact() => $_ensure(45);
+  SharedContact ensureAddContact() => $_ensure(46);
 
   ///
   ///  Initiate or respond to a key verification request
   @$pb.TagNumber(67)
-  KeyVerificationAdmin get keyVerification => $_getN(46);
+  KeyVerificationAdmin get keyVerification => $_getN(47);
   @$pb.TagNumber(67)
   set keyVerification(KeyVerificationAdmin value) => $_setField(67, value);
   @$pb.TagNumber(67)
-  $core.bool hasKeyVerification() => $_has(46);
+  $core.bool hasKeyVerification() => $_has(47);
   @$pb.TagNumber(67)
   void clearKeyVerification() => $_clearField(67);
   @$pb.TagNumber(67)
-  KeyVerificationAdmin ensureKeyVerification() => $_ensure(46);
-
-  ///
-  ///  Tell the node to reboot into OTA mode for firmware update via BLE or WiFi (ESP32 only for now)
-  @$pb.TagNumber(68)
-  OTAMode get rebootOtaMode => $_getN(47);
-  @$pb.TagNumber(68)
-  set rebootOtaMode(OTAMode value) => $_setField(68, value);
-  @$pb.TagNumber(68)
-  $core.bool hasRebootOtaMode() => $_has(47);
-  @$pb.TagNumber(68)
-  void clearRebootOtaMode() => $_clearField(68);
+  KeyVerificationAdmin ensureKeyVerification() => $_ensure(47);
 
   ///
   ///  Tell the node to factory reset config everything; all device state and configuration will be returned to factory defaults and BLE bonds will be cleared.
@@ -1379,6 +1471,19 @@ class AdminMessage extends $pb.GeneratedMessage {
   $core.bool hasSessionPasskey() => $_has(55);
   @$pb.TagNumber(101)
   void clearSessionPasskey() => $_clearField(101);
+
+  ///
+  ///  Tell the node to reset into the OTA Loader
+  @$pb.TagNumber(102)
+  AdminMessage_OTAEvent get otaRequest => $_getN(56);
+  @$pb.TagNumber(102)
+  set otaRequest(AdminMessage_OTAEvent value) => $_setField(102, value);
+  @$pb.TagNumber(102)
+  $core.bool hasOtaRequest() => $_has(56);
+  @$pb.TagNumber(102)
+  void clearOtaRequest() => $_clearField(102);
+  @$pb.TagNumber(102)
+  AdminMessage_OTAEvent ensureOtaRequest() => $_ensure(56);
 }
 
 ///

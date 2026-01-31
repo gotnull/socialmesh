@@ -4,6 +4,12 @@
 
 // @dart = 3.3
 
+// ignore_for_file: annotate_overrides, camel_case_types, comment_references
+// ignore_for_file: constant_identifier_names
+// ignore_for_file: curly_braces_in_flow_control_structures
+// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
+
 import 'dart:core' as $core;
 
 import 'package:fixnum/fixnum.dart' as $fixnum;
@@ -1105,6 +1111,7 @@ class StoreForwardPlusPlus extends $pb.GeneratedMessage {
     $core.int? encapsulatedTo,
     $core.int? encapsulatedFrom,
     $core.int? encapsulatedRxtime,
+    $core.int? chainCount,
   }) {
     final result = create();
     if (sfppMessageType != null) result.sfppMessageType = sfppMessageType;
@@ -1117,6 +1124,7 @@ class StoreForwardPlusPlus extends $pb.GeneratedMessage {
     if (encapsulatedFrom != null) result.encapsulatedFrom = encapsulatedFrom;
     if (encapsulatedRxtime != null)
       result.encapsulatedRxtime = encapsulatedRxtime;
+    if (chainCount != null) result.chainCount = chainCount;
     return result;
   }
 
@@ -1151,6 +1159,8 @@ class StoreForwardPlusPlus extends $pb.GeneratedMessage {
     ..aI(8, _omitFieldNames ? '' : 'encapsulatedFrom',
         fieldType: $pb.PbFieldType.OU3)
     ..aI(9, _omitFieldNames ? '' : 'encapsulatedRxtime',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(10, _omitFieldNames ? '' : 'chainCount',
         fieldType: $pb.PbFieldType.OU3)
     ..hasRequiredFields = false;
 
@@ -1272,6 +1282,17 @@ class StoreForwardPlusPlus extends $pb.GeneratedMessage {
   $core.bool hasEncapsulatedRxtime() => $_has(8);
   @$pb.TagNumber(9)
   void clearEncapsulatedRxtime() => $_clearField(9);
+
+  ///
+  ///  Used in a LINK_REQUEST to specify the message X spots back from head
+  @$pb.TagNumber(10)
+  $core.int get chainCount => $_getIZ(9);
+  @$pb.TagNumber(10)
+  set chainCount($core.int value) => $_setUnsignedInt32(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasChainCount() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearChainCount() => $_clearField(10);
 }
 
 ///
@@ -1429,6 +1450,62 @@ class Waypoint extends $pb.GeneratedMessage {
   $core.bool hasIcon() => $_has(7);
   @$pb.TagNumber(8)
   void clearIcon() => $_clearField(8);
+}
+
+///
+///  Message for node status
+class StatusMessage extends $pb.GeneratedMessage {
+  factory StatusMessage({
+    $core.String? status,
+  }) {
+    final result = create();
+    if (status != null) result.status = status;
+    return result;
+  }
+
+  StatusMessage._();
+
+  factory StatusMessage.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory StatusMessage.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'StatusMessage',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'status')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  StatusMessage clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  StatusMessage copyWith(void Function(StatusMessage) updates) =>
+      super.copyWith((message) => updates(message as StatusMessage))
+          as StatusMessage;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static StatusMessage create() => StatusMessage._();
+  @$core.override
+  StatusMessage createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static StatusMessage getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<StatusMessage>(create);
+  static StatusMessage? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get status => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set status($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasStatus() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearStatus() => $_clearField(1);
 }
 
 enum MqttClientProxyMessage_PayloadVariant { data, text, notSet }
@@ -1992,6 +2069,7 @@ class NodeInfo extends $pb.GeneratedMessage {
     $core.bool? isFavorite,
     $core.bool? isIgnored,
     $core.bool? isKeyManuallyVerified,
+    $core.bool? isMuted,
   }) {
     final result = create();
     if (num != null) result.num = num;
@@ -2007,6 +2085,7 @@ class NodeInfo extends $pb.GeneratedMessage {
     if (isIgnored != null) result.isIgnored = isIgnored;
     if (isKeyManuallyVerified != null)
       result.isKeyManuallyVerified = isKeyManuallyVerified;
+    if (isMuted != null) result.isMuted = isMuted;
     return result;
   }
 
@@ -2037,6 +2116,7 @@ class NodeInfo extends $pb.GeneratedMessage {
     ..aOB(10, _omitFieldNames ? '' : 'isFavorite')
     ..aOB(11, _omitFieldNames ? '' : 'isIgnored')
     ..aOB(12, _omitFieldNames ? '' : 'isKeyManuallyVerified')
+    ..aOB(13, _omitFieldNames ? '' : 'isMuted')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2200,6 +2280,18 @@ class NodeInfo extends $pb.GeneratedMessage {
   $core.bool hasIsKeyManuallyVerified() => $_has(11);
   @$pb.TagNumber(12)
   void clearIsKeyManuallyVerified() => $_clearField(12);
+
+  ///
+  ///  True if node has been muted
+  ///  Persistes between NodeDB internal clean ups
+  @$pb.TagNumber(13)
+  $core.bool get isMuted => $_getBF(12);
+  @$pb.TagNumber(13)
+  set isMuted($core.bool value) => $_setBool(12, value);
+  @$pb.TagNumber(13)
+  $core.bool hasIsMuted() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearIsMuted() => $_clearField(13);
 }
 
 ///

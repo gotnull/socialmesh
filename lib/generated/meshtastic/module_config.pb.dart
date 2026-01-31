@@ -4,6 +4,12 @@
 
 // @dart = 3.3
 
+// ignore_for_file: annotate_overrides, camel_case_types, comment_references
+// ignore_for_file: constant_identifier_names
+// ignore_for_file: curly_braces_in_flow_control_structures
+// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
+
 import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
@@ -1627,6 +1633,7 @@ class ModuleConfig_TelemetryConfig extends $pb.GeneratedMessage {
     $core.int? healthUpdateInterval,
     $core.bool? healthScreenEnabled,
     $core.bool? deviceTelemetryEnabled,
+    $core.bool? airQualityScreenEnabled,
   }) {
     final result = create();
     if (deviceUpdateInterval != null)
@@ -1656,6 +1663,8 @@ class ModuleConfig_TelemetryConfig extends $pb.GeneratedMessage {
       result.healthScreenEnabled = healthScreenEnabled;
     if (deviceTelemetryEnabled != null)
       result.deviceTelemetryEnabled = deviceTelemetryEnabled;
+    if (airQualityScreenEnabled != null)
+      result.airQualityScreenEnabled = airQualityScreenEnabled;
     return result;
   }
 
@@ -1691,6 +1700,7 @@ class ModuleConfig_TelemetryConfig extends $pb.GeneratedMessage {
         fieldType: $pb.PbFieldType.OU3)
     ..aOB(13, _omitFieldNames ? '' : 'healthScreenEnabled')
     ..aOB(14, _omitFieldNames ? '' : 'deviceTelemetryEnabled')
+    ..aOB(15, _omitFieldNames ? '' : 'airQualityScreenEnabled')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1875,6 +1885,17 @@ class ModuleConfig_TelemetryConfig extends $pb.GeneratedMessage {
   $core.bool hasDeviceTelemetryEnabled() => $_has(13);
   @$pb.TagNumber(14)
   void clearDeviceTelemetryEnabled() => $_clearField(14);
+
+  ///
+  ///  Enable/Disable the air quality telemetry measurement module on-device display
+  @$pb.TagNumber(15)
+  $core.bool get airQualityScreenEnabled => $_getBF(14);
+  @$pb.TagNumber(15)
+  set airQualityScreenEnabled($core.bool value) => $_setBool(14, value);
+  @$pb.TagNumber(15)
+  $core.bool hasAirQualityScreenEnabled() => $_has(14);
+  @$pb.TagNumber(15)
+  void clearAirQualityScreenEnabled() => $_clearField(15);
 }
 
 ///
@@ -2233,6 +2254,69 @@ class ModuleConfig_AmbientLightingConfig extends $pb.GeneratedMessage {
   void clearBlue() => $_clearField(5);
 }
 
+///
+///  StatusMessage config - Allows setting a status message for a node to periodically rebroadcast
+class ModuleConfig_StatusMessageConfig extends $pb.GeneratedMessage {
+  factory ModuleConfig_StatusMessageConfig({
+    $core.String? nodeStatus,
+  }) {
+    final result = create();
+    if (nodeStatus != null) result.nodeStatus = nodeStatus;
+    return result;
+  }
+
+  ModuleConfig_StatusMessageConfig._();
+
+  factory ModuleConfig_StatusMessageConfig.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ModuleConfig_StatusMessageConfig.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ModuleConfig.StatusMessageConfig',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'nodeStatus')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ModuleConfig_StatusMessageConfig clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ModuleConfig_StatusMessageConfig copyWith(
+          void Function(ModuleConfig_StatusMessageConfig) updates) =>
+      super.copyWith(
+              (message) => updates(message as ModuleConfig_StatusMessageConfig))
+          as ModuleConfig_StatusMessageConfig;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ModuleConfig_StatusMessageConfig create() =>
+      ModuleConfig_StatusMessageConfig._();
+  @$core.override
+  ModuleConfig_StatusMessageConfig createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ModuleConfig_StatusMessageConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ModuleConfig_StatusMessageConfig>(
+          create);
+  static ModuleConfig_StatusMessageConfig? _defaultInstance;
+
+  ///
+  ///  The actual status string
+  @$pb.TagNumber(1)
+  $core.String get nodeStatus => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set nodeStatus($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasNodeStatus() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearNodeStatus() => $_clearField(1);
+}
+
 enum ModuleConfig_PayloadVariant {
   mqtt,
   serial,
@@ -2247,6 +2331,7 @@ enum ModuleConfig_PayloadVariant {
   ambientLighting,
   detectionSensor,
   paxcounter,
+  statusmessage,
   notSet
 }
 
@@ -2267,6 +2352,7 @@ class ModuleConfig extends $pb.GeneratedMessage {
     ModuleConfig_AmbientLightingConfig? ambientLighting,
     ModuleConfig_DetectionSensorConfig? detectionSensor,
     ModuleConfig_PaxcounterConfig? paxcounter,
+    ModuleConfig_StatusMessageConfig? statusmessage,
   }) {
     final result = create();
     if (mqtt != null) result.mqtt = mqtt;
@@ -2283,6 +2369,7 @@ class ModuleConfig extends $pb.GeneratedMessage {
     if (ambientLighting != null) result.ambientLighting = ambientLighting;
     if (detectionSensor != null) result.detectionSensor = detectionSensor;
     if (paxcounter != null) result.paxcounter = paxcounter;
+    if (statusmessage != null) result.statusmessage = statusmessage;
     return result;
   }
 
@@ -2310,13 +2397,14 @@ class ModuleConfig extends $pb.GeneratedMessage {
     11: ModuleConfig_PayloadVariant.ambientLighting,
     12: ModuleConfig_PayloadVariant.detectionSensor,
     13: ModuleConfig_PayloadVariant.paxcounter,
+    14: ModuleConfig_PayloadVariant.statusmessage,
     0: ModuleConfig_PayloadVariant.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'ModuleConfig',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'meshtastic'),
       createEmptyInstance: create)
-    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13])
+    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
     ..aOM<ModuleConfig_MQTTConfig>(1, _omitFieldNames ? '' : 'mqtt',
         subBuilder: ModuleConfig_MQTTConfig.create)
     ..aOM<ModuleConfig_SerialConfig>(2, _omitFieldNames ? '' : 'serial',
@@ -2351,6 +2439,9 @@ class ModuleConfig extends $pb.GeneratedMessage {
     ..aOM<ModuleConfig_PaxcounterConfig>(
         13, _omitFieldNames ? '' : 'paxcounter',
         subBuilder: ModuleConfig_PaxcounterConfig.create)
+    ..aOM<ModuleConfig_StatusMessageConfig>(
+        14, _omitFieldNames ? '' : 'statusmessage',
+        subBuilder: ModuleConfig_StatusMessageConfig.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2385,6 +2476,7 @@ class ModuleConfig extends $pb.GeneratedMessage {
   @$pb.TagNumber(11)
   @$pb.TagNumber(12)
   @$pb.TagNumber(13)
+  @$pb.TagNumber(14)
   ModuleConfig_PayloadVariant whichPayloadVariant() =>
       _ModuleConfig_PayloadVariantByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
@@ -2400,6 +2492,7 @@ class ModuleConfig extends $pb.GeneratedMessage {
   @$pb.TagNumber(11)
   @$pb.TagNumber(12)
   @$pb.TagNumber(13)
+  @$pb.TagNumber(14)
   void clearPayloadVariant() => $_clearField($_whichOneof(0));
 
   ///
@@ -2578,6 +2671,20 @@ class ModuleConfig extends $pb.GeneratedMessage {
   void clearPaxcounter() => $_clearField(13);
   @$pb.TagNumber(13)
   ModuleConfig_PaxcounterConfig ensurePaxcounter() => $_ensure(12);
+
+  ///
+  ///  TODO: REPLACE
+  @$pb.TagNumber(14)
+  ModuleConfig_StatusMessageConfig get statusmessage => $_getN(13);
+  @$pb.TagNumber(14)
+  set statusmessage(ModuleConfig_StatusMessageConfig value) =>
+      $_setField(14, value);
+  @$pb.TagNumber(14)
+  $core.bool hasStatusmessage() => $_has(13);
+  @$pb.TagNumber(14)
+  void clearStatusmessage() => $_clearField(14);
+  @$pb.TagNumber(14)
+  ModuleConfig_StatusMessageConfig ensureStatusmessage() => $_ensure(13);
 }
 
 ///

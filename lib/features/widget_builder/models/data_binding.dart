@@ -492,6 +492,29 @@ class BindingRegistry {
       valueType: int,
     ),
     BindingDefinition(
+      path: 'node.numTxDropped',
+      label: 'Packets TX Dropped',
+      description: 'Packets dropped due to full TX queue',
+      category: BindingCategory.network,
+      valueType: int,
+    ),
+    BindingDefinition(
+      path: 'node.noiseFloor',
+      label: 'Noise Floor',
+      description: 'Measured noise floor in dBm',
+      category: BindingCategory.network,
+      valueType: int,
+      unit: 'dBm',
+      defaultFormat: '{value} dBm',
+    ),
+    BindingDefinition(
+      path: 'node.nodeStatus',
+      label: 'Node Status',
+      description: 'Custom status message from the node',
+      category: BindingCategory.node,
+      valueType: String,
+    ),
+    BindingDefinition(
       path: 'node.numOnlineNodes',
       label: 'Nodes Heard (2h)',
       description: 'Meshtastic metric: nodes heard in the last 2 hours',
@@ -1031,6 +1054,12 @@ class DataBindingEngine {
         return node.numOnlineNodes;
       case 'numTotalNodes':
         return node.numTotalNodes;
+      case 'numTxDropped':
+        return node.numTxDropped;
+      case 'noiseFloor':
+        return node.noiseFloor;
+      case 'nodeStatus':
+        return node.nodeStatus;
 
       default:
         return null;

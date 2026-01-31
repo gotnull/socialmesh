@@ -4,6 +4,12 @@
 
 // @dart = 3.3
 
+// ignore_for_file: annotate_overrides, camel_case_types, comment_references
+// ignore_for_file: constant_identifier_names
+// ignore_for_file: curly_braces_in_flow_control_structures
+// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
+
 import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
@@ -263,6 +269,13 @@ class ModuleConfig_SerialConfig_Serial_Mode extends $pb.ProtobufEnum {
       ModuleConfig_SerialConfig_Serial_Mode._(
           8, _omitEnumNames ? '' : 'MS_CONFIG');
 
+  /// Logs mesh traffic to the serial pins, ideal for logging via openLog or similar.
+  static const ModuleConfig_SerialConfig_Serial_Mode LOG =
+      ModuleConfig_SerialConfig_Serial_Mode._(9, _omitEnumNames ? '' : 'LOG');
+  static const ModuleConfig_SerialConfig_Serial_Mode LOGTEXT =
+      ModuleConfig_SerialConfig_Serial_Mode._(
+          10, _omitEnumNames ? '' : 'LOGTEXT');
+
   static const $core.List<ModuleConfig_SerialConfig_Serial_Mode> values =
       <ModuleConfig_SerialConfig_Serial_Mode>[
     DEFAULT,
@@ -274,10 +287,12 @@ class ModuleConfig_SerialConfig_Serial_Mode extends $pb.ProtobufEnum {
     WS85,
     VE_DIRECT,
     MS_CONFIG,
+    LOG,
+    LOGTEXT,
   ];
 
   static final $core.List<ModuleConfig_SerialConfig_Serial_Mode?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 8);
+      $pb.ProtobufEnum.$_initByValueList(values, 10);
   static ModuleConfig_SerialConfig_Serial_Mode? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 
