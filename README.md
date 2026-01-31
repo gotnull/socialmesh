@@ -101,6 +101,35 @@ lib/
 └── utils/          # Utilities and helpers
 ```
 
+## Building from Source
+
+### What works out of the box
+
+- BLE connection to Meshtastic devices
+- All mesh communication features (messaging, node discovery, channels)
+- Local SQLite storage
+- Protobuf encoding/decoding
+
+### External services (optional)
+
+The app uses Firebase for optional cloud features. Without Firebase configuration:
+
+- **Analytics/Crashlytics** — Disabled silently
+- **Cloud sync** — Falls back to local-only mode
+- **Authentication** — Sign-in options unavailable
+
+To enable Firebase features, add your own `google-services.json` (Android) and `GoogleService-Info.plist` (iOS).
+
+### Build commands
+
+```bash
+flutter pub get
+./scripts/generate_protos.sh   # Generate Meshtastic protobufs
+flutter build ios              # or: flutter build apk
+```
+
+Missing backend configuration disables cloud features but does not block the build.
+
 ## URL Scheme
 
 Socialmesh registers the `socialmesh://` URL scheme:
