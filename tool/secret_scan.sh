@@ -15,20 +15,17 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-# Directories to exclude from scanning
+# Directories to exclude from scanning (use single directory names, not paths)
 EXCLUDE_DIRS=(
     "build"
     ".dart_tool"
-    "ios/Pods"
-    "macos/Pods"
-    "android/.gradle"
-    "android/build"
+    "Pods"           # ios/Pods and macos/Pods (gRPC roots.pem contains public CA certs)
+    ".gradle"        # android/.gradle
     ".pub-cache"
-    "lib/generated"
+    "generated"      # lib/generated
     "node_modules"
     ".git"
     ".venv"
-    "functions/lib"
 )
 
 # Build grep exclude arguments
@@ -69,10 +66,10 @@ echo ""
 echo "Scanning for secrets in working tree..."
 echo ""
 
-# Private keys
-scan_pattern "BEGIN PRIVATE KEY|BEGIN RSA PRIVATE KEY|BEGIN EC PRIVATE KEY|BEGIN DSA PRIVATE KEY" "Private key header"
+# Private keys (these are actual secrets)
+scan_pattern "BEGIN PRIVATE KEY|BEGIN RSA PRIVATE KEY|BEGIN EC PRIVATE KEY|BEGIN DSA PRIVATE KEY|BEGIN OPENSSH PRIVATE KEY" "Private key header"
 scan_pattern "PRIVATE KEY-----" "Private key footer"
-scan_pattern "BEGIN CERTIFICATE-----" "Certificate"
+# Note: Certificates (BEGIN CERTIFICATE) are PUBLIC, not secrets - skipped
 
 # API keys and tokens
 scan_pattern "AIza[0-9A-Za-z_-]{35}" "Google API key"
