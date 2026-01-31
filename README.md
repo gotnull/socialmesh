@@ -166,13 +166,27 @@ These features are available via one-time in-app purchases:
 | Protocol Buffers | `brew install protobuf`            |
 | CocoaPods        | `sudo gem install cocoapods` (iOS) |
 
-### Quick Start
+### Quick Start (Demo Mode)
+
+Run the app without backend configuration using demo mode:
 
 ```bash
-# Clone the repository
+# Clone and bootstrap
 git clone https://github.com/gotnull/socialmesh.git
 cd socialmesh
+./tool/dev_bootstrap.sh
 
+# Run in demo mode (no backend required)
+flutter run --dart-define=SOCIALMESH_DEMO=1
+```
+
+Demo mode provides sample nodes and messages so you can explore the UI immediately.
+
+### Production Build
+
+For production builds, demo mode is disabled by default. Configure Firebase and other services as documented below.
+
+```bash
 # Install dependencies
 flutter pub get
 

@@ -9,6 +9,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../config/admin_config.dart';
 import '../core/logging.dart';
 import '../core/transport.dart';
+import '../dev/demo/demo.dart';
 import '../services/transport/ble_transport.dart';
 import '../services/transport/usb_transport.dart';
 import '../services/protocol/protocol_service.dart';
@@ -1581,6 +1582,16 @@ class MessagesNotifier extends Notifier<List<Message>> {
   }
 
   Future<void> _init(ProtocolService protocol) async {
+    // Demo mode: seed sample messages if enabled and storage is empty
+    if (DemoConfig.isEnabled && _storage != null) {
+      final existing = await _storage!.loadMessages();
+      if (existing.isEmpty) {
+        AppLogging.debug('${DemoConfig.modeLabel} Seeding demo messages');
+        state = DemoData.sampleMessages;
+        return;
+      }
+    }
+
     // Load persisted messages
     if (_storage != null) {
       final savedMessages = await _storage!.loadMessages();
@@ -2188,6 +2199,16 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
   }
 
   Future<void> _init(ProtocolService protocol) async {
+    // Demo mode: seed sample nodes if enabled and storage is empty
+    if (DemoConfig.isEnabled && _storage != null) {
+      final existing = await _storage!.loadNodes();
+      if (existing.isEmpty) {
+        AppLogging.debug('${DemoConfig.modeLabel} Seeding demo nodes');
+        state = {for (final node in DemoData.sampleNodes) node.nodeNum: node};
+        return;
+      }
+    }
+
     // Get persisted favorites/ignored from DeviceFavoritesService
     final favoritesSet = _deviceFavorites?.favorites ?? <int>{};
     final ignoredSet = _deviceFavorites?.ignored ?? <int>{};
