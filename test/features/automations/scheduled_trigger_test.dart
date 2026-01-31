@@ -685,19 +685,21 @@ void main() {
       scheduler.fireEvents.listen(events.add);
       scheduler.start();
 
-      final spec =
-          ScheduleSpec.daily(
-            id: 'test-all-catchup',
-            hour: 9,
-            minute: 0,
-            catchUpPolicy: CatchUpPolicy.allWithinWindow,
-            catchUpWindow: const Duration(days: 7),
-            maxCatchUpExecutions: 5,
-            lastEvaluatedAt: DateTime(2026, 1, 30, 9, 0, 0),
-          ).recordFiredSlot(
-            'daily:2026-01-30T09:00+11:00',
-            DateTime(2026, 1, 30, 9, 0, 0),
-          );
+      // Create spec and generate slot key dynamically to handle timezone
+      final baseSpec = ScheduleSpec.daily(
+        id: 'test-all-catchup',
+        hour: 9,
+        minute: 0,
+        catchUpPolicy: CatchUpPolicy.allWithinWindow,
+        catchUpWindow: const Duration(days: 7),
+        maxCatchUpExecutions: 5,
+        lastEvaluatedAt: DateTime(2026, 1, 30, 9, 0, 0),
+      );
+      final jan30SlotKey = baseSpec.generateSlotKey(DateTime(2026, 1, 30, 9, 0));
+      final spec = baseSpec.recordFiredSlot(
+        jan30SlotKey,
+        DateTime(2026, 1, 30, 9, 0, 0),
+      );
       scheduler.register(spec);
 
       // Jump forward 3 days to Feb 2 at 09:00
