@@ -388,9 +388,9 @@ enum HardwareModel {
   LORA_RELAY_V1 = 32;
 
   /*
-   * TODO: REPLACE
+   * T-Echo Plus device from LilyGo
    */
-  NRF52840DK = 33;
+  T_ECHO_PLUS = 33;
 
   /*
    * TODO: REPLACE
@@ -841,6 +841,21 @@ enum HardwareModel {
   THINKNODE_M6 = 120;
 
   /*
+   * Elecrow Meshstick 1262
+   */
+  MESHSTICK_1262 = 121;
+
+  /*
+   * LilyGo T-Beam 1W
+   */
+  TBEAM_1_WATT = 122;
+
+  /*
+   * LilyGo T5 S3 ePaper Pro (V1 and V2)
+   */
+  T5_S3_EPAPER_PRO = 123;
+
+  /*
    * ------------------------------------------------------------------------------------------------------------------------------------------
    * Reserved ID For developing private Ports. These will show up in live traffic sparsely, so we can use a high number. Keep it within 8 bits.
    * ------------------------------------------------------------------------------------------------------------------------------------------
@@ -1050,6 +1065,12 @@ message Routing {
      * This typically enforced per portnum and is used to prevent a single node from monopolizing airtime
      */
     RATE_LIMIT_EXCEEDED = 38;
+
+    /*
+     * PKI encryption failed, due to no public key for the remote node
+     * This is different from PKI_UNKNOWN_PUBKEY which indicates a failure upon receiving a packet
+     */
+    PKI_SEND_FAIL_PUBLIC_KEY = 39;
   }
 
   oneof variant {
@@ -1237,6 +1258,11 @@ message StoreForwardPlusPlus {
    * The receive time of the message in question
    */
   uint32 encapsulated_rxtime = 9;
+
+  /*
+   * Used in a LINK_REQUEST to specify the message X spots back from head
+   */
+  uint32 chain_count = 10;
 }
 
 /*
@@ -1283,6 +1309,13 @@ message Waypoint {
    * Designator icon for the waypoint in the form of a unicode emoji
    */
   fixed32 icon = 8;
+}
+
+/*
+ * Message for node status
+ */
+message StatusMessage {
+  string status = 1;
 }
 
 /*
@@ -1748,6 +1781,12 @@ message NodeInfo {
    * LSB 0 of the bitfield
    */
   bool is_key_manually_verified = 12;
+
+  /*
+   * True if node has been muted
+   * Persistes between NodeDB internal clean ups
+   */
+  bool is_muted = 13;
 }
 
 /*
