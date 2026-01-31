@@ -11,6 +11,7 @@ If you discover a security vulnerability in Socialmesh, please report it private
 Email: security@socialmesh.app
 
 Include:
+
 - Description of the vulnerability
 - Steps to reproduce
 - Potential impact
