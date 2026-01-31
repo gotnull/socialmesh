@@ -181,7 +181,7 @@ class AndroidWorkManagerScheduler implements PlatformScheduler {
       initialDelay: delay,
       inputData: taskData,
       existingWorkPolicy: wm.ExistingWorkPolicy.replace,
-      constraints: wm.Constraints(networkType: wm.NetworkType.not_required),
+      constraints: wm.Constraints(networkType: wm.NetworkType.notRequired),
     );
 
     // Track scheduled task
@@ -222,8 +222,8 @@ class AndroidWorkManagerScheduler implements PlatformScheduler {
       _workManagerPeriodicTask,
       frequency: effectiveInterval,
       inputData: taskData,
-      existingWorkPolicy: wm.ExistingWorkPolicy.replace,
-      constraints: wm.Constraints(networkType: wm.NetworkType.not_required),
+      existingWorkPolicy: wm.ExistingPeriodicWorkPolicy.replace,
+      constraints: wm.Constraints(networkType: wm.NetworkType.notRequired),
     );
 
     // Track scheduled task

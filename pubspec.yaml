@@ -104,7 +104,7 @@ dependencies:
   align_positioned: ^5.0.1
 
   # Background scheduling
-  workmanager: ^0.5.2
+  workmanager: ^0.9.0
   background_fetch: ^1.3.7
   timezone: ^0.10.0
 
