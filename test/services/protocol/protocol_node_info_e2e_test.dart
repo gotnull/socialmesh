@@ -90,20 +90,23 @@ void main() {
     await container.read(nodeIdentityStoreProvider.future);
 
     container.read(nodesProvider);
-    protocol.onIdentityUpdate = ({
-      required int nodeNum,
-      String? longName,
-      String? shortName,
-      int? lastSeenAtMs,
-    }) {
-      container.read(nodeIdentityProvider.notifier).upsertIdentity(
-            nodeNum: nodeNum,
-            longName: longName,
-            shortName: shortName,
-            updatedAtMs: DateTime.now().millisecondsSinceEpoch,
-            lastSeenAtMs: lastSeenAtMs,
-          );
-    };
+    protocol.onIdentityUpdate =
+        ({
+          required int nodeNum,
+          String? longName,
+          String? shortName,
+          int? lastSeenAtMs,
+        }) {
+          container
+              .read(nodeIdentityProvider.notifier)
+              .upsertIdentity(
+                nodeNum: nodeNum,
+                longName: longName,
+                shortName: shortName,
+                updatedAtMs: DateTime.now().millisecondsSinceEpoch,
+                lastSeenAtMs: lastSeenAtMs,
+              );
+        };
     await Future<void>.delayed(Duration.zero);
 
     final fromRadio = pb.FromRadio(

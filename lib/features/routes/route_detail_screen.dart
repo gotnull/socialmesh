@@ -325,14 +325,14 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen>
             Positioned(
               top: MediaQuery.of(context).padding.top + 70,
               left: 16,
-              right: 16 + MapControlLayout.controlSize + MapControlLayout.controlSpacing,
+              right:
+                  16 +
+                  MapControlLayout.controlSize +
+                  MapControlLayout.controlSpacing,
               child: _NodeInfoCard(
                 node: _selectedNode!,
                 isMyNode: _selectedNode!.nodeNum == myNodeNum,
-                presence: presenceConfidenceFor(
-                  presenceMap,
-                  _selectedNode!,
-                ),
+                presence: presenceConfidenceFor(presenceMap, _selectedNode!),
                 lastHeardAge: lastHeardAgeFor(presenceMap, _selectedNode!),
                 onClose: () => setState(() => _selectedNode = null),
                 onCenter: () {
@@ -640,10 +640,7 @@ class _NodeInfoCard extends StatelessWidget {
                   Tooltip(
                     message: kPresenceInferenceTooltip,
                     child: Text(
-                      presenceStatusText(
-                        presence,
-                        lastHeardAge,
-                      ),
+                      presenceStatusText(presence, lastHeardAge),
                       style: TextStyle(
                         fontSize: 12,
                         color: context.textSecondary,

@@ -133,5 +133,4 @@ class LocationService {
   void dispose() {
     stopLocationUpdates();
   }
-
 }

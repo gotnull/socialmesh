@@ -7,8 +7,10 @@ enum PresenceConfidence { active, fading, stale, unknown }
 class PresenceThresholds {
   /// Heard within this window is treated as actively present.
   static const Duration activeWindow = Duration(minutes: 2);
+
   /// Heard within this window is treated as fading (recent but silent).
   static const Duration fadingWindow = Duration(minutes: 10);
+
   /// Heard within this window is treated as stale (likely offline).
   static const Duration staleWindow = Duration(minutes: 60);
 
@@ -56,5 +58,6 @@ extension PresenceConfidenceText on PresenceConfidence {
   bool get isFading => this == PresenceConfidence.fading;
   bool get isStale => this == PresenceConfidence.stale;
   bool get isUnknown => this == PresenceConfidence.unknown;
-  bool get isInactive => this == PresenceConfidence.stale || this == PresenceConfidence.unknown;
+  bool get isInactive =>
+      this == PresenceConfidence.stale || this == PresenceConfidence.unknown;
 }

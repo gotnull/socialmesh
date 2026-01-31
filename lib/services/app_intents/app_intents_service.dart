@@ -210,8 +210,7 @@ class AppIntentsService {
     return {
       'name': node.longName ?? 'Node $nodeNum',
       'nodeNum': nodeNum,
-      'presenceConfidence':
-          presenceConfidenceFor(presenceMap, node).name,
+      'presenceConfidence': presenceConfidenceFor(presenceMap, node).name,
       'battery': node.batteryLevel,
       'lastSeen': lastSeen,
     };

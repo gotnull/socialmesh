@@ -168,8 +168,7 @@ class _FloatingIconsBackgroundState extends State<FloatingIconsBackground>
       if (mounted) {
         setState(() {});
       }
-    })
-      ..start();
+    })..start();
 
     _pulseController = AnimationController(
       vsync: this,
@@ -235,13 +234,14 @@ class _FloatingIconsBackgroundState extends State<FloatingIconsBackground>
         final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
         final time = _floatTime;
-        final phase =
-            (iconData.startX + iconData.startY) * math.pi * 2.0;
+        final phase = (iconData.startX + iconData.startY) * math.pi * 2.0;
         final driftTime = time * iconData.floatSpeed;
-        final driftX = math.sin(driftTime * 0.6 + phase) *
+        final driftX =
+            math.sin(driftTime * 0.6 + phase) *
             iconData.floatAmplitude *
             (0.6 + iconData.parallaxFactor * 0.4);
-        final driftY = math.cos(driftTime * 0.8 + phase) *
+        final driftY =
+            math.cos(driftTime * 0.8 + phase) *
             iconData.floatAmplitude *
             (0.5 + (1.5 - iconData.parallaxFactor) * 0.3);
 

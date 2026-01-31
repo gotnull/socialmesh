@@ -55,38 +55,38 @@ class _ActiveSignalsBannerState extends State<ActiveSignalsBanner>
         child: Row(
           children: [
             // Pulsing indicator
-          AnimatedBuilder(
-            animation: _pulseAnimation,
-            builder: (context, child) {
-              return Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: accentColor,
-                  boxShadow: [
-                    BoxShadow(
-                      color: accentColor.withValues(
-                        alpha: _pulseAnimation.value * 0.6,
+            AnimatedBuilder(
+              animation: _pulseAnimation,
+              builder: (context, child) {
+                return Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: accentColor,
+                    boxShadow: [
+                      BoxShadow(
+                        color: accentColor.withValues(
+                          alpha: _pulseAnimation.value * 0.6,
+                        ),
+                        blurRadius: 8 * _pulseAnimation.value,
+                        spreadRadius: 2 * _pulseAnimation.value,
                       ),
-                      blurRadius: 8 * _pulseAnimation.value,
-                      spreadRadius: 2 * _pulseAnimation.value,
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-          const SizedBox(width: 10),
-          Text(
-            '${widget.count} ${widget.count == 1 ? "signal" : "signals"} active',
-            style: TextStyle(
-              color: accentColor,
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
+                    ],
+                  ),
+                );
+              },
             ),
-          ),
-        ],
+            const SizedBox(width: 10),
+            Text(
+              '${widget.count} ${widget.count == 1 ? "signal" : "signals"} active',
+              style: TextStyle(
+                color: accentColor,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
       ),
     );

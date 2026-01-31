@@ -382,8 +382,9 @@ class _NodeTile extends StatelessWidget {
               Text(
                 presenceStatusText(presence, lastHeardAge),
                 style: TextStyle(
-                  color:
-                      presence.isActive ? context.accentColor : context.textTertiary,
+                  color: presence.isActive
+                      ? context.accentColor
+                      : context.textTertiary,
                   fontSize: 11,
                 ),
               ),

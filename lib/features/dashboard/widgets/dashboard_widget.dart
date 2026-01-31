@@ -191,9 +191,7 @@ class _DashboardWidgetState extends State<DashboardWidget>
         color: context.card,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: widget.isEditMode
-              ? Colors.transparent
-              : context.border,
+          color: widget.isEditMode ? Colors.transparent : context.border,
           width: 1,
         ),
       ),

@@ -501,10 +501,7 @@ class _NodeAdminTile extends StatelessWidget {
                         Tooltip(
                           message: kPresenceInferenceTooltip,
                           child: Text(
-                            presenceStatusText(
-                              presence,
-                              lastHeardAge,
-                            ),
+                            presenceStatusText(presence, lastHeardAge),
                             style: TextStyle(
                               color: presence.isActive
                                   ? accentColor.withValues(alpha: 0.8)

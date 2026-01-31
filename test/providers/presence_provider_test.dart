@@ -51,7 +51,10 @@ void main() {
 
     now = now.add(const Duration(minutes: 5));
     nodesNotifier.setNodes({
-      1: MeshNode(nodeNum: 1, lastHeard: now.subtract(const Duration(minutes: 5))),
+      1: MeshNode(
+        nodeNum: 1,
+        lastHeard: now.subtract(const Duration(minutes: 5)),
+      ),
     });
     container.read(presenceMapProvider.notifier).recomputeNow();
     expect(
@@ -61,7 +64,10 @@ void main() {
 
     now = now.add(const Duration(minutes: 15));
     nodesNotifier.setNodes({
-      1: MeshNode(nodeNum: 1, lastHeard: now.subtract(const Duration(minutes: 20))),
+      1: MeshNode(
+        nodeNum: 1,
+        lastHeard: now.subtract(const Duration(minutes: 20)),
+      ),
     });
     container.read(presenceMapProvider.notifier).recomputeNow();
     expect(
@@ -71,7 +77,10 @@ void main() {
 
     now = now.add(const Duration(hours: 2));
     nodesNotifier.setNodes({
-      1: MeshNode(nodeNum: 1, lastHeard: now.subtract(const Duration(hours: 2))),
+      1: MeshNode(
+        nodeNum: 1,
+        lastHeard: now.subtract(const Duration(hours: 2)),
+      ),
     });
     container.read(presenceMapProvider.notifier).recomputeNow();
     expect(
@@ -96,9 +105,7 @@ void main() {
         container.read(nodesProvider.notifier) as _TestNodesNotifier;
 
     final lastHeard = now.subtract(const Duration(minutes: 25));
-    nodesNotifier.setNodes({
-      1: MeshNode(nodeNum: 1, lastHeard: lastHeard),
-    });
+    nodesNotifier.setNodes({1: MeshNode(nodeNum: 1, lastHeard: lastHeard)});
     container.read(presenceMapProvider.notifier).recomputeNow();
 
     final confidence = container.read(presenceMapProvider)[1]!.confidence;

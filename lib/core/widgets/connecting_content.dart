@@ -88,6 +88,7 @@ class ConnectingContent extends StatelessWidget {
   final bool showCancel;
   final VoidCallback? onCancel;
   final Animation<double>? pulseAnimation;
+
   /// Optional accent color for the logo gradient. Uses default brand gradient if null.
   final Color? accentColor;
 

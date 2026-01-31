@@ -125,10 +125,7 @@ class SnappableState extends State<Snappable>
           AnimatedBuilder(
             animation: _animationController,
             builder: (context, child) {
-              return Opacity(
-                opacity: _hideOriginal ? 0.0 : 1.0,
-                child: child,
-              );
+              return Opacity(opacity: _hideOriginal ? 0.0 : 1.0, child: child);
             },
             child: RepaintBoundary(key: _globalKey, child: widget.child),
           ),

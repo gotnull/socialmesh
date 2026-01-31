@@ -32,7 +32,8 @@ class _FakeTransport extends DeviceTransport {
   Stream<List<int>> get dataStream => _dataController.stream;
 
   @override
-  Stream<DeviceInfo> scan({Duration? timeout}) => const Stream<DeviceInfo>.empty();
+  Stream<DeviceInfo> scan({Duration? timeout}) =>
+      const Stream<DeviceInfo>.empty();
 
   @override
   Future<void> connect(DeviceInfo device) async {}
@@ -108,11 +109,7 @@ void main() {
       final received = <MeshSignalPacket>[];
       final sub = protocol.signalStream.listen(received.add);
       try {
-        final payload = {
-          'id': 'mesh-1',
-          'c': 'hello',
-          't': 30,
-        };
+        final payload = {'id': 'mesh-1', 'c': 'hello', 't': 30};
         final packet = _buildSignalPacket(
           packetId: 123,
           fromNode: 0x10,

@@ -9,10 +9,7 @@ void main() {
 
     test('returns Faded for zero or negative', () {
       expect(formatSignalTtlCountdown(const Duration(seconds: 0)), 'Faded');
-      expect(
-        formatSignalTtlCountdown(const Duration(seconds: -1)),
-        'Faded',
-      );
+      expect(formatSignalTtlCountdown(const Duration(seconds: -1)), 'Faded');
     });
 
     test('uses seconds under 60s', () {
@@ -49,17 +46,11 @@ void main() {
     });
 
     test('uses hours under 24h', () {
-      expect(
-        formatSignalTtlCountdown(const Duration(hours: 1)),
-        'Fades in 1h',
-      );
+      expect(formatSignalTtlCountdown(const Duration(hours: 1)), 'Fades in 1h');
     });
 
     test('uses days at 24h+', () {
-      expect(
-        formatSignalTtlCountdown(const Duration(days: 2)),
-        'Fades in 2d',
-      );
+      expect(formatSignalTtlCountdown(const Duration(days: 2)), 'Fades in 2d');
     });
   });
 }

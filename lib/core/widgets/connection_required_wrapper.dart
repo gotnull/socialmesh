@@ -201,8 +201,8 @@ class ConnectionRequiredWrapper extends ConsumerWidget {
                   isInvalidated
                       ? Icons.error_outline
                       : autoReconnectState == AutoReconnectState.failed
-                          ? Icons.wifi_off
-                          : Icons.bluetooth_disabled,
+                      ? Icons.wifi_off
+                      : Icons.bluetooth_disabled,
                   size: 64,
                   color: context.textTertiary,
                 ),
@@ -211,8 +211,8 @@ class ConnectionRequiredWrapper extends ConsumerWidget {
                   isInvalidated
                       ? 'Device Reset'
                       : autoReconnectState == AutoReconnectState.failed
-                          ? 'Connection Failed'
-                          : 'No Device Connected',
+                      ? 'Connection Failed'
+                      : 'No Device Connected',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w600,
@@ -225,8 +225,8 @@ class ConnectionRequiredWrapper extends ConsumerWidget {
                       (isInvalidated
                           ? 'Device was reset or replaced. Set it up again.'
                           : (autoReconnectState == AutoReconnectState.failed
-                              ? 'Could not find saved device'
-                              : 'Connect to a Meshtastic device to get started')),
+                                ? 'Could not find saved device'
+                                : 'Connect to a Meshtastic device to get started')),
                   style: TextStyle(fontSize: 14, color: context.textSecondary),
                   textAlign: TextAlign.center,
                 ),

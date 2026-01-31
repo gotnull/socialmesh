@@ -35,9 +35,8 @@ class MeshPacketDedupeStore {
   Database? _db;
   DateTime _lastCleanup = DateTime.fromMillisecondsSinceEpoch(0);
 
-  MeshPacketDedupeStore({
-    String? dbPathOverride,
-  }) : _dbPathOverride = dbPathOverride;
+  MeshPacketDedupeStore({String? dbPathOverride})
+    : _dbPathOverride = dbPathOverride;
 
   /// Initialize the underlying SQLite database.
   Future<void> init() {
@@ -91,26 +90,19 @@ class MeshPacketDedupeStore {
     _initFuture = null;
   }
 
-  Future<bool> hasSeen(
-    MeshPacketKey key, {
-    Duration? ttl,
-  }) async {
+  Future<bool> hasSeen(MeshPacketKey key, {Duration? ttl}) async {
     final db = await _ensureDb();
     final effectiveTtl = ttl ?? _defaultTtl;
     final cutoff = DateTime.now().subtract(effectiveTtl).millisecondsSinceEpoch;
 
     final where = StringBuffer()
       ..write('packetType = ? AND senderNodeId = ? AND packetId = ? AND ')
-      ..write(key.channelIndex == null
-          ? 'channelIndex IS NULL'
-          : 'channelIndex = ?')
+      ..write(
+        key.channelIndex == null ? 'channelIndex IS NULL' : 'channelIndex = ?',
+      )
       ..write(' AND receivedAt > ?');
 
-    final args = <Object?>[
-      key.packetType,
-      key.senderNodeId,
-      key.packetId,
-    ];
+    final args = <Object?>[key.packetType, key.senderNodeId, key.packetId];
     if (key.channelIndex != null) {
       args.add(key.channelIndex);
     }
@@ -127,32 +119,23 @@ class MeshPacketDedupeStore {
     return rows.isNotEmpty;
   }
 
-  Future<void> markSeen(
-    MeshPacketKey key, {
-    Duration? ttl,
-  }) async {
+  Future<void> markSeen(MeshPacketKey key, {Duration? ttl}) async {
     final db = await _ensureDb();
     final now = DateTime.now().millisecondsSinceEpoch;
 
-    await db.insert(
-      _tableName,
-      {
-        'packetType': key.packetType,
-        'senderNodeId': key.senderNodeId,
-        'packetId': key.packetId,
-        'channelIndex': key.channelIndex,
-        'receivedAt': now,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert(_tableName, {
+      'packetType': key.packetType,
+      'senderNodeId': key.senderNodeId,
+      'packetId': key.packetId,
+      'channelIndex': key.channelIndex,
+      'receivedAt': now,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
 
     final effectiveTtl = ttl ?? _defaultTtl;
     await _maybeCleanup(effectiveTtl);
   }
 
-  Future<void> cleanup({
-    Duration? ttl,
-  }) async {
+  Future<void> cleanup({Duration? ttl}) async {
     final db = await _ensureDb();
     final effectiveTtl = ttl ?? _defaultTtl;
     final cutoff = DateTime.now().subtract(effectiveTtl).millisecondsSinceEpoch;

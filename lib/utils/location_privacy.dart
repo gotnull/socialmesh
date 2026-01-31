@@ -55,7 +55,8 @@ class LocationPrivacy {
   ) {
     final latStep = radiusMeters / _metersPerDegreeLat;
     final latRad = latitude * pi / 180.0;
-    final lonMetersPerDegree = _metersPerDegreeLat * max(0.0001, cos(latRad).abs());
+    final lonMetersPerDegree =
+        _metersPerDegreeLat * max(0.0001, cos(latRad).abs());
     final lonStep = radiusMeters / lonMetersPerDegree;
     final quantizedLat = (latitude / latStep).round() * latStep;
     final quantizedLon = (longitude / lonStep).round() * lonStep;

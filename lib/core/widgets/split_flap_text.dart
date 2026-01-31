@@ -37,6 +37,7 @@ class SplitFlapText extends StatefulWidget {
   final String text;
   final TextStyle? style;
   final bool useGradient;
+
   /// Custom gradient colors. If null, uses default brand gradient.
   final List<Color>? gradientColors;
   final Duration spinDuration;
@@ -404,6 +405,7 @@ class SocialmeshSplitFlapLogo extends StatelessWidget {
 
   final double fontSize;
   final FontWeight fontWeight;
+
   /// Optional accent color for the gradient. If null, uses default brand gradient.
   final Color? accentColor;
 

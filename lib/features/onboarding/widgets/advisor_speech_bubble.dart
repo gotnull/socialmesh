@@ -297,7 +297,7 @@ class _AdvisorSpeechBubbleState extends State<AdvisorSpeechBubble>
                                 ),
                               ),
                             if (widget.onHapticToggle != null)
-                                const SizedBox(width: 8),
+                              const SizedBox(width: 8),
                             // Typing indicator
                             if (_currentCharIndex < widget.text.length &&
                                 widget.typewriterEffect)
@@ -322,8 +322,9 @@ class _AdvisorSpeechBubbleState extends State<AdvisorSpeechBubble>
                                 TextSpan(
                                   text: '▌',
                                   style: TextStyle(
-                                    color: widget.accentColor
-                                        .withValues(alpha: _glow.value),
+                                    color: widget.accentColor.withValues(
+                                      alpha: _glow.value,
+                                    ),
                                   ),
                                 ),
                             ],

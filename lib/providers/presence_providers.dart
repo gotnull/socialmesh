@@ -85,10 +85,7 @@ PresenceConfidence presenceConfidenceFor(
   return PresenceCalculator.fromLastHeard(node.lastHeard, now: DateTime.now());
 }
 
-Duration? lastHeardAgeFor(
-  Map<int, NodePresence> presenceMap,
-  MeshNode node,
-) {
+Duration? lastHeardAgeFor(Map<int, NodePresence> presenceMap, MeshNode node) {
   final presence = presenceMap[node.nodeNum];
   if (presence != null) return presence.timeSinceLastHeard;
   final heard = node.lastHeard;
@@ -138,9 +135,13 @@ class PresenceNotifier extends Notifier<Map<int, NodePresence>> {
     final seenNodes = <int>{};
 
     for (final node in nodes.values) {
-      final confidence =
-          PresenceCalculator.fromLastHeard(node.lastHeard, now: now);
-      final age = node.lastHeard != null ? now.difference(node.lastHeard!) : null;
+      final confidence = PresenceCalculator.fromLastHeard(
+        node.lastHeard,
+        now: now,
+      );
+      final age = node.lastHeard != null
+          ? now.difference(node.lastHeard!)
+          : null;
       final signalQuality = _calculateSignalQuality(node);
 
       next[node.nodeNum] = NodePresence(

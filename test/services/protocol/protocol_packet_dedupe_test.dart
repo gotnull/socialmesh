@@ -80,9 +80,7 @@ List<int> _buildTextMessage({
   return frame.writeToBuffer();
 }
 
-Future<void> _withTempDirectory(
-  Future<void> Function(String path) body,
-) async {
+Future<void> _withTempDirectory(Future<void> Function(String path) body) async {
   final tempDir = await Directory.systemTemp.createTemp('packet_dedupe');
   try {
     await body(tempDir.path);

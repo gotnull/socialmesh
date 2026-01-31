@@ -231,15 +231,20 @@ class MeshMapWidget extends StatelessWidget {
               left: 8,
               bottom: 8,
               child: GestureDetector(
-                onTap: () => launchUrl(Uri.parse(
-                  mapStyle == MapTileStyle.satellite
-                      ? 'https://www.esri.com'
-                      : mapStyle == MapTileStyle.terrain
-                          ? 'https://opentopomap.org'
-                          : 'https://carto.com/attributions',
-                )),
+                onTap: () => launchUrl(
+                  Uri.parse(
+                    mapStyle == MapTileStyle.satellite
+                        ? 'https://www.esri.com'
+                        : mapStyle == MapTileStyle.terrain
+                        ? 'https://opentopomap.org'
+                        : 'https://carto.com/attributions',
+                  ),
+                ),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.black.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(4),
@@ -248,12 +253,9 @@ class MeshMapWidget extends StatelessWidget {
                     mapStyle == MapTileStyle.satellite
                         ? '© Esri'
                         : mapStyle == MapTileStyle.terrain
-                            ? '© OpenTopoMap © OSM'
-                            : '© OSM © CARTO',
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 9,
-                    ),
+                        ? '© OpenTopoMap © OSM'
+                        : '© OSM © CARTO',
+                    style: const TextStyle(color: Colors.white70, fontSize: 9),
                   ),
                 ),
               ),

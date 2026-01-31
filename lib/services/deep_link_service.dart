@@ -96,7 +96,8 @@ class DeepLinkService {
   /// Stream of parsed deep links
   Stream<DeepLinkData> get linkStream => _linkController.stream;
 
-  DeepLinkService(this._ref, {FirebaseFirestore? firestore}) : _firestore = firestore;
+  DeepLinkService(this._ref, {FirebaseFirestore? firestore})
+    : _firestore = firestore;
 
   /// Initialize deep link handling
   Future<void> initialize() async {
@@ -359,8 +360,12 @@ class DeepLinkService {
     // Create a MeshNode from the deep link data, sanitizing names to prevent UTF-16 crashes
     final node = MeshNode(
       nodeNum: nodeData.nodeNum!,
-      longName: nodeData.longName != null ? sanitizeUtf16(nodeData.longName!) : null,
-      shortName: nodeData.shortName != null ? sanitizeUtf16(nodeData.shortName!) : null,
+      longName: nodeData.longName != null
+          ? sanitizeUtf16(nodeData.longName!)
+          : null,
+      shortName: nodeData.shortName != null
+          ? sanitizeUtf16(nodeData.shortName!)
+          : null,
       userId: nodeData.userId,
       latitude: nodeData.latitude,
       longitude: nodeData.longitude,

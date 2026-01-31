@@ -168,36 +168,41 @@ void main() {
       },
     );
 
-    test('cloud comment injection hydrates getComments and emits updates', () async {
-      final service = SignalService();
+    test(
+      'cloud comment injection hydrates getComments and emits updates',
+      () async {
+        final service = SignalService();
 
-      await service.createSignalFromMesh(
-        content: 'Signal for comments',
-        senderNodeId: 10,
-        signalId: 'sig-comments',
-        packetId: 301,
-        ttlMinutes: 15,
-      );
+        await service.createSignalFromMesh(
+          content: 'Signal for comments',
+          senderNodeId: 10,
+          signalId: 'sig-comments',
+          packetId: 301,
+          ttlMinutes: 15,
+        );
 
-      final now = DateTime.now();
-      final comment = SignalResponse(
-        id: 'comment-1',
-        signalId: 'sig-comments',
-        content: 'Hello from cloud',
-        authorId: 'user-2',
-        createdAt: now,
-        expiresAt: now.add(const Duration(hours: 1)),
-        isLocal: false,
-      );
+        final now = DateTime.now();
+        final comment = SignalResponse(
+          id: 'comment-1',
+          signalId: 'sig-comments',
+          content: 'Hello from cloud',
+          authorId: 'user-2',
+          createdAt: now,
+          expiresAt: now.add(const Duration(hours: 1)),
+          isLocal: false,
+        );
 
-      final updateFuture =
-          expectLater(service.onCommentUpdate, emits('sig-comments'));
-      service.injectCloudCommentsForTest('sig-comments', [comment]);
-      await updateFuture;
+        final updateFuture = expectLater(
+          service.onCommentUpdate,
+          emits('sig-comments'),
+        );
+        service.injectCloudCommentsForTest('sig-comments', [comment]);
+        await updateFuture;
 
-      final comments = await service.getComments('sig-comments');
-      expect(comments.any((c) => c.id == 'comment-1'), isTrue);
-    });
+        final comments = await service.getComments('sig-comments');
+        expect(comments.any((c) => c.id == 'comment-1'), isTrue);
+      },
+    );
 
     test('mesh signals without signalId are ignored', () async {
       final service = SignalService();
@@ -217,34 +222,31 @@ void main() {
       expect(after.length, equals(before.length));
     });
 
-    test(
-      'same signalId received twice does not create duplicates',
-      () async {
-        final service = SignalService();
+    test('same signalId received twice does not create duplicates', () async {
+      final service = SignalService();
 
-        final first = await service.createSignalFromMesh(
-          content: 'Duplicate id',
-          senderNodeId: 10,
-          signalId: 'sig-dup',
-          packetId: 601,
-          ttlMinutes: 15,
-        );
-        expect(first, isNotNull);
+      final first = await service.createSignalFromMesh(
+        content: 'Duplicate id',
+        senderNodeId: 10,
+        signalId: 'sig-dup',
+        packetId: 601,
+        ttlMinutes: 15,
+      );
+      expect(first, isNotNull);
 
-        final second = await service.createSignalFromMesh(
-          content: 'Duplicate id',
-          senderNodeId: 10,
-          signalId: 'sig-dup',
-          packetId: 602,
-          ttlMinutes: 15,
-        );
-        expect(second, isNull);
+      final second = await service.createSignalFromMesh(
+        content: 'Duplicate id',
+        senderNodeId: 10,
+        signalId: 'sig-dup',
+        packetId: 602,
+        ttlMinutes: 15,
+      );
+      expect(second, isNull);
 
-        final all = await service.getActiveSignals();
-        final ids = all.map((s) => s.id).toList();
-        expect(ids.where((id) => id == 'sig-dup').length, 1);
-      },
-    );
+      final all = await service.getActiveSignals();
+      final ids = all.map((s) => s.id).toList();
+      expect(ids.where((id) => id == 'sig-dup').length, 1);
+    });
 
     test('mesh-only broadcast uses short timeout', () async {
       final service = SignalService();

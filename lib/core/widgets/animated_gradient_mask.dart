@@ -31,10 +31,7 @@ class _AnimatedGradientMaskState extends State<AnimatedGradientMask>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.duration,
-    );
+    _controller = AnimationController(vsync: this, duration: widget.duration);
     if (widget.animate && widget.enabled) {
       _controller.repeat();
     }
@@ -96,10 +93,6 @@ class _SlideGradientTransform extends GradientTransform {
 
   @override
   Matrix4 transform(Rect bounds, {TextDirection? textDirection}) {
-    return Matrix4.translationValues(
-      bounds.width * slidePercent,
-      0,
-      0,
-    );
+    return Matrix4.translationValues(bounds.width * slidePercent, 0, 0);
   }
 }

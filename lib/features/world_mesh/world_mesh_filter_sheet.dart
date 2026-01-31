@@ -419,8 +419,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
           label: 'Active (≤2m)',
           count: options.activeCount,
           color: AppTheme.successGreen,
-          isSelected:
-              filters.statusFilter.contains(PresenceConfidence.active),
+          isSelected: filters.statusFilter.contains(PresenceConfidence.active),
           onTap: () => ref
               .read(worldMeshFiltersProvider.notifier)
               .toggleStatus(PresenceConfidence.active),
@@ -430,8 +429,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
           label: 'Fading (2-10m)',
           count: options.fadingCount,
           color: Colors.amber,
-          isSelected:
-              filters.statusFilter.contains(PresenceConfidence.fading),
+          isSelected: filters.statusFilter.contains(PresenceConfidence.fading),
           onTap: () => ref
               .read(worldMeshFiltersProvider.notifier)
               .toggleStatus(PresenceConfidence.fading),
@@ -441,8 +439,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
           label: 'Inactive (10-60m)',
           count: options.staleCount,
           color: context.textTertiary,
-          isSelected:
-              filters.statusFilter.contains(PresenceConfidence.stale),
+          isSelected: filters.statusFilter.contains(PresenceConfidence.stale),
           onTap: () => ref
               .read(worldMeshFiltersProvider.notifier)
               .toggleStatus(PresenceConfidence.stale),
@@ -452,8 +449,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
           label: 'Unknown (>60m)',
           count: options.unknownCount,
           color: context.textTertiary,
-          isSelected:
-              filters.statusFilter.contains(PresenceConfidence.unknown),
+          isSelected: filters.statusFilter.contains(PresenceConfidence.unknown),
           onTap: () => ref
               .read(worldMeshFiltersProvider.notifier)
               .toggleStatus(PresenceConfidence.unknown),

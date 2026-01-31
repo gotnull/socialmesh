@@ -23,37 +23,40 @@ Post _signal({
 }
 
 void main() {
-  test('sortSignalsForFeed prioritizes my node, then hopCount, expiry, createdAt', () {
-    final now = DateTime(2024, 1, 1, 12, 0, 0);
-    final myNodeNum = 42;
+  test(
+    'sortSignalsForFeed prioritizes my node, then hopCount, expiry, createdAt',
+    () {
+      final now = DateTime(2024, 1, 1, 12, 0, 0);
+      final myNodeNum = 42;
 
-    final mine = _signal(
-      id: 'mine',
-      createdAt: now.subtract(const Duration(minutes: 1)),
-      expiresAt: now.add(const Duration(minutes: 10)),
-      meshNodeId: myNodeNum,
-      hopCount: 2,
-    );
-    final close = _signal(
-      id: 'close',
-      createdAt: now.subtract(const Duration(minutes: 2)),
-      expiresAt: now.add(const Duration(minutes: 5)),
-      meshNodeId: 7,
-      hopCount: 0,
-    );
-    final far = _signal(
-      id: 'far',
-      createdAt: now.subtract(const Duration(minutes: 3)),
-      expiresAt: now.add(const Duration(minutes: 1)),
-      meshNodeId: 9,
-      hopCount: 3,
-    );
+      final mine = _signal(
+        id: 'mine',
+        createdAt: now.subtract(const Duration(minutes: 1)),
+        expiresAt: now.add(const Duration(minutes: 10)),
+        meshNodeId: myNodeNum,
+        hopCount: 2,
+      );
+      final close = _signal(
+        id: 'close',
+        createdAt: now.subtract(const Duration(minutes: 2)),
+        expiresAt: now.add(const Duration(minutes: 5)),
+        meshNodeId: 7,
+        hopCount: 0,
+      );
+      final far = _signal(
+        id: 'far',
+        createdAt: now.subtract(const Duration(minutes: 3)),
+        expiresAt: now.add(const Duration(minutes: 1)),
+        meshNodeId: 9,
+        hopCount: 3,
+      );
 
-    final sorted = sortSignalsForFeed([far, close, mine], myNodeNum);
-    expect(sorted.first.id, 'mine');
-    expect(sorted[1].id, 'close');
-    expect(sorted[2].id, 'far');
-  });
+      final sorted = sortSignalsForFeed([far, close, mine], myNodeNum);
+      expect(sorted.first.id, 'mine');
+      expect(sorted[1].id, 'close');
+      expect(sorted[2].id, 'far');
+    },
+  );
 
   test('sortSignalsForFeed uses expiry then createdAt when hopCount ties', () {
     final now = DateTime(2024, 1, 1, 12, 0, 0);
@@ -89,7 +92,10 @@ void main() {
   test('SignalFeedState.withSignals deduplicates by id', () {
     final now = DateTime(2024, 1, 1, 12, 0, 0);
     final original = _signal(id: 'dup', createdAt: now);
-    final updated = _signal(id: 'dup', createdAt: now).copyWith(content: 'updated');
+    final updated = _signal(
+      id: 'dup',
+      createdAt: now,
+    ).copyWith(content: 'updated');
 
     final state = SignalFeedState().withSignals([original, updated]);
     expect(state.signals.length, 1);

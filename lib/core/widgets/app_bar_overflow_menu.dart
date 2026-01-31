@@ -41,13 +41,15 @@ class AppBarOverflowMenu<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final resolvedIcon = icon ??
+    final resolvedIcon =
+        icon ??
         Icon(
           Icons.more_vert,
           color: iconColor ?? context.textPrimary,
           size: iconSize,
         );
-    final resolvedShape = shape ??
+    final resolvedShape =
+        shape ??
         RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
           side: BorderSide(color: context.border),

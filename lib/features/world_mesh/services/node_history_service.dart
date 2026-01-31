@@ -162,10 +162,9 @@ class NodeHistoryEntry {
     final fallbackOnline = json['isOnline'] as bool?;
     final parsedConfidence = PresenceConfidence.values.firstWhere(
       (value) => value.name == confidenceRaw,
-      orElse: () =>
-          (fallbackOnline == true
-              ? PresenceConfidence.active
-              : PresenceConfidence.unknown),
+      orElse: () => (fallbackOnline == true
+          ? PresenceConfidence.active
+          : PresenceConfidence.unknown),
     );
     return NodeHistoryEntry(
       timestamp: DateTime.parse(json['timestamp'] as String),

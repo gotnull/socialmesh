@@ -85,7 +85,6 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
       duration: const Duration(milliseconds: 550),
     );
 
-
     // Floating nodes animation
     _floatTicker = createTicker((elapsed) {
       _floatTime = elapsed.inMilliseconds / 3000.0;
@@ -296,8 +295,7 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
                   AnimatedBuilder(
                     animation: _convergeController,
                     builder: (context, child) {
-                      final converge =
-                          1 - (_convergeController.value * 0.25);
+                      final converge = 1 - (_convergeController.value * 0.25);
                       return Stack(
                         alignment: Alignment.center,
                         children: _floatingNodes.map((node) {
@@ -316,7 +314,7 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
                           final depthScale = 0.4 + (node.radius / 140);
                           final parallax =
                               (_tiltOffset + (_gyroOffset * 0.4)) *
-                                  activityFactor;
+                              activityFactor;
                           final x =
                               cos(angle) * radius + parallax.dx * depthScale;
                           final y =
@@ -410,7 +408,10 @@ class _SignalsEmptyStateState extends State<SignalsEmptyState>
               child: Center(
                 child: AnimatedTagline(
                   taglines: _signalEmptyTaglines,
-                  textStyle: TextStyle(color: context.textSecondary, fontSize: 14),
+                  textStyle: TextStyle(
+                    color: context.textSecondary,
+                    fontSize: 14,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -463,10 +464,7 @@ class _FloatingNode {
 }
 
 class _AnimatedIconCycle extends StatefulWidget {
-  const _AnimatedIconCycle({
-    required this.icons,
-    required this.builder,
-  });
+  const _AnimatedIconCycle({required this.icons, required this.builder});
 
   final List<IconData> icons;
   final Widget Function(IconData icon) builder;
@@ -493,16 +491,12 @@ class _AnimatedIconCycleState extends State<_AnimatedIconCycle>
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
-    ).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-    );
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
 
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.3),
       end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-    );
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
 
     _controller.forward();
     _startCycling();
@@ -622,7 +616,10 @@ class _GoActiveButtonState extends State<_GoActiveButton>
               enabled: widget.canGoActive,
               borderRadius: BorderRadius.circular(24),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: widget.canGoActive
                       ? null

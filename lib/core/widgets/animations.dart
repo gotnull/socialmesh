@@ -724,8 +724,9 @@ class _AnimatedCounterState extends State<AnimatedCounter>
             (_previousValue +
                     (_currentValue - _previousValue) * _animation.value)
                 .round();
-        final displayText =
-            widget.formatter != null ? widget.formatter!(displayValue) : '$displayValue';
+        final displayText = widget.formatter != null
+            ? widget.formatter!(displayValue)
+            : '$displayValue';
         return Text(
           '${widget.prefix ?? ''}$displayText${widget.suffix ?? ''}',
           style: widget.style,
@@ -1026,8 +1027,7 @@ class ThemedSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accentColor =
-        activeColor ?? Theme.of(context).colorScheme.primary;
+    final accentColor = activeColor ?? Theme.of(context).colorScheme.primary;
     return Switch.adaptive(
       value: value,
       onChanged: onChanged,

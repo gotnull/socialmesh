@@ -18,7 +18,9 @@ class NodeMapContent extends ConsumerWidget {
     final nodes = ref.watch(nodesProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
     final presenceMap = ref.watch(presenceMapProvider);
-    final mapStyle = ref.watch(settingsServiceProvider).maybeWhen(
+    final mapStyle = ref
+        .watch(settingsServiceProvider)
+        .maybeWhen(
           data: (settings) {
             final index = settings.mapTileStyleIndex;
             if (index >= 0 && index < MapTileStyle.values.length) {

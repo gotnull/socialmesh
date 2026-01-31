@@ -46,7 +46,8 @@ class GradientBorderContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = accentColor ?? context.accentColor;
-    final defaultBorder = defaultBorderColor ?? context.border.withValues(alpha: 0.5);
+    final defaultBorder =
+        defaultBorderColor ?? context.border.withValues(alpha: 0.5);
     final bgColor = backgroundColor ?? context.card;
 
     return CustomPaint(
@@ -117,14 +118,14 @@ class _GradientBorderPainter extends CustomPainter {
         accentColor, // top-left corner / back to start
       ],
       stops: const [
-        0.0,    // top (after rotation)
-        0.125,  // top-right corner
-        0.25,   // right
-        0.375,  // bottom-right corner
-        0.5,    // bottom
-        0.625,  // bottom-left corner
-        0.75,   // left
-        1.0,    // back to top
+        0.0, // top (after rotation)
+        0.125, // top-right corner
+        0.25, // right
+        0.375, // bottom-right corner
+        0.5, // bottom
+        0.625, // bottom-left corner
+        0.75, // left
+        1.0, // back to top
       ],
       // Rotate -90° so 0 starts at top instead of right
       transform: const GradientRotation(-math.pi / 2),

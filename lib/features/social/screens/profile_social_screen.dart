@@ -1744,8 +1744,7 @@ class _LinkedDeviceChip extends StatelessWidget {
               showGradientBorder: true,
               gradientColors: gradientColors,
               showOnlineIndicator: presence.isActive,
-              onlineStatus:
-                  presence.isActive ? OnlineStatus.online : null,
+              onlineStatus: presence.isActive ? OnlineStatus.online : null,
               batteryLevel: node?.batteryLevel,
               showBatteryBadge: false,
               badge: isPrimary
