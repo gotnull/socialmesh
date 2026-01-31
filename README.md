@@ -302,6 +302,17 @@ See [NOTICE.md](NOTICE.md) for attribution of third-party components including M
 
 ---
 
+## Maintainer Setup
+
+For repository maintainers:
+
+1. Enable branch protection on `main`
+2. Require pull requests with at least one approval
+3. Require CI status checks to pass before merging
+4. Disallow force pushes to `main`
+
+---
+
 <p align="center">
   <strong>Built for the mesh. Built for you.</strong>
 </p>
