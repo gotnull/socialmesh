@@ -28,10 +28,12 @@ class _DeviceManagementScreenState
     String? warningMessage,
     bool causesDisconnect = false,
   }) async {
-    AppLogging.protocol('DeviceManagement: _executeAction($actionName) started');
-    
+    AppLogging.protocol(
+      'DeviceManagement: _executeAction($actionName) started',
+    );
+
     if (!mounted) return;
-    
+
     if (requiresConfirmation) {
       final confirmed = await showDialog<bool>(
         context: context,
@@ -39,19 +41,27 @@ class _DeviceManagementScreenState
           backgroundColor: Theme.of(dialogContext).cardColor,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: BorderSide(color: Theme.of(dialogContext).colorScheme.outline),
+            side: BorderSide(
+              color: Theme.of(dialogContext).colorScheme.outline,
+            ),
           ),
           title: Row(
             children: [
               Icon(
-                causesDisconnect ? Icons.warning_amber_rounded : Icons.info_outline,
-                color: causesDisconnect ? AppTheme.warningYellow : Theme.of(dialogContext).colorScheme.primary,
+                causesDisconnect
+                    ? Icons.warning_amber_rounded
+                    : Icons.info_outline,
+                color: causesDisconnect
+                    ? AppTheme.warningYellow
+                    : Theme.of(dialogContext).colorScheme.primary,
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   actionName,
-                  style: TextStyle(color: Theme.of(dialogContext).colorScheme.onSurface),
+                  style: TextStyle(
+                    color: Theme.of(dialogContext).colorScheme.onSurface,
+                  ),
                 ),
               ),
             ],
@@ -59,21 +69,25 @@ class _DeviceManagementScreenState
           content: Text(
             warningMessage ??
                 'Are you sure you want to $actionName? This action cannot be undone.',
-            style: TextStyle(color: Theme.of(dialogContext).colorScheme.onSurfaceVariant),
+            style: TextStyle(
+              color: Theme.of(dialogContext).colorScheme.onSurfaceVariant,
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
               child: Text(
                 'Cancel',
-                style: TextStyle(color: Theme.of(dialogContext).colorScheme.onSurfaceVariant),
+                style: TextStyle(
+                  color: Theme.of(dialogContext).colorScheme.onSurfaceVariant,
+                ),
               ),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(dialogContext, true),
               style: FilledButton.styleFrom(
-                backgroundColor: causesDisconnect 
-                    ? AppTheme.warningYellow 
+                backgroundColor: causesDisconnect
+                    ? AppTheme.warningYellow
                     : Theme.of(dialogContext).colorScheme.primary,
                 foregroundColor: causesDisconnect ? Colors.black : Colors.white,
               ),
@@ -96,16 +110,18 @@ class _DeviceManagementScreenState
     try {
       AppLogging.protocol('DeviceManagement: Executing $actionName...');
       await action();
-      
+
       if (mounted) {
-        final message = causesDisconnect 
+        final message = causesDisconnect
             ? '$actionName - device will disconnect'
             : '$actionName command sent';
         showSuccessSnackBar(context, message);
-        
+
         // Pop the screen after triggering actions that cause disconnect
         if (causesDisconnect) {
-          AppLogging.protocol('DeviceManagement: $actionName causes disconnect, popping screen');
+          AppLogging.protocol(
+            'DeviceManagement: $actionName causes disconnect, popping screen',
+          );
           Future.delayed(const Duration(milliseconds: 500), () {
             if (mounted) {
               Navigator.pop(context);
@@ -253,7 +269,9 @@ class _DeviceManagementScreenState
                       final settingsAsync = ref.read(settingsServiceProvider);
                       if (settingsAsync.hasValue) {
                         // Region will be UNSET after config reset, so clear the configured flag
-                        await settingsAsync.requireValue.setRegionConfigured(false);
+                        await settingsAsync.requireValue.setRegionConfigured(
+                          false,
+                        );
                       }
                       // Clear channels from local cache
                       ref.read(channelsProvider.notifier).clearChannels();
@@ -276,24 +294,26 @@ class _DeviceManagementScreenState
                     () async {
                       // Capture navigator before async operations
                       final navigator = Navigator.of(context);
-                      
+
                       await protocol.factoryResetDevice();
                       // Clear ALL local state - device is being wiped completely
                       final settingsAsync = ref.read(settingsServiceProvider);
                       if (settingsAsync.hasValue) {
                         // Region will be UNSET, clear configured flag
-                        await settingsAsync.requireValue.setRegionConfigured(false);
+                        await settingsAsync.requireValue.setRegionConfigured(
+                          false,
+                        );
                         // Device is being wiped, clear the last device
                         await settingsAsync.requireValue.clearLastDevice();
                       }
                       // Clear nodes and channels from local cache
                       ref.read(nodesProvider.notifier).clearNodes();
                       ref.read(channelsProvider.notifier).clearChannels();
-                      
+
                       // CRITICAL: Set app state to needsScanner BEFORE navigating
                       // This ensures the router shows ScannerScreen instead of MainShell
                       ref.read(appInitProvider.notifier).setNeedsScanner();
-                      
+
                       // Navigate directly to scanner after factory reset
                       // The device is wiped and will need to be paired again
                       if (mounted) {
