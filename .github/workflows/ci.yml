@@ -36,4 +36,4 @@ jobs:
         run: flutter analyze
 
       - name: Run tests
-        run: flutter test --reporter expanded
+        run: flutter test --reporter github
