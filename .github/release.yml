@@ -1,0 +1,41 @@
+# GitHub Release Notes Configuration
+# https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes
+
+changelog:
+  categories:
+    - title: Highlights
+      labels:
+        - enhancement
+        - feature
+    - title: Fixed
+      labels:
+        - bug
+        - fix
+    - title: Documentation
+      labels:
+        - documentation
+        - docs
+    - title: Other Changes
+      labels:
+        - "*"
+  exclude:
+    labels:
+      - skip-changelog
+
+template: |
+  ## What's New
+
+  $CHANGES
+
+  ## Demo Mode
+
+  Run without backend configuration:
+  ```bash
+  flutter run --dart-define=SOCIALMESH_DEMO=1
+  ```
+
+  ## Notes
+
+  - This release includes the mobile client only
+  - Backend services are not included in this repository
+  - See [CHANGELOG.md](CHANGELOG.md) for detailed changes

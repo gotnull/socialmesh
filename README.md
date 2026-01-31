@@ -151,6 +151,7 @@ These features are available via one-time in-app purchases:
 
 - [Architecture Overview](docs/ARCHITECTURE.md) — How the app is structured
 - [Backend Boundary](docs/BACKEND.md) — What requires cloud services
+- [Releasing](docs/RELEASING.md) — How to cut a release
 
 ---
 
