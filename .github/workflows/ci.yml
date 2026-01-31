@@ -13,6 +13,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Create .env for CI
+        run: cp .env.ci .env
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
