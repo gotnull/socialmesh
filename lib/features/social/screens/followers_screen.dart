@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/verified_badge.dart';
 import '../../../providers/social_providers.dart';
 import '../../../services/social_service.dart';
@@ -46,24 +47,26 @@ class _FollowersScreenState extends ConsumerState<FollowersScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Connections'),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Followers'),
-            Tab(text: 'Following'),
-          ],
-        ),
-      ),
-      body: TabBarView(
+    return GlassScaffold(
+      title: 'Connections',
+      bottom: TabBar(
         controller: _tabController,
-        children: [
-          _FollowersList(userId: widget.userId),
-          _FollowingList(userId: widget.userId),
+        tabs: const [
+          Tab(text: 'Followers'),
+          Tab(text: 'Following'),
         ],
       ),
+      slivers: [
+        SliverFillRemaining(
+          child: TabBarView(
+            controller: _tabController,
+            children: [
+              _FollowersList(userId: widget.userId),
+              _FollowingList(userId: widget.userId),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../models/mesh_models.dart';
 import '../../models/presence_confidence.dart';
@@ -25,50 +26,48 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
     return HelpTourController(
       topicId: 'presence_overview',
       stepKeys: const {},
-      child: Scaffold(
-        backgroundColor: context.background,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          centerTitle: true,
-          title: const Text('Presence'),
-          actions: [IcoHelpAppBarButton(topicId: 'presence_overview')],
-        ),
-        body: presences.isEmpty
-            ? _buildEmptyState(theme)
-            : CustomScrollView(
-                slivers: [
-                  // Summary section
-                  SliverToBoxAdapter(
-                    child: _buildSummarySection(context, theme, summary),
-                  ),
-                  // Activity chart
-                  SliverToBoxAdapter(
-                    child: _buildActivityChart(theme, presences),
-                  ),
-                  // Node list header
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
-                      child: Text(
-                        'All Nodes',
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          color: context.textSecondary,
-                          fontWeight: FontWeight.w600,
-                        ),
+      child: GlassScaffold(
+        title: 'Presence',
+        actions: [IcoHelpAppBarButton(topicId: 'presence_overview')],
+        slivers: presences.isEmpty
+            ? [
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: _buildEmptyState(theme),
+                ),
+              ]
+            : [
+                // Summary section
+                SliverToBoxAdapter(
+                  child: _buildSummarySection(context, theme, summary),
+                ),
+                // Activity chart
+                SliverToBoxAdapter(
+                  child: _buildActivityChart(theme, presences),
+                ),
+                // Node list header
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+                    child: Text(
+                      'All Nodes',
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: context.textSecondary,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
-                  // Node list
-                  SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) =>
-                          _buildPresenceCard(theme, presences[index]),
-                      childCount: presences.length,
-                    ),
+                ),
+                // Node list
+                SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) =>
+                        _buildPresenceCard(theme, presences[index]),
+                    childCount: presences.length,
                   ),
-                  const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
-                ],
-              ),
+                ),
+                const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
+              ],
       ),
     );
   }

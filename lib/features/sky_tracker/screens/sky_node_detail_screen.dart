@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme.dart';
+import '../../../core/widgets/glass_scaffold.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../utils/snackbar.dart';
@@ -33,86 +34,71 @@ class _SkyNodeDetailScreenState extends ConsumerState<SkyNodeDetailScreen> {
       flightPositionProvider(widget.skyNode.flightNumber),
     );
 
-    return Scaffold(
-      backgroundColor: context.background,
-      body: CustomScrollView(
-        slivers: [
-          // App bar with flight info
-          SliverAppBar(
-            backgroundColor: context.card,
-            expandedHeight: 200,
-            pinned: true,
-            flexibleSpace: FlexibleSpaceBar(
-              background: _buildHeader(context, positionAsync),
+    return GlassScaffold(
+      title: widget.skyNode.flightNumber,
+      expandedHeight: 200,
+      flexibleSpace: FlexibleSpaceBar(
+        background: _buildHeader(context, positionAsync),
+      ),
+      actions: [
+        if (widget.skyNode.isActive)
+          IconButton(
+            icon: Icon(Icons.refresh, color: context.accentColor),
+            onPressed: () => ref.invalidate(
+              flightPositionProvider(widget.skyNode.flightNumber),
             ),
-            title: Text(
-              widget.skyNode.flightNumber,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: context.textPrimary,
-              ),
-            ),
-            actions: [
-              if (widget.skyNode.isActive)
-                IconButton(
-                  icon: Icon(Icons.refresh, color: context.accentColor),
-                  onPressed: () => ref.invalidate(
-                    flightPositionProvider(widget.skyNode.flightNumber),
-                  ),
-                  tooltip: 'Refresh position',
-                ),
-            ],
+            tooltip: 'Refresh position',
           ),
+      ],
+      slivers: [
+        // Content
+        SliverToBoxAdapter(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Live position card
+              if (widget.skyNode.isActive)
+                _buildLivePositionCard(context, positionAsync),
 
-          // Content
-          SliverToBoxAdapter(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Live position card
-                if (widget.skyNode.isActive)
-                  _buildLivePositionCard(context, positionAsync),
+              // Flight details
+              _buildDetailsCard(context),
 
-                // Flight details
-                _buildDetailsCard(context),
-
-                // Report button
-                if (widget.skyNode.isActive)
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: ElevatedButton.icon(
-                      onPressed: () => _reportReception(context),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: context.accentColor,
-                        minimumSize: const Size(double.infinity, 52),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+              // Report button
+              if (widget.skyNode.isActive)
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: ElevatedButton.icon(
+                    onPressed: () => _reportReception(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: context.accentColor,
+                      minimumSize: const Size(double.infinity, 52),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      icon: const Icon(
-                        Icons.signal_cellular_alt,
+                    ),
+                    icon: const Icon(
+                      Icons.signal_cellular_alt,
+                      color: Colors.white,
+                    ),
+                    label: const Text(
+                      'I Received This Signal!',
+                      style: TextStyle(
                         color: Colors.white,
-                      ),
-                      label: const Text(
-                        'I Received This Signal!',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16,
-                        ),
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
                       ),
                     ),
                   ),
+                ),
 
-                // Reports section
-                _buildReportsSection(context, reports),
+              // Reports section
+              _buildReportsSection(context, reports),
 
-                const SizedBox(height: 100), // Bottom padding
-              ],
-            ),
+              const SizedBox(height: 100), // Bottom padding
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

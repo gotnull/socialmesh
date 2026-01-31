@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../utils/share_utils.dart';
 import '../../utils/snackbar.dart';
 import '../../models/mesh_models.dart';
@@ -29,341 +30,335 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.background,
-        title: Text(
-          'Export Data',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: context.textPrimary,
-          ),
-        ),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // Messages
-          _buildSectionHeader('Messages'),
-          Container(
-            decoration: BoxDecoration(
-              color: context.card,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: context.border),
-            ),
-            child: Column(
-              children: [
-                _buildExportTile(
-                  icon: Icons.message_outlined,
-                  title: 'All Messages',
-                  subtitle: 'Export all channel and direct messages',
-                  format: 'CSV',
-                  type: 'messages',
-                  onExport: _exportMessages,
-                  onClear: () => _confirmClear('messages', 'all messages'),
+    return GlassScaffold(
+      title: 'Export Data',
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.all(16),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate([
+              // Messages
+              _buildSectionHeader('Messages'),
+              Container(
+                decoration: BoxDecoration(
+                  color: context.card,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: context.border),
                 ),
-              ],
-            ),
-          ),
-
-          SizedBox(height: 24),
-
-          // Telemetry
-          _buildSectionHeader('Telemetry'),
-          Container(
-            decoration: BoxDecoration(
-              color: context.card,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: context.border),
-            ),
-            child: Column(
-              children: [
-                _buildExportTile(
-                  icon: Icons.battery_charging_full,
-                  title: 'Device Metrics',
-                  subtitle: 'Battery, voltage, utilization logs',
-                  format: 'CSV',
-                  type: 'device_metrics',
-                  onExport: _exportDeviceMetrics,
-                  onClear: () =>
-                      _confirmClear('device_metrics', 'device metrics'),
-                ),
-                _buildDivider(),
-                _buildExportTile(
-                  icon: Icons.thermostat,
-                  title: 'Environment Metrics',
-                  subtitle: 'Temperature, humidity, pressure logs',
-                  format: 'CSV',
-                  type: 'environment_metrics',
-                  onExport: _exportEnvironmentMetrics,
-                  onClear: () => _confirmClear(
-                    'environment_metrics',
-                    'environment metrics',
-                  ),
-                ),
-                _buildDivider(),
-                _buildExportTile(
-                  icon: Icons.air,
-                  title: 'Air Quality',
-                  subtitle: 'PM2.5, PM10, CO2 readings',
-                  format: 'CSV',
-                  type: 'air_quality',
-                  onExport: _exportAirQuality,
-                  onClear: () =>
-                      _confirmClear('air_quality', 'air quality data'),
-                ),
-                _buildDivider(),
-                _buildExportTile(
-                  icon: Icons.bolt,
-                  title: 'Power Metrics',
-                  subtitle: 'Channel voltage and current',
-                  format: 'CSV',
-                  type: 'power_metrics',
-                  onExport: _exportPowerMetrics,
-                  onClear: () =>
-                      _confirmClear('power_metrics', 'power metrics'),
-                ),
-              ],
-            ),
-          ),
-
-          SizedBox(height: 24),
-
-          // Position Data
-          _buildSectionHeader('Position Data'),
-          Container(
-            decoration: BoxDecoration(
-              color: context.card,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: context.border),
-            ),
-            child: Column(
-              children: [
-                _buildExportTile(
-                  icon: Icons.location_on_outlined,
-                  title: 'Position History',
-                  subtitle: 'GPS position logs with timestamps',
-                  format: 'CSV',
-                  type: 'positions',
-                  onExport: _exportPositions,
-                  onClear: () => _confirmClear('positions', 'position history'),
-                ),
-                _buildDivider(),
-                _buildExportTile(
-                  icon: Icons.route,
-                  title: 'Routes',
-                  subtitle: 'Recorded routes and tracks',
-                  format: 'GPX',
-                  type: 'routes',
-                  onExport: _exportRoutes,
-                  onClear: () => _confirmClear('routes', 'all routes'),
-                ),
-                _buildDivider(),
-                _buildExportTile(
-                  icon: Icons.timeline,
-                  title: 'Traceroutes',
-                  subtitle: 'Network path analysis',
-                  format: 'CSV',
-                  type: 'traceroutes',
-                  onExport: _exportTraceroutes,
-                  onClear: () =>
-                      _confirmClear('traceroutes', 'traceroute data'),
-                ),
-              ],
-            ),
-          ),
-
-          SizedBox(height: 24),
-
-          // Automations
-          _buildSectionHeader('Automations'),
-          Container(
-            decoration: BoxDecoration(
-              color: context.card,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: context.border),
-            ),
-            child: Column(
-              children: [
-                _buildExportTile(
-                  icon: Icons.auto_awesome,
-                  title: 'Automation Rules',
-                  subtitle: 'All automation configurations',
-                  format: 'JSON',
-                  type: 'automations',
-                  onExport: _exportAutomations,
-                  onClear: () =>
-                      _confirmClear('automations', 'all automation rules'),
-                ),
-                _buildDivider(),
-                _buildExportTile(
-                  icon: Icons.history,
-                  title: 'Execution Log',
-                  subtitle: 'Automation trigger history with results',
-                  format: 'JSON',
-                  type: 'automation_log',
-                  onExport: _exportAutomationLog,
-                  onClear: () =>
-                      _confirmClear('automation_log', 'automation log'),
-                ),
-              ],
-            ),
-          ),
-
-          SizedBox(height: 24),
-
-          // Nodes
-          _buildSectionHeader('Network'),
-          Container(
-            decoration: BoxDecoration(
-              color: context.card,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: context.border),
-            ),
-            child: Column(
-              children: [
-                _buildExportTile(
-                  icon: Icons.hub_outlined,
-                  title: 'Node List',
-                  subtitle: 'All discovered nodes with details',
-                  format: 'CSV',
-                  type: 'nodes',
-                  onExport: _exportNodes,
-                  onClear: null, // Can't clear nodes - managed by protocol
-                ),
-              ],
-            ),
-          ),
-
-          SizedBox(height: 24),
-
-          // All Data
-          _buildSectionHeader('Complete Export'),
-          Container(
-            decoration: BoxDecoration(
-              color: context.accentColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: context.accentColor.withValues(alpha: 0.3),
-              ),
-            ),
-            child: _buildExportTile(
-              icon: Icons.archive_outlined,
-              title: 'Export All Data',
-              subtitle: 'Complete backup of all app data',
-              format: 'JSON',
-              type: 'all',
-              onExport: _exportAll,
-              onClear: null,
-              isHighlighted: true,
-            ),
-          ),
-
-          SizedBox(height: 24),
-
-          // Clear All Data
-          _buildSectionHeader('Clear Data'),
-          Container(
-            decoration: BoxDecoration(
-              color: AppTheme.errorRed.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppTheme.errorRed.withValues(alpha: 0.3),
-              ),
-            ),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: () => _confirmClearAll(),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
+                child: Column(
                   children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: AppTheme.errorRed.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.delete_forever,
-                        color: AppTheme.errorRed,
-                        size: 22,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Clear All Data',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: AppTheme.errorRed,
-                            ),
-                          ),
-                          SizedBox(height: 2),
-                          Text(
-                            'Delete all stored telemetry, routes, and logs',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: context.textTertiary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(
-                      Icons.warning_amber,
-                      color: AppTheme.errorRed,
-                      size: 20,
+                    _buildExportTile(
+                      icon: Icons.message_outlined,
+                      title: 'All Messages',
+                      subtitle: 'Export all channel and direct messages',
+                      format: 'CSV',
+                      type: 'messages',
+                      onExport: _exportMessages,
+                      onClear: () => _confirmClear('messages', 'all messages'),
                     ),
                   ],
                 ),
               ),
-            ),
-          ),
 
-          const SizedBox(height: 24),
+              SizedBox(height: 24),
 
-          // Info
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AccentColors.blue.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AccentColors.blue.withValues(alpha: 0.3),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.info_outline,
-                  color: AccentColors.blue.withValues(alpha: 0.8),
-                  size: 24,
+              // Telemetry
+              _buildSectionHeader('Telemetry'),
+              Container(
+                decoration: BoxDecoration(
+                  color: context.card,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: context.border),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Exported files can be shared via email, AirDrop, or saved to Files. Tap the trash icon to clear specific data.',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: context.textSecondary,
+                child: Column(
+                  children: [
+                    _buildExportTile(
+                      icon: Icons.battery_charging_full,
+                      title: 'Device Metrics',
+                      subtitle: 'Battery, voltage, utilization logs',
+                      format: 'CSV',
+                      type: 'device_metrics',
+                      onExport: _exportDeviceMetrics,
+                      onClear: () =>
+                          _confirmClear('device_metrics', 'device metrics'),
+                    ),
+                    _buildDivider(),
+                    _buildExportTile(
+                      icon: Icons.thermostat,
+                      title: 'Environment Metrics',
+                      subtitle: 'Temperature, humidity, pressure logs',
+                      format: 'CSV',
+                      type: 'environment_metrics',
+                      onExport: _exportEnvironmentMetrics,
+                      onClear: () => _confirmClear(
+                        'environment_metrics',
+                        'environment metrics',
+                      ),
+                    ),
+                    _buildDivider(),
+                    _buildExportTile(
+                      icon: Icons.air,
+                      title: 'Air Quality',
+                      subtitle: 'PM2.5, PM10, CO2 readings',
+                      format: 'CSV',
+                      type: 'air_quality',
+                      onExport: _exportAirQuality,
+                      onClear: () =>
+                          _confirmClear('air_quality', 'air quality data'),
+                    ),
+                    _buildDivider(),
+                    _buildExportTile(
+                      icon: Icons.bolt,
+                      title: 'Power Metrics',
+                      subtitle: 'Channel voltage and current',
+                      format: 'CSV',
+                      type: 'power_metrics',
+                      onExport: _exportPowerMetrics,
+                      onClear: () =>
+                          _confirmClear('power_metrics', 'power metrics'),
+                    ),
+                  ],
+                ),
+              ),
+
+              SizedBox(height: 24),
+
+              // Position Data
+              _buildSectionHeader('Position Data'),
+              Container(
+                decoration: BoxDecoration(
+                  color: context.card,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: context.border),
+                ),
+                child: Column(
+                  children: [
+                    _buildExportTile(
+                      icon: Icons.location_on_outlined,
+                      title: 'Position History',
+                      subtitle: 'GPS position logs with timestamps',
+                      format: 'CSV',
+                      type: 'positions',
+                      onExport: _exportPositions,
+                      onClear: () =>
+                          _confirmClear('positions', 'position history'),
+                    ),
+                    _buildDivider(),
+                    _buildExportTile(
+                      icon: Icons.route,
+                      title: 'Routes',
+                      subtitle: 'Recorded routes and tracks',
+                      format: 'GPX',
+                      type: 'routes',
+                      onExport: _exportRoutes,
+                      onClear: () => _confirmClear('routes', 'all routes'),
+                    ),
+                    _buildDivider(),
+                    _buildExportTile(
+                      icon: Icons.timeline,
+                      title: 'Traceroutes',
+                      subtitle: 'Network path analysis',
+                      format: 'CSV',
+                      type: 'traceroutes',
+                      onExport: _exportTraceroutes,
+                      onClear: () =>
+                          _confirmClear('traceroutes', 'traceroute data'),
+                    ),
+                  ],
+                ),
+              ),
+
+              SizedBox(height: 24),
+
+              // Automations
+              _buildSectionHeader('Automations'),
+              Container(
+                decoration: BoxDecoration(
+                  color: context.card,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: context.border),
+                ),
+                child: Column(
+                  children: [
+                    _buildExportTile(
+                      icon: Icons.auto_awesome,
+                      title: 'Automation Rules',
+                      subtitle: 'All automation configurations',
+                      format: 'JSON',
+                      type: 'automations',
+                      onExport: _exportAutomations,
+                      onClear: () =>
+                          _confirmClear('automations', 'all automation rules'),
+                    ),
+                    _buildDivider(),
+                    _buildExportTile(
+                      icon: Icons.history,
+                      title: 'Execution Log',
+                      subtitle: 'Automation trigger history with results',
+                      format: 'JSON',
+                      type: 'automation_log',
+                      onExport: _exportAutomationLog,
+                      onClear: () =>
+                          _confirmClear('automation_log', 'automation log'),
+                    ),
+                  ],
+                ),
+              ),
+
+              SizedBox(height: 24),
+
+              // Nodes
+              _buildSectionHeader('Network'),
+              Container(
+                decoration: BoxDecoration(
+                  color: context.card,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: context.border),
+                ),
+                child: Column(
+                  children: [
+                    _buildExportTile(
+                      icon: Icons.hub_outlined,
+                      title: 'Node List',
+                      subtitle: 'All discovered nodes with details',
+                      format: 'CSV',
+                      type: 'nodes',
+                      onExport: _exportNodes,
+                      onClear: null, // Can't clear nodes - managed by protocol
+                    ),
+                  ],
+                ),
+              ),
+
+              SizedBox(height: 24),
+
+              // All Data
+              _buildSectionHeader('Complete Export'),
+              Container(
+                decoration: BoxDecoration(
+                  color: context.accentColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: context.accentColor.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: _buildExportTile(
+                  icon: Icons.archive_outlined,
+                  title: 'Export All Data',
+                  subtitle: 'Complete backup of all app data',
+                  format: 'JSON',
+                  type: 'all',
+                  onExport: _exportAll,
+                  onClear: null,
+                  isHighlighted: true,
+                ),
+              ),
+
+              SizedBox(height: 24),
+
+              // Clear All Data
+              _buildSectionHeader('Clear Data'),
+              Container(
+                decoration: BoxDecoration(
+                  color: AppTheme.errorRed.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppTheme.errorRed.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () => _confirmClearAll(),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: AppTheme.errorRed.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.delete_forever,
+                            color: AppTheme.errorRed,
+                            size: 22,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Clear All Data',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppTheme.errorRed,
+                                ),
+                              ),
+                              SizedBox(height: 2),
+                              Text(
+                                'Delete all stored telemetry, routes, and logs',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: context.textTertiary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          Icons.warning_amber,
+                          color: AppTheme.errorRed,
+                          size: 20,
+                        ),
+                      ],
                     ),
                   ),
                 ),
-              ],
-            ),
-          ),
+              ),
 
-          const SizedBox(height: 32),
-        ],
-      ),
+              const SizedBox(height: 24),
+
+              // Info
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AccentColors.blue.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AccentColors.blue.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      color: AccentColors.blue.withValues(alpha: 0.8),
+                      size: 24,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Exported files can be shared via email, AirDrop, or saved to Files. Tap the trash icon to clear specific data.',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: context.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 32),
+            ]),
+          ),
+        ),
+      ],
     );
   }
 

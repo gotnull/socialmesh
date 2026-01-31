@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
@@ -147,400 +148,385 @@ class _SerialConfigScreenState extends ConsumerState<SerialConfigScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return Scaffold(
-        backgroundColor: context.background,
-        appBar: AppBar(
-          backgroundColor: context.background,
-          title: Text(
-            'Serial Config',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: context.textPrimary,
-            ),
-          ),
-        ),
-        body: const ScreenLoadingIndicator(),
+      return GlassScaffold(
+        title: 'Serial Config',
+        slivers: [SliverFillRemaining(child: const ScreenLoadingIndicator())],
       );
     }
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.background,
-        title: Text(
-          'Serial Config',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: context.textPrimary,
-          ),
-        ),
-        actions: [
-          if (_hasChanges)
-            TextButton(
-              onPressed: _isSaving ? null : _saveConfig,
-              child: _isSaving
-                  ? SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: context.accentColor,
-                      ),
-                    )
-                  : Text(
-                      'Save',
-                      style: TextStyle(
-                        color: context.accentColor,
-                        fontWeight: FontWeight.w600,
-                      ),
+    return GlassScaffold(
+      title: 'Serial Config',
+      actions: [
+        if (_hasChanges)
+          TextButton(
+            onPressed: _isSaving ? null : _saveConfig,
+            child: _isSaving
+                ? SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: context.accentColor,
                     ),
-            ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // Serial Enable
-          _buildSectionHeader('General'),
-          Container(
-            decoration: BoxDecoration(
-              color: context.card,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: context.border),
-            ),
-            child: Column(
-              children: [
-                _buildSwitchTile(
-                  icon: Icons.usb_rounded,
-                  title: 'Serial Enabled',
-                  subtitle: 'Enable serial port communication',
-                  value: _serialEnabled,
-                  onChanged: (value) {
-                    setState(() => _serialEnabled = value);
-                    _markChanged();
-                  },
-                ),
-                _buildDivider(),
-                _buildSwitchTile(
-                  icon: Icons.input,
-                  title: 'RXD GPIO',
-                  subtitle: 'Enable RXD GPIO pin',
-                  value: _rxdGpioEnabled,
-                  onChanged: (value) {
-                    setState(() => _rxdGpioEnabled = value);
-                    _markChanged();
-                  },
-                ),
-                _buildDivider(),
-                _buildSwitchTile(
-                  icon: Icons.output,
-                  title: 'TXD GPIO',
-                  subtitle: 'Enable TXD GPIO pin',
-                  value: _txdGpioEnabled,
-                  onChanged: (value) {
-                    setState(() => _txdGpioEnabled = value);
-                    _markChanged();
-                  },
-                ),
-                _buildDivider(),
-                _buildSwitchTile(
-                  icon: Icons.terminal,
-                  title: 'Override Console Serial',
-                  subtitle: 'Use serial module instead of console',
-                  value: _overrideConsoleSerialPort,
-                  onChanged: (value) {
-                    setState(() => _overrideConsoleSerialPort = value);
-                    _markChanged();
-                  },
-                ),
-              ],
-            ),
+                  )
+                : Text(
+                    'Save',
+                    style: TextStyle(
+                      color: context.accentColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
           ),
-
-          SizedBox(height: 24),
-
-          // Baud Rate
-          _buildSectionHeader('Baud Rate'),
-          Container(
-            decoration: BoxDecoration(
-              color: context.card,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: context.border),
-            ),
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+      ],
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.all(16),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate([
+              // Serial Enable
+              _buildSectionHeader('General'),
+              Container(
+                decoration: BoxDecoration(
+                  color: context.card,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: context.border),
+                ),
+                child: Column(
                   children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: context.accentColor.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(
-                        Icons.speed,
-                        color: context.accentColor,
-                        size: 20,
-                      ),
+                    _buildSwitchTile(
+                      icon: Icons.usb_rounded,
+                      title: 'Serial Enabled',
+                      subtitle: 'Enable serial port communication',
+                      value: _serialEnabled,
+                      onChanged: (value) {
+                        setState(() => _serialEnabled = value);
+                        _markChanged();
+                      },
                     ),
-                    SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Baud Rate',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: context.textPrimary,
+                    _buildDivider(),
+                    _buildSwitchTile(
+                      icon: Icons.input,
+                      title: 'RXD GPIO',
+                      subtitle: 'Enable RXD GPIO pin',
+                      value: _rxdGpioEnabled,
+                      onChanged: (value) {
+                        setState(() => _rxdGpioEnabled = value);
+                        _markChanged();
+                      },
+                    ),
+                    _buildDivider(),
+                    _buildSwitchTile(
+                      icon: Icons.output,
+                      title: 'TXD GPIO',
+                      subtitle: 'Enable TXD GPIO pin',
+                      value: _txdGpioEnabled,
+                      onChanged: (value) {
+                        setState(() => _txdGpioEnabled = value);
+                        _markChanged();
+                      },
+                    ),
+                    _buildDivider(),
+                    _buildSwitchTile(
+                      icon: Icons.terminal,
+                      title: 'Override Console Serial',
+                      subtitle: 'Use serial module instead of console',
+                      value: _overrideConsoleSerialPort,
+                      onChanged: (value) {
+                        setState(() => _overrideConsoleSerialPort = value);
+                        _markChanged();
+                      },
+                    ),
+                  ],
+                ),
+              ),
+
+              SizedBox(height: 24),
+
+              // Baud Rate
+              _buildSectionHeader('Baud Rate'),
+              Container(
+                decoration: BoxDecoration(
+                  color: context.card,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: context.border),
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: context.accentColor.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(
+                            Icons.speed,
+                            color: context.accentColor,
+                            size: 20,
+                          ),
+                        ),
+                        SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Baud Rate',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: context.textPrimary,
+                                ),
+                              ),
+                              SizedBox(height: 2),
+                              Text(
+                                'Serial communication speed',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: context.textTertiary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: _baudRates.map((rate) {
+                        final isSelected = _baudRate == rate;
+                        return GestureDetector(
+                          onTap: () {
+                            setState(() => _baudRate = rate);
+                            _markChanged();
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? context.accentColor
+                                  : context.background,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: isSelected
+                                    ? context.accentColor
+                                    : context.border,
+                              ),
+                            ),
+                            child: Text(
+                              rate.toString(),
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: isSelected
+                                    ? Colors.white
+                                    : context.textSecondary,
+                              ),
                             ),
                           ),
-                          SizedBox(height: 2),
-                          Text(
-                            'Serial communication speed',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: context.textTertiary,
-                            ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+
+              SizedBox(height: 24),
+
+              // Timeout
+              _buildSectionHeader('Timeout'),
+              Container(
+                decoration: BoxDecoration(
+                  color: context.card,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: context.border),
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: context.accentColor.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                        ],
+                          child: Icon(
+                            Icons.timer_outlined,
+                            color: context.accentColor,
+                            size: 20,
+                          ),
+                        ),
+                        SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Timeout',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: context.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '$_timeout seconds',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: context.textTertiary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 12),
+                    SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
+                        activeTrackColor: context.accentColor,
+                        inactiveTrackColor: context.border,
+                        thumbColor: context.accentColor,
+                        overlayColor: context.accentColor.withValues(
+                          alpha: 0.2,
+                        ),
+                      ),
+                      child: Slider(
+                        value: _timeout.toDouble(),
+                        min: 1,
+                        max: 60,
+                        divisions: 59,
+                        onChanged: (value) {
+                          setState(() => _timeout = value.round());
+                          _markChanged();
+                        },
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: _baudRates.map((rate) {
-                    final isSelected = _baudRate == rate;
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() => _baudRate = rate);
-                        _markChanged();
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? context.accentColor
-                              : context.background,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: isSelected
-                                ? context.accentColor
-                                : context.border,
+              ),
+
+              SizedBox(height: 24),
+
+              // Mode Selection
+              _buildSectionHeader('Serial Mode'),
+              Container(
+                decoration: BoxDecoration(
+                  color: context.card,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: context.border),
+                ),
+                child: Column(
+                  children: _modes.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final mode = entry.value;
+                    final isSelected = _mode == mode;
+
+                    return Column(
+                      children: [
+                        InkWell(
+                          borderRadius: index == 0
+                              ? const BorderRadius.vertical(
+                                  top: Radius.circular(12),
+                                )
+                              : index == _modes.length - 1
+                              ? const BorderRadius.vertical(
+                                  bottom: Radius.circular(12),
+                                )
+                              : BorderRadius.zero,
+                          onTap: () {
+                            setState(() => _mode = mode);
+                            _markChanged();
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 14,
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 24,
+                                  height: 24,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? context.accentColor
+                                          : context.border,
+                                      width: 2,
+                                    ),
+                                    color: isSelected
+                                        ? context.accentColor
+                                        : Colors.transparent,
+                                  ),
+                                  child: isSelected
+                                      ? Icon(
+                                          Icons.check,
+                                          color: Colors.white,
+                                          size: 16,
+                                        )
+                                      : null,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        mode,
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: isSelected
+                                              ? FontWeight.w600
+                                              : FontWeight.w500,
+                                          color: isSelected
+                                              ? context.textPrimary
+                                              : context.textSecondary,
+                                        ),
+                                      ),
+                                      SizedBox(height: 2),
+                                      Text(
+                                        _getModeDescription(mode),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: context.textTertiary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                        child: Text(
-                          rate.toString(),
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: isSelected
-                                ? Colors.white
-                                : context.textSecondary,
-                          ),
-                        ),
-                      ),
+                        if (index < _modes.length - 1) _buildDivider(),
+                      ],
                     );
                   }).toList(),
                 ),
-              ],
-            ),
+              ),
+
+              const SizedBox(height: 32),
+            ]),
           ),
-
-          SizedBox(height: 24),
-
-          // Timeout
-          _buildSectionHeader('Timeout'),
-          Container(
-            decoration: BoxDecoration(
-              color: context.card,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: context.border),
-            ),
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: context.accentColor.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(
-                        Icons.timer_outlined,
-                        color: context.accentColor,
-                        size: 20,
-                      ),
-                    ),
-                    SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Timeout',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: context.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            '$_timeout seconds',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: context.textTertiary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 12),
-                SliderTheme(
-                  data: SliderTheme.of(context).copyWith(
-                    activeTrackColor: context.accentColor,
-                    inactiveTrackColor: context.border,
-                    thumbColor: context.accentColor,
-                    overlayColor: context.accentColor.withValues(alpha: 0.2),
-                  ),
-                  child: Slider(
-                    value: _timeout.toDouble(),
-                    min: 1,
-                    max: 60,
-                    divisions: 59,
-                    onChanged: (value) {
-                      setState(() => _timeout = value.round());
-                      _markChanged();
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          SizedBox(height: 24),
-
-          // Mode Selection
-          _buildSectionHeader('Serial Mode'),
-          Container(
-            decoration: BoxDecoration(
-              color: context.card,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: context.border),
-            ),
-            child: Column(
-              children: _modes.asMap().entries.map((entry) {
-                final index = entry.key;
-                final mode = entry.value;
-                final isSelected = _mode == mode;
-
-                return Column(
-                  children: [
-                    InkWell(
-                      borderRadius: index == 0
-                          ? const BorderRadius.vertical(
-                              top: Radius.circular(12),
-                            )
-                          : index == _modes.length - 1
-                          ? const BorderRadius.vertical(
-                              bottom: Radius.circular(12),
-                            )
-                          : BorderRadius.zero,
-                      onTap: () {
-                        setState(() => _mode = mode);
-                        _markChanged();
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 14,
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 24,
-                              height: 24,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: isSelected
-                                      ? context.accentColor
-                                      : context.border,
-                                  width: 2,
-                                ),
-                                color: isSelected
-                                    ? context.accentColor
-                                    : Colors.transparent,
-                              ),
-                              child: isSelected
-                                  ? Icon(
-                                      Icons.check,
-                                      color: Colors.white,
-                                      size: 16,
-                                    )
-                                  : null,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    mode,
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: isSelected
-                                          ? FontWeight.w600
-                                          : FontWeight.w500,
-                                      color: isSelected
-                                          ? context.textPrimary
-                                          : context.textSecondary,
-                                    ),
-                                  ),
-                                  SizedBox(height: 2),
-                                  Text(
-                                    _getModeDescription(mode),
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: context.textTertiary,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    if (index < _modes.length - 1) _buildDivider(),
-                  ],
-                );
-              }).toList(),
-            ),
-          ),
-
-          const SizedBox(height: 32),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

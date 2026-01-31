@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
 import '../../config/revenuecat_config.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/animated_gold_button.dart';
 import '../../core/widgets/legal_document_sheet.dart';
 import '../../core/widgets/verified_badge.dart';
@@ -62,10 +63,9 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
         ownedCount == OneTimePurchases.allIndividualPurchases.length ||
         purchaseState.hasPurchased(RevenueCatConfig.completePackProductId);
 
-    return Scaffold(
-      appBar: AppBar(title: Text('Premium')),
-      body: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
+    return GlassScaffold.body(
+      title: 'Premium',
+      body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

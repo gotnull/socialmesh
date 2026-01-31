@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
+import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../utils/snackbar.dart';
@@ -27,29 +28,27 @@ class _AdminSellersScreenState extends ConsumerState<AdminSellersScreen> {
   Widget build(BuildContext context) {
     final sellersAsync = ref.watch(adminAllSellersProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Manage Sellers'),
-        actions: [
-          IconButton(
-            icon: Icon(
-              _showInactive ? Icons.visibility : Icons.visibility_off,
-              color: _showInactive ? context.accentColor : null,
-            ),
-            onPressed: () => setState(() => _showInactive = !_showInactive),
-            tooltip: _showInactive ? 'Hide inactive' : 'Show inactive',
+    return GlassScaffold(
+      title: 'Manage Sellers',
+      actions: [
+        IconButton(
+          icon: Icon(
+            _showInactive ? Icons.visibility : Icons.visibility_off,
+            color: _showInactive ? context.accentColor : null,
           ),
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () => _navigateToEdit(null),
-            tooltip: 'Add Seller',
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Search Bar
-          Padding(
+          onPressed: () => setState(() => _showInactive = !_showInactive),
+          tooltip: _showInactive ? 'Hide inactive' : 'Show inactive',
+        ),
+        IconButton(
+          icon: const Icon(Icons.add),
+          onPressed: () => _navigateToEdit(null),
+          tooltip: 'Add Seller',
+        ),
+      ],
+      slivers: [
+        // Search Bar
+        SliverToBoxAdapter(
+          child: Padding(
             padding: const EdgeInsets.all(16),
             child: TextField(
               decoration: InputDecoration(
@@ -66,57 +65,61 @@ class _AdminSellersScreenState extends ConsumerState<AdminSellersScreen> {
               onChanged: (value) => setState(() => _searchQuery = value),
             ),
           ),
+        ),
 
-          // Sellers List
-          Expanded(
-            child: sellersAsync.when(
-              data: (sellers) {
-                var filtered = sellers.where((s) {
-                  if (!_showInactive && !s.isActive) return false;
-                  if (_searchQuery.isNotEmpty) {
-                    final query = _searchQuery.toLowerCase();
-                    return s.name.toLowerCase().contains(query) ||
-                        (s.description?.toLowerCase().contains(query) ?? false);
-                  }
-                  return true;
-                }).toList();
+        // Sellers List
+        sellersAsync.when(
+          data: (sellers) {
+            var filtered = sellers.where((s) {
+              if (!_showInactive && !s.isActive) return false;
+              if (_searchQuery.isNotEmpty) {
+                final query = _searchQuery.toLowerCase();
+                return s.name.toLowerCase().contains(query) ||
+                    (s.description?.toLowerCase().contains(query) ?? false);
+              }
+              return true;
+            }).toList();
 
-                if (filtered.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.store_outlined,
-                          size: 64,
-                          color: context.textTertiary,
-                        ),
-                        const SizedBox(height: 16),
-                        const Text('No sellers found'),
-                      ],
-                    ),
+            if (filtered.isEmpty) {
+              return SliverFillRemaining(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.store_outlined,
+                        size: 64,
+                        color: context.textTertiary,
+                      ),
+                      const SizedBox(height: 16),
+                      const Text('No sellers found'),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            return SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final seller = filtered[index];
+                  return _SellerListItem(
+                    seller: seller,
+                    onEdit: () => _navigateToEdit(seller),
+                    onToggleActive: () => _toggleActive(seller),
                   );
-                }
-
-                return ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: filtered.length,
-                  itemBuilder: (context, index) {
-                    final seller = filtered[index];
-                    return _SellerListItem(
-                      seller: seller,
-                      onEdit: () => _navigateToEdit(seller),
-                      onToggleActive: () => _toggleActive(seller),
-                    );
-                  },
-                );
-              },
-              loading: () => Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('Error: $e')),
-            ),
+                }, childCount: filtered.length),
+              ),
+            );
+          },
+          loading: () => SliverFillRemaining(
+            child: Center(child: CircularProgressIndicator()),
           ),
-        ],
-      ),
+          error: (e, _) =>
+              SliverFillRemaining(child: Center(child: Text('Error: $e'))),
+        ),
+      ],
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _navigateToEdit(null),
         icon: const Icon(Icons.add),
@@ -410,146 +413,161 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(_isEditing ? 'Edit Seller' : 'Add Seller')),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            // Logo Section
-            _buildSectionTitle('Seller Logo'),
-            _buildLogoSection(),
-            SizedBox(height: 24),
+    return GlassScaffold(
+      title: _isEditing ? 'Edit Seller' : 'Add Seller',
+      slivers: [
+        SliverToBoxAdapter(
+          child: Form(
+            key: _formKey,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Logo Section
+                  _buildSectionTitle('Seller Logo'),
+                  _buildLogoSection(),
+                  SizedBox(height: 24),
 
-            // Basic Info
-            _buildSectionTitle('Basic Information'),
-            TextFormField(
-              controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Seller Name *',
-                hintText: 'e.g., LilyGO, RAK Wireless',
+                  // Basic Info
+                  _buildSectionTitle('Basic Information'),
+                  TextFormField(
+                    controller: _nameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Seller Name *',
+                      hintText: 'e.g., LilyGO, RAK Wireless',
+                    ),
+                    validator: (v) => v?.isEmpty == true ? 'Required' : null,
+                  ),
+                  const SizedBox(height: 16),
+
+                  TextFormField(
+                    controller: _descriptionController,
+                    decoration: const InputDecoration(
+                      labelText: 'Description',
+                      hintText: 'Brief description of the seller',
+                    ),
+                    maxLines: 3,
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Contact Info
+                  _buildSectionTitle('Contact Information'),
+                  TextFormField(
+                    controller: _websiteUrlController,
+                    decoration: const InputDecoration(
+                      labelText: 'Website URL *',
+                      hintText: 'https://...',
+                      prefixIcon: Icon(Icons.link),
+                    ),
+                    keyboardType: TextInputType.url,
+                    validator: (v) => v?.isEmpty == true ? 'Required' : null,
+                  ),
+                  const SizedBox(height: 16),
+
+                  TextFormField(
+                    controller: _contactEmailController,
+                    decoration: const InputDecoration(
+                      labelText: 'Contact Email',
+                      hintText: 'support@example.com',
+                      prefixIcon: Icon(Icons.email),
+                    ),
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Shipping Countries
+                  _buildSectionTitle('Shipping Countries'),
+                  TextFormField(
+                    controller: _countriesController,
+                    decoration: const InputDecoration(
+                      labelText: 'Countries',
+                      hintText: 'US, CA, UK, DE (comma separated)',
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Status Toggles
+                  _buildSectionTitle('Status & Verification'),
+                  SwitchListTile(
+                    title: const Text('Verified'),
+                    subtitle: const Text('Seller identity has been verified'),
+                    value: _isVerified,
+                    onChanged: (v) => setState(() => _isVerified = v),
+                    activeTrackColor: context.accentColor.withValues(
+                      alpha: 0.5,
+                    ),
+                    thumbColor: WidgetStateProperty.resolveWith((states) {
+                      if (states.contains(WidgetState.selected)) {
+                        return context.accentColor;
+                      }
+                      return null;
+                    }),
+                  ),
+                  SwitchListTile(
+                    title: Text('Official Partner'),
+                    subtitle: const Text(
+                      'Display as official Meshtastic partner',
+                    ),
+                    value: _isOfficialPartner,
+                    onChanged: (v) => setState(() => _isOfficialPartner = v),
+                    activeTrackColor: context.accentColor.withValues(
+                      alpha: 0.5,
+                    ),
+                    thumbColor: WidgetStateProperty.resolveWith((states) {
+                      if (states.contains(WidgetState.selected)) {
+                        return context.accentColor;
+                      }
+                      return null;
+                    }),
+                  ),
+                  SwitchListTile(
+                    title: Text('Active'),
+                    subtitle: const Text('Seller is visible in the shop'),
+                    value: _isActive,
+                    onChanged: (v) => setState(() => _isActive = v),
+                    activeTrackColor: context.accentColor.withValues(
+                      alpha: 0.5,
+                    ),
+                    thumbColor: WidgetStateProperty.resolveWith((states) {
+                      if (states.contains(WidgetState.selected)) {
+                        return context.accentColor;
+                      }
+                      return null;
+                    }),
+                  ),
+
+                  SizedBox(height: 32),
+
+                  // Save Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _save,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: context.accentColor,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Text(_isEditing ? 'Save Changes' : 'Create Seller'),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                ],
               ),
-              validator: (v) => v?.isEmpty == true ? 'Required' : null,
             ),
-            const SizedBox(height: 16),
-
-            TextFormField(
-              controller: _descriptionController,
-              decoration: const InputDecoration(
-                labelText: 'Description',
-                hintText: 'Brief description of the seller',
-              ),
-              maxLines: 3,
-            ),
-            const SizedBox(height: 24),
-
-            // Contact Info
-            _buildSectionTitle('Contact Information'),
-            TextFormField(
-              controller: _websiteUrlController,
-              decoration: const InputDecoration(
-                labelText: 'Website URL *',
-                hintText: 'https://...',
-                prefixIcon: Icon(Icons.link),
-              ),
-              keyboardType: TextInputType.url,
-              validator: (v) => v?.isEmpty == true ? 'Required' : null,
-            ),
-            const SizedBox(height: 16),
-
-            TextFormField(
-              controller: _contactEmailController,
-              decoration: const InputDecoration(
-                labelText: 'Contact Email',
-                hintText: 'support@example.com',
-                prefixIcon: Icon(Icons.email),
-              ),
-              keyboardType: TextInputType.emailAddress,
-            ),
-            const SizedBox(height: 24),
-
-            // Shipping Countries
-            _buildSectionTitle('Shipping Countries'),
-            TextFormField(
-              controller: _countriesController,
-              decoration: const InputDecoration(
-                labelText: 'Countries',
-                hintText: 'US, CA, UK, DE (comma separated)',
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Status Toggles
-            _buildSectionTitle('Status & Verification'),
-            SwitchListTile(
-              title: const Text('Verified'),
-              subtitle: const Text('Seller identity has been verified'),
-              value: _isVerified,
-              onChanged: (v) => setState(() => _isVerified = v),
-              activeTrackColor: context.accentColor.withValues(alpha: 0.5),
-              thumbColor: WidgetStateProperty.resolveWith((states) {
-                if (states.contains(WidgetState.selected)) {
-                  return context.accentColor;
-                }
-                return null;
-              }),
-            ),
-            SwitchListTile(
-              title: Text('Official Partner'),
-              subtitle: const Text('Display as official Meshtastic partner'),
-              value: _isOfficialPartner,
-              onChanged: (v) => setState(() => _isOfficialPartner = v),
-              activeTrackColor: context.accentColor.withValues(alpha: 0.5),
-              thumbColor: WidgetStateProperty.resolveWith((states) {
-                if (states.contains(WidgetState.selected)) {
-                  return context.accentColor;
-                }
-                return null;
-              }),
-            ),
-            SwitchListTile(
-              title: Text('Active'),
-              subtitle: const Text('Seller is visible in the shop'),
-              value: _isActive,
-              onChanged: (v) => setState(() => _isActive = v),
-              activeTrackColor: context.accentColor.withValues(alpha: 0.5),
-              thumbColor: WidgetStateProperty.resolveWith((states) {
-                if (states.contains(WidgetState.selected)) {
-                  return context.accentColor;
-                }
-                return null;
-              }),
-            ),
-
-            SizedBox(height: 32),
-
-            // Save Button
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: _isLoading ? null : _save,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: context.accentColor,
-                  foregroundColor: Colors.white,
-                ),
-                child: _isLoading
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : Text(_isEditing ? 'Save Changes' : 'Create Seller'),
-              ),
-            ),
-            const SizedBox(height: 32),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 

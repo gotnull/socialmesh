@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../services/debug/debug_export_service.dart';
 import '../../utils/share_utils.dart';
 import '../../utils/snackbar.dart';
@@ -299,131 +300,113 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
     final logs = _getFilteredLogs();
     final filters = ref.watch(filteredLogsProvider);
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.background,
-        title: Text(
-          'App Log',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: context.textPrimary,
+    return GlassScaffold(
+      title: 'App Log',
+      actions: [
+        IconButton(
+          icon: Icon(
+            _autoScroll ? Icons.vertical_align_bottom : Icons.pause,
+            color: _autoScroll ? context.accentColor : context.textSecondary,
           ),
+          tooltip: _autoScroll ? 'Auto-scroll on' : 'Auto-scroll off',
+          onPressed: () {
+            setState(() => _autoScroll = !_autoScroll);
+          },
         ),
-        actions: [
-          IconButton(
-            icon: Icon(
-              _autoScroll ? Icons.vertical_align_bottom : Icons.pause,
-              color: _autoScroll ? context.accentColor : context.textSecondary,
+        AppBarOverflowMenu<String>(
+          onSelected: (value) {
+            switch (value) {
+              case 'filter':
+                _showFilterDialog();
+                break;
+              case 'copy':
+                _copyToClipboard();
+                break;
+              case 'share':
+                _shareLog();
+                break;
+              case 'debug_export':
+                _exportDebug();
+                break;
+              case 'clear':
+                _clearLogs();
+                break;
+            }
+          },
+          itemBuilder: (context) => [
+            PopupMenuItem(
+              value: 'filter',
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.filter_list,
+                    color: filters.length < LogLevel.values.length
+                        ? context.accentColor
+                        : context.textSecondary,
+                    size: 20,
+                  ),
+                  SizedBox(width: 12),
+                  Text('Filter', style: TextStyle(color: context.textPrimary)),
+                ],
+              ),
             ),
-            tooltip: _autoScroll ? 'Auto-scroll on' : 'Auto-scroll off',
-            onPressed: () {
-              setState(() => _autoScroll = !_autoScroll);
-            },
-          ),
-          AppBarOverflowMenu<String>(
-            onSelected: (value) {
-              switch (value) {
-                case 'filter':
-                  _showFilterDialog();
-                  break;
-                case 'copy':
-                  _copyToClipboard();
-                  break;
-                case 'share':
-                  _shareLog();
-                  break;
-                case 'debug_export':
-                  _exportDebug();
-                  break;
-                case 'clear':
-                  _clearLogs();
-                  break;
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'filter',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.filter_list,
-                      color: filters.length < LogLevel.values.length
-                          ? context.accentColor
-                          : context.textSecondary,
-                      size: 20,
-                    ),
-                    SizedBox(width: 12),
-                    Text(
-                      'Filter',
-                      style: TextStyle(color: context.textPrimary),
-                    ),
-                  ],
-                ),
+            PopupMenuItem(
+              value: 'copy',
+              child: Row(
+                children: [
+                  Icon(Icons.copy, color: context.textSecondary, size: 20),
+                  SizedBox(width: 12),
+                  Text('Copy', style: TextStyle(color: context.textPrimary)),
+                ],
               ),
-              PopupMenuItem(
-                value: 'copy',
-                child: Row(
-                  children: [
-                    Icon(Icons.copy, color: context.textSecondary, size: 20),
-                    SizedBox(width: 12),
-                    Text('Copy', style: TextStyle(color: context.textPrimary)),
-                  ],
-                ),
+            ),
+            PopupMenuItem(
+              value: 'share',
+              child: Row(
+                children: [
+                  Icon(Icons.share, color: context.textSecondary, size: 20),
+                  SizedBox(width: 12),
+                  Text(
+                    'Share Log',
+                    style: TextStyle(color: context.textPrimary),
+                  ),
+                ],
               ),
-              PopupMenuItem(
-                value: 'share',
-                child: Row(
-                  children: [
-                    Icon(Icons.share, color: context.textSecondary, size: 20),
-                    SizedBox(width: 12),
-                    Text(
-                      'Share Log',
-                      style: TextStyle(color: context.textPrimary),
-                    ),
-                  ],
-                ),
+            ),
+            PopupMenuItem(
+              value: 'debug_export',
+              child: Row(
+                children: [
+                  Icon(Icons.bug_report, color: context.accentColor, size: 20),
+                  SizedBox(width: 12),
+                  Text(
+                    'Export Debug JSON',
+                    style: TextStyle(color: context.accentColor),
+                  ),
+                ],
               ),
-              PopupMenuItem(
-                value: 'debug_export',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.bug_report,
-                      color: context.accentColor,
-                      size: 20,
-                    ),
-                    SizedBox(width: 12),
-                    Text(
-                      'Export Debug JSON',
-                      style: TextStyle(color: context.accentColor),
-                    ),
-                  ],
-                ),
+            ),
+            PopupMenuItem(
+              value: 'clear',
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.delete_outline,
+                    color: AppTheme.errorRed,
+                    size: 20,
+                  ),
+                  SizedBox(width: 12),
+                  Text('Clear', style: TextStyle(color: AppTheme.errorRed)),
+                ],
               ),
-              PopupMenuItem(
-                value: 'clear',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.delete_outline,
-                      color: AppTheme.errorRed,
-                      size: 20,
-                    ),
-                    SizedBox(width: 12),
-                    Text('Clear', style: TextStyle(color: AppTheme.errorRed)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Search bar
-          Container(
+            ),
+          ],
+        ),
+      ],
+      slivers: [
+        // Search bar
+        SliverToBoxAdapter(
+          child: Container(
             padding: const EdgeInsets.all(16),
             child: TextField(
               controller: _searchController,
@@ -457,9 +440,11 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
               },
             ),
           ),
+        ),
 
-          // Log count
-          Padding(
+        // Log count
+        SliverToBoxAdapter(
+          child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
@@ -490,44 +475,43 @@ class _AppLogScreenState extends ConsumerState<AppLogScreen> {
               ],
             ),
           ),
+        ),
 
-          SizedBox(height: 8),
+        SliverToBoxAdapter(child: SizedBox(height: 8)),
 
-          // Log list
-          Expanded(
-            child: logs.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.article_outlined,
-                          size: 64,
-                          color: context.textTertiary.withValues(alpha: 0.5),
-                        ),
-                        SizedBox(height: 16),
-                        Text(
-                          'No log entries',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: context.textTertiary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                : ListView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: logs.length,
-                    itemBuilder: (context, index) {
-                      final entry = logs[index];
-                      return _buildLogEntry(entry);
-                    },
+        // Log list
+        if (logs.isEmpty)
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.article_outlined,
+                    size: 64,
+                    color: context.textTertiary.withValues(alpha: 0.5),
                   ),
+                  SizedBox(height: 16),
+                  Text(
+                    'No log entries',
+                    style: TextStyle(fontSize: 16, color: context.textTertiary),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else
+          SliverList(
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final entry = logs[index];
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: _buildLogEntry(entry),
+              );
+            }, childCount: logs.length),
           ),
-        ],
-      ),
+      ],
     );
   }
 

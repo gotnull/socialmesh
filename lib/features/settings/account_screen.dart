@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/widgets/glass_scaffold.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
@@ -22,32 +23,37 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
     final theme = Theme.of(context);
     final authState = ref.watch(authStateProvider);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Account')),
-      body: authState.when(
-        data: (user) =>
-            user != null ? _SignedInView(user: user) : const _SignedOutView(),
-        loading: () => const ScreenLoadingIndicator(),
-        error: (error, _) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.error_outline,
-                size: 48,
-                color: theme.colorScheme.error,
+    return GlassScaffold(
+      title: 'Account',
+      slivers: [
+        authState.when(
+          data: (user) =>
+              user != null ? _SignedInView(user: user) : const _SignedOutView(),
+          loading: () =>
+              const SliverFillRemaining(child: ScreenLoadingIndicator()),
+          error: (error, _) => SliverFillRemaining(
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 48,
+                    color: theme.colorScheme.error,
+                  ),
+                  const SizedBox(height: 16),
+                  Text('Error: $error'),
+                  const SizedBox(height: 16),
+                  FilledButton(
+                    onPressed: () => ref.invalidate(authStateProvider),
+                    child: const Text('Retry'),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-              Text('Error: $error'),
-              const SizedBox(height: 16),
-              FilledButton(
-                onPressed: () => ref.invalidate(authStateProvider),
-                child: const Text('Retry'),
-              ),
-            ],
+            ),
           ),
         ),
-      ),
+      ],
     );
   }
 }
@@ -59,58 +65,60 @@ class _SignedOutView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
-    return SingleChildScrollView(
+    return SliverPadding(
       padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Icon(
-            Icons.account_circle_outlined,
-            size: 80,
-            color: theme.colorScheme.primary,
-          ),
-          const SizedBox(height: 24),
-          Text(
-            'Sign In',
-            style: theme.textTheme.headlineMedium,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Sign in to submit widgets to the marketplace and track your contributions.',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+      sliver: SliverToBoxAdapter(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Icon(
+              Icons.account_circle_outlined,
+              size: 80,
+              color: theme.colorScheme.primary,
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 32),
-          FilledButton.icon(
-            onPressed: () => _showSignInDialog(context, ref),
-            icon: const Icon(Icons.email),
-            label: const Text('Sign in with Email'),
-          ),
-          const SizedBox(height: 12),
-          OutlinedButton.icon(
-            onPressed: () => _showCreateAccountDialog(context, ref),
-            icon: const Icon(Icons.person_add),
-            label: const Text('Create Account'),
-          ),
-          const SizedBox(height: 24),
-          const Divider(),
-          const SizedBox(height: 24),
-          Text(
-            'Or continue without an account',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+            const SizedBox(height: 24),
+            Text(
+              'Sign In',
+              style: theme.textTheme.headlineMedium,
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 12),
-          TextButton(
-            onPressed: () => _signInAnonymously(context, ref),
-            child: const Text('Continue as Guest'),
-          ),
-        ],
+            const SizedBox(height: 8),
+            Text(
+              'Sign in to submit widgets to the marketplace and track your contributions.',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+            FilledButton.icon(
+              onPressed: () => _showSignInDialog(context, ref),
+              icon: const Icon(Icons.email),
+              label: const Text('Sign in with Email'),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: () => _showCreateAccountDialog(context, ref),
+              icon: const Icon(Icons.person_add),
+              label: const Text('Create Account'),
+            ),
+            const SizedBox(height: 24),
+            const Divider(),
+            const SizedBox(height: 24),
+            Text(
+              'Or continue without an account',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: () => _signInAnonymously(context, ref),
+              child: const Text('Continue as Guest'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -164,144 +172,146 @@ class _SignedInView extends ConsumerWidget {
     final displayName = ref.watch(userDisplayNameProvider);
     final isAnonymous = user.isAnonymous;
 
-    return SingleChildScrollView(
+    return SliverPadding(
       padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          CircleAvatar(
-            radius: 48,
-            backgroundColor: theme.colorScheme.primaryContainer,
-            backgroundImage: user.photoURL != null
-                ? NetworkImage(user.photoURL!)
-                : null,
-            child: user.photoURL == null
-                ? Icon(
-                    isAnonymous ? Icons.person_outline : Icons.person,
-                    size: 48,
-                    color: theme.colorScheme.onPrimaryContainer,
-                  )
-                : null,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            displayName,
-            style: theme.textTheme.headlineSmall,
-            textAlign: TextAlign.center,
-          ),
-          if (user.email != null) ...[
-            const SizedBox(height: 4),
-            Text(
-              user.email!,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: isAnonymous
-                  ? theme.colorScheme.secondaryContainer
-                  : theme.colorScheme.primaryContainer,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Text(
-              isAnonymous ? 'Guest Account' : 'Signed In',
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: isAnonymous
-                    ? theme.colorScheme.onSecondaryContainer
-                    : theme.colorScheme.onPrimaryContainer,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-          const SizedBox(height: 32),
-          if (isAnonymous) ...[
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          color: theme.colorScheme.primary,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Upgrade Your Account',
-                          style: theme.textTheme.titleMedium,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Link an email to your account to keep your widgets and contributions even if you switch devices.',
-                      style: theme.textTheme.bodySmall,
-                    ),
-                    const SizedBox(height: 12),
-                    FilledButton(
-                      onPressed: () => _linkEmailAccount(context, ref),
-                      child: const Text('Link Email'),
-                    ),
-                  ],
-                ),
-              ),
+      sliver: SliverToBoxAdapter(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            CircleAvatar(
+              radius: 48,
+              backgroundColor: theme.colorScheme.primaryContainer,
+              backgroundImage: user.photoURL != null
+                  ? NetworkImage(user.photoURL!)
+                  : null,
+              child: user.photoURL == null
+                  ? Icon(
+                      isAnonymous ? Icons.person_outline : Icons.person,
+                      size: 48,
+                      color: theme.colorScheme.onPrimaryContainer,
+                    )
+                  : null,
             ),
             const SizedBox(height: 16),
-          ],
-          if (!isAnonymous) ...[
-            ListTile(
-              leading: const Icon(Icons.badge_outlined),
-              title: const Text('Display Name'),
-              subtitle: Text(user.displayName ?? 'Not set'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => _editDisplayName(context, ref),
+            Text(
+              displayName,
+              style: theme.textTheme.headlineSmall,
+              textAlign: TextAlign.center,
             ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.lock_outline),
-              title: const Text('Change Password'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => _sendPasswordReset(context, ref),
+            if (user.email != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                user.email!,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: isAnonymous
+                    ? theme.colorScheme.secondaryContainer
+                    : theme.colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Text(
+                isAnonymous ? 'Guest Account' : 'Signed In',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: isAnonymous
+                      ? theme.colorScheme.onSecondaryContainer
+                      : theme.colorScheme.onPrimaryContainer,
+                ),
+                textAlign: TextAlign.center,
+              ),
             ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.forum_outlined),
-              title: const Text('Social Profile'),
-              subtitle: const Text('View your posts and followers'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ProfileSocialScreen(userId: user.uid),
+            const SizedBox(height: 32),
+            if (isAnonymous) ...[
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            color: theme.colorScheme.primary,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Upgrade Your Account',
+                            style: theme.textTheme.titleMedium,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Link an email to your account to keep your widgets and contributions even if you switch devices.',
+                        style: theme.textTheme.bodySmall,
+                      ),
+                      const SizedBox(height: 12),
+                      FilledButton(
+                        onPressed: () => _linkEmailAccount(context, ref),
+                        child: const Text('Link Email'),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            const Divider(),
-          ],
-          const SizedBox(height: 16),
-          OutlinedButton.icon(
-            onPressed: () => _signOut(context, ref),
-            icon: const Icon(Icons.logout),
-            label: const Text('Sign Out'),
-          ),
-          if (!isAnonymous) ...[
-            const SizedBox(height: 32),
-            TextButton(
-              onPressed: () => _deleteAccount(context, ref),
-              style: TextButton.styleFrom(
-                foregroundColor: theme.colorScheme.error,
+              const SizedBox(height: 16),
+            ],
+            if (!isAnonymous) ...[
+              ListTile(
+                leading: const Icon(Icons.badge_outlined),
+                title: const Text('Display Name'),
+                subtitle: Text(user.displayName ?? 'Not set'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => _editDisplayName(context, ref),
               ),
-              child: const Text('Delete Account'),
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.lock_outline),
+                title: const Text('Change Password'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => _sendPasswordReset(context, ref),
+              ),
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.forum_outlined),
+                title: const Text('Social Profile'),
+                subtitle: const Text('View your posts and followers'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ProfileSocialScreen(userId: user.uid),
+                  ),
+                ),
+              ),
+              const Divider(),
+            ],
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: () => _signOut(context, ref),
+              icon: const Icon(Icons.logout),
+              label: const Text('Sign Out'),
             ),
+            if (!isAnonymous) ...[
+              const SizedBox(height: 32),
+              TextButton(
+                onPressed: () => _deleteAccount(context, ref),
+                style: TextButton.styleFrom(
+                  foregroundColor: theme.colorScheme.error,
+                ),
+                child: const Text('Delete Account'),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

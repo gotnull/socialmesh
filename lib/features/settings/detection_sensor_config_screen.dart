@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/logging.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../providers/app_providers.dart';
@@ -142,25 +143,24 @@ class _DetectionSensorConfigScreenState
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.surface,
-        title: Text('Detection Sensor'),
-        actions: [
-          TextButton(
-            onPressed: _isSaving ? null : _saveConfig,
-            child: _isSaving
-                ? LoadingIndicator(size: 20)
-                : Text('Save', style: TextStyle(color: context.accentColor)),
-          ),
-        ],
-      ),
-      body: _isLoading
-          ? const ScreenLoadingIndicator()
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
+    return GlassScaffold(
+      title: 'Detection Sensor',
+      actions: [
+        TextButton(
+          onPressed: _isSaving ? null : _saveConfig,
+          child: _isSaving
+              ? LoadingIndicator(size: 20)
+              : Text('Save', style: TextStyle(color: context.accentColor)),
+        ),
+      ],
+      slivers: [
+        if (_isLoading)
+          const SliverFillRemaining(child: ScreenLoadingIndicator())
+        else
+          SliverPadding(
+            padding: const EdgeInsets.all(16),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
                 // Info card
                 _buildInfoCard(),
 
@@ -189,8 +189,10 @@ class _DetectionSensorConfigScreenState
                   _buildSectionTitle('Client Options'),
                   _buildClientOptionsCard(),
                 ],
-              ],
+              ]),
             ),
+          ),
+      ],
     );
   }
 

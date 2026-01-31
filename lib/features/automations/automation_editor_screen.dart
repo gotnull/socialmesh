@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/premium_gating.dart';
 import '../../models/subscription_models.dart';
 import '../../providers/subscription_providers.dart';
@@ -223,191 +224,191 @@ class _AutomationEditorScreenState
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        title: Text(_isEditing ? 'Edit Automation' : 'New Automation'),
-        actions: [
-          if (_isEditing)
-            ThemedSwitch(
-              value: _enabled,
-              onChanged: (value) => setState(() => _enabled = value),
-            ),
-        ],
-      ),
-      body: GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(),
-        behavior: HitTestBehavior.opaque,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Name field
-              _buildSectionTitle(context, 'Name'),
-              SizedBox(height: 8),
-              TextField(
-                controller: _nameController,
-                textCapitalization: TextCapitalization.sentences,
-                decoration: InputDecoration(
-                  hintText: 'e.g., Low Battery Alert',
-                  filled: true,
-                  fillColor: context.card,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: context.border),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                ),
-              ),
-
-              SizedBox(height: 16),
-
-              // Description field
-              _buildSectionTitle(context, 'Description (optional)'),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _descriptionController,
-                textCapitalization: TextCapitalization.sentences,
-                decoration: InputDecoration(
-                  hintText: 'What does this automation do?',
-                  filled: true,
-                  fillColor: context.card,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: context.border),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                ),
-                maxLines: 2,
-              ),
-
-              const SizedBox(height: 24),
-
-              // WHEN (Trigger)
-              _buildSectionTitle(
-                context,
-                'WHEN',
-                icon: Icons.bolt,
-                color: Colors.amber,
-              ),
-              const SizedBox(height: 8),
-              TriggerSelector(
-                trigger: _trigger,
-                availableNodes: ref.watch(nodesProvider).values.toList(),
-                onChanged: (trigger) => _updateTrigger(trigger),
-              ),
-
-              // Flow connector: WHEN -> THEN
-              _buildFlowConnector(context, isFirst: true),
-
-              // THEN (Actions)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return GlassScaffold(
+      title: _isEditing ? 'Edit Automation' : 'New Automation',
+      actions: [
+        if (_isEditing)
+          ThemedSwitch(
+            value: _enabled,
+            onChanged: (value) => setState(() => _enabled = value),
+          ),
+      ],
+      bottomNavigationBar: _buildSaveButton(),
+      slivers: [
+        SliverToBoxAdapter(
+          child: GestureDetector(
+            onTap: () => FocusScope.of(context).unfocus(),
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Name field
+                  _buildSectionTitle(context, 'Name'),
+                  SizedBox(height: 8),
+                  TextField(
+                    controller: _nameController,
+                    textCapitalization: TextCapitalization.sentences,
+                    decoration: InputDecoration(
+                      hintText: 'e.g., Low Battery Alert',
+                      filled: true,
+                      fillColor: context.card,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: context.border),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  SizedBox(height: 16),
+
+                  // Description field
+                  _buildSectionTitle(context, 'Description (optional)'),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _descriptionController,
+                    textCapitalization: TextCapitalization.sentences,
+                    decoration: InputDecoration(
+                      hintText: 'What does this automation do?',
+                      filled: true,
+                      fillColor: context.card,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: context.border),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                    maxLines: 2,
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // WHEN (Trigger)
                   _buildSectionTitle(
                     context,
-                    'THEN',
-                    icon: Icons.play_arrow,
-                    color: AppTheme.successGreen,
+                    'WHEN',
+                    icon: Icons.bolt,
+                    color: Colors.amber,
                   ),
-                  BouncyTap(
-                    onTap: _addAction,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.primary.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.add,
-                            size: 16,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Add Action',
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.primary,
-                              fontWeight: FontWeight.w500,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  const SizedBox(height: 8),
+                  TriggerSelector(
+                    trigger: _trigger,
+                    availableNodes: ref.watch(nodesProvider).values.toList(),
+                    onChanged: (trigger) => _updateTrigger(trigger),
                   ),
+
+                  // Flow connector: WHEN -> THEN
+                  _buildFlowConnector(context, isFirst: true),
+
+                  // THEN (Actions)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildSectionTitle(
+                        context,
+                        'THEN',
+                        icon: Icons.play_arrow,
+                        color: AppTheme.successGreen,
+                      ),
+                      BouncyTap(
+                        onTap: _addAction,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.add,
+                                size: 16,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Add Action',
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Actions list with flow connectors
+                  ..._actions.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final action = entry.value;
+                    // Get nodes and channels for action editor
+                    final nodes = ref.watch(nodesProvider);
+                    final channels = ref.watch(channelsProvider);
+                    final myNodeNum = ref.watch(myNodeNumProvider);
+                    return Column(
+                      children: [
+                        ActionEditor(
+                          action: action,
+                          index: index,
+                          totalActions: _actions.length,
+                          triggerType: _trigger.type,
+                          availableNodes: nodes.values.toList(),
+                          availableChannels: channels,
+                          myNodeNum: myNodeNum,
+                          onChanged: (updated) {
+                            setState(() {
+                              _actions[index] = updated;
+                            });
+                          },
+                          onDelete: _actions.length > 1
+                              ? () => setState(() => _actions.removeAt(index))
+                              : null,
+                        ),
+                        // Show connector between actions (not after the last one)
+                        if (index < _actions.length - 1)
+                          _buildFlowConnector(context, stepNumber: index + 2),
+                      ],
+                    );
+                  }),
+
+                  const SizedBox(height: 100), // Space for bottom button
                 ],
               ),
-              const SizedBox(height: 8),
-
-              // Actions list with flow connectors
-              ..._actions.asMap().entries.map((entry) {
-                final index = entry.key;
-                final action = entry.value;
-                // Get nodes and channels for action editor
-                final nodes = ref.watch(nodesProvider);
-                final channels = ref.watch(channelsProvider);
-                final myNodeNum = ref.watch(myNodeNumProvider);
-                return Column(
-                  children: [
-                    ActionEditor(
-                      action: action,
-                      index: index,
-                      totalActions: _actions.length,
-                      triggerType: _trigger.type,
-                      availableNodes: nodes.values.toList(),
-                      availableChannels: channels,
-                      myNodeNum: myNodeNum,
-                      onChanged: (updated) {
-                        setState(() {
-                          _actions[index] = updated;
-                        });
-                      },
-                      onDelete: _actions.length > 1
-                          ? () => setState(() => _actions.removeAt(index))
-                          : null,
-                    ),
-                    // Show connector between actions (not after the last one)
-                    if (index < _actions.length - 1)
-                      _buildFlowConnector(context, stepNumber: index + 2),
-                  ],
-                );
-              }),
-
-              const SizedBox(height: 100), // Space for bottom button
-            ],
+            ),
           ),
         ),
-      ),
-      bottomNavigationBar: _buildSaveButton(),
+      ],
     );
   }
 

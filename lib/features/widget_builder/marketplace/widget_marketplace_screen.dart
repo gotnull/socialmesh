@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/ico_help_system.dart';
 import '../../../core/widgets/premium_gating.dart';
 import '../../../models/subscription_models.dart';
@@ -12,7 +13,6 @@ import '../renderer/widget_renderer.dart';
 import '../storage/widget_storage_service.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/widget_preview_card.dart';
-import '../../../core/widgets/auto_scroll_text.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/profile_providers.dart';
 import '../../../providers/splash_mesh_provider.dart';
@@ -83,58 +83,47 @@ class _WidgetMarketplaceScreenState
       child: HelpTourController(
         topicId: 'marketplace_overview',
         stepKeys: const {},
-        child: Scaffold(
-          backgroundColor: context.background,
-          appBar: AppBar(
-            backgroundColor: context.background,
-            title: Text(
-              'Widget Marketplace',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: context.textPrimary,
-              ),
+        child: GlassScaffold(
+          title: 'Widget Marketplace',
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.help_outline),
+              onPressed: () => ref
+                  .read(helpProvider.notifier)
+                  .startTour('marketplace_overview'),
+              tooltip: 'Help',
             ),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.help_outline),
-                onPressed: () => ref
-                    .read(helpProvider.notifier)
-                    .startTour('marketplace_overview'),
-                tooltip: 'Help',
-              ),
-            ],
-            bottom: TabBar(
-              controller: _tabController,
-              indicatorColor: context.accentColor,
-              labelColor: context.accentColor,
-              unselectedLabelColor: context.textSecondary,
-              isScrollable: true,
-              tabAlignment: TabAlignment.start,
-              tabs: [
-                const Tab(text: 'Featured'),
-                const Tab(text: 'Popular'),
-                const Tab(text: 'New'),
-                Tab(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.favorite, size: 16),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Favorites${favoritesCount > 0 ? ' ($favoritesCount)' : ''}',
-                      ),
-                    ],
-                  ),
+          ],
+          bottom: TabBar(
+            controller: _tabController,
+            indicatorColor: context.accentColor,
+            labelColor: context.accentColor,
+            unselectedLabelColor: context.textSecondary,
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
+            tabs: [
+              const Tab(text: 'Featured'),
+              const Tab(text: 'Popular'),
+              const Tab(text: 'New'),
+              Tab(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.favorite, size: 16),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Favorites${favoritesCount > 0 ? ' ($favoritesCount)' : ''}',
+                    ),
+                  ],
                 ),
-                const Tab(text: 'Categories'),
-              ],
-            ),
+              ),
+              const Tab(text: 'Categories'),
+            ],
           ),
-          body: Column(
-            children: [
-              // Search bar
-              Padding(
+          slivers: [
+            // Search bar
+            SliverToBoxAdapter(
+              child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: TextField(
                   controller: _searchController,
@@ -167,30 +156,31 @@ class _WidgetMarketplaceScreenState
                   ),
                 ),
               ),
-              // Content
-              Expanded(
-                child: searchState.query.isNotEmpty
-                    ? _buildSearchResults(searchState)
-                    : marketplaceAsync.when(
-                        loading: () => const ScreenLoadingIndicator(),
-                        error: (error, stack) => _buildErrorState(
-                          'Unable to load marketplace',
-                          onRetry: () => ref.invalidate(marketplaceProvider),
-                        ),
-                        data: (state) => TabBarView(
-                          controller: _tabController,
-                          children: [
-                            _buildFeaturedTab(state),
-                            _buildPopularTab(state),
-                            _buildNewTab(state),
-                            _buildFavoritesTab(state),
-                            _buildCategoriesTab(),
-                          ],
-                        ),
+            ),
+            // Content
+            SliverFillRemaining(
+              hasScrollBody: true,
+              child: searchState.query.isNotEmpty
+                  ? _buildSearchResults(searchState)
+                  : marketplaceAsync.when(
+                      loading: () => const ScreenLoadingIndicator(),
+                      error: (error, stack) => _buildErrorState(
+                        'Unable to load marketplace',
+                        onRetry: () => ref.invalidate(marketplaceProvider),
                       ),
-              ),
-            ],
-          ),
+                      data: (state) => TabBarView(
+                        controller: _tabController,
+                        children: [
+                          _buildFeaturedTab(state),
+                          _buildPopularTab(state),
+                          _buildNewTab(state),
+                          _buildFavoritesTab(state),
+                          _buildCategoriesTab(),
+                        ],
+                      ),
+                    ),
+            ),
+          ],
         ),
       ),
     );
@@ -563,237 +553,232 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
     final isAlreadyInstalled =
         profile?.installedWidgetIds.contains(mWidget.id) ?? false;
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.background,
-        title: AutoScrollText(
-          mWidget.name,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: context.textPrimary,
-          ),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Live preview - widget fills container
-            Container(
-              decoration: BoxDecoration(
-                color: context.card,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: FutureBuilder<WidgetSchema>(
-                future: service.previewWidget(mWidget.id),
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData) {
-                    return AspectRatio(
-                      aspectRatio: 2.0,
-                      child: Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.widgets,
-                              size: 48,
-                              color: context.accentColor.withValues(alpha: 0.4),
+    return GlassScaffold(
+      title: mWidget.name,
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.all(16),
+          sliver: SliverToBoxAdapter(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Live preview - widget fills container
+                Container(
+                  decoration: BoxDecoration(
+                    color: context.card,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: FutureBuilder<WidgetSchema>(
+                    future: service.previewWidget(mWidget.id),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) {
+                        return AspectRatio(
+                          aspectRatio: 2.0,
+                          child: Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.widgets,
+                                  size: 48,
+                                  color: context.accentColor.withValues(
+                                    alpha: 0.4,
+                                  ),
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  'Loading preview...',
+                                  style: TextStyle(
+                                    color: context.textTertiary,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
                             ),
-                            SizedBox(height: 8),
-                            Text(
-                              'Loading preview...',
-                              style: TextStyle(
-                                color: context.textTertiary,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
+                          ),
+                        );
+                      }
+
+                      // Render widget at its natural size
+                      return Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: WidgetRenderer(
+                          schema: snapshot.data!,
+                          node: node,
+                          allNodes: nodes,
+                          accentColor: context.accentColor,
+                          enableActions: false, // Only interactive on dashboard
+                          isPreview: true,
+                          usePlaceholderData: node == null,
                         ),
+                      );
+                    },
+                  ),
+                ),
+                SizedBox(height: 24),
+                // Title and author
+                Text(
+                  mWidget.name,
+                  style: TextStyle(
+                    color: context.textPrimary,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // Author
+                Text(
+                  'by ${mWidget.author}',
+                  style: TextStyle(color: context.textSecondary, fontSize: 14),
+                ),
+                SizedBox(height: 16),
+                // Stats row
+                Row(
+                  children: [
+                    _buildStatItem(
+                      Icons.star,
+                      '${mWidget.rating.toStringAsFixed(1)} (${mWidget.ratingCount})',
+                      AppTheme.warningYellow,
+                    ),
+                    const SizedBox(width: 24),
+                    _buildStatItem(
+                      Icons.download_done,
+                      '${mWidget.installs} installs',
+                      context.textSecondary,
+                    ),
+                  ],
+                ),
+                SizedBox(height: 24),
+                // Description
+                Text(
+                  'Description',
+                  style: TextStyle(
+                    color: context.textPrimary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  mWidget.description,
+                  style: TextStyle(
+                    color: context.textSecondary,
+                    fontSize: 14,
+                    height: 1.5,
+                  ),
+                ),
+                SizedBox(height: 24),
+                // Tags
+                if (mWidget.tags.isNotEmpty) ...[
+                  Text(
+                    'Tags',
+                    style: TextStyle(
+                      color: context.textPrimary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: mWidget.tags.map((tag) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: context.accentColor.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Text(
+                          tag,
+                          style: TextStyle(
+                            color: context.accentColor,
+                            fontSize: 12,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
+                SizedBox(height: 32),
+                // Install button
+                Builder(
+                  builder: (context) {
+                    final hasPremium = ref.watch(
+                      hasFeatureProvider(PremiumFeature.homeWidgets),
+                    );
+                    final isLocked = !hasPremium && !isAlreadyInstalled;
+
+                    return SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _isInstalling || isAlreadyInstalled
+                            ? null
+                            : _installWidget,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isAlreadyInstalled
+                              ? context.textSecondary.withValues(alpha: 0.3)
+                              : isLocked
+                              ? Colors.grey.shade600
+                              : context.accentColor,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: _isInstalling
+                            ? const SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  if (isAlreadyInstalled)
+                                    const Icon(
+                                      Icons.check_circle,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                                  if (isLocked)
+                                    const Icon(
+                                      Icons.lock,
+                                      color: Colors.white70,
+                                      size: 18,
+                                    ),
+                                  if (isAlreadyInstalled || isLocked)
+                                    const SizedBox(width: 8),
+                                  Text(
+                                    isAlreadyInstalled
+                                        ? 'Already Installed'
+                                        : 'Install Widget',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: isAlreadyInstalled || isLocked
+                                          ? Colors.white70
+                                          : Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
                       ),
                     );
-                  }
-
-                  // Render widget at its natural size
-                  return Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: WidgetRenderer(
-                      schema: snapshot.data!,
-                      node: node,
-                      allNodes: nodes,
-                      accentColor: context.accentColor,
-                      enableActions: false, // Only interactive on dashboard
-                      isPreview: true,
-                      usePlaceholderData: node == null,
-                    ),
-                  );
-                },
-              ),
-            ),
-            SizedBox(height: 24),
-            // Title and author
-            Text(
-              mWidget.name,
-              style: TextStyle(
-                color: context.textPrimary,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            // Author
-            Text(
-              'by ${mWidget.author}',
-              style: TextStyle(color: context.textSecondary, fontSize: 14),
-            ),
-            SizedBox(height: 16),
-            // Stats row
-            Row(
-              children: [
-                _buildStatItem(
-                  Icons.star,
-                  '${mWidget.rating.toStringAsFixed(1)} (${mWidget.ratingCount})',
-                  AppTheme.warningYellow,
-                ),
-                const SizedBox(width: 24),
-                _buildStatItem(
-                  Icons.download_done,
-                  '${mWidget.installs} installs',
-                  context.textSecondary,
+                  },
                 ),
               ],
             ),
-            SizedBox(height: 24),
-            // Description
-            Text(
-              'Description',
-              style: TextStyle(
-                color: context.textPrimary,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              mWidget.description,
-              style: TextStyle(
-                color: context.textSecondary,
-                fontSize: 14,
-                height: 1.5,
-              ),
-            ),
-            SizedBox(height: 24),
-            // Tags
-            if (mWidget.tags.isNotEmpty) ...[
-              Text(
-                'Tags',
-                style: TextStyle(
-                  color: context.textPrimary,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: mWidget.tags.map((tag) {
-                  return Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: context.accentColor.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Text(
-                      tag,
-                      style: TextStyle(
-                        color: context.accentColor,
-                        fontSize: 12,
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ],
-            SizedBox(height: 32),
-            // Install button
-            Builder(
-              builder: (context) {
-                final hasPremium = ref.watch(
-                  hasFeatureProvider(PremiumFeature.homeWidgets),
-                );
-                final isLocked = !hasPremium && !isAlreadyInstalled;
-
-                return SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _isInstalling || isAlreadyInstalled
-                        ? null
-                        : _installWidget,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: isAlreadyInstalled
-                          ? context.textSecondary.withValues(alpha: 0.3)
-                          : isLocked
-                          ? Colors.grey.shade600
-                          : context.accentColor,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: _isInstalling
-                        ? const SizedBox(
-                            height: 24,
-                            width: 24,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.5,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              if (isAlreadyInstalled)
-                                const Icon(
-                                  Icons.check_circle,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                              if (isLocked)
-                                const Icon(
-                                  Icons.lock,
-                                  color: Colors.white70,
-                                  size: 18,
-                                ),
-                              if (isAlreadyInstalled || isLocked)
-                                const SizedBox(width: 8),
-                              Text(
-                                isAlreadyInstalled
-                                    ? 'Already Installed'
-                                    : 'Install Widget',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: isAlreadyInstalled || isLocked
-                                      ? Colors.white70
-                                      : Colors.white,
-                                ),
-                              ),
-                            ],
-                          ),
-                  ),
-                );
-              },
-            ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 
@@ -895,55 +880,26 @@ class _CategoryScreenState extends ConsumerState<_CategoryScreen> {
   Widget build(BuildContext context) {
     final asyncState = ref.watch(marketplaceProvider);
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.background,
-        title: AutoScrollText(
-          WidgetCategories.getDisplayName(widget.category),
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: context.textPrimary,
-          ),
-        ),
-      ),
-      body: asyncState.when(
-        loading: () => const ScreenLoadingIndicator(),
-        error: (error, stack) => Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.error_outline, size: 48, color: context.textTertiary),
-              SizedBox(height: 16),
-              Text(
-                'Failed to load category',
-                style: TextStyle(color: context.textSecondary, fontSize: 16),
-              ),
-            ],
-          ),
-        ),
-        data: (state) {
-          final widgets = state.categoryWidgets[widget.category] ?? [];
-          final isLoading = !state.categoryWidgets.containsKey(widget.category);
-
-          if (isLoading) {
-            return const ScreenLoadingIndicator();
-          }
-
-          if (widgets.isEmpty) {
-            return Center(
+    return GlassScaffold(
+      title: WidgetCategories.getDisplayName(widget.category),
+      slivers: asyncState.when(
+        loading: () => [
+          const SliverFillRemaining(child: ScreenLoadingIndicator()),
+        ],
+        error: (error, stack) => [
+          SliverFillRemaining(
+            child: Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    Icons.widgets_outlined,
+                    Icons.error_outline,
                     size: 48,
                     color: context.textTertiary,
                   ),
                   SizedBox(height: 16),
                   Text(
-                    'No widgets in this category',
+                    'Failed to load category',
                     style: TextStyle(
                       color: context.textSecondary,
                       fontSize: 16,
@@ -951,32 +907,70 @@ class _CategoryScreenState extends ConsumerState<_CategoryScreen> {
                   ),
                 ],
               ),
-            );
+            ),
+          ),
+        ],
+        data: (state) {
+          final widgets = state.categoryWidgets[widget.category] ?? [];
+          final isLoading = !state.categoryWidgets.containsKey(widget.category);
+
+          if (isLoading) {
+            return [const SliverFillRemaining(child: ScreenLoadingIndicator())];
           }
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: widgets.length,
-            itemBuilder: (context, index) {
-              return _MarketplaceWidgetCard(
-                widget: widgets[index],
-                onTap: () async {
-                  final installed = await Navigator.push<bool>(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => _WidgetDetailsScreen(
-                        marketplaceWidget: widgets[index],
+          if (widgets.isEmpty) {
+            return [
+              SliverFillRemaining(
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.widgets_outlined,
+                        size: 48,
+                        color: context.textTertiary,
                       ),
-                    ),
+                      SizedBox(height: 16),
+                      Text(
+                        'No widgets in this category',
+                        style: TextStyle(
+                          color: context.textSecondary,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ];
+          }
+
+          return [
+            SliverPadding(
+              padding: const EdgeInsets.all(16),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  return _MarketplaceWidgetCard(
+                    widget: widgets[index],
+                    onTap: () async {
+                      final installed = await Navigator.push<bool>(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => _WidgetDetailsScreen(
+                            marketplaceWidget: widgets[index],
+                          ),
+                        ),
+                      );
+                      // Refresh if widget was installed
+                      if (installed == true && mounted) {
+                        ref.read(marketplaceProvider.notifier).refresh();
+                      }
+                    },
                   );
-                  // Refresh if widget was installed
-                  if (installed == true && mounted) {
-                    ref.read(marketplaceProvider.notifier).refresh();
-                  }
-                },
-              );
-            },
-          );
+                }, childCount: widgets.length),
+              ),
+            ),
+          ];
         },
       ),
     );

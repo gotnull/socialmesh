@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socialmesh/utils/snackbar.dart';
 
 import '../../../core/theme.dart';
+import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../providers/social_providers.dart';
 import '../../../services/content_moderation_service.dart';
@@ -52,13 +53,18 @@ class _SensitiveContentSettingsScreenState
   Widget build(BuildContext context) {
     final settings = _settings;
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Sensitive Content')),
-      body: settings == null
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              children: [
+    return GlassScaffold(
+      title: 'Sensitive Content',
+      slivers: [
+        if (settings == null)
+          const SliverFillRemaining(
+            child: Center(child: CircularProgressIndicator()),
+          )
+        else
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
                 // Header explanation
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -181,8 +187,10 @@ class _SensitiveContentSettingsScreenState
                     ),
                   ),
                 ),
-              ],
+              ]),
             ),
+          ),
+      ],
     );
   }
 

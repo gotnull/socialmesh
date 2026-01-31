@@ -12,6 +12,7 @@ import '../../generated/meshtastic/config.pb.dart' as config_pb;
 import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
 import '../../core/widgets/loading_indicator.dart';
+import '../../core/widgets/glass_scaffold.dart';
 
 /// Screen for configuring GPS and position settings
 class PositionConfigScreen extends ConsumerStatefulWidget {
@@ -277,40 +278,32 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
-      child: Scaffold(
-        backgroundColor: context.background,
-        appBar: AppBar(
-          backgroundColor: context.background,
-          title: Text(
-            'Position',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: context.textPrimary,
+      child: GlassScaffold(
+        title: 'Position',
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: TextButton(
+              onPressed: _isLoading ? null : _saveConfig,
+              child: _isLoading
+                  ? LoadingIndicator(size: 20)
+                  : Text(
+                      'Save',
+                      style: TextStyle(
+                        color: context.accentColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
             ),
           ),
-          actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: TextButton(
-                onPressed: _isLoading ? null : _saveConfig,
-                child: _isLoading
-                    ? LoadingIndicator(size: 20)
-                    : Text(
-                        'Save',
-                        style: TextStyle(
-                          color: context.accentColor,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-              ),
-            ),
-          ],
-        ),
-        body: _isLoading
-            ? const ScreenLoadingIndicator()
-            : ListView(
-                padding: const EdgeInsets.symmetric(vertical: 8),
+        ],
+        slivers: [
+          if (_isLoading)
+            const SliverFillRemaining(child: ScreenLoadingIndicator())
+          else
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              sliver: SliverList.list(
                 children: [
                   const _SectionHeader(title: 'GPS MODE'),
                   _buildGpsModeSelector(),
@@ -999,6 +992,8 @@ class _PositionConfigScreenState extends ConsumerState<PositionConfigScreen> {
                   const SizedBox(height: 32),
                 ],
               ),
+            ),
+        ],
       ),
     );
   }

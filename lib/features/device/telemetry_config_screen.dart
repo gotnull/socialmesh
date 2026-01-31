@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
@@ -138,219 +139,197 @@ class _TelemetryConfigScreenState extends ConsumerState<TelemetryConfigScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return Scaffold(
-        backgroundColor: context.background,
-        appBar: AppBar(
-          backgroundColor: context.background,
-          title: Text(
-            'Telemetry',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: context.textPrimary,
-            ),
-          ),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ),
-        body: const ScreenLoadingIndicator(),
+      return GlassScaffold(
+        title: 'Telemetry',
+        slivers: [SliverFillRemaining(child: const ScreenLoadingIndicator())],
       );
     }
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.background,
-        title: Text(
-          'Telemetry',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: context.textPrimary,
-          ),
-        ),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
-        actions: [
-          if (_hasChanges)
-            TextButton(
-              onPressed: _isSaving ? null : _save,
-              child: _isSaving
-                  ? SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: context.accentColor,
-                      ),
-                    )
-                  : Text(
-                      'Save',
-                      style: TextStyle(
-                        color: context.accentColor,
-                        fontWeight: FontWeight.w600,
-                      ),
+    return GlassScaffold(
+      title: 'Telemetry',
+      actions: [
+        if (_hasChanges)
+          TextButton(
+            onPressed: _isSaving ? null : _save,
+            child: _isSaving
+                ? SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: context.accentColor,
                     ),
-            ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // Device Metrics Section
-          _SectionHeader(
-            title: 'Device Metrics',
-            icon: Icons.memory,
-            color: AccentColors.blue,
-          ),
-          const SizedBox(height: 12),
-          _TelemetrySection(
-            enabled: _deviceMetricsEnabled,
-            updateInterval: _deviceMetricsUpdateInterval,
-            onEnabledChanged: (value) {
-              setState(() {
-                _deviceMetricsEnabled = value;
-                _hasChanges = true;
-              });
-            },
-            onIntervalChanged: (value) {
-              setState(() {
-                _deviceMetricsUpdateInterval = value;
-                _hasChanges = true;
-              });
-            },
-            description:
-                'Battery level, voltage, channel utilization, air util TX',
-          ),
-
-          const SizedBox(height: 24),
-
-          // Environment Metrics Section
-          _SectionHeader(
-            title: 'Environment Metrics',
-            icon: Icons.thermostat,
-            color: AccentColors.green,
-          ),
-          const SizedBox(height: 12),
-          _TelemetrySection(
-            enabled: _environmentMetricsEnabled,
-            updateInterval: _environmentMetricsUpdateInterval,
-            onEnabledChanged: (value) {
-              setState(() {
-                _environmentMetricsEnabled = value;
-                _hasChanges = true;
-              });
-            },
-            onIntervalChanged: (value) {
-              setState(() {
-                _environmentMetricsUpdateInterval = value;
-                _hasChanges = true;
-              });
-            },
-            description:
-                'Temperature, humidity, barometric pressure, gas resistance',
-            additionalWidget: _ToggleTile(
-              title: 'Display on Screen',
-              subtitle: 'Show environment data on device screen',
-              value: _environmentDisplayOnScreen,
-              onChanged: (value) {
-                setState(() {
-                  _environmentDisplayOnScreen = value;
-                  _hasChanges = true;
-                });
-              },
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          // Air Quality Section
-          _SectionHeader(
-            title: 'Air Quality',
-            icon: Icons.air,
-            color: AccentColors.teal,
-          ),
-          const SizedBox(height: 12),
-          _TelemetrySection(
-            enabled: _airQualityEnabled,
-            updateInterval: _airQualityUpdateInterval,
-            onEnabledChanged: (value) {
-              setState(() {
-                _airQualityEnabled = value;
-                _hasChanges = true;
-              });
-            },
-            onIntervalChanged: (value) {
-              setState(() {
-                _airQualityUpdateInterval = value;
-                _hasChanges = true;
-              });
-            },
-            description: 'PM1.0, PM2.5, PM10, particle counts, CO2',
-          ),
-
-          const SizedBox(height: 24),
-
-          // Power Metrics Section
-          _SectionHeader(
-            title: 'Power Metrics',
-            icon: Icons.electric_bolt,
-            color: AccentColors.orange,
-          ),
-          const SizedBox(height: 12),
-          _TelemetrySection(
-            enabled: _powerMetricsEnabled,
-            updateInterval: _powerMetricsUpdateInterval,
-            onEnabledChanged: (value) {
-              setState(() {
-                _powerMetricsEnabled = value;
-                _hasChanges = true;
-              });
-            },
-            onIntervalChanged: (value) {
-              setState(() {
-                _powerMetricsUpdateInterval = value;
-                _hasChanges = true;
-              });
-            },
-            description: 'Voltage and current for channels 1-3',
-          ),
-
-          SizedBox(height: 24),
-
-          // Info card
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: context.accentColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: context.accentColor.withValues(alpha: 0.3),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.info_outline, color: context.accentColor, size: 20),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Telemetry data is shared with all nodes on the mesh network. '
-                    'Shorter intervals increase airtime usage.',
+                  )
+                : Text(
+                    'Save',
                     style: TextStyle(
-                      fontSize: 13,
-                      color: context.textSecondary,
+                      color: context.accentColor,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                ),
-              ],
-            ),
           ),
-        ],
-      ),
+      ],
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.all(16),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate([
+              // Device Metrics Section
+              _SectionHeader(
+                title: 'Device Metrics',
+                icon: Icons.memory,
+                color: AccentColors.blue,
+              ),
+              const SizedBox(height: 12),
+              _TelemetrySection(
+                enabled: _deviceMetricsEnabled,
+                updateInterval: _deviceMetricsUpdateInterval,
+                onEnabledChanged: (value) {
+                  setState(() {
+                    _deviceMetricsEnabled = value;
+                    _hasChanges = true;
+                  });
+                },
+                onIntervalChanged: (value) {
+                  setState(() {
+                    _deviceMetricsUpdateInterval = value;
+                    _hasChanges = true;
+                  });
+                },
+                description:
+                    'Battery level, voltage, channel utilization, air util TX',
+              ),
+
+              const SizedBox(height: 24),
+
+              // Environment Metrics Section
+              _SectionHeader(
+                title: 'Environment Metrics',
+                icon: Icons.thermostat,
+                color: AccentColors.green,
+              ),
+              const SizedBox(height: 12),
+              _TelemetrySection(
+                enabled: _environmentMetricsEnabled,
+                updateInterval: _environmentMetricsUpdateInterval,
+                onEnabledChanged: (value) {
+                  setState(() {
+                    _environmentMetricsEnabled = value;
+                    _hasChanges = true;
+                  });
+                },
+                onIntervalChanged: (value) {
+                  setState(() {
+                    _environmentMetricsUpdateInterval = value;
+                    _hasChanges = true;
+                  });
+                },
+                description:
+                    'Temperature, humidity, barometric pressure, gas resistance',
+                additionalWidget: _ToggleTile(
+                  title: 'Display on Screen',
+                  subtitle: 'Show environment data on device screen',
+                  value: _environmentDisplayOnScreen,
+                  onChanged: (value) {
+                    setState(() {
+                      _environmentDisplayOnScreen = value;
+                      _hasChanges = true;
+                    });
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Air Quality Section
+              _SectionHeader(
+                title: 'Air Quality',
+                icon: Icons.air,
+                color: AccentColors.teal,
+              ),
+              const SizedBox(height: 12),
+              _TelemetrySection(
+                enabled: _airQualityEnabled,
+                updateInterval: _airQualityUpdateInterval,
+                onEnabledChanged: (value) {
+                  setState(() {
+                    _airQualityEnabled = value;
+                    _hasChanges = true;
+                  });
+                },
+                onIntervalChanged: (value) {
+                  setState(() {
+                    _airQualityUpdateInterval = value;
+                    _hasChanges = true;
+                  });
+                },
+                description: 'PM1.0, PM2.5, PM10, particle counts, CO2',
+              ),
+
+              const SizedBox(height: 24),
+
+              // Power Metrics Section
+              _SectionHeader(
+                title: 'Power Metrics',
+                icon: Icons.electric_bolt,
+                color: AccentColors.orange,
+              ),
+              const SizedBox(height: 12),
+              _TelemetrySection(
+                enabled: _powerMetricsEnabled,
+                updateInterval: _powerMetricsUpdateInterval,
+                onEnabledChanged: (value) {
+                  setState(() {
+                    _powerMetricsEnabled = value;
+                    _hasChanges = true;
+                  });
+                },
+                onIntervalChanged: (value) {
+                  setState(() {
+                    _powerMetricsUpdateInterval = value;
+                    _hasChanges = true;
+                  });
+                },
+                description: 'Voltage and current for channels 1-3',
+              ),
+
+              SizedBox(height: 24),
+
+              // Info card
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: context.accentColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: context.accentColor.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      color: context.accentColor,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Telemetry data is shared with all nodes on the mesh network. '
+                        'Shorter intervals increase airtime usage.',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: context.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ]),
+          ),
+        ),
+      ],
     );
   }
 }

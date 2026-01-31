@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/widgets/glass_scaffold.dart';
 import '../../providers/glyph_provider.dart';
 import '../../services/glyph_matrix_service.dart';
 
@@ -388,46 +389,41 @@ class _GlyphTestScreenState extends ConsumerState<GlyphTestScreen>
     final initState = ref.watch(glyphServiceInitProvider);
     final isSupported = ref.watch(glyphSupportedProvider);
 
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        elevation: 0,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'GLYPH MATRIX',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                letterSpacing: 2,
-              ),
+    return GlassScaffold.body(
+      titleWidget: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'GLYPH MATRIX',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+              letterSpacing: 2,
             ),
-            Text(
-              glyphService.deviceModel.toUpperCase(),
-              style: TextStyle(
-                color: Colors.white54,
-                fontSize: 11,
-                letterSpacing: 1,
-              ),
+          ),
+          Text(
+            glyphService.deviceModel.toUpperCase(),
+            style: TextStyle(
+              color: Colors.white54,
+              fontSize: 11,
+              letterSpacing: 1,
             ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(
-              Icons.power_settings_new,
-              color: _matrixState.any((row) => row.any((v) => v > 0))
-                  ? Colors.redAccent
-                  : Colors.white30,
-            ),
-            onPressed: _turnOff,
-            tooltip: 'Turn off',
           ),
         ],
       ),
+      actions: [
+        IconButton(
+          icon: Icon(
+            Icons.power_settings_new,
+            color: _matrixState.any((row) => row.any((v) => v > 0))
+                ? Colors.redAccent
+                : Colors.white30,
+          ),
+          onPressed: _turnOff,
+          tooltip: 'Turn off',
+        ),
+      ],
       body: initState.when(
         loading: () => _buildLoadingState(),
         error: (error, _) => _buildErrorState(error),

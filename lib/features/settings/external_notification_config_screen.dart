@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/logging.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
@@ -152,26 +153,25 @@ class _ExternalNotificationConfigScreenState
     final protocol = ref.watch(protocolServiceProvider);
     final isConnected = protocol.isConnected;
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        title: Text('External Notification'),
-        backgroundColor: context.surface,
-        actions: [
-          if (isConnected)
-            TextButton(
-              onPressed: _isSaving ? null : _saveConfig,
-              child: _isSaving
-                  ? LoadingIndicator(size: 20)
-                  : Text('Save', style: TextStyle(color: context.accentColor)),
-            ),
-        ],
-      ),
-      body: _isLoading
-          ? const ScreenLoadingIndicator()
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
+    return GlassScaffold(
+      title: 'External Notification',
+      actions: [
+        if (isConnected)
+          TextButton(
+            onPressed: _isSaving ? null : _saveConfig,
+            child: _isSaving
+                ? LoadingIndicator(size: 20)
+                : Text('Save', style: TextStyle(color: context.accentColor)),
+          ),
+      ],
+      slivers: [
+        if (_isLoading)
+          const SliverFillRemaining(child: ScreenLoadingIndicator())
+        else ...[
+          SliverPadding(
+            padding: const EdgeInsets.all(16),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
                 if (!isConnected)
                   Container(
                     padding: const EdgeInsets.all(16),
@@ -372,8 +372,11 @@ class _ExternalNotificationConfigScreenState
                 ]),
 
                 const SizedBox(height: 32),
-              ],
+              ]),
             ),
+          ),
+        ],
+      ],
     );
   }
 

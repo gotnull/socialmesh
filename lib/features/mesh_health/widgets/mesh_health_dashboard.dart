@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
+import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/ico_help_system.dart';
 import '../../../services/mesh_health/mesh_health_models.dart';
 import '../../../services/mesh_health/mesh_health_providers.dart';
@@ -22,54 +23,48 @@ class MeshHealthDashboard extends ConsumerWidget {
     return HelpTourController(
       topicId: 'mesh_health_overview',
       stepKeys: const {},
-      child: Scaffold(
-        backgroundColor: context.background,
-        appBar: AppBar(
-          backgroundColor: context.background,
-          title: Text(
-            'Mesh Health',
-            style: TextStyle(color: context.textPrimary),
-          ),
-          actions: [
-            IconButton(
-              icon: Icon(
-                healthState.isMonitoring ? Icons.pause : Icons.play_arrow,
-                color: healthState.isMonitoring
-                    ? const Color(0xFF00E5FF)
-                    : context.textSecondary,
-              ),
-              tooltip: healthState.isMonitoring ? 'Pause' : 'Resume',
-              onPressed: () {
-                ref.read(meshHealthProvider.notifier).toggleMonitoring();
-              },
+      child: GlassScaffold(
+        title: 'Mesh Health',
+        actions: [
+          IconButton(
+            icon: Icon(
+              healthState.isMonitoring ? Icons.pause : Icons.play_arrow,
+              color: healthState.isMonitoring
+                  ? const Color(0xFF00E5FF)
+                  : context.textSecondary,
             ),
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              tooltip: 'Reset Data',
-              onPressed: () {
-                ref.read(meshHealthProvider.notifier).reset();
-              },
-            ),
-            IcoHelpAppBarButton(topicId: 'mesh_health_overview'),
-          ],
-        ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildStatusHeader(healthState),
-              const SizedBox(height: 16),
-              _buildMetricsRow(healthState),
-              const SizedBox(height: 16),
-              _buildUtilizationChart(healthState),
-              const SizedBox(height: 16),
-              _buildIssuesSection(healthState),
-              const SizedBox(height: 16),
-              _buildTopContributors(healthState),
-            ],
+            tooltip: healthState.isMonitoring ? 'Pause' : 'Resume',
+            onPressed: () {
+              ref.read(meshHealthProvider.notifier).toggleMonitoring();
+            },
           ),
-        ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Reset Data',
+            onPressed: () {
+              ref.read(meshHealthProvider.notifier).reset();
+            },
+          ),
+          IcoHelpAppBarButton(topicId: 'mesh_health_overview'),
+        ],
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.all(16),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                _buildStatusHeader(healthState),
+                const SizedBox(height: 16),
+                _buildMetricsRow(healthState),
+                const SizedBox(height: 16),
+                _buildUtilizationChart(healthState),
+                const SizedBox(height: 16),
+                _buildIssuesSection(healthState),
+                const SizedBox(height: 16),
+                _buildTopContributors(healthState),
+              ]),
+            ),
+          ),
+        ],
       ),
     );
   }

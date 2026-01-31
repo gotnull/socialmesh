@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/help/help_content.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
+import '../../../core/widgets/glass_scaffold.dart';
 import '../../../features/onboarding/widgets/mesh_node_brain.dart';
 import '../../../providers/help_providers.dart';
 
@@ -50,16 +51,12 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen> {
     final helpState = ref.watch(helpProvider);
     final theme = Theme.of(context);
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        title: const Text('Help Center'),
-      ),
-      body: Column(
-        children: [
-          // Ico mascot header
-          Container(
+    return GlassScaffold(
+      title: 'Help Center',
+      slivers: [
+        // Ico mascot header
+        SliverToBoxAdapter(
+          child: Container(
             padding: const EdgeInsets.all(24),
             child: Column(
               children: [
@@ -85,9 +82,11 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen> {
               ],
             ),
           ),
+        ),
 
-          // Search bar
-          Padding(
+        // Search bar
+        SliverToBoxAdapter(
+          child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: TextField(
               controller: _searchController,
@@ -122,11 +121,13 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen> {
               onChanged: (value) => setState(() => _searchQuery = value),
             ),
           ),
+        ),
 
-          const SizedBox(height: 16),
+        const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
-          // Category filter chips
-          SingleChildScrollView(
+        // Category filter chips
+        SliverToBoxAdapter(
+          child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
@@ -138,44 +139,44 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen> {
               ],
             ),
           ),
+        ),
 
-          const SizedBox(height: 16),
+        const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
-          // Help topics list
-          Expanded(
-            child: _filteredTopics.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.search_off,
-                          size: 64,
-                          color: context.textTertiary,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No topics found',
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            color: context.textSecondary,
-                          ),
-                        ),
-                      ],
+        // Help topics list
+        if (_filteredTopics.isEmpty)
+          SliverFillRemaining(
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.search_off, size: 64, color: context.textTertiary),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No topics found',
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: context.textSecondary,
                     ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _filteredTopics.length,
-                    itemBuilder: (context, index) {
-                      final topic = _filteredTopics[index];
-                      final isCompleted = helpState.isTopicCompleted(topic.id);
-                      return _buildTopicCard(topic, isCompleted);
-                    },
                   ),
+                ],
+              ),
+            ),
+          )
+        else
+          SliverPadding(
+            padding: const EdgeInsets.all(16),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final topic = _filteredTopics[index];
+                final isCompleted = helpState.isTopicCompleted(topic.id);
+                return _buildTopicCard(topic, isCompleted);
+              }, childCount: _filteredTopics.length),
+            ),
           ),
 
-          // Settings section
-          Container(
+        // Settings section
+        SliverToBoxAdapter(
+          child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: context.surface,
@@ -226,8 +227,8 @@ class _HelpCenterScreenState extends ConsumerState<HelpCenterScreen> {
               ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

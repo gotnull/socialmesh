@@ -13,6 +13,7 @@ import '../../generated/meshtastic/config.pb.dart' as config_pb;
 import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
 import '../../core/widgets/loading_indicator.dart';
+import '../../core/widgets/glass_scaffold.dart';
 
 /// Screen for configuring LoRa radio settings
 class RadioConfigScreen extends ConsumerStatefulWidget {
@@ -150,47 +151,39 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
     return HelpTourController(
       topicId: 'radio_config_overview',
       stepKeys: const {},
-      child: Scaffold(
-        backgroundColor: context.background,
-        appBar: AppBar(
-          backgroundColor: context.background,
-          title: Text(
-            'Radio',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: context.textPrimary,
+      child: GlassScaffold(
+        title: 'Radio',
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            onPressed: () => ref
+                .read(helpProvider.notifier)
+                .startTour('radio_config_overview'),
+            tooltip: 'Help',
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: TextButton(
+              onPressed: _isLoading ? null : _saveConfig,
+              child: _isLoading
+                  ? LoadingIndicator(size: 20)
+                  : Text(
+                      'Save',
+                      style: TextStyle(
+                        color: context.accentColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
             ),
           ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.help_outline),
-              onPressed: () => ref
-                  .read(helpProvider.notifier)
-                  .startTour('radio_config_overview'),
-              tooltip: 'Help',
-            ),
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: TextButton(
-                onPressed: _isLoading ? null : _saveConfig,
-                child: _isLoading
-                    ? LoadingIndicator(size: 20)
-                    : Text(
-                        'Save',
-                        style: TextStyle(
-                          color: context.accentColor,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-              ),
-            ),
-          ],
-        ),
-        body: _isLoading
-            ? const ScreenLoadingIndicator()
-            : ListView(
-                padding: const EdgeInsets.symmetric(vertical: 8),
+        ],
+        slivers: [
+          if (_isLoading)
+            const SliverFillRemaining(child: ScreenLoadingIndicator())
+          else
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              sliver: SliverList.list(
                 children: [
                   const _SectionHeader(title: 'REGION'),
                   _buildRegionSelector(),
@@ -357,6 +350,8 @@ class _RadioConfigScreenState extends ConsumerState<RadioConfigScreen> {
                   const SizedBox(height: 32),
                 ],
               ),
+            ),
+        ],
       ),
     );
   }

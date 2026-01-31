@@ -7,6 +7,7 @@ import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/auto_scroll_text.dart';
 import '../../core/widgets/device_privacy_warning.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/node_avatar.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
@@ -40,66 +41,56 @@ class _LinkedDevicesScreenState extends ConsumerState<LinkedDevicesScreen> {
     final currentProfile = ref.watch(userProfileProvider);
 
     if (currentUser == null) {
-      return Scaffold(
-        backgroundColor: context.background,
-        appBar: AppBar(
-          backgroundColor: context.background,
-          title: Text(
-            'Linked Devices',
-            style: TextStyle(color: context.textPrimary),
-          ),
-        ),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.account_circle_outlined,
-                  size: 64,
-                  color: context.textTertiary,
+      return GlassScaffold(
+        title: 'Linked Devices',
+        slivers: [
+          SliverFillRemaining(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.account_circle_outlined,
+                      size: 64,
+                      color: context.textTertiary,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Sign In Required',
+                      style: TextStyle(
+                        color: context.textPrimary,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Sign in to link your Meshtastic devices to your social profile.',
+                      style: TextStyle(
+                        color: context.textSecondary,
+                        fontSize: 14,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  'Sign In Required',
-                  style: TextStyle(
-                    color: context.textPrimary,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Sign in to link your Meshtastic devices to your social profile.',
-                  style: TextStyle(color: context.textSecondary, fontSize: 14),
-                  textAlign: TextAlign.center,
-                ),
-              ],
+              ),
             ),
           ),
-        ),
+        ],
       );
     }
 
     final primaryNodeId = currentProfile.value?.primaryNodeId;
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.background,
-        title: Text(
-          'Linked Devices',
-          style: TextStyle(color: context.textPrimary),
-        ),
-      ),
-      body: linkedNodesAsync.when(
-        data: (linkedNodeIds) {
-          return RefreshIndicator(
-            onRefresh: () async {
-              ref.invalidate(linkedNodeIdsProvider);
-            },
-            child: CustomScrollView(
+    return GlassScaffold(
+      title: 'Linked Devices',
+      slivers: [
+        linkedNodesAsync.when(
+          data: (linkedNodeIds) {
+            return SliverMainAxisGroup(
               slivers: [
                 // Header info
                 SliverToBoxAdapter(
@@ -279,29 +270,37 @@ class _LinkedDevicesScreenState extends ConsumerState<LinkedDevicesScreen> {
                   ),
                 ),
               ],
+            );
+          },
+          loading: () => const SliverFillRemaining(
+            child: Center(child: CircularProgressIndicator()),
+          ),
+          error: (error, _) => SliverFillRemaining(
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 48,
+                    color: context.textTertiary,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Failed to load linked devices',
+                    style: TextStyle(color: context.textSecondary),
+                  ),
+                  const SizedBox(height: 16),
+                  OutlinedButton(
+                    onPressed: () => ref.invalidate(linkedNodeIdsProvider),
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
             ),
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.error_outline, size: 48, color: context.textTertiary),
-              const SizedBox(height: 16),
-              Text(
-                'Failed to load linked devices',
-                style: TextStyle(color: context.textSecondary),
-              ),
-              const SizedBox(height: 16),
-              OutlinedButton(
-                onPressed: () => ref.invalidate(linkedNodeIdsProvider),
-                child: const Text('Retry'),
-              ),
-            ],
           ),
         ),
-      ),
+      ],
     );
   }
 

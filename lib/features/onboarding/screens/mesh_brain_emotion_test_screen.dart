@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/widgets/glass_scaffold.dart';
 import '../../../providers/splash_mesh_provider.dart';
 import '../widgets/mesh_node_brain.dart';
 
@@ -50,46 +51,39 @@ class _MeshBrainEmotionTestScreenState
       error: (_, _) => SplashMeshConfig.defaultConfig,
     );
 
-    return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0A0A0F) : Colors.grey[100],
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        title: const Text('Emotion Configurator'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: _showSettingsSheet,
-            tooltip: 'Settings',
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Fixed brain preview at top
-          _buildFixedBrainPreview(isDark, meshConfig),
+    return GlassScaffold(
+      title: 'Emotion Configurator',
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.settings),
+          onPressed: _showSettingsSheet,
+          tooltip: 'Settings',
+        ),
+      ],
+      slivers: [
+        // Fixed brain preview at top
+        SliverToBoxAdapter(child: _buildFixedBrainPreview(isDark, meshConfig)),
 
-          // Category filter
-          _buildCategoryFilter(theme),
+        // Category filter
+        SliverToBoxAdapter(child: _buildCategoryFilter(theme)),
 
-          // Scrollable emotion grid
-          Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.all(16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                childAspectRatio: 0.85,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-              ),
-              itemCount: _filteredMoods.length,
-              itemBuilder: (context, index) {
-                final mood = _filteredMoods[index];
-                return _buildEmotionCard(mood, theme, isDark);
-              },
+        // Scrollable emotion grid
+        SliverPadding(
+          padding: const EdgeInsets.all(16),
+          sliver: SliverGrid(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              childAspectRatio: 0.85,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
             ),
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final mood = _filteredMoods[index];
+              return _buildEmotionCard(mood, theme, isDark);
+            }, childCount: _filteredMoods.length),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

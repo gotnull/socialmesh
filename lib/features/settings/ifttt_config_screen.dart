@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -222,72 +223,73 @@ class _IftttConfigScreenState extends ConsumerState<IftttConfigScreen> {
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
-      child: Scaffold(
-        backgroundColor: context.background,
-        appBar: AppBar(
-          title: const Text('IFTTT Integration'),
-          actions: [
-            if (hasPremium)
-              TextButton(onPressed: _saveConfig, child: const Text('Save'))
-            else
-              TextButton.icon(
-                onPressed: () => showPremiumInfoSheet(
-                  context: context,
-                  ref: ref,
-                  feature: PremiumFeature.iftttIntegration,
-                ),
-                icon: const Icon(Icons.lock, size: 14, color: Colors.grey),
-                label: Text(
-                  'Save',
-                  style: TextStyle(color: context.textSecondary),
-                ),
+      child: GlassScaffold(
+        title: 'IFTTT Integration',
+        actions: [
+          if (hasPremium)
+            TextButton(onPressed: _saveConfig, child: const Text('Save'))
+          else
+            TextButton.icon(
+              onPressed: () => showPremiumInfoSheet(
+                context: context,
+                ref: ref,
+                feature: PremiumFeature.iftttIntegration,
               ),
-          ],
-        ),
-        body: ListView(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          children: [
-            // Premium explanation card (only shown when not premium)
-            if (!hasPremium)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                child: PremiumExplanationCard(
-                  feature: PremiumFeature.iftttIntegration,
-                  title: 'Connect to 700+ Services',
-                  description:
-                      'Trigger smart home devices, log events to spreadsheets, send Discord/Slack messages, and more.',
-                  exampleTitle: 'Node goes offline',
-                  exampleDescription:
-                      'Automatically turn on a smart light or send yourself a notification when your node is no longer heard.',
-                  initiallyExpanded: true,
-                ),
+              icon: const Icon(Icons.lock, size: 14, color: Colors.grey),
+              label: Text(
+                'Save',
+                style: TextStyle(color: context.textSecondary),
               ),
-            _buildEnableTile(),
-            // Only show form fields when premium AND enabled
-            if (hasPremium && _enabled) ...[
-              const SizedBox(height: 16),
-              const _SectionHeader(title: 'WEBHOOK'),
-              _buildWebhookSection(),
-              const SizedBox(height: 16),
-              const _SectionHeader(title: 'MESSAGE TRIGGERS'),
-              _buildMessageTriggers(),
-              const SizedBox(height: 16),
-              const _SectionHeader(title: 'NODE STATUS TRIGGERS'),
-              _buildNodeTriggers(),
-              const SizedBox(height: 16),
-              const _SectionHeader(title: 'TELEMETRY TRIGGERS'),
-              _buildTelemetryTriggers(),
-              const SizedBox(height: 16),
-              const _SectionHeader(title: 'GEOFENCING'),
-              _buildGeofenceSettings(),
-            ],
-            const SizedBox(height: 16),
-            _buildInfoCard(),
-            const SizedBox(height: 8),
-            _buildEventNamesCard(),
-            const SizedBox(height: 32),
-          ],
-        ),
+            ),
+        ],
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                // Premium explanation card (only shown when not premium)
+                if (!hasPremium)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                    child: PremiumExplanationCard(
+                      feature: PremiumFeature.iftttIntegration,
+                      title: 'Connect to 700+ Services',
+                      description:
+                          'Trigger smart home devices, log events to spreadsheets, send Discord/Slack messages, and more.',
+                      exampleTitle: 'Node goes offline',
+                      exampleDescription:
+                          'Automatically turn on a smart light or send yourself a notification when your node is no longer heard.',
+                      initiallyExpanded: true,
+                    ),
+                  ),
+                _buildEnableTile(),
+                // Only show form fields when premium AND enabled
+                if (hasPremium && _enabled) ...[
+                  const SizedBox(height: 16),
+                  const _SectionHeader(title: 'WEBHOOK'),
+                  _buildWebhookSection(),
+                  const SizedBox(height: 16),
+                  const _SectionHeader(title: 'MESSAGE TRIGGERS'),
+                  _buildMessageTriggers(),
+                  const SizedBox(height: 16),
+                  const _SectionHeader(title: 'NODE STATUS TRIGGERS'),
+                  _buildNodeTriggers(),
+                  const SizedBox(height: 16),
+                  const _SectionHeader(title: 'TELEMETRY TRIGGERS'),
+                  _buildTelemetryTriggers(),
+                  const SizedBox(height: 16),
+                  const _SectionHeader(title: 'GEOFENCING'),
+                  _buildGeofenceSettings(),
+                ],
+                const SizedBox(height: 16),
+                _buildInfoCard(),
+                const SizedBox(height: 8),
+                _buildEventNamesCard(),
+                const SizedBox(height: 32),
+              ]),
+            ),
+          ),
+        ],
       ),
     );
   }

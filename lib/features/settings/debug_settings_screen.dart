@@ -13,6 +13,7 @@ import '../../core/logging.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animated_mesh_node.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../models/user_profile.dart';
 import '../../providers/profile_providers.dart';
 import '../../providers/app_providers.dart';
@@ -299,114 +300,103 @@ class _DebugSettingsScreenState extends ConsumerState<DebugSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        title: const Text('Debug Settings'),
-        centerTitle: true,
-        actions: [
-          // Quick expand/collapse all
-          IconButton(
-            onPressed: () {
-              final allExpanded =
-                  _meshNodeExpanded &&
-                  _introAnimationsExpanded &&
-                  _notificationExpanded &&
-                  _quickTestsExpanded;
-              setState(() {
-                _meshNodeExpanded = !allExpanded;
-                _introAnimationsExpanded = !allExpanded;
-                _notificationExpanded = !allExpanded;
-                _quickTestsExpanded = !allExpanded;
-              });
-            },
-            icon: Icon(
-              _meshNodeExpanded &&
-                      _introAnimationsExpanded &&
-                      _notificationExpanded &&
-                      _quickTestsExpanded
-                  ? Icons.unfold_less_rounded
-                  : Icons.unfold_more_rounded,
-              color: context.textSecondary,
-            ),
-            tooltip: 'Expand/Collapse all',
+    return GlassScaffold(
+      title: 'Debug Settings',
+      actions: [
+        // Quick expand/collapse all
+        IconButton(
+          onPressed: () {
+            final allExpanded =
+                _meshNodeExpanded &&
+                _introAnimationsExpanded &&
+                _notificationExpanded &&
+                _quickTestsExpanded;
+            setState(() {
+              _meshNodeExpanded = !allExpanded;
+              _introAnimationsExpanded = !allExpanded;
+              _notificationExpanded = !allExpanded;
+              _quickTestsExpanded = !allExpanded;
+            });
+          },
+          icon: Icon(
+            _meshNodeExpanded &&
+                    _introAnimationsExpanded &&
+                    _notificationExpanded &&
+                    _quickTestsExpanded
+                ? Icons.unfold_less_rounded
+                : Icons.unfold_more_rounded,
+            color: context.textSecondary,
           ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Scrollable content
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                _buildCollapsibleSection(
-                  title: 'Mesh Node Playground',
-                  subtitle: 'Test animated mesh configurations',
-                  icon: Icons.hub_rounded,
-                  iconColor: AppTheme.primaryMagenta,
-                  isExpanded: _meshNodeExpanded,
-                  onToggle: () =>
-                      setState(() => _meshNodeExpanded = !_meshNodeExpanded),
-                  child: _buildMeshNodeContent(),
+          tooltip: 'Expand/Collapse all',
+        ),
+      ],
+      bottomNavigationBar: _buildFixedBottomBar(),
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.all(16),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate([
+              _buildCollapsibleSection(
+                title: 'Mesh Node Playground',
+                subtitle: 'Test animated mesh configurations',
+                icon: Icons.hub_rounded,
+                iconColor: AppTheme.primaryMagenta,
+                isExpanded: _meshNodeExpanded,
+                onToggle: () =>
+                    setState(() => _meshNodeExpanded = !_meshNodeExpanded),
+                child: _buildMeshNodeContent(),
+              ),
+              const SizedBox(height: 12),
+              _buildCollapsibleSection(
+                title: 'Intro Animations',
+                subtitle: 'Preview splash screen animations',
+                icon: Icons.movie_filter_rounded,
+                iconColor: const Color(0xFF00E5FF),
+                isExpanded: _introAnimationsExpanded,
+                onToggle: () => setState(
+                  () => _introAnimationsExpanded = !_introAnimationsExpanded,
                 ),
-                const SizedBox(height: 12),
-                _buildCollapsibleSection(
-                  title: 'Intro Animations',
-                  subtitle: 'Preview splash screen animations',
-                  icon: Icons.movie_filter_rounded,
-                  iconColor: const Color(0xFF00E5FF),
-                  isExpanded: _introAnimationsExpanded,
-                  onToggle: () => setState(
-                    () => _introAnimationsExpanded = !_introAnimationsExpanded,
-                  ),
-                  child: _buildIntroAnimationsContent(),
+                child: _buildIntroAnimationsContent(),
+              ),
+              const SizedBox(height: 12),
+              _buildCollapsibleSection(
+                title: 'Push Notifications',
+                subtitle: 'Test notification delivery',
+                icon: Icons.notifications_rounded,
+                iconColor: AppTheme.accentOrange,
+                isExpanded: _notificationExpanded,
+                onToggle: () => setState(
+                  () => _notificationExpanded = !_notificationExpanded,
                 ),
-                const SizedBox(height: 12),
-                _buildCollapsibleSection(
-                  title: 'Push Notifications',
-                  subtitle: 'Test notification delivery',
-                  icon: Icons.notifications_rounded,
-                  iconColor: AppTheme.accentOrange,
-                  isExpanded: _notificationExpanded,
-                  onToggle: () => setState(
-                    () => _notificationExpanded = !_notificationExpanded,
-                  ),
-                  child: _buildNotificationContent(),
-                ),
-                const SizedBox(height: 12),
-                _buildCollapsibleSection(
-                  title: 'Quick Tests',
-                  subtitle: 'Debug utilities',
-                  icon: Icons.bug_report_rounded,
-                  iconColor: AppTheme.primaryBlue,
-                  isExpanded: _quickTestsExpanded,
-                  onToggle: () => setState(
-                    () => _quickTestsExpanded = !_quickTestsExpanded,
-                  ),
-                  child: _buildQuickTestsContent(),
-                ),
-                const SizedBox(height: 12),
-                _buildCollapsibleSection(
-                  title: 'Admin Tools',
-                  subtitle: 'Marketplace & social moderation',
-                  icon: Icons.admin_panel_settings_rounded,
-                  iconColor: AppTheme.accentOrange,
-                  isExpanded: _adminToolsExpanded,
-                  onToggle: () => setState(
-                    () => _adminToolsExpanded = !_adminToolsExpanded,
-                  ),
-                  child: _buildAdminToolsContent(),
-                ),
-                const SizedBox(height: 16),
-              ],
-            ),
+                child: _buildNotificationContent(),
+              ),
+              const SizedBox(height: 12),
+              _buildCollapsibleSection(
+                title: 'Quick Tests',
+                subtitle: 'Debug utilities',
+                icon: Icons.bug_report_rounded,
+                iconColor: AppTheme.primaryBlue,
+                isExpanded: _quickTestsExpanded,
+                onToggle: () =>
+                    setState(() => _quickTestsExpanded = !_quickTestsExpanded),
+                child: _buildQuickTestsContent(),
+              ),
+              const SizedBox(height: 12),
+              _buildCollapsibleSection(
+                title: 'Admin Tools',
+                subtitle: 'Marketplace & social moderation',
+                icon: Icons.admin_panel_settings_rounded,
+                iconColor: AppTheme.accentOrange,
+                isExpanded: _adminToolsExpanded,
+                onToggle: () =>
+                    setState(() => _adminToolsExpanded = !_adminToolsExpanded),
+                child: _buildAdminToolsContent(),
+              ),
+              const SizedBox(height: 16),
+            ]),
           ),
-          // Fixed bottom action bar
-          _buildFixedBottomBar(),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

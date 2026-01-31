@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/theme.dart';
 import '../../core/widgets/edge_fade.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../models/social.dart';
 
 class AdminPostsScreen extends StatefulWidget {
@@ -31,25 +32,23 @@ class _AdminPostsScreenState extends State<AdminPostsScreen> {
         .orderBy('createdAt', descending: true)
         .snapshots();
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Signals'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.delete_sweep_outlined),
-            tooltip: 'Delete all signals',
-            onPressed: () => _confirmBulkDelete(context),
-          ),
-          IconButton(
-            icon: const Icon(Icons.refresh_outlined),
-            tooltip: 'Refresh snapshot',
-            onPressed: () => setState(() {}),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Padding(
+    return GlassScaffold(
+      title: 'Signals',
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.delete_sweep_outlined),
+          tooltip: 'Delete all signals',
+          onPressed: () => _confirmBulkDelete(context),
+        ),
+        IconButton(
+          icon: const Icon(Icons.refresh_outlined),
+          tooltip: 'Refresh snapshot',
+          onPressed: () => setState(() {}),
+        ),
+      ],
+      slivers: [
+        SliverToBoxAdapter(
+          child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
             child: TextField(
               decoration: InputDecoration(
@@ -65,193 +64,192 @@ class _AdminPostsScreenState extends State<AdminPostsScreen> {
               onChanged: (value) => setState(() => _searchQuery = value.trim()),
             ),
           ),
-          Expanded(
-            child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-              stream: postsStream,
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return Center(
-                    child: Text(
-                      'Failed to load posts: ${snapshot.error}',
-                      style: TextStyle(color: context.textTertiary),
-                    ),
-                  );
-                }
+        ),
+        SliverFillRemaining(
+          child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+            stream: postsStream,
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return Center(
+                  child: Text(
+                    'Failed to load posts: ${snapshot.error}',
+                    style: TextStyle(color: context.textTertiary),
+                  ),
+                );
+              }
 
-                if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+              if (!snapshot.hasData) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-                final now = DateTime.now();
-                final allEntries = snapshot.data!.docs
-                    .map((doc) => _PostEntry.fromSnapshot(doc))
-                    .toList();
-                final totalCount = allEntries.length;
-                final signalCount = allEntries
-                    .where((entry) => entry.post.postMode == PostMode.signal)
-                    .length;
-                final expiredCount = allEntries.where((entry) {
+              final now = DateTime.now();
+              final allEntries = snapshot.data!.docs
+                  .map((doc) => _PostEntry.fromSnapshot(doc))
+                  .toList();
+              final totalCount = allEntries.length;
+              final signalCount = allEntries
+                  .where((entry) => entry.post.postMode == PostMode.signal)
+                  .length;
+              final expiredCount = allEntries.where((entry) {
+                final expiresAt = entry.post.expiresAt;
+                return expiresAt != null && expiresAt.isBefore(now);
+              }).length;
+              final locationCount = allEntries
+                  .where((entry) => entry.post.location != null)
+                  .length;
+              final mediaCount = allEntries
+                  .where((entry) => entry.post.mediaUrls.isNotEmpty)
+                  .length;
+
+              final entries = allEntries.where((entry) {
+                if (_showSignalsOnly &&
+                    entry.post.postMode != PostMode.signal) {
+                  return false;
+                }
+                if (_showExpiredOnly) {
                   final expiresAt = entry.post.expiresAt;
-                  return expiresAt != null && expiresAt.isBefore(now);
-                }).length;
-                final locationCount = allEntries
-                    .where((entry) => entry.post.location != null)
-                    .length;
-                final mediaCount = allEntries
-                    .where((entry) => entry.post.mediaUrls.isNotEmpty)
-                    .length;
-
-                final entries = allEntries.where((entry) {
-                  if (_showSignalsOnly &&
-                      entry.post.postMode != PostMode.signal) {
+                  if (expiresAt == null || expiresAt.isAfter(now)) {
                     return false;
                   }
-                  if (_showExpiredOnly) {
-                    final expiresAt = entry.post.expiresAt;
-                    if (expiresAt == null || expiresAt.isAfter(now)) {
-                      return false;
-                    }
-                  }
-                  if (_searchQuery.isNotEmpty) {
-                    final lower = _searchQuery.toLowerCase();
-                    final matchesContent = entry.post.content
-                        .toLowerCase()
-                        .contains(lower);
-                    final matchesAuthor = entry.post.authorId
-                        .toLowerCase()
-                        .contains(lower);
-                    if (!matchesContent && !matchesAuthor) {
-                      return false;
-                    }
-                  }
-                  if (_showWithLocation && entry.post.location == null) {
-                    return false;
-                  }
-                  if (_showWithMedia && entry.post.mediaUrls.isEmpty) {
-                    return false;
-                  }
-                  return true;
-                }).toList();
-                _lastTotalCount = totalCount;
-                _lastFilteredCount = entries.length;
-                _filteredDocRefs = entries.map((entry) => entry.docRef).toList();
-
-                if (entries.isEmpty) {
-                  return Center(
-                    child: Text(
-                      'No posts matched',
-                      style: TextStyle(color: context.textSecondary),
-                    ),
-                  );
                 }
+                if (_searchQuery.isNotEmpty) {
+                  final lower = _searchQuery.toLowerCase();
+                  final matchesContent = entry.post.content
+                      .toLowerCase()
+                      .contains(lower);
+                  final matchesAuthor = entry.post.authorId
+                      .toLowerCase()
+                      .contains(lower);
+                  if (!matchesContent && !matchesAuthor) {
+                    return false;
+                  }
+                }
+                if (_showWithLocation && entry.post.location == null) {
+                  return false;
+                }
+                if (_showWithMedia && entry.post.mediaUrls.isEmpty) {
+                  return false;
+                }
+                return true;
+              }).toList();
+              _lastTotalCount = totalCount;
+              _lastFilteredCount = entries.length;
+              _filteredDocRefs = entries.map((entry) => entry.docRef).toList();
 
-                return Column(
-                  children: [
-                    SizedBox(
-                      height: 44,
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: EdgeFade.end(
-                              fadeSize: 32,
-                              fadeColor: context.background,
-                              child: ListView(
-                                scrollDirection: Axis.horizontal,
-                                padding: const EdgeInsets.only(left: 16),
-                                children: [
-                                  _AdminFilterChip(
-                                    label: 'All',
-                                    count: totalCount,
-                                    isSelected:
-                                        !_showSignalsOnly &&
-                                        !_showExpiredOnly &&
-                                        !_showWithLocation &&
-                                        !_showWithMedia,
-                                    onTap: () => setState(() {
-                                      _showSignalsOnly = false;
-                                      _showExpiredOnly = false;
-                                      _showWithLocation = false;
-                                      _showWithMedia = false;
-                                    }),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  _AdminFilterChip(
-                                    label: 'Signals',
-                                    count: signalCount,
-                                    isSelected: _showSignalsOnly,
-                                    color: AccentColors.cyan,
-                                    onTap: () => setState(() {
-                                      _showSignalsOnly = true;
-                                      _showExpiredOnly = false;
-                                    }),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  _AdminFilterChip(
-                                    label: 'Expired',
-                                    count: expiredCount,
-                                    isSelected: _showExpiredOnly,
-                                    color: AppTheme.warningYellow,
-                                    onTap: () => setState(() {
-                                      _showSignalsOnly = false;
-                                      _showExpiredOnly = true;
-                                    }),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  _AdminFilterChip(
-                                    label: 'Location',
-                                    count: locationCount,
-                                    isSelected: _showWithLocation,
-                                    color: AccentColors.green,
-                                    onTap: () => setState(() {
-                                      _showWithLocation = !_showWithLocation;
-                                    }),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  _AdminFilterChip(
-                                    label: 'Media',
-                                    count: mediaCount,
-                                    isSelected: _showWithMedia,
-                                    color: AccentColors.orange,
-                                    onTap: () => setState(() {
-                                      _showWithMedia = !_showWithMedia;
-                                    }),
-                                  ),
-                                ],
-                              ),
+              if (entries.isEmpty) {
+                return Center(
+                  child: Text(
+                    'No posts matched',
+                    style: TextStyle(color: context.textSecondary),
+                  ),
+                );
+              }
+
+              return Column(
+                children: [
+                  SizedBox(
+                    height: 44,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: EdgeFade.end(
+                            fadeSize: 32,
+                            fadeColor: context.background,
+                            child: ListView(
+                              scrollDirection: Axis.horizontal,
+                              padding: const EdgeInsets.only(left: 16),
+                              children: [
+                                _AdminFilterChip(
+                                  label: 'All',
+                                  count: totalCount,
+                                  isSelected:
+                                      !_showSignalsOnly &&
+                                      !_showExpiredOnly &&
+                                      !_showWithLocation &&
+                                      !_showWithMedia,
+                                  onTap: () => setState(() {
+                                    _showSignalsOnly = false;
+                                    _showExpiredOnly = false;
+                                    _showWithLocation = false;
+                                    _showWithMedia = false;
+                                  }),
+                                ),
+                                const SizedBox(width: 8),
+                                _AdminFilterChip(
+                                  label: 'Signals',
+                                  count: signalCount,
+                                  isSelected: _showSignalsOnly,
+                                  color: AccentColors.cyan,
+                                  onTap: () => setState(() {
+                                    _showSignalsOnly = true;
+                                    _showExpiredOnly = false;
+                                  }),
+                                ),
+                                const SizedBox(width: 8),
+                                _AdminFilterChip(
+                                  label: 'Expired',
+                                  count: expiredCount,
+                                  isSelected: _showExpiredOnly,
+                                  color: AppTheme.warningYellow,
+                                  onTap: () => setState(() {
+                                    _showSignalsOnly = false;
+                                    _showExpiredOnly = true;
+                                  }),
+                                ),
+                                const SizedBox(width: 8),
+                                _AdminFilterChip(
+                                  label: 'Location',
+                                  count: locationCount,
+                                  isSelected: _showWithLocation,
+                                  color: AccentColors.green,
+                                  onTap: () => setState(() {
+                                    _showWithLocation = !_showWithLocation;
+                                  }),
+                                ),
+                                const SizedBox(width: 8),
+                                _AdminFilterChip(
+                                  label: 'Media',
+                                  count: mediaCount,
+                                  isSelected: _showWithMedia,
+                                  color: AccentColors.orange,
+                                  onTap: () => setState(() {
+                                    _showWithMedia = !_showWithMedia;
+                                  }),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Expanded(
-                      child: ListView.separated(
-                        padding: const EdgeInsets.only(
-                          left: 16,
-                          right: 16,
-                          bottom: 32,
                         ),
-                        itemCount: entries.length,
-                        separatorBuilder: (context, index) =>
-                            const SizedBox(height: 8),
-                        itemBuilder: (context, index) {
-                          final entry = entries[index];
-                          return _AdminPostCard(
-                            entry: entry,
-                            dateFormat: _dateFormat,
-                            onDelete: () =>
-                                _confirmDelete(context, entry.docRef),
-                          );
-                        },
-                      ),
+                      ],
                     ),
-                  ],
-                );
-              },
-            ),
+                  ),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: ListView.separated(
+                      padding: const EdgeInsets.only(
+                        left: 16,
+                        right: 16,
+                        bottom: 32,
+                      ),
+                      itemCount: entries.length,
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 8),
+                      itemBuilder: (context, index) {
+                        final entry = entries[index];
+                        return _AdminPostCard(
+                          entry: entry,
+                          dateFormat: _dateFormat,
+                          onDelete: () => _confirmDelete(context, entry.docRef),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -292,63 +290,57 @@ class _AdminPostsScreenState extends State<AdminPostsScreen> {
     final totalCount = _lastTotalCount;
     final filteredRefs = List<DocumentReference>.from(_filteredDocRefs);
 
-    final result =
-        await showDialog<_DeleteScope>(
-          context: context,
-          builder: (context) {
-            String input = '';
-            return StatefulBuilder(
-              builder: (context, setState) => AlertDialog(
-                title: const Text('Delete signals?'),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      hasFilters
-                          ? 'Delete filtered ($filteredCount) or all ($totalCount) signals.'
-                          : 'Delete all $totalCount signals.',
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'This cannot be undone. Type DELETE to confirm.',
-                      style: TextStyle(color: context.textSecondary),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      onChanged: (value) =>
-                          setState(() => input = value.trim()),
-                      decoration: const InputDecoration(
-                        hintText: 'DELETE',
-                      ),
-                    ),
-                  ],
+    final result = await showDialog<_DeleteScope>(
+      context: context,
+      builder: (context) {
+        String input = '';
+        return StatefulBuilder(
+          builder: (context, setState) => AlertDialog(
+            title: const Text('Delete signals?'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  hasFilters
+                      ? 'Delete filtered ($filteredCount) or all ($totalCount) signals.'
+                      : 'Delete all $totalCount signals.',
                 ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(null),
-                    child: const Text('Cancel'),
-                  ),
-                  if (hasFilters)
-                    TextButton(
-                      onPressed: input == 'DELETE'
-                          ? () => Navigator.of(context).pop(
-                                _DeleteScope.filtered,
-                              )
-                          : null,
-                      child: Text('Delete filtered ($filteredCount)'),
-                    ),
-                  TextButton(
-                    onPressed: input == 'DELETE'
-                        ? () => Navigator.of(context).pop(_DeleteScope.all)
-                        : null,
-                    child: Text('Delete all ($totalCount)'),
-                  ),
-                ],
+                const SizedBox(height: 12),
+                Text(
+                  'This cannot be undone. Type DELETE to confirm.',
+                  style: TextStyle(color: context.textSecondary),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  onChanged: (value) => setState(() => input = value.trim()),
+                  decoration: const InputDecoration(hintText: 'DELETE'),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(null),
+                child: const Text('Cancel'),
               ),
-            );
-          },
+              if (hasFilters)
+                TextButton(
+                  onPressed: input == 'DELETE'
+                      ? () => Navigator.of(context).pop(_DeleteScope.filtered)
+                      : null,
+                  child: Text('Delete filtered ($filteredCount)'),
+                ),
+              TextButton(
+                onPressed: input == 'DELETE'
+                    ? () => Navigator.of(context).pop(_DeleteScope.all)
+                    : null,
+                child: Text('Delete all ($totalCount)'),
+              ),
+            ],
+          ),
         );
+      },
+    );
 
     if (result == null) return;
 

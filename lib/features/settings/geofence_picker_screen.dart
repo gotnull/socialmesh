@@ -10,6 +10,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../../core/map_config.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/mesh_map_widget.dart';
 import '../../core/widgets/map_controls.dart';
 import '../../models/mesh_models.dart';
@@ -344,26 +345,22 @@ class _GeofencePickerScreenState extends ConsumerState<GeofencePickerScreen> {
       }
     }
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.card,
-        title: Text('Set Geofence'),
-        actions: [
-          TextButton(
-            onPressed: _center != null ? _confirmGeofence : null,
-            child: Text(
-              'Done',
-              style: TextStyle(
-                color: _center != null
-                    ? context.accentColor
-                    : context.textTertiary,
-                fontWeight: FontWeight.w600,
-              ),
+    return GlassScaffold.body(
+      title: 'Set Geofence',
+      actions: [
+        TextButton(
+          onPressed: _center != null ? _confirmGeofence : null,
+          child: Text(
+            'Done',
+            style: TextStyle(
+              color: _center != null
+                  ? context.accentColor
+                  : context.textTertiary,
+              fontWeight: FontWeight.w600,
             ),
           ),
-        ],
-      ),
+        ),
+      ],
       body: Stack(
         children: [
           // Map using shared MeshMapWidget
@@ -810,9 +807,7 @@ class _NodeMarker extends StatelessWidget {
   Widget build(BuildContext context) {
     final baseColor = isMyNode
         ? context.accentColor
-        : (presence.isActive
-              ? context.accentColor
-              : context.textTertiary);
+        : (presence.isActive ? context.accentColor : context.textTertiary);
 
     // Use green border if monitored, white if selected
     final borderColor = isMonitored
@@ -1050,9 +1045,7 @@ class _NodeListItem extends StatelessWidget {
     final node = nodeWithPos.node;
     final baseColor = isMyNode
         ? context.accentColor
-        : (presence.isActive
-              ? context.accentColor
-              : context.textTertiary);
+        : (presence.isActive ? context.accentColor : context.textTertiary);
 
     return Material(
       color: isMonitored

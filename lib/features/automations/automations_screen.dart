@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
@@ -31,115 +32,126 @@ class AutomationsScreen extends ConsumerWidget {
     return HelpTourController(
       topicId: 'automations_overview',
       stepKeys: const {},
-      child: Scaffold(
-        backgroundColor: context.background,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          centerTitle: true,
-          title: const Text('Automations'),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.history),
-              tooltip: 'Execution Log',
-              onPressed: () => _showExecutionLog(context, ref),
-            ),
-            IconButton(
-              icon: const Icon(Icons.add),
-              tooltip: 'New Automation',
-              onPressed: () => _showAddAutomation(context, ref),
-            ),
-            AppBarOverflowMenu<String>(
-              onSelected: (value) {
-                if (value == 'help') {
-                  ref
-                      .read(helpProvider.notifier)
-                      .startTour('automations_overview');
-                }
-              },
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'help',
-                  child: ListTile(
-                    leading: Icon(Icons.help_outline),
-                    title: Text('Help'),
-                    contentPadding: EdgeInsets.zero,
-                  ),
+      child: GlassScaffold(
+        title: 'Automations',
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history),
+            tooltip: 'Execution Log',
+            onPressed: () => _showExecutionLog(context, ref),
+          ),
+          IconButton(
+            icon: const Icon(Icons.add),
+            tooltip: 'New Automation',
+            onPressed: () => _showAddAutomation(context, ref),
+          ),
+          AppBarOverflowMenu<String>(
+            onSelected: (value) {
+              if (value == 'help') {
+                ref
+                    .read(helpProvider.notifier)
+                    .startTour('automations_overview');
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'help',
+                child: ListTile(
+                  leading: Icon(Icons.help_outline),
+                  title: Text('Help'),
+                  contentPadding: EdgeInsets.zero,
                 ),
-              ],
-            ),
-          ],
-        ),
-        body: automationsAsync.when(
+              ),
+            ],
+          ),
+        ],
+        slivers: automationsAsync.when(
           data: (automations) {
             if (automations.isEmpty) {
-              return _buildEmptyState(context, ref);
+              return _buildEmptyStateSlivers(context, ref);
             }
-            return _buildAutomationsList(context, ref, automations, stats);
+            return _buildAutomationsListSlivers(
+              context,
+              ref,
+              automations,
+              stats,
+            );
           },
-          loading: () => const ScreenLoadingIndicator(),
-          error: (error, _) => Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.error_outline,
-                  size: 48,
-                  color: AppTheme.errorRed,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Failed to load automations',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: 8),
-                TextButton(
-                  onPressed: () =>
-                      ref.read(automationsProvider.notifier).refresh(),
-                  child: const Text('Retry'),
-                ),
-              ],
+          loading: () => [
+            const SliverFillRemaining(
+              hasScrollBody: false,
+              child: ScreenLoadingIndicator(),
             ),
-          ),
+          ],
+          error: (error, _) => [
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      size: 48,
+                      color: AppTheme.errorRed,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Failed to load automations',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    TextButton(
+                      onPressed: () =>
+                          ref.read(automationsProvider.notifier).refresh(),
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  /// Build the first-visit/empty state as a guided automation builder
+  /// Build the first-visit/empty state as a guided automation builder - returns slivers
   /// This transforms "empty list" into "invitation to create"
-  Widget _buildEmptyState(BuildContext context, WidgetRef ref) {
+  List<Widget> _buildEmptyStateSlivers(BuildContext context, WidgetRef ref) {
     final hasAutomationsPack = ref.watch(
       hasFeatureProvider(PremiumFeature.automations),
     );
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Hero section - What this is
-          _buildHeroSection(context, hasAutomationsPack),
+    return [
+      SliverPadding(
+        padding: const EdgeInsets.all(16),
+        sliver: SliverList(
+          delegate: SliverChildListDelegate([
+            // Hero section - What this is
+            _buildHeroSection(context, hasAutomationsPack),
 
-          const SizedBox(height: 24),
+            const SizedBox(height: 24),
 
-          // Create from scratch CTA - Primary action
-          _buildCreateFromScratchCard(context, ref, hasAutomationsPack),
+            // Create from scratch CTA - Primary action
+            _buildCreateFromScratchCard(context, ref, hasAutomationsPack),
 
-          const SizedBox(height: 24),
+            const SizedBox(height: 24),
 
-          // Quick Start Templates - Secondary inspiration
-          _buildTemplatesSection(context, ref, hasAutomationsPack),
+            // Quick Start Templates - Secondary inspiration
+            _buildTemplatesSection(context, ref, hasAutomationsPack),
 
-          const SizedBox(height: 24),
+            const SizedBox(height: 24),
 
-          // Start with a Trigger - Exploration path
-          _buildTriggerCategoriesSection(context, ref, hasAutomationsPack),
+            // Start with a Trigger - Exploration path
+            _buildTriggerCategoriesSection(context, ref, hasAutomationsPack),
 
-          // Bottom padding
-          SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
-        ],
+            // Bottom padding
+            SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
+          ]),
+        ),
       ),
-    );
+    ];
   }
 
   /// Hero section explaining what automations are
@@ -559,86 +571,84 @@ class AutomationsScreen extends ConsumerWidget {
     }
   }
 
-  Widget _buildAutomationsList(
+  List<Widget> _buildAutomationsListSlivers(
     BuildContext context,
     WidgetRef ref,
     List<Automation> automations,
     AutomationStats stats,
   ) {
-    return CustomScrollView(
-      slivers: [
-        // Stats header
-        SliverToBoxAdapter(
-          child: Container(
-            margin: const EdgeInsets.all(16),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: context.card,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: context.border),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildStatItem(
-                  context,
-                  label: 'Total',
-                  value: stats.total.toString(),
-                  icon: Icons.bolt,
-                ),
-                Container(width: 1, height: 40, color: context.border),
-                _buildStatItem(
-                  context,
-                  label: 'Active',
-                  value: stats.enabled.toString(),
-                  icon: Icons.play_circle,
-                  color: AppTheme.successGreen,
-                ),
-                Container(width: 1, height: 40, color: context.border),
-                _buildStatItem(
-                  context,
-                  label: 'Executions',
-                  value: stats.totalTriggers.toString(),
-                  icon: Icons.trending_up,
-                ),
-              ],
-            ),
+    return [
+      // Stats header
+      SliverToBoxAdapter(
+        child: Container(
+          margin: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: context.card,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: context.border),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildStatItem(
+                context,
+                label: 'Total',
+                value: stats.total.toString(),
+                icon: Icons.bolt,
+              ),
+              Container(width: 1, height: 40, color: context.border),
+              _buildStatItem(
+                context,
+                label: 'Active',
+                value: stats.enabled.toString(),
+                icon: Icons.play_circle,
+                color: AppTheme.successGreen,
+              ),
+              Container(width: 1, height: 40, color: context.border),
+              _buildStatItem(
+                context,
+                label: 'Executions',
+                value: stats.totalTriggers.toString(),
+                icon: Icons.trending_up,
+              ),
+            ],
           ),
         ),
+      ),
 
-        // Automations list
-        SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          sliver: SliverList(
-            delegate: SliverChildBuilderDelegate((context, index) {
-              final automation = automations[index];
-              final animationsEnabled = ref.watch(animationsEnabledProvider);
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Perspective3DSlide(
-                  index: index,
-                  direction: SlideDirection.left,
-                  enabled: animationsEnabled,
-                  child: AutomationCard(
-                    automation: automation,
-                    onToggle: (enabled) {
-                      ref
-                          .read(automationsProvider.notifier)
-                          .toggleAutomation(automation.id, enabled);
-                    },
-                    onTap: () => _editAutomation(context, ref, automation),
-                    onDelete: () => _confirmDelete(context, ref, automation),
-                  ),
+      // Automations list
+      SliverPadding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        sliver: SliverList(
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final automation = automations[index];
+            final animationsEnabled = ref.watch(animationsEnabledProvider);
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Perspective3DSlide(
+                index: index,
+                direction: SlideDirection.left,
+                enabled: animationsEnabled,
+                child: AutomationCard(
+                  automation: automation,
+                  onToggle: (enabled) {
+                    ref
+                        .read(automationsProvider.notifier)
+                        .toggleAutomation(automation.id, enabled);
+                  },
+                  onTap: () => _editAutomation(context, ref, automation),
+                  onDelete: () => _confirmDelete(context, ref, automation),
                 ),
-              );
-            }, childCount: automations.length),
-          ),
+              ),
+            );
+          }, childCount: automations.length),
         ),
+      ),
 
-        // Bottom padding for FAB
-        const SliverToBoxAdapter(child: SizedBox(height: 100)),
-      ],
-    );
+      // Bottom padding for FAB
+      const SliverToBoxAdapter(child: SizedBox(height: 100)),
+    ];
   }
 
   Widget _buildStatItem(

@@ -9,6 +9,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../core/constants.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/auto_scroll_text.dart';
 import '../../core/widgets/info_table.dart';
 import '../../models/world_mesh_node.dart';
@@ -276,18 +277,16 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
     final lastSeenAge = node.lastSeen != null
         ? DateTime.now().difference(node.lastSeen!)
         : null;
-    final statusText = presenceStatusText(
-      node.presenceConfidence,
-      lastSeenAge,
-    );
+    final statusText = presenceStatusText(node.presenceConfidence, lastSeenAge);
 
-    final docRef =
-        await FirebaseFirestore.instance.collection('shared_nodes').add({
-      'nodeId': _nodeId,
-      'name': node.displayName,
-      'description': '${node.role} • ${node.hwModel} • $statusText',
-      'createdAt': FieldValue.serverTimestamp(),
-    });
+    final docRef = await FirebaseFirestore.instance
+        .collection('shared_nodes')
+        .add({
+          'nodeId': _nodeId,
+          'name': node.displayName,
+          'description': '${node.role} • ${node.hwModel} • $statusText',
+          'createdAt': FieldValue.serverTimestamp(),
+        });
 
     final shareUrl = AppUrls.shareNodeUrl(docRef.id);
 
@@ -501,99 +500,96 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
   Widget build(BuildContext context) {
     final node = _node;
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.background,
-        title: AutoScrollText(
-          node.longName.isNotEmpty ? node.longName : node.shortName,
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: context.textPrimary,
-          ),
-        ),
-        actions: [
-          // Share button
-          IconButton(
-            icon: const Icon(Icons.share),
-            tooltip: 'Share node info',
-            onPressed: _shareNode,
-          ),
-          // Live watch toggle
-          IconButton(
-            icon: _isRefreshing
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Icon(
-                    _isLiveWatching ? Icons.sensors : Icons.sensors_off,
-                    color: _isLiveWatching ? AccentColors.green : null,
-                  ),
-            tooltip: _isLiveWatching ? 'Stop watching' : 'Watch live',
-            onPressed: _isRefreshing ? null : _toggleLiveWatching,
-          ),
-          // Favorite toggle
-          IconButton(
-            icon: Icon(
-              _isFavorite ? Icons.star : Icons.star_border,
-              color: _isFavorite ? const Color(0xFFFFD700) : null,
-            ),
-            tooltip: _isFavorite ? 'Remove from favorites' : 'Add to favorites',
-            onPressed: _toggleFavorite,
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Status card
-            _buildStatusCard(node),
-            const SizedBox(height: 16),
-
-            // Quick actions
-            _buildQuickActions(node),
-            const SizedBox(height: 24),
-
-            // Device info section
-            _buildSectionHeader('Device Info'),
-            const SizedBox(height: 8),
-            _buildDeviceInfoTable(node),
-            const SizedBox(height: 24),
-
-            // Metrics section
-            _buildSectionHeader('Device Metrics'),
-            const SizedBox(height: 8),
-            _buildMetricsTable(node),
-            const SizedBox(height: 24),
-
-            // Network section
-            _buildSectionHeader('Network'),
-            const SizedBox(height: 8),
-            _buildNetworkSection(node),
-            const SizedBox(height: 24),
-
-            // Charts section
-            _buildSectionHeader('Trends'),
-            const SizedBox(height: 8),
-            NodeHistoryCharts(
-              history: _history,
-              accentColor: context.accentColor,
-            ),
-            const SizedBox(height: 24),
-
-            // History section
-            _buildHistorySectionHeader(),
-            const SizedBox(height: 8),
-            _buildHistorySection(),
-            const SizedBox(height: 32),
-          ],
+    return GlassScaffold(
+      titleWidget: AutoScrollText(
+        node.longName.isNotEmpty ? node.longName : node.shortName,
+        style: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: context.textPrimary,
         ),
       ),
+      actions: [
+        // Share button
+        IconButton(
+          icon: const Icon(Icons.share),
+          tooltip: 'Share node info',
+          onPressed: _shareNode,
+        ),
+        // Live watch toggle
+        IconButton(
+          icon: _isRefreshing
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Icon(
+                  _isLiveWatching ? Icons.sensors : Icons.sensors_off,
+                  color: _isLiveWatching ? AccentColors.green : null,
+                ),
+          tooltip: _isLiveWatching ? 'Stop watching' : 'Watch live',
+          onPressed: _isRefreshing ? null : _toggleLiveWatching,
+        ),
+        // Favorite toggle
+        IconButton(
+          icon: Icon(
+            _isFavorite ? Icons.star : Icons.star_border,
+            color: _isFavorite ? const Color(0xFFFFD700) : null,
+          ),
+          tooltip: _isFavorite ? 'Remove from favorites' : 'Add to favorites',
+          onPressed: _toggleFavorite,
+        ),
+      ],
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.all(16),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate([
+              // Status card
+              _buildStatusCard(node),
+              const SizedBox(height: 16),
+
+              // Quick actions
+              _buildQuickActions(node),
+              const SizedBox(height: 24),
+
+              // Device info section
+              _buildSectionHeader('Device Info'),
+              const SizedBox(height: 8),
+              _buildDeviceInfoTable(node),
+              const SizedBox(height: 24),
+
+              // Metrics section
+              _buildSectionHeader('Device Metrics'),
+              const SizedBox(height: 8),
+              _buildMetricsTable(node),
+              const SizedBox(height: 24),
+
+              // Network section
+              _buildSectionHeader('Network'),
+              const SizedBox(height: 8),
+              _buildNetworkSection(node),
+              const SizedBox(height: 24),
+
+              // Charts section
+              _buildSectionHeader('Trends'),
+              const SizedBox(height: 8),
+              NodeHistoryCharts(
+                history: _history,
+                accentColor: context.accentColor,
+              ),
+              const SizedBox(height: 24),
+
+              // History section
+              _buildHistorySectionHeader(),
+              const SizedBox(height: 8),
+              _buildHistorySection(),
+              const SizedBox(height: 32),
+            ]),
+          ),
+        ),
+      ],
     );
   }
 
@@ -602,8 +598,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
         ? DateTime.now().difference(node.lastSeen!)
         : null;
     final statusColor = _presenceColor(context, node.presenceConfidence);
-    final statusText =
-        presenceStatusText(node.presenceConfidence, lastSeenAge);
+    final statusText = presenceStatusText(node.presenceConfidence, lastSeenAge);
 
     return Container(
       padding: const EdgeInsets.all(16),

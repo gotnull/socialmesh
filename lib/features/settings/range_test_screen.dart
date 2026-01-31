@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
@@ -350,26 +351,25 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
             ? '!${_selectedTargetNode!.toRadixString(16)}'
             : 'Select target');
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.surface,
-        title: Text('Range Test'),
-        actions: [
-          if (!_isRunning)
-            TextButton(
-              onPressed: _isSaving ? null : _saveConfig,
-              child: _isSaving
-                  ? LoadingIndicator(size: 20)
-                  : Text('Save', style: TextStyle(color: context.accentColor)),
-            ),
-        ],
-      ),
-      body: _isLoading
-          ? const ScreenLoadingIndicator()
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
+    return GlassScaffold(
+      title: 'Range Test',
+      actions: [
+        if (!_isRunning)
+          TextButton(
+            onPressed: _isSaving ? null : _saveConfig,
+            child: _isSaving
+                ? LoadingIndicator(size: 20)
+                : Text('Save', style: TextStyle(color: context.accentColor)),
+          ),
+      ],
+      slivers: [
+        if (_isLoading)
+          const SliverFillRemaining(child: ScreenLoadingIndicator())
+        else
+          SliverPadding(
+            padding: const EdgeInsets.all(16),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
                 // Test Status Card
                 _buildStatusCard(targetName),
 
@@ -393,8 +393,10 @@ class _RangeTestScreenState extends ConsumerState<RangeTestScreen> {
                   _buildSectionTitle('About Range Test'),
                   _buildInfoCard(),
                 ],
-              ],
+              ]),
             ),
+          ),
+      ],
     );
   }
 

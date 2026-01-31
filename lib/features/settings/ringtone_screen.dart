@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/premium_feature_gate.dart';
 import '../../core/widgets/premium_gating.dart';
 import '../../models/subscription_models.dart';
@@ -887,16 +888,12 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
     }
   }
 
-  /// Returns true if premium is required for the current selection and user doesn't have it.
-  bool get _requiresPremiumForSave {
-    // Saving library or custom ringtones requires premium
-    return (_selectedSource == 'library' || _selectedSource == 'custom') &&
-        !ref.read(hasFeatureProvider(PremiumFeature.customRingtones));
-  }
-
   Future<void> _saveRingtone() async {
-    // Check if premium is required for saving this ringtone
-    if (_requiresPremiumForSave) {
+    // Check premium - required for ALL ringtone changes
+    final hasPremium = ref.read(
+      hasFeatureProvider(PremiumFeature.customRingtones),
+    );
+    if (!hasPremium) {
       showPremiumInfoSheet(
         context: context,
         ref: ref,
@@ -1118,20 +1115,15 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
   @override
   Widget build(BuildContext context) {
     final customRingtones = ref.watch(customRingtonesProvider);
-    final needsPremiumForSave = _requiresPremiumForSave;
+    final hasPremium = ref.watch(
+      hasFeatureProvider(PremiumFeature.customRingtones),
+    );
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.background,
-        title: Text(
-          'Ringtone',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: context.textPrimary,
-          ),
-        ),
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      behavior: HitTestBehavior.opaque,
+      child: GlassScaffold(
+        title: 'Ringtone',
         actions: [
           IconButton(
             onPressed: _showRtttlHelp,
@@ -1143,7 +1135,9 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
               padding: EdgeInsets.only(right: 16),
               child: LoadingIndicator(size: 20),
             )
-          else if (needsPremiumForSave)
+          else if (hasPremium)
+            TextButton(onPressed: _saveRingtone, child: const Text('Save'))
+          else
             TextButton.icon(
               onPressed: () => showPremiumInfoSheet(
                 context: context,
@@ -1155,597 +1149,23 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                 'Save',
                 style: TextStyle(color: context.textSecondary),
               ),
-            )
-          else
-            TextButton(onPressed: _saveRingtone, child: const Text('Save')),
+            ),
         ],
-      ),
-      body: GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(),
-        behavior: HitTestBehavior.opaque,
-        child: _loading
-            ? Center(child: LoadingIndicator(size: 48))
-            : ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  // Current RTTTL input
-                  Text(
-                    'RTTTL STRING',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: context.textTertiary,
-                      letterSpacing: 1,
-                    ),
-                  ),
-                  SizedBox(height: 12),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: context.card,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        TextField(
-                          controller: _rtttlController,
-                          style: TextStyle(
-                            color: context.textPrimary,
-                            fontFamily: AppTheme.fontFamily,
-                            fontSize: 13,
-                          ),
-                          maxLines: 4,
-                          decoration: InputDecoration(
-                            hintText: 'Paste or select an RTTTL ringtone...',
-                            hintStyle: TextStyle(
-                              color: context.textTertiary.withValues(
-                                alpha: 0.5,
-                              ),
-                              fontFamily: AppTheme.fontFamily,
-                              fontSize: 13,
-                            ),
-                            filled: true,
-                            fillColor: context.background,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: _validationError != null
-                                  ? BorderSide(
-                                      color: AppTheme.errorRed,
-                                      width: 1,
-                                    )
-                                  : BorderSide.none,
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: _validationError != null
-                                  ? BorderSide(
-                                      color: AppTheme.errorRed,
-                                      width: 1,
-                                    )
-                                  : BorderSide.none,
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(
-                                color: _validationError != null
-                                    ? AppTheme.errorRed
-                                    : context.accentColor,
-                                width: 1,
-                              ),
-                            ),
-                            contentPadding: const EdgeInsets.all(12),
-                          ),
-                        ),
-                        if (_validationError != null) ...[
-                          SizedBox(height: 8),
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.error_outline,
-                                size: 14,
-                                color: AppTheme.errorRed,
-                              ),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  _validationError!,
-                                  style: const TextStyle(
-                                    color: AppTheme.errorRed,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            // Play/Preview button
-                            ElevatedButton.icon(
-                              onPressed: _playPreview,
-                              icon: Icon(
-                                _playing ? Icons.stop : Icons.play_arrow,
-                                size: 20,
-                              ),
-                              label: Text(_playing ? 'Stop' : 'Preview'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: _playing
-                                    ? AppTheme.errorRed
-                                    : context.accentColor,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                            ),
-                            const Spacer(),
-                            TextButton.icon(
-                              onPressed: () {
-                                _rtttlController.clear();
-                                setState(() {
-                                  _selectedPresetIndex = -1;
-                                  _validationError = null;
-                                });
-                              },
-                              icon: Icon(Icons.clear, size: 16),
-                              label: Text('Clear'),
-                              style: TextButton.styleFrom(
-                                foregroundColor: context.textSecondary,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                'Tap Preview to hear, then Save to device',
-                                style: TextStyle(
-                                  color: context.textSecondary.withValues(
-                                    alpha: 0.7,
-                                  ),
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
-                            Builder(
-                              builder: (context) {
-                                final len = _rtttlController.text.trim().length;
-                                final isTooLong = len > _maxRtttlLength;
-                                return Text(
-                                  '$len/$_maxRtttlLength',
-                                  style: TextStyle(
-                                    color: isTooLong
-                                        ? AppTheme.warningYellow
-                                        : context.textTertiary,
-                                    fontSize: 12,
-                                    fontWeight: isTooLong
-                                        ? FontWeight.w600
-                                        : FontWeight.normal,
-                                  ),
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 24),
-
-                  // Browse Library section
-                  Text(
-                    'RINGTONE LIBRARY',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: context.textTertiary,
-                      letterSpacing: 1,
-                    ),
-                  ),
-                  SizedBox(height: 12),
-                  InkWell(
-                    onTap: _showLibraryBrowser,
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: context.card,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: context.accentColor.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 48,
-                            height: 48,
-                            decoration: BoxDecoration(
-                              color: context.accentColor.withValues(
-                                alpha: 0.15,
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              Icons.library_music,
-                              color: context.accentColor,
-                              size: 24,
-                            ),
-                          ),
-                          SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Text(
-                                      'Browse ${_libraryToneCount > 0 ? '${(_libraryToneCount / 1000).toStringAsFixed(1).replaceAll('.0', '')}k+' : ''} Ringtones',
-                                      style: TextStyle(
-                                        color: context.textPrimary,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    if (!ref.watch(
-                                      hasFeatureProvider(
-                                        PremiumFeature.customRingtones,
-                                      ),
-                                    )) ...[
-                                      SizedBox(width: 8),
-                                      Icon(
-                                        Icons.star,
-                                        color: context.accentColor,
-                                        size: 16,
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Search classic tunes, TV themes, movie soundtracks, and more',
-                                  style: TextStyle(
-                                    color: context.textSecondary.withValues(
-                                      alpha: 0.8,
-                                    ),
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(width: 8),
-                          Icon(
-                            Icons.arrow_forward_ios,
-                            color: context.accentColor,
-                            size: 18,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 24),
-
-                  // Selected ringtone section (unified across all sources)
-                  if (_selectedName != null) ...[
-                    Text(
-                      'SELECTED RINGTONE',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: context.textTertiary,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                    SizedBox(height: 12),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: context.card,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: context.accentColor.withValues(alpha: 0.3),
-                          width: 1,
-                        ),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        child: Row(
-                          children: [
-                            // Icon based on source
-                            Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: context.accentColor.withValues(
-                                  alpha: 0.15,
-                                ),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                _selectedSource == 'library'
-                                    ? Icons.library_music
-                                    : _selectedSource == 'custom'
-                                    ? Icons.star
-                                    : Icons.music_note,
-                                color: context.accentColor,
-                                size: 20,
-                              ),
-                            ),
-                            SizedBox(width: 12),
-                            // Title and description
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    _selectedName!,
-                                    style: TextStyle(
-                                      color: context.accentColor,
-                                      fontWeight: FontWeight.w600,
-
-                                      fontSize: 15,
-                                    ),
-                                  ),
-                                  if (_selectedDescription != null)
-                                    Text(
-                                      _selectedDescription!,
-                                      style: TextStyle(
-                                        color: context.textSecondary,
-                                        fontSize: 13,
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                            // Play button
-                            GestureDetector(
-                              onTap: () => _playSelectedRingtone(),
-                              child: Container(
-                                width: 36,
-                                height: 36,
-                                decoration: BoxDecoration(
-                                  color: _playingSelected
-                                      ? context.accentColor.withValues(
-                                          alpha: 0.15,
-                                        )
-                                      : context.background,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Icon(
-                                  _playingSelected
-                                      ? Icons.stop
-                                      : Icons.play_arrow,
-                                  color: _playingSelected
-                                      ? context.accentColor
-                                      : context.textSecondary,
-                                  size: 20,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            // Clear button
-                            GestureDetector(
-                              onTap: () async {
-                                setState(() {
-                                  _selectedName = null;
-                                  _selectedDescription = null;
-                                  _selectedSource = null;
-                                  _selectedPresetIndex = -1;
-                                  _showingCustom = false;
-                                });
-                                // Clear from persistent storage
-                                try {
-                                  final settings = await ref.read(
-                                    settingsServiceProvider.future,
-                                  );
-                                  await settings.clearSelectedRingtone();
-                                } catch (e) {
-                                  // Ignore
-                                }
-                              },
-                              child: Container(
-                                width: 36,
-                                height: 36,
-                                decoration: BoxDecoration(
-                                  color: context.background,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Icon(
-                                  Icons.close,
-                                  color: context.textSecondary,
-                                  size: 20,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 24),
-                  ],
-
-                  // Built-in presets section
-                  Text(
-                    'BUILT-IN PRESETS',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: context.textTertiary,
-                      letterSpacing: 1,
-                    ),
-                  ),
-                  SizedBox(height: 12),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: context.card,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      children: _builtInPresets.asMap().entries.map((entry) {
-                        final index = entry.key;
-                        final preset = entry.value;
-                        final isSelected =
-                            !_showingCustom && _selectedPresetIndex == index;
-                        final isPlaying =
-                            !_playingCustomPreset &&
-                            _playingPresetIndex == index;
-
-                        return Column(
-                          children: [
-                            InkWell(
-                              onTap: () => _selectPreset(preset, index),
-                              borderRadius: index == 0
-                                  ? const BorderRadius.vertical(
-                                      top: Radius.circular(12),
-                                    )
-                                  : index == _builtInPresets.length - 1
-                                  ? const BorderRadius.vertical(
-                                      bottom: Radius.circular(12),
-                                    )
-                                  : BorderRadius.zero,
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
-                                ),
-                                child: Row(
-                                  children: [
-                                    // Music icon
-                                    Container(
-                                      width: 40,
-                                      height: 40,
-                                      decoration: BoxDecoration(
-                                        color: isSelected
-                                            ? context.accentColor.withValues(
-                                                alpha: 0.15,
-                                              )
-                                            : context.background,
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Icon(
-                                        isSelected
-                                            ? Icons.music_note
-                                            : Icons.music_note_outlined,
-                                        color: isSelected
-                                            ? context.accentColor
-                                            : context.textSecondary,
-                                        size: 20,
-                                      ),
-                                    ),
-                                    SizedBox(width: 12),
-                                    // Title and description
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            preset.name,
-                                            style: TextStyle(
-                                              color: isSelected
-                                                  ? context.accentColor
-                                                  : context.textPrimary,
-                                              fontWeight: isSelected
-                                                  ? FontWeight.w600
-                                                  : FontWeight.w500,
-
-                                              fontSize: 15,
-                                            ),
-                                          ),
-                                          SizedBox(height: 2),
-                                          Text(
-                                            preset.description,
-                                            style: TextStyle(
-                                              color: context.textSecondary,
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    SizedBox(width: 8),
-                                    // Play button
-                                    SizedBox(
-                                      width: 40,
-                                      height: 40,
-                                      child: Material(
-                                        color: isPlaying
-                                            ? AppTheme.errorRed.withValues(
-                                                alpha: 0.15,
-                                              )
-                                            : context.background,
-                                        borderRadius: BorderRadius.circular(20),
-                                        child: InkWell(
-                                          onTap: () =>
-                                              _playPreset(preset, index),
-                                          borderRadius: BorderRadius.circular(
-                                            20,
-                                          ),
-                                          child: Icon(
-                                            isPlaying
-                                                ? Icons.stop
-                                                : Icons.play_arrow,
-                                            color: isPlaying
-                                                ? AppTheme.errorRed
-                                                : context.textSecondary,
-                                            size: 20,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    SizedBox(width: 8),
-                                    // Selected indicator
-                                    SizedBox(
-                                      width: 24,
-                                      child: isSelected
-                                          ? Icon(
-                                              Icons.check_circle,
-                                              color: context.accentColor,
-                                              size: 22,
-                                            )
-                                          : Icon(
-                                              Icons.chevron_right,
-                                              color: context.textTertiary,
-                                              size: 22,
-                                            ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            if (index < _builtInPresets.length - 1)
-                              Divider(
-                                height: 1,
-                                indent: 68,
-                                color: context.border,
-                              ),
-                          ],
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                  SizedBox(height: 24),
-
-                  // Custom presets section
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
+        slivers: _loading
+            ? [
+                const SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(child: LoadingIndicator(size: 48)),
+                ),
+              ]
+            : [
+                SliverPadding(
+                  padding: const EdgeInsets.all(16),
+                  sliver: SliverList(
+                    delegate: SliverChildListDelegate([
+                      // Current RTTTL input
                       Text(
-                        'CUSTOM PRESETS',
+                        'RTTTL STRING',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -1753,206 +1173,565 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                           letterSpacing: 1,
                         ),
                       ),
-                      DisabledControlWithLock(
-                        feature: PremiumFeature.customRingtones,
-                        child: TextButton.icon(
-                          onPressed: _showAddCustomDialog,
-                          icon: const Icon(Icons.add, size: 18),
-                          label: const Text('Add'),
-                          style: TextButton.styleFrom(
-                            foregroundColor: context.accentColor,
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                      SizedBox(height: 12),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: context.card,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            TextField(
+                              controller: _rtttlController,
+                              style: TextStyle(
+                                color: context.textPrimary,
+                                fontFamily: AppTheme.fontFamily,
+                                fontSize: 13,
+                              ),
+                              maxLines: 4,
+                              decoration: InputDecoration(
+                                hintText:
+                                    'Paste or select an RTTTL ringtone...',
+                                hintStyle: TextStyle(
+                                  color: context.textTertiary.withValues(
+                                    alpha: 0.5,
+                                  ),
+                                  fontFamily: AppTheme.fontFamily,
+                                  fontSize: 13,
+                                ),
+                                filled: true,
+                                fillColor: context.background,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: _validationError != null
+                                      ? BorderSide(
+                                          color: AppTheme.errorRed,
+                                          width: 1,
+                                        )
+                                      : BorderSide.none,
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: _validationError != null
+                                      ? BorderSide(
+                                          color: AppTheme.errorRed,
+                                          width: 1,
+                                        )
+                                      : BorderSide.none,
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(
+                                    color: _validationError != null
+                                        ? AppTheme.errorRed
+                                        : context.accentColor,
+                                    width: 1,
+                                  ),
+                                ),
+                                contentPadding: const EdgeInsets.all(12),
+                              ),
+                            ),
+                            if (_validationError != null) ...[
+                              SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.error_outline,
+                                    size: 14,
+                                    color: AppTheme.errorRed,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      _validationError!,
+                                      style: const TextStyle(
+                                        color: AppTheme.errorRed,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                // Play/Preview button
+                                ElevatedButton.icon(
+                                  onPressed: _playPreview,
+                                  icon: Icon(
+                                    _playing ? Icons.stop : Icons.play_arrow,
+                                    size: 20,
+                                  ),
+                                  label: Text(_playing ? 'Stop' : 'Preview'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: _playing
+                                        ? AppTheme.errorRed
+                                        : context.accentColor,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 12,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                ),
+                                const Spacer(),
+                                TextButton.icon(
+                                  onPressed: () {
+                                    _rtttlController.clear();
+                                    setState(() {
+                                      _selectedPresetIndex = -1;
+                                      _validationError = null;
+                                    });
+                                  },
+                                  icon: Icon(Icons.clear, size: 16),
+                                  label: Text('Clear'),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: context.textSecondary,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    'Tap Preview to hear, then Save to device',
+                                    style: TextStyle(
+                                      color: context.textSecondary.withValues(
+                                        alpha: 0.7,
+                                      ),
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                                Builder(
+                                  builder: (context) {
+                                    final len = _rtttlController.text
+                                        .trim()
+                                        .length;
+                                    final isTooLong = len > _maxRtttlLength;
+                                    return Text(
+                                      '$len/$_maxRtttlLength',
+                                      style: TextStyle(
+                                        color: isTooLong
+                                            ? AppTheme.warningYellow
+                                            : context.textTertiary,
+                                        fontSize: 12,
+                                        fontWeight: isTooLong
+                                            ? FontWeight.w600
+                                            : FontWeight.normal,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 24),
+
+                      // Browse Library section
+                      Text(
+                        'RINGTONE LIBRARY',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: context.textTertiary,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                      SizedBox(height: 12),
+                      InkWell(
+                        onTap: _showLibraryBrowser,
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: context.card,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: context.accentColor.withValues(alpha: 0.3),
+                            ),
+                          ),
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 48,
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  color: context.accentColor.withValues(
+                                    alpha: 0.15,
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  Icons.library_music,
+                                  color: context.accentColor,
+                                  size: 24,
+                                ),
+                              ),
+                              SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Text(
+                                          'Browse ${_libraryToneCount > 0 ? '${(_libraryToneCount / 1000).toStringAsFixed(1).replaceAll('.0', '')}k+' : ''} Ringtones',
+                                          style: TextStyle(
+                                            color: context.textPrimary,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        if (!ref.watch(
+                                          hasFeatureProvider(
+                                            PremiumFeature.customRingtones,
+                                          ),
+                                        )) ...[
+                                          SizedBox(width: 8),
+                                          Icon(
+                                            Icons.star,
+                                            color: context.accentColor,
+                                            size: 16,
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Search classic tunes, TV themes, movie soundtracks, and more',
+                                      style: TextStyle(
+                                        color: context.textSecondary.withValues(
+                                          alpha: 0.8,
+                                        ),
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              SizedBox(width: 8),
+                              Icon(
+                                Icons.arrow_forward_ios,
+                                color: context.accentColor,
+                                size: 18,
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                    ],
-                  ),
-                  SizedBox(height: 12),
+                      SizedBox(height: 24),
 
-                  if (customRingtones.isEmpty)
-                    Container(
-                      decoration: BoxDecoration(
-                        color: context.card,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.library_music_outlined,
-                            size: 48,
-                            color: context.textTertiary.withValues(alpha: 0.5),
+                      // Selected ringtone section (unified across all sources)
+                      if (_selectedName != null) ...[
+                        Text(
+                          'SELECTED RINGTONE',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: context.textTertiary,
+                            letterSpacing: 1,
                           ),
-                          SizedBox(height: 12),
-                          Text(
-                            'No custom ringtones',
-                            style: TextStyle(
-                              color: context.textSecondary,
-                              fontSize: 14,
+                        ),
+                        SizedBox(height: 12),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: context.card,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: context.accentColor.withValues(alpha: 0.3),
+                              width: 1,
                             ),
                           ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Tap "Add" to create your own presets',
-                            style: TextStyle(
-                              color: context.textTertiary.withValues(
-                                alpha: 0.7,
-                              ),
-                              fontSize: 12,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            child: Row(
+                              children: [
+                                // Icon based on source
+                                Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: context.accentColor.withValues(
+                                      alpha: 0.15,
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    _selectedSource == 'library'
+                                        ? Icons.library_music
+                                        : _selectedSource == 'custom'
+                                        ? Icons.star
+                                        : Icons.music_note,
+                                    color: context.accentColor,
+                                    size: 20,
+                                  ),
+                                ),
+                                SizedBox(width: 12),
+                                // Title and description
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        _selectedName!,
+                                        style: TextStyle(
+                                          color: context.accentColor,
+                                          fontWeight: FontWeight.w600,
+
+                                          fontSize: 15,
+                                        ),
+                                      ),
+                                      if (_selectedDescription != null)
+                                        Text(
+                                          _selectedDescription!,
+                                          style: TextStyle(
+                                            color: context.textSecondary,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                                // Play button
+                                GestureDetector(
+                                  onTap: () => _playSelectedRingtone(),
+                                  child: Container(
+                                    width: 36,
+                                    height: 36,
+                                    decoration: BoxDecoration(
+                                      color: _playingSelected
+                                          ? context.accentColor.withValues(
+                                              alpha: 0.15,
+                                            )
+                                          : context.background,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Icon(
+                                      _playingSelected
+                                          ? Icons.stop
+                                          : Icons.play_arrow,
+                                      color: _playingSelected
+                                          ? context.accentColor
+                                          : context.textSecondary,
+                                      size: 20,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                // Clear button
+                                GestureDetector(
+                                  onTap: () async {
+                                    setState(() {
+                                      _selectedName = null;
+                                      _selectedDescription = null;
+                                      _selectedSource = null;
+                                      _selectedPresetIndex = -1;
+                                      _showingCustom = false;
+                                    });
+                                    // Clear from persistent storage
+                                    try {
+                                      final settings = await ref.read(
+                                        settingsServiceProvider.future,
+                                      );
+                                      await settings.clearSelectedRingtone();
+                                    } catch (e) {
+                                      // Ignore
+                                    }
+                                  },
+                                  child: Container(
+                                    width: 36,
+                                    height: 36,
+                                    decoration: BoxDecoration(
+                                      color: context.background,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Icon(
+                                      Icons.close,
+                                      color: context.textSecondary,
+                                      size: 20,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
+                        ),
+                        SizedBox(height: 24),
+                      ],
+
+                      // Built-in presets section
+                      Text(
+                        'BUILT-IN PRESETS',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: context.textTertiary,
+                          letterSpacing: 1,
+                        ),
                       ),
-                    )
-                  else
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Container(
+                      SizedBox(height: 12),
+                      Container(
                         decoration: BoxDecoration(
                           color: context.card,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Column(
-                          children: customRingtones.asMap().entries.map((
+                          children: _builtInPresets.asMap().entries.map((
                             entry,
                           ) {
                             final index = entry.key;
                             final preset = entry.value;
                             final isSelected =
-                                _showingCustom && _selectedPresetIndex == index;
+                                !_showingCustom &&
+                                _selectedPresetIndex == index;
                             final isPlaying =
-                                _playingCustomPreset &&
+                                !_playingCustomPreset &&
                                 _playingPresetIndex == index;
-                            final isFirst = index == 0;
-                            final isLast = index == customRingtones.length - 1;
 
                             return Column(
                               children: [
-                                Material(
-                                  color: Colors.transparent,
-                                  child: InkWell(
-                                    onTap: () => _selectPreset(
-                                      preset,
-                                      index,
-                                      isCustom: true,
+                                InkWell(
+                                  onTap: () => _selectPreset(preset, index),
+                                  borderRadius: index == 0
+                                      ? const BorderRadius.vertical(
+                                          top: Radius.circular(12),
+                                        )
+                                      : index == _builtInPresets.length - 1
+                                      ? const BorderRadius.vertical(
+                                          bottom: Radius.circular(12),
+                                        )
+                                      : BorderRadius.zero,
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 12,
                                     ),
-                                    child: Padding(
-                                      padding: EdgeInsets.only(
-                                        left: 16,
-                                        right: 16,
-                                        top: isFirst ? 12 : 12,
-                                        bottom: isLast ? 12 : 12,
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          // Music icon
-                                          Container(
-                                            width: 40,
-                                            height: 40,
-                                            decoration: BoxDecoration(
-                                              color: isSelected
-                                                  ? context.accentColor
-                                                        .withValues(alpha: 0.15)
-                                                  : context.background,
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                            ),
-                                            child: Icon(
-                                              isSelected
-                                                  ? Icons.music_note
-                                                  : Icons.music_note_outlined,
-                                              color: isSelected
-                                                  ? context.accentColor
-                                                  : context.textSecondary,
-                                              size: 20,
+                                    child: Row(
+                                      children: [
+                                        // Music icon
+                                        Container(
+                                          width: 40,
+                                          height: 40,
+                                          decoration: BoxDecoration(
+                                            color: isSelected
+                                                ? context.accentColor
+                                                      .withValues(alpha: 0.15)
+                                                : context.background,
+                                            borderRadius: BorderRadius.circular(
+                                              8,
                                             ),
                                           ),
-                                          SizedBox(width: 12),
-                                          // Title and description
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  preset.name,
-                                                  style: TextStyle(
-                                                    color: isSelected
-                                                        ? context.accentColor
-                                                        : context.textPrimary,
-                                                    fontWeight: isSelected
-                                                        ? FontWeight.w600
-                                                        : FontWeight.w500,
+                                          child: Icon(
+                                            isSelected
+                                                ? Icons.music_note
+                                                : Icons.music_note_outlined,
+                                            color: isSelected
+                                                ? context.accentColor
+                                                : context.textSecondary,
+                                            size: 20,
+                                          ),
+                                        ),
+                                        SizedBox(width: 12),
+                                        // Title and description
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                preset.name,
+                                                style: TextStyle(
+                                                  color: isSelected
+                                                      ? context.accentColor
+                                                      : context.textPrimary,
+                                                  fontWeight: isSelected
+                                                      ? FontWeight.w600
+                                                      : FontWeight.w500,
 
-                                                    fontSize: 15,
-                                                  ),
+                                                  fontSize: 15,
                                                 ),
-                                                SizedBox(height: 2),
-                                                Text(
-                                                  preset.description,
-                                                  style: TextStyle(
-                                                    color:
-                                                        context.textSecondary,
-                                                    fontSize: 12,
-                                                  ),
+                                              ),
+                                              SizedBox(height: 2),
+                                              Text(
+                                                preset.description,
+                                                style: TextStyle(
+                                                  color: context.textSecondary,
+                                                  fontSize: 12,
                                                 ),
-                                              ],
-                                            ),
+                                              ),
+                                            ],
                                           ),
-                                          SizedBox(width: 8),
-                                          // Play button
-                                          SizedBox(
-                                            width: 40,
-                                            height: 40,
-                                            child: Material(
-                                              color: isPlaying
-                                                  ? AppTheme.errorRed
-                                                        .withValues(alpha: 0.15)
-                                                  : context.background,
+                                        ),
+                                        SizedBox(width: 8),
+                                        // Play button
+                                        SizedBox(
+                                          width: 40,
+                                          height: 40,
+                                          child: Material(
+                                            color: isPlaying
+                                                ? AppTheme.errorRed.withValues(
+                                                    alpha: 0.15,
+                                                  )
+                                                : context.background,
+                                            borderRadius: BorderRadius.circular(
+                                              20,
+                                            ),
+                                            child: InkWell(
+                                              onTap: () =>
+                                                  _playPreset(preset, index),
                                               borderRadius:
                                                   BorderRadius.circular(20),
-                                              child: InkWell(
-                                                onTap: () => _playPreset(
-                                                  preset,
-                                                  index,
-                                                  isCustom: true,
-                                                ),
-                                                borderRadius:
-                                                    BorderRadius.circular(20),
-                                                child: Icon(
-                                                  isPlaying
-                                                      ? Icons.stop
-                                                      : Icons.play_arrow,
-                                                  color: isPlaying
-                                                      ? AppTheme.errorRed
-                                                      : context.textSecondary,
-                                                  size: 20,
-                                                ),
+                                              child: Icon(
+                                                isPlaying
+                                                    ? Icons.stop
+                                                    : Icons.play_arrow,
+                                                color: isPlaying
+                                                    ? AppTheme.errorRed
+                                                    : context.textSecondary,
+                                                size: 20,
                                               ),
                                             ),
                                           ),
-                                          SizedBox(width: 8),
-                                          // Selected indicator
-                                          SizedBox(
-                                            width: 24,
-                                            child: isSelected
-                                                ? Icon(
-                                                    Icons.check_circle,
-                                                    color: context.accentColor,
-                                                    size: 22,
-                                                  )
-                                                : Icon(
-                                                    Icons.chevron_right,
-                                                    color: context.textTertiary,
-                                                    size: 22,
-                                                  ),
-                                          ),
-                                        ],
-                                      ),
+                                        ),
+                                        SizedBox(width: 8),
+                                        // Selected indicator
+                                        SizedBox(
+                                          width: 24,
+                                          child: isSelected
+                                              ? Icon(
+                                                  Icons.check_circle,
+                                                  color: context.accentColor,
+                                                  size: 22,
+                                                )
+                                              : Icon(
+                                                  Icons.chevron_right,
+                                                  color: context.textTertiary,
+                                                  size: 22,
+                                                ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),
-                                if (!isLast)
+                                if (index < _builtInPresets.length - 1)
                                   Divider(
                                     height: 1,
                                     indent: 68,
@@ -1963,57 +1742,306 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                           }).toList(),
                         ),
                       ),
-                    ),
-                  SizedBox(height: 24),
+                      SizedBox(height: 24),
 
-                  // Info card
-                  Container(
-                    decoration: BoxDecoration(
-                      color: AppTheme.warningYellow.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppTheme.warningYellow.withValues(alpha: 0.3),
+                      // Custom presets section
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'CUSTOM PRESETS',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: context.textTertiary,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                          DisabledControlWithLock(
+                            feature: PremiumFeature.customRingtones,
+                            child: TextButton.icon(
+                              onPressed: _showAddCustomDialog,
+                              icon: const Icon(Icons.add, size: 18),
+                              label: const Text('Add'),
+                              style: TextButton.styleFrom(
+                                foregroundColor: context.accentColor,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(
-                          Icons.lightbulb_outline,
-                          color: AppTheme.warningYellow.withValues(alpha: 0.8),
-                          size: 20,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
+                      SizedBox(height: 12),
+
+                      if (customRingtones.isEmpty)
+                        Container(
+                          decoration: BoxDecoration(
+                            color: context.card,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.all(24),
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              Icon(
+                                Icons.library_music_outlined,
+                                size: 48,
+                                color: context.textTertiary.withValues(
+                                  alpha: 0.5,
+                                ),
+                              ),
+                              SizedBox(height: 12),
                               Text(
-                                'Tip: Find your device',
+                                'No custom ringtones',
                                 style: TextStyle(
-                                  color: context.textPrimary,
+                                  color: context.textSecondary,
                                   fontSize: 14,
-                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                               SizedBox(height: 4),
                               Text(
-                                'Send a message with the bell emoji (🔔) to trigger the ringtone on your device. Great for finding lost nodes!',
+                                'Tap "Add" to create your own presets',
                                 style: TextStyle(
-                                  color: context.textSecondary,
-                                  fontSize: 13,
+                                  color: context.textTertiary.withValues(
+                                    alpha: 0.7,
+                                  ),
+                                  fontSize: 12,
                                 ),
                               ),
                             ],
                           ),
+                        )
+                      else
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: context.card,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Column(
+                              children: customRingtones.asMap().entries.map((
+                                entry,
+                              ) {
+                                final index = entry.key;
+                                final preset = entry.value;
+                                final isSelected =
+                                    _showingCustom &&
+                                    _selectedPresetIndex == index;
+                                final isPlaying =
+                                    _playingCustomPreset &&
+                                    _playingPresetIndex == index;
+                                final isFirst = index == 0;
+                                final isLast =
+                                    index == customRingtones.length - 1;
+
+                                return Column(
+                                  children: [
+                                    Material(
+                                      color: Colors.transparent,
+                                      child: InkWell(
+                                        onTap: () => _selectPreset(
+                                          preset,
+                                          index,
+                                          isCustom: true,
+                                        ),
+                                        child: Padding(
+                                          padding: EdgeInsets.only(
+                                            left: 16,
+                                            right: 16,
+                                            top: isFirst ? 12 : 12,
+                                            bottom: isLast ? 12 : 12,
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              // Music icon
+                                              Container(
+                                                width: 40,
+                                                height: 40,
+                                                decoration: BoxDecoration(
+                                                  color: isSelected
+                                                      ? context.accentColor
+                                                            .withValues(
+                                                              alpha: 0.15,
+                                                            )
+                                                      : context.background,
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                                child: Icon(
+                                                  isSelected
+                                                      ? Icons.music_note
+                                                      : Icons
+                                                            .music_note_outlined,
+                                                  color: isSelected
+                                                      ? context.accentColor
+                                                      : context.textSecondary,
+                                                  size: 20,
+                                                ),
+                                              ),
+                                              SizedBox(width: 12),
+                                              // Title and description
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      preset.name,
+                                                      style: TextStyle(
+                                                        color: isSelected
+                                                            ? context
+                                                                  .accentColor
+                                                            : context
+                                                                  .textPrimary,
+                                                        fontWeight: isSelected
+                                                            ? FontWeight.w600
+                                                            : FontWeight.w500,
+
+                                                        fontSize: 15,
+                                                      ),
+                                                    ),
+                                                    SizedBox(height: 2),
+                                                    Text(
+                                                      preset.description,
+                                                      style: TextStyle(
+                                                        color: context
+                                                            .textSecondary,
+                                                        fontSize: 12,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              SizedBox(width: 8),
+                                              // Play button
+                                              SizedBox(
+                                                width: 40,
+                                                height: 40,
+                                                child: Material(
+                                                  color: isPlaying
+                                                      ? AppTheme.errorRed
+                                                            .withValues(
+                                                              alpha: 0.15,
+                                                            )
+                                                      : context.background,
+                                                  borderRadius:
+                                                      BorderRadius.circular(20),
+                                                  child: InkWell(
+                                                    onTap: () => _playPreset(
+                                                      preset,
+                                                      index,
+                                                      isCustom: true,
+                                                    ),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          20,
+                                                        ),
+                                                    child: Icon(
+                                                      isPlaying
+                                                          ? Icons.stop
+                                                          : Icons.play_arrow,
+                                                      color: isPlaying
+                                                          ? AppTheme.errorRed
+                                                          : context
+                                                                .textSecondary,
+                                                      size: 20,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                              SizedBox(width: 8),
+                                              // Selected indicator
+                                              SizedBox(
+                                                width: 24,
+                                                child: isSelected
+                                                    ? Icon(
+                                                        Icons.check_circle,
+                                                        color:
+                                                            context.accentColor,
+                                                        size: 22,
+                                                      )
+                                                    : Icon(
+                                                        Icons.chevron_right,
+                                                        color: context
+                                                            .textTertiary,
+                                                        size: 22,
+                                                      ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    if (!isLast)
+                                      Divider(
+                                        height: 1,
+                                        indent: 68,
+                                        color: context.border,
+                                      ),
+                                  ],
+                                );
+                              }).toList(),
+                            ),
+                          ),
                         ),
-                      ],
-                    ),
+                      SizedBox(height: 24),
+
+                      // Info card
+                      Container(
+                        decoration: BoxDecoration(
+                          color: AppTheme.warningYellow.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppTheme.warningYellow.withValues(
+                              alpha: 0.3,
+                            ),
+                          ),
+                        ),
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              Icons.lightbulb_outline,
+                              color: AppTheme.warningYellow.withValues(
+                                alpha: 0.8,
+                              ),
+                              size: 20,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Tip: Find your device',
+                                    style: TextStyle(
+                                      color: context.textPrimary,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    'Send a message with the bell emoji (🔔) to trigger the ringtone on your device. Great for finding lost nodes!',
+                                    style: TextStyle(
+                                      color: context.textSecondary,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                    ]),
                   ),
-                  const SizedBox(height: 32),
-                ],
-              ),
+                ),
+              ],
       ),
     );
   }

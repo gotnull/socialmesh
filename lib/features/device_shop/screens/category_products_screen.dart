@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
-import '../../../core/widgets/auto_scroll_text.dart';
+import '../../../core/widgets/glass_scaffold.dart';
 import '../models/shop_models.dart';
 import '../providers/device_shop_providers.dart';
 import 'product_detail_screen.dart';
@@ -30,133 +30,141 @@ class _CategoryProductsScreenState
   Widget build(BuildContext context) {
     final productsAsync = ref.watch(categoryProductsProvider(widget.category));
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.card,
-        title: AutoScrollText(
-          widget.category.label,
-          style: TextStyle(color: context.textPrimary),
-          maxLines: 1,
-          velocity: 30.0,
-          fadeWidth: 20.0,
+    return GlassScaffold(
+      title: widget.category.label,
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.filter_list),
+          onPressed: () => _showFilterSheet(context),
+          tooltip: 'Filter',
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.filter_list),
-            onPressed: () => _showFilterSheet(context),
-            tooltip: 'Filter',
-          ),
-          AppBarOverflowMenu<String>(
-            onSelected: (value) => setState(() => _sortBy = value),
-            itemBuilder: (context) => [
-              _sortMenuItem('popular', 'Most Popular'),
-              _sortMenuItem('newest', 'Newest First'),
-              _sortMenuItem('price_low', 'Price: Low to High'),
-              _sortMenuItem('price_high', 'Price: High to Low'),
-              _sortMenuItem('rating', 'Highest Rated'),
-            ],
-          ),
-        ],
-      ),
-      body: productsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline, color: AppTheme.errorRed, size: 48),
-              const SizedBox(height: 16),
-              Text(
-                'Error loading products',
-                style: TextStyle(color: context.textPrimary),
-              ),
-              TextButton(
-                onPressed: () =>
-                    ref.invalidate(categoryProductsProvider(widget.category)),
-                child: Text('Retry'),
-              ),
-            ],
-          ),
+        AppBarOverflowMenu<String>(
+          onSelected: (value) => setState(() => _sortBy = value),
+          itemBuilder: (context) => [
+            _sortMenuItem('popular', 'Most Popular'),
+            _sortMenuItem('newest', 'Newest First'),
+            _sortMenuItem('price_low', 'Price: Low to High'),
+            _sortMenuItem('price_high', 'Price: High to Low'),
+            _sortMenuItem('rating', 'Highest Rated'),
+          ],
         ),
-        data: (products) {
-          final filtered = _filterProducts(products);
-          final sorted = _sortProducts(filtered);
-
-          if (sorted.isEmpty) {
-            return Center(
+      ],
+      slivers: [
+        productsAsync.when(
+          loading: () => const SliverFillRemaining(
+            child: Center(child: CircularProgressIndicator()),
+          ),
+          error: (e, _) => SliverFillRemaining(
+            child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(_categoryIcon, color: context.textTertiary, size: 64),
-                  SizedBox(height: 16),
+                  Icon(Icons.error_outline, color: AppTheme.errorRed, size: 48),
+                  const SizedBox(height: 16),
                   Text(
-                    'No products found',
-                    style: TextStyle(color: context.textPrimary, fontSize: 18),
+                    'Error loading products',
+                    style: TextStyle(color: context.textPrimary),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Try adjusting your filters',
-                    style: TextStyle(color: context.textSecondary),
-                  ),
-                  if (_hasActiveFilters)
-                    TextButton(
-                      onPressed: _clearFilters,
-                      child: Text('Clear Filters'),
+                  TextButton(
+                    onPressed: () => ref.invalidate(
+                      categoryProductsProvider(widget.category),
                     ),
+                    child: Text('Retry'),
+                  ),
                 ],
               ),
-            );
-          }
+            ),
+          ),
+          data: (products) {
+            final filtered = _filterProducts(products);
+            final sorted = _sortProducts(filtered);
 
-          return Column(
-            children: [
-              // Active filters chip
-              if (_hasActiveFilters)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  child: Row(
+            if (sorted.isEmpty) {
+              return SliverFillRemaining(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        '${sorted.length} products',
-                        style: TextStyle(color: context.textSecondary),
+                      Icon(
+                        _categoryIcon,
+                        color: context.textTertiary,
+                        size: 64,
                       ),
-                      const Spacer(),
-                      TextButton.icon(
-                        onPressed: _clearFilters,
-                        icon: Icon(Icons.clear, size: 18),
-                        label: Text('Clear Filters'),
-                        style: TextButton.styleFrom(
-                          foregroundColor: context.textSecondary,
+                      SizedBox(height: 16),
+                      Text(
+                        'No products found',
+                        style: TextStyle(
+                          color: context.textPrimary,
+                          fontSize: 18,
                         ),
                       ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Try adjusting your filters',
+                        style: TextStyle(color: context.textSecondary),
+                      ),
+                      if (_hasActiveFilters)
+                        TextButton(
+                          onPressed: _clearFilters,
+                          child: Text('Clear Filters'),
+                        ),
                     ],
                   ),
                 ),
+              );
+            }
 
-              // Product grid
-              Expanded(
-                child: GridView.builder(
-                  padding: const EdgeInsets.all(12),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 0.65,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
+            return SliverMainAxisGroup(
+              slivers: [
+                // Active filters chip
+                if (_hasActiveFilters)
+                  SliverToBoxAdapter(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            '${sorted.length} products',
+                            style: TextStyle(color: context.textSecondary),
+                          ),
+                          const Spacer(),
+                          TextButton.icon(
+                            onPressed: _clearFilters,
+                            icon: Icon(Icons.clear, size: 18),
+                            label: Text('Clear Filters'),
+                            style: TextButton.styleFrom(
+                              foregroundColor: context.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  itemCount: sorted.length,
-                  itemBuilder: (context, index) {
-                    return _ProductGridCard(product: sorted[index]);
-                  },
+
+                // Product grid
+                SliverPadding(
+                  padding: const EdgeInsets.all(12),
+                  sliver: SliverGrid(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 0.65,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                        ),
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      return _ProductGridCard(product: sorted[index]);
+                    }, childCount: sorted.length),
+                  ),
                 ),
-              ),
-            ],
-          );
-        },
-      ),
+              ],
+            );
+          },
+        ),
+      ],
     );
   }
 

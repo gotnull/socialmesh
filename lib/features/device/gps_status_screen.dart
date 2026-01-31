@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../providers/app_providers.dart';
 
 class GpsStatusScreen extends ConsumerWidget {
@@ -30,311 +31,310 @@ class GpsStatusScreen extends ConsumerWidget {
         latitude != 0 &&
         longitude != 0;
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.background,
-        title: Text(
-          'GPS Status',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: context.textPrimary,
-          ),
-        ),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // GPS Fix Status Card
-          _buildStatusCard(
-            context,
-            hasGpsFix: hasGpsFix,
-            satsInView: satsInView,
-          ),
-
-          SizedBox(height: 16),
-
-          // Position Card
-          if (hasGpsFix) ...[
-            _buildSectionHeader(context, 'Position'),
-            Container(
-              decoration: BoxDecoration(
-                color: context.card,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: context.border),
+    return GlassScaffold(
+      title: 'GPS Status',
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.all(16),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate([
+              // GPS Fix Status Card
+              _buildStatusCard(
+                context,
+                hasGpsFix: hasGpsFix,
+                satsInView: satsInView,
               ),
-              child: Column(
-                children: [
-                  _buildInfoRow(
-                    icon: Icons.my_location,
-                    label: 'Latitude',
-                    value: '${latitude.toStringAsFixed(6)}°',
-                    context: context,
-                  ),
-                  _buildDivider(context),
-                  _buildInfoRow(
-                    icon: Icons.my_location,
-                    label: 'Longitude',
-                    value: '${longitude.toStringAsFixed(6)}°',
-                    context: context,
-                  ),
-                  _buildDivider(context),
-                  _buildInfoRow(
-                    icon: Icons.terrain,
-                    label: 'Altitude',
-                    value: altitude != null ? '${altitude}m' : 'Unknown',
-                    context: context,
-                  ),
-                  _buildDivider(context),
-                  _buildInfoRow(
-                    icon: Icons.gps_fixed,
-                    label: 'Accuracy',
-                    value: gpsAccuracy != null ? '±${gpsAccuracy}m' : 'Unknown',
-                    context: context,
-                  ),
-                  _buildDivider(context),
-                  _buildInfoRow(
-                    icon: Icons.grid_4x4,
-                    label: 'Precision Bits',
-                    value: precisionBits?.toString() ?? 'Unknown',
-                    context: context,
-                  ),
-                ],
-              ),
-            ),
 
-            SizedBox(height: 16),
+              SizedBox(height: 16),
 
-            // Motion Card
-            _buildSectionHeader(context, 'Motion'),
-            Container(
-              decoration: BoxDecoration(
-                color: context.card,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: context.border),
-              ),
-              child: Column(
-                children: [
-                  _buildInfoRow(
-                    icon: Icons.speed,
-                    label: 'Ground Speed',
-                    value: groundSpeed != null
-                        ? '$groundSpeed m/s (${(groundSpeed * 3.6).toStringAsFixed(1)} km/h)'
-                        : 'Unknown',
-                    context: context,
-                  ),
-                  _buildDivider(context),
-                  _buildInfoRow(
-                    icon: Icons.explore,
-                    label: 'Ground Track',
-                    value: groundTrack != null
-                        ? '$groundTrack° ${_getCardinalDirection(groundTrack)}'
-                        : 'Unknown',
-                    context: context,
-                  ),
-                ],
-              ),
-            ),
-
-            SizedBox(height: 16),
-
-            // Map Button
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: () => _openInMaps(latitude, longitude),
-                style: FilledButton.styleFrom(
-                  backgroundColor: context.accentColor,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
+              // Position Card
+              if (hasGpsFix) ...[
+                _buildSectionHeader(context, 'Position'),
+                Container(
+                  decoration: BoxDecoration(
+                    color: context.card,
                     borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: context.border),
+                  ),
+                  child: Column(
+                    children: [
+                      _buildInfoRow(
+                        icon: Icons.my_location,
+                        label: 'Latitude',
+                        value: '${latitude.toStringAsFixed(6)}°',
+                        context: context,
+                      ),
+                      _buildDivider(context),
+                      _buildInfoRow(
+                        icon: Icons.my_location,
+                        label: 'Longitude',
+                        value: '${longitude.toStringAsFixed(6)}°',
+                        context: context,
+                      ),
+                      _buildDivider(context),
+                      _buildInfoRow(
+                        icon: Icons.terrain,
+                        label: 'Altitude',
+                        value: altitude != null ? '${altitude}m' : 'Unknown',
+                        context: context,
+                      ),
+                      _buildDivider(context),
+                      _buildInfoRow(
+                        icon: Icons.gps_fixed,
+                        label: 'Accuracy',
+                        value: gpsAccuracy != null
+                            ? '±${gpsAccuracy}m'
+                            : 'Unknown',
+                        context: context,
+                      ),
+                      _buildDivider(context),
+                      _buildInfoRow(
+                        icon: Icons.grid_4x4,
+                        label: 'Precision Bits',
+                        value: precisionBits?.toString() ?? 'Unknown',
+                        context: context,
+                      ),
+                    ],
                   ),
                 ),
-                icon: Icon(Icons.map),
-                label: const Text(
-                  'Open in Maps',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+
+                SizedBox(height: 16),
+
+                // Motion Card
+                _buildSectionHeader(context, 'Motion'),
+                Container(
+                  decoration: BoxDecoration(
+                    color: context.card,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: context.border),
+                  ),
+                  child: Column(
+                    children: [
+                      _buildInfoRow(
+                        icon: Icons.speed,
+                        label: 'Ground Speed',
+                        value: groundSpeed != null
+                            ? '$groundSpeed m/s (${(groundSpeed * 3.6).toStringAsFixed(1)} km/h)'
+                            : 'Unknown',
+                        context: context,
+                      ),
+                      _buildDivider(context),
+                      _buildInfoRow(
+                        icon: Icons.explore,
+                        label: 'Ground Track',
+                        value: groundTrack != null
+                            ? '$groundTrack° ${_getCardinalDirection(groundTrack)}'
+                            : 'Unknown',
+                        context: context,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ),
-          ] else ...[
-            // No GPS Fix message
-            Container(
-              padding: const EdgeInsets.all(32),
-              decoration: BoxDecoration(
-                color: context.card,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: context.border),
-              ),
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.gps_off,
-                    size: 64,
-                    color: context.textTertiary.withValues(alpha: 0.5),
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    'No GPS Fix',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: context.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'The device has not acquired a GPS position yet. '
-                    'Make sure the device has a clear view of the sky.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: context.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
 
-          SizedBox(height: 16),
+                SizedBox(height: 16),
 
-          // Satellites Card
-          _buildSectionHeader(context, 'Satellites'),
-          Container(
-            decoration: BoxDecoration(
-              color: context.card,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: context.border),
-            ),
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: _getSatelliteColor(
-                          satsInView,
-                        ).withValues(alpha: 0.15),
+                // Map Button
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: () => _openInMaps(latitude, longitude),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: context.accentColor,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(
-                        Icons.satellite_alt,
-                        color: _getSatelliteColor(satsInView),
-                        size: 24,
-                      ),
                     ),
-                    SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            satsInView?.toString() ?? '0',
-                            style: TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.w700,
-                              color: _getSatelliteColor(satsInView),
-                            ),
-                          ),
-                          Text(
-                            'Satellites in View',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: context.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 16),
-                _buildSatelliteBar(satsInView ?? 0, context),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildSatelliteLabel(context, 'No Fix', Colors.grey),
-                    _buildSatelliteLabel(context, 'Poor', AppTheme.errorRed),
-                    _buildSatelliteLabel(
-                      context,
-                      'Fair',
-                      AppTheme.warningYellow,
-                    ),
-                    _buildSatelliteLabel(
-                      context,
-                      'Good',
-                      AppTheme.successGreen,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Last Update
-          if (positionTimestamp != null) ...[
-            _buildSectionHeader(context, 'Last Update'),
-            Container(
-              decoration: BoxDecoration(
-                color: context.card,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: context.border),
-              ),
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: context.accentColor.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
-                      Icons.access_time,
-                      color: context.accentColor,
-                      size: 20,
+                    icon: Icon(Icons.map),
+                    label: const Text(
+                      'Open in Maps',
+                      style: TextStyle(fontWeight: FontWeight.w600),
                     ),
                   ),
-                  SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                ),
+              ] else ...[
+                // No GPS Fix message
+                Container(
+                  padding: const EdgeInsets.all(32),
+                  decoration: BoxDecoration(
+                    color: context.card,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: context.border),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.gps_off,
+                        size: 64,
+                        color: context.textTertiary.withValues(alpha: 0.5),
+                      ),
+                      SizedBox(height: 16),
+                      Text(
+                        'No GPS Fix',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: context.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'The device has not acquired a GPS position yet. '
+                        'Make sure the device has a clear view of the sky.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: context.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
+              SizedBox(height: 16),
+
+              // Satellites Card
+              _buildSectionHeader(context, 'Satellites'),
+              Container(
+                decoration: BoxDecoration(
+                  color: context.card,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: context.border),
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    Row(
                       children: [
-                        Text(
-                          _formatTimestamp(positionTimestamp),
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: context.textPrimary,
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: _getSatelliteColor(
+                              satsInView,
+                            ).withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.satellite_alt,
+                            color: _getSatelliteColor(satsInView),
+                            size: 24,
                           ),
                         ),
-                        Text(
-                          _timeAgo(positionTimestamp),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: context.textTertiary,
+                        SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                satsInView?.toString() ?? '0',
+                                style: TextStyle(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.w700,
+                                  color: _getSatelliteColor(satsInView),
+                                ),
+                              ),
+                              Text(
+                                'Satellites in View',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: context.textSecondary,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
-                  ),
-                ],
+                    SizedBox(height: 16),
+                    _buildSatelliteBar(satsInView ?? 0, context),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildSatelliteLabel(context, 'No Fix', Colors.grey),
+                        _buildSatelliteLabel(
+                          context,
+                          'Poor',
+                          AppTheme.errorRed,
+                        ),
+                        _buildSatelliteLabel(
+                          context,
+                          'Fair',
+                          AppTheme.warningYellow,
+                        ),
+                        _buildSatelliteLabel(
+                          context,
+                          'Good',
+                          AppTheme.successGreen,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
 
-          const SizedBox(height: 32),
-        ],
-      ),
+              const SizedBox(height: 16),
+
+              // Last Update
+              if (positionTimestamp != null) ...[
+                _buildSectionHeader(context, 'Last Update'),
+                Container(
+                  decoration: BoxDecoration(
+                    color: context.card,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: context.border),
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: context.accentColor.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          Icons.access_time,
+                          color: context.accentColor,
+                          size: 20,
+                        ),
+                      ),
+                      SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _formatTimestamp(positionTimestamp),
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: context.textPrimary,
+                              ),
+                            ),
+                            Text(
+                              _timeAgo(positionTimestamp),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: context.textTertiary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
+              const SizedBox(height: 32),
+            ]),
+          ),
+        ),
+      ],
     );
   }
 

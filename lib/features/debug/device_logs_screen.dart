@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/connection_required_wrapper.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../generated/meshtastic/mesh.pbenum.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 import '../../providers/app_providers.dart';
@@ -355,106 +356,102 @@ class _DeviceLogsScreenState extends ConsumerState<DeviceLogsScreen> {
     final logs = _getFilteredLogs();
     final filters = ref.watch(deviceLogFilterProvider);
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.background,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Device Logs', style: TextStyle(color: context.textPrimary)),
-            Text(
-              '${logs.length} entries',
-              style: TextStyle(color: context.textSecondary, fontSize: 12),
-            ),
-          ],
-        ),
-        actions: [
-          // Auto-scroll toggle
-          IconButton(
-            icon: Icon(
-              _autoScroll ? Icons.vertical_align_bottom : Icons.pause,
-              color: _autoScroll ? context.accentColor : context.textSecondary,
-            ),
-            tooltip: _autoScroll ? 'Auto-scroll ON' : 'Auto-scroll OFF',
-            onPressed: () {
-              setState(() => _autoScroll = !_autoScroll);
-            },
-          ),
-          // Filter button
-          IconButton(
-            icon: Badge(
-              isLabelVisible: filters.length < 6,
-              backgroundColor: context.accentColor,
-              label: Text('${6 - filters.length}'),
-              child: const Icon(Icons.filter_list),
-            ),
-            tooltip: 'Filter levels',
-            onPressed: _showFilterDialog,
-          ),
-          // More menu
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert),
-            color: context.card,
-            onSelected: (value) {
-              switch (value) {
-                case 'copy':
-                  _copyToClipboard();
-                  break;
-                case 'share':
-                  _shareLogs();
-                  break;
-                case 'clear':
-                  _clearLogs();
-                  break;
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'copy',
-                child: Row(
-                  children: [
-                    Icon(Icons.copy, color: context.textSecondary),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Copy to Clipboard',
-                      style: TextStyle(color: context.textPrimary),
-                    ),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'share',
-                child: Row(
-                  children: [
-                    Icon(Icons.share, color: context.textSecondary),
-                    const SizedBox(width: 12),
-                    Text('Share', style: TextStyle(color: context.textPrimary)),
-                  ],
-                ),
-              ),
-              const PopupMenuDivider(),
-              PopupMenuItem(
-                value: 'clear',
-                child: Row(
-                  children: [
-                    const Icon(Icons.delete_outline, color: AppTheme.errorRed),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Clear Logs',
-                      style: TextStyle(color: context.textPrimary),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+    return GlassScaffold(
+      titleWidget: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Device Logs', style: TextStyle(color: context.textPrimary)),
+          Text(
+            '${logs.length} entries',
+            style: TextStyle(color: context.textSecondary, fontSize: 12),
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Search bar
-          Padding(
+      actions: [
+        // Auto-scroll toggle
+        IconButton(
+          icon: Icon(
+            _autoScroll ? Icons.vertical_align_bottom : Icons.pause,
+            color: _autoScroll ? context.accentColor : context.textSecondary,
+          ),
+          tooltip: _autoScroll ? 'Auto-scroll ON' : 'Auto-scroll OFF',
+          onPressed: () {
+            setState(() => _autoScroll = !_autoScroll);
+          },
+        ),
+        // Filter button
+        IconButton(
+          icon: Badge(
+            isLabelVisible: filters.length < 6,
+            backgroundColor: context.accentColor,
+            label: Text('${6 - filters.length}'),
+            child: const Icon(Icons.filter_list),
+          ),
+          tooltip: 'Filter levels',
+          onPressed: _showFilterDialog,
+        ),
+        // More menu
+        PopupMenuButton<String>(
+          icon: const Icon(Icons.more_vert),
+          color: context.card,
+          onSelected: (value) {
+            switch (value) {
+              case 'copy':
+                _copyToClipboard();
+                break;
+              case 'share':
+                _shareLogs();
+                break;
+              case 'clear':
+                _clearLogs();
+                break;
+            }
+          },
+          itemBuilder: (context) => [
+            PopupMenuItem(
+              value: 'copy',
+              child: Row(
+                children: [
+                  Icon(Icons.copy, color: context.textSecondary),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Copy to Clipboard',
+                    style: TextStyle(color: context.textPrimary),
+                  ),
+                ],
+              ),
+            ),
+            PopupMenuItem(
+              value: 'share',
+              child: Row(
+                children: [
+                  Icon(Icons.share, color: context.textSecondary),
+                  const SizedBox(width: 12),
+                  Text('Share', style: TextStyle(color: context.textPrimary)),
+                ],
+              ),
+            ),
+            const PopupMenuDivider(),
+            PopupMenuItem(
+              value: 'clear',
+              child: Row(
+                children: [
+                  const Icon(Icons.delete_outline, color: AppTheme.errorRed),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Clear Logs',
+                    style: TextStyle(color: context.textPrimary),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+      slivers: [
+        // Search bar
+        SliverToBoxAdapter(
+          child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextField(
               controller: _searchController,
@@ -482,9 +479,11 @@ class _DeviceLogsScreenState extends ConsumerState<DeviceLogsScreen> {
               onChanged: (value) => setState(() => _searchQuery = value),
             ),
           ),
+        ),
 
-          // Info banner
-          Container(
+        // Info banner
+        SliverToBoxAdapter(
+          child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 8),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -510,51 +509,44 @@ class _DeviceLogsScreenState extends ConsumerState<DeviceLogsScreen> {
               ],
             ),
           ),
+        ),
 
-          const SizedBox(height: 8),
+        const SliverToBoxAdapter(child: SizedBox(height: 8)),
 
-          // Log list
-          Expanded(
-            child: logs.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.terminal,
-                          size: 64,
-                          color: context.textTertiary,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No device logs yet',
-                          style: TextStyle(
-                            color: context.textSecondary,
-                            fontSize: 16,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Logs will appear here as your device sends them',
-                          style: TextStyle(
-                            color: context.textTertiary,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
+        // Log list
+        if (logs.isEmpty)
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.terminal, size: 64, color: context.textTertiary),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No device logs yet',
+                    style: TextStyle(
+                      color: context.textSecondary,
+                      fontSize: 16,
                     ),
-                  )
-                : ListView.builder(
-                    controller: _scrollController,
-                    itemCount: logs.length,
-                    itemBuilder: (context, index) {
-                      final entry = logs[index];
-                      return _LogEntryTile(entry: entry);
-                    },
                   ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Logs will appear here as your device sends them',
+                    style: TextStyle(color: context.textTertiary, fontSize: 14),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else
+          SliverList(
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final entry = logs[index];
+              return _LogEntryTile(entry: entry);
+            }, childCount: logs.length),
           ),
-        ],
-      ),
+      ],
     );
   }
 }

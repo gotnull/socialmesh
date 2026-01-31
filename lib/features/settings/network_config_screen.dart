@@ -10,6 +10,7 @@ import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/config.pb.dart' as config_pb;
 import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
 import '../../core/widgets/loading_indicator.dart';
+import '../../core/widgets/glass_scaffold.dart';
 
 class NetworkConfigScreen extends ConsumerStatefulWidget {
   const NetworkConfigScreen({super.key});
@@ -134,40 +135,32 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
-      child: Scaffold(
-        backgroundColor: context.background,
-        appBar: AppBar(
-          backgroundColor: context.background,
-          title: Text(
-            'Network',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: context.textPrimary,
+      child: GlassScaffold(
+        title: 'Network',
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: TextButton(
+              onPressed: _saving ? null : _saveConfig,
+              child: _saving
+                  ? LoadingIndicator(size: 20)
+                  : Text(
+                      'Save',
+                      style: TextStyle(
+                        color: context.accentColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
             ),
           ),
-          actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: TextButton(
-                onPressed: _saving ? null : _saveConfig,
-                child: _saving
-                    ? LoadingIndicator(size: 20)
-                    : Text(
-                        'Save',
-                        style: TextStyle(
-                          color: context.accentColor,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-              ),
-            ),
-          ],
-        ),
-        body: _loading
-            ? const ScreenLoadingIndicator()
-            : ListView(
-                padding: const EdgeInsets.symmetric(vertical: 8),
+        ],
+        slivers: [
+          if (_loading)
+            const SliverFillRemaining(child: ScreenLoadingIndicator())
+          else
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              sliver: SliverList.list(
                 children: [
                   // WiFi Section
                   const _SectionHeader(title: 'WI-FI'),
@@ -464,6 +457,8 @@ class _NetworkConfigScreenState extends ConsumerState<NetworkConfigScreen> {
                   const SizedBox(height: 32),
                 ],
               ),
+            ),
+        ],
       ),
     );
   }

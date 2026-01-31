@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/logging.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
@@ -107,43 +108,43 @@ class _StoreForwardConfigScreenState
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.surface,
-        title: Text('Store & Forward'),
-        actions: [
-          TextButton(
-            onPressed: _isSaving ? null : _saveConfig,
-            child: _isSaving
-                ? LoadingIndicator(size: 20)
-                : Text('Save', style: TextStyle(color: context.accentColor)),
-          ),
-        ],
-      ),
-      body: _isLoading
-          ? const ScreenLoadingIndicator()
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                // Info card
-                _buildInfoCard(),
+    return GlassScaffold(
+      title: 'Store & Forward',
+      actions: [
+        TextButton(
+          onPressed: _isSaving ? null : _saveConfig,
+          child: _isSaving
+              ? LoadingIndicator(size: 20)
+              : Text('Save', style: TextStyle(color: context.accentColor)),
+        ),
+      ],
+      slivers: _isLoading
+          ? [SliverFillRemaining(child: const ScreenLoadingIndicator())]
+          : [
+              SliverPadding(
+                padding: const EdgeInsets.all(16),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    // Info card
+                    _buildInfoCard(),
 
-                const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                // Module settings
-                _buildSectionTitle('Module Settings'),
-                _buildConfigCard(),
+                    // Module settings
+                    _buildSectionTitle('Module Settings'),
+                    _buildConfigCard(),
 
-                const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                // Server settings (only shown if server mode)
-                if (_isServer) ...[
-                  _buildSectionTitle('Server Settings'),
-                  _buildServerSettingsCard(),
-                ],
-              ],
-            ),
+                    // Server settings (only shown if server mode)
+                    if (_isServer) ...[
+                      _buildSectionTitle('Server Settings'),
+                      _buildServerSettingsCard(),
+                    ],
+                  ]),
+                ),
+              ),
+            ],
     );
   }
 

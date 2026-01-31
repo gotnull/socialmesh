@@ -4,6 +4,7 @@ import 'package:timeago/timeago.dart' as timeago;
 
 import '../../../core/theme.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
+import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/verified_badge.dart';
 import '../../../models/social_activity.dart';
 import '../../../providers/activity_providers.dart';
@@ -30,55 +31,55 @@ class _ActivityTimelineScreenState
   Widget build(BuildContext context) {
     final feedState = ref.watch(activityFeedProvider);
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.background,
-        foregroundColor: context.textPrimary,
-        title: const Text('Activity'),
-        actions: [
-          if (feedState.activities.isNotEmpty)
-            AppBarOverflowMenu<String>(
-              onSelected: (value) {
-                if (value == 'clear') {
-                  _showClearConfirmation();
-                } else if (value == 'markAllRead') {
-                  ref.read(activityFeedProvider.notifier).markAllAsRead();
-                }
-              },
-              itemBuilder: (context) => [
-                if (feedState.unreadCount > 0)
-                  const PopupMenuItem(
-                    value: 'markAllRead',
-                    child: Row(
-                      children: [
-                        Icon(Icons.done_all, size: 20),
-                        SizedBox(width: 12),
-                        Text('Mark all as read'),
-                      ],
-                    ),
-                  ),
+    return GlassScaffold(
+      title: 'Activity',
+      actions: [
+        if (feedState.activities.isNotEmpty)
+          AppBarOverflowMenu<String>(
+            onSelected: (value) {
+              if (value == 'clear') {
+                _showClearConfirmation();
+              } else if (value == 'markAllRead') {
+                ref.read(activityFeedProvider.notifier).markAllAsRead();
+              }
+            },
+            itemBuilder: (context) => [
+              if (feedState.unreadCount > 0)
                 const PopupMenuItem(
-                  value: 'clear',
+                  value: 'markAllRead',
                   child: Row(
                     children: [
-                      Icon(Icons.delete_outline, size: 20),
+                      Icon(Icons.done_all, size: 20),
                       SizedBox(width: 12),
-                      Text('Clear all'),
+                      Text('Mark all as read'),
                     ],
                   ),
                 ),
-              ],
-            ),
-        ],
-      ),
-      body: feedState.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : feedState.error != null
-          ? _buildError(feedState.error!)
-          : feedState.activities.isEmpty
-          ? _buildEmpty()
-          : _buildActivityList(feedState.activities),
+              const PopupMenuItem(
+                value: 'clear',
+                child: Row(
+                  children: [
+                    Icon(Icons.delete_outline, size: 20),
+                    SizedBox(width: 12),
+                    Text('Clear all'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+      ],
+      slivers: [
+        if (feedState.isLoading)
+          const SliverFillRemaining(
+            child: Center(child: CircularProgressIndicator()),
+          )
+        else if (feedState.error != null)
+          SliverFillRemaining(child: _buildError(feedState.error!))
+        else if (feedState.activities.isEmpty)
+          SliverFillRemaining(child: _buildEmpty())
+        else
+          ..._buildActivitySlivers(feedState.activities),
+      ],
     );
   }
 
@@ -153,26 +154,26 @@ class _ActivityTimelineScreenState
     );
   }
 
-  Widget _buildActivityList(List<SocialActivity> activities) {
+  List<Widget> _buildActivitySlivers(List<SocialActivity> activities) {
     // Group activities by time period
     final grouped = _groupActivities(activities);
 
-    return RefreshIndicator(
-      onRefresh: () => ref.read(activityFeedProvider.notifier).refresh(),
-      child: ListView.builder(
+    return [
+      SliverPadding(
         padding: const EdgeInsets.only(bottom: 32),
-        itemCount: grouped.length,
-        itemBuilder: (context, index) {
-          final group = grouped[index];
-          return _ActivityGroup(
-            title: group.title,
-            activities: group.activities,
-            onActivityTap: _handleActivityTap,
-            onActivityDismiss: _handleActivityDismiss,
-          );
-        },
+        sliver: SliverList(
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final group = grouped[index];
+            return _ActivityGroup(
+              title: group.title,
+              activities: group.activities,
+              onActivityTap: _handleActivityTap,
+              onActivityDismiss: _handleActivityDismiss,
+            );
+          }, childCount: grouped.length),
+        ),
       ),
-    );
+    ];
   }
 
   List<_ActivityGroupData> _groupActivities(List<SocialActivity> activities) {

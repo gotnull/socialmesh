@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:socialmesh/core/logging.dart';
 
+import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/snappable.dart';
 
 /// Demo screen to test the Thanos snap disintegration effect
@@ -112,31 +113,26 @@ class _SnapEffectScreenState extends State<SnapEffectScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: const Text(
-          'Snap Effect',
-          style: TextStyle(
-            fontFamily: 'JetBrains Mono',
-            fontWeight: FontWeight.w300,
-            letterSpacing: 2,
-          ),
+    return GlassScaffold(
+      titleWidget: const Text(
+        'Snap Effect',
+        style: TextStyle(
+          fontFamily: 'JetBrains Mono',
+          fontWeight: FontWeight.w300,
+          letterSpacing: 2,
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Reset all cards',
-            onPressed: _resetAll,
-          ),
-        ],
       ),
-      body: Column(
-        children: [
-          // Instructions
-          Padding(
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.refresh),
+          tooltip: 'Reset all cards',
+          onPressed: _resetAll,
+        ),
+      ],
+      slivers: [
+        // Instructions
+        SliverToBoxAdapter(
+          child: Padding(
             padding: const EdgeInsets.all(16),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -167,23 +163,22 @@ class _SnapEffectScreenState extends State<SnapEffectScreen> {
               ),
             ),
           ),
+        ),
 
-          // Cards list
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: _cards.length,
-              itemBuilder: (context, index) {
-                final card = _cards[index];
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: _buildSnapCard(card, index),
-                );
-              },
-            ),
+        // Cards list
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final card = _cards[index];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: _buildSnapCard(card, index),
+              );
+            }, childCount: _cards.length),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

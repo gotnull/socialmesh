@@ -4,6 +4,7 @@ import '../../../services/share_link_service.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 import '../../../core/theme.dart';
+import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/content_moderation_warning.dart';
 import '../../../core/widgets/fullscreen_gallery.dart';
@@ -67,94 +68,103 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     final postAsync = ref.watch(postStreamProvider(widget.postId));
     final commentsAsync = ref.watch(commentsStreamProvider(widget.postId));
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Post')),
-      body: GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(),
-        child: postAsync.when(
-          data: (post) {
-            if (post == null) {
-              return const Center(child: Text('Post not found'));
-            }
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: GlassScaffold(
+        title: 'Post',
+        slivers: [
+          SliverFillRemaining(
+            hasScrollBody: true,
+            child: postAsync.when(
+              data: (post) {
+                if (post == null) {
+                  return const Center(child: Text('Post not found'));
+                }
 
-            // Get actual comment count from stream (excluding deleted)
-            final actualCommentCount = commentsAsync.when(
-              data: (comments) => comments
-                  .where((c) => !_deletedCommentIds.contains(c.comment.id))
-                  .length,
-              loading: () => post.commentCount,
-              error: (e, s) => post.commentCount,
-            );
+                // Get actual comment count from stream (excluding deleted)
+                final actualCommentCount = commentsAsync.when(
+                  data: (comments) => comments
+                      .where((c) => !_deletedCommentIds.contains(c.comment.id))
+                      .length,
+                  loading: () => post.commentCount,
+                  error: (e, s) => post.commentCount,
+                );
 
-            return Column(
-              children: [
-                Expanded(
-                  child: CustomScrollView(
-                    slivers: [
-                      // Post content
-                      SliverToBoxAdapter(
-                        child: _PostContent(
-                          post: post,
-                          onAuthorTap: () => _navigateToProfile(post.authorId),
-                          onCommentTap: () => _commentFocusNode.requestFocus(),
-                          onShareTap: () => _sharePost(post),
-                          onMoreTap: () => _showPostOptions(post),
-                          onLocationTap: _handleLocationTap,
-                          onNodeTap: _handleNodeTap,
-                          commentCount: actualCommentCount,
-                        ),
-                      ),
-
-                      const SliverToBoxAdapter(child: Divider(height: 1)),
-
-                      // Comments header
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Text(
-                            'Comments',
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.bold),
+                return Column(
+                  children: [
+                    Expanded(
+                      child: CustomScrollView(
+                        slivers: [
+                          // Post content
+                          SliverToBoxAdapter(
+                            child: _PostContent(
+                              post: post,
+                              onAuthorTap: () =>
+                                  _navigateToProfile(post.authorId),
+                              onCommentTap: () =>
+                                  _commentFocusNode.requestFocus(),
+                              onShareTap: () => _sharePost(post),
+                              onMoreTap: () => _showPostOptions(post),
+                              onLocationTap: _handleLocationTap,
+                              onNodeTap: _handleNodeTap,
+                              commentCount: actualCommentCount,
+                            ),
                           ),
-                        ),
-                      ),
 
-                      // Comments list
-                      commentsAsync.when(
-                        data: (comments) => _buildCommentsSliver(comments),
-                        loading: () => const SliverToBoxAdapter(
-                          child: Padding(
-                            padding: EdgeInsets.all(32),
-                            child: Center(child: CircularProgressIndicator()),
-                          ),
-                        ),
-                        error: (e, _) => SliverToBoxAdapter(
-                          child: Padding(
-                            padding: const EdgeInsets.all(32),
-                            child: Center(child: Text('Error: $e')),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                          const SliverToBoxAdapter(child: Divider(height: 1)),
 
-                // Comment input
-                if (currentUser != null)
-                  _CommentInput(
-                    controller: _commentController,
-                    focusNode: _commentFocusNode,
-                    replyingTo: _replyingToAuthor,
-                    isSubmitting: _isSubmitting,
-                    onCancelReply: _cancelReply,
-                    onSubmit: () => _submitComment(post.id),
-                  ),
-              ],
-            );
-          },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Error: $e')),
-        ),
+                          // Comments header
+                          SliverToBoxAdapter(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Text(
+                                'Comments',
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+
+                          // Comments list
+                          commentsAsync.when(
+                            data: (comments) => _buildCommentsSliver(comments),
+                            loading: () => const SliverToBoxAdapter(
+                              child: Padding(
+                                padding: EdgeInsets.all(32),
+                                child: Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              ),
+                            ),
+                            error: (e, _) => SliverToBoxAdapter(
+                              child: Padding(
+                                padding: const EdgeInsets.all(32),
+                                child: Center(child: Text('Error: $e')),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Comment input
+                    if (currentUser != null)
+                      _CommentInput(
+                        controller: _commentController,
+                        focusNode: _commentFocusNode,
+                        replyingTo: _replyingToAuthor,
+                        isSubmitting: _isSubmitting,
+                        onCancelReply: _cancelReply,
+                        onSubmit: () => _submitComment(post.id),
+                      ),
+                  ],
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Center(child: Text('Error: $e')),
+            ),
+          ),
+        ],
       ),
     );
   }

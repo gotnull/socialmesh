@@ -10,6 +10,7 @@ import '../../utils/snackbar.dart';
 import '../../generated/meshtastic/module_config.pb.dart' as module_pb;
 import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
 import '../../core/widgets/loading_indicator.dart';
+import '../../core/widgets/glass_scaffold.dart';
 
 /// Screen for configuring MQTT module settings
 class MqttConfigScreen extends ConsumerStatefulWidget {
@@ -144,40 +145,32 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
-      child: Scaffold(
-        backgroundColor: context.background,
-        appBar: AppBar(
-          backgroundColor: context.background,
-          title: Text(
-            'MQTT',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: context.textPrimary,
+      child: GlassScaffold(
+        title: 'MQTT',
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: TextButton(
+              onPressed: _isLoading ? null : _saveConfig,
+              child: _isLoading
+                  ? LoadingIndicator(size: 20)
+                  : Text(
+                      'Save',
+                      style: TextStyle(
+                        color: context.accentColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
             ),
           ),
-          actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: TextButton(
-                onPressed: _isLoading ? null : _saveConfig,
-                child: _isLoading
-                    ? LoadingIndicator(size: 20)
-                    : Text(
-                        'Save',
-                        style: TextStyle(
-                          color: context.accentColor,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-              ),
-            ),
-          ],
-        ),
-        body: _isLoading
-            ? const ScreenLoadingIndicator()
-            : ListView(
-                padding: const EdgeInsets.symmetric(vertical: 8),
+        ],
+        slivers: [
+          if (_isLoading)
+            const SliverFillRemaining(child: ScreenLoadingIndicator())
+          else
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              sliver: SliverList.list(
                 children: [
                   _SettingsTile(
                     icon: Icons.cloud,
@@ -471,6 +464,8 @@ class _MqttConfigScreenState extends ConsumerState<MqttConfigScreen> {
                   SizedBox(height: 32),
                 ],
               ),
+            ),
+        ],
       ),
     );
   }

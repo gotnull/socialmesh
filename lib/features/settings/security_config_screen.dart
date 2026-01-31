@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -217,41 +218,33 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.background,
-        title: Text(
-          'Security',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: context.textPrimary,
+    return GlassScaffold(
+      title: 'Security',
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: TextButton(
+            onPressed: _saving ? null : _saveConfig,
+            child: _saving
+                ? LoadingIndicator(size: 20)
+                : Text(
+                    'Save',
+                    style: TextStyle(
+                      color: context.accentColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
           ),
         ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: TextButton(
-              onPressed: _saving ? null : _saveConfig,
-              child: _saving
-                  ? LoadingIndicator(size: 20)
-                  : Text(
-                      'Save',
-                      style: TextStyle(
-                        color: context.accentColor,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-            ),
-          ),
-        ],
-      ),
-      body: _loading
-          ? const ScreenLoadingIndicator()
-          : ListView(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              children: [
+      ],
+      slivers: [
+        if (_loading)
+          const SliverFillRemaining(child: ScreenLoadingIndicator())
+        else
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
                 // PKI Keys Section
                 const _SectionHeader(title: 'DIRECT MESSAGE KEY'),
                 _buildKeySection(),
@@ -360,8 +353,10 @@ class _SecurityConfigScreenState extends ConsumerState<SecurityConfigScreen> {
                   ),
                 ),
                 const SizedBox(height: 32),
-              ],
+              ]),
             ),
+          ),
+      ],
     );
   }
 

@@ -6,6 +6,7 @@ import '../renderer/widget_renderer.dart';
 import '../storage/widget_storage_service.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
+import '../../../core/widgets/glass_scaffold.dart';
 import '../../../utils/snackbar.dart';
 import 'selectors/icon_selector.dart';
 import 'selectors/binding_selector.dart';
@@ -74,49 +75,8 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
 
   /// Portrait layout - full screen canvas with bottom sheets for tools/properties
   Widget _buildPortraitLayout() {
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: _buildCompactAppBar(),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Widget info bar with size selector
-            _buildCompactInfoBar(),
-            // Canvas takes all remaining space
-            Expanded(child: _buildFullscreenCanvas()),
-          ],
-        ),
-      ),
-      // Bottom navigation for tools
-      bottomNavigationBar: _buildBottomToolbar(),
-    );
-  }
-
-  /// Landscape layout - side-by-side panels
-  Widget _buildLandscapeLayout() {
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: _buildAppBar(),
-      body: SafeArea(
-        child: Row(
-          children: [
-            // Left: Toolbox
-            if (_showToolbox) _buildToolbox(),
-            // Center: Canvas
-            Expanded(child: _buildCanvas()),
-            // Right: Property Inspector
-            if (_selectedElementId != null) _buildPropertyInspector(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  AppBar _buildCompactAppBar() {
-    return AppBar(
-      backgroundColor: context.background,
-      leadingWidth: 40,
-      title: GestureDetector(
+    return GlassScaffold.body(
+      titleWidget: GestureDetector(
         onTap: _editWidgetName,
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -137,7 +97,6 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
         ),
       ),
       actions: [
-        // Save button
         TextButton.icon(
           onPressed: _saveWidget,
           icon: Icon(Icons.save, color: context.accentColor, size: 20),
@@ -151,6 +110,71 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
         ),
         const SizedBox(width: 4),
       ],
+      body: SafeArea(
+        top: false,
+        child: Column(
+          children: [
+            // Widget info bar with size selector
+            _buildCompactInfoBar(),
+            // Canvas takes all remaining space
+            Expanded(child: _buildFullscreenCanvas()),
+          ],
+        ),
+      ),
+      // Bottom navigation for tools
+      bottomNavigationBar: _buildBottomToolbar(),
+    );
+  }
+
+  /// Landscape layout - side-by-side panels
+  Widget _buildLandscapeLayout() {
+    return GlassScaffold.body(
+      titleWidget: AutoScrollText(
+        _schema.name,
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: context.textPrimary,
+        ),
+      ),
+      actions: [
+        // Toggle toolbox
+        IconButton(
+          icon: Icon(
+            _showToolbox ? Icons.view_sidebar : Icons.view_sidebar_outlined,
+            color: _showToolbox ? context.accentColor : context.textPrimary,
+          ),
+          onPressed: () => setState(() => _showToolbox = !_showToolbox),
+          tooltip: 'Toggle Toolbox',
+        ),
+        SizedBox(width: 8),
+        // Save button
+        TextButton.icon(
+          onPressed: _saveWidget,
+          icon: Icon(Icons.save, color: context.accentColor),
+          label: Text(
+            'Save',
+            style: TextStyle(
+              color: context.accentColor,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+      ],
+      body: SafeArea(
+        top: false,
+        child: Row(
+          children: [
+            // Left: Toolbox
+            if (_showToolbox) _buildToolbox(),
+            // Center: Canvas
+            Expanded(child: _buildCanvas()),
+            // Right: Property Inspector
+            if (_selectedElementId != null) _buildPropertyInspector(),
+          ],
+        ),
+      ),
     );
   }
 
@@ -1060,45 +1084,6 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
       // Clear the callback when sheet is dismissed
       _sheetSetState = null;
     });
-  }
-
-  AppBar _buildAppBar() {
-    return AppBar(
-      backgroundColor: context.background,
-      title: AutoScrollText(
-        _schema.name,
-        style: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: context.textPrimary,
-        ),
-      ),
-      actions: [
-        // Toggle toolbox
-        IconButton(
-          icon: Icon(
-            _showToolbox ? Icons.view_sidebar : Icons.view_sidebar_outlined,
-            color: _showToolbox ? context.accentColor : context.textPrimary,
-          ),
-          onPressed: () => setState(() => _showToolbox = !_showToolbox),
-          tooltip: 'Toggle Toolbox',
-        ),
-        SizedBox(width: 8),
-        // Save button
-        TextButton.icon(
-          onPressed: _saveWidget,
-          icon: Icon(Icons.save, color: context.accentColor),
-          label: Text(
-            'Save',
-            style: TextStyle(
-              color: context.accentColor,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-      ],
-    );
   }
 
   Widget _buildToolbox() {

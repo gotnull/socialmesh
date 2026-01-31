@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../config/revenuecat_config.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../providers/subscription_providers.dart';
 
 /// Home widgets configuration screen for Widget Pack owners
@@ -19,87 +20,80 @@ class _HomeWidgetsScreenState extends ConsumerState<HomeWidgetsScreen> {
   Widget build(BuildContext context) {
     final accentColor = context.accentColor;
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.background,
-        title: Text(
-          'Home Widgets',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: context.textPrimary,
+    return GlassScaffold(
+      title: 'Home Widgets',
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.all(16),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate([
+              // Header
+              _buildHeader(context, accentColor),
+              const SizedBox(height: 24),
+
+              // Available Widgets Section
+              _buildSectionHeader('AVAILABLE WIDGETS'),
+              const SizedBox(height: 12),
+              _buildWidgetCard(
+                context,
+                icon: Icons.people,
+                title: 'Mesh Status',
+                description: 'Shows connected nodes count and mesh health',
+                sizes: ['Small', 'Medium'],
+                accentColor: accentColor,
+              ),
+              const SizedBox(height: 12),
+              _buildWidgetCard(
+                context,
+                icon: Icons.message,
+                title: 'Recent Messages',
+                description: 'Displays latest messages from your mesh',
+                sizes: ['Medium', 'Large'],
+                accentColor: accentColor,
+              ),
+              const SizedBox(height: 12),
+              _buildWidgetCard(
+                context,
+                icon: Icons.battery_full,
+                title: 'Device Battery',
+                description: 'Shows battery level of your connected device',
+                sizes: ['Small'],
+                accentColor: accentColor,
+              ),
+              const SizedBox(height: 12),
+              _buildWidgetCard(
+                context,
+                icon: Icons.send,
+                title: 'Quick Message',
+                description: 'Send a canned response with one tap',
+                sizes: ['Small', 'Medium'],
+                accentColor: accentColor,
+              ),
+              const SizedBox(height: 12),
+              _buildWidgetCard(
+                context,
+                icon: Icons.gps_fixed,
+                title: 'Location Beacon',
+                description: 'Share your location with a single tap',
+                sizes: ['Small'],
+                accentColor: accentColor,
+              ),
+              const SizedBox(height: 24),
+
+              // How to Add Section
+              _buildSectionHeader('HOW TO ADD WIDGETS'),
+              const SizedBox(height: 12),
+              _buildInstructions(context, accentColor),
+              const SizedBox(height: 24),
+
+              // Tips Section
+              _buildSectionHeader('TIPS'),
+              const SizedBox(height: 12),
+              _buildTipsSection(context, accentColor),
+            ]),
           ),
         ),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // Header
-          _buildHeader(context, accentColor),
-          const SizedBox(height: 24),
-
-          // Available Widgets Section
-          _buildSectionHeader('AVAILABLE WIDGETS'),
-          const SizedBox(height: 12),
-          _buildWidgetCard(
-            context,
-            icon: Icons.people,
-            title: 'Mesh Status',
-            description: 'Shows connected nodes count and mesh health',
-            sizes: ['Small', 'Medium'],
-            accentColor: accentColor,
-          ),
-          const SizedBox(height: 12),
-          _buildWidgetCard(
-            context,
-            icon: Icons.message,
-            title: 'Recent Messages',
-            description: 'Displays latest messages from your mesh',
-            sizes: ['Medium', 'Large'],
-            accentColor: accentColor,
-          ),
-          const SizedBox(height: 12),
-          _buildWidgetCard(
-            context,
-            icon: Icons.battery_full,
-            title: 'Device Battery',
-            description: 'Shows battery level of your connected device',
-            sizes: ['Small'],
-            accentColor: accentColor,
-          ),
-          const SizedBox(height: 12),
-          _buildWidgetCard(
-            context,
-            icon: Icons.send,
-            title: 'Quick Message',
-            description: 'Send a canned response with one tap',
-            sizes: ['Small', 'Medium'],
-            accentColor: accentColor,
-          ),
-          const SizedBox(height: 12),
-          _buildWidgetCard(
-            context,
-            icon: Icons.gps_fixed,
-            title: 'Location Beacon',
-            description: 'Share your location with a single tap',
-            sizes: ['Small'],
-            accentColor: accentColor,
-          ),
-          const SizedBox(height: 24),
-
-          // How to Add Section
-          _buildSectionHeader('HOW TO ADD WIDGETS'),
-          const SizedBox(height: 12),
-          _buildInstructions(context, accentColor),
-          const SizedBox(height: 24),
-
-          // Tips Section
-          _buildSectionHeader('TIPS'),
-          const SizedBox(height: 12),
-          _buildTipsSection(context, accentColor),
-        ],
-      ),
+      ],
     );
   }
 

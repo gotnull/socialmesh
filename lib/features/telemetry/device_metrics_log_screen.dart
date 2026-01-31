@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../models/telemetry_log.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../providers/telemetry_providers.dart';
@@ -80,93 +81,98 @@ class _DeviceMetricsLogScreenState
     final logsAsync = ref.watch(deviceMetricsLogsProvider);
     final nodes = ref.watch(nodesProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Device'),
-        actions: [
-          if (_hasActiveFilters)
-            IconButton(
-              icon: const Icon(Icons.filter_alt_off),
-              tooltip: 'Clear filters',
-              onPressed: _clearFilters,
-            ),
+    return GlassScaffold(
+      title: 'Device',
+      actions: [
+        if (_hasActiveFilters)
           IconButton(
-            icon: Badge(
-              isLabelVisible: _hasActiveFilters,
-              child: const Icon(Icons.date_range),
-            ),
-            tooltip: 'Date range',
-            onPressed: _selectDateRange,
+            icon: const Icon(Icons.filter_alt_off),
+            tooltip: 'Clear filters',
+            onPressed: _clearFilters,
           ),
-          IconButton(
-            icon: Icon(_showGraph ? Icons.list : Icons.show_chart),
-            tooltip: _showGraph ? 'List view' : 'Graph view',
-            onPressed: () => setState(() => _showGraph = !_showGraph),
+        IconButton(
+          icon: Badge(
+            isLabelVisible: _hasActiveFilters,
+            child: const Icon(Icons.date_range),
           ),
-        ],
-      ),
-      body: SafeArea(
-        child: logsAsync.when(
-          loading: () => const ScreenLoadingIndicator(),
-          error: (e, s) => Center(child: Text('Error: $e')),
+          tooltip: 'Date range',
+          onPressed: _selectDateRange,
+        ),
+        IconButton(
+          icon: Icon(_showGraph ? Icons.list : Icons.show_chart),
+          tooltip: _showGraph ? 'List view' : 'Graph view',
+          onPressed: () => setState(() => _showGraph = !_showGraph),
+        ),
+      ],
+      slivers: [
+        logsAsync.when(
+          loading: () =>
+              const SliverFillRemaining(child: ScreenLoadingIndicator()),
+          error: (e, s) =>
+              SliverFillRemaining(child: Center(child: Text('Error: $e'))),
           data: (logs) {
             final filtered = _filterLogs(logs)
               ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
 
             if (filtered.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.battery_unknown,
-                      size: 64,
-                      color: context.textTertiary,
-                    ),
-                    SizedBox(height: 16),
-                    Text(
-                      _hasActiveFilters
-                          ? 'No metrics match filters'
-                          : 'No device history',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: context.textSecondary,
+              return SliverFillRemaining(
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.battery_unknown,
+                        size: 64,
+                        color: context.textTertiary,
                       ),
-                    ),
-                    if (_hasActiveFilters) ...[
-                      const SizedBox(height: 8),
-                      TextButton(
-                        onPressed: _clearFilters,
-                        child: const Text('Clear filters'),
+                      SizedBox(height: 16),
+                      Text(
+                        _hasActiveFilters
+                            ? 'No metrics match filters'
+                            : 'No device history',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: context.textSecondary,
+                        ),
                       ),
+                      if (_hasActiveFilters) ...[
+                        const SizedBox(height: 8),
+                        TextButton(
+                          onPressed: _clearFilters,
+                          child: const Text('Clear filters'),
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               );
             }
 
             if (_showGraph) {
-              return _DeviceGraphView(
-                logs: filtered,
-                selectedMetric: _selectedMetric,
-                onMetricChanged: (m) => setState(() => _selectedMetric = m),
+              return SliverFillRemaining(
+                child: _DeviceGraphView(
+                  logs: filtered,
+                  selectedMetric: _selectedMetric,
+                  onMetricChanged: (m) => setState(() => _selectedMetric = m),
+                ),
               );
             }
 
-            return ListView.builder(
+            return SliverPadding(
               padding: const EdgeInsets.all(16),
-              itemCount: filtered.length,
-              itemBuilder: (context, index) {
-                final log = filtered[index];
-                final nodeName =
-                    nodes[log.nodeNum]?.displayName ??
-                    '!${log.nodeNum.toRadixString(16).toUpperCase()}';
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final log = filtered[index];
+                  final nodeName =
+                      nodes[log.nodeNum]?.displayName ??
+                      '!${log.nodeNum.toRadixString(16).toUpperCase()}';
 
-                return _DeviceMetricsCard(log: log, nodeName: nodeName);
-              },
+                  return _DeviceMetricsCard(log: log, nodeName: nodeName);
+                }, childCount: filtered.length),
+              ),
             );
           },
         ),
-      ),
+      ],
     );
   }
 }

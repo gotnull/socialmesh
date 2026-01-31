@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
 import '../../../core/widgets/content_moderation_warning.dart';
+import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/gradient_border_container.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/profile_providers.dart';
@@ -72,38 +73,27 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
         : const AsyncValue<Set<String>>.data({});
     final isAdminAsync = ref.watch(isShopAdminProvider);
 
-    return Scaffold(
-      backgroundColor: context.background,
-      body: productAsync.when(
-        loading: () => Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline, color: AppTheme.errorRed, size: 48),
-              const SizedBox(height: 16),
-              Text(
-                'Error loading product',
-                style: TextStyle(color: context.textPrimary),
-              ),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text('Go Back'),
-              ),
-            ],
+    return productAsync.when(
+      loading: () => GlassScaffold(
+        title: 'Product',
+        slivers: [
+          SliverFillRemaining(
+            child: Center(child: CircularProgressIndicator()),
           ),
-        ),
-        data: (product) {
-          if (product == null) {
-            return Center(
+        ],
+      ),
+      error: (e, _) => GlassScaffold(
+        title: 'Product',
+        slivers: [
+          SliverFillRemaining(
+            child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.search_off, color: context.textTertiary, size: 48),
+                  Icon(Icons.error_outline, color: AppTheme.errorRed, size: 48),
                   const SizedBox(height: 16),
                   Text(
-                    'Product not found',
+                    'Error loading product',
                     style: TextStyle(color: context.textPrimary),
                   ),
                   const SizedBox(height: 8),
@@ -113,50 +103,83 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                   ),
                 ],
               ),
-            );
-          }
-
-          final isFavorite =
-              favoriteIdsAsync.value?.contains(product.id) ?? false;
-
-          return CustomScrollView(
-            controller: _scrollController,
+            ),
+          ),
+        ],
+      ),
+      data: (product) {
+        if (product == null) {
+          return GlassScaffold(
+            title: 'Product',
             slivers: [
-              // App Bar with Image Gallery
-              _buildImageGallery(
-                product,
-                isFavorite,
-                user?.uid,
-                isAdminAsync.value ?? false,
+              SliverFillRemaining(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.search_off,
+                        color: context.textTertiary,
+                        size: 48,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Product not found',
+                        style: TextStyle(color: context.textPrimary),
+                      ),
+                      const SizedBox(height: 8),
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text('Go Back'),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-
-              // Product Info
-              SliverToBoxAdapter(child: _buildProductInfo(product)),
-
-              // Technical Specs
-              if (_hasSpecs(product))
-                SliverToBoxAdapter(child: _buildSpecsSection(product)),
-
-              // Features
-              SliverToBoxAdapter(child: _buildFeaturesSection(product)),
-
-              // Shipping Info
-              SliverToBoxAdapter(child: _buildShippingSection(product)),
-
-              // Reviews Section
-              SliverToBoxAdapter(child: _ReviewsSection(productId: product.id)),
-
-              // Bottom padding for buy button
-              const SliverPadding(padding: EdgeInsets.only(bottom: 100)),
             ],
           );
-        },
-      ),
-      bottomNavigationBar: productAsync.whenOrNull(
-        data: (product) => product != null
-            ? _buildBottomBar(product, isAdminAsync.value ?? false)
-            : null,
-      ),
+        }
+
+        final isFavorite =
+            favoriteIdsAsync.value?.contains(product.id) ?? false;
+
+        return GlassScaffold(
+          title: _showTitle ? product.name : '',
+          controller: _scrollController,
+          bottomNavigationBar: _buildBottomBar(
+            product,
+            isAdminAsync.value ?? false,
+          ),
+          slivers: [
+            // App Bar with Image Gallery
+            _buildImageGallery(
+              product,
+              isFavorite,
+              user?.uid,
+              isAdminAsync.value ?? false,
+            ),
+
+            // Product Info
+            SliverToBoxAdapter(child: _buildProductInfo(product)),
+
+            // Technical Specs
+            if (_hasSpecs(product))
+              SliverToBoxAdapter(child: _buildSpecsSection(product)),
+
+            // Features
+            SliverToBoxAdapter(child: _buildFeaturesSection(product)),
+
+            // Shipping Info
+            SliverToBoxAdapter(child: _buildShippingSection(product)),
+
+            // Reviews Section
+            SliverToBoxAdapter(child: _ReviewsSection(productId: product.id)),
+
+            // Bottom padding for buy button
+            const SliverPadding(padding: EdgeInsets.only(bottom: 100)),
+          ],
+        );
+      },
     );
   }
 

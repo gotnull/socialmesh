@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme.dart';
+import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
 import '../../../core/widgets/user_avatar.dart';
 import '../models/shop_models.dart';
@@ -55,41 +56,27 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen> {
     final sellerAsync = ref.watch(singleSellerProvider(widget.sellerId));
     final productsAsync = ref.watch(sellerProductsProvider(widget.sellerId));
 
-    return Scaffold(
-      backgroundColor: context.background,
-      body: sellerAsync.when(
-        loading: () => Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline, color: AppTheme.errorRed, size: 48),
-              const SizedBox(height: 16),
-              Text(
-                'Error loading seller',
-                style: TextStyle(color: context.textPrimary),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text('Go Back'),
-              ),
-            ],
+    return sellerAsync.when(
+      loading: () => GlassScaffold(
+        title: 'Seller',
+        slivers: [
+          SliverFillRemaining(
+            child: Center(child: CircularProgressIndicator()),
           ),
-        ),
-        data: (seller) {
-          if (seller == null) {
-            return Center(
+        ],
+      ),
+      error: (e, _) => GlassScaffold(
+        title: 'Seller',
+        slivers: [
+          SliverFillRemaining(
+            child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.store_outlined,
-                    color: context.textTertiary,
-                    size: 48,
-                  ),
+                  Icon(Icons.error_outline, color: AppTheme.errorRed, size: 48),
                   const SizedBox(height: 16),
                   Text(
-                    'Seller not found',
+                    'Error loading seller',
                     style: TextStyle(color: context.textPrimary),
                   ),
                   TextButton(
@@ -98,169 +85,202 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen> {
                   ),
                 ],
               ),
-            );
-          }
-
-          return CustomScrollView(
-            controller: _scrollController,
+            ),
+          ),
+        ],
+      ),
+      data: (seller) {
+        if (seller == null) {
+          return GlassScaffold(
+            title: 'Seller',
             slivers: [
-              // App Bar with seller header
-              _buildHeader(context, seller),
-
-              // Search bar - pinned below app bar
-              SliverPersistentHeader(
-                pinned: true,
-                delegate: _SearchBarDelegate(
-                  searchController: _searchController,
-                  searchQuery: _searchQuery,
-                  onChanged: (value) => setState(() => _searchQuery = value),
-                  onClear: () {
-                    _searchController.clear();
-                    setState(() => _searchQuery = '');
-                  },
-                  hintText: 'Search products...',
-                  backgroundColor: context.background,
-                  cardColor: context.card,
-                  textPrimary: context.textPrimary,
-                  textTertiary: context.textTertiary,
-                ),
-              ),
-
-              // Seller stats
-              SliverToBoxAdapter(child: _SellerStats(seller: seller)),
-
-              // Seller description
-              if (seller.description != null)
-                SliverToBoxAdapter(
-                  child: _SellerDescription(description: seller.description!),
-                ),
-
-              // Contact section
-              SliverToBoxAdapter(child: _ContactSection(seller: seller)),
-
-              // Products section header
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
-                  child: Text(
-                    'Products (${seller.productCount})',
-                    style: TextStyle(
-                      color: context.textPrimary,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+              SliverFillRemaining(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.store_outlined,
+                        color: context.textTertiary,
+                        size: 48,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Seller not found',
+                        style: TextStyle(color: context.textPrimary),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text('Go Back'),
+                      ),
+                    ],
                   ),
                 ),
               ),
-
-              // Products grid
-              productsAsync.when(
-                loading: () => const SliverToBoxAdapter(
-                  child: Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(32),
-                      child: CircularProgressIndicator(),
-                    ),
-                  ),
-                ),
-                error: (error, stack) => SliverToBoxAdapter(
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(32),
-                      child: Text(
-                        'Unable to load products',
-                        style: TextStyle(color: context.textSecondary),
-                      ),
-                    ),
-                  ),
-                ),
-                data: (products) {
-                  if (products.isEmpty) {
-                    return SliverToBoxAdapter(
-                      child: Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(32),
-                          child: Column(
-                            children: [
-                              Icon(
-                                Icons.inventory_2_outlined,
-                                color: context.textTertiary,
-                                size: 48,
-                              ),
-                              SizedBox(height: 12),
-                              Text(
-                                'No products listed yet',
-                                style: TextStyle(color: context.textSecondary),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  }
-
-                  // Filter products by search query
-                  final filteredProducts = _searchQuery.isEmpty
-                      ? products
-                      : products.where((p) {
-                          final query = _searchQuery.toLowerCase();
-                          return p.name.toLowerCase().contains(query) ||
-                              (p.description.toLowerCase().contains(query)) ||
-                              (p.shortDescription?.toLowerCase().contains(
-                                    query,
-                                  ) ??
-                                  false) ||
-                              p.category.label.toLowerCase().contains(query);
-                        }).toList();
-
-                  if (filteredProducts.isEmpty) {
-                    return SliverToBoxAdapter(
-                      child: Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(32),
-                          child: Column(
-                            children: [
-                              Icon(
-                                Icons.search_off,
-                                color: context.textTertiary,
-                                size: 48,
-                              ),
-                              SizedBox(height: 12),
-                              Text(
-                                'No products match "$_searchQuery"',
-                                style: TextStyle(color: context.textSecondary),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  }
-
-                  return SliverPadding(
-                    padding: const EdgeInsets.all(12),
-                    sliver: SliverGrid(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            childAspectRatio: 0.7,
-                            crossAxisSpacing: 12,
-                            mainAxisSpacing: 12,
-                          ),
-                      delegate: SliverChildBuilderDelegate((context, index) {
-                        return ProductCard(product: filteredProducts[index]);
-                      }, childCount: filteredProducts.length),
-                    ),
-                  );
-                },
-              ),
-
-              // Bottom padding
-              const SliverPadding(padding: EdgeInsets.only(bottom: 32)),
             ],
           );
-        },
-      ),
+        }
+
+        return GlassScaffold(
+          title: _showTitle ? seller.name : '',
+          controller: _scrollController,
+          slivers: [
+            // App Bar with seller header
+            _buildHeader(context, seller),
+
+            // Search bar - pinned below app bar
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _SearchBarDelegate(
+                searchController: _searchController,
+                searchQuery: _searchQuery,
+                onChanged: (value) => setState(() => _searchQuery = value),
+                onClear: () {
+                  _searchController.clear();
+                  setState(() => _searchQuery = '');
+                },
+                hintText: 'Search products...',
+                backgroundColor: context.background,
+                cardColor: context.card,
+                textPrimary: context.textPrimary,
+                textTertiary: context.textTertiary,
+              ),
+            ),
+
+            // Seller stats
+            SliverToBoxAdapter(child: _SellerStats(seller: seller)),
+
+            // Seller description
+            if (seller.description != null)
+              SliverToBoxAdapter(
+                child: _SellerDescription(description: seller.description!),
+              ),
+
+            // Contact section
+            SliverToBoxAdapter(child: _ContactSection(seller: seller)),
+
+            // Products section header
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+                child: Text(
+                  'Products (${seller.productCount})',
+                  style: TextStyle(
+                    color: context.textPrimary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+
+            // Products grid
+            productsAsync.when(
+              loading: () => const SliverToBoxAdapter(
+                child: Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(32),
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
+              ),
+              error: (error, stack) => SliverToBoxAdapter(
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Text(
+                      'Unable to load products',
+                      style: TextStyle(color: context.textSecondary),
+                    ),
+                  ),
+                ),
+              ),
+              data: (products) {
+                if (products.isEmpty) {
+                  return SliverToBoxAdapter(
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(32),
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.inventory_2_outlined,
+                              color: context.textTertiary,
+                              size: 48,
+                            ),
+                            SizedBox(height: 12),
+                            Text(
+                              'No products listed yet',
+                              style: TextStyle(color: context.textSecondary),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                // Filter products by search query
+                final filteredProducts = _searchQuery.isEmpty
+                    ? products
+                    : products.where((p) {
+                        final query = _searchQuery.toLowerCase();
+                        return p.name.toLowerCase().contains(query) ||
+                            (p.description.toLowerCase().contains(query)) ||
+                            (p.shortDescription?.toLowerCase().contains(
+                                  query,
+                                ) ??
+                                false) ||
+                            p.category.label.toLowerCase().contains(query);
+                      }).toList();
+
+                if (filteredProducts.isEmpty) {
+                  return SliverToBoxAdapter(
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(32),
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.search_off,
+                              color: context.textTertiary,
+                              size: 48,
+                            ),
+                            SizedBox(height: 12),
+                            Text(
+                              'No products match "$_searchQuery"',
+                              style: TextStyle(color: context.textSecondary),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                return SliverPadding(
+                  padding: const EdgeInsets.all(12),
+                  sliver: SliverGrid(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 0.7,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                        ),
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      return ProductCard(product: filteredProducts[index]);
+                    }, childCount: filteredProducts.length),
+                  ),
+                );
+              },
+            ),
+
+            // Bottom padding
+            const SliverPadding(padding: EdgeInsets.only(bottom: 32)),
+          ],
+        );
+      },
     );
   }
 

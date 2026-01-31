@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 import '../../../core/theme.dart';
-import '../../../core/widgets/auto_scroll_text.dart';
+import '../../../core/widgets/glass_scaffold.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../utils/snackbar.dart';
 import '../models/shop_models.dart';
@@ -46,27 +46,17 @@ class _ReviewModerationScreenState extends ConsumerState<ReviewModerationScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.card,
-        title: AutoScrollText(
-          'Review Management',
-          style: TextStyle(color: context.textPrimary),
-          maxLines: 1,
-          velocity: 30.0,
-          fadeWidth: 20.0,
-        ),
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: context.accentColor,
-          labelColor: context.accentColor,
-          unselectedLabelColor: context.textSecondary,
-          tabs: const [
-            Tab(text: 'Pending'),
-            Tab(text: 'All Reviews'),
-          ],
-        ),
+    return GlassScaffold.body(
+      title: 'Review Management',
+      bottom: TabBar(
+        controller: _tabController,
+        indicatorColor: context.accentColor,
+        labelColor: context.accentColor,
+        unselectedLabelColor: context.textSecondary,
+        tabs: const [
+          Tab(text: 'Pending'),
+          Tab(text: 'All Reviews'),
+        ],
       ),
       body: TabBarView(
         controller: _tabController,

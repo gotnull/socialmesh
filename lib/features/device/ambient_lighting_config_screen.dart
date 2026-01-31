@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
@@ -107,338 +108,323 @@ class _AmbientLightingConfigScreenState
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return Scaffold(
-        backgroundColor: context.background,
-        appBar: AppBar(
-          backgroundColor: context.background,
-          title: Text(
-            'Ambient Lighting',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: context.textPrimary,
-            ),
-          ),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ),
-        body: const ScreenLoadingIndicator(),
+      return GlassScaffold(
+        title: 'Ambient Lighting',
+        slivers: [const SliverFillRemaining(child: ScreenLoadingIndicator())],
       );
     }
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.background,
-        title: Text(
-          'Ambient Lighting',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: context.textPrimary,
+    return GlassScaffold(
+      title: 'Ambient Lighting',
+      actions: [
+        if (_hasChanges)
+          TextButton(
+            onPressed: _isSaving ? null : _save,
+            child: _isSaving
+                ? SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: context.accentColor,
+                    ),
+                  )
+                : Text(
+                    'Save',
+                    style: TextStyle(
+                      color: context.accentColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
           ),
-        ),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
-        actions: [
-          if (_hasChanges)
-            TextButton(
-              onPressed: _isSaving ? null : _save,
-              child: _isSaving
-                  ? SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: context.accentColor,
-                      ),
-                    )
-                  : Text(
-                      'Save',
-                      style: TextStyle(
-                        color: context.accentColor,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-            ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // LED State toggle
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: context.card,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+      ],
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.all(16),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate([
+              // LED State toggle
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: context.card,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'LED Enabled',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: context.textPrimary,
-                      ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'LED Enabled',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: context.textPrimary,
+                          ),
+                        ),
+                        Text(
+                          'Turn ambient lighting on or off',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: context.textTertiary,
+                          ),
+                        ),
+                      ],
                     ),
-                    Text(
-                      'Turn ambient lighting on or off',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: context.textTertiary,
-                      ),
+                    ThemedSwitch(
+                      value: _ledState,
+                      onChanged: (value) {
+                        setState(() {
+                          _ledState = value;
+                          _hasChanges = true;
+                        });
+                      },
                     ),
                   ],
                 ),
-                ThemedSwitch(
-                  value: _ledState,
-                  onChanged: (value) {
-                    setState(() {
-                      _ledState = value;
-                      _hasChanges = true;
-                    });
-                  },
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          // Color preview
-          Center(
-            child: Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                color: Color(_currentColor),
-                shape: BoxShape.circle,
-                boxShadow: _ledState
-                    ? [
-                        BoxShadow(
-                          color: Color(_currentColor).withValues(alpha: 0.5),
-                          blurRadius: 30,
-                          spreadRadius: 10,
-                        ),
-                      ]
-                    : null,
               ),
-            ),
-          ),
 
-          const SizedBox(height: 24),
+              const SizedBox(height: 24),
 
-          // Preset colors
-          Text(
-            'Preset Colors',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: context.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: _presetColors.map((color) {
-              final isSelected = _currentColor == color;
-              return GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _currentColor = color;
-                    _red = (color >> 16) & 0xFF;
-                    _green = (color >> 8) & 0xFF;
-                    _blue = color & 0xFF;
-                    _hasChanges = true;
-                  });
-                },
+              // Color preview
+              Center(
                 child: Container(
-                  width: 40,
-                  height: 40,
+                  width: 120,
+                  height: 120,
                   decoration: BoxDecoration(
-                    color: Color(color),
+                    color: Color(_currentColor),
                     shape: BoxShape.circle,
-                    border: isSelected
-                        ? Border.all(color: Colors.white, width: 2)
+                    boxShadow: _ledState
+                        ? [
+                            BoxShadow(
+                              color: Color(
+                                _currentColor,
+                              ).withValues(alpha: 0.5),
+                              blurRadius: 30,
+                              spreadRadius: 10,
+                            ),
+                          ]
                         : null,
                   ),
                 ),
-              );
-            }).toList(),
-          ),
+              ),
 
-          const SizedBox(height: 24),
+              const SizedBox(height: 24),
 
-          // RGB sliders
-          Text(
-            'Custom Color',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: context.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          _ColorSlider(
-            label: 'Red',
-            value: _red,
-            color: Colors.red,
-            onChanged: (value) {
-              setState(() {
-                _red = value;
-                _updateColor();
-              });
-            },
-          ),
-
-          _ColorSlider(
-            label: 'Green',
-            value: _green,
-            color: Colors.green,
-            onChanged: (value) {
-              setState(() {
-                _green = value;
-                _updateColor();
-              });
-            },
-          ),
-
-          _ColorSlider(
-            label: 'Blue',
-            value: _blue,
-            color: Colors.blue,
-            onChanged: (value) {
-              setState(() {
-                _blue = value;
-                _updateColor();
-              });
-            },
-          ),
-
-          const SizedBox(height: 24),
-
-          // LED Brightness/Current
-          Text(
-            'LED Brightness',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: context.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: context.card,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Current',
-                      style: TextStyle(
-                        color: context.textPrimary,
-                        fontWeight: FontWeight.w500,
+              // Preset colors
+              Text(
+                'Preset Colors',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: context.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: _presetColors.map((color) {
+                  final isSelected = _currentColor == color;
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _currentColor = color;
+                        _red = (color >> 16) & 0xFF;
+                        _green = (color >> 8) & 0xFF;
+                        _blue = color & 0xFF;
+                        _hasChanges = true;
+                      });
+                    },
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Color(color),
+                        shape: BoxShape.circle,
+                        border: isSelected
+                            ? Border.all(color: Colors.white, width: 2)
+                            : null,
                       ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
+                  );
+                }).toList(),
+              ),
+
+              const SizedBox(height: 24),
+
+              // RGB sliders
+              Text(
+                'Custom Color',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: context.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              _ColorSlider(
+                label: 'Red',
+                value: _red,
+                color: Colors.red,
+                onChanged: (value) {
+                  setState(() {
+                    _red = value;
+                    _updateColor();
+                  });
+                },
+              ),
+
+              _ColorSlider(
+                label: 'Green',
+                value: _green,
+                color: Colors.green,
+                onChanged: (value) {
+                  setState(() {
+                    _green = value;
+                    _updateColor();
+                  });
+                },
+              ),
+
+              _ColorSlider(
+                label: 'Blue',
+                value: _blue,
+                color: Colors.blue,
+                onChanged: (value) {
+                  setState(() {
+                    _blue = value;
+                    _updateColor();
+                  });
+                },
+              ),
+
+              const SizedBox(height: 24),
+
+              // LED Brightness/Current
+              Text(
+                'LED Brightness',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: context.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: context.card,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Current',
+                          style: TextStyle(
+                            color: context.textPrimary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: context.accentColor.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            '$_current mA',
+                            style: TextStyle(
+                              color: context.accentColor,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'LED drive current (brightness)',
+                      style: TextStyle(
+                        color: context.textSecondary,
+                        fontSize: 12,
                       ),
-                      decoration: BoxDecoration(
-                        color: context.accentColor.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(6),
+                    ),
+                    const SizedBox(height: 8),
+                    SliderTheme(
+                      data: SliderThemeData(
+                        activeTrackColor: context.accentColor,
+                        inactiveTrackColor: context.border,
+                        thumbColor: context.accentColor,
+                        overlayColor: context.accentColor.withValues(
+                          alpha: 0.2,
+                        ),
+                        trackHeight: 4,
                       ),
+                      child: Slider(
+                        value: _current.toDouble(),
+                        min: 1,
+                        max: 31,
+                        divisions: 30,
+                        onChanged: (value) {
+                          setState(() {
+                            _current = value.toInt();
+                            _hasChanges = true;
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              SizedBox(height: 24),
+
+              // Info card
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: context.accentColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: context.accentColor.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      color: context.accentColor,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
                       child: Text(
-                        '$_current mA',
+                        'Ambient lighting is only available on devices with LED support (RAK WisBlock, T-Beam, etc.)',
                         style: TextStyle(
-                          color: context.accentColor,
-                          fontWeight: FontWeight.w600,
                           fontSize: 13,
+                          color: context.textSecondary,
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'LED drive current (brightness)',
-                  style: TextStyle(color: context.textSecondary, fontSize: 12),
-                ),
-                const SizedBox(height: 8),
-                SliderTheme(
-                  data: SliderThemeData(
-                    activeTrackColor: context.accentColor,
-                    inactiveTrackColor: context.border,
-                    thumbColor: context.accentColor,
-                    overlayColor: context.accentColor.withValues(alpha: 0.2),
-                    trackHeight: 4,
-                  ),
-                  child: Slider(
-                    value: _current.toDouble(),
-                    min: 1,
-                    max: 31,
-                    divisions: 30,
-                    onChanged: (value) {
-                      setState(() {
-                        _current = value.toInt();
-                        _hasChanges = true;
-                      });
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          SizedBox(height: 24),
-
-          // Info card
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: context.accentColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: context.accentColor.withValues(alpha: 0.3),
               ),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.info_outline, color: context.accentColor, size: 20),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Ambient lighting is only available on devices with LED support (RAK WisBlock, T-Beam, etc.)',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: context.textSecondary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            ]),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

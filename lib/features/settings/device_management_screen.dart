@@ -6,6 +6,7 @@ import '../../core/transport.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
+import '../../core/widgets/glass_scaffold.dart';
 
 /// Screen for device management actions like reboot, shutdown, factory reset
 class DeviceManagementScreen extends ConsumerStatefulWidget {
@@ -134,12 +135,15 @@ class _DeviceManagementScreenState
       orElse: () => false,
     );
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Device Management')),
-      body: _isProcessing
-          ? const ScreenLoadingIndicator()
-          : ListView(
-              padding: const EdgeInsets.all(16),
+    return GlassScaffold(
+      title: 'Device Management',
+      slivers: [
+        if (_isProcessing)
+          const SliverFillRemaining(child: ScreenLoadingIndicator())
+        else
+          SliverPadding(
+            padding: const EdgeInsets.all(16),
+            sliver: SliverList.list(
               children: [
                 if (!isConnected)
                   Padding(
@@ -331,6 +335,8 @@ class _DeviceManagementScreenState
                 const SizedBox(height: 32),
               ],
             ),
+          ),
+      ],
     );
   }
 }

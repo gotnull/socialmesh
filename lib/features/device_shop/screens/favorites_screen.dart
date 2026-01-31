@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
+import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
 import '../../../providers/auth_providers.dart';
 import '../models/shop_models.dart';
@@ -17,80 +18,17 @@ class FavoritesScreen extends ConsumerWidget {
     final user = ref.watch(currentUserProvider);
 
     if (user == null) {
-      return Scaffold(
-        backgroundColor: context.background,
-        appBar: AppBar(
-          backgroundColor: context.card,
-          title: AutoScrollText(
-            'Favorites',
-            style: TextStyle(color: context.textPrimary),
-            maxLines: 1,
-            velocity: 30.0,
-            fadeWidth: 20.0,
-          ),
-        ),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.favorite_outline,
-                color: context.textTertiary,
-                size: 64,
-              ),
-              SizedBox(height: 16),
-              Text(
-                'Sign in to save favorites',
-                style: TextStyle(color: context.textPrimary, fontSize: 18),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Your favorite devices will appear here',
-                style: TextStyle(color: context.textSecondary),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    final favoritesAsync = ref.watch(userFavoritesProvider(user.uid));
-
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.card,
-        title: AutoScrollText(
+      return GlassScaffold(
+        titleWidget: AutoScrollText(
           'Favorites',
           style: TextStyle(color: context.textPrimary),
           maxLines: 1,
           velocity: 30.0,
           fadeWidth: 20.0,
         ),
-      ),
-      body: favoritesAsync.when(
-        loading: () => Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline, color: AppTheme.errorRed, size: 48),
-              const SizedBox(height: 16),
-              Text(
-                'Error loading favorites',
-                style: TextStyle(color: context.textPrimary),
-              ),
-              TextButton(
-                onPressed: () =>
-                    ref.invalidate(userFavoritesProvider(user.uid)),
-                child: Text('Retry'),
-              ),
-            ],
-          ),
-        ),
-        data: (favorites) {
-          if (favorites.isEmpty) {
-            return Center(
+        slivers: [
+          SliverFillRemaining(
+            child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -101,31 +39,102 @@ class FavoritesScreen extends ConsumerWidget {
                   ),
                   SizedBox(height: 16),
                   Text(
-                    'No favorites yet',
+                    'Sign in to save favorites',
                     style: TextStyle(color: context.textPrimary, fontSize: 18),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Tap the heart icon on products to save them',
+                    'Your favorite devices will appear here',
                     style: TextStyle(color: context.textSecondary),
                   ),
                 ],
               ),
-            );
-          }
+            ),
+          ),
+        ],
+      );
+    }
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: favorites.length,
-            itemBuilder: (context, index) {
-              return _FavoriteProductCard(
-                favorite: favorites[index],
-                userId: user.uid,
-              );
-            },
-          );
-        },
+    final favoritesAsync = ref.watch(userFavoritesProvider(user.uid));
+
+    return GlassScaffold(
+      titleWidget: AutoScrollText(
+        'Favorites',
+        style: TextStyle(color: context.textPrimary),
+        maxLines: 1,
+        velocity: 30.0,
+        fadeWidth: 20.0,
       ),
+      slivers: [
+        favoritesAsync.when(
+          loading: () => SliverFillRemaining(
+            child: Center(child: CircularProgressIndicator()),
+          ),
+          error: (e, _) => SliverFillRemaining(
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline, color: AppTheme.errorRed, size: 48),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Error loading favorites',
+                    style: TextStyle(color: context.textPrimary),
+                  ),
+                  TextButton(
+                    onPressed: () =>
+                        ref.invalidate(userFavoritesProvider(user.uid)),
+                    child: Text('Retry'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          data: (favorites) {
+            if (favorites.isEmpty) {
+              return SliverFillRemaining(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.favorite_outline,
+                        color: context.textTertiary,
+                        size: 64,
+                      ),
+                      SizedBox(height: 16),
+                      Text(
+                        'No favorites yet',
+                        style: TextStyle(
+                          color: context.textPrimary,
+                          fontSize: 18,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Tap the heart icon on products to save them',
+                        style: TextStyle(color: context.textSecondary),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            return SliverPadding(
+              padding: const EdgeInsets.all(16),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  return _FavoriteProductCard(
+                    favorite: favorites[index],
+                    userId: user.uid,
+                  );
+                }, childCount: favorites.length),
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 }

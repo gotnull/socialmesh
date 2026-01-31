@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
@@ -131,29 +132,28 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.background,
-        title: Text('Display Configuration'),
-        actions: [
-          TextButton(
-            onPressed: _isLoading ? null : _saveConfig,
-            child: Text(
-              'Save',
-              style: TextStyle(
-                color: _isLoading ? Colors.grey : context.accentColor,
-                fontWeight: FontWeight.w600,
-              ),
+    return GlassScaffold(
+      title: 'Display Configuration',
+      actions: [
+        TextButton(
+          onPressed: _isLoading ? null : _saveConfig,
+          child: Text(
+            'Save',
+            style: TextStyle(
+              color: _isLoading ? Colors.grey : context.accentColor,
+              fontWeight: FontWeight.w600,
             ),
           ),
-        ],
-      ),
-      body: _isLoading
-          ? const ScreenLoadingIndicator()
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
+        ),
+      ],
+      slivers: [
+        if (_isLoading)
+          const SliverFillRemaining(child: ScreenLoadingIndicator())
+        else
+          SliverPadding(
+            padding: const EdgeInsets.all(16),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
                 _SectionHeader(title: 'SCREEN'),
                 const SizedBox(height: 8),
                 _buildScreenSettings(),
@@ -174,8 +174,10 @@ class _DisplayConfigScreenState extends ConsumerState<DisplayConfigScreen> {
                 const SizedBox(height: 8),
                 _buildDisplayModeSelector(),
                 const SizedBox(height: 32),
-              ],
+              ]),
             ),
+          ),
+      ],
     );
   }
 

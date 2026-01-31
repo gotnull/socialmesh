@@ -9,6 +9,7 @@ import 'package:latlong2/latlong.dart';
 import '../../../core/logging.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
+import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/ico_help_system.dart';
 import '../../../core/widgets/edge_fade.dart';
 import '../../../core/widgets/animated_gradient_background.dart';
@@ -355,70 +356,52 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
       child: HelpTourController(
         topicId: 'signals_overview',
         stepKeys: const {},
-        child: Scaffold(
-          backgroundColor: context.background,
-          appBar: AppBar(
-            backgroundColor: context.background,
-            leading: const HamburgerMenuButton(),
-            centerTitle: true,
-            title: Text(
-              'Presence${allCount > 0 ? ' ($allCount)' : ''}',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: context.textPrimary,
-              ),
+        child: GlassScaffold(
+          title: 'Presence${allCount > 0 ? ' ($allCount)' : ''}',
+          leading: const HamburgerMenuButton(),
+          actions: [
+            // Go Active button
+            Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: _buildGoActiveButton(canGoActive, isSignedIn, isConnected),
             ),
-            actions: [
-              // Go Active button
-              Padding(
-                padding: const EdgeInsets.only(right: 4),
-                child: _buildGoActiveButton(
-                  canGoActive,
-                  isSignedIn,
-                  isConnected,
+            AppBarOverflowMenu<String>(
+              onSelected: (value) {
+                if (value == 'help') {
+                  ref.read(helpProvider.notifier).startTour('signals_overview');
+                } else if (value == 'settings') {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                  );
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'help',
+                  child: ListTile(
+                    leading: Icon(Icons.help_outline),
+                    title: Text('Help'),
+                    contentPadding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                  ),
                 ),
-              ),
-              AppBarOverflowMenu<String>(
-                onSelected: (value) {
-                  if (value == 'help') {
-                    ref
-                        .read(helpProvider.notifier)
-                        .startTour('signals_overview');
-                  } else if (value == 'settings') {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                    );
-                  }
-                },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: 'help',
-                    child: ListTile(
-                      leading: Icon(Icons.help_outline),
-                      title: Text('Help'),
-                      contentPadding: EdgeInsets.zero,
-                      visualDensity: VisualDensity.compact,
-                    ),
+                const PopupMenuItem(
+                  value: 'settings',
+                  child: ListTile(
+                    leading: Icon(Icons.settings_outlined),
+                    title: Text('Settings'),
+                    contentPadding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
                   ),
-                  const PopupMenuItem(
-                    value: 'settings',
-                    child: ListTile(
-                      leading: Icon(Icons.settings_outlined),
-                      title: Text('Settings'),
-                      contentPadding: EdgeInsets.zero,
-                      visualDensity: VisualDensity.compact,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          body: Column(
-            children: [
-              // Search bar
-              Padding(
+                ),
+              ],
+            ),
+          ],
+          slivers: [
+            // Search bar
+            SliverToBoxAdapter(
+              child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                 child: Container(
                   decoration: BoxDecoration(
@@ -457,11 +440,14 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                   ),
                 ),
               ),
+            ),
 
-              if (Platform.isIOS &&
-                  !connectivity.hasInternet &&
-                  connectivity.isBleConnected)
-                Padding(
+            // iOS Airplane Mode banner
+            if (Platform.isIOS &&
+                !connectivity.hasInternet &&
+                connectivity.isBleConnected)
+              SliverToBoxAdapter(
+                child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                   child: Container(
                     padding: const EdgeInsets.all(12),
@@ -494,9 +480,11 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                     ),
                   ),
                 ),
+              ),
 
-              // Filter chips row with view toggle at end
-              SizedBox(
+            // Filter chips row with view toggle at end
+            SliverToBoxAdapter(
+              child: SizedBox(
                 height: 44,
                 child: Row(
                   children: [
@@ -644,46 +632,50 @@ class _PresenceFeedScreenState extends ConsumerState<PresenceFeedScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 8),
+            ),
 
-              // Divider
-              Container(
+            // Spacing
+            const SliverToBoxAdapter(child: SizedBox(height: 8)),
+
+            // Divider
+            SliverToBoxAdapter(
+              child: Container(
                 height: 1,
                 color: context.border.withValues(alpha: 0.3),
               ),
+            ),
 
-              // Signal list/grid/map based on view mode with sticky header overlay
-              Expanded(
-                child: Stack(
-                  children: [
-                    // Content
-                    feedState.isLoading && feedState.signals.isEmpty
-                        ? _buildLoading()
-                        : signals.isEmpty
-                        ? _buildEmptyState()
-                        : _buildSignalView(
-                            signals,
-                            ref.watch(signalViewModeProvider),
-                          ),
-
-                    // Sticky header overlay with overlapping author avatars
-                    if (activeAuthors.isNotEmpty)
-                      Positioned(
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        child: _ActiveAuthorsHeader(
-                          authors: activeAuthors,
-                          signalCount: feedState.signals.length,
-                          isVisible: _showStickyHeader,
-                          onTap: _scrollToTop,
+            // Signal list/grid/map based on view mode with sticky header overlay
+            SliverFillRemaining(
+              child: Stack(
+                children: [
+                  // Content
+                  feedState.isLoading && feedState.signals.isEmpty
+                      ? _buildLoading()
+                      : signals.isEmpty
+                      ? _buildEmptyState()
+                      : _buildSignalView(
+                          signals,
+                          ref.watch(signalViewModeProvider),
                         ),
+
+                  // Sticky header overlay with overlapping author avatars
+                  if (activeAuthors.isNotEmpty)
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: _ActiveAuthorsHeader(
+                        authors: activeAuthors,
+                        signalCount: feedState.signals.length,
+                        isVisible: _showStickyHeader,
+                        onTap: _scrollToTop,
                       ),
-                  ],
-                ),
+                    ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/verified_badge.dart';
 import '../../../models/social.dart';
 import '../../../providers/social_providers.dart';
@@ -15,21 +16,17 @@ class FollowRequestsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final requestsAsync = ref.watch(pendingFollowRequestsProvider);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Follow Requests')),
-      body: requestsAsync.when(
-        data: (requests) {
-          if (requests.isEmpty) {
-            return _buildEmptyState(context);
-          }
+    return GlassScaffold(
+      title: 'Follow Requests',
+      slivers: [
+        requestsAsync.when(
+          data: (requests) {
+            if (requests.isEmpty) {
+              return SliverFillRemaining(child: _buildEmptyState(context));
+            }
 
-          return RefreshIndicator(
-            onRefresh: () async {
-              ref.invalidate(pendingFollowRequestsProvider);
-            },
-            child: ListView.builder(
-              itemCount: requests.length,
-              itemBuilder: (context, index) {
+            return SliverList(
+              delegate: SliverChildBuilderDelegate((context, index) {
                 final request = requests[index];
                 return _RequestTile(
                   request: request,
@@ -38,17 +35,21 @@ class FollowRequestsScreen extends ConsumerWidget {
                   onTap: () =>
                       _navigateToProfile(context, request.request.requesterId),
                 );
-              },
+              }, childCount: requests.length),
+            );
+          },
+          loading: () => const SliverFillRemaining(
+            child: Center(child: CircularProgressIndicator()),
+          ),
+          error: (error, _) => SliverFillRemaining(
+            child: _buildErrorState(
+              context,
+              error,
+              () => ref.invalidate(pendingFollowRequestsProvider),
             ),
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => _buildErrorState(
-          context,
-          error,
-          () => ref.invalidate(pendingFollowRequestsProvider),
+          ),
         ),
-      ),
+      ],
     );
   }
 

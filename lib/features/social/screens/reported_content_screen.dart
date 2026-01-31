@@ -8,6 +8,7 @@ import 'package:timeago/timeago.dart' as timeago;
 
 import '../../../core/logging.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../providers/social_providers.dart';
 import '../../../utils/snackbar.dart';
@@ -41,74 +42,73 @@ class _ReportedContentScreenState extends ConsumerState<ReportedContentScreen>
   Widget build(BuildContext context) {
     final socialService = ref.watch(socialServiceProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Reported Content'),
-        bottom: TabBar(
-          controller: _tabController,
-          isScrollable: true,
-          tabs: [
-            // Auto tab with moderation queue count
-            StreamBuilder<List<Map<String, dynamic>>>(
-              stream: socialService.watchModerationQueue(),
-              builder: (context, snapshot) {
-                final count = snapshot.data?.length ?? 0;
-                return _TabWithBadge(label: 'Auto', count: count);
-              },
-            ),
-            // All reports tab
-            StreamBuilder<List<Map<String, dynamic>>>(
-              stream: socialService.watchPendingReports(),
-              builder: (context, snapshot) {
-                final count = snapshot.data?.length ?? 0;
-                return _TabWithBadge(label: 'All', count: count);
-              },
-            ),
-            // Posts tab
-            StreamBuilder<List<Map<String, dynamic>>>(
-              stream: socialService.watchPendingReports(),
-              builder: (context, snapshot) {
-                final count =
-                    snapshot.data?.where((r) => r['type'] == 'post').length ??
-                    0;
-                return _TabWithBadge(label: 'Posts', count: count);
-              },
-            ),
-            // Comments tab
-            StreamBuilder<List<Map<String, dynamic>>>(
-              stream: socialService.watchPendingReports(),
-              builder: (context, snapshot) {
-                final count =
-                    snapshot.data
-                        ?.where((r) => r['type'] == 'comment')
-                        .length ??
-                    0;
-                return _TabWithBadge(label: 'Comments', count: count);
-              },
-            ),
-            // Signals tab
-            StreamBuilder<List<Map<String, dynamic>>>(
-              stream: socialService.watchPendingReports(),
-              builder: (context, snapshot) {
-                final count =
-                    snapshot.data?.where((r) => r['type'] == 'signal').length ??
-                    0;
-                return _TabWithBadge(label: 'Signals', count: count);
-              },
-            ),
-          ],
-        ),
-      ),
-      body: TabBarView(
+    return GlassScaffold(
+      title: 'Reported Content',
+      bottom: TabBar(
         controller: _tabController,
-        children: [
-          _ModerationQueueList(),
-          _ReportsList(filter: null),
-          _ReportsList(filter: 'post'),
-          _ReportsList(filter: 'comment'),
-          _ReportsList(filter: 'signal'),
+        isScrollable: true,
+        tabs: [
+          // Auto tab with moderation queue count
+          StreamBuilder<List<Map<String, dynamic>>>(
+            stream: socialService.watchModerationQueue(),
+            builder: (context, snapshot) {
+              final count = snapshot.data?.length ?? 0;
+              return _TabWithBadge(label: 'Auto', count: count);
+            },
+          ),
+          // All reports tab
+          StreamBuilder<List<Map<String, dynamic>>>(
+            stream: socialService.watchPendingReports(),
+            builder: (context, snapshot) {
+              final count = snapshot.data?.length ?? 0;
+              return _TabWithBadge(label: 'All', count: count);
+            },
+          ),
+          // Posts tab
+          StreamBuilder<List<Map<String, dynamic>>>(
+            stream: socialService.watchPendingReports(),
+            builder: (context, snapshot) {
+              final count =
+                  snapshot.data?.where((r) => r['type'] == 'post').length ?? 0;
+              return _TabWithBadge(label: 'Posts', count: count);
+            },
+          ),
+          // Comments tab
+          StreamBuilder<List<Map<String, dynamic>>>(
+            stream: socialService.watchPendingReports(),
+            builder: (context, snapshot) {
+              final count =
+                  snapshot.data?.where((r) => r['type'] == 'comment').length ??
+                  0;
+              return _TabWithBadge(label: 'Comments', count: count);
+            },
+          ),
+          // Signals tab
+          StreamBuilder<List<Map<String, dynamic>>>(
+            stream: socialService.watchPendingReports(),
+            builder: (context, snapshot) {
+              final count =
+                  snapshot.data?.where((r) => r['type'] == 'signal').length ??
+                  0;
+              return _TabWithBadge(label: 'Signals', count: count);
+            },
+          ),
         ],
       ),
+      slivers: [
+        SliverFillRemaining(
+          child: TabBarView(
+            controller: _tabController,
+            children: [
+              _ModerationQueueList(),
+              _ReportsList(filter: null),
+              _ReportsList(filter: 'post'),
+              _ReportsList(filter: 'comment'),
+              _ReportsList(filter: 'signal'),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

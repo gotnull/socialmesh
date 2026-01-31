@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +6,7 @@ import 'package:socialmesh/features/settings/account_subscriptions_screen.dart';
 
 import '../../../core/logging.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/content_moderation_warning.dart';
@@ -20,7 +20,6 @@ import '../../../services/signal_service.dart';
 import '../../../utils/snackbar.dart';
 import '../utils/signal_utils.dart';
 import '../widgets/signal_card.dart';
-import '../widgets/signal_thumbnail.dart';
 
 /// Detail screen for a signal with replies.
 class SignalDetailScreen extends ConsumerStatefulWidget {
@@ -823,78 +822,137 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
     }
   }
 
-  void _scrollToTop() {
-    _scrollController.animateTo(
-      0,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeOut,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final signal = _currentSignal ?? widget.signal;
 
-    return Scaffold(
-      backgroundColor: context.background,
-      extendBodyBehindAppBar: true,
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(
-          kToolbarHeight + MediaQuery.of(context).padding.top,
+    // Build the reply input widget
+    Widget buildReplyInput() {
+      return Container(
+        decoration: BoxDecoration(
+          color: context.card,
+          border: Border(
+            top: BorderSide(color: context.border.withValues(alpha: 0.5)),
+          ),
         ),
-        child: ClipRRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(
-              decoration: BoxDecoration(
-                color: context.card.withValues(alpha: 0.7),
-              ),
-              child: SafeArea(
-                bottom: false,
-                child: SizedBox(
-                  height: kToolbarHeight,
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Reply indicator
+              if (_replyingToAuthor != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  color: context.accentColor.withValues(alpha: 0.1),
                   child: Row(
                     children: [
-                      IconButton(
-                        icon: Icon(
-                          Icons.arrow_back,
-                          color: context.textPrimary,
-                        ),
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                      Expanded(
-                        child: Text(
-                          'Signal',
-                          style: TextStyle(
-                            color: context.textPrimary,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 20,
-                          ),
+                      Icon(Icons.reply, size: 16, color: context.accentColor),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Replying to $_replyingToAuthor',
+                        style: TextStyle(
+                          color: context.textSecondary,
+                          fontSize: 13,
                         ),
                       ),
-                      _buildSignalMenu(context, signal),
+                      const Spacer(),
+                      GestureDetector(
+                        onTap: _cancelReply,
+                        child: Icon(
+                          Icons.close,
+                          size: 18,
+                          color: context.textTertiary,
+                        ),
+                      ),
                     ],
                   ),
                 ),
+
+              // Input field
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _replyController,
+                        focusNode: _replyFocusNode,
+                        enabled: !_isSubmittingReply,
+                        style: TextStyle(color: context.textPrimary),
+                        decoration: InputDecoration(
+                          hintText: _replyingToAuthor != null
+                              ? 'Write a reply...'
+                              : 'Respond to this signal...',
+                          hintStyle: TextStyle(color: context.textTertiary),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(24),
+                            borderSide: BorderSide.none,
+                          ),
+                          filled: true,
+                          fillColor: context.background,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                        ),
+                        maxLines: 1,
+                        textInputAction: TextInputAction.send,
+                        onSubmitted: (_) => _submitReply(),
+                        textCapitalization: TextCapitalization.sentences,
+                        onChanged: (_) => setState(() {}),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    _isSubmittingReply
+                        ? SizedBox(
+                            width: 48,
+                            height: 48,
+                            child: Center(
+                              child: SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: context.accentColor,
+                                ),
+                              ),
+                            ),
+                          )
+                        : IconButton(
+                            onPressed: _replyController.text.trim().isNotEmpty
+                                ? _submitReply
+                                : null,
+                            icon: Icon(
+                              Icons.send,
+                              color: _replyController.text.trim().isNotEmpty
+                                  ? context.accentColor
+                                  : context.textTertiary,
+                            ),
+                          ),
+                  ],
+                ),
               ),
-            ),
+            ],
           ),
         ),
-      ),
-      body: Stack(
-        children: [
-          // Main content - with top padding for AppBar and bottom for reply input
-          ListView(
-            key: PageStorageKey('signal_detail_${widget.signal.id}'),
-            controller: _scrollController,
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: EdgeInsets.fromLTRB(
-              16,
-              MediaQuery.of(context).padding.top + kToolbarHeight + 16,
-              16,
-              100,
-            ),
-            children: [
+      );
+    }
+
+    return GlassScaffold(
+      title: 'Signal',
+      centerTitle: false,
+      actions: [_buildSignalMenu(context, signal)],
+      controller: _scrollController,
+      bottomNavigationBar: buildReplyInput(),
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate([
               // Animated signal card
               SlideTransition(
                 position: _cardSlideAnimation,
@@ -982,150 +1040,12 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
                 opacity: _headerFadeAnimation,
                 child: _buildCommentsList(context),
               ),
-            ],
+            ]),
           ),
-
-          // Reply input - positioned at bottom
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              decoration: BoxDecoration(
-                color: context.card,
-                border: Border(
-                  top: BorderSide(color: context.border.withValues(alpha: 0.5)),
-                ),
-              ),
-              child: SafeArea(
-                top: false,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Reply indicator
-                    if (_replyingToAuthor != null)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        color: context.accentColor.withValues(alpha: 0.1),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.reply,
-                              size: 16,
-                              color: context.accentColor,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Replying to $_replyingToAuthor',
-                              style: TextStyle(
-                                color: context.textSecondary,
-                                fontSize: 13,
-                              ),
-                            ),
-                            const Spacer(),
-                            GestureDetector(
-                              onTap: _cancelReply,
-                              child: Icon(
-                                Icons.close,
-                                size: 18,
-                                color: context.textTertiary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                    // Input field
-                    Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: _replyController,
-                              focusNode: _replyFocusNode,
-                              enabled: !_isSubmittingReply,
-                              style: TextStyle(color: context.textPrimary),
-                              decoration: InputDecoration(
-                                hintText: _replyingToAuthor != null
-                                    ? 'Write a reply...'
-                                    : 'Respond to this signal...',
-                                hintStyle: TextStyle(
-                                  color: context.textTertiary,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(24),
-                                  borderSide: BorderSide.none,
-                                ),
-                                filled: true,
-                                fillColor: context.background,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 10,
-                                ),
-                              ),
-                              maxLines: 1,
-                              textInputAction: TextInputAction.send,
-                              onSubmitted: (_) => _submitReply(),
-                              textCapitalization: TextCapitalization.sentences,
-                              onChanged: (_) => setState(() {}),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          _isSubmittingReply
-                              ? SizedBox(
-                                  width: 48,
-                                  height: 48,
-                                  child: Center(
-                                    child: SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: context.accentColor,
-                                      ),
-                                    ),
-                                  ),
-                                )
-                              : IconButton(
-                                  onPressed:
-                                      _replyController.text.trim().isNotEmpty
-                                      ? _submitReply
-                                      : null,
-                                  icon: Icon(
-                                    Icons.send,
-                                    color:
-                                        _replyController.text.trim().isNotEmpty
-                                        ? context.accentColor
-                                        : context.textTertiary,
-                                  ),
-                                ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          // Sticky header overlay - slides in/out from top with blur
-          // Positioned 1px higher to overlap with AppBar and hide seam
-          Positioned(
-            top: MediaQuery.of(context).padding.top + kToolbarHeight,
-            left: 0,
-            right: 0,
-            child: _StickySignalHeader(
-              signal: signal,
-              isVisible: _showStickyHeader,
-              onTap: _scrollToTop,
-            ),
-          ),
-        ],
-      ),
+        ),
+        // Add some space at bottom to not be hidden by sticky header
+        const SliverToBoxAdapter(child: SizedBox(height: 60)),
+      ],
     );
   }
 }
@@ -1390,209 +1310,6 @@ class _VoteButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(8),
         child: Icon(icon, size: 18, color: color),
-      ),
-    );
-  }
-}
-
-/// Sticky header showing compact signal info when scrolled.
-class _StickySignalHeader extends StatefulWidget {
-  const _StickySignalHeader({
-    required this.signal,
-    required this.isVisible,
-    this.onTap,
-  });
-
-  final Post signal;
-  final bool isVisible;
-  final VoidCallback? onTap;
-
-  @override
-  State<_StickySignalHeader> createState() => _StickySignalHeaderState();
-}
-
-class _StickySignalHeaderState extends State<_StickySignalHeader>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _slideController;
-  late Animation<Offset> _slideAnimation;
-  late Animation<double> _fadeAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _slideController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 250),
-    );
-    _slideAnimation =
-        Tween<Offset>(begin: const Offset(0, -1), end: Offset.zero).animate(
-          CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
-        );
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _slideController, curve: Curves.easeOut));
-
-    // Start with correct state
-    if (widget.isVisible) {
-      _slideController.forward();
-    }
-  }
-
-  @override
-  void didUpdateWidget(_StickySignalHeader oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.isVisible != oldWidget.isVisible) {
-      if (widget.isVisible) {
-        _slideController.forward();
-      } else {
-        _slideController.reverse();
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _slideController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final signal = widget.signal;
-
-    return IgnorePointer(
-      ignoring: !widget.isVisible,
-      child: SlideTransition(
-        position: _slideAnimation,
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: ClipRRect(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-              child: GestureDetector(
-                onTap: widget.onTap,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: context.card.withValues(alpha: 0.7),
-                    border: Border(
-                      bottom: BorderSide(
-                        color: context.accentColor.withValues(alpha: 0.3),
-                        width: 1,
-                      ),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.15),
-                        blurRadius: 8,
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      // Thumbnail
-                      SignalThumbnail(
-                        signal: signal,
-                        size: 40,
-                        borderRadius: 8,
-                        fallbackIcon: Icons.signal_cellular_alt_rounded,
-                      ),
-
-                      const SizedBox(width: 12),
-
-                      // Content
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Row(
-                              children: [
-                                Text(
-                                  signal.authorSnapshot?.displayName ??
-                                      'Anonymous',
-                                  style: TextStyle(
-                                    color: context.textPrimary,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  '· ${formatTimeAgo(signal.createdAt, compact: true)}',
-                                  style: TextStyle(
-                                    color: context.textTertiary,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              signal.content,
-                              style: TextStyle(
-                                color: context.textSecondary,
-                                fontSize: 13,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(width: 12),
-
-                      // Response count
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: context.accentColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.chat_bubble_outline_rounded,
-                              size: 12,
-                              color: context.accentColor,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${signal.commentCount}',
-                              style: TextStyle(
-                                color: context.accentColor,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(width: 8),
-
-                      // Scroll up
-                      Icon(
-                        Icons.expand_less_rounded,
-                        size: 24,
-                        color: context.textTertiary,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }

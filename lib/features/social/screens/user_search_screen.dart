@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
+import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/verified_badge.dart';
 import '../../../models/social.dart';
 import '../../../providers/social_providers.dart';
@@ -54,21 +55,12 @@ class _UserSearchScreenState extends ConsumerState<UserSearchScreen> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
-      child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: context.background,
-          title: Text(
-            'Search',
-            style: TextStyle(
-              color: context.textPrimary,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-        body: Column(
-          children: [
-            // Search bar in body like Direct Messages
-            Padding(
+      child: GlassScaffold(
+        title: 'Search',
+        slivers: [
+          // Search bar in body like Direct Messages
+          SliverToBoxAdapter(
+            child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               child: Container(
                 decoration: BoxDecoration(
@@ -106,16 +98,22 @@ class _UserSearchScreenState extends ConsumerState<UserSearchScreen> {
                 ),
               ),
             ),
-            // Divider
-            Container(height: 1, color: context.border.withValues(alpha: 0.3)),
-            // Results
-            Expanded(
-              child: _searchQuery.isEmpty
-                  ? _SuggestionsView()
-                  : _SearchResultsView(query: _searchQuery),
+          ),
+          // Divider
+          SliverToBoxAdapter(
+            child: Container(
+              height: 1,
+              color: context.border.withValues(alpha: 0.3),
             ),
-          ],
-        ),
+          ),
+          // Results
+          SliverFillRemaining(
+            hasScrollBody: true,
+            child: _searchQuery.isEmpty
+                ? _SuggestionsView()
+                : _SearchResultsView(query: _searchQuery),
+          ),
+        ],
       ),
     );
   }

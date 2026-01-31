@@ -6,6 +6,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:intl/intl.dart';
 import '../../core/map_config.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/mesh_map_widget.dart';
 import '../../core/widgets/map_controls.dart';
 import '../../models/telemetry_log.dart';
@@ -263,109 +264,114 @@ class _PositionLogScreenState extends ConsumerState<PositionLogScreen> {
     final logsAsync = ref.watch(positionLogsProvider);
     final nodes = ref.watch(nodesProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Position'),
-        actions: [
-          if (_hasActiveFilters)
-            IconButton(
-              icon: const Icon(Icons.filter_alt_off),
-              tooltip: 'Clear filters',
-              onPressed: _clearFilters,
-            ),
+    return GlassScaffold(
+      title: 'Position',
+      actions: [
+        if (_hasActiveFilters)
           IconButton(
-            icon: Badge(
-              isLabelVisible: _hasActiveFilters,
-              child: const Icon(Icons.filter_list),
-            ),
-            tooltip: 'Filters',
-            onPressed: _showFilterSheet,
+            icon: const Icon(Icons.filter_alt_off),
+            tooltip: 'Clear filters',
+            onPressed: _clearFilters,
           ),
-          IconButton(
-            icon: Icon(_showMap ? Icons.list : Icons.map),
-            tooltip: _showMap ? 'List view' : 'Map view',
-            onPressed: () => setState(() => _showMap = !_showMap),
+        IconButton(
+          icon: Badge(
+            isLabelVisible: _hasActiveFilters,
+            child: const Icon(Icons.filter_list),
           ),
-        ],
-      ),
-      body: SafeArea(
-        child: logsAsync.when(
-          loading: () => const ScreenLoadingIndicator(),
-          error: (e, s) => Center(child: Text('Error: $e')),
+          tooltip: 'Filters',
+          onPressed: _showFilterSheet,
+        ),
+        IconButton(
+          icon: Icon(_showMap ? Icons.list : Icons.map),
+          tooltip: _showMap ? 'List view' : 'Map view',
+          onPressed: () => setState(() => _showMap = !_showMap),
+        ),
+      ],
+      slivers: [
+        logsAsync.when(
+          loading: () =>
+              const SliverFillRemaining(child: ScreenLoadingIndicator()),
+          error: (e, s) =>
+              SliverFillRemaining(child: Center(child: Text('Error: $e'))),
           data: (logs) {
             final filtered = _filterLogs(logs)
               ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
 
             if (filtered.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.location_off,
-                      size: 64,
-                      color: context.textTertiary,
-                    ),
-                    SizedBox(height: 16),
-                    Text(
-                      _hasActiveFilters
-                          ? 'No positions match filters'
-                          : 'No position history',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: context.textSecondary,
+              return SliverFillRemaining(
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.location_off,
+                        size: 64,
+                        color: context.textTertiary,
                       ),
-                    ),
-                    if (_hasActiveFilters) ...[
-                      const SizedBox(height: 8),
-                      TextButton(
-                        onPressed: _clearFilters,
-                        child: const Text('Clear filters'),
+                      SizedBox(height: 16),
+                      Text(
+                        _hasActiveFilters
+                            ? 'No positions match filters'
+                            : 'No position history',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: context.textSecondary,
+                        ),
                       ),
+                      if (_hasActiveFilters) ...[
+                        const SizedBox(height: 8),
+                        TextButton(
+                          onPressed: _clearFilters,
+                          child: const Text('Clear filters'),
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               );
             }
 
             if (_showMap) {
-              return _PositionMapView(
-                logs: filtered,
-                nodes: nodes,
-                mapStyle: _mapStyle,
+              return SliverFillRemaining(
+                child: _PositionMapView(
+                  logs: filtered,
+                  nodes: nodes,
+                  mapStyle: _mapStyle,
+                ),
               );
             }
 
-            return ListView.builder(
+            return SliverPadding(
               padding: const EdgeInsets.all(16),
-              itemCount: filtered.length,
-              itemBuilder: (context, index) {
-                final log = filtered[index];
-                final prevLog = index < filtered.length - 1
-                    ? filtered[index + 1]
-                    : null;
-                final distance = prevLog != null
-                    ? _calculateDistance(
-                        log.latitude,
-                        log.longitude,
-                        prevLog.latitude,
-                        prevLog.longitude,
-                      )
-                    : null;
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final log = filtered[index];
+                  final prevLog = index < filtered.length - 1
+                      ? filtered[index + 1]
+                      : null;
+                  final distance = prevLog != null
+                      ? _calculateDistance(
+                          log.latitude,
+                          log.longitude,
+                          prevLog.latitude,
+                          prevLog.longitude,
+                        )
+                      : null;
 
-                final nodeName =
-                    nodes[log.nodeNum]?.displayName ??
-                    '!${log.nodeNum.toRadixString(16).toUpperCase()}';
+                  final nodeName =
+                      nodes[log.nodeNum]?.displayName ??
+                      '!${log.nodeNum.toRadixString(16).toUpperCase()}';
 
-                return _PositionCard(
-                  log: log,
-                  nodeName: nodeName,
-                  distanceFromPrev: distance,
-                );
-              },
+                  return _PositionCard(
+                    log: log,
+                    nodeName: nodeName,
+                    distanceFromPrev: distance,
+                  );
+                }, childCount: filtered.length),
+              ),
             );
           },
         ),
-      ),
+      ],
     );
   }
 

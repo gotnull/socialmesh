@@ -4,6 +4,7 @@ import '../../core/widgets/animations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
@@ -135,327 +136,331 @@ class _PowerConfigScreenState extends ConsumerState<PowerConfigScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.background,
-        title: Text(
-          'Power',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: context.textPrimary,
+    return GlassScaffold(
+      title: 'Power',
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: TextButton(
+            onPressed: _saving ? null : _saveConfig,
+            child: _saving
+                ? LoadingIndicator(size: 20)
+                : Text(
+                    'Save',
+                    style: TextStyle(
+                      color: context.accentColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
           ),
         ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: TextButton(
-              onPressed: _saving ? null : _saveConfig,
-              child: _saving
-                  ? LoadingIndicator(size: 20)
-                  : Text(
-                      'Save',
-                      style: TextStyle(
-                        color: context.accentColor,
-                        fontWeight: FontWeight.w600,
+      ],
+      slivers: _loading
+          ? [SliverFillRemaining(child: const ScreenLoadingIndicator())]
+          : [
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    // Power Section
+                    const _SectionHeader(title: 'POWER'),
+                    // Power saving mode toggle
+                    _SettingsTile(
+                      icon: _isPowerSaving
+                          ? Icons.battery_saver
+                          : Icons.battery_full,
+                      iconColor: _isPowerSaving ? context.accentColor : null,
+                      title: 'Power Saving Mode',
+                      subtitle: 'Reduce power consumption when idle',
+                      trailing: ThemedSwitch(
+                        value: _isPowerSaving,
+                        onChanged: (value) {
+                          HapticFeedback.selectionClick();
+                          setState(() => _isPowerSaving = value);
+                        },
                       ),
                     ),
-            ),
-          ),
-        ],
-      ),
-      body: _loading
-          ? const ScreenLoadingIndicator()
-          : ListView(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              children: [
-                // Power Section
-                const _SectionHeader(title: 'POWER'),
-                // Power saving mode toggle
-                _SettingsTile(
-                  icon: _isPowerSaving
-                      ? Icons.battery_saver
-                      : Icons.battery_full,
-                  iconColor: _isPowerSaving ? context.accentColor : null,
-                  title: 'Power Saving Mode',
-                  subtitle: 'Reduce power consumption when idle',
-                  trailing: ThemedSwitch(
-                    value: _isPowerSaving,
-                    onChanged: (value) {
-                      HapticFeedback.selectionClick();
-                      setState(() => _isPowerSaving = value);
-                    },
-                  ),
-                ),
-                _SettingsTile(
-                  icon: Icons.power_settings_new,
-                  iconColor: _shutdownOnPowerLoss ? context.accentColor : null,
-                  title: 'Shutdown on Power Loss',
-                  subtitle: 'Power off device when external power removed',
-                  trailing: ThemedSwitch(
-                    value: _shutdownOnPowerLoss,
-                    onChanged: (value) {
-                      HapticFeedback.selectionClick();
-                      setState(() {
-                        _shutdownOnPowerLoss = value;
-                        if (value && _shutdownAfterSecs == 0) {
-                          _shutdownAfterSecs = 60; // Default to 1 minute
-                        }
-                      });
-                    },
-                  ),
-                ),
-                // Shutdown After Secs slider (only show when shutdown enabled)
-                if (_shutdownOnPowerLoss)
-                  Container(
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 2,
+                    _SettingsTile(
+                      icon: Icons.power_settings_new,
+                      iconColor: _shutdownOnPowerLoss
+                          ? context.accentColor
+                          : null,
+                      title: 'Shutdown on Power Loss',
+                      subtitle: 'Power off device when external power removed',
+                      trailing: ThemedSwitch(
+                        value: _shutdownOnPowerLoss,
+                        onChanged: (value) {
+                          HapticFeedback.selectionClick();
+                          setState(() {
+                            _shutdownOnPowerLoss = value;
+                            if (value && _shutdownAfterSecs == 0) {
+                              _shutdownAfterSecs = 60; // Default to 1 minute
+                            }
+                          });
+                        },
+                      ),
                     ),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: context.card,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: _buildSliderSetting(
-                      title: 'Shutdown Delay',
-                      subtitle: 'Time to wait before shutdown after power loss',
-                      value: _shutdownAfterSecs.toDouble(),
-                      min: 10,
-                      max: 3600,
-                      divisions: 36,
-                      formatValue: (v) => _formatDuration(v.toInt()),
-                      onChanged: (value) =>
-                          setState(() => _shutdownAfterSecs = value.toInt()),
-                    ),
-                  ),
-                SizedBox(height: 16),
+                    // Shutdown After Secs slider (only show when shutdown enabled)
+                    if (_shutdownOnPowerLoss)
+                      Container(
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 2,
+                        ),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: context.card,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: _buildSliderSetting(
+                          title: 'Shutdown Delay',
+                          subtitle:
+                              'Time to wait before shutdown after power loss',
+                          value: _shutdownAfterSecs.toDouble(),
+                          min: 10,
+                          max: 3600,
+                          divisions: 36,
+                          formatValue: (v) => _formatDuration(v.toInt()),
+                          onChanged: (value) => setState(
+                            () => _shutdownAfterSecs = value.toInt(),
+                          ),
+                        ),
+                      ),
+                    SizedBox(height: 16),
 
-                // Battery Section (ADC Multiplier)
-                const _SectionHeader(title: 'BATTERY'),
-                _SettingsTile(
-                  icon: Icons.battery_charging_full,
-                  iconColor: _adcOverride ? context.accentColor : null,
-                  title: 'ADC Multiplier Override',
-                  subtitle:
-                      'Override voltage divider ratio for battery reading',
-                  trailing: ThemedSwitch(
-                    value: _adcOverride,
-                    onChanged: (value) {
-                      HapticFeedback.selectionClick();
-                      setState(() {
-                        _adcOverride = value;
-                        if (value && _adcMultiplier == 0.0) {
-                          _adcMultiplier = 3.2; // Default ratio
-                        }
-                      });
-                    },
-                  ),
-                ),
-                // ADC Multiplier input (only show when override enabled)
-                if (_adcOverride)
-                  Container(
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 2,
+                    // Battery Section (ADC Multiplier)
+                    const _SectionHeader(title: 'BATTERY'),
+                    _SettingsTile(
+                      icon: Icons.battery_charging_full,
+                      iconColor: _adcOverride ? context.accentColor : null,
+                      title: 'ADC Multiplier Override',
+                      subtitle:
+                          'Override voltage divider ratio for battery reading',
+                      trailing: ThemedSwitch(
+                        value: _adcOverride,
+                        onChanged: (value) {
+                          HapticFeedback.selectionClick();
+                          setState(() {
+                            _adcOverride = value;
+                            if (value && _adcMultiplier == 0.0) {
+                              _adcMultiplier = 3.2; // Default ratio
+                            }
+                          });
+                        },
+                      ),
                     ),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: context.card,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    // ADC Multiplier input (only show when override enabled)
+                    if (_adcOverride)
+                      Container(
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 2,
+                        ),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: context.card,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'ADC Multiplier',
-                              style: TextStyle(
-                                color: context.textPrimary,
-                                fontWeight: FontWeight.w500,
-                              ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'ADC Multiplier',
+                                  style: TextStyle(
+                                    color: context.textPrimary,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: 80,
+                                  child: TextField(
+                                    keyboardType:
+                                        const TextInputType.numberWithOptions(
+                                          decimal: true,
+                                        ),
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: context.textPrimary,
+                                    ),
+                                    decoration: InputDecoration(
+                                      isDense: true,
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 8,
+                                          ),
+                                      fillColor: context.background,
+                                      filled: true,
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                        borderSide: BorderSide(
+                                          color: context.border,
+                                        ),
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                        borderSide: BorderSide(
+                                          color: context.border,
+                                        ),
+                                      ),
+                                    ),
+                                    controller: TextEditingController(
+                                      text: _adcMultiplier.toStringAsFixed(2),
+                                    ),
+                                    onChanged: (value) {
+                                      final parsed = double.tryParse(value);
+                                      if (parsed != null &&
+                                          parsed >= 2.0 &&
+                                          parsed <= 6.0) {
+                                        setState(() => _adcMultiplier = parsed);
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ],
                             ),
-                            SizedBox(
-                              width: 80,
-                              child: TextField(
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                      decimal: true,
-                                    ),
-                                textAlign: TextAlign.center,
-                                style: TextStyle(color: context.textPrimary),
-                                decoration: InputDecoration(
-                                  isDense: true,
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 8,
-                                  ),
-                                  fillColor: context.background,
-                                  filled: true,
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: BorderSide(
-                                      color: context.border,
-                                    ),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: BorderSide(
-                                      color: context.border,
-                                    ),
-                                  ),
-                                ),
-                                controller: TextEditingController(
-                                  text: _adcMultiplier.toStringAsFixed(2),
-                                ),
-                                onChanged: (value) {
-                                  final parsed = double.tryParse(value);
-                                  if (parsed != null &&
-                                      parsed >= 2.0 &&
-                                      parsed <= 6.0) {
-                                    setState(() => _adcMultiplier = parsed);
-                                  }
-                                },
+                            SizedBox(height: 4),
+                            Text(
+                              'Voltage divider ratio (2.0 - 6.0)',
+                              style: TextStyle(
+                                color: context.textSecondary,
+                                fontSize: 12,
                               ),
                             ),
                           ],
                         ),
-                        SizedBox(height: 4),
-                        Text(
-                          'Voltage divider ratio (2.0 - 6.0)',
-                          style: TextStyle(
-                            color: context.textSecondary,
-                            fontSize: 12,
+                      ),
+                    SizedBox(height: 16),
+
+                    // Sleep Settings Section
+                    const _SectionHeader(title: 'SLEEP SETTINGS'),
+
+                    Container(
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: context.card,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Wait Bluetooth
+                          _buildSliderSetting(
+                            title: 'Wait for Bluetooth',
+                            subtitle:
+                                'Time to wait for Bluetooth connection before sleep',
+                            value: _waitBluetoothSecs.toDouble(),
+                            min: 0,
+                            max: 300,
+                            divisions: 30,
+                            formatValue: (v) => _formatDuration(v.toInt()),
+                            onChanged: (value) => setState(
+                              () => _waitBluetoothSecs = value.toInt(),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                SizedBox(height: 16),
+                          SizedBox(height: 20),
+                          Divider(height: 1, color: context.border),
+                          SizedBox(height: 20),
 
-                // Sleep Settings Section
-                const _SectionHeader(title: 'SLEEP SETTINGS'),
-
-                Container(
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: context.card,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Wait Bluetooth
-                      _buildSliderSetting(
-                        title: 'Wait for Bluetooth',
-                        subtitle:
-                            'Time to wait for Bluetooth connection before sleep',
-                        value: _waitBluetoothSecs.toDouble(),
-                        min: 0,
-                        max: 300,
-                        divisions: 30,
-                        formatValue: (v) => _formatDuration(v.toInt()),
-                        onChanged: (value) =>
-                            setState(() => _waitBluetoothSecs = value.toInt()),
-                      ),
-                      SizedBox(height: 20),
-                      Divider(height: 1, color: context.border),
-                      SizedBox(height: 20),
-
-                      // Light Sleep
-                      _buildSliderSetting(
-                        title: 'Light Sleep Duration',
-                        subtitle: 'Duration of light sleep before deep sleep',
-                        value: _lsSecs.toDouble(),
-                        min: 0,
-                        max: 3600,
-                        divisions: 36,
-                        formatValue: (v) => _formatDuration(v.toInt()),
-                        onChanged: (value) =>
-                            setState(() => _lsSecs = value.toInt()),
-                      ),
-                      const SizedBox(height: 20),
-                      Divider(height: 1, color: context.border),
-                      SizedBox(height: 20),
-
-                      // Deep Sleep
-                      _buildSliderSetting(
-                        title: 'Deep Sleep Duration',
-                        subtitle: 'Duration of deep sleep (SDS)',
-                        value: _sdsSecs.toDouble(),
-                        min: 0,
-                        max: 86400,
-                        divisions: 24,
-                        formatValue: (v) => _formatDuration(v.toInt()),
-                        onChanged: (value) =>
-                            setState(() => _sdsSecs = value.toInt()),
-                      ),
-                      const SizedBox(height: 20),
-                      Divider(height: 1, color: context.border),
-                      SizedBox(height: 20),
-
-                      // Min Wake
-                      _buildSliderSetting(
-                        title: 'Minimum Wake Time',
-                        subtitle: 'Minimum time device stays awake',
-                        value: _minWakeSecs,
-                        min: 1,
-                        max: 120,
-                        divisions: 119,
-                        formatValue: (v) => '${v.toInt()}s',
-                        onChanged: (value) =>
-                            setState(() => _minWakeSecs = value),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Info card
-                Container(
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppTheme.warningYellow.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: AppTheme.warningYellow.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(
-                        Icons.warning_amber,
-                        color: AppTheme.warningYellow.withValues(alpha: 0.8),
-                        size: 20,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'Power settings affect battery life and device responsiveness. Aggressive sleep settings may cause delays in receiving messages.',
-                          style: TextStyle(
-                            color: context.textSecondary,
-                            fontSize: 13,
+                          // Light Sleep
+                          _buildSliderSetting(
+                            title: 'Light Sleep Duration',
+                            subtitle:
+                                'Duration of light sleep before deep sleep',
+                            value: _lsSecs.toDouble(),
+                            min: 0,
+                            max: 3600,
+                            divisions: 36,
+                            formatValue: (v) => _formatDuration(v.toInt()),
+                            onChanged: (value) =>
+                                setState(() => _lsSecs = value.toInt()),
                           ),
+                          const SizedBox(height: 20),
+                          Divider(height: 1, color: context.border),
+                          SizedBox(height: 20),
+
+                          // Deep Sleep
+                          _buildSliderSetting(
+                            title: 'Deep Sleep Duration',
+                            subtitle: 'Duration of deep sleep (SDS)',
+                            value: _sdsSecs.toDouble(),
+                            min: 0,
+                            max: 86400,
+                            divisions: 24,
+                            formatValue: (v) => _formatDuration(v.toInt()),
+                            onChanged: (value) =>
+                                setState(() => _sdsSecs = value.toInt()),
+                          ),
+                          const SizedBox(height: 20),
+                          Divider(height: 1, color: context.border),
+                          SizedBox(height: 20),
+
+                          // Min Wake
+                          _buildSliderSetting(
+                            title: 'Minimum Wake Time',
+                            subtitle: 'Minimum time device stays awake',
+                            value: _minWakeSecs,
+                            min: 1,
+                            max: 120,
+                            divisions: 119,
+                            formatValue: (v) => '${v.toInt()}s',
+                            onChanged: (value) =>
+                                setState(() => _minWakeSecs = value),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Info card
+                    Container(
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppTheme.warningYellow.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppTheme.warningYellow.withValues(alpha: 0.3),
                         ),
                       ),
-                    ],
-                  ),
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.warning_amber,
+                            color: AppTheme.warningYellow.withValues(
+                              alpha: 0.8,
+                            ),
+                            size: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Power settings affect battery life and device responsiveness. Aggressive sleep settings may cause delays in receiving messages.',
+                              style: TextStyle(
+                                color: context.textSecondary,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                  ]),
                 ),
-                const SizedBox(height: 32),
-              ],
-            ),
+              ),
+            ],
     );
   }
 

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../models/world_mesh_node.dart';
 import '../../models/presence_confidence.dart';
 import '../../providers/node_favorites_provider.dart';
@@ -237,62 +238,51 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
         final hasEnoughForCompare =
             favorites.where((f) => f.hasLiveData).length >= 2;
 
-        return Scaffold(
-          backgroundColor: context.background,
-          appBar: AppBar(
-            backgroundColor: context.background,
-            title: Text(
-              _isCompareMode
-                  ? (_selectedForCompare == null
-                        ? 'Select first node'
-                        : 'Select second node')
-                  : 'Favorite Nodes',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: context.textPrimary,
-              ),
-            ),
-            actions: [
-              // Compare toggle
-              if (favorites.length >= 2 && hasEnoughForCompare)
-                IconButton(
-                  icon: Icon(
-                    _isCompareMode ? Icons.close : Icons.compare_arrows,
-                    color: _isCompareMode ? AccentColors.green : null,
-                  ),
-                  tooltip: _isCompareMode ? 'Cancel compare' : 'Compare nodes',
-                  onPressed: _toggleCompareMode,
+        return GlassScaffold(
+          title: _isCompareMode
+              ? (_selectedForCompare == null
+                    ? 'Select first node'
+                    : 'Select second node')
+              : 'Favorite Nodes',
+          actions: [
+            // Compare toggle
+            if (favorites.length >= 2 && hasEnoughForCompare)
+              IconButton(
+                icon: Icon(
+                  _isCompareMode ? Icons.close : Icons.compare_arrows,
+                  color: _isCompareMode ? AccentColors.green : null,
                 ),
-              if (favorites.isNotEmpty && !_isCompareMode)
-                Padding(
-                  padding: const EdgeInsets.only(right: 16),
-                  child: Center(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: context.accentColor.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        '${favorites.length}',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: context.accentColor,
-                        ),
+                tooltip: _isCompareMode ? 'Cancel compare' : 'Compare nodes',
+                onPressed: _toggleCompareMode,
+              ),
+            if (favorites.isNotEmpty && !_isCompareMode)
+              Padding(
+                padding: const EdgeInsets.only(right: 16),
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: context.accentColor.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${favorites.length}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: context.accentColor,
                       ),
                     ),
                   ),
                 ),
-            ],
-          ),
-          body: favorites.isEmpty
-              ? _buildEmptyState()
-              : _buildFavoritesList(favorites),
+              ),
+          ],
+          slivers: favorites.isEmpty
+              ? [SliverFillRemaining(child: _buildEmptyState())]
+              : _buildFavoritesSlivers(favorites),
         );
       },
     );
@@ -340,20 +330,18 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
     );
   }
 
-  Widget _buildFavoritesList(List<_FavoriteItem> favorites) {
-    return RefreshIndicator(
-      onRefresh: () => ref.read(nodeFavoritesProvider.notifier).refresh(),
-      color: context.accentColor,
-      backgroundColor: context.card,
-      child: ListView.builder(
+  List<Widget> _buildFavoritesSlivers(List<_FavoriteItem> favorites) {
+    return [
+      SliverPadding(
         padding: const EdgeInsets.all(16),
-        itemCount: favorites.length,
-        itemBuilder: (context, index) {
-          final item = favorites[index];
-          return _buildDismissibleCard(item);
-        },
+        sliver: SliverList(
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final item = favorites[index];
+            return _buildDismissibleCard(item);
+          }, childCount: favorites.length),
+        ),
       ),
-    );
+    ];
   }
 
   Widget _buildDismissibleCard(_FavoriteItem item) {

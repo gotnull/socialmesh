@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme.dart';
+import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/gradient_border_container.dart';
 import '../../../providers/social_providers.dart';
@@ -50,29 +51,36 @@ class _ModerationStatusScreenState
   Widget build(BuildContext context) {
     final statusAsync = ref.watch(moderationStatusProvider);
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.background,
-        title: const Text('Account Status'),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.help_outline),
-            onPressed: _contactSupport,
+    return GlassScaffold(
+      title: 'Account Status',
+      centerTitle: true,
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.help_outline),
+          onPressed: _contactSupport,
+        ),
+      ],
+      slivers: [
+        statusAsync.when(
+          data: (status) {
+            if (status == null) {
+              return SliverFillRemaining(
+                hasScrollBody: false,
+                child: _buildGoodStanding(),
+              );
+            }
+            return SliverToBoxAdapter(child: _buildStatusContent(status));
+          },
+          loading: () => const SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(child: CircularProgressIndicator()),
           ),
-        ],
-      ),
-      body: statusAsync.when(
-        data: (status) {
-          if (status == null) {
-            return _buildGoodStanding();
-          }
-          return _buildStatusContent(status);
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error loading status: $e')),
-      ),
+          error: (e, _) => SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(child: Text('Error loading status: $e')),
+          ),
+        ),
+      ],
     );
   }
 

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../models/reachability_models.dart';
 import '../../providers/app_providers.dart';
@@ -56,70 +57,64 @@ class _MeshReachabilityScreenState
       stepKeys: const {},
       child: GestureDetector(
         onTap: _dismissKeyboard,
-        child: Scaffold(
-          backgroundColor: context.background,
-          appBar: AppBar(
-            backgroundColor: context.background,
-            centerTitle: true,
-            title: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Reachability',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: context.textPrimary,
-                  ),
+        child: GlassScaffold(
+          titleWidget: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Reachability',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: context.textPrimary,
                 ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppTheme.warningYellow.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(4),
-                    border: Border.all(
-                      color: AppTheme.warningYellow.withValues(alpha: 0.5),
-                    ),
-                  ),
-                  child: Text(
-                    'BETA',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.warningYellow,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.info_outline),
-                tooltip: 'About Reachability',
-                onPressed: () => _showInfoDialog(context),
               ),
-              IcoHelpAppBarButton(topicId: 'reachability_overview'),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppTheme.warningYellow.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(
+                    color: AppTheme.warningYellow.withValues(alpha: 0.5),
+                  ),
+                ),
+                child: Text(
+                  'BETA',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.warningYellow,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
             ],
           ),
-          body: Column(
-            children: [
-              // Disclaimer banner
-              _DisclaimerBanner(),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.info_outline),
+              tooltip: 'About Reachability',
+              onPressed: () => _showInfoDialog(context),
+            ),
+            IcoHelpAppBarButton(topicId: 'reachability_overview'),
+          ],
+          slivers: [
+            // Disclaimer banner
+            SliverToBoxAdapter(child: _DisclaimerBanner()),
 
-              // Summary row
-              _ReachabilitySummary(
+            // Summary row
+            SliverToBoxAdapter(
+              child: _ReachabilitySummary(
                 highCount: nodesByReach.high.length,
                 mediumCount: nodesByReach.medium.length,
                 lowCount: nodesByReach.low.length,
               ),
+            ),
 
-              // Search bar
-              Padding(
+            // Search bar
+            SliverToBoxAdapter(
+              child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                 child: Container(
                   decoration: BoxDecoration(
@@ -145,42 +140,41 @@ class _MeshReachabilityScreenState
                   ),
                 ),
               ),
+            ),
 
-              // Divider
-              Container(
+            // Divider
+            SliverToBoxAdapter(
+              child: Container(
                 height: 1,
                 margin: const EdgeInsets.symmetric(horizontal: 16),
                 color: context.border.withValues(alpha: 0.3),
               ),
+            ),
 
-              // Node list
-              Expanded(
-                child: filteredNodes.isEmpty
-                    ? _EmptyState()
-                    : ListView.builder(
-                        padding: const EdgeInsets.only(top: 8, bottom: 24),
-                        itemCount: filteredNodes.length,
-                        itemBuilder: (context, index) {
-                          final nodeData = filteredNodes[index];
-                          return Perspective3DSlide(
-                            index: index,
-                            direction: SlideDirection.left,
-                            enabled: animationsEnabled,
-                            child: _ReachabilityNodeCard(
-                              nodeData: nodeData,
-                              animationsEnabled: animationsEnabled,
-                              onTap: () => showNodeDetailsSheet(
-                                context,
-                                nodeData.node,
-                                false,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
+            // Node list
+            if (filteredNodes.isEmpty)
+              SliverFillRemaining(child: _EmptyState())
+            else
+              SliverList(
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final nodeData = filteredNodes[index];
+                  return Perspective3DSlide(
+                    index: index,
+                    direction: SlideDirection.left,
+                    enabled: animationsEnabled,
+                    child: _ReachabilityNodeCard(
+                      nodeData: nodeData,
+                      animationsEnabled: animationsEnabled,
+                      onTap: () =>
+                          showNodeDetailsSheet(context, nodeData.node, false),
+                    ),
+                  );
+                }, childCount: filteredNodes.length),
               ),
-            ],
-          ),
+
+            // Bottom padding
+            const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
+          ],
         ),
       ),
     );

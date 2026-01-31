@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
+import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../providers/social_providers.dart';
 import '../../../services/content_moderation_service.dart';
@@ -35,26 +36,29 @@ class _ModerationQueueScreenState extends ConsumerState<ModerationQueueScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Moderation Queue'),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Pending'),
-            Tab(text: 'Approved'),
-            Tab(text: 'Rejected'),
-          ],
-        ),
-      ),
-      body: TabBarView(
+    return GlassScaffold(
+      title: 'Moderation Queue',
+      bottom: TabBar(
         controller: _tabController,
-        children: const [
-          _QueueList(status: 'pending'),
-          _QueueList(status: 'approved'),
-          _QueueList(status: 'rejected'),
+        tabs: const [
+          Tab(text: 'Pending'),
+          Tab(text: 'Approved'),
+          Tab(text: 'Rejected'),
         ],
       ),
+      slivers: [
+        SliverFillRemaining(
+          hasScrollBody: true,
+          child: TabBarView(
+            controller: _tabController,
+            children: const [
+              _QueueList(status: 'pending'),
+              _QueueList(status: 'approved'),
+              _QueueList(status: 'rejected'),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

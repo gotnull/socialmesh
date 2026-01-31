@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/widgets/glass_scaffold.dart';
 import '../models/widget_schema.dart';
 import '../models/data_binding.dart';
 import '../renderer/widget_renderer.dart';
@@ -782,34 +783,23 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.initialSchema != null;
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.background,
-        leading: _currentStep > 0
-            ? IconButton(
-                icon: Icon(Icons.arrow_back, color: context.accentColor),
-                onPressed: _goBack,
-              )
-            : null,
-        title: Text(
-          _steps[_currentStep].title,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: context.textPrimary,
-          ),
-        ),
-        actions: [
-          IconButton(icon: const Icon(Icons.close), onPressed: _handleClose),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Progress indicator
-          _buildProgressIndicator(),
-          // Step subtitle
-          Padding(
+    return GlassScaffold(
+      title: _steps[_currentStep].title,
+      leading: _currentStep > 0
+          ? IconButton(
+              icon: Icon(Icons.arrow_back, color: context.accentColor),
+              onPressed: _goBack,
+            )
+          : null,
+      actions: [
+        IconButton(icon: const Icon(Icons.close), onPressed: _handleClose),
+      ],
+      slivers: [
+        // Progress indicator
+        SliverToBoxAdapter(child: _buildProgressIndicator()),
+        // Step subtitle
+        SliverToBoxAdapter(
+          child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
             child: Text(
               _steps[_currentStep].subtitle,
@@ -817,28 +807,37 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
               textAlign: TextAlign.center,
             ),
           ),
-          // Live preview (shown after step 1)
-          if (_currentStep > 0) _buildLivePreviewPanel(),
-          // Page content
-          Expanded(
-            child: PageView(
-              controller: _pageController,
-              physics: const NeverScrollableScrollPhysics(),
-              onPageChanged: (index) => setState(() => _currentStep = index),
-              children: [
-                _buildTemplateStep(),
-                _buildNameStep(),
-                _selectedTemplate?.id == 'actions'
-                    ? _buildActionsStep()
-                    : _buildDataStep(),
-                _buildAppearanceStep(),
-              ],
-            ),
+        ),
+        // Live preview (shown after step 1)
+        if (_currentStep > 0)
+          SliverToBoxAdapter(child: _buildLivePreviewPanel()),
+        // Page content + Bottom actions
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Column(
+            children: [
+              Expanded(
+                child: PageView(
+                  controller: _pageController,
+                  physics: const NeverScrollableScrollPhysics(),
+                  onPageChanged: (index) =>
+                      setState(() => _currentStep = index),
+                  children: [
+                    _buildTemplateStep(),
+                    _buildNameStep(),
+                    _selectedTemplate?.id == 'actions'
+                        ? _buildActionsStep()
+                        : _buildDataStep(),
+                    _buildAppearanceStep(),
+                  ],
+                ),
+              ),
+              // Bottom actions
+              _buildBottomActions(isEditing),
+            ],
           ),
-          // Bottom actions
-          _buildBottomActions(isEditing),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/premium_feature_gate.dart';
 import '../../models/subscription_models.dart';
 import '../../providers/app_providers.dart';
@@ -25,46 +26,59 @@ class ThemeSettingsScreen extends ConsumerStatefulWidget {
 class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final accentColorAsync = ref.watch(accentColorProvider);
     final currentColor = accentColorAsync.asData?.value ?? AccentColors.magenta;
     final settingsAsync = ref.watch(settingsServiceProvider);
 
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        backgroundColor: theme.scaffoldBackgroundColor,
-        title: Text(
-          'Theme Settings',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: theme.colorScheme.onSurface,
+    return settingsAsync.when(
+      loading: () => const GlassScaffold(
+        title: 'Theme Settings',
+        slivers: [
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: ScreenLoadingIndicator(),
           ),
-        ),
+        ],
       ),
-      body: settingsAsync.when(
-        loading: () => const ScreenLoadingIndicator(),
-        error: (e, _) => Center(child: Text('Error: $e')),
-        data: (settingsService) => ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            // Header with current theme preview
-            _buildThemePreview(context, currentColor),
-            const SizedBox(height: 24),
+      error: (e, _) => GlassScaffold(
+        title: 'Theme Settings',
+        slivers: [
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(child: Text('Error: $e')),
+          ),
+        ],
+      ),
+      data: (settingsService) => GlassScaffold(
+        title: 'Theme Settings',
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.all(16),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                // Header with current theme preview
+                _buildThemePreview(context, currentColor),
+                const SizedBox(height: 24),
 
-            // Accent Color Section
-            _buildSectionHeader('ACCENT COLOR'),
-            const SizedBox(height: 12),
-            _buildAccentColorGrid(context, ref, settingsService, currentColor),
-            const SizedBox(height: 24),
+                // Accent Color Section
+                _buildSectionHeader('ACCENT COLOR'),
+                const SizedBox(height: 12),
+                _buildAccentColorGrid(
+                  context,
+                  ref,
+                  settingsService,
+                  currentColor,
+                ),
+                const SizedBox(height: 24),
 
-            // Theme Preview Section
-            _buildSectionHeader('PREVIEW'),
-            const SizedBox(height: 12),
-            _buildPreviewElements(context, currentColor),
-          ],
-        ),
+                // Theme Preview Section
+                _buildSectionHeader('PREVIEW'),
+                const SizedBox(height: 12),
+                _buildPreviewElements(context, currentColor),
+              ]),
+            ),
+          ),
+        ],
       ),
     );
   }

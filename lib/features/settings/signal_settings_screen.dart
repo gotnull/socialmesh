@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../providers/social_providers.dart';
 import '../../core/widgets/animations.dart';
@@ -110,24 +111,16 @@ class _SignalSettingsScreenState extends ConsumerState<SignalSettingsScreen> {
     final isAdminAsync = ref.watch(isAdminProvider);
     final isAdmin = isAdminAsync.value ?? false;
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.background,
-        title: Text(
-          'Signals',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: context.textPrimary,
-          ),
-        ),
-      ),
-      body: _isLoading
-          ? const ScreenLoadingIndicator()
-          : ListView(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              children: [
+    return GlassScaffold(
+      title: 'Signals',
+      slivers: [
+        if (_isLoading)
+          const SliverFillRemaining(child: ScreenLoadingIndicator())
+        else
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
                 const _SectionHeader(title: 'SIGNAL PRIVACY'),
                 Container(
                   margin: const EdgeInsets.symmetric(
@@ -330,8 +323,10 @@ class _SignalSettingsScreenState extends ConsumerState<SignalSettingsScreen> {
                   ),
                 ],
                 const SizedBox(height: 32),
-              ],
+              ]),
             ),
+          ),
+      ],
     );
   }
 }

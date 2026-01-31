@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme.dart';
+import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/gradient_border_container.dart';
 import '../../../providers/auth_providers.dart';
 import '../models/sky_node.dart';
@@ -47,64 +48,65 @@ class _SkyTrackerScreenState extends ConsumerState<SkyTrackerScreen>
   Widget build(BuildContext context) {
     final stats = ref.watch(skyTrackerStatsProvider);
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.background,
-        title: Row(
-          children: [
-            Icon(Icons.flight, color: context.accentColor, size: 24),
-            SizedBox(width: 8),
-            Text(
-              'Sky Tracker',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: context.textPrimary,
-              ),
+    return GlassScaffold(
+      titleWidget: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.flight, color: context.accentColor, size: 24),
+          SizedBox(width: 8),
+          Text(
+            'Sky Tracker',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
             ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.info_outline, color: context.textSecondary),
-            onPressed: _showInfo,
-            tooltip: 'About Sky Tracker',
           ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: context.accentColor,
-          labelColor: context.accentColor,
-          unselectedLabelColor: context.textSecondary,
-          tabs: [
-            Tab(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.flight_takeoff, size: 18),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Active${stats.activeFlights > 0 ? ' (${stats.activeFlights})' : ''}',
-                  ),
-                ],
-              ),
-            ),
-            const Tab(text: 'Upcoming'),
-            const Tab(text: 'Reports'),
-            const Tab(text: 'My Flights'),
-          ],
-        ),
       ),
-      body: TabBarView(
+      actions: [
+        IconButton(
+          icon: Icon(Icons.info_outline, color: context.textSecondary),
+          onPressed: _showInfo,
+          tooltip: 'About Sky Tracker',
+        ),
+      ],
+      bottom: TabBar(
         controller: _tabController,
-        children: [
-          _ActiveFlightsTab(),
-          _UpcomingFlightsTab(),
-          _ReportsTab(),
-          _MyFlightsTab(),
+        indicatorColor: context.accentColor,
+        labelColor: context.accentColor,
+        unselectedLabelColor: context.textSecondary,
+        tabs: [
+          Tab(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.flight_takeoff, size: 18),
+                const SizedBox(width: 4),
+                Text(
+                  'Active${stats.activeFlights > 0 ? ' (${stats.activeFlights})' : ''}',
+                ),
+              ],
+            ),
+          ),
+          const Tab(text: 'Upcoming'),
+          const Tab(text: 'Reports'),
+          const Tab(text: 'My Flights'),
         ],
       ),
+      slivers: [
+        SliverFillRemaining(
+          child: TabBarView(
+            controller: _tabController,
+            children: [
+              _ActiveFlightsTab(),
+              _UpcomingFlightsTab(),
+              _ReportsTab(),
+              _MyFlightsTab(),
+            ],
+          ),
+        ),
+      ],
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _scheduleFlight,
         backgroundColor: context.accentColor,
@@ -653,74 +655,74 @@ class _LiveTrackingIndicator extends ConsumerWidget {
         child: positionAsync.when(
           loading: () => Row(
             mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: context.accentColor,
+            children: [
+              SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: context.accentColor,
+                ),
               ),
-            ),
-            SizedBox(width: 8),
-            Text(
-              'Getting live position...',
-              style: TextStyle(color: context.accentColor, fontSize: 13),
-            ),
-          ],
-        ),
-        error: (e, _) => Row(
-          children: [
-            Icon(Icons.cloud_off, color: context.textTertiary, size: 18),
-            SizedBox(width: 8),
-            Text(
-              'Position unavailable',
-              style: TextStyle(color: context.textTertiary, fontSize: 13),
-            ),
-          ],
-        ),
-        data: (positionState) {
-          if (positionState.position == null) {
+              SizedBox(width: 8),
+              Text(
+                'Getting live position...',
+                style: TextStyle(color: context.accentColor, fontSize: 13),
+              ),
+            ],
+          ),
+          error: (e, _) => Row(
+            children: [
+              Icon(Icons.cloud_off, color: context.textTertiary, size: 18),
+              SizedBox(width: 8),
+              Text(
+                'Position unavailable',
+                style: TextStyle(color: context.textTertiary, fontSize: 13),
+              ),
+            ],
+          ),
+          data: (positionState) {
+            if (positionState.position == null) {
+              return Row(
+                children: [
+                  Icon(Icons.cloud_off, color: context.textTertiary, size: 18),
+                  SizedBox(width: 8),
+                  Text(
+                    positionState.error ?? 'Position unavailable',
+                    style: TextStyle(color: context.textTertiary, fontSize: 13),
+                  ),
+                ],
+              );
+            }
             return Row(
               children: [
-                Icon(Icons.cloud_off, color: context.textTertiary, size: 18),
+                Icon(Icons.radar, color: context.accentColor, size: 18),
                 SizedBox(width: 8),
-                Text(
-                  positionState.error ?? 'Position unavailable',
-                  style: TextStyle(color: context.textTertiary, fontSize: 13),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'FL${(positionState.position!.altitudeFeet / 100).round()} • ${positionState.position!.velocityKnots.round()} kts',
+                        style: TextStyle(
+                          color: context.accentColor,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        'Coverage radius: ~${positionState.position!.coverageRadiusKm.round()} km',
+                        style: TextStyle(
+                          color: context.accentColor.withValues(alpha: 0.8),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             );
-          }
-          return Row(
-            children: [
-              Icon(Icons.radar, color: context.accentColor, size: 18),
-              SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'FL${(positionState.position!.altitudeFeet / 100).round()} • ${positionState.position!.velocityKnots.round()} kts',
-                      style: TextStyle(
-                        color: context.accentColor,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      'Coverage radius: ~${positionState.position!.coverageRadiusKm.round()} km',
-                      style: TextStyle(
-                        color: context.accentColor.withValues(alpha: 0.8),
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          );
-        },
+          },
         ),
       ),
     );

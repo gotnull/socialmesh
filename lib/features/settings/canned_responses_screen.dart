@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../models/canned_response.dart';
 import '../../models/user_profile.dart';
@@ -131,47 +132,48 @@ class _CannedResponsesScreenState extends ConsumerState<CannedResponsesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.background,
-        title: Text('Quick Responses'),
-        actions: [
-          IconButton(
-            icon: Icon(
-              _isReordering ? Icons.check : Icons.reorder,
-              color: _isReordering ? context.accentColor : null,
-            ),
-            tooltip: _isReordering ? 'Done' : 'Reorder',
-            onPressed: () {
-              HapticFeedback.selectionClick();
-              setState(() => _isReordering = !_isReordering);
-            },
+    return GlassScaffold(
+      title: 'Quick Responses',
+      actions: [
+        IconButton(
+          icon: Icon(
+            _isReordering ? Icons.check : Icons.reorder,
+            color: _isReordering ? context.accentColor : null,
           ),
-          AppBarOverflowMenu<String>(
-            onSelected: (value) {
-              if (value == 'reset') {
-                _resetToDefaults();
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'reset',
-                child: Row(
-                  children: [
-                    Icon(Icons.restore, color: context.textSecondary),
-                    SizedBox(width: 12),
-                    Text('Reset to defaults'),
-                  ],
-                ),
+          tooltip: _isReordering ? 'Done' : 'Reorder',
+          onPressed: () {
+            HapticFeedback.selectionClick();
+            setState(() => _isReordering = !_isReordering);
+          },
+        ),
+        AppBarOverflowMenu<String>(
+          onSelected: (value) {
+            if (value == 'reset') {
+              _resetToDefaults();
+            }
+          },
+          itemBuilder: (context) => [
+            PopupMenuItem(
+              value: 'reset',
+              child: Row(
+                children: [
+                  Icon(Icons.restore, color: context.textSecondary),
+                  SizedBox(width: 12),
+                  Text('Reset to defaults'),
+                ],
               ),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
+      ],
+      floatingActionButton: FloatingActionButton(
+        onPressed: _addResponse,
+        backgroundColor: context.accentColor,
+        child: const Icon(Icons.add, color: Colors.white),
       ),
-      body: Column(
-        children: [
-          Padding(
+      slivers: [
+        SliverToBoxAdapter(
+          child: Padding(
             padding: const EdgeInsets.all(16),
             child: Text(
               _isReordering
@@ -180,76 +182,70 @@ class _CannedResponsesScreenState extends ConsumerState<CannedResponsesScreen> {
               style: TextStyle(color: context.textSecondary, fontSize: 14),
             ),
           ),
-          Expanded(
-            child: _isLoading
-                ? Center(child: LoadingIndicator(size: 48))
-                : _isReordering
-                ? ReorderableListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: _responses.length,
-                    onReorder: (oldIndex, newIndex) async {
-                      if (_settingsService == null) return;
-                      HapticFeedback.mediumImpact();
-                      await _settingsService!.reorderCannedResponses(
-                        oldIndex,
-                        newIndex,
-                      );
-                      setState(_loadResponses);
-                      _syncToCloud();
-                    },
-                    itemBuilder: (context, index) => _ResponseTile(
-                      key: ValueKey(_responses[index].id),
-                      response: _responses[index],
-                      isReordering: true,
-                      onTap: () {},
-                      onDelete: () {},
+        ),
+        if (_isLoading)
+          SliverFillRemaining(child: Center(child: LoadingIndicator(size: 48)))
+        else if (_isReordering)
+          SliverFillRemaining(
+            child: ReorderableListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: _responses.length,
+              onReorder: (oldIndex, newIndex) async {
+                if (_settingsService == null) return;
+                HapticFeedback.mediumImpact();
+                await _settingsService!.reorderCannedResponses(
+                  oldIndex,
+                  newIndex,
+                );
+                setState(_loadResponses);
+                _syncToCloud();
+              },
+              itemBuilder: (context, index) => _ResponseTile(
+                key: ValueKey(_responses[index].id),
+                response: _responses[index],
+                isReordering: true,
+                onTap: () {},
+                onDelete: () {},
+              ),
+            ),
+          )
+        else
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final response = _responses[index];
+                return Dismissible(
+                  key: ValueKey(response.id),
+                  direction: DismissDirection.endToStart,
+                  background: Container(
+                    alignment: Alignment.centerRight,
+                    padding: const EdgeInsets.only(right: 20),
+                    decoration: BoxDecoration(
+                      color: AppTheme.errorRed.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: _responses.length,
-                    itemBuilder: (context, index) {
-                      final response = _responses[index];
-                      return Dismissible(
-                        key: ValueKey(response.id),
-                        direction: DismissDirection.endToStart,
-                        background: Container(
-                          alignment: Alignment.centerRight,
-                          padding: const EdgeInsets.only(right: 20),
-                          decoration: BoxDecoration(
-                            color: AppTheme.errorRed.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.delete,
-                            color: AppTheme.errorRed,
-                          ),
-                        ),
-                        confirmDismiss: (_) async {
-                          HapticFeedback.mediumImpact();
-                          return true;
-                        },
-                        onDismissed: (_) {
-                          _settingsService?.deleteCannedResponse(response.id);
-                          setState(_loadResponses);
-                        },
-                        child: _ResponseTile(
-                          response: response,
-                          isReordering: false,
-                          onTap: () => _editResponse(response),
-                          onDelete: () => _deleteResponse(response),
-                        ),
-                      );
-                    },
+                    child: const Icon(Icons.delete, color: AppTheme.errorRed),
                   ),
+                  confirmDismiss: (_) async {
+                    HapticFeedback.mediumImpact();
+                    return true;
+                  },
+                  onDismissed: (_) {
+                    _settingsService?.deleteCannedResponse(response.id);
+                    setState(_loadResponses);
+                  },
+                  child: _ResponseTile(
+                    response: response,
+                    isReordering: false,
+                    onTap: () => _editResponse(response),
+                    onDelete: () => _deleteResponse(response),
+                  ),
+                );
+              }, childCount: _responses.length),
+            ),
           ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addResponse,
-        backgroundColor: context.accentColor,
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
+      ],
     );
   }
 }

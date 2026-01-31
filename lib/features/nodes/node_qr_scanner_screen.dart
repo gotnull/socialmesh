@@ -5,6 +5,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../providers/app_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../core/theme.dart';
+import '../../core/logging.dart';
 import '../../utils/snackbar.dart';
 import '../../utils/text_sanitizer.dart';
 import '../../core/widgets/loading_indicator.dart';
@@ -22,20 +23,64 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
   bool _isProcessing = false;
 
   @override
+  void initState() {
+    super.initState();
+    AppLogging.ble(
+      '📷 QR SCANNER: initState - initializing MobileScannerController',
+    );
+
+    // Listen to controller events
+    _controller.barcodes.listen(
+      (capture) {
+        AppLogging.ble('📷 QR SCANNER: Barcode stream event received');
+      },
+      onError: (error) {
+        AppLogging.ble('📷 QR SCANNER ERROR: Barcode stream error: $error');
+      },
+    );
+
+    _controller
+        .start()
+        .then((_) {
+          AppLogging.ble('📷 QR SCANNER: Camera started successfully');
+          if (mounted) {
+            setState(() {}); // Trigger rebuild to show camera
+          }
+        })
+        .catchError((error) {
+          AppLogging.ble('📷 QR SCANNER ERROR: Failed to start camera: $error');
+        });
+  }
+
+  @override
   void dispose() {
+    AppLogging.ble('📷 QR SCANNER: dispose - stopping camera');
     _controller.dispose();
     super.dispose();
   }
 
   void _onDetect(BarcodeCapture capture) {
-    if (_isProcessing) return;
+    AppLogging.ble('📷 QR SCANNER: onDetect called');
+    if (_isProcessing) {
+      AppLogging.ble('📷 QR SCANNER: Already processing, ignoring');
+      return;
+    }
 
     final List<Barcode> barcodes = capture.barcodes;
-    if (barcodes.isEmpty) return;
+    if (barcodes.isEmpty) {
+      AppLogging.ble('📷 QR SCANNER: No barcodes in capture');
+      return;
+    }
 
     final String? code = barcodes.first.rawValue;
-    if (code == null) return;
+    if (code == null) {
+      AppLogging.ble('📷 QR SCANNER: Barcode rawValue is null');
+      return;
+    }
 
+    AppLogging.ble(
+      '📷 QR SCANNER: Detected code: ${code.substring(0, code.length > 50 ? 50 : code.length)}...',
+    );
     setState(() {
       _isProcessing = true;
     });
@@ -44,15 +89,19 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
   }
 
   Future<void> _processQrCode(String code) async {
+    AppLogging.ble('📷 QR SCANNER: Processing QR code');
     try {
       // Node QR codes format: "socialmesh://node/<base64-encoded-json>"
       // Also supports legacy format: "meshtastic://node/<base64-encoded-json>"
       String base64Data;
       if (code.startsWith('socialmesh://node/')) {
         base64Data = code.substring('socialmesh://node/'.length);
+        AppLogging.ble('📷 QR SCANNER: Valid socialmesh node QR detected');
       } else if (code.startsWith('meshtastic://node/')) {
         base64Data = code.substring('meshtastic://node/'.length);
+        AppLogging.ble('📷 QR SCANNER: Valid meshtastic node QR detected');
       } else {
+        AppLogging.ble('📷 QR SCANNER ERROR: Invalid QR format: $code');
         throw Exception('Not a valid node QR code');
       }
       final jsonStr = utf8.decode(base64Decode(base64Data));
@@ -67,8 +116,13 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
       final lon = nodeInfo['lon'] as double?;
 
       if (nodeNum == null) {
+        AppLogging.ble('📷 QR SCANNER ERROR: Missing nodeNum in QR data');
         throw Exception('Invalid node data: missing nodeNum');
       }
+
+      AppLogging.ble(
+        '📷 QR SCANNER: Parsed node - nodeNum=$nodeNum, longName=$longName',
+      );
 
       // Check if node already exists
       final existingNodes = ref.read(nodesProvider);
@@ -307,8 +361,12 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
       final existing = existingNodes[nodeNum];
 
       // Sanitize names to prevent UTF-16 crashes when rendering text
-      final sanitizedLongName = longName != null ? sanitizeUtf16(longName) : existing?.longName;
-      final sanitizedShortName = shortName != null ? sanitizeUtf16(shortName) : existing?.shortName;
+      final sanitizedLongName = longName != null
+          ? sanitizeUtf16(longName)
+          : existing?.longName;
+      final sanitizedShortName = shortName != null
+          ? sanitizeUtf16(shortName)
+          : existing?.shortName;
 
       // Create or update the node
       final node = MeshNode(
@@ -352,6 +410,7 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    AppLogging.ble('📷 QR SCANNER: build() - isProcessing=$_isProcessing');
     return Scaffold(
       backgroundColor: context.background,
       appBar: AppBar(

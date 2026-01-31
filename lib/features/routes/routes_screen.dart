@@ -11,6 +11,7 @@ import '../../core/theme.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/animations.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/gradient_border_container.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../models/route.dart' as route_model;
@@ -32,103 +33,88 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen> {
   Widget build(BuildContext context) {
     final routes = ref.watch(routesProvider);
     final activeRoute = ref.watch(activeRouteProvider);
+    final animationsEnabled = ref.watch(animationsEnabledProvider);
 
     return HelpTourController(
       topicId: 'routes_overview',
       stepKeys: const {},
-      child: Scaffold(
-        backgroundColor: context.background,
-        appBar: AppBar(
-          backgroundColor: context.background,
-          centerTitle: true,
-          title: Text(
-            'Routes',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: context.textPrimary,
-            ),
-          ),
-          actions: [
-            IcoHelpAppBarButton(topicId: 'routes_overview'),
-            AppBarOverflowMenu<String>(
-              onSelected: (value) {
-                switch (value) {
-                  case 'start':
-                    _startRecording();
-                    break;
-                  case 'import':
-                    _importRoute();
-                    break;
-                }
-              },
-              itemBuilder: (context) => [
-                if (activeRoute == null)
-                  PopupMenuItem<String>(
-                    value: 'start',
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.play_arrow,
-                          color: AccentColors.green,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 12),
-                        const Text('Start Route'),
-                      ],
-                    ),
-                  ),
+      child: GlassScaffold(
+        title: 'Routes',
+        actions: [
+          IcoHelpAppBarButton(topicId: 'routes_overview'),
+          AppBarOverflowMenu<String>(
+            onSelected: (value) {
+              switch (value) {
+                case 'start':
+                  _startRecording();
+                  break;
+                case 'import':
+                  _importRoute();
+                  break;
+              }
+            },
+            itemBuilder: (context) => [
+              if (activeRoute == null)
                 PopupMenuItem<String>(
-                  value: 'import',
+                  value: 'start',
                   child: Row(
                     children: [
                       Icon(
-                        Icons.file_upload_outlined,
-                        color: context.textSecondary,
+                        Icons.play_arrow,
+                        color: AccentColors.green,
                         size: 20,
                       ),
                       const SizedBox(width: 12),
-                      const Text('Import GPX'),
+                      const Text('Start Route'),
                     ],
                   ),
                 ),
-              ],
-            ),
-          ],
-        ),
-        body: Column(
-          children: [
-            // Active recording banner
-            if (activeRoute != null) _ActiveRouteBanner(route: activeRoute),
-
-            // Routes list
-            Expanded(
-              child: routes.isEmpty
-                  ? _buildEmptyState()
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: routes.length,
-                      itemBuilder: (context, index) {
-                        final route = routes[index];
-                        final animationsEnabled = ref.watch(
-                          animationsEnabledProvider,
-                        );
-                        return Perspective3DSlide(
-                          index: index,
-                          direction: SlideDirection.left,
-                          enabled: animationsEnabled,
-                          child: _RouteCard(
-                            route: route,
-                            onTap: () => _viewRoute(route),
-                            onDelete: () => _deleteRoute(route),
-                            onExport: () => _exportRoute(route),
-                          ),
-                        );
-                      },
+              PopupMenuItem<String>(
+                value: 'import',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.file_upload_outlined,
+                      color: context.textSecondary,
+                      size: 20,
                     ),
+                    const SizedBox(width: 12),
+                    const Text('Import GPX'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+        slivers: [
+          // Active recording banner
+          if (activeRoute != null)
+            SliverToBoxAdapter(child: _ActiveRouteBanner(route: activeRoute)),
+
+          // Routes list or empty state
+          if (routes.isEmpty)
+            SliverFillRemaining(hasScrollBody: false, child: _buildEmptyState())
+          else
+            SliverPadding(
+              padding: const EdgeInsets.all(16),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final route = routes[index];
+                  return Perspective3DSlide(
+                    index: index,
+                    direction: SlideDirection.left,
+                    enabled: animationsEnabled,
+                    child: _RouteCard(
+                      route: route,
+                      onTap: () => _viewRoute(route),
+                      onDelete: () => _deleteRoute(route),
+                      onExport: () => _exportRoute(route),
+                    ),
+                  );
+                }, childCount: routes.length),
+              ),
             ),
-          ],
-        ),
+        ],
       ),
     );
   }

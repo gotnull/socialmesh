@@ -11,6 +11,7 @@ import '../../generated/meshtastic/config.pb.dart' as config_pb;
 import '../../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import '../../generated/meshtastic/admin.pbenum.dart' as admin_pbenum;
 import '../../core/widgets/loading_indicator.dart';
+import '../../core/widgets/glass_scaffold.dart';
 
 class BluetoothConfigScreen extends ConsumerStatefulWidget {
   const BluetoothConfigScreen({super.key});
@@ -155,40 +156,32 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
-      child: Scaffold(
-        backgroundColor: context.background,
-        appBar: AppBar(
-          backgroundColor: context.background,
-          title: Text(
-            'Bluetooth',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: context.textPrimary,
+      child: GlassScaffold(
+        title: 'Bluetooth',
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: TextButton(
+              onPressed: _saving ? null : _saveConfig,
+              child: _saving
+                  ? LoadingIndicator(size: 20)
+                  : Text(
+                      'Save',
+                      style: TextStyle(
+                        color: context.accentColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
             ),
           ),
-          actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: TextButton(
-                onPressed: _saving ? null : _saveConfig,
-                child: _saving
-                    ? LoadingIndicator(size: 20)
-                    : Text(
-                        'Save',
-                        style: TextStyle(
-                          color: context.accentColor,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-              ),
-            ),
-          ],
-        ),
-        body: _loading
-            ? const ScreenLoadingIndicator()
-            : ListView(
-                padding: const EdgeInsets.all(16),
+        ],
+        slivers: [
+          if (_loading)
+            const SliverFillRemaining(child: ScreenLoadingIndicator())
+          else
+            SliverPadding(
+              padding: const EdgeInsets.all(16),
+              sliver: SliverList.list(
                 children: [
                   // Bluetooth enabled toggle
                   Container(
@@ -422,6 +415,8 @@ class _BluetoothConfigScreenState extends ConsumerState<BluetoothConfigScreen> {
                   ),
                 ],
               ),
+            ),
+        ],
       ),
     );
   }

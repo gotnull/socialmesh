@@ -9,6 +9,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../../core/theme.dart';
 import '../../core/transport.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/channel_key_field.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../models/mesh_models.dart';
@@ -387,23 +388,19 @@ class _ChannelWizardScreenState extends ConsumerState<ChannelWizardScreen> {
     final theme = Theme.of(context);
     final stepHelp = _WizardStepHelp.steps[_currentStep];
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        title: const Text('Create Channel'),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.pop(context),
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(stepHelp.icon, color: stepHelp.color),
-            onPressed: _showStepHelp,
-            tooltip: 'Help',
-          ),
-        ],
+    return GlassScaffold.body(
+      title: 'Create Channel',
+      leading: IconButton(
+        icon: const Icon(Icons.close),
+        onPressed: () => Navigator.pop(context),
       ),
+      actions: [
+        IconButton(
+          icon: Icon(stepHelp.icon, color: stepHelp.color),
+          onPressed: _showStepHelp,
+          tooltip: 'Help',
+        ),
+      ],
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         behavior: HitTestBehavior.opaque,

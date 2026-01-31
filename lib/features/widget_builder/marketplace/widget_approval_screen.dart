@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'widget_marketplace_service.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/glass_scaffold.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/splash_mesh_provider.dart';
 import '../../../utils/snackbar.dart';
@@ -180,84 +181,88 @@ class _WidgetApprovalScreenState extends ConsumerState<WidgetApprovalScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.card,
-        title: const Text('Widget Approval'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadPendingWidgets,
-          ),
-        ],
-      ),
-      body: _buildBody(),
+    return GlassScaffold(
+      title: 'Widget Approval',
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.refresh),
+          onPressed: _loadPendingWidgets,
+        ),
+      ],
+      slivers: _buildSlivers(),
     );
   }
 
-  Widget _buildBody() {
+  List<Widget> _buildSlivers() {
     if (_isLoading) {
-      return const ScreenLoadingIndicator();
+      return [const SliverFillRemaining(child: ScreenLoadingIndicator())];
     }
 
     if (_error != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 64, color: AppTheme.errorRed),
-            SizedBox(height: 16),
-            Text(
-              _error!,
-              style: TextStyle(color: context.textSecondary),
-              textAlign: TextAlign.center,
+      return [
+        SliverFillRemaining(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, size: 64, color: AppTheme.errorRed),
+                SizedBox(height: 16),
+                Text(
+                  _error!,
+                  style: TextStyle(color: context.textSecondary),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: _loadPendingWidgets,
+                  child: const Text('Retry'),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            TextButton(
-              onPressed: _loadPendingWidgets,
-              child: const Text('Retry'),
-            ),
-          ],
+          ),
         ),
-      );
+      ];
     }
 
     if (_pendingWidgets.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.check_circle_outline,
-              size: 64,
-              color: AppTheme.successGreen,
+      return [
+        SliverFillRemaining(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.check_circle_outline,
+                  size: 64,
+                  color: AppTheme.successGreen,
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'No widgets pending approval',
+                  style: TextStyle(color: context.textSecondary, fontSize: 18),
+                ),
+              ],
             ),
-            SizedBox(height: 16),
-            Text(
-              'No widgets pending approval',
-              style: TextStyle(color: context.textSecondary, fontSize: 18),
-            ),
-          ],
+          ),
         ),
-      );
+      ];
     }
 
-    return RefreshIndicator(
-      onRefresh: _loadPendingWidgets,
-      child: ListView.builder(
+    return [
+      SliverPadding(
         padding: const EdgeInsets.all(16),
-        itemCount: _pendingWidgets.length,
-        itemBuilder: (context, index) {
-          final widget = _pendingWidgets[index];
-          return _PendingWidgetCard(
-            widget: widget,
-            onApprove: () => _approveWidget(widget),
-            onReject: () => _rejectWidget(widget),
-          );
-        },
+        sliver: SliverList(
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final widget = _pendingWidgets[index];
+            return _PendingWidgetCard(
+              widget: widget,
+              onApprove: () => _approveWidget(widget),
+              onReject: () => _rejectWidget(widget),
+            );
+          }, childCount: _pendingWidgets.length),
+        ),
       ),
-    );
+    ];
   }
 }
 

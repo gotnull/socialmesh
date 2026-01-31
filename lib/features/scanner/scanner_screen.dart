@@ -13,6 +13,7 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import '../../core/transport.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/connecting_content.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../utils/permissions.dart';
 import '../../utils/snackbar.dart';
@@ -60,13 +61,11 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     // In that case, we should immediately show the "device not found" banner
     final autoReconnectState = ref.read(autoReconnectStateProvider);
     final deviceState = ref.read(conn.deviceConnectionProvider);
-    
+
     // Check if pairing was invalidated (factory reset, device replaced, etc.)
     // Show the pairing hint immediately so user knows to forget in Bluetooth settings
     if (deviceState.isTerminalInvalidated) {
-      AppLogging.connection(
-        '📡 SCANNER: Shown after pairing invalidation',
-      );
+      AppLogging.connection('📡 SCANNER: Shown after pairing invalidation');
       _showPairingInvalidationHint = true;
     } else if (autoReconnectState == AutoReconnectState.failed &&
         deviceState.reason == conn.DisconnectReason.deviceNotFound) {
@@ -736,8 +735,9 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       final isFromNeedsScanner = appState == AppInitState.needsScanner;
 
       final regionState = ref.read(regionConfigProvider);
-        final sessionId =
-          ref.read(conn.deviceConnectionProvider).connectionSessionId;
+      final sessionId = ref
+          .read(conn.deviceConnectionProvider)
+          .connectionSessionId;
       final shouldShowRegionPicker =
           needsRegionSetup &&
           regionState.connectionSessionId == sessionId &&
@@ -755,7 +755,8 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
         // Route guard would show "Device Required" screen during this brief disconnect.
         Navigator.of(context).pushReplacement(
           MaterialPageRoute<void>(
-            builder: (context) => RegionSelectionScreen(isInitialSetup: widget.isOnboarding),
+            builder: (context) =>
+                RegionSelectionScreen(isInitialSetup: widget.isOnboarding),
           ),
         );
       } else if (needsRegionSetup) {
@@ -799,7 +800,8 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       // pairing/auth errors which are user-recoverable, or GATT errors (133)
       // which happen when device is connected to another phone or cache is stale
       final errorStr = e.toString().toLowerCase();
-      final isExpectedError = errorStr.contains('timed out') ||
+      final isExpectedError =
+          errorStr.contains('timed out') ||
           errorStr.contains('timeout') ||
           errorStr.contains('pairing') ||
           errorStr.contains('bonding') ||
@@ -840,13 +842,15 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
       // Provide user-friendly error messages for common BLE errors
       final errorLower = e.toString().toLowerCase();
-      final isTimeout = errorLower.contains('timed out') ||
-          errorLower.contains('timeout');
-      final isGattError = errorLower.contains('gatt_error') ||
+      final isTimeout =
+          errorLower.contains('timed out') || errorLower.contains('timeout');
+      final isGattError =
+          errorLower.contains('gatt_error') ||
           errorLower.contains('android-code: 133');
       final isDiscoveryFailed = errorLower.contains('discovery failed');
-      final isDeviceDisconnected =
-          errorLower.contains('device is disconnected');
+      final isDeviceDisconnected = errorLower.contains(
+        'device is disconnected',
+      );
 
       String userMessage;
       if (pairingInvalidation) {
@@ -975,368 +979,32 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     return HelpTourController(
       topicId: 'device_connection',
       stepKeys: const {},
-      child: Scaffold(
-        backgroundColor: context.background,
-        appBar: AppBar(
-          backgroundColor: context.background,
-          leading: widget.isOnboarding
-              ? IconButton(
-                  icon: Icon(Icons.arrow_back, color: context.textPrimary),
-                  onPressed: () => Navigator.of(context).pop(),
-                )
-              : null,
-          title: Text(
-            widget.isOnboarding ? 'Connect Device' : 'Meshtastic',
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w600,
-              color: context.textPrimary,
-            ),
-          ),
-          actions: [
-            if (_scanning)
-              const SizedBox(
-                width: 48,
-                child: Center(child: LoadingIndicator(size: 20)),
-              ),
-            IcoHelpAppBarButton(
-              topicId: 'device_connection',
-              autoTrigger: widget.isOnboarding,
-            ),
-          ],
-        ),
-        body: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            // Info banner when saved device wasn't found
-            if (_savedDeviceNotFoundName != null)
-              Container(
-                padding: const EdgeInsets.all(24),
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: Colors.orange.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.orange.withValues(alpha: 0.4),
-                  ),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(
-                      Icons.info_outline,
-                      color: Colors.orange.shade700,
-                      size: 22,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '$_savedDeviceNotFoundName not found',
-                            style: TextStyle(
-                              color: Colors.orange.shade800,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'If another app is connected to this device, disconnect from it first. Only one app can use Bluetooth at a time.',
-                            style: TextStyle(
-                              color: Colors.orange.shade700,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        Icons.close,
-                        color: Colors.orange.shade700,
-                        size: 20,
-                      ),
-                      onPressed: () =>
-                          setState(() => _savedDeviceNotFoundName = null),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                    ),
-                  ],
-                ),
-              ),
-
-            if (_errorMessage != null)
-              Container(
-                padding: const EdgeInsets.all(16),
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: AppTheme.errorRed.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: AppTheme.errorRed.withValues(alpha: 0.5),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.error_outline, color: AppTheme.errorRed),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        _errorMessage!,
-                        style: const TextStyle(color: AppTheme.errorRed),
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.close, color: AppTheme.errorRed),
-                      onPressed: () => setState(() {
-                        _errorMessage = null;
-                        _showPairingInvalidationHint = false;
-                      }),
-                      iconSize: 20,
-                    ),
-                  ],
-                ),
-              ),
-
-            if (_showPairingInvalidationHint)
-              Container(
-                padding: const EdgeInsets.all(12),
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: context.accentColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: context.accentColor.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Bluetooth pairing was removed. Forget “Meshtastic” in Settings > Bluetooth and reconnect to continue.',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: context.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        TextButton.icon(
-                          onPressed: _openBluetoothSettings,
-                          icon: Icon(
-                            Icons.bluetooth_rounded,
-                            size: 16,
-                            color: context.textPrimary,
-                          ),
-                          label: Text(
-                            'Bluetooth Settings',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: context.textPrimary,
-                            ),
-                          ),
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 6,
-                              horizontal: 10,
-                            ),
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        TextButton(
-                          onPressed: () {
-                            setState(() {
-                              _errorMessage = null;
-                              _showPairingInvalidationHint = false;
-                            });
-                            _startScan();
-                          },
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 6,
-                              horizontal: 10,
-                            ),
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          child: Text(
-                            'Retry Scan',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: context.textPrimary,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-            if (_scanning)
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: context.accentColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: context.accentColor.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    LoadingIndicator(size: 20),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Scanning for nearby devices',
-                            style: TextStyle(
-                              color: context.textPrimary,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            _devices.isEmpty
-                                ? 'Looking for Meshtastic devices...'
-                                : '${_devices.length} ${_devices.length == 1 ? 'device' : 'devices'} found so far',
-                            style: TextStyle(
-                              color: context.textSecondary,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-            if (displayDevices.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Row(
-                  children: [
-                    Text(
-                      'Available Devices',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: context.textSecondary,
-
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: context.accentColor.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        '${displayDevices.length}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: context.accentColor,
-                        ),
-                      ),
-                    ),
-                    Spacer(),
-                    TextButton.icon(
-                      onPressed: _scanning ? null : _startScan,
-                      icon: Icon(
-                        Icons.refresh,
-                        size: 16,
-                      ),
-                      label: Text(
-                        'Retry Scan',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 6,
-                          horizontal: 10,
-                        ),
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-            if (_devices.isEmpty && !_scanning)
-              Center(
-                child: Column(
-                  children: [
-                    SizedBox(height: 100),
-                    Icon(
-                      Icons.bluetooth_searching,
-                      size: 80,
-                      color: context.textTertiary,
-                    ),
-                    SizedBox(height: 24),
-                    Text(
-                      'No devices found',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                        color: context.textSecondary,
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      'Make sure Bluetooth is enabled and\nyour Meshtastic device is powered on',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: context.textTertiary,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton.icon(
-                      onPressed: _startScan,
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Scan Again'),
-                    ),
-                  ],
-                ),
+      child: GlassScaffold(
+        leading: widget.isOnboarding
+            ? IconButton(
+                icon: Icon(Icons.arrow_back, color: context.textPrimary),
+                onPressed: () => Navigator.of(context).pop(),
               )
-            else
-              ...displayDevices.map(
-                (device) => Column(
-                  children: [
-                    _DeviceCard(device: device, onTap: () => _connect(device)),
-                    if (device.rssi != null)
-                      _DeviceDetailsTable(device: device),
-                  ],
-                ),
-              ),
-          ],
+            : null,
+        titleWidget: Text(
+          widget.isOnboarding ? 'Connect Device' : 'Meshtastic',
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.w600,
+            color: context.textPrimary,
+          ),
         ),
+        actions: [
+          if (_scanning)
+            const SizedBox(
+              width: 48,
+              child: Center(child: LoadingIndicator(size: 20)),
+            ),
+          IcoHelpAppBarButton(
+            topicId: 'device_connection',
+            autoTrigger: widget.isOnboarding,
+          ),
+        ],
         bottomNavigationBar: Consumer(
           builder: (context, ref, child) {
             final appVersionAsync = ref.watch(appVersionProvider);
@@ -1376,6 +1044,345 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
             );
           },
         ),
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.all(16),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                // Info banner when saved device wasn't found
+                if (_savedDeviceNotFoundName != null)
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.orange.withValues(alpha: 0.4),
+                      ),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          color: Colors.orange.shade700,
+                          size: 22,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '$_savedDeviceNotFoundName not found',
+                                style: TextStyle(
+                                  color: Colors.orange.shade800,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'If another app is connected to this device, disconnect from it first. Only one app can use Bluetooth at a time.',
+                                style: TextStyle(
+                                  color: Colors.orange.shade700,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(
+                            Icons.close,
+                            color: Colors.orange.shade700,
+                            size: 20,
+                          ),
+                          onPressed: () =>
+                              setState(() => _savedDeviceNotFoundName = null),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                if (_errorMessage != null)
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: AppTheme.errorRed.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppTheme.errorRed.withValues(alpha: 0.5),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.error_outline,
+                          color: AppTheme.errorRed,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            _errorMessage!,
+                            style: const TextStyle(color: AppTheme.errorRed),
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.close, color: AppTheme.errorRed),
+                          onPressed: () => setState(() {
+                            _errorMessage = null;
+                            _showPairingInvalidationHint = false;
+                          }),
+                          iconSize: 20,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                if (_showPairingInvalidationHint)
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: context.accentColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: context.accentColor.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Bluetooth pairing was removed. Forget “Meshtastic” in Settings > Bluetooth and reconnect to continue.',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: context.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            TextButton.icon(
+                              onPressed: _openBluetoothSettings,
+                              icon: Icon(
+                                Icons.bluetooth_rounded,
+                                size: 16,
+                                color: context.textPrimary,
+                              ),
+                              label: Text(
+                                'Bluetooth Settings',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: context.textPrimary,
+                                ),
+                              ),
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 6,
+                                  horizontal: 10,
+                                ),
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  _errorMessage = null;
+                                  _showPairingInvalidationHint = false;
+                                });
+                                _startScan();
+                              },
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 6,
+                                  horizontal: 10,
+                                ),
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: Text(
+                                'Retry Scan',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: context.textPrimary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                if (_scanning)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: context.accentColor.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: context.accentColor.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        LoadingIndicator(size: 20),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Scanning for nearby devices',
+                                style: TextStyle(
+                                  color: context.textPrimary,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                _devices.isEmpty
+                                    ? 'Looking for Meshtastic devices...'
+                                    : '${_devices.length} ${_devices.length == 1 ? 'device' : 'devices'} found so far',
+                                style: TextStyle(
+                                  color: context.textSecondary,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                if (displayDevices.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Row(
+                      children: [
+                        Text(
+                          'Available Devices',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: context.textSecondary,
+
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: context.accentColor.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '${displayDevices.length}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: context.accentColor,
+                            ),
+                          ),
+                        ),
+                        Spacer(),
+                        TextButton.icon(
+                          onPressed: _scanning ? null : _startScan,
+                          icon: Icon(Icons.refresh, size: 16),
+                          label: Text(
+                            'Retry Scan',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 6,
+                              horizontal: 10,
+                            ),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                if (_devices.isEmpty && !_scanning)
+                  Center(
+                    child: Column(
+                      children: [
+                        SizedBox(height: 100),
+                        Icon(
+                          Icons.bluetooth_searching,
+                          size: 80,
+                          color: context.textTertiary,
+                        ),
+                        SizedBox(height: 24),
+                        Text(
+                          'No devices found',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                            color: context.textSecondary,
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          'Make sure Bluetooth is enabled and\nyour Meshtastic device is powered on',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: context.textTertiary,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton.icon(
+                          onPressed: _startScan,
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Scan Again'),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  ...displayDevices.map(
+                    (device) => Column(
+                      children: [
+                        _DeviceCard(
+                          device: device,
+                          onTap: () => _connect(device),
+                        ),
+                        if (device.rssi != null)
+                          _DeviceDetailsTable(device: device),
+                      ],
+                    ),
+                  ),
+              ]),
+            ),
+          ),
+        ],
       ),
     );
   }

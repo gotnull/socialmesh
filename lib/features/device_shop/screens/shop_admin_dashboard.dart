@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
+import '../../../core/widgets/glass_scaffold.dart';
 import '../../../utils/snackbar.dart';
 import '../providers/admin_shop_providers.dart';
 import '../services/device_shop_service.dart';
@@ -19,40 +20,55 @@ class ShopAdminDashboard extends ConsumerWidget {
     return isAdminAsync.when(
       data: (isAdmin) {
         if (!isAdmin) {
-          return Scaffold(
-            appBar: AppBar(title: const Text('Access Denied')),
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.lock,
-                    size: 64,
-                    color: Colors.red.withValues(alpha: 0.5),
+          return GlassScaffold(
+            title: 'Access Denied',
+            slivers: [
+              SliverFillRemaining(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.lock,
+                        size: 64,
+                        color: Colors.red.withValues(alpha: 0.5),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Admin Access Required',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'You do not have permission to access this area.',
+                        style: TextStyle(color: context.textSecondary),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Admin Access Required',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'You do not have permission to access this area.',
-                    style: TextStyle(color: context.textSecondary),
-                  ),
-                ],
+                ),
               ),
-            ),
+            ],
           );
         }
 
         return const _AdminDashboardContent();
       },
-      loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (error, _) => Scaffold(
-        appBar: AppBar(title: const Text('Error')),
-        body: Center(child: Text('Error: $error')),
+      loading: () => const GlassScaffold(
+        title: 'Shop Admin',
+        slivers: [
+          SliverFillRemaining(
+            child: Center(child: CircularProgressIndicator()),
+          ),
+        ],
+      ),
+      error: (error, _) => GlassScaffold(
+        title: 'Error',
+        slivers: [
+          SliverFillRemaining(child: Center(child: Text('Error: \$error'))),
+        ],
       ),
     );
   }
@@ -65,33 +81,28 @@ class _AdminDashboardContent extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final statsAsync = ref.watch(adminShopStatisticsProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: context.accentColor.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                Icons.admin_panel_settings,
-                color: context.accentColor,
-              ),
+    return GlassScaffold.body(
+      titleWidget: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: context.accentColor.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(8),
             ),
-            const SizedBox(width: 12),
-            const Text('Shop Admin'),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => ref.invalidate(adminShopStatisticsProvider),
-            tooltip: 'Refresh',
+            child: Icon(Icons.admin_panel_settings, color: context.accentColor),
           ),
+          const SizedBox(width: 12),
+          const Text('Shop Admin'),
         ],
       ),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.refresh),
+          onPressed: () => ref.invalidate(adminShopStatisticsProvider),
+          tooltip: 'Refresh',
+        ),
+      ],
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../providers/app_providers.dart';
 import '../../core/widgets/loading_indicator.dart';
 
@@ -88,491 +89,497 @@ class FirmwareUpdateScreen extends ConsumerWidget {
 
     final currentVersion = myNode?.firmwareVersion ?? 'Unknown';
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.background,
-        title: Text(
-          'Firmware Update',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: context.textPrimary,
-          ),
+    return GlassScaffold(
+      title: 'Firmware Update',
+      actions: [
+        IconButton(
+          icon: Icon(Icons.refresh, color: context.textPrimary),
+          onPressed: () {
+            ref.invalidate(firmwareCheckProvider);
+          },
         ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.refresh, color: context.textPrimary),
-            onPressed: () {
-              ref.invalidate(firmwareCheckProvider);
-            },
-          ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // Current Version Card
-          _buildSectionHeader(context, 'Current Version'),
-          Container(
-            decoration: BoxDecoration(
-              color: context.card,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: context.border),
-            ),
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: context.accentColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    Icons.memory,
-                    color: context.accentColor,
-                    size: 24,
-                  ),
+      ],
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.all(16),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate([
+              // Current Version Card
+              _buildSectionHeader(context, 'Current Version'),
+              Container(
+                decoration: BoxDecoration(
+                  color: context.card,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: context.border),
                 ),
-                SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Installed Firmware',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: context.textSecondary,
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        currentVersion,
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w700,
-                          color: context.textPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Device Info
-          Container(
-            decoration: BoxDecoration(
-              color: context.card,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: context.border),
-            ),
-            child: Column(
-              children: [
-                _buildInfoRow(
-                  icon: Icons.developer_board,
-                  label: 'Hardware',
-                  value: myNode?.hardwareModel ?? 'Unknown',
-                  context: context,
-                ),
-                _buildDivider(context),
-                _buildInfoRow(
-                  icon: Icons.tag,
-                  label: 'Node ID',
-                  value: myNode?.nodeNum.toString() ?? 'Unknown',
-                  context: context,
-                ),
-                _buildDivider(context),
-                _buildInfoRow(
-                  icon: Icons.schedule,
-                  label: 'Uptime',
-                  value: myNode?.uptimeSeconds != null
-                      ? _formatUptime(myNode!.uptimeSeconds!)
-                      : 'Unknown',
-                  context: context,
-                ),
-                if (myNode?.hasWifi == true) ...[
-                  _buildDivider(context),
-                  _buildInfoRow(
-                    icon: Icons.wifi,
-                    label: 'WiFi',
-                    value: 'Supported',
-                    context: context,
-                  ),
-                ],
-                if (myNode?.hasBluetooth == true) ...[
-                  _buildDivider(context),
-                  _buildInfoRow(
-                    icon: Icons.bluetooth,
-                    label: 'Bluetooth',
-                    value: 'Supported',
-                    context: context,
-                  ),
-                ],
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          // Update Check
-          _buildSectionHeader(context, 'Available Update'),
-          firmwareCheck.when(
-            data: (info) {
-              if (info == null) {
-                return _buildNoUpdateCard(context);
-              }
-
-              final isNewer = _isNewerVersion(
-                currentVersion,
-                info.latestVersion,
-              );
-
-              return Column(
-                children: [
-                  // Update Status Card
-                  Container(
-                    decoration: BoxDecoration(
-                      color: isNewer
-                          ? AppTheme.successGreen.withValues(alpha: 0.1)
-                          : context.card,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isNewer
-                            ? AppTheme.successGreen.withValues(alpha: 0.3)
-                            : context.border,
-                      ),
-                    ),
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 48,
-                              height: 48,
-                              decoration: BoxDecoration(
-                                color:
-                                    (isNewer
-                                            ? AppTheme.successGreen
-                                            : context.textTertiary)
-                                        .withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Icon(
-                                isNewer
-                                    ? Icons.system_update
-                                    : Icons.check_circle,
-                                color: isNewer
-                                    ? AppTheme.successGreen
-                                    : context.textTertiary,
-                                size: 24,
-                              ),
-                            ),
-                            SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    isNewer ? 'Update Available' : 'Up to Date',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: isNewer
-                                          ? AppTheme.successGreen
-                                          : context.textSecondary,
-                                    ),
-                                  ),
-                                  SizedBox(height: 2),
-                                  Text(
-                                    'Latest: ${info.latestVersion}',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: context.textTertiary,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            if (isNewer)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppTheme.successGreen,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  'NEW',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                        if (isNewer) ...[
-                          SizedBox(height: 16),
-                          SizedBox(
-                            width: double.infinity,
-                            child: FilledButton.icon(
-                              onPressed: () =>
-                                  _openDownloadPage(info.downloadUrl),
-                              style: FilledButton.styleFrom(
-                                backgroundColor: AppTheme.successGreen,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                              icon: const Icon(Icons.download),
-                              label: const Text(
-                                'Download Update',
-                                style: TextStyle(fontWeight: FontWeight.w600),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-
-                  if (isNewer) ...[
-                    const SizedBox(height: 16),
-
-                    // Release Notes
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
                     Container(
+                      width: 48,
+                      height: 48,
                       decoration: BoxDecoration(
-                        color: context.card,
+                        color: context.accentColor.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: context.border),
                       ),
-                      padding: const EdgeInsets.all(16),
+                      child: Icon(
+                        Icons.memory,
+                        color: context.accentColor,
+                        size: 24,
+                      ),
+                    ),
+                    SizedBox(width: 16),
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.notes,
-                                color: context.accentColor,
-                                size: 20,
-                              ),
-                              SizedBox(width: 8),
-                              Text(
-                                'Release Notes',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                  color: context.textPrimary,
-                                ),
-                              ),
-                              const Spacer(),
-                              Text(
-                                _formatDate(info.releaseDate),
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: context.textTertiary,
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 12),
                           Text(
-                            info.releaseNotes,
+                            'Installed Firmware',
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 13,
                               color: context.textSecondary,
-                              height: 1.5,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            currentVersion,
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w700,
+                              color: context.textPrimary,
                             ),
                           ),
                         ],
                       ),
                     ),
                   ],
-                ],
-              );
-            },
-            loading: () => Container(
-              decoration: BoxDecoration(
-                color: context.card,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: context.border),
-              ),
-              padding: const EdgeInsets.all(32),
-              child: Column(
-                children: [
-                  LoadingIndicator(size: 32),
-                  SizedBox(height: 16),
-                  Text(
-                    'Checking for updates...',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: context.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            error: (error, _) => Container(
-              decoration: BoxDecoration(
-                color: AppTheme.errorRed.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: AppTheme.errorRed.withValues(alpha: 0.3),
                 ),
               ),
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Icon(Icons.error_outline, color: AppTheme.errorRed, size: 24),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Failed to check for updates',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.errorRed,
+
+              const SizedBox(height: 16),
+
+              // Device Info
+              Container(
+                decoration: BoxDecoration(
+                  color: context.card,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: context.border),
+                ),
+                child: Column(
+                  children: [
+                    _buildInfoRow(
+                      icon: Icons.developer_board,
+                      label: 'Hardware',
+                      value: myNode?.hardwareModel ?? 'Unknown',
+                      context: context,
+                    ),
+                    _buildDivider(context),
+                    _buildInfoRow(
+                      icon: Icons.tag,
+                      label: 'Node ID',
+                      value: myNode?.nodeNum.toString() ?? 'Unknown',
+                      context: context,
+                    ),
+                    _buildDivider(context),
+                    _buildInfoRow(
+                      icon: Icons.schedule,
+                      label: 'Uptime',
+                      value: myNode?.uptimeSeconds != null
+                          ? _formatUptime(myNode!.uptimeSeconds!)
+                          : 'Unknown',
+                      context: context,
+                    ),
+                    if (myNode?.hasWifi == true) ...[
+                      _buildDivider(context),
+                      _buildInfoRow(
+                        icon: Icons.wifi,
+                        label: 'WiFi',
+                        value: 'Supported',
+                        context: context,
+                      ),
+                    ],
+                    if (myNode?.hasBluetooth == true) ...[
+                      _buildDivider(context),
+                      _buildInfoRow(
+                        icon: Icons.bluetooth,
+                        label: 'Bluetooth',
+                        value: 'Supported',
+                        context: context,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Update Check
+              _buildSectionHeader(context, 'Available Update'),
+              firmwareCheck.when(
+                data: (info) {
+                  if (info == null) {
+                    return _buildNoUpdateCard(context);
+                  }
+
+                  final isNewer = _isNewerVersion(
+                    currentVersion,
+                    info.latestVersion,
+                  );
+
+                  return Column(
+                    children: [
+                      // Update Status Card
+                      Container(
+                        decoration: BoxDecoration(
+                          color: isNewer
+                              ? AppTheme.successGreen.withValues(alpha: 0.1)
+                              : context.card,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isNewer
+                                ? AppTheme.successGreen.withValues(alpha: 0.3)
+                                : context.border,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          error.toString(),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: context.textTertiary,
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  width: 48,
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                    color:
+                                        (isNewer
+                                                ? AppTheme.successGreen
+                                                : context.textTertiary)
+                                            .withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Icon(
+                                    isNewer
+                                        ? Icons.system_update
+                                        : Icons.check_circle,
+                                    color: isNewer
+                                        ? AppTheme.successGreen
+                                        : context.textTertiary,
+                                    size: 24,
+                                  ),
+                                ),
+                                SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        isNewer
+                                            ? 'Update Available'
+                                            : 'Up to Date',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color: isNewer
+                                              ? AppTheme.successGreen
+                                              : context.textSecondary,
+                                        ),
+                                      ),
+                                      SizedBox(height: 2),
+                                      Text(
+                                        'Latest: ${info.latestVersion}',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: context.textTertiary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (isNewer)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.successGreen,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      'NEW',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            if (isNewer) ...[
+                              SizedBox(height: 16),
+                              SizedBox(
+                                width: double.infinity,
+                                child: FilledButton.icon(
+                                  onPressed: () =>
+                                      _openDownloadPage(info.downloadUrl),
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: AppTheme.successGreen,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 14,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                  icon: const Icon(Icons.download),
+                                  label: const Text(
+                                    'Download Update',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+
+                      if (isNewer) ...[
+                        const SizedBox(height: 16),
+
+                        // Release Notes
+                        Container(
+                          decoration: BoxDecoration(
+                            color: context.card,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: context.border),
+                          ),
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.notes,
+                                    color: context.accentColor,
+                                    size: 20,
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Release Notes',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                      color: context.textPrimary,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  Text(
+                                    _formatDate(info.releaseDate),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: context.textTertiary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 12),
+                              Text(
+                                info.releaseNotes,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: context.textSecondary,
+                                  height: 1.5,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
-                    ),
+                    ],
+                  );
+                },
+                loading: () => Container(
+                  decoration: BoxDecoration(
+                    color: context.card,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: context.border),
                   ),
-                ],
-              ),
-            ),
-          ),
-
-          SizedBox(height: 24),
-
-          // Update Instructions
-          _buildSectionHeader(context, 'How to Update'),
-          Container(
-            decoration: BoxDecoration(
-              color: context.card,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: context.border),
-            ),
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                _buildStep(
-                  1,
-                  'Download the firmware file for your device',
-                  context,
-                ),
-                SizedBox(height: 12),
-                _buildStep(2, 'Connect your device via USB', context),
-                const SizedBox(height: 12),
-                _buildStep(
-                  3,
-                  'Use the Meshtastic Web Flasher or CLI to flash',
-                  context,
-                ),
-                const SizedBox(height: 12),
-                _buildStep(
-                  4,
-                  'Wait for device to reboot and reconnect',
-                  context,
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Web Flasher Link
-          OutlinedButton.icon(
-            onPressed: () => _openWebFlasher(),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: context.accentColor,
-              side: BorderSide(color: context.accentColor),
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            icon: const Icon(Icons.open_in_browser),
-            label: const Text('Open Web Flasher'),
-          ),
-
-          const SizedBox(height: 32),
-
-          // Warning
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppTheme.warningYellow.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppTheme.warningYellow.withValues(alpha: 0.3),
-              ),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(
-                  Icons.warning_amber_rounded,
-                  color: AppTheme.warningYellow,
-                  size: 24,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
+                  padding: const EdgeInsets.all(32),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      LoadingIndicator(size: 32),
+                      SizedBox(height: 16),
                       Text(
-                        'Backup Your Settings',
+                        'Checking for updates...',
                         style: TextStyle(
                           fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.warningYellow.withValues(alpha: 0.9),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Firmware updates may reset your device configuration. '
-                        'Consider exporting your settings before updating.',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: AppTheme.warningYellow.withValues(alpha: 0.7),
+                          color: context.textSecondary,
                         ),
                       ),
                     ],
                   ),
                 ),
-              ],
-            ),
-          ),
+                error: (error, _) => Container(
+                  decoration: BoxDecoration(
+                    color: AppTheme.errorRed.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppTheme.errorRed.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        color: AppTheme.errorRed,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Failed to check for updates',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.errorRed,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              error.toString(),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: context.textTertiary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
 
-          const SizedBox(height: 32),
-        ],
-      ),
+              SizedBox(height: 24),
+
+              // Update Instructions
+              _buildSectionHeader(context, 'How to Update'),
+              Container(
+                decoration: BoxDecoration(
+                  color: context.card,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: context.border),
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    _buildStep(
+                      1,
+                      'Download the firmware file for your device',
+                      context,
+                    ),
+                    SizedBox(height: 12),
+                    _buildStep(2, 'Connect your device via USB', context),
+                    const SizedBox(height: 12),
+                    _buildStep(
+                      3,
+                      'Use the Meshtastic Web Flasher or CLI to flash',
+                      context,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildStep(
+                      4,
+                      'Wait for device to reboot and reconnect',
+                      context,
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Web Flasher Link
+              OutlinedButton.icon(
+                onPressed: () => _openWebFlasher(),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: context.accentColor,
+                  side: BorderSide(color: context.accentColor),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                icon: const Icon(Icons.open_in_browser),
+                label: const Text('Open Web Flasher'),
+              ),
+
+              const SizedBox(height: 32),
+
+              // Warning
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.warningYellow.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppTheme.warningYellow.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      Icons.warning_amber_rounded,
+                      color: AppTheme.warningYellow,
+                      size: 24,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Backup Your Settings',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.warningYellow.withValues(
+                                alpha: 0.9,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Firmware updates may reset your device configuration. '
+                            'Consider exporting your settings before updating.',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: AppTheme.warningYellow.withValues(
+                                alpha: 0.7,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 32),
+            ]),
+          ),
+        ),
+      ],
     );
   }
 

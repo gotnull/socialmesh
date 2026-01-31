@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/logging.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/legal_document_sheet.dart';
 import '../../core/widgets/user_avatar.dart';
 import '../../models/subscription_models.dart';
@@ -44,69 +45,61 @@ class _AccountSubscriptionsScreenState
     final authState = ref.watch(authStateProvider);
     final profileAsync = ref.watch(userProfileProvider);
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.background,
-        centerTitle: true,
-        title: Text(
-          'Account',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: context.textPrimary,
+    return GlassScaffold(
+      title: 'Account',
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.all(16),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate([
+              // ═══════════════════════════════════════════════════════════════
+              // PROFILE CARD - Quick access to edit profile
+              // ═══════════════════════════════════════════════════════════════
+              _buildProfileCard(profileAsync, accentColor),
+
+              const SizedBox(height: 24),
+
+              // ═══════════════════════════════════════════════════════════════
+              // ACCOUNT SECTION - Sign in/out, linked accounts
+              // ═══════════════════════════════════════════════════════════════
+              _buildSectionHeader('ACCOUNT'),
+              const SizedBox(height: 8),
+              authState.when(
+                data: (user) => user != null
+                    ? _buildSignedInAccountCard(user)
+                    : _buildSignedOutAccountCard(),
+                loading: () => const _LoadingCard(),
+                error: (e, _) => _buildSignedOutAccountCard(),
+              ),
+
+              const SizedBox(height: 24),
+
+              // ═══════════════════════════════════════════════════════════════
+              // PREMIUM SECTION - Cloud Sync (subscription) + Feature Packs (one-time)
+              // ═══════════════════════════════════════════════════════════════
+              _buildSectionHeader('PREMIUM'),
+              const SizedBox(height: 8),
+
+              // Cloud Sync subscription card (monthly/yearly)
+              _buildCloudSyncCard(),
+
+              const SizedBox(height: 12),
+
+              // Feature packs card (one-time purchases)
+              _buildFeaturePacksCard(),
+
+              const SizedBox(height: 24),
+
+              // ═══════════════════════════════════════════════════════════════
+              // MANAGE SECTION - Restore, Terms, Privacy
+              // ═══════════════════════════════════════════════════════════════
+              _buildSectionHeader('MANAGE'),
+              const SizedBox(height: 8),
+              _buildManageCard(),
+            ]),
           ),
         ),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // ═══════════════════════════════════════════════════════════════
-          // PROFILE CARD - Quick access to edit profile
-          // ═══════════════════════════════════════════════════════════════
-          _buildProfileCard(profileAsync, accentColor),
-
-          const SizedBox(height: 24),
-
-          // ═══════════════════════════════════════════════════════════════
-          // ACCOUNT SECTION - Sign in/out, linked accounts
-          // ═══════════════════════════════════════════════════════════════
-          _buildSectionHeader('ACCOUNT'),
-          const SizedBox(height: 8),
-          authState.when(
-            data: (user) => user != null
-                ? _buildSignedInAccountCard(user)
-                : _buildSignedOutAccountCard(),
-            loading: () => const _LoadingCard(),
-            error: (e, _) => _buildSignedOutAccountCard(),
-          ),
-
-          const SizedBox(height: 24),
-
-          // ═══════════════════════════════════════════════════════════════
-          // PREMIUM SECTION - Cloud Sync (subscription) + Feature Packs (one-time)
-          // ═══════════════════════════════════════════════════════════════
-          _buildSectionHeader('PREMIUM'),
-          const SizedBox(height: 8),
-
-          // Cloud Sync subscription card (monthly/yearly)
-          _buildCloudSyncCard(),
-
-          const SizedBox(height: 12),
-
-          // Feature packs card (one-time purchases)
-          _buildFeaturePacksCard(),
-
-          const SizedBox(height: 24),
-
-          // ═══════════════════════════════════════════════════════════════
-          // MANAGE SECTION - Restore, Terms, Privacy
-          // ═══════════════════════════════════════════════════════════════
-          _buildSectionHeader('MANAGE'),
-          const SizedBox(height: 8),
-          _buildManageCard(),
-        ],
-      ),
+      ],
     );
   }
 

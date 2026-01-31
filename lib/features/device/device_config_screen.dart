@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/logging.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/animations.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/info_table.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/splash_mesh_provider.dart';
@@ -601,318 +602,301 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
     final connectedDevice = ref.watch(connectedDeviceProvider);
 
     if (_isLoading) {
-      return Scaffold(
-        backgroundColor: context.background,
-        appBar: AppBar(
-          backgroundColor: context.background,
-          title: Text(
-            'Device Config',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: context.textPrimary,
-            ),
-          ),
-        ),
-        body: const ScreenLoadingIndicator(),
+      return GlassScaffold(
+        title: 'Device Config',
+        slivers: [SliverFillRemaining(child: const ScreenLoadingIndicator())],
       );
     }
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.background,
-        title: Text(
-          'Device Config',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: context.textPrimary,
-          ),
-        ),
-        actions: [
-          if (_hasChanges)
-            TextButton(
-              onPressed: _isSaving ? null : _confirmAndSave,
-              child: _isSaving
-                  ? SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: context.accentColor,
-                      ),
-                    )
-                  : Text(
-                      'Save',
-                      style: TextStyle(
-                        color: context.accentColor,
-                        fontWeight: FontWeight.w600,
-                      ),
+    return GlassScaffold(
+      title: 'Device Config',
+      actions: [
+        if (_hasChanges)
+          TextButton(
+            onPressed: _isSaving ? null : _confirmAndSave,
+            child: _isSaving
+                ? SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: context.accentColor,
                     ),
-            ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // Long Name Field
-          _buildNameField(
-            icon: Icons.badge_outlined,
-            label: 'Long Name',
-            subtitle: 'Display name visible on the mesh',
-            controller: _longNameController,
-            maxLength: maxLongNameLength,
-            hint: 'Enter display name',
-          ),
-
-          SizedBox(height: 16),
-
-          // Short Name Field
-          _buildNameField(
-            icon: Icons.short_text,
-            label: 'Short Name',
-            subtitle: 'Max $maxShortNameLength characters (A-Z, 0-9)',
-            controller: _shortNameController,
-            maxLength: maxShortNameLength,
-            hint: 'e.g. FUZZ',
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
-              UpperCaseTextFormatter(),
-              LengthLimitingTextInputFormatter(maxShortNameLength),
-            ],
-            textCapitalization: TextCapitalization.characters,
-          ),
-
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Text(
-              'Your device name is broadcast to the mesh and visible to other nodes.',
-              style: TextStyle(fontSize: 12, color: context.textTertiary),
-            ),
-          ),
-
-          SizedBox(height: 24),
-
-          // User Flags Section
-          _buildSectionHeader('User Flags'),
-          _buildUserFlagsSettings(),
-
-          SizedBox(height: 24),
-
-          // Device Info Section
-          _buildSectionHeader('Device Info'),
-          InfoTable(
-            rows: [
-              InfoTableRow(
-                label: 'BLE Name',
-                value: connectedDevice?.name ?? 'Unknown',
-                icon: Icons.bluetooth,
-              ),
-              InfoTableRow(
-                label: 'Hardware',
-                value: myNode?.hardwareModel ?? 'Unknown',
-                icon: Icons.memory_outlined,
-              ),
-              InfoTableRow(
-                label: 'User ID',
-                value: myNode?.userId ?? 'Unknown',
-                icon: Icons.fingerprint,
-              ),
-              InfoTableRow(
-                label: 'Node Number',
-                value: '${myNode?.nodeNum ?? 0}',
-                icon: Icons.tag,
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 24),
-
-          // Device Role Section
-          _buildSectionHeader('Device Role'),
-          Container(
-            decoration: BoxDecoration(
-              color: context.card,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: context.border),
-            ),
-            child: Material(
-              color: Colors.transparent,
-              borderRadius: BorderRadius.circular(12),
-              child: Column(
-                children: deviceRoles.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final option = entry.value;
-                  final isSelected = _selectedRole == option.role;
-
-                  return Column(
-                    children: [
-                      InkWell(
-                        borderRadius: index == 0
-                            ? const BorderRadius.vertical(
-                                top: Radius.circular(12),
-                              )
-                            : index == deviceRoles.length - 1
-                            ? const BorderRadius.vertical(
-                                bottom: Radius.circular(12),
-                              )
-                            : BorderRadius.zero,
-                        onTap: () {
-                          setState(() {
-                            _selectedRole = option.role;
-                          });
-                          _checkForChanges();
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 14,
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 24,
-                                height: 24,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: isSelected
-                                        ? context.accentColor
-                                        : context.border,
-                                    width: 2,
-                                  ),
-                                  color: isSelected
-                                      ? context.accentColor
-                                      : Colors.transparent,
-                                ),
-                                child: isSelected
-                                    ? Icon(
-                                        Icons.check,
-                                        color: Colors.white,
-                                        size: 16,
-                                      )
-                                    : null,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      option.displayName,
-                                      style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: isSelected
-                                            ? FontWeight.w600
-                                            : FontWeight.w500,
-                                        color: isSelected
-                                            ? context.textPrimary
-                                            : context.textSecondary,
-                                      ),
-                                    ),
-                                    SizedBox(height: 2),
-                                    Text(
-                                      option.description,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: context.textTertiary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      if (index < deviceRoles.length - 1) _buildDivider(),
-                    ],
-                  );
-                }).toList(),
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 32),
-
-          // Rebroadcast Mode Section
-          _buildSectionHeader('Rebroadcast Mode'),
-          _buildRebroadcastModeSelector(),
-
-          const SizedBox(height: 24),
-
-          // Node Info Broadcast Section
-          _buildSectionHeader('Node Info Broadcast'),
-          _buildNodeInfoBroadcastSetting(),
-
-          const SizedBox(height: 24),
-
-          // Button & Input Section
-          _buildSectionHeader('Button & Input'),
-          _buildButtonInputSettings(),
-
-          const SizedBox(height: 24),
-
-          // Buzzer Section
-          _buildSectionHeader('Buzzer'),
-          _buildBuzzerSettings(),
-
-          const SizedBox(height: 24),
-
-          // LED & Display Section
-          _buildSectionHeader('LED'),
-          _buildLedSettings(),
-
-          const SizedBox(height: 24),
-
-          // Timezone Section
-          _buildSectionHeader('Timezone'),
-          _buildTimezoneSettings(),
-
-          const SizedBox(height: 24),
-
-          // GPIO Section (Advanced)
-          _buildSectionHeader('GPIO (Advanced)'),
-          _buildGpioSettings(),
-
-          const SizedBox(height: 24),
-
-          // Warning
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppTheme.warningYellow.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppTheme.warningYellow.withValues(alpha: 0.3),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.info_outline_rounded,
-                  color: AppTheme.primaryBlue,
-                  size: 24,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Changes to device configuration will cause the device to reboot.',
+                  )
+                : Text(
+                    'Save',
                     style: TextStyle(
-                      fontSize: 13,
-                      color: AppTheme.primaryBlue.withValues(alpha: 0.9),
+                      color: context.accentColor,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                ),
-              ],
-            ),
           ),
+      ],
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.all(16),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate([
+              // Long Name Field
+              _buildNameField(
+                icon: Icons.badge_outlined,
+                label: 'Long Name',
+                subtitle: 'Display name visible on the mesh',
+                controller: _longNameController,
+                maxLength: maxLongNameLength,
+                hint: 'Enter display name',
+              ),
 
-          const SizedBox(height: 32),
-        ],
-      ),
+              SizedBox(height: 16),
+
+              // Short Name Field
+              _buildNameField(
+                icon: Icons.short_text,
+                label: 'Short Name',
+                subtitle: 'Max $maxShortNameLength characters (A-Z, 0-9)',
+                controller: _shortNameController,
+                maxLength: maxShortNameLength,
+                hint: 'e.g. FUZZ',
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
+                  UpperCaseTextFormatter(),
+                  LengthLimitingTextInputFormatter(maxShortNameLength),
+                ],
+                textCapitalization: TextCapitalization.characters,
+              ),
+
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Text(
+                  'Your device name is broadcast to the mesh and visible to other nodes.',
+                  style: TextStyle(fontSize: 12, color: context.textTertiary),
+                ),
+              ),
+
+              SizedBox(height: 24),
+
+              // User Flags Section
+              _buildSectionHeader('User Flags'),
+              _buildUserFlagsSettings(),
+
+              SizedBox(height: 24),
+
+              // Device Info Section
+              _buildSectionHeader('Device Info'),
+              InfoTable(
+                rows: [
+                  InfoTableRow(
+                    label: 'BLE Name',
+                    value: connectedDevice?.name ?? 'Unknown',
+                    icon: Icons.bluetooth,
+                  ),
+                  InfoTableRow(
+                    label: 'Hardware',
+                    value: myNode?.hardwareModel ?? 'Unknown',
+                    icon: Icons.memory_outlined,
+                  ),
+                  InfoTableRow(
+                    label: 'User ID',
+                    value: myNode?.userId ?? 'Unknown',
+                    icon: Icons.fingerprint,
+                  ),
+                  InfoTableRow(
+                    label: 'Node Number',
+                    value: '${myNode?.nodeNum ?? 0}',
+                    icon: Icons.tag,
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 24),
+
+              // Device Role Section
+              _buildSectionHeader('Device Role'),
+              Container(
+                decoration: BoxDecoration(
+                  color: context.card,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: context.border),
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Column(
+                    children: deviceRoles.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final option = entry.value;
+                      final isSelected = _selectedRole == option.role;
+
+                      return Column(
+                        children: [
+                          InkWell(
+                            borderRadius: index == 0
+                                ? const BorderRadius.vertical(
+                                    top: Radius.circular(12),
+                                  )
+                                : index == deviceRoles.length - 1
+                                ? const BorderRadius.vertical(
+                                    bottom: Radius.circular(12),
+                                  )
+                                : BorderRadius.zero,
+                            onTap: () {
+                              setState(() {
+                                _selectedRole = option.role;
+                              });
+                              _checkForChanges();
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 14,
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 24,
+                                    height: 24,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: isSelected
+                                            ? context.accentColor
+                                            : context.border,
+                                        width: 2,
+                                      ),
+                                      color: isSelected
+                                          ? context.accentColor
+                                          : Colors.transparent,
+                                    ),
+                                    child: isSelected
+                                        ? Icon(
+                                            Icons.check,
+                                            color: Colors.white,
+                                            size: 16,
+                                          )
+                                        : null,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          option.displayName,
+                                          style: TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: isSelected
+                                                ? FontWeight.w600
+                                                : FontWeight.w500,
+                                            color: isSelected
+                                                ? context.textPrimary
+                                                : context.textSecondary,
+                                          ),
+                                        ),
+                                        SizedBox(height: 2),
+                                        Text(
+                                          option.description,
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: context.textTertiary,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          if (index < deviceRoles.length - 1) _buildDivider(),
+                        ],
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // Rebroadcast Mode Section
+              _buildSectionHeader('Rebroadcast Mode'),
+              _buildRebroadcastModeSelector(),
+
+              const SizedBox(height: 24),
+
+              // Node Info Broadcast Section
+              _buildSectionHeader('Node Info Broadcast'),
+              _buildNodeInfoBroadcastSetting(),
+
+              const SizedBox(height: 24),
+
+              // Button & Input Section
+              _buildSectionHeader('Button & Input'),
+              _buildButtonInputSettings(),
+
+              const SizedBox(height: 24),
+
+              // Buzzer Section
+              _buildSectionHeader('Buzzer'),
+              _buildBuzzerSettings(),
+
+              const SizedBox(height: 24),
+
+              // LED & Display Section
+              _buildSectionHeader('LED'),
+              _buildLedSettings(),
+
+              const SizedBox(height: 24),
+
+              // Timezone Section
+              _buildSectionHeader('Timezone'),
+              _buildTimezoneSettings(),
+
+              const SizedBox(height: 24),
+
+              // GPIO Section (Advanced)
+              _buildSectionHeader('GPIO (Advanced)'),
+              _buildGpioSettings(),
+
+              const SizedBox(height: 24),
+
+              // Warning
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.warningYellow.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppTheme.warningYellow.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline_rounded,
+                      color: AppTheme.warningYellow,
+                      size: 24,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Changes to device configuration will cause the device to reboot.',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: context.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 32),
+            ]),
+          ),
+        ),
+      ],
     );
   }
 

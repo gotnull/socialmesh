@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../models/telemetry_log.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../providers/telemetry_providers.dart';
@@ -22,63 +23,46 @@ class PaxCounterLogScreen extends ConsumerWidget {
     final node = nodeNum != null ? nodes[nodeNum] : null;
     final nodeName = node?.displayName ?? 'All Nodes';
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.background,
-        title: Text(
-          'PAX Counter Log',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: context.textPrimary,
+    return GlassScaffold(
+      title: 'PAX Counter Log',
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          sliver: SliverToBoxAdapter(
+            child: Text(
+              nodeName,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: context.textSecondary,
+              ),
+            ),
           ),
         ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Text(
-                nodeName,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: context.textSecondary,
+        logsAsync.when(
+          data: (logs) {
+            if (logs.isEmpty) {
+              return SliverFillRemaining(
+                child: _buildEmptyState(context, 'No PAX data recorded yet'),
+              );
+            }
+            final sortedLogs = logs.reversed.toList();
+            return SliverPadding(
+              padding: const EdgeInsets.all(16),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) => _PaxCounterCard(log: sortedLogs[index]),
+                  childCount: sortedLogs.length,
                 ),
               ),
-            ),
-            Expanded(
-              child: logsAsync.when(
-                data: (logs) {
-                  if (logs.isEmpty) {
-                    return _buildEmptyState(
-                      context,
-                      'No PAX data recorded yet',
-                    );
-                  }
-                  final sortedLogs = logs.reversed.toList();
-                  return ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: sortedLogs.length,
-                    itemBuilder: (context, index) {
-                      return _PaxCounterCard(log: sortedLogs[index]);
-                    },
-                  );
-                },
-                loading: () => const ScreenLoadingIndicator(),
-                error: (e, _) => Center(child: Text('Error: $e')),
-              ),
-            ),
-          ],
+            );
+          },
+          loading: () =>
+              const SliverFillRemaining(child: ScreenLoadingIndicator()),
+          error: (e, _) =>
+              SliverFillRemaining(child: Center(child: Text('Error: $e'))),
         ),
-      ),
+      ],
     );
   }
 

@@ -4,6 +4,7 @@ import '../../core/widgets/animations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/glass_scaffold.dart';
 import '../../providers/splash_mesh_provider.dart';
 import '../../utils/snackbar.dart';
 import '../../providers/app_providers.dart';
@@ -150,201 +151,197 @@ class _DeviceConfigScreenState extends ConsumerState<DeviceConfigScreen> {
     final remoteState = ref.watch(remoteAdminProvider);
     final isRemote = remoteState.isRemote;
 
-    return Scaffold(
-      backgroundColor: context.background,
-      appBar: AppBar(
-        backgroundColor: context.background,
-        title: Text(
-          isRemote ? 'Device (Remote)' : 'Device',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: context.textPrimary,
+    return GlassScaffold(
+      title: isRemote ? 'Device (Remote)' : 'Device',
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: TextButton(
+            onPressed: _isLoading ? null : _saveConfig,
+            child: _isLoading
+                ? LoadingIndicator(size: 20)
+                : Text(
+                    'Save',
+                    style: TextStyle(
+                      color: context.accentColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
           ),
         ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: TextButton(
-              onPressed: _isLoading ? null : _saveConfig,
-              child: _isLoading
-                  ? LoadingIndicator(size: 20)
-                  : Text(
-                      'Save',
-                      style: TextStyle(
-                        color: context.accentColor,
-                        fontWeight: FontWeight.w600,
+      ],
+      slivers: _isLoading
+          ? [SliverFillRemaining(child: const ScreenLoadingIndicator())]
+          : [
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    // Remote admin banner
+                    if (isRemote) _buildRemoteAdminBanner(context, remoteState),
+                    const _SectionHeader(title: 'DEVICE ROLE'),
+                    _buildRoleSelector(),
+                    SizedBox(height: 16),
+                    const _SectionHeader(title: 'REBROADCAST'),
+                    _buildRebroadcastSelector(),
+                    SizedBox(height: 16),
+                    const _SectionHeader(title: 'SETTINGS'),
+                    _SettingsTile(
+                      icon: Icons.terminal,
+                      iconColor: _serialEnabled ? context.accentColor : null,
+                      title: 'Serial Console',
+                      subtitle: 'Enable serial port for debugging',
+                      trailing: ThemedSwitch(
+                        value: _serialEnabled,
+                        onChanged: (value) {
+                          HapticFeedback.selectionClick();
+                          setState(() => _serialEnabled = value);
+                        },
                       ),
                     ),
-            ),
-          ),
-        ],
-      ),
-      body: _isLoading
-          ? const ScreenLoadingIndicator()
-          : ListView(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              children: [
-                // Remote admin banner
-                if (isRemote) _buildRemoteAdminBanner(context, remoteState),
-                const _SectionHeader(title: 'DEVICE ROLE'),
-                _buildRoleSelector(),
-                SizedBox(height: 16),
-                const _SectionHeader(title: 'REBROADCAST'),
-                _buildRebroadcastSelector(),
-                SizedBox(height: 16),
-                const _SectionHeader(title: 'SETTINGS'),
-                _SettingsTile(
-                  icon: Icons.terminal,
-                  iconColor: _serialEnabled ? context.accentColor : null,
-                  title: 'Serial Console',
-                  subtitle: 'Enable serial port for debugging',
-                  trailing: ThemedSwitch(
-                    value: _serialEnabled,
-                    onChanged: (value) {
-                      HapticFeedback.selectionClick();
-                      setState(() => _serialEnabled = value);
-                    },
-                  ),
-                ),
-                _SettingsTile(
-                  icon: Icons.lightbulb_outline,
-                  iconColor: !_ledHeartbeatDisabled
-                      ? context.accentColor
-                      : null,
-                  title: 'LED Heartbeat',
-                  subtitle: 'Flash LED to indicate device is running',
-                  trailing: ThemedSwitch(
-                    value: !_ledHeartbeatDisabled,
-                    onChanged: (value) {
-                      HapticFeedback.selectionClick();
-                      setState(() => _ledHeartbeatDisabled = !value);
-                    },
-                  ),
-                ),
-                Container(
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 2,
-                  ),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: context.card,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    _SettingsTile(
+                      icon: Icons.lightbulb_outline,
+                      iconColor: !_ledHeartbeatDisabled
+                          ? context.accentColor
+                          : null,
+                      title: 'LED Heartbeat',
+                      subtitle: 'Flash LED to indicate device is running',
+                      trailing: ThemedSwitch(
+                        value: !_ledHeartbeatDisabled,
+                        onChanged: (value) {
+                          HapticFeedback.selectionClick();
+                          setState(() => _ledHeartbeatDisabled = !value);
+                        },
+                      ),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 2,
+                      ),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: context.card,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Node Info Broadcast',
+                                style: TextStyle(
+                                  color: context.textPrimary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: context.accentColor.withValues(
+                                    alpha: 0.15,
+                                  ),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  _formatDuration(_nodeInfoBroadcastSecs),
+                                  style: TextStyle(
+                                    color: context.accentColor,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 4),
                           Text(
-                            'Node Info Broadcast',
+                            'How often to broadcast device info',
                             style: TextStyle(
-                              color: context.textPrimary,
-                              fontWeight: FontWeight.w500,
+                              color: context.textSecondary,
+                              fontSize: 13,
                             ),
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: context.accentColor.withValues(
-                                alpha: 0.15,
+                          SizedBox(height: 8),
+                          SliderTheme(
+                            data: SliderThemeData(
+                              inactiveTrackColor: context.border,
+                              thumbColor: context.accentColor,
+                              overlayColor: context.accentColor.withValues(
+                                alpha: 0.2,
                               ),
-                              borderRadius: BorderRadius.circular(6),
+                              trackHeight: 4,
                             ),
-                            child: Text(
-                              _formatDuration(_nodeInfoBroadcastSecs),
-                              style: TextStyle(
-                                color: context.accentColor,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 13,
-                              ),
+                            child: Slider(
+                              value: _nodeInfoBroadcastSecs.toDouble(),
+                              min: 300,
+                              max: 86400,
+                              divisions: 20,
+                              onChanged: (value) {
+                                setState(
+                                  () => _nodeInfoBroadcastSecs = value.toInt(),
+                                );
+                              },
                             ),
                           ),
                         ],
                       ),
-                      SizedBox(height: 4),
-                      Text(
-                        'How often to broadcast device info',
-                        style: TextStyle(
-                          color: context.textSecondary,
-                          fontSize: 13,
-                        ),
+                    ),
+                    SizedBox(height: 16),
+                    const _SectionHeader(title: 'HARDWARE'),
+                    _SettingsTile(
+                      icon: Icons.touch_app,
+                      iconColor: _doubleTapAsButtonPress
+                          ? context.accentColor
+                          : null,
+                      title: 'Double Tap as Button',
+                      subtitle:
+                          'Treat double tap on accelerometer as button press',
+                      trailing: ThemedSwitch(
+                        value: _doubleTapAsButtonPress,
+                        onChanged: (value) {
+                          HapticFeedback.selectionClick();
+                          setState(() => _doubleTapAsButtonPress = value);
+                        },
                       ),
-                      SizedBox(height: 8),
-                      SliderTheme(
-                        data: SliderThemeData(
-                          inactiveTrackColor: context.border,
-                          thumbColor: context.accentColor,
-                          overlayColor: context.accentColor.withValues(
-                            alpha: 0.2,
-                          ),
-                          trackHeight: 4,
-                        ),
-                        child: Slider(
-                          value: _nodeInfoBroadcastSecs.toDouble(),
-                          min: 300,
-                          max: 86400,
-                          divisions: 20,
-                          onChanged: (value) {
-                            setState(
-                              () => _nodeInfoBroadcastSecs = value.toInt(),
-                            );
-                          },
-                        ),
+                    ),
+                    _SettingsTile(
+                      icon: Icons.location_pin,
+                      iconColor: _tripleClickEnabled
+                          ? context.accentColor
+                          : null,
+                      title: 'Triple Click Ad Hoc Ping',
+                      subtitle: 'Send position on triple click',
+                      trailing: ThemedSwitch(
+                        value: _tripleClickEnabled,
+                        onChanged: (value) {
+                          HapticFeedback.selectionClick();
+                          setState(() => _tripleClickEnabled = value);
+                        },
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 16),
+                    const _SectionHeader(title: 'BUZZER'),
+                    _buildBuzzerModeSelector(),
+                    const SizedBox(height: 16),
+                    const _SectionHeader(title: 'GPIO'),
+                    _buildGpioSettings(),
+                    const SizedBox(height: 16),
+                    const _SectionHeader(title: 'DEBUG'),
+                    _buildTimezoneSettings(),
+                    const SizedBox(height: 16),
+                    const _SectionHeader(title: 'DANGER ZONE'),
+                    _buildResetButtons(),
+                    const SizedBox(height: 32),
+                  ]),
                 ),
-                SizedBox(height: 16),
-                const _SectionHeader(title: 'HARDWARE'),
-                _SettingsTile(
-                  icon: Icons.touch_app,
-                  iconColor: _doubleTapAsButtonPress
-                      ? context.accentColor
-                      : null,
-                  title: 'Double Tap as Button',
-                  subtitle: 'Treat double tap on accelerometer as button press',
-                  trailing: ThemedSwitch(
-                    value: _doubleTapAsButtonPress,
-                    onChanged: (value) {
-                      HapticFeedback.selectionClick();
-                      setState(() => _doubleTapAsButtonPress = value);
-                    },
-                  ),
-                ),
-                _SettingsTile(
-                  icon: Icons.location_pin,
-                  iconColor: _tripleClickEnabled ? context.accentColor : null,
-                  title: 'Triple Click Ad Hoc Ping',
-                  subtitle: 'Send position on triple click',
-                  trailing: ThemedSwitch(
-                    value: _tripleClickEnabled,
-                    onChanged: (value) {
-                      HapticFeedback.selectionClick();
-                      setState(() => _tripleClickEnabled = value);
-                    },
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const _SectionHeader(title: 'BUZZER'),
-                _buildBuzzerModeSelector(),
-                const SizedBox(height: 16),
-                const _SectionHeader(title: 'GPIO'),
-                _buildGpioSettings(),
-                const SizedBox(height: 16),
-                const _SectionHeader(title: 'DEBUG'),
-                _buildTimezoneSettings(),
-                const SizedBox(height: 16),
-                const _SectionHeader(title: 'DANGER ZONE'),
-                _buildResetButtons(),
-                const SizedBox(height: 32),
-              ],
-            ),
+              ),
+            ],
     );
   }
 
