@@ -2,6 +2,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:socialmesh/core/logging.dart';
 
 import '../services/app_review_service.dart';
 import '../core/widgets/review_nudge_dialog.dart';
@@ -46,7 +47,7 @@ extension ReviewPromptExtension on WidgetRef {
       }
     } catch (e) {
       // Silently fail - review prompts are non-critical
-      debugPrint('[AppReview] Error prompting for review: $e');
+      AppLogging.debug('[AppReview] Error prompting for review: $e');
     }
   }
 }
