@@ -4,7 +4,6 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import '../../core/logging.dart';
-import '../../core/meshcore_constants.dart';
 import '../../core/transport.dart';
 import '../../models/mesh_device.dart';
 import '../../providers/meshcore_providers.dart';
@@ -288,15 +287,26 @@ class ConnectionCoordinator {
       switch (lockedProtocol) {
         case MeshProtocolType.meshcore:
           // MeshCore path: uses MeshCore transport/session, NEVER ProtocolService
-          return await _connectMeshCore(device, advertisedServiceUuids);
+          return await _connectMeshCore(device);
 
         case MeshProtocolType.meshtastic:
-        case MeshProtocolType.unknown:
           // Meshtastic path: uses ProtocolService, NEVER MeshCore resources
           return await _connectMeshtastic(
             device,
             protocolService,
             existingTransport,
+          );
+
+        case MeshProtocolType.unknown:
+          // Unknown devices NEVER auto-connect - explicit user action required
+          AppLogging.connection(
+            'ConnectionCoordinator: Unknown protocol - connect blocked',
+          );
+          _stateController.add(MeshConnectionState.error);
+          return ConnectionResult.failure(
+            'Unknown device type. This device does not advertise a '
+            'recognized mesh protocol (Meshtastic or MeshCore).',
+            error: MeshProtocolError.unsupportedDevice,
           );
       }
     } catch (e) {
@@ -306,29 +316,14 @@ class ConnectionCoordinator {
     }
   }
 
-  Future<ConnectionResult> _connectMeshCore(
-    DeviceInfo device,
-    List<String> advertisedServiceUuids,
-  ) async {
+  Future<ConnectionResult> _connectMeshCore(DeviceInfo device) async {
     AppLogging.connection('ConnectionCoordinator: Using MeshCore adapter');
 
     // -------------------------------------------------------------------------
-    // Invariant: Verify UART service is advertised BEFORE creating resources
-    // This prevents MeshCore devices from accidentally entering Meshtastic flow
+    // Note: MeshCore detection used pre-connect hints (name, advertised UUIDs).
+    // However, advertisements can be incomplete/truncated.
+    // Actual validation happens AFTER service discovery in transport.connect().
     // -------------------------------------------------------------------------
-    final hasUartService = advertisedServiceUuids.any(
-      (uuid) => uuid.toLowerCase() == MeshCoreBleUuids.serviceUuid,
-    );
-    if (!hasUartService) {
-      AppLogging.connection(
-        'ConnectionCoordinator: MeshCore device missing UART service',
-      );
-      _stateController.add(MeshConnectionState.error);
-      return ConnectionResult.failure(
-        'MeshCore device missing required UART service',
-        error: MeshProtocolError.unsupportedDevice,
-      );
-    }
 
     // Create MeshCore transport using injectable factory
     final transport = _meshCoreTransportFactory();
