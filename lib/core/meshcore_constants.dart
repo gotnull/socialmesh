@@ -37,7 +37,8 @@ class MeshCoreCodeClassification {
   ///
   /// Response codes are returned by the device in reply to a command.
   /// These codes CAN satisfy pending response waiters.
-  static bool isResponseCode(int code) => code >= 0x00 && code <= maxResponseCode;
+  static bool isResponseCode(int code) =>
+      code >= 0x00 && code <= maxResponseCode;
 
   /// Check if a code is a push code (0x80-0xFF).
   ///
