@@ -9,6 +9,7 @@ import 'dart:async';
 import 'dart:convert';
 import '../../providers/app_providers.dart';
 import '../../providers/help_providers.dart';
+import '../../providers/review_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../models/presence_confidence.dart';
 import '../../models/canned_response.dart';
@@ -942,6 +943,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               packetId: packetId,
             ),
           );
+
+      // Track message sent for review prompt
+      _trackMessageSentForReview();
     } catch (e) {
       // Update status to failed with error
       ref
@@ -953,6 +957,25 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               errorMessage: e.toString(),
             ),
           );
+    }
+  }
+
+  /// Tracks message sent and triggers review prompt at milestones (10, 50, 100 messages)
+  Future<void> _trackMessageSentForReview() async {
+    final reviewServiceAsync = ref.read(appReviewServiceProvider);
+    if (!reviewServiceAsync.hasValue) return;
+    final reviewService = reviewServiceAsync.value!;
+
+    final count = await reviewService.recordMessageSent();
+
+    // Prompt at message milestones
+    const milestones = [10, 50, 100];
+    if (milestones.contains(count) && mounted) {
+      // Delay to let message UI settle
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+      if (mounted) {
+        ref.maybePromptForReview(context, surface: 'message_milestone_$count');
+      }
     }
   }
 

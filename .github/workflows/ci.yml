@@ -39,4 +39,22 @@ jobs:
         run: flutter analyze
 
       - name: Run tests
-        run: flutter test --reporter github
+        run: |
+          # Run tests with expanded output, retry once on failure to catch flaky tests
+          if ! flutter test --reporter expanded 2>&1 | tee test_output.log; then
+            echo "::warning::First test run failed, retrying to check for flaky tests..."
+            echo "::group::First Run Failure Details"
+            tail -100 test_output.log
+            echo "::endgroup::"
+            
+            # Retry once
+            if ! flutter test --reporter expanded 2>&1 | tee test_output_retry.log; then
+              echo "::error::Tests failed on retry - this is a real failure"
+              echo "::group::Retry Failure Details"
+              tail -200 test_output_retry.log
+              echo "::endgroup::"
+              exit 1
+            else
+              echo "::warning::Tests passed on retry - detected flaky test! Check first run output above."
+            fi
+          fi

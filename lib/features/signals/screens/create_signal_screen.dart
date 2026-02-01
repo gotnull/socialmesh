@@ -22,6 +22,7 @@ import '../../../providers/app_providers.dart';
 import '../../../providers/signal_providers.dart';
 import '../../../providers/social_providers.dart';
 import '../../../providers/connectivity_providers.dart';
+import '../../../providers/review_providers.dart';
 import '../../../utils/location_privacy.dart';
 
 import '../../../services/signal_service.dart';
@@ -374,6 +375,19 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
       if (signal != null && mounted) {
         showSuccessSnackBar(context, 'Signal sent');
         Navigator.pop(context);
+
+        // Maybe prompt for review after successful signal creation
+        // Use a short delay to let the navigation complete
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) {
+            ref.maybePromptForReview(
+              context,
+              surface: 'signal_created',
+              minSessions: 3, // Signals users are engaged
+              minSinceInstall: const Duration(days: 3),
+            );
+          }
+        });
       }
     } catch (e) {
       if (mounted) {
