@@ -187,17 +187,34 @@ class BugReportService with WidgetsBindingObserver {
   }
 
   Future<String?> _uploadScreenshot(Uint8List bytes) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return null;
-    final uid = user.uid;
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-    final refPath = 'bug_reports/$uid/$timestamp.png';
-    AppLogging.bugReport('Uploading screenshot to $refPath');
-    final ref = FirebaseStorage.instance.ref(refPath);
-    await ref.putData(bytes, SettableMetadata(contentType: 'image/png'));
-    final url = await ref.getDownloadURL();
-    AppLogging.bugReport('Screenshot uploaded');
-    return url;
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      // Use 'anonymous' folder for non-authenticated users
+      final uid = user?.uid ?? 'anonymous';
+      AppLogging.bugReport(
+        'User state: ${user == null ? "not logged in" : "logged in as $uid"}',
+      );
+
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final refPath = 'bug_reports/$uid/$timestamp.png';
+      AppLogging.bugReport(
+        'Uploading screenshot to $refPath (${bytes.length} bytes)',
+      );
+
+      final ref = FirebaseStorage.instance.ref(refPath);
+      AppLogging.bugReport('Storage ref created, attempting upload...');
+
+      await ref.putData(bytes, SettableMetadata(contentType: 'image/png'));
+      AppLogging.bugReport('Upload successful, getting download URL...');
+
+      final url = await ref.getDownloadURL();
+      AppLogging.bugReport('Screenshot uploaded successfully: $url');
+      return url;
+    } catch (e, stackTrace) {
+      AppLogging.bugReport('❌ Screenshot upload failed: $e');
+      AppLogging.bugReport('Stack trace: $stackTrace');
+      rethrow;
+    }
   }
 
   Future<Map<String, dynamic>> _submitReport({

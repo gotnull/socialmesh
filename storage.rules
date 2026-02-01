@@ -147,8 +147,11 @@ service firebase.storage {
     // BUG REPORT SCREENSHOTS
     // =============================================================================
     match /bug_reports/{userId}/{fileName} {
-      allow read: if isAdmin();
-      allow write: if isOwner(userId) && isValidImage();
+      // Owner can read their own uploads (needed for getDownloadURL after upload)
+      // Admins can read all reports
+      allow read: if isAdmin() || isOwner(userId) || userId == 'anonymous';
+      // Allow anyone to submit bug reports (including anonymous users)
+      allow write: if (userId == 'anonymous' || isOwner(userId)) && isValidImage();
       allow delete: if isOwner(userId) || isAdmin();
     }
   }
