@@ -216,10 +216,6 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent> {
                   enabled: actionsEnabled,
                   onTap: () => _showResetNodeDbDialog(context),
                 ),
-              // Debug: Ping device action (developer tool)
-              if (isConnected) _PingDebugTile(enabled: actionsEnabled),
-              // Debug: Dump GATT services (developer tool for BLE UUIDs)
-              if (isConnected) _GattDumpDebugTile(enabled: actionsEnabled),
 
               // Dev-only MeshCore Console (visible in debug builds for MeshCore devices)
               if (MeshCoreConsole.shouldShow(

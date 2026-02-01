@@ -304,7 +304,15 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     );
 
     // Listen to transport connection state changes
-    _setupConnectionListener();
+    // BUT only for Meshtastic protocol - MeshCore uses its own transport
+    final lastProtocol = settings.lastDeviceProtocol;
+    if (lastProtocol != 'meshcore') {
+      _setupConnectionListener();
+    } else {
+      AppLogging.connection(
+        '🔌 DeviceConnectionNotifier: MeshCore device - skipping Meshtastic listener',
+      );
+    }
 
     // Start background connection attempt if auto-reconnect enabled
     if (settings.autoReconnect) {
@@ -557,11 +565,21 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     final settings = await ref.read(settingsServiceProvider.future);
     final lastDeviceId = settings.lastDeviceId;
     final lastDeviceName = settings.lastDeviceName;
+    final lastProtocol = settings.lastDeviceProtocol;
 
     if (lastDeviceId == null) {
       AppLogging.connection(
         '🔌 startBackgroundConnection: No device to reconnect to',
       );
+      return;
+    }
+
+    // MeshCore auto-reconnect is handled by ConnectionCoordinator, not here
+    if (lastProtocol == 'meshcore') {
+      AppLogging.connection(
+        '🔌 startBackgroundConnection: MeshCore device - skipping Meshtastic reconnect',
+      );
+      _backgroundScanInProgress = false;
       return;
     }
 
@@ -1098,15 +1116,37 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     await startBackgroundConnection();
   }
 
-  /// Mark as paired after first successful connection from scanner
+  /// Mark as paired after first successful connection from scanner.
+  ///
+  /// [isMeshCore] - If true, this is a MeshCore connection. The Meshtastic
+  /// transport listener will NOT be set up (MeshCore uses its own transport).
+  /// This prevents the immediate disconnect that occurs when the Meshtastic
+  /// transport's disconnected state triggers `_handleDisconnect`.
   bool _reconciledThisSession = false;
 
-  void markAsPaired(DeviceInfo device, int? myNodeNum) {
-    // CRITICAL: Set up the connection listener if not already done.
-    // This is needed for first-time connections where initialize() was never called
-    // (because there was no lastDeviceId). Without this listener, disconnect events
-    // won't trigger auto-reconnect.
-    _setupConnectionListener();
+  void markAsPaired(
+    DeviceInfo device,
+    int? myNodeNum, {
+    bool isMeshCore = false,
+  }) {
+    // CRITICAL: Only set up the Meshtastic connection listener for Meshtastic devices.
+    // MeshCore uses ConnectionCoordinator which manages its own transport.
+    // Setting up the Meshtastic listener for MeshCore would cause immediate
+    // disconnect because the Meshtastic transport is in disconnected state.
+    if (!isMeshCore) {
+      _setupConnectionListener();
+      AppLogging.connection(
+        '🔌 markAsPaired: Meshtastic device, transport listener active',
+      );
+    } else {
+      // For MeshCore, cancel any existing Meshtastic transport listener
+      // to prevent spurious disconnect events
+      _connectionSubscription?.cancel();
+      _connectionSubscription = null;
+      AppLogging.connection(
+        '🔌 markAsPaired: MeshCore device, skipping Meshtastic transport listener',
+      );
+    }
 
     // Mark as initialized so future calls don't re-run build() initialization
     _isInitialized = true;
@@ -1122,11 +1162,12 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     _resetInvalidationTracking();
 
     AppLogging.connection(
-      '🔌 markAsPaired: device=${device.id}, myNodeNum=$myNodeNum, listener active',
+      '🔌 markAsPaired: device=${device.id}, myNodeNum=$myNodeNum, isMeshCore=$isMeshCore',
     );
 
-    // Run one-shot reconciliation for this node on connect
-    if (!_reconciledThisSession && myNodeNum != null) {
+    // Run one-shot reconciliation for this node on connect (Meshtastic only)
+    // MeshCore doesn't use the same message storage/reconciliation
+    if (!isMeshCore && !_reconciledThisSession && myNodeNum != null) {
       _reconciledThisSession = true;
       AppLogging.connection('🔌 Running reconnect canary for node $myNodeNum');
       // Fire-and-forget reconcile

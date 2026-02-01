@@ -4,6 +4,7 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 import '../../core/logging.dart';
+import '../../core/meshcore_constants.dart';
 import '../../core/transport.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 
@@ -191,10 +192,12 @@ class BleTransport implements DeviceTransport {
               '📡 BLE_TRANSPORT: Calling FlutterBluePlus.startScan() (attempt ${retryCount + 1})...',
             );
             // When scanAll is true, scan without service filter to see ALL devices
-            // When false, filter by Meshtastic service UUID only
+            // When false, filter by Meshtastic AND MeshCore service UUIDs
             await FlutterBluePlus.startScan(
               timeout: scanDuration,
-              withServices: scanAll ? [] : [Guid(_serviceUuid)],
+              withServices: scanAll
+                  ? []
+                  : [Guid(_serviceUuid), Guid(MeshCoreBleUuids.serviceUuid)],
             );
             AppLogging.ble(
               '📡 BLE_TRANSPORT: startScan() completed successfully',

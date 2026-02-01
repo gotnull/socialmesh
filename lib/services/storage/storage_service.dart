@@ -112,11 +112,15 @@ class SettingsService {
     String deviceId,
     String deviceType, {
     String? deviceName,
+    String? protocol,
   }) async {
     await _preferences.setString('last_device_id', deviceId);
     await _preferences.setString('last_device_type', deviceType);
     if (deviceName != null) {
       await _preferences.setString('last_device_name', deviceName);
+    }
+    if (protocol != null) {
+      await _preferences.setString('last_device_protocol', protocol);
     }
   }
 
@@ -125,11 +129,16 @@ class SettingsService {
     await _preferences.remove('last_device_id');
     await _preferences.remove('last_device_type');
     await _preferences.remove('last_device_name');
+    await _preferences.remove('last_device_protocol');
   }
 
   String? get lastDeviceId => _preferences.getString('last_device_id');
   String? get lastDeviceType => _preferences.getString('last_device_type');
   String? get lastDeviceName => _preferences.getString('last_device_name');
+
+  /// Returns 'meshtastic', 'meshcore', or null (defaults to meshtastic for legacy)
+  String? get lastDeviceProtocol =>
+      _preferences.getString('last_device_protocol');
 
   // Last connected myNodeNum - used to detect device changes and clear stale data
   Future<void> setLastMyNodeNum(int? nodeNum) async {

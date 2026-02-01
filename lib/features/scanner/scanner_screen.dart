@@ -19,6 +19,7 @@ import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/ico_help_system.dart';
 import '../../models/mesh_device.dart';
 import '../../services/meshcore/meshcore_detector.dart';
+import '../../providers/meshcore_providers.dart';
 import '../../utils/permissions.dart';
 import '../../utils/snackbar.dart';
 import '../../providers/app_providers.dart';
@@ -544,8 +545,26 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     return TransportType.ble;
   }
 
-  List<DeviceInfo> _buildDisplayDevices() {
-    final devices = [..._devices];
+  /// Build the list of devices to display in the scanner.
+  ///
+  /// By default, only shows devices with recognized protocols (Meshtastic, MeshCore).
+  /// Unknown devices are only shown when "Show all BLE devices" dev mode is enabled.
+  List<DeviceInfo> _buildDisplayDevices({bool showAllDevices = false}) {
+    List<DeviceInfo> devices;
+
+    if (showAllDevices) {
+      // Dev mode: show all scanned devices
+      devices = [..._devices];
+    } else {
+      // Normal mode: filter to only recognized protocols
+      devices = _devices.where((device) {
+        final protocol = device.detectProtocol().protocolType;
+        return protocol == MeshProtocolType.meshtastic;
+        //|| protocol == MeshProtocolType.meshcore;
+      }).toList();
+    }
+
+    // Add saved device placeholder if scanning and not found
     if ((_scanning || _autoReconnecting) &&
         _savedDeviceId != null &&
         devices.every((d) => d.id != _savedDeviceId)) {
@@ -621,67 +640,109 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       '📡 SCANNER: MeshCore device detected - ${detection.reason}',
     );
 
-    // MeshCore connection is not yet fully implemented in the main app flow.
-    // Show informational dialog instead of attempting Meshtastic connect.
     if (!mounted) return;
 
-    await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.router, color: Colors.blue),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text('MeshCore Device', style: TextStyle(fontSize: 18)),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'This device is running MeshCore firmware.',
-              style: TextStyle(fontSize: 14),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: context.cardAlt,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Protocol: MeshCore (Nordic UART)',
-                    style: TextStyle(fontSize: 12, fontFamily: 'monospace'),
-                  ),
-                  Text(
-                    'Detection: ${detection.reason}',
-                    style: TextStyle(fontSize: 12, fontFamily: 'monospace'),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'MeshCore connection support is coming soon. '
-              'Currently, only Meshtastic devices are fully supported.',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
+    if (_connecting) {
+      AppLogging.connection(
+        '📡 SCANNER: _connectMeshCore called but already connecting',
+      );
+      return;
+    }
+
+    setState(() {
+      _connecting = true;
+      _errorMessage = null;
+    });
+
+    try {
+      // Use ConnectionCoordinator to handle MeshCore connection
+      final coordinator = ref.read(connectionCoordinatorProvider);
+      final result = await coordinator.connect(device: device);
+
+      if (!mounted) return;
+
+      if (!result.success) {
+        // Connection failed
+        setState(() {
+          _connecting = false;
+          _errorMessage = result.errorMessage ?? 'MeshCore connection failed';
+        });
+        showErrorSnackBar(
+          context,
+          result.errorMessage ?? 'MeshCore connection failed',
+        );
+        return;
+      }
+
+      // Connection succeeded - save device for auto-reconnect (with protocol)
+      final settingsService = await ref.read(settingsServiceProvider.future);
+      await settingsService.setLastDevice(
+        device.id,
+        'ble',
+        deviceName: device.name,
+        protocol: 'meshcore',
+      );
+
+      // Update connected device provider
+      ref.read(connectedDeviceProvider.notifier).setState(device);
+
+      // Mark as paired in device connection provider
+      // For MeshCore, we use the nodeId from MeshDeviceInfo
+      // Pass isMeshCore=true so it sets up the correct state listener
+      final nodeIdHex = result.deviceInfo?.nodeId ?? '0';
+      final nodeNumParsed = int.tryParse(nodeIdHex, radix: 16);
+      ref
+          .read(conn.deviceConnectionProvider.notifier)
+          .markAsPaired(device, nodeNumParsed, isMeshCore: true);
+
+      // Clear userDisconnected flag
+      ref.read(userDisconnectedProvider.notifier).setUserDisconnected(false);
+      ref.read(conn.deviceConnectionProvider.notifier).clearUserDisconnected();
+
+      // Reset auto-reconnect state
+      ref
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.idle);
+
+      AppLogging.connection(
+        '📡 SCANNER: MeshCore connected successfully: ${result.deviceInfo?.displayName}',
+      );
+
+      setState(() {
+        _connecting = false;
+      });
+
+      if (!mounted) return;
+
+      // Navigate based on context (same as Meshtastic flow)
+      final isFromNeedsScanner =
+          ref.read(appInitProvider) == AppInitState.needsScanner;
+
+      if (widget.isOnboarding) {
+        Navigator.of(context).pop(device);
+        return;
+      }
+
+      if (isFromNeedsScanner) {
+        // At root level from needsScanner - update app state to initialized
+        ref.read(appInitProvider.notifier).setInitialized();
+      } else if (!widget.isInline) {
+        // Navigate to main app
+        Navigator.of(context).pushReplacementNamed('/main');
+      }
+      // If inline, don't navigate - let connection state trigger rebuild
+    } catch (e, stack) {
+      AppLogging.connection('📡 SCANNER: MeshCore connection error: $e');
+      FirebaseCrashlytics.instance.recordError(e, stack);
+
+      if (!mounted) return;
+
+      setState(() {
+        _connecting = false;
+        _errorMessage = 'Connection failed: $e';
+      });
+      showErrorSnackBar(context, 'MeshCore connection failed: $e');
+    }
   }
 
   Future<void> _connectToDevice(
@@ -718,7 +779,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
       ref.read(connectedDeviceProvider.notifier).setState(device);
 
-      // Save device for auto-reconnect
+      // Save device for auto-reconnect (with protocol for future reconnect routing)
       final settingsServiceAsync = ref.read(settingsServiceProvider);
       final settingsService = settingsServiceAsync.value;
       if (settingsService != null) {
@@ -727,6 +788,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
           device.id,
           deviceType,
           deviceName: device.name,
+          protocol: 'meshtastic',
         );
       }
 
@@ -1033,8 +1095,6 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final displayDevices = _buildDisplayDevices();
-
     // When connecting, use EXACT same structure as onboarding
     if (_connecting) {
       return Scaffold(
@@ -1100,7 +1160,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
               )
             : null,
         titleWidget: Text(
-          widget.isOnboarding ? 'Connect Device' : 'Meshtastic',
+          widget.isOnboarding ? 'Connect Device' : 'Devices',
           style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.w600,
@@ -1455,63 +1515,74 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                     },
                   ),
 
-                if (displayDevices.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Row(
-                      children: [
-                        Text(
-                          'Available Devices',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: context.textSecondary,
-
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                        SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: context.accentColor.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            '${displayDevices.length}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: context.accentColor,
-                            ),
-                          ),
-                        ),
-                        Spacer(),
-                        TextButton.icon(
-                          onPressed: _scanning ? null : _startScan,
-                          icon: Icon(Icons.refresh, size: 16),
-                          label: Text(
-                            'Retry Scan',
+                // Device list header and count - wrapped in Consumer for filtering
+                Consumer(
+                  builder: (context, ref, child) {
+                    final showAllDevices = ref.watch(showAllBleDevicesProvider);
+                    final filteredDevices = _buildDisplayDevices(
+                      showAllDevices: showAllDevices,
+                    );
+                    if (filteredDevices.isEmpty) {
+                      return const SizedBox.shrink();
+                    }
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Row(
+                        children: [
+                          Text(
+                            'Available Devices',
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
+                              color: context.textSecondary,
+
+                              letterSpacing: 0.5,
                             ),
                           ),
-                          style: TextButton.styleFrom(
+                          SizedBox(width: 8),
+                          Container(
                             padding: const EdgeInsets.symmetric(
-                              vertical: 6,
-                              horizontal: 10,
+                              horizontal: 8,
+                              vertical: 2,
                             ),
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            decoration: BoxDecoration(
+                              color: context.accentColor.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '${filteredDevices.length}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: context.accentColor,
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
+                          Spacer(),
+                          TextButton.icon(
+                            onPressed: _scanning ? null : _startScan,
+                            icon: Icon(Icons.refresh, size: 16),
+                            label: Text(
+                              'Retry Scan',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 6,
+                                horizontal: 10,
+                              ),
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
 
                 if (_devices.isEmpty && !_scanning)
                   Center(
@@ -1556,8 +1627,12 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                       final showAllDevices = ref.watch(
                         showAllBleDevicesProvider,
                       );
+                      // Build filtered device list based on dev mode
+                      final filteredDevices = _buildDisplayDevices(
+                        showAllDevices: showAllDevices,
+                      );
                       return Column(
-                        children: displayDevices.map((device) {
+                        children: filteredDevices.map((device) {
                           final detection = device.detectProtocol();
                           final isUnknown =
                               detection.protocolType ==
