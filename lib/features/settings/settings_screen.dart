@@ -1165,34 +1165,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        // Premium feature tiles
+        // Premium feature tiles - order matches drawer
         _PremiumFeatureTile(
-          icon: Icons.music_note,
-          title:
-              storeProducts[RevenueCatConfig.ringtonePackProductId]?.title ??
-              'Ringtone Pack',
-          feature: PremiumFeature.customRingtones,
-          onTap: () {
-            final hasFeature = purchaseState.hasFeature(
-              PremiumFeature.customRingtones,
-            );
-            // Allow navigation when user owns feature OR upsell mode is enabled
-            final upsellEnabled = ref.read(premiumUpsellEnabledProvider);
-            if (hasFeature || upsellEnabled) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const RingtoneScreen()),
-              );
-            } else {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
-              );
-            }
-          },
-        ),
-        _PremiumFeatureTile(
-          icon: Icons.palette,
+          icon: Icons.palette_outlined,
+          iconColor: Colors.purple.shade400,
           title:
               storeProducts[RevenueCatConfig.themePackProductId]?.title ??
               'Theme Pack',
@@ -1201,8 +1177,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             final hasFeature = purchaseState.hasFeature(
               PremiumFeature.premiumThemes,
             );
-            final upsellEnabled = ref.read(premiumUpsellEnabledProvider);
-            if (hasFeature || upsellEnabled) {
+            final showUpsell = ref.read(
+              premiumFeatureGateProvider('premiumThemes'),
+            );
+            if (hasFeature || showUpsell) {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const ThemeSettingsScreen()),
@@ -1216,7 +1194,62 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           },
         ),
         _PremiumFeatureTile(
-          icon: Icons.bolt,
+          icon: Icons.music_note_outlined,
+          iconColor: Colors.pink.shade300,
+          title:
+              storeProducts[RevenueCatConfig.ringtonePackProductId]?.title ??
+              'Ringtone Pack',
+          feature: PremiumFeature.customRingtones,
+          onTap: () {
+            final hasFeature = purchaseState.hasFeature(
+              PremiumFeature.customRingtones,
+            );
+            final showUpsell = ref.read(
+              premiumFeatureGateProvider('customRingtones'),
+            );
+            if (hasFeature || showUpsell) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const RingtoneScreen()),
+              );
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+              );
+            }
+          },
+        ),
+        _PremiumFeatureTile(
+          icon: Icons.widgets_outlined,
+          iconColor: Colors.deepOrange.shade400,
+          title:
+              storeProducts[RevenueCatConfig.widgetPackProductId]?.title ??
+              'Widget Pack',
+          feature: PremiumFeature.homeWidgets,
+          onTap: () {
+            final hasFeature = purchaseState.hasFeature(
+              PremiumFeature.homeWidgets,
+            );
+            final showUpsell = ref.read(
+              premiumFeatureGateProvider('homeWidgets'),
+            );
+            if (hasFeature || showUpsell) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const WidgetBuilderScreen()),
+              );
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+              );
+            }
+          },
+        ),
+        _PremiumFeatureTile(
+          icon: Icons.auto_awesome,
+          iconColor: Colors.yellow.shade700,
           title:
               storeProducts[RevenueCatConfig.automationsPackProductId]?.title ??
               'Automations Pack',
@@ -1225,8 +1258,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             final hasFeature = purchaseState.hasFeature(
               PremiumFeature.automations,
             );
-            final upsellEnabled = ref.read(premiumUpsellEnabledProvider);
-            if (hasFeature || upsellEnabled) {
+            final showUpsell = ref.read(
+              premiumFeatureGateProvider('automations'),
+            );
+            if (hasFeature || showUpsell) {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const AutomationsScreen()),
@@ -1240,7 +1275,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           },
         ),
         _PremiumFeatureTile(
-          icon: Icons.webhook,
+          icon: Icons.webhook_outlined,
+          iconColor: Colors.blue.shade300,
           title:
               storeProducts[RevenueCatConfig.iftttPackProductId]?.title ??
               'IFTTT Pack',
@@ -1249,35 +1285,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             final hasFeature = purchaseState.hasFeature(
               PremiumFeature.iftttIntegration,
             );
-            final upsellEnabled = ref.read(premiumUpsellEnabledProvider);
-            if (hasFeature || upsellEnabled) {
+            final showUpsell = ref.read(
+              premiumFeatureGateProvider('iftttIntegration'),
+            );
+            if (hasFeature || showUpsell) {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const IftttConfigScreen()),
-              );
-            } else {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
-              );
-            }
-          },
-        ),
-        _PremiumFeatureTile(
-          icon: Icons.widgets,
-          title:
-              storeProducts[RevenueCatConfig.widgetPackProductId]?.title ??
-              'Widget Pack',
-          feature: PremiumFeature.homeWidgets,
-          onTap: () {
-            final hasFeature = purchaseState.hasFeature(
-              PremiumFeature.homeWidgets,
-            );
-            final upsellEnabled = ref.read(premiumUpsellEnabledProvider);
-            if (hasFeature || upsellEnabled) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const WidgetBuilderScreen()),
               );
             } else {
               Navigator.push(
@@ -3108,12 +3122,14 @@ class _SettingsTile extends StatelessWidget {
 /// Premium feature tile with owned/locked badge
 class _PremiumFeatureTile extends ConsumerWidget {
   final IconData icon;
+  final Color? iconColor;
   final String title;
   final PremiumFeature feature;
   final VoidCallback? onTap;
 
   const _PremiumFeatureTile({
     required this.icon,
+    this.iconColor,
     required this.title,
     required this.feature,
     this.onTap,
@@ -3123,7 +3139,8 @@ class _PremiumFeatureTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final purchaseState = ref.watch(purchaseStateProvider);
     final hasFeature = purchaseState.hasFeature(feature);
-    final upsellEnabled = ref.watch(premiumUpsellEnabledProvider);
+    // Use per-feature gate instead of global upsellEnabled
+    final upsellEnabled = ref.watch(premiumFeatureGateProvider(feature.name));
     final accentColor = context.accentColor;
     final purchase = OneTimePurchases.getByFeature(feature);
 
@@ -3152,7 +3169,9 @@ class _PremiumFeatureTile extends ConsumerWidget {
               children: [
                 Icon(
                   icon,
-                  color: isExplorable ? accentColor : context.textTertiary,
+                  color: isExplorable
+                      ? (iconColor ?? accentColor)
+                      : context.textTertiary,
                 ),
                 SizedBox(width: 16),
                 Expanded(
@@ -3184,17 +3203,22 @@ class _PremiumFeatureTile extends ConsumerWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (hasFeature) ...[
+                      if (!hasFeature && !upsellEnabled) ...[
+                        // Show locked badge when upsell is disabled (not owned)
+                        Icon(Icons.lock, size: 12, color: context.textTertiary),
+                        SizedBox(width: 4),
                         Text(
-                          'OWNED',
+                          purchase != null
+                              ? '\$${purchase.price.toStringAsFixed(2)}'
+                              : 'LOCKED',
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
-                            color: accentColor,
+                            color: context.textTertiary,
                           ),
                         ),
-                      ] else if (upsellEnabled) ...[
-                        // Show "TRY IT" badge when upsell is enabled
+                      ] else if (!hasFeature && upsellEnabled) ...[
+                        // Show "TRY IT" badge when upsell is enabled but not owned
                         Icon(Icons.star, size: 12, color: Colors.amber),
                         SizedBox(width: 4),
                         Text(
@@ -3206,16 +3230,13 @@ class _PremiumFeatureTile extends ConsumerWidget {
                           ),
                         ),
                       ] else ...[
-                        Icon(Icons.lock, size: 12, color: context.textTertiary),
-                        SizedBox(width: 4),
+                        // Show OWNED badge when user has the feature
                         Text(
-                          purchase != null
-                              ? '\$${purchase.price.toStringAsFixed(2)}'
-                              : 'LOCKED',
+                          'OWNED',
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
-                            color: context.textTertiary,
+                            color: accentColor,
                           ),
                         ),
                       ],

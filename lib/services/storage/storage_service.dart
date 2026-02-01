@@ -102,6 +102,9 @@ class SettingsService {
     return _prefs!;
   }
 
+  /// Public access to SharedPreferences for providers that need direct access
+  SharedPreferences get prefs => _preferences;
+
   /// Reload preferences from disk to avoid stale reads.
   Future<void> reload() async {
     await _preferences.reload();

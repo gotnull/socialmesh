@@ -288,60 +288,74 @@ final firestoreConfigWatcherProvider = StreamProvider<MeshConfigData?>((
           .join(',');
       await prefs.setString('premium_gated_features', featuresJson);
       AppLogging.settings('🔄 Synced premium gated features: $featuresJson');
+
+      // Reload SharedPreferences to ensure cached values are updated
+      await prefs.reload();
+
+      // Trigger refresh for any providers watching premium feature gates
+      ref.read(premiumGatedFeaturesRefreshProvider.notifier).refresh();
     }
     yield config;
   }
 });
 
-/// Check if a specific premium feature should show the "Try It" upsell.
-/// Features can be individually enabled/disabled from Firestore (premiumGatedFeatures map).
-/// Returns true if the feature should show upsell, false if it's freely available.
+/// Trigger to force premium gated features to refresh
+/// Incremented when Firestore sync updates the SharedPreferences
+class PremiumGatedFeaturesRefreshNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  void refresh() => state++;
+}
+
+final premiumGatedFeaturesRefreshProvider =
+    NotifierProvider<PremiumGatedFeaturesRefreshNotifier, int>(
+      PremiumGatedFeaturesRefreshNotifier.new,
+    );
+
+/// Check if a premium feature should show the "Try It" upsell popup.
+/// This does NOT control whether the feature is gated - features are ALWAYS premium-gated.
+/// This only controls whether to show the promotional "Try It" upsell when blocked.
 ///
-/// Feature keys match PremiumFeature enum names:
-/// - 'customRingtones': Custom ringtone presets and library
-/// - 'advancedAutomations': Advanced automation triggers and actions
-/// - 'detectionSensors': Detection sensor monitoring and logging
-/// - 'mapStyles': Premium map styles
+/// Firestore values:
+/// - `customRingtones: true` = Show "Try It" upsell when user taps
+/// - `customRingtones: false` = Don't show upsell (silently block)
 ///
-/// Usage: Check before calling checkPremiumOrShowUpsell() to optionally skip the gate.
+/// Usage: After checking premium, show upsell only if this returns true.
 final premiumFeatureGateProvider = Provider.family<bool, String>((
   ref,
   featureKey,
 ) {
+  // Watch refresh trigger to rebuild when Firestore syncs new values
+  ref.watch(premiumGatedFeaturesRefreshProvider);
+
   final settingsAsync = ref.watch(settingsServiceProvider);
   return settingsAsync.maybeWhen(
     data: (settings) {
       // Global kill switch - if premium upsell is disabled, all features are free
       if (!settings.premiumUpsellEnabled) return false;
 
-      // Check granular feature gate from SharedPreferences
-      // Default to true (gated) if not explicitly set to false
+      // Check granular feature gate from SharedPreferences (sync read)
+      // This is safe because SharedPreferences caches values in memory after first load
       try {
-        // Access SharedPreferences directly since SettingsService doesn't expose prefs
-        return ref
-            .watch(
-              FutureProvider((ref) async {
-                final prefs = await SharedPreferences.getInstance();
-                final featuresJson =
-                    prefs.getString('premium_gated_features') ?? '';
-                if (featuresJson.isEmpty) {
-                  return true; // Gate by default if no config
-                }
+        // Note: Using synchronous access - SharedPreferences is already initialized
+        // by this point via settingsServiceProvider
+        final featuresJson =
+            settings.prefs.getString('premium_gated_features') ?? '';
+        if (featuresJson.isEmpty) {
+          return true; // Gate by default if no config
+        }
 
-                final features = Map<String, bool>.fromEntries(
-                  featuresJson.split(',').where((s) => s.contains(':')).map((
-                    entry,
-                  ) {
-                    final parts = entry.split(':');
-                    return MapEntry(parts[0], parts[1] == 'true');
-                  }),
-                );
+        final features = Map<String, bool>.fromEntries(
+          featuresJson.split(',').where((s) => s.contains(':')).map((entry) {
+            final parts = entry.split(':');
+            return MapEntry(parts[0], parts[1] == 'true');
+          }),
+        );
 
-                return features[featureKey] ??
-                    true; // Gate by default if key not found
-              }),
-            )
-            .maybeWhen(data: (gated) => gated, orElse: () => true);
+        // Firestore: true = show upsell, false = don't show
+        // Return the value directly (default to true if not found)
+        return features[featureKey] ?? true;
       } catch (e) {
         AppLogging.settings('⚠️ Failed to parse premium gated features: $e');
         return true; // Gate by default on error

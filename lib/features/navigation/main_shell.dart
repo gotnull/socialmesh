@@ -569,9 +569,13 @@ class _MainShellState extends ConsumerState<MainShell> {
                   !isPremium ||
                   ref.watch(hasFeatureProvider(item.premiumFeature!));
 
-              // When upsell mode is enabled, allow navigation to premium features
+              // When upsell mode is enabled for this feature, allow navigation
               // The feature screen itself handles the upsell gate on actions
-              final upsellEnabled = ref.watch(premiumUpsellEnabledProvider);
+              // Use per-feature gate instead of global upsellEnabled
+              final featureKey = item.premiumFeature?.name ?? '';
+              final upsellEnabled = isPremium
+                  ? ref.watch(premiumFeatureGateProvider(featureKey))
+                  : false;
               final allowNavigation = hasAccess || upsellEnabled;
 
               // Check if item requires connection but we're not connected
@@ -583,9 +587,11 @@ class _MainShellState extends ConsumerState<MainShell> {
                     icon: item.icon,
                     label: item.label,
                     isSelected: false, // Never selected, items push new screens
-                    isPremium: isPremium,
+                    isPremium: isPremium && hasAccess, // Only true if owned
                     // Show locked state only when upsell is disabled
                     isLocked: isPremium && !hasAccess && !upsellEnabled,
+                    // Show "TRY IT" when upsell enabled but not owned
+                    showTryIt: isPremium && !hasAccess && upsellEnabled,
                     isDisabled: needsConnection,
                     iconColor: item.iconColor,
                     onTap: needsConnection
@@ -1339,6 +1345,7 @@ class _DrawerMenuTile extends StatelessWidget {
   final bool isSelected;
   final bool isPremium;
   final bool isLocked;
+  final bool showTryIt;
   final bool isDisabled;
   final VoidCallback? onTap;
   final int? badgeCount;
@@ -1351,6 +1358,7 @@ class _DrawerMenuTile extends StatelessWidget {
     required this.onTap,
     this.isPremium = false,
     this.isLocked = false,
+    this.showTryIt = false,
     this.isDisabled = false,
     this.badgeCount,
     this.iconColor,
@@ -1466,6 +1474,7 @@ class _DrawerMenuTile extends StatelessWidget {
               ),
               // Show lock icon and PRO badge for locked premium features
               if (isLocked) ...[
+                const SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
@@ -1502,6 +1511,36 @@ class _DrawerMenuTile extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                           fontFamily: AppTheme.fontFamily,
                           color: Colors.white,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ] else if (showTryIt) ...[
+                // Show "TRY IT" badge when upsell is enabled but not owned
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.star, size: 12, color: Colors.amber),
+                      const SizedBox(width: 4),
+                      Text(
+                        'TRY IT',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: AppTheme.fontFamily,
+                          color: Colors.amber,
                           letterSpacing: 0.5,
                         ),
                       ),
