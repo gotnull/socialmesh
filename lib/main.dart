@@ -11,6 +11,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:vector_math/vector_math_64.dart' show Vector3;
 import 'package:socialmesh/features/scanner/widgets/connecting_animation.dart';
@@ -112,6 +113,29 @@ Future<void> _initializeFirebaseInBackground() async {
         throw TimeoutException('Firebase initialization timed out');
       },
     );
+
+    // Configure Firestore settings to prevent cache corruption crashes
+    // See: https://github.com/firebase/flutterfire/issues/9661
+    // The crash occurs when Firestore's local cache gets corrupted on iOS.
+    // This must be set BEFORE any Firestore access to take effect.
+    try {
+      FirebaseFirestore.instance.settings = const Settings(
+        persistenceEnabled: true,
+        cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+      );
+    } catch (e) {
+      // Firestore cache may be corrupted - try disabling persistence
+      // This allows the app to continue working, losing local cache only
+      AppLogging.debug('Firestore settings failed, trying without cache: $e');
+      try {
+        FirebaseFirestore.instance.settings = const Settings(
+          persistenceEnabled: false,
+        );
+      } catch (e2) {
+        // Firestore completely broken - continue without it
+        AppLogging.debug('Firestore unavailable: $e2');
+      }
+    }
 
     // Configure Crashlytics only if Firebase initialized successfully
     FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
