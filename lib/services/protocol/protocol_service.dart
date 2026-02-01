@@ -47,6 +47,8 @@ class MeshSignalPacket {
   final int? hopCount; // null = unknown, 0 = local, 1+ = hops away
   final DateTime receivedAt;
   final bool hasImage;
+  final Map<String, dynamic>?
+  presenceInfo; // Extended presence: {"i": int, "s": string}
 
   const MeshSignalPacket({
     required this.senderNodeId,
@@ -59,10 +61,11 @@ class MeshSignalPacket {
     this.hopCount,
     required this.receivedAt,
     this.hasImage = false,
+    this.presenceInfo,
   });
 
   /// Parse from mesh packet payload (JSON).
-  /// Compressed keys: id, c (content), t (ttl), la (lat), ln (lng)
+  /// Compressed keys: id, c (content), t (ttl), la (lat), ln (lng), p (presence)
   factory MeshSignalPacket.fromPayload(
     int senderNodeId,
     List<int> payload, {
@@ -80,6 +83,13 @@ class MeshSignalPacket {
     final lng =
         (json['ln'] as num?)?.toDouble() ?? (json['lng'] as num?)?.toDouble();
 
+    // Parse extended presence info if present
+    Map<String, dynamic>? presenceInfo;
+    final presenceRaw = json['p'];
+    if (presenceRaw is Map<String, dynamic>) {
+      presenceInfo = presenceRaw;
+    }
+
     return MeshSignalPacket(
       senderNodeId: senderNodeId,
       packetId: packetId ?? 0,
@@ -94,6 +104,7 @@ class MeshSignalPacket {
           _extractBool(json['i']) ||
           _extractBool(json['hasImage']) ||
           _extractBool(json['has_image']),
+      presenceInfo: presenceInfo,
     );
   }
 
@@ -114,6 +125,7 @@ class MeshSignalPacket {
   /// - c: content
   /// - t: ttl
   /// - la/ln: latitude/longitude
+  /// - p: presence info (optional)
   List<int> toPayload() {
     if (signalId == null || signalId!.isEmpty) {
       throw StateError('MeshSignalPacket requires signalId for send');
@@ -126,6 +138,9 @@ class MeshSignalPacket {
     }
     if (hasImage) {
       json['i'] = true;
+    }
+    if (presenceInfo != null && presenceInfo!.isNotEmpty) {
+      json['p'] = presenceInfo;
     }
     return utf8.encode(jsonEncode(json));
   }
@@ -2699,6 +2714,7 @@ class ProtocolService {
     double? latitude,
     double? longitude,
     bool hasImage = false,
+    Map<String, dynamic>? presenceInfo,
   }) async {
     if (_myNodeNum == null) {
       throw StateError('Cannot send signal: device not ready (no node number)');
@@ -2718,6 +2734,7 @@ class ProtocolService {
         longitude: longitude,
         receivedAt: DateTime.now(),
         hasImage: hasImage,
+        presenceInfo: presenceInfo,
       );
 
       final payload = signalPacket.toPayload();

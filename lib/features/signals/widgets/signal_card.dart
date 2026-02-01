@@ -13,10 +13,12 @@ import '../../../core/logging.dart';
 import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/user_avatar.dart';
+import '../../../models/presence_confidence.dart';
 import '../../../models/social.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/connectivity_providers.dart';
+import '../../../providers/presence_providers.dart';
 import '../../navigation/main_shell.dart';
 import '../../../providers/signal_bookmark_provider.dart';
 import '../screens/presence_feed_screen.dart';
@@ -25,6 +27,7 @@ import 'proximity_indicator.dart';
 import 'signal_gallery_view.dart';
 import 'signal_ttl_footer.dart';
 import '../../social/widgets/subscribe_button.dart';
+import 'signal_presence_context.dart';
 
 /// Card widget for displaying a signal.
 ///
@@ -93,6 +96,10 @@ class SignalCard extends StatelessWidget {
                   ),
                 ),
               ),
+
+            // Presence context (intent, status, encounter hints)
+            if (signal.meshNodeId != null)
+              _SignalPresenceContextWrapper(signal: signal),
 
             // Image(s) - stacked if multiple
             if (signal.mediaUrls.isNotEmpty ||
@@ -184,9 +191,10 @@ class _SignalHeader extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Row 1: Name + Proximity + Bookmark (name gets priority)
                 Row(
                   children: [
-                    Flexible(
+                    Expanded(
                       child: Text(
                         authorName,
                         style: TextStyle(
@@ -211,6 +219,7 @@ class _SignalHeader extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: 2),
+                // Row 2: ShortName · Time · Live indicator (fixed info)
                 Row(
                   children: [
                     if (isMeshSignal && authorShortName != null) ...[
@@ -550,7 +559,10 @@ class _SignalImage extends ConsumerWidget {
           decoration: BoxDecoration(
             color: context.card, // Background color for loading state
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white, width: 3),
+            border: Border.all(
+              color: context.border.withValues(alpha: 0.5),
+              width: 3,
+            ),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.2),
@@ -1174,4 +1186,46 @@ class _SyncingMeshPainter extends CustomPainter {
   @override
   bool shouldRepaint(_SyncingMeshPainter oldDelegate) =>
       oldDelegate.color != color;
+}
+
+/// Wrapper that resolves presence data and renders SignalPresenceContext.
+///
+/// Priority for presence data:
+/// 1. signal.presenceInfo (embedded at send time - most accurate)
+/// 2. nodeExtendedPresenceProvider (cached from recent packets - fallback)
+class _SignalPresenceContextWrapper extends ConsumerWidget {
+  const _SignalPresenceContextWrapper({required this.signal});
+
+  final Post signal;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final nodeNum = signal.meshNodeId;
+    if (nodeNum == null) return const SizedBox.shrink();
+
+    // Resolve presence info: signal-embedded first, then cached
+    ExtendedPresenceInfo? displayPresence;
+
+    // Priority 1: Presence info embedded in the signal itself
+    if (signal.presenceInfo != null && signal.presenceInfo!.isNotEmpty) {
+      displayPresence = ExtendedPresenceInfo.fromJson(signal.presenceInfo);
+    }
+
+    // Priority 2: Cached node extended presence
+    displayPresence ??= ref.watch(nodeExtendedPresenceProvider(nodeNum));
+
+    // Get encounter info
+    final encounter = ref.watch(nodeEncounterProvider(nodeNum));
+
+    // Get presence info for last-seen bucket and back nearby
+    final presence = ref.watch(presenceForNodeProvider(nodeNum));
+
+    return SignalPresenceContext(
+      intent: displayPresence?.intent,
+      shortStatus: displayPresence?.shortStatus,
+      encounterCount: encounter?.encounterCount,
+      lastSeenBucket: presence?.lastSeenBucket,
+      isBackNearby: presence?.isBackNearby ?? false,
+    );
+  }
 }

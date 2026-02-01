@@ -5,12 +5,14 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/logging.dart';
+import '../models/presence_confidence.dart';
 import '../models/social.dart';
 import '../services/protocol/protocol_service.dart';
 import '../services/signal_service.dart';
 import '../utils/location_privacy.dart';
 import 'app_providers.dart';
 import 'auth_providers.dart';
+import 'presence_providers.dart';
 import 'profile_providers.dart';
 import 'connectivity_providers.dart';
 
@@ -240,6 +242,20 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
           bool hasImage,
         ) async {
           try {
+            // Include extended presence info if available and rate limiting allows
+            final presenceService = ref.read(extendedPresenceServiceProvider);
+            await presenceService.init();
+            final myPresence = await presenceService.getMyPresenceInfo();
+            Map<String, dynamic>? presenceInfo;
+            if (myPresence.hasData &&
+                presenceService.shouldBroadcast(myPresence)) {
+              presenceInfo = myPresence.toJson();
+              await presenceService.recordBroadcast(myPresence);
+              AppLogging.signals(
+                'Piggybacking presence on signal: intent=${myPresence.intent.name}',
+              );
+            }
+
             final packetId = await protocol.sendSignal(
               signalId: signalId,
               content: content,
@@ -247,6 +263,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
               latitude: latitude,
               longitude: longitude,
               hasImage: hasImage,
+              presenceInfo: presenceInfo,
             );
             return packetId;
           } catch (e) {
@@ -265,7 +282,8 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
     );
 
     // Subscribe to remote deletions (signal deleted by author on another device)
-    _remoteDeleteSubscription?.cancel();
+    _remoteDeleteSubscription?.cancel;
+    ();
     _remoteDeleteSubscription = service.onRemoteDelete.listen(
       (signalId) {
         AppLogging.signals(
@@ -288,6 +306,19 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
       ' (id=${packet.signalId ?? "none"}, packetId=${packet.packetId})',
     );
 
+    // Extract and cache extended presence info if present
+    if (packet.presenceInfo != null && packet.presenceInfo!.isNotEmpty) {
+      final presenceService = ref.read(extendedPresenceServiceProvider);
+      final extendedInfo = ExtendedPresenceInfo.fromJson(packet.presenceInfo);
+      if (extendedInfo.hasData) {
+        presenceService.handleRemotePresence(packet.senderNodeId, extendedInfo);
+        AppLogging.signals(
+          'Cached extended presence for !${packet.senderNodeId.toRadixString(16)}: '
+          'intent=${extendedInfo.intent.name}, status=${extendedInfo.shortStatus}',
+        );
+      }
+    }
+
     PostLocation? location;
     if (packet.latitude != null && packet.longitude != null) {
       final settings = await ref.read(settingsServiceProvider.future);
@@ -307,6 +338,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
       location: location,
       hopCount: packet.hopCount,
       hasPendingCloudImage: packet.hasImage,
+      presenceInfo: packet.presenceInfo,
     );
   }
 
@@ -548,6 +580,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
     PostLocation? location,
     List<String>? imageLocalPaths,
     bool? useCloud,
+    Map<String, dynamic>? presenceInfo,
   }) async {
     final service = ref.read(signalServiceProvider);
     final myNodeNum = ref.read(myNodeNumProvider);
@@ -584,6 +617,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
               )
             : null,
         useCloud: canUseCloud,
+        presenceInfo: presenceInfo,
       );
 
       // Add to state using map-based upsert (handles duplicates)
@@ -611,6 +645,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
     PostLocation? location,
     int? hopCount,
     bool hasPendingCloudImage = false,
+    Map<String, dynamic>? presenceInfo,
   }) async {
     final service = ref.read(signalServiceProvider);
 
@@ -638,6 +673,7 @@ class SignalFeedNotifier extends Notifier<SignalFeedState>
         hopCount: hopCount,
         allowCloud: !ref.read(meshOnlyDebugModeProvider),
         hasPendingCloudImage: hasPendingCloudImage,
+        presenceInfo: presenceInfo,
       );
 
       // If null, it was ignored or a duplicate in DB

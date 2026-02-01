@@ -10,6 +10,7 @@ import '../../providers/help_providers.dart';
 import '../../models/mesh_models.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/presence_providers.dart';
+import '../../utils/number_format.dart';
 import '../messaging/messaging_screen.dart';
 
 /// Screen showing the 3D mesh globe with node positions
@@ -168,7 +169,7 @@ class _GlobeScreenState extends ConsumerState<GlobeScreen> {
                       Icon(Icons.public, size: 14, color: context.accentColor),
                       SizedBox(width: 6),
                       Text(
-                        '${nodesList.length} nodes',
+                        '${NumberFormatUtils.formatWithThousandsSeparators(nodesList.length)} nodes',
                         style: TextStyle(
                           color: context.textPrimary,
                           fontSize: 12,

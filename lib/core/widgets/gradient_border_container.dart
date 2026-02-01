@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import '../theme.dart';
 
@@ -17,6 +18,8 @@ class GradientBorderContainer extends StatelessWidget {
     this.accentColor,
     this.defaultBorderColor,
     this.padding,
+    this.enableDepthBlend = false,
+    this.depthBlendOpacity = 0.15,
   });
 
   /// The child widget to display inside the container.
@@ -43,6 +46,12 @@ class GradientBorderContainer extends StatelessWidget {
   /// Optional padding inside the container.
   final EdgeInsets? padding;
 
+  /// Enable a subtle depth blend effect from the accent color.
+  final bool enableDepthBlend;
+
+  /// Opacity of the depth blend gradient (0.0 to 1.0).
+  final double depthBlendOpacity;
+
   @override
   Widget build(BuildContext context) {
     final accent = accentColor ?? context.accentColor;
@@ -56,11 +65,14 @@ class GradientBorderContainer extends StatelessWidget {
         borderWidth: borderWidth,
         accentColor: accent.withValues(alpha: accentOpacity),
         defaultBorderColor: defaultBorder,
+        enableDepthBlend: enableDepthBlend,
+        depthBlendOpacity: depthBlendOpacity,
+        backgroundColor: bgColor,
       ),
       child: Container(
         margin: EdgeInsets.all(borderWidth / 2),
         decoration: BoxDecoration(
-          color: bgColor,
+          color: enableDepthBlend ? Colors.transparent : bgColor,
           borderRadius: BorderRadius.circular(borderRadius - borderWidth / 2),
         ),
         padding: padding,
@@ -77,12 +89,18 @@ class _GradientBorderPainter extends CustomPainter {
     required this.borderWidth,
     required this.accentColor,
     required this.defaultBorderColor,
+    required this.enableDepthBlend,
+    required this.depthBlendOpacity,
+    required this.backgroundColor,
   });
 
   final double borderRadius;
   final double borderWidth;
   final Color accentColor;
   final Color defaultBorderColor;
+  final bool enableDepthBlend;
+  final double depthBlendOpacity;
+  final Color backgroundColor;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -97,6 +115,35 @@ class _GradientBorderPainter extends CustomPainter {
       rect,
       Radius.circular(borderRadius - borderWidth / 2),
     );
+
+    // Draw depth blend fill if enabled
+    if (enableDepthBlend) {
+      final fillRect = Rect.fromLTWH(
+        borderWidth,
+        borderWidth,
+        size.width - borderWidth * 2,
+        size.height - borderWidth * 2,
+      );
+
+      final fillRRect = RRect.fromRectAndRadius(
+        fillRect,
+        Radius.circular(borderRadius - borderWidth),
+      );
+
+      // Diagonal gradient from top-left (accent) to bottom-right (background)
+      final blendGradient = ui.Gradient.linear(
+        Offset.zero,
+        Offset(size.width, size.height),
+        [accentColor.withValues(alpha: depthBlendOpacity), backgroundColor],
+        [0.0, 0.6],
+      );
+
+      final fillPaint = Paint()
+        ..shader = blendGradient
+        ..style = PaintingStyle.fill;
+
+      canvas.drawRRect(fillRRect, fillPaint);
+    }
 
     // Sweep gradient going clockwise:
     // - Top-left corner: accent
@@ -144,5 +191,8 @@ class _GradientBorderPainter extends CustomPainter {
       borderRadius != oldDelegate.borderRadius ||
       borderWidth != oldDelegate.borderWidth ||
       accentColor != oldDelegate.accentColor ||
-      defaultBorderColor != oldDelegate.defaultBorderColor;
+      defaultBorderColor != oldDelegate.defaultBorderColor ||
+      enableDepthBlend != oldDelegate.enableDepthBlend ||
+      depthBlendOpacity != oldDelegate.depthBlendOpacity ||
+      backgroundColor != oldDelegate.backgroundColor;
 }

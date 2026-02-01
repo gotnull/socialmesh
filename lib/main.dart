@@ -37,6 +37,7 @@ import 'providers/cloud_sync_entitlement_providers.dart';
 import 'providers/analytics_providers.dart';
 import 'providers/signal_providers.dart';
 import 'providers/connectivity_providers.dart';
+import 'providers/presence_providers.dart';
 import 'providers/glyph_provider.dart';
 import 'features/automations/automation_providers.dart';
 import 'models/mesh_models.dart';
@@ -803,6 +804,10 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
 
   /// Initialize user presence tracking
   Future<void> _initializePresence() async {
+    // Initialize extended presence service first (loads cached remote presence)
+    final extendedPresenceService = ref.read(extendedPresenceServiceProvider);
+    await extendedPresenceService.init();
+
     // Wait for Firebase to be ready
     final isFirebaseReady = await firebaseReady.timeout(
       const Duration(seconds: 5),

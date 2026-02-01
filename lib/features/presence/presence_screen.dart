@@ -5,10 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/ico_help_system.dart';
+import '../../dev/demo/demo_config.dart';
 import '../../models/mesh_models.dart';
+import '../../models/node_encounter.dart';
 import '../../models/presence_confidence.dart';
 import '../../providers/presence_providers.dart';
 import '../../utils/presence_utils.dart';
+import 'widgets/my_presence_settings.dart';
 
 class PresenceScreen extends ConsumerStatefulWidget {
   const PresenceScreen({super.key});
@@ -23,6 +26,7 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
     final theme = Theme.of(context);
     final presences = ref.watch(presenceListProvider);
     final summary = ref.watch(presenceSummaryProvider);
+    final showQuietMeshHint = presences.length < 3 || DemoConfig.isEnabled;
 
     return HelpTourController(
       topicId: 'presence_overview',
@@ -32,12 +36,22 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
         actions: [IcoHelpAppBarButton(topicId: 'presence_overview')],
         slivers: presences.isEmpty
             ? [
+                // My presence settings (always visible)
+                const SliverToBoxAdapter(child: MyPresenceSettings()),
+                // Quiet mesh hint
+                if (showQuietMeshHint)
+                  const SliverToBoxAdapter(child: _QuietMeshHint()),
                 SliverFillRemaining(
                   hasScrollBody: false,
                   child: _buildEmptyState(theme),
                 ),
               ]
             : [
+                // My presence settings at top
+                const SliverToBoxAdapter(child: MyPresenceSettings()),
+                // Quiet mesh hint for small meshes
+                if (showQuietMeshHint)
+                  const SliverToBoxAdapter(child: _QuietMeshHint()),
                 // Summary section
                 SliverToBoxAdapter(
                   child: _buildSummarySection(context, theme, summary),
@@ -279,26 +293,39 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
                 Tooltip(
                   message: kPresenceInferenceTooltip,
                   child: Text(
-                    presenceStatusText(
-                      presence.confidence,
-                      presence.timeSinceLastHeard,
-                    ),
+                    presence.lastSeenBucket.label,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: _statusColor(presence.confidence),
                     ),
                   ),
                 ),
-                if (presence.timeSinceLastHeard != null) ...[
-                  const SizedBox(width: 8),
-                  Text(
-                    '• ${_formatTimeSince(presence.timeSinceLastHeard!)}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: context.textTertiary,
-                    ),
-                  ),
+                const SizedBox(width: 8),
+                _ConfidenceTierBadge(tier: presence.confidenceTier),
+                // Back nearby badge
+                if (presence.isBackNearby) ...[
+                  const SizedBox(width: 6),
+                  _BackNearbyBadge(),
+                ],
+                // Familiar badge
+                if (presence.encounter != null &&
+                    presence.encounter!.isFamiliar &&
+                    !presence.isBackNearby) ...[
+                  const SizedBox(width: 6),
+                  _FamiliarBadge(),
                 ],
               ],
             ),
+            // Encounter history
+            if (presence.encounter != null) ...[
+              const SizedBox(height: 4),
+              _EncounterRow(encounter: presence.encounter!),
+            ],
+            // Extended presence: intent and short status
+            if (presence.extendedInfo != null &&
+                presence.extendedInfo!.hasData) ...[
+              const SizedBox(height: 6),
+              _ExtendedPresenceRow(info: presence.extendedInfo!),
+            ],
             if (presence.signalQuality != null) ...[
               const SizedBox(height: 8),
               _SignalQualityBar(quality: presence.signalQuality!),
@@ -346,13 +373,6 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
       return '?';
     }
     return name.substring(0, name.length.clamp(0, 2)).toUpperCase();
-  }
-
-  String _formatTimeSince(Duration duration) {
-    if (duration.inMinutes < 1) return 'just now';
-    if (duration.inMinutes < 60) return '${duration.inMinutes}m ago';
-    if (duration.inHours < 24) return '${duration.inHours}h ago';
-    return '${duration.inDays}d ago';
   }
 
   Color _statusColor(PresenceConfidence confidence) {
@@ -530,5 +550,229 @@ class _ActivityTimeline extends StatelessWidget {
     if (bucket < 2) return AppTheme.successGreen;
     if (bucket < 4) return AppTheme.warningYellow;
     return context.textTertiary;
+  }
+}
+
+/// Displays extended presence info (intent + short status)
+class _ExtendedPresenceRow extends StatelessWidget {
+  const _ExtendedPresenceRow({required this.info});
+
+  final ExtendedPresenceInfo info;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Row(
+      children: [
+        // Intent icon and label
+        if (info.intent != PresenceIntent.unknown) ...[
+          Icon(
+            IconData(
+              PresenceIntentIcons.codeFor(info.intent),
+              fontFamily: 'MaterialIcons',
+            ),
+            size: 12,
+            color: context.accentColor,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            info.intent.label,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: context.accentColor,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+        // Short status
+        if (info.shortStatus != null && info.shortStatus!.isNotEmpty) ...[
+          if (info.intent != PresenceIntent.unknown) ...[
+            const SizedBox(width: 6),
+            Text(
+              '•',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: context.textTertiary,
+              ),
+            ),
+            const SizedBox(width: 6),
+          ],
+          Flexible(
+            child: Text(
+              info.shortStatus!,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: context.textSecondary,
+                fontStyle: FontStyle.italic,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Subtle badge showing confidence tier.
+class _ConfidenceTierBadge extends StatelessWidget {
+  const _ConfidenceTierBadge({required this.tier});
+
+  final ConfidenceTier tier;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: _tierColor(context).withAlpha(26),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: _tierColor(context).withAlpha(51)),
+      ),
+      child: Text(
+        tier.label,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: _tierColor(context),
+          fontSize: 10,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
+  }
+
+  Color _tierColor(BuildContext context) {
+    switch (tier) {
+      case ConfidenceTier.strong:
+        return AppTheme.successGreen;
+      case ConfidenceTier.moderate:
+        return AppTheme.warningYellow;
+      case ConfidenceTier.weak:
+        return context.textTertiary;
+    }
+  }
+}
+
+/// Displays encounter history for a node.
+class _EncounterRow extends StatelessWidget {
+  const _EncounterRow({required this.encounter});
+
+  final NodeEncounter encounter;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final now = DateTime.now();
+
+    return Row(
+      children: [
+        Icon(
+          encounter.isFamiliar ? Icons.people : Icons.person_outline,
+          size: 12,
+          color: context.textTertiary,
+        ),
+        const SizedBox(width: 4),
+        Text(
+          encounter.encounterSummary,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: context.textTertiary,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          '•',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: context.textTertiary,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          encounter.relationshipAgeText(now),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: context.textTertiary,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Subtle hint banner for quiet/small meshes.
+class _QuietMeshHint extends StatelessWidget {
+  const _QuietMeshHint();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: context.border),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.wifi_tethering, size: 16, color: context.textTertiary),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Mesh is quiet right now — nodes appear as they come online.',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: context.textSecondary),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Badge for familiar nodes (>5 encounters).
+class _FamiliarBadge extends StatelessWidget {
+  const _FamiliarBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: AppTheme.primaryPurple.withAlpha(26),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: AppTheme.primaryPurple.withAlpha(51)),
+      ),
+      child: Text(
+        'Familiar',
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: AppTheme.primaryPurple,
+          fontSize: 10,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
+  }
+}
+
+/// Badge for nodes that reappeared after >48h absence.
+class _BackNearbyBadge extends StatelessWidget {
+  const _BackNearbyBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: AppTheme.accentOrange.withAlpha(26),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: AppTheme.accentOrange.withAlpha(51)),
+      ),
+      child: Text(
+        'Back nearby',
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: AppTheme.accentOrange,
+          fontSize: 10,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
   }
 }

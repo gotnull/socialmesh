@@ -22,6 +22,7 @@ import '../../models/presence_confidence.dart';
 import '../../providers/node_favorites_provider.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/world_mesh_map_provider.dart';
+import '../../utils/number_format.dart';
 import '../../utils/snackbar.dart';
 import 'favorites_screen.dart';
 import 'widgets/node_intelligence_panel.dart';
@@ -473,7 +474,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                   Icon(Icons.search, size: 14, color: context.textTertiary),
                   SizedBox(width: 8),
                   Text(
-                    '${results.length} node${results.length == 1 ? '' : 's'} found',
+                    '${NumberFormatUtils.formatWithThousandsSeparators(results.length)} node${results.length == 1 ? '' : 's'} found',
                     style: TextStyle(fontSize: 12, color: context.textTertiary),
                   ),
                 ],
@@ -1659,7 +1660,7 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
                     _buildSectionHeader(
                       theme,
                       Icons.people,
-                      'Neighbors (${node.neighbors!.length})',
+                      'Neighbors (${NumberFormatUtils.formatWithThousandsSeparators(node.neighbors!.length)})',
                     ),
                     const SizedBox(height: 8),
                     Wrap(
@@ -1694,13 +1695,13 @@ class _WorldNodeInfoCardState extends ConsumerState<WorldNodeInfoCard> {
                     _buildSectionHeader(
                       theme,
                       Icons.wifi_tethering,
-                      'Seen By (${node.seenBy.length} gateways)',
+                      'Seen By (${NumberFormatUtils.formatWithThousandsSeparators(node.seenBy.length)} gateways)',
                     ),
                     const SizedBox(height: 8),
                     Text(
                       node.seenBy.keys.take(3).join(', ') +
                           (node.seenBy.length > 3
-                              ? ' +${node.seenBy.length - 3} more'
+                              ? ' +${NumberFormatUtils.formatWithThousandsSeparators(node.seenBy.length - 3)} more'
                               : ''),
                       style: TextStyle(
                         color: context.textSecondary,

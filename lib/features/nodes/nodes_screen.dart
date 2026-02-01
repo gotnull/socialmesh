@@ -245,51 +245,61 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
               ),
             ),
             // Node list content
-            if (nodesList.isEmpty)
+            if (nodesList.isEmpty &&
+                isConnected &&
+                _activeFilter == NodeFilter.all)
+              // Loading shimmer as SliverList (not SliverFillRemaining to avoid intrinsic dimension issues)
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) => Skeletonizer(
+                    enabled: true,
+                    child: const SkeletonNodeCard(),
+                  ),
+                  childCount: 8,
+                ),
+              )
+            else if (nodesList.isEmpty)
               SliverFillRemaining(
                 hasScrollBody: false,
-                child: (isConnected && _activeFilter == NodeFilter.all)
-                    ? _buildLoadingShimmer()
-                    : Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              width: 72,
-                              height: 72,
-                              decoration: BoxDecoration(
-                                color: context.card,
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Icon(
-                                Icons.group,
-                                size: 40,
-                                color: context.textTertiary,
-                              ),
-                            ),
-                            SizedBox(height: 24),
-                            Text(
-                              _activeFilter == NodeFilter.all
-                                  ? 'No nodes discovered yet'
-                                  : 'No nodes match this filter',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                color: context.textSecondary,
-                              ),
-                            ),
-                            if (_activeFilter != NodeFilter.all) ...[
-                              const SizedBox(height: 12),
-                              TextButton(
-                                onPressed: () => setState(
-                                  () => _activeFilter = NodeFilter.all,
-                                ),
-                                child: const Text('Show all nodes'),
-                              ),
-                            ],
-                          ],
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 72,
+                        height: 72,
+                        decoration: BoxDecoration(
+                          color: context.card,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Icon(
+                          Icons.group,
+                          size: 40,
+                          color: context.textTertiary,
                         ),
                       ),
+                      SizedBox(height: 24),
+                      Text(
+                        _activeFilter == NodeFilter.all
+                            ? 'No nodes discovered yet'
+                            : 'No nodes match this filter',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: context.textSecondary,
+                        ),
+                      ),
+                      if (_activeFilter != NodeFilter.all) ...[
+                        const SizedBox(height: 12),
+                        TextButton(
+                          onPressed: () =>
+                              setState(() => _activeFilter = NodeFilter.all),
+                          child: const Text('Show all nodes'),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
               )
             else
               ..._buildNodeSlivers(
@@ -766,17 +776,6 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
     await transport.disconnect();
     ref.read(connectedDeviceProvider.notifier).setState(null);
   }
-
-  Widget _buildLoadingShimmer() {
-    return Skeletonizer(
-      enabled: true,
-      child: ListView.builder(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        itemCount: 8,
-        itemBuilder: (context, index) => const SkeletonNodeCard(),
-      ),
-    );
-  }
 }
 
 /// Filter options for the nodes list
@@ -1229,6 +1228,8 @@ class _NodeCard extends StatelessWidget {
                   borderWidth: 2,
                   accentOpacity: 1.0,
                   backgroundColor: context.accentColor.withValues(alpha: 0.08),
+                  enableDepthBlend: true,
+                  depthBlendOpacity: 0.5,
                   padding: const EdgeInsets.all(16),
                   child: _buildCardContent(
                     context,

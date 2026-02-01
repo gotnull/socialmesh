@@ -338,6 +338,11 @@ class Post {
   /// Signals that have an image pending in Firebase but not yet downloaded locally.
   final bool hasPendingCloudImage;
 
+  /// Extended presence info embedded in the signal at send time.
+  /// Contains intent and short status that was active when signal was created.
+  /// This persists the sender's presence context for consistent display.
+  final Map<String, dynamic>? presenceInfo;
+
   /// Convenience getter for image URLs (alias for mediaUrls)
   List<String> get imageUrls => mediaUrls;
 
@@ -368,6 +373,7 @@ class Post {
     this.imageLocalPath,
     this.imageLocalPaths = const [],
     this.hasPendingCloudImage = false,
+    this.presenceInfo,
   });
 
   factory Post.fromFirestore(DocumentSnapshot doc) {
@@ -417,6 +423,7 @@ class Post {
               .toList() ??
           const [],
       hasPendingCloudImage: false,
+      presenceInfo: data['presenceInfo'] as Map<String, dynamic>?,
     );
   }
 
@@ -441,6 +448,7 @@ class Post {
       // NOTE: hopCount is LOCAL-ONLY - used for proximity sorting, not synced
       // NOTE: imageLocalPath is LOCAL-ONLY - never store device paths in Firestore
       'imageState': imageState.name,
+      if (presenceInfo != null) 'presenceInfo': presenceInfo,
     };
   }
 
@@ -464,6 +472,7 @@ class Post {
     String? imageLocalPath,
     List<String>? imageLocalPaths,
     bool? hasPendingCloudImage,
+    Map<String, dynamic>? presenceInfo,
   }) {
     return Post(
       id: id ?? this.id,
@@ -485,6 +494,7 @@ class Post {
       imageLocalPath: imageLocalPath ?? this.imageLocalPath,
       imageLocalPaths: imageLocalPaths ?? this.imageLocalPaths,
       hasPendingCloudImage: hasPendingCloudImage ?? this.hasPendingCloudImage,
+      presenceInfo: presenceInfo ?? this.presenceInfo,
     );
   }
 

@@ -848,6 +848,8 @@ class SignalService {
     // When false, do not attempt any cloud work (no Firestore/Storage calls)
     // Only broadcast over mesh and store locally.
     bool useCloud = true,
+    // Sender's presence info at time of send (intent + short status)
+    Map<String, dynamic>? presenceInfo,
   }) async {
     await init();
 
@@ -911,6 +913,7 @@ class SignalService {
           : null,
       imageLocalPaths: persistentImagePaths,
       hasPendingCloudImage: persistentImagePaths.isNotEmpty,
+      presenceInfo: presenceInfo,
     );
 
     AppLogging.signals(
@@ -1197,6 +1200,7 @@ class SignalService {
     int? hopCount,
     bool allowCloud = true,
     bool hasPendingCloudImage = false,
+    Map<String, dynamic>? presenceInfo,
   }) async {
     await init();
 
@@ -1277,6 +1281,7 @@ class SignalService {
       hopCount: hopCount,
       imageState: ImageState.none,
       hasPendingCloudImage: hasPendingCloudImage,
+      presenceInfo: presenceInfo,
     );
 
     AppLogging.signals('SIGNAL_DB_INSERT_START signalId=${signal.id}');

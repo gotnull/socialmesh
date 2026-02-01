@@ -23,6 +23,7 @@ class FakeSignalService extends SignalService {
     List<String>? imageLocalPaths,
     PostAuthorSnapshot? authorSnapshot,
     bool useCloud = true,
+    Map<String, dynamic>? presenceInfo,
   }) async {
     final now = nowProvider();
     return Post(
@@ -34,6 +35,7 @@ class FakeSignalService extends SignalService {
       origin: SignalOrigin.mesh,
       expiresAt: now.add(const Duration(seconds: 1)),
       meshNodeId: meshNodeId,
+      presenceInfo: presenceInfo,
     );
   }
 }

@@ -276,5 +276,36 @@ void main() {
       // Ensure it returned quickly (timeout set to ~1500ms in implementation)
       expect(sw.elapsedMilliseconds, lessThan(2000));
     });
+
+    test('createSignal embeds presenceInfo when provided', () async {
+      final service = SignalService();
+      service.onBroadcastSignal = null; // Skip broadcast for test
+
+      final presenceData = {'i': 3, 's': 'Testing presence'};
+      final signal = await service.createSignal(
+        content: 'signal with presence',
+        useCloud: false,
+        presenceInfo: presenceData,
+      );
+
+      expect(signal, isNotNull);
+      expect(signal.presenceInfo, isNotNull);
+      expect(signal.presenceInfo!['i'], 3);
+      expect(signal.presenceInfo!['s'], 'Testing presence');
+    });
+
+    test('createSignal works without presenceInfo (null)', () async {
+      final service = SignalService();
+      service.onBroadcastSignal = null; // Skip broadcast for test
+
+      final signal = await service.createSignal(
+        content: 'signal without presence',
+        useCloud: false,
+        presenceInfo: null,
+      );
+
+      expect(signal, isNotNull);
+      expect(signal.presenceInfo, isNull);
+    });
   });
 }

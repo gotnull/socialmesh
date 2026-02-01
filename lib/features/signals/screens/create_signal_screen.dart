@@ -17,8 +17,10 @@ import '../../../core/widgets/animations.dart';
 import '../../../core/widgets/content_moderation_warning.dart';
 import '../../../core/widgets/gradient_border_container.dart';
 import '../../../core/widgets/local_image_gallery.dart';
+import '../../../models/presence_confidence.dart';
 import '../../../models/social.dart';
 import '../../../providers/app_providers.dart';
+import '../../../providers/presence_providers.dart';
 import '../../../providers/signal_providers.dart';
 import '../../../providers/social_providers.dart';
 import '../../../providers/connectivity_providers.dart';
@@ -27,7 +29,6 @@ import '../../../utils/location_privacy.dart';
 
 import '../../../services/signal_service.dart';
 import '../../settings/account_subscriptions_screen.dart';
-import '../../settings/position_config_screen.dart';
 import '../../settings/signal_settings_screen.dart';
 import '../../../utils/snackbar.dart';
 import '../widgets/ttl_selector.dart';
@@ -49,6 +50,7 @@ class CreateSignalScreen extends ConsumerStatefulWidget {
 class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
     with TickerProviderStateMixin {
   final TextEditingController _contentController = TextEditingController();
+  final TextEditingController _statusController = TextEditingController();
   final FocusNode _contentFocusNode = FocusNode();
 
   // Track if we've shown the cloud banner animation this session
@@ -66,6 +68,10 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
       {}; // Track which images are animating out
   bool _imageHiddenDueToOffline =
       false; // Track if image was hidden due to going offline
+
+  // Presence fields for composer
+  PresenceIntent _selectedIntent = PresenceIntent.unknown;
+  bool _loadedPresenceDefaults = false;
 
   final ImagePicker _imagePicker = ImagePicker();
   late final AnimationController _bannerShakeController;
@@ -145,11 +151,35 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
+
+    // Load presence defaults from service
+    _loadPresenceDefaults();
+  }
+
+  Future<void> _loadPresenceDefaults() async {
+    if (_loadedPresenceDefaults) return;
+    try {
+      final service = ref.read(extendedPresenceServiceProvider);
+      await service.init();
+      final info = await service.getMyPresenceInfo();
+      if (mounted) {
+        setState(() {
+          _selectedIntent = info.intent;
+          if (info.shortStatus != null && info.shortStatus!.isNotEmpty) {
+            _statusController.text = info.shortStatus!;
+          }
+          _loadedPresenceDefaults = true;
+        });
+      }
+    } catch (_) {
+      // Ignore errors loading defaults
+    }
   }
 
   @override
   void dispose() {
     _contentController.dispose();
+    _statusController.dispose();
     _contentFocusNode.dispose();
     _bannerShakeController.dispose();
     _entryAnimationController.dispose();
@@ -358,6 +388,16 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
         duration: const Duration(seconds: 2),
       );
 
+      // Build presence info from selected intent/status to embed in signal
+      final trimmedStatus = _statusController.text.trim();
+      final presenceToEmbed = ExtendedPresenceInfo(
+        intent: _selectedIntent,
+        shortStatus: trimmedStatus.isEmpty ? null : trimmedStatus,
+      );
+      final presenceJson = presenceToEmbed.hasData
+          ? presenceToEmbed.toJson()
+          : null;
+
       final signal = await ref
           .read(signalFeedProvider.notifier)
           .createSignal(
@@ -368,12 +408,17 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
             // decide cloud usage at time of send
             // note: if offline this will be false
             useCloud: canUseCloudNow,
+            presenceInfo: presenceJson,
           );
 
       sw.stop();
       AppLogging.signals('SEND_PATH: completed in ${sw.elapsedMilliseconds}ms');
 
       if (signal != null && mounted) {
+        // Update presence with selected intent/status
+        await _updatePresenceOnSend();
+
+        if (!mounted) return;
         showSuccessSnackBar(context, 'Signal sent');
         Navigator.pop(context);
 
@@ -399,6 +444,101 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
         setState(() => _isSubmitting = false);
       }
     }
+  }
+
+  Future<void> _updatePresenceOnSend() async {
+    try {
+      final service = ref.read(extendedPresenceServiceProvider);
+      final trimmedStatus = _statusController.text.trim();
+
+      // Update local settings
+      await service.setMyIntent(_selectedIntent);
+      await service.setMyStatus(trimmedStatus.isEmpty ? null : trimmedStatus);
+
+      AppLogging.signals(
+        'Updated presence: intent=${_selectedIntent.name}, '
+        'status=${trimmedStatus.isEmpty ? "none" : trimmedStatus}',
+      );
+    } catch (e) {
+      AppLogging.signals('Failed to update presence: $e');
+    }
+  }
+
+  void _showIntentPicker() {
+    _dismissKeyboard();
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: context.background,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(ctx).size.height * 0.7,
+          ),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: context.border,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Your Intent',
+                  style: TextStyle(
+                    color: context.textPrimary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Let others know why you\'re active',
+                  style: TextStyle(color: context.textTertiary, fontSize: 13),
+                ),
+                const SizedBox(height: 16),
+                ...PresenceIntent.values
+                    .where((i) => i != PresenceIntent.unknown)
+                    .map(
+                      (intent) => _IntentOption(
+                        intent: intent,
+                        isSelected: _selectedIntent == intent,
+                        onTap: () {
+                          setState(() => _selectedIntent = intent);
+                          Navigator.pop(ctx);
+                        },
+                      ),
+                    ),
+                const SizedBox(height: 8),
+                // Clear option
+                _IntentOption(
+                  intent: PresenceIntent.unknown,
+                  isSelected: _selectedIntent == PresenceIntent.unknown,
+                  label: 'No intent',
+                  onTap: () {
+                    setState(() => _selectedIntent = PresenceIntent.unknown);
+                    Navigator.pop(ctx);
+                  },
+                ),
+                const SizedBox(height: 12),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _pickImage() async {
@@ -1139,6 +1279,8 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
         kDefaultSignalLocationRadiusMeters;
     final canUseCloud = connectivity.canUseCloud && !meshOnlyDebug;
     final isDeviceConnected = connectivity.isBleConnected;
+    // Location is "acquiring" if device is connected but no position yet
+    final isAcquiringLocation = isDeviceConnected && !hasNodeLocation;
     final canSubmit =
         _hasValidContent && isDeviceConnected && !_isValidatingImage;
     final submitBlockedReason = _submitBlockedReason(isDeviceConnected);
@@ -1368,13 +1510,17 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                                           ? Icons.location_off_outlined
                                           : Icons.location_on_outlined,
                                       isSelected: _location != null,
-                                      isLoading: _isLoadingLocation,
+                                      isLoading:
+                                          _isLoadingLocation ||
+                                          isAcquiringLocation,
                                       isEnabled: hasNodeLocation,
                                       tooltip: hasNodeLocation
                                           ? (_location != null
                                                 ? 'Remove location'
                                                 : 'Add location')
-                                          : 'No device location available',
+                                          : (isAcquiringLocation
+                                                ? 'Acquiring device location...'
+                                                : 'No device connected'),
                                       onTap: _isSubmitting || _isLoadingLocation
                                           ? null
                                           : () {
@@ -1384,23 +1530,14 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                                                 _getLocation();
                                               }
                                             },
-                                      onDisabledTap: !hasNodeLocation
+                                      onDisabledTap:
+                                          !hasNodeLocation &&
+                                              !isAcquiringLocation
                                           ? () {
                                               HapticFeedback.lightImpact();
-                                              showActionSnackBar(
+                                              showInfoSnackBar(
                                                 context,
-                                                'Device has no GPS location. Enable GPS or set a fixed position.',
-                                                actionLabel: 'Settings',
-                                                type: SnackBarType.warning,
-                                                onAction: () {
-                                                  if (!context.mounted) return;
-                                                  Navigator.of(context).push(
-                                                    MaterialPageRoute(
-                                                      builder: (_) =>
-                                                          const PositionConfigScreen(),
-                                                    ),
-                                                  );
-                                                },
+                                                'Connect a device to add location to your signal.',
                                               );
                                             }
                                           : null,
@@ -1474,6 +1611,21 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                           ),
                         ),
                       ),
+                    ),
+
+                    // Intent picker row
+                    const SizedBox(height: 16),
+                    _PresenceIntentRow(
+                      intent: _selectedIntent,
+                      onTap: _isSubmitting ? null : _showIntentPicker,
+                    ),
+
+                    // Short status field
+                    const SizedBox(height: 12),
+                    _ShortStatusField(
+                      controller: _statusController,
+                      enabled: !_isSubmitting,
+                      onChanged: (_) => setState(() {}),
                     ),
 
                     // Images preview grid
@@ -2145,4 +2297,231 @@ class _SquircleClipper extends CustomClipper<Path> {
 
   @override
   bool shouldReclip(_SquircleClipper oldClipper) => oldClipper.radius != radius;
+}
+
+/// Tappable row for selecting presence intent
+class _PresenceIntentRow extends StatelessWidget {
+  const _PresenceIntentRow({required this.intent, this.onTap});
+
+  final PresenceIntent intent;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasIntent = intent != PresenceIntent.unknown;
+    final iconCode = PresenceIntentIcons.codeFor(intent);
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: context.card,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: hasIntent
+                ? context.accentColor.withValues(alpha: 0.4)
+                : context.border.withValues(alpha: 0.3),
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              IconData(iconCode, fontFamily: 'MaterialIcons'),
+              size: 20,
+              color: hasIntent ? context.accentColor : context.textTertiary,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Intent',
+                    style: TextStyle(
+                      color: context.textTertiary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    hasIntent ? intent.label : 'Tap to set',
+                    style: TextStyle(
+                      color: hasIntent
+                          ? context.textPrimary
+                          : context.textTertiary,
+                      fontSize: 14,
+                      fontWeight: hasIntent ? FontWeight.w500 : FontWeight.w400,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, size: 20, color: context.textTertiary),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Option row in the intent picker bottom sheet
+class _IntentOption extends StatelessWidget {
+  const _IntentOption({
+    required this.intent,
+    required this.isSelected,
+    required this.onTap,
+    this.label,
+  });
+
+  final PresenceIntent intent;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final String? label;
+
+  @override
+  Widget build(BuildContext context) {
+    final iconCode = PresenceIntentIcons.codeFor(intent);
+    final displayLabel = label ?? intent.label;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? context.accentColor.withValues(alpha: 0.15)
+              : context.card,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected
+                ? context.accentColor.withValues(alpha: 0.5)
+                : context.border.withValues(alpha: 0.3),
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              IconData(iconCode, fontFamily: 'MaterialIcons'),
+              size: 22,
+              color: isSelected ? context.accentColor : context.textSecondary,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                displayLabel,
+                style: TextStyle(
+                  color: isSelected ? context.accentColor : context.textPrimary,
+                  fontSize: 15,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            ),
+            if (isSelected)
+              Icon(Icons.check_circle, size: 20, color: context.accentColor),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Short status text field with character counter
+class _ShortStatusField extends StatelessWidget {
+  const _ShortStatusField({
+    required this.controller,
+    required this.enabled,
+    this.onChanged,
+  });
+
+  final TextEditingController controller;
+  final bool enabled;
+  final ValueChanged<String>? onChanged;
+
+  static const int _maxLength = ExtendedPresenceInfo.maxStatusLength;
+
+  @override
+  Widget build(BuildContext context) {
+    final remaining = _maxLength - controller.text.length;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: context.card,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: context.border.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Icon(
+              Icons.short_text,
+              size: 20,
+              color: context.textTertiary,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Short Status (optional)',
+                  style: TextStyle(
+                    color: context.textTertiary,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                TextField(
+                  controller: controller,
+                  enabled: enabled,
+                  maxLength: _maxLength,
+                  maxLengthEnforcement: MaxLengthEnforcement.enforced,
+                  textCapitalization: TextCapitalization.sentences,
+                  style: TextStyle(color: context.textPrimary, fontSize: 14),
+                  decoration: InputDecoration(
+                    hintText: 'e.g. "On the trail near summit"',
+                    hintStyle: TextStyle(
+                      color: context.textTertiary,
+                      fontSize: 14,
+                    ),
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    disabledBorder: InputBorder.none,
+                    isDense: true,
+                    contentPadding: EdgeInsets.zero,
+                    counterText: '',
+                  ),
+                  onChanged: onChanged,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Padding(
+            padding: const EdgeInsets.only(top: 16),
+            child: Text(
+              '$remaining',
+              style: TextStyle(
+                color: remaining < 10 ? Colors.orange : context.textTertiary,
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
