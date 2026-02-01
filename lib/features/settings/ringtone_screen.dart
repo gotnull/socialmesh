@@ -890,19 +890,8 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
   }
 
   Future<void> _saveRingtone() async {
-    // Check premium - required for ALL ringtone changes
-    final hasPremium = ref.read(
-      hasFeatureProvider(PremiumFeature.customRingtones),
-    );
-    if (!hasPremium) {
-      showPremiumInfoSheet(
-        context: context,
-        ref: ref,
-        feature: PremiumFeature.customRingtones,
-      );
-      return;
-    }
-
+    // Manual RTTTL paste is FREE - no premium check
+    // Premium only gates: built-in presets and library browser
     final validation = _validateRtttl(_rtttlController.text);
     if (validation != null) {
       showErrorSnackBar(context, validation);
@@ -933,7 +922,18 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
     RingtonePreset preset,
     int index, {
     bool isCustom = false,
-  }) {
+  }) async {
+    // Built-in presets require premium (custom presets are user-created, so no gate)
+    if (!isCustom) {
+      final hasPremium = await checkPremiumOrShowUpsell(
+        context: context,
+        ref: ref,
+        feature: PremiumFeature.customRingtones,
+        featureDescription: 'Access built-in ringtone presets',
+      );
+      if (!hasPremium) return;
+    }
+
     final source = isCustom ? 'custom' : 'builtin';
     setState(() {
       _rtttlController.text = preset.rtttl;
@@ -1136,21 +1136,9 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
               padding: EdgeInsets.only(right: 16),
               child: LoadingIndicator(size: 20),
             )
-          else if (hasPremium)
-            TextButton(onPressed: _saveRingtone, child: const Text('Save'))
           else
-            TextButton.icon(
-              onPressed: () => showPremiumInfoSheet(
-                context: context,
-                ref: ref,
-                feature: PremiumFeature.customRingtones,
-              ),
-              icon: const Icon(Icons.lock, size: 14, color: Colors.grey),
-              label: Text(
-                'Save',
-                style: TextStyle(color: context.textSecondary),
-              ),
-            ),
+            // Save is always available - manual RTTTL paste is free
+            TextButton(onPressed: _saveRingtone, child: const Text('Save')),
         ],
         slivers: _loading
             ? [
@@ -1579,14 +1567,27 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                       ],
 
                       // Built-in presets section
-                      Text(
-                        'BUILT-IN PRESETS',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: context.textTertiary,
-                          letterSpacing: 1,
-                        ),
+                      // Built-in presets section - premium gated
+                      Row(
+                        children: [
+                          Text(
+                            'BUILT-IN PRESETS',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: context.textTertiary,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                          if (!hasPremium) ...[
+                            const SizedBox(width: 8),
+                            Icon(
+                              Icons.star,
+                              color: context.accentColor,
+                              size: 14,
+                            ),
+                          ],
+                        ],
                       ),
                       SizedBox(height: 12),
                       Container(

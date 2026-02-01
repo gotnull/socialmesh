@@ -44,6 +44,27 @@ class MeshFirestoreConfigService {
         .doc(MeshFirestoreKeys.document);
   }
 
+  /// Stream of config changes - listens for real-time updates from Firestore
+  Stream<MeshConfigData?> get configStream {
+    if (_firestore == null) {
+      return Stream.value(null);
+    }
+
+    return _configDoc
+        .snapshots()
+        .map((snapshot) {
+          if (!snapshot.exists || snapshot.data() == null) {
+            return null;
+          }
+          AppLogging.settings('🔄 Mesh config updated from Firestore');
+          return MeshConfigData.fromJson(snapshot.data()!);
+        })
+        .handleError((e) {
+          AppLogging.settings('⚠️ Mesh config stream error: $e');
+          return null;
+        });
+  }
+
   /// Get the remote mesh config (if available)
   /// Always fetches from server to ensure latest config
   Future<MeshConfigData?> getRemoteConfig() async {

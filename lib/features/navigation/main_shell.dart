@@ -914,6 +914,10 @@ class _MainShellState extends ConsumerState<MainShell> {
     final settingsAsync = ref.watch(settingsServiceProvider);
     final deviceState = ref.watch(deviceConnectionProvider);
 
+    // Watch Firestore config for real-time updates (premium upsell, etc.)
+    // This keeps the stream alive and syncs remote changes to local storage
+    ref.watch(firestoreConfigWatcherProvider);
+
     // Auto-reconnect and live activity managers are now watched at app level in main.dart
 
     // Watch for UNSET region - firmware updates can reset it!

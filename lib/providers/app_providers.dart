@@ -26,6 +26,7 @@ import '../services/ifttt/ifttt_service.dart';
 import '../services/notifications/push_notification_service.dart';
 import '../services/messaging/message_utils.dart';
 import '../services/bug_report_service.dart';
+import '../services/config/mesh_firestore_config_service.dart';
 import '../features/automations/automation_providers.dart';
 import '../features/automations/automation_engine.dart';
 import '../models/mesh_models.dart';
@@ -240,6 +241,47 @@ final premiumUpsellEnabledProvider = Provider<bool>((ref) {
     data: (settings) => settings.premiumUpsellEnabled,
     orElse: () => false,
   );
+});
+
+/// Real-time Firestore config watcher - syncs remote config changes to local storage.
+/// This allows admin to change config in Firestore console and have it apply globally.
+/// Watch this provider from a widget that's always mounted (e.g., MainShell).
+final firestoreConfigWatcherProvider = StreamProvider<MeshConfigData?>((
+  ref,
+) async* {
+  // Wait for settings service to be ready
+  final settingsService = await ref.watch(settingsServiceProvider.future);
+
+  // Initialize Firestore service if needed
+  await MeshFirestoreConfigService.instance.initialize();
+
+  if (!MeshFirestoreConfigService.instance.isAvailable) {
+    AppLogging.settings('⚠️ Firestore not available for config watching');
+    yield null;
+    return;
+  }
+
+  AppLogging.settings('👀 Starting real-time Firestore config watcher');
+
+  await for (final config in MeshFirestoreConfigService.instance.configStream) {
+    if (config != null) {
+      // Sync premium upsell flag to local storage
+      final currentValue = settingsService.premiumUpsellEnabled;
+      if (config.premiumUpsellEnabled != currentValue) {
+        AppLogging.settings(
+          '🔄 Syncing premiumUpsellEnabled: $currentValue -> ${config.premiumUpsellEnabled}',
+        );
+        await settingsService.setPremiumUpsellEnabled(
+          config.premiumUpsellEnabled,
+        );
+        // Update AdminConfig static flag
+        AdminConfig.setPremiumUpsellEnabled(config.premiumUpsellEnabled);
+        // Invalidate settings provider to trigger rebuild
+        ref.invalidate(settingsServiceProvider);
+      }
+    }
+    yield config;
+  }
 });
 
 /// Debug setting: admin mode enabled (full debug features visible).
