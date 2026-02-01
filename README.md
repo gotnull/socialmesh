@@ -24,6 +24,13 @@
   <img src="https://img.shields.io/badge/PRs-Welcome-brightgreen" alt="PRs Welcome">
 </p>
 
+<p align="center">
+  <a href="https://socialmesh.app">Website</a> •
+  <a href="https://apps.apple.com/app/socialmesh/id6475642447">iOS App</a> •
+  <a href="https://play.google.com/store/apps/details?id=app.socialmesh">Android App</a> •
+  <a href="https://github.com/gotnull/socialmesh/issues">Issues</a>
+</p>
+
 ---
 
 Connect to your mesh radio, exchange messages, track nearby nodes, and configure your device — **all without internet**.
@@ -332,6 +339,15 @@ For repository maintainers:
 2. Require pull requests with at least one approval
 3. Require CI status checks to pass before merging
 4. Disallow force pushes to `main`
+
+---
+
+## Resources
+
+- [Architecture Overview](docs/ARCHITECTURE.md)
+- [Backend Boundary](docs/BACKEND.md)
+- [Contributing Guide](CONTRIBUTING.md)
+- [Security Policy](SECURITY.md)
 
 ---
 
