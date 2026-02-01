@@ -441,4 +441,294 @@ void main() {
       expect(receivedData[0], equals([0xAA, 0xBB]));
     });
   });
+
+  // ---------------------------------------------------------------------------
+  // Phase 6: identify() mapping tests
+  // ---------------------------------------------------------------------------
+
+  group('identify() mapping', () {
+    late FakeMeshTransport fakeTransport;
+    late MeshCoreAdapter adapter;
+
+    setUp(() async {
+      fakeTransport = FakeMeshTransport();
+      adapter = MeshCoreAdapter(fakeTransport);
+
+      await fakeTransport.connect(
+        DeviceInfo(
+          id: 'test-device',
+          name: 'Test MeshCore',
+          type: TransportType.ble,
+        ),
+      );
+    });
+
+    tearDown(() async {
+      await adapter.dispose();
+    });
+
+    test('maps nodeName to displayName with trim', () async {
+      // Build self info with whitespace in node name
+      final responsePayload = buildSelfInfoResponseWithPubKey('  MyNode  ', [
+        0x12,
+        0x34,
+        0x56,
+        0x78,
+      ]);
+      fakeTransport.queueResponse(responsePayload);
+      // Queue battery response (identify fetches battery too)
+      fakeTransport.queueResponse(buildBattAndStorageResponseWithVoltage(3700));
+
+      final result = await adapter.identify();
+
+      expect(result.isSuccess, isTrue);
+      expect(result.value!.displayName, equals('MyNode'));
+    });
+
+    test('uses fallback displayName for empty nodeName', () async {
+      final responsePayload = buildSelfInfoResponseWithPubKey('', [
+        0xAA,
+        0xBB,
+        0xCC,
+        0xDD,
+      ]);
+      fakeTransport.queueResponse(responsePayload);
+      fakeTransport.queueResponse(buildBattAndStorageResponseWithVoltage(4000));
+
+      final result = await adapter.identify();
+
+      expect(result.isSuccess, isTrue);
+      expect(result.value!.displayName, equals('MeshCore'));
+    });
+
+    test('uses fallback displayName for whitespace-only nodeName', () async {
+      final responsePayload = buildSelfInfoResponseWithPubKey('   ', [
+        0xAA,
+        0xBB,
+        0xCC,
+        0xDD,
+      ]);
+      fakeTransport.queueResponse(responsePayload);
+      fakeTransport.queueResponse(buildBattAndStorageResponseWithVoltage(4000));
+
+      final result = await adapter.identify();
+
+      expect(result.isSuccess, isTrue);
+      expect(result.value!.displayName, equals('MeshCore'));
+    });
+
+    test('extracts nodeId from pubKey hex prefix', () async {
+      // Use specific pubKey bytes: 0xDE 0xAD 0xBE 0xEF -> nodeId "DEADBEEF"
+      final responsePayload = buildSelfInfoResponseWithPubKey('TestNode', [
+        0xDE,
+        0xAD,
+        0xBE,
+        0xEF,
+      ]);
+      fakeTransport.queueResponse(responsePayload);
+      fakeTransport.queueResponse(buildBattAndStorageResponseWithVoltage(3800));
+
+      final result = await adapter.identify();
+
+      expect(result.isSuccess, isTrue);
+      expect(result.value!.nodeId, equals('DEADBEEF'));
+    });
+
+    test('maps battery percentage from voltage', () async {
+      final responsePayload = buildSelfInfoResponseWithPubKey('Test', [
+        0x11,
+        0x22,
+        0x33,
+        0x44,
+      ]);
+      fakeTransport.queueResponse(responsePayload);
+      // 3600mV should map to ~50% (3000=0%, 4200=100%)
+      fakeTransport.queueResponse(buildBattAndStorageResponseWithVoltage(3600));
+
+      final result = await adapter.identify();
+
+      expect(result.isSuccess, isTrue);
+      expect(result.value!.batteryPercentage, isNotNull);
+      expect(result.value!.batteryPercentage, equals(50));
+    });
+
+    test('includes batteryVoltageMillivolts in deviceInfo', () async {
+      final responsePayload = buildSelfInfoResponseWithPubKey('Test', [
+        0x11,
+        0x22,
+        0x33,
+        0x44,
+      ]);
+      fakeTransport.queueResponse(responsePayload);
+      fakeTransport.queueResponse(buildBattAndStorageResponseWithVoltage(4100));
+
+      final result = await adapter.identify();
+
+      expect(result.isSuccess, isTrue);
+      expect(result.value!.batteryVoltageMillivolts, equals(4100));
+    });
+
+    test('handles missing battery gracefully (battery fields null)', () async {
+      final responsePayload = buildSelfInfoResponseWithPubKey('NoBattery', [
+        0x11,
+        0x22,
+        0x33,
+        0x44,
+      ]);
+      fakeTransport.queueResponse(responsePayload);
+      // Don't queue battery response - will timeout
+
+      final result = await adapter.identify().timeout(
+        const Duration(seconds: 8),
+        onTimeout: () => const MeshProtocolResult.failure(
+          MeshProtocolError.timeout,
+          'Test timeout',
+        ),
+      );
+
+      // Identify should still succeed even if battery times out
+      expect(result.isSuccess, isTrue);
+      expect(result.value!.displayName, equals('NoBattery'));
+      // Battery fields should be null
+      expect(result.value!.batteryPercentage, isNull);
+      expect(result.value!.batteryVoltageMillivolts, isNull);
+    });
+
+    test('parse failure returns identificationFailed', () async {
+      // Queue a too-short response that will fail to parse
+      fakeTransport.queueResponse([
+        MeshCoreResponses.selfInfo,
+        0x01, // Just ADV_TYPE, not enough data
+      ]);
+
+      final result = await adapter.identify();
+
+      expect(result.isFailure, isTrue);
+      expect(result.error, equals(MeshProtocolError.identificationFailed));
+    });
+  });
+
+  group('refreshBattery()', () {
+    late FakeMeshTransport fakeTransport;
+    late MeshCoreAdapter adapter;
+
+    setUp(() async {
+      fakeTransport = FakeMeshTransport();
+      adapter = MeshCoreAdapter(fakeTransport);
+
+      await fakeTransport.connect(
+        DeviceInfo(
+          id: 'test-device',
+          name: 'Test MeshCore',
+          type: TransportType.ble,
+        ),
+      );
+
+      // Initial identify to populate deviceInfo
+      fakeTransport.queueResponse(
+        buildSelfInfoResponseWithPubKey('TestDevice', [0x11, 0x22, 0x33, 0x44]),
+      );
+      fakeTransport.queueResponse(buildBattAndStorageResponseWithVoltage(3600));
+      await adapter.identify();
+    });
+
+    tearDown(() async {
+      await adapter.dispose();
+    });
+
+    test('returns updated battery percentage', () async {
+      // Queue new battery response with different voltage
+      fakeTransport.queueResponse(buildBattAndStorageResponseWithVoltage(4000));
+
+      final result = await adapter.refreshBattery();
+
+      // 4000mV should be ~83% (3000=0%, 4200=100%)
+      expect(result, isNotNull);
+      expect(result, equals(83));
+    });
+
+    test('updates deviceInfo with new battery values', () async {
+      // Initial deviceInfo should have first battery values
+      expect(adapter.deviceInfo!.batteryPercentage, equals(50));
+      expect(adapter.deviceInfo!.batteryVoltageMillivolts, equals(3600));
+
+      // Refresh with new values
+      fakeTransport.queueResponse(buildBattAndStorageResponseWithVoltage(4200));
+      await adapter.refreshBattery();
+
+      // deviceInfo should be updated
+      expect(adapter.deviceInfo!.batteryPercentage, equals(100));
+      expect(adapter.deviceInfo!.batteryVoltageMillivolts, equals(4200));
+    });
+
+    test('returns null when not connected', () async {
+      await fakeTransport.disconnect();
+
+      final result = await adapter.refreshBattery();
+
+      expect(result, isNull);
+    });
+
+    test('returns null on timeout', () async {
+      // Don't queue response - will timeout
+      final result = await adapter.refreshBattery();
+
+      expect(result, isNull);
+    });
+  });
+}
+
+/// Build SELF_INFO response with configurable pubKey prefix.
+///
+/// The [pubKeyPrefix] is used for the first 4 bytes of pubKey (used for nodeId).
+/// Remaining pubKey bytes are filled with 0x00.
+List<int> buildSelfInfoResponseWithPubKey(
+  String nodeName,
+  List<int> pubKeyPrefix,
+) {
+  // Build full pubKey: prefix + padding
+  final pubKey = List<int>.filled(meshCorePubKeySize, 0x00);
+  for (var i = 0; i < pubKeyPrefix.length && i < meshCorePubKeySize; i++) {
+    pubKey[i] = pubKeyPrefix[i];
+  }
+
+  final payload = <int>[
+    MeshCoreResponses.selfInfo, // code
+    0x01, // ADV_TYPE (chat)
+    20, // tx_power_dbm
+    22, // MAX_LORA_TX_POWER
+    ...pubKey, // pub_key (32 bytes)
+    0, 0, 0, 0, // lat
+    0, 0, 0, 0, // lon
+    0, // multi_acks
+    0, // advert_loc_policy
+    0, // telemetry modes
+    0, // manual_add_contacts
+    0, 0, 0, 0, // freq (uint32 LE)
+    0, 0, 0, 0, // bw (uint32 LE)
+    12, // sf
+    5, // cr
+  ];
+
+  // Pad to offset 57 where node_name starts
+  while (payload.length < 58) {
+    payload.add(0);
+  }
+
+  // Add node name (null-terminated)
+  payload.addAll(nodeName.codeUnits);
+  payload.add(0); // null terminator
+
+  return payload;
+}
+
+/// Build BATT_AND_STORAGE response with configurable voltage.
+List<int> buildBattAndStorageResponseWithVoltage(int voltageMillivolts) {
+  return [
+    MeshCoreResponses.battAndStorage,
+    voltageMillivolts & 0xFF, // low byte
+    (voltageMillivolts >> 8) & 0xFF, // high byte
+    0x00, 0x01, // storage used
+    0x00, 0x04, // storage total
+  ];
 }

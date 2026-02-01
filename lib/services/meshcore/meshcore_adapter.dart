@@ -103,14 +103,48 @@ class MeshCoreAdapter implements MeshDeviceAdapter {
         );
       }
 
+      // Extract node ID from pubKey hex prefix (first 4 bytes = 8 hex chars)
+      String? nodeId;
+      if (selfInfo.pubKey.isNotEmpty) {
+        final prefix = selfInfo.pubKey.take(4).toList();
+        nodeId = prefix
+            .map((b) => b.toRadixString(16).padLeft(2, '0'))
+            .join()
+            .toUpperCase();
+      }
+
+      // Get battery info (best-effort, don't fail identify on battery error)
+      int? batteryPercentage;
+      int? batteryVoltageMillivolts;
+      try {
+        final battInfo = await session.getBattAndStorage(
+          timeout: const Duration(seconds: 3),
+        );
+        if (battInfo != null) {
+          batteryPercentage = battInfo.batteryPercentEstimate;
+          batteryVoltageMillivolts = battInfo.batteryMillivolts;
+          AppLogging.protocol(
+            'MeshCore: Battery ${batteryPercentage ?? "?"}%, '
+            '${batteryVoltageMillivolts}mV',
+          );
+        }
+      } catch (e) {
+        AppLogging.protocol('MeshCore: Battery info unavailable: $e');
+      }
+
+      // Safely extract display name with trim and fallback
+      final displayName = selfInfo.nodeName.trim().isNotEmpty
+          ? selfInfo.nodeName.trim()
+          : 'MeshCore';
+
       // Convert to MeshDeviceInfo
       _deviceInfo = MeshDeviceInfo(
         protocolType: MeshProtocolType.meshcore,
-        displayName: selfInfo.nodeName.isNotEmpty
-            ? selfInfo.nodeName
-            : 'MeshCore',
-        nodeId: null, // Could extract from pub_key if needed
+        displayName: displayName,
+        nodeId: nodeId,
         firmwareVersion: null, // Not in self info response
+        batteryPercentage: batteryPercentage,
+        batteryVoltageMillivolts: batteryVoltageMillivolts,
       );
 
       AppLogging.protocol('MeshCore: Identified as $_deviceInfo');
@@ -176,6 +210,44 @@ class MeshCoreAdapter implements MeshDeviceAdapter {
         MeshProtocolError.communicationError,
         e.toString(),
       );
+    }
+  }
+
+  /// Refresh battery info and update deviceInfo.
+  ///
+  /// Returns updated battery percentage, or null on failure.
+  /// This is a debug-only feature for manual battery refresh.
+  Future<int?> refreshBattery() async {
+    if (!_transport.isConnected) return null;
+    final session = _session;
+    if (session == null) return null;
+
+    try {
+      final battInfo = await session.getBattAndStorage(
+        timeout: const Duration(seconds: 3),
+      );
+      if (battInfo == null) return null;
+
+      final batteryPercentage = battInfo.batteryPercentEstimate;
+      final batteryVoltageMillivolts = battInfo.batteryMillivolts;
+
+      // Update deviceInfo with new battery values
+      if (_deviceInfo != null) {
+        _deviceInfo = _deviceInfo!.copyWith(
+          batteryPercentage: batteryPercentage,
+          batteryVoltageMillivolts: batteryVoltageMillivolts,
+        );
+      }
+
+      AppLogging.protocol(
+        'MeshCore: Battery refreshed: ${batteryPercentage ?? "?"}%, '
+        '${batteryVoltageMillivolts}mV',
+      );
+
+      return batteryPercentage;
+    } catch (e) {
+      AppLogging.protocol('MeshCore: Battery refresh failed: $e');
+      return null;
     }
   }
 

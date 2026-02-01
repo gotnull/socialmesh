@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/logging.dart';
@@ -227,6 +228,9 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent> {
                 const SizedBox(height: 24),
                 _buildSectionTitle(context, 'Developer Tools'),
                 const SizedBox(height: 12),
+                // MeshCore battery refresh (debug-only)
+                _MeshCoreBatteryRefreshTile(enabled: actionsEnabled),
+                const SizedBox(height: 8),
                 const MeshCoreConsole(),
               ],
               const SizedBox(height: 24),
@@ -518,13 +522,16 @@ class _DeviceInfoCard extends ConsumerWidget {
     // Get protocol-agnostic device info
     final meshDeviceInfo = ref.watch(meshDeviceInfoProvider);
 
-    final batteryColor = batteryLevel != null
-        ? (batteryLevel! > 100
+    // Use battery from meshDeviceInfo (MeshCore) or passed batteryLevel (Meshtastic)
+    final effectiveBattery = meshDeviceInfo?.batteryPercentage ?? batteryLevel;
+
+    final batteryColor = effectiveBattery != null
+        ? (effectiveBattery > 100
               ? AppTheme
                     .primaryGreen // Charging
-              : batteryLevel! >= 50
+              : effectiveBattery >= 50
               ? context.accentColor
-              : batteryLevel! >= 20
+              : effectiveBattery >= 20
               ? AppTheme.warningYellow
               : AppTheme.errorRed)
         : null;
@@ -609,11 +616,11 @@ class _DeviceInfoCard extends ConsumerWidget {
               icon: Icons.signal_cellular_alt,
               iconColor: rssiColor,
             ),
-          if (batteryLevel != null && isConnected)
+          if (effectiveBattery != null && isConnected)
             InfoTableRow(
               label: 'Battery',
-              value: batteryLevel! > 100 ? 'Charging' : '$batteryLevel%',
-              icon: _getBatteryIcon(batteryLevel!),
+              value: effectiveBattery > 100 ? 'Charging' : '$effectiveBattery%',
+              icon: _getBatteryIcon(effectiveBattery),
               iconColor: batteryColor,
             ),
         ],
@@ -998,5 +1005,133 @@ class _GattDumpDebugTile extends ConsumerWidget {
 
   void _onDump(WidgetRef ref) {
     ref.read(gattDumpProvider.notifier).dump();
+  }
+}
+
+/// Debug tile for refreshing MeshCore battery info.
+///
+/// Only visible in debug builds for MeshCore devices.
+class _MeshCoreBatteryRefreshTile extends ConsumerWidget {
+  final bool enabled;
+
+  const _MeshCoreBatteryRefreshTile({required this.enabled});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Double-check this should be visible (MeshCore + debug mode)
+    final protocolType = ref.watch(meshProtocolTypeProvider);
+    if (!kDebugMode || protocolType != MeshProtocolType.meshcore) {
+      return const SizedBox.shrink();
+    }
+
+    final batteryState = ref.watch(meshCoreBatteryProvider);
+    final isEnabled = enabled && !batteryState.isInProgress;
+
+    String subtitle;
+    IconData trailingIcon;
+    Color? trailingColor;
+
+    if (batteryState.isInProgress) {
+      subtitle = 'Refreshing battery...';
+      trailingIcon = Icons.hourglass_empty;
+      trailingColor = context.textTertiary;
+    } else if (batteryState.isSuccess) {
+      final pct = batteryState.percentage;
+      final mv = batteryState.voltageMillivolts;
+      subtitle = '${pct ?? "?"}%${mv != null ? " (${mv}mV)" : ""}';
+      trailingIcon = Icons.check_circle;
+      trailingColor = AppTheme.primaryGreen;
+    } else if (batteryState.isFailure) {
+      subtitle = batteryState.errorMessage ?? 'Failed';
+      trailingIcon = Icons.error;
+      trailingColor = AppTheme.errorRed;
+    } else {
+      subtitle = 'Fetch battery from device';
+      trailingIcon = Icons.chevron_right;
+      trailingColor = context.textTertiary;
+    }
+
+    final opacity = isEnabled ? 1.0 : 0.5;
+
+    return Opacity(
+      opacity: opacity,
+      child: Container(
+        decoration: BoxDecoration(
+          color: context.background,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: context.border),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: isEnabled ? () => _onRefresh(ref) : null,
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: context.card,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.battery_charging_full,
+                      color: AccentColors.purple,
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Refresh Battery',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: context.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: batteryState.isFailure
+                                ? AppTheme.errorRed
+                                : batteryState.isSuccess
+                                ? AppTheme.primaryGreen
+                                : context.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (batteryState.isInProgress)
+                    SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AccentColors.purple,
+                      ),
+                    )
+                  else
+                    Icon(trailingIcon, color: trailingColor, size: 20),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _onRefresh(WidgetRef ref) {
+    ref.read(meshCoreBatteryProvider.notifier).refresh();
   }
 }

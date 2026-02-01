@@ -108,6 +108,112 @@ final meshCoreCaptureProvider = Provider<MeshCoreFrameCapture?>((ref) {
   return coordinator.meshCoreCapture;
 });
 
+// ---------------------------------------------------------------------------
+// MeshCore Battery Refresh (Debug-only)
+// ---------------------------------------------------------------------------
+
+/// State for MeshCore battery refresh operation.
+class MeshCoreBatteryState {
+  /// The current status.
+  final MeshCoreBatteryStatus status;
+
+  /// Battery percentage (0-100), or null if unknown.
+  final int? percentage;
+
+  /// Battery voltage in millivolts, or null if unknown.
+  final int? voltageMillivolts;
+
+  /// Error message on failure.
+  final String? errorMessage;
+
+  const MeshCoreBatteryState.idle()
+    : status = MeshCoreBatteryStatus.idle,
+      percentage = null,
+      voltageMillivolts = null,
+      errorMessage = null;
+
+  const MeshCoreBatteryState.inProgress()
+    : status = MeshCoreBatteryStatus.inProgress,
+      percentage = null,
+      voltageMillivolts = null,
+      errorMessage = null;
+
+  const MeshCoreBatteryState.success({
+    required this.percentage,
+    required this.voltageMillivolts,
+  }) : status = MeshCoreBatteryStatus.success,
+       errorMessage = null;
+
+  const MeshCoreBatteryState.failure(this.errorMessage)
+    : status = MeshCoreBatteryStatus.failure,
+      percentage = null,
+      voltageMillivolts = null;
+
+  bool get isIdle => status == MeshCoreBatteryStatus.idle;
+  bool get isInProgress => status == MeshCoreBatteryStatus.inProgress;
+  bool get isSuccess => status == MeshCoreBatteryStatus.success;
+  bool get isFailure => status == MeshCoreBatteryStatus.failure;
+}
+
+enum MeshCoreBatteryStatus { idle, inProgress, success, failure }
+
+/// Notifier for MeshCore battery refresh (debug-only).
+///
+/// Provides manual refresh of battery info for MeshCore devices.
+class MeshCoreBatteryNotifier extends Notifier<MeshCoreBatteryState> {
+  @override
+  MeshCoreBatteryState build() {
+    // Initialize from current device info if available
+    final adapter = ref.read(meshCoreAdapterProvider);
+    final deviceInfo = adapter?.deviceInfo;
+    if (deviceInfo != null &&
+        (deviceInfo.batteryPercentage != null ||
+            deviceInfo.batteryVoltageMillivolts != null)) {
+      return MeshCoreBatteryState.success(
+        percentage: deviceInfo.batteryPercentage,
+        voltageMillivolts: deviceInfo.batteryVoltageMillivolts,
+      );
+    }
+    return const MeshCoreBatteryState.idle();
+  }
+
+  /// Refresh battery info from the device.
+  Future<void> refresh() async {
+    state = const MeshCoreBatteryState.inProgress();
+
+    try {
+      final adapter = ref.read(meshCoreAdapterProvider);
+      if (adapter == null) {
+        state = const MeshCoreBatteryState.failure('Not connected to MeshCore');
+        return;
+      }
+
+      final percentage = await adapter.refreshBattery();
+      final deviceInfo = adapter.deviceInfo;
+
+      if (percentage != null || deviceInfo?.batteryVoltageMillivolts != null) {
+        state = MeshCoreBatteryState.success(
+          percentage: percentage,
+          voltageMillivolts: deviceInfo?.batteryVoltageMillivolts,
+        );
+      } else {
+        state = const MeshCoreBatteryState.failure('Battery info unavailable');
+      }
+    } catch (e) {
+      state = MeshCoreBatteryState.failure(e.toString());
+    }
+  }
+
+  void reset() {
+    state = const MeshCoreBatteryState.idle();
+  }
+}
+
+final meshCoreBatteryProvider =
+    NotifierProvider<MeshCoreBatteryNotifier, MeshCoreBatteryState>(
+      MeshCoreBatteryNotifier.new,
+    );
+
 /// Provider for protocol detection on a scanned device.
 ///
 /// This is a family provider that takes scan parameters and returns

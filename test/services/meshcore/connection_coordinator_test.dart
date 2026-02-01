@@ -147,6 +147,9 @@ class FakeMeshCoreAdapter implements MeshCoreAdapter {
   }
 
   @override
+  Future<int?> refreshBattery() async => null;
+
+  @override
   Future<void> disconnect() async {
     await _transport.disconnect();
   }
@@ -1421,6 +1424,9 @@ class FakeMeshCoreAdapterWithDisposeHook implements MeshCoreAdapter {
   Future<MeshProtocolResult<Duration>> ping() async {
     return const MeshProtocolResult.success(Duration(milliseconds: 50));
   }
+
+  @override
+  Future<int?> refreshBattery() async => null;
 
   @override
   Future<void> disconnect() async {

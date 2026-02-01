@@ -276,6 +276,139 @@ void main() {
       expect(const PingTestState.idle().isFailure, isFalse);
     });
   });
+
+  group('MeshCoreBatteryState', () {
+    test('isIdle returns correct value', () {
+      expect(const MeshCoreBatteryState.idle().isIdle, isTrue);
+      expect(const MeshCoreBatteryState.inProgress().isIdle, isFalse);
+    });
+
+    test('isInProgress returns correct value', () {
+      expect(const MeshCoreBatteryState.inProgress().isInProgress, isTrue);
+      expect(const MeshCoreBatteryState.idle().isInProgress, isFalse);
+    });
+
+    test('isSuccess returns correct value', () {
+      expect(
+        const MeshCoreBatteryState.success(
+          percentage: 75,
+          voltageMillivolts: 3900,
+        ).isSuccess,
+        isTrue,
+      );
+      expect(const MeshCoreBatteryState.idle().isSuccess, isFalse);
+    });
+
+    test('isFailure returns correct value', () {
+      expect(const MeshCoreBatteryState.failure('error').isFailure, isTrue);
+      expect(const MeshCoreBatteryState.idle().isFailure, isFalse);
+    });
+
+    test('success state contains battery values', () {
+      const state = MeshCoreBatteryState.success(
+        percentage: 80,
+        voltageMillivolts: 4000,
+      );
+      expect(state.percentage, equals(80));
+      expect(state.voltageMillivolts, equals(4000));
+    });
+  });
+
+  group('MeshCore battery refresh widget tests', () {
+    testWidgets('battery refresh button visible for MeshCore in debug mode', (
+      tester,
+    ) async {
+      final container = ProviderContainer(
+        overrides: [
+          meshProtocolTypeProvider.overrideWithValue(MeshProtocolType.meshcore),
+          meshCoreBatteryProvider.overrideWith(() => _IdleBatteryNotifier()),
+        ],
+      );
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(home: _TestBatteryRefreshWidget()),
+        ),
+      );
+
+      expect(find.text('Refresh Battery'), findsOneWidget);
+    });
+
+    testWidgets('battery refresh button hidden for Meshtastic protocol', (
+      tester,
+    ) async {
+      final container = ProviderContainer(
+        overrides: [
+          meshProtocolTypeProvider.overrideWithValue(
+            MeshProtocolType.meshtastic,
+          ),
+          meshCoreBatteryProvider.overrideWith(() => _IdleBatteryNotifier()),
+        ],
+      );
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(home: _TestBatteryRefreshWidget()),
+        ),
+      );
+
+      expect(find.text('Refresh Battery'), findsNothing);
+    });
+
+    testWidgets('tapping refresh updates displayed percentage', (tester) async {
+      final container = ProviderContainer(
+        overrides: [
+          meshProtocolTypeProvider.overrideWithValue(MeshProtocolType.meshcore),
+          meshCoreBatteryProvider.overrideWith(() => _MockBatteryNotifier()),
+        ],
+      );
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(home: _TestBatteryRefreshWidget()),
+        ),
+      );
+
+      // Initially idle
+      expect(find.text('Idle'), findsOneWidget);
+
+      // Tap refresh
+      await tester.tap(find.text('Refresh'));
+      await tester.pump();
+
+      // Should show in progress
+      expect(find.text('In Progress'), findsOneWidget);
+
+      // Pump to allow state change to propagate
+      await tester.pumpAndSettle();
+
+      // Should show success with percentage
+      expect(find.text('Battery: 85%'), findsOneWidget);
+    });
+
+    testWidgets('shows failure message on error', (tester) async {
+      final container = ProviderContainer(
+        overrides: [
+          meshProtocolTypeProvider.overrideWithValue(MeshProtocolType.meshcore),
+          meshCoreBatteryProvider.overrideWith(
+            () => _FailureBatteryNotifier('Not connected'),
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(home: _TestBatteryRefreshWidget()),
+        ),
+      );
+
+      expect(find.text('Error: Not connected'), findsOneWidget);
+    });
+  });
 }
 
 // Test widgets for verifying protocol badge behavior
@@ -372,4 +505,80 @@ class _FailurePingTestNotifier extends PingTestNotifier {
 
   @override
   PingTestState build() => PingTestState.failure(_error);
+}
+
+// Test widget for MeshCore battery refresh
+class _TestBatteryRefreshWidget extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final protocolType = ref.watch(meshProtocolTypeProvider);
+    final batteryState = ref.watch(meshCoreBatteryProvider);
+
+    // Mirror the visibility logic from _MeshCoreBatteryRefreshTile
+    // Note: In tests, kDebugMode is true
+    if (protocolType != MeshProtocolType.meshcore) {
+      return const Scaffold(body: Center(child: Text('Not MeshCore')));
+    }
+
+    String text;
+    if (batteryState.isIdle) {
+      text = 'Idle';
+    } else if (batteryState.isInProgress) {
+      text = 'In Progress';
+    } else if (batteryState.isSuccess) {
+      text = 'Battery: ${batteryState.percentage}%';
+    } else {
+      text = 'Error: ${batteryState.errorMessage}';
+    }
+
+    return Scaffold(
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Text('Refresh Battery'),
+          Text(text),
+          ElevatedButton(
+            onPressed: () =>
+                ref.read(meshCoreBatteryProvider.notifier).refresh(),
+            child: const Text('Refresh'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Mock battery notifiers for testing
+class _IdleBatteryNotifier extends MeshCoreBatteryNotifier {
+  @override
+  MeshCoreBatteryState build() => const MeshCoreBatteryState.idle();
+
+  @override
+  Future<void> refresh() async {
+    // No-op for idle state test
+  }
+}
+
+class _MockBatteryNotifier extends MeshCoreBatteryNotifier {
+  @override
+  MeshCoreBatteryState build() => const MeshCoreBatteryState.idle();
+
+  @override
+  Future<void> refresh() async {
+    state = const MeshCoreBatteryState.inProgress();
+    await Future.delayed(const Duration(milliseconds: 10));
+    state = const MeshCoreBatteryState.success(
+      percentage: 85,
+      voltageMillivolts: 4050,
+    );
+  }
+}
+
+class _FailureBatteryNotifier extends MeshCoreBatteryNotifier {
+  final String _error;
+
+  _FailureBatteryNotifier(this._error);
+
+  @override
+  MeshCoreBatteryState build() => MeshCoreBatteryState.failure(_error);
 }
