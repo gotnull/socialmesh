@@ -27,6 +27,7 @@ import '../../../utils/location_privacy.dart';
 
 import '../../../services/signal_service.dart';
 import '../../settings/account_subscriptions_screen.dart';
+import '../../settings/position_config_screen.dart';
 import '../../settings/signal_settings_screen.dart';
 import '../../../utils/snackbar.dart';
 import '../widgets/ttl_selector.dart';
@@ -1369,10 +1370,12 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                                       isSelected: _location != null,
                                       isLoading: _isLoadingLocation,
                                       isEnabled: hasNodeLocation,
-                                      onTap:
-                                          _isSubmitting ||
-                                              _isLoadingLocation ||
-                                              !hasNodeLocation
+                                      tooltip: hasNodeLocation
+                                          ? (_location != null
+                                                ? 'Remove location'
+                                                : 'Add location')
+                                          : 'No device location available',
+                                      onTap: _isSubmitting || _isLoadingLocation
                                           ? null
                                           : () {
                                               if (_location != null) {
@@ -1381,6 +1384,26 @@ class _CreateSignalScreenState extends ConsumerState<CreateSignalScreen>
                                                 _getLocation();
                                               }
                                             },
+                                      onDisabledTap: !hasNodeLocation
+                                          ? () {
+                                              HapticFeedback.lightImpact();
+                                              showActionSnackBar(
+                                                context,
+                                                'Device has no GPS location. Enable GPS or set a fixed position.',
+                                                actionLabel: 'Settings',
+                                                type: SnackBarType.warning,
+                                                onAction: () {
+                                                  if (!context.mounted) return;
+                                                  Navigator.of(context).push(
+                                                    MaterialPageRoute(
+                                                      builder: (_) =>
+                                                          const PositionConfigScreen(),
+                                                    ),
+                                                  );
+                                                },
+                                              );
+                                            }
+                                          : null,
                                     ),
                                     // TTL button (shows current selection)
                                     _InputActionButton(
@@ -2040,17 +2063,21 @@ class _InputActionButton extends StatelessWidget {
     required this.icon,
     this.label,
     this.onTap,
+    this.onDisabledTap,
     this.isSelected = false,
     this.isLoading = false,
     this.isEnabled = true,
+    this.tooltip,
   });
 
   final IconData icon;
   final String? label;
   final VoidCallback? onTap;
+  final VoidCallback? onDisabledTap;
   final bool isSelected;
   final bool isLoading;
   final bool isEnabled;
+  final String? tooltip;
 
   @override
   Widget build(BuildContext context) {
@@ -2058,10 +2085,10 @@ class _InputActionButton extends StatelessWidget {
         ? context.accentColor
         : (isEnabled ? context.textSecondary : context.textTertiary);
 
-    return Material(
+    Widget button = Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: isEnabled ? onTap : null,
+        onTap: isEnabled ? onTap : onDisabledTap,
         borderRadius: BorderRadius.circular(20),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -2095,6 +2122,11 @@ class _InputActionButton extends StatelessWidget {
         ),
       ),
     );
+
+    if (tooltip != null) {
+      return Tooltip(message: tooltip!, child: button);
+    }
+    return button;
   }
 }
 
