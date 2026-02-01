@@ -86,7 +86,6 @@ class SignalPresenceContext extends StatelessWidget {
   bool get _showLastSeen => lastSeenBucket != null;
 
   Widget _buildIntentChip(BuildContext context) {
-    final iconCode = PresenceIntentIcons.codeFor(intent!);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
@@ -97,7 +96,7 @@ class SignalPresenceContext extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            IconData(iconCode, fontFamily: 'MaterialIcons'),
+            PresenceIntentIcons.iconFor(intent!),
             size: 12,
             color: context.accentColor,
           ),

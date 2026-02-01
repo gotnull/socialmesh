@@ -2309,7 +2309,6 @@ class _PresenceIntentRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasIntent = intent != PresenceIntent.unknown;
-    final iconCode = PresenceIntentIcons.codeFor(intent);
 
     return GestureDetector(
       onTap: onTap,
@@ -2327,7 +2326,7 @@ class _PresenceIntentRow extends StatelessWidget {
         child: Row(
           children: [
             Icon(
-              IconData(iconCode, fontFamily: 'MaterialIcons'),
+              PresenceIntentIcons.iconFor(intent),
               size: 20,
               color: hasIntent ? context.accentColor : context.textTertiary,
             ),
@@ -2384,7 +2383,6 @@ class _IntentOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconCode = PresenceIntentIcons.codeFor(intent);
     final displayLabel = label ?? intent.label;
 
     return GestureDetector(
@@ -2406,7 +2404,7 @@ class _IntentOption extends StatelessWidget {
         child: Row(
           children: [
             Icon(
-              IconData(iconCode, fontFamily: 'MaterialIcons'),
+              PresenceIntentIcons.iconFor(intent),
               size: 22,
               color: isSelected ? context.accentColor : context.textSecondary,
             ),

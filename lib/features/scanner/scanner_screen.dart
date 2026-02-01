@@ -1815,7 +1815,10 @@ class _DeviceCard extends StatelessWidget {
                               ),
                             ),
                           ),
-                          if (showDebugInfo) ...[
+                          // Always show protocol badge for Meshtastic/MeshCore
+                          // Show for unknown devices only in debug mode
+                          if (protocolType != MeshProtocolType.unknown ||
+                              showDebugInfo) ...[
                             const SizedBox(width: 8),
                             _ProtocolBadge(protocolType: protocolType),
                           ],

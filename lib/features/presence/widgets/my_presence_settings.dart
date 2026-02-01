@@ -87,10 +87,7 @@ class _MyPresenceSettingsState extends ConsumerState<MyPresenceSettings> {
             final isSelected = intent == _intent;
             return ListTile(
               leading: Icon(
-                IconData(
-                  PresenceIntentIcons.codeFor(intent),
-                  fontFamily: 'MaterialIcons',
-                ),
+                PresenceIntentIcons.iconFor(intent),
                 color: isSelected ? context.accentColor : context.textSecondary,
               ),
               title: Text(
@@ -216,10 +213,7 @@ class _MyPresenceSettingsState extends ConsumerState<MyPresenceSettings> {
               // Intent selector
               ListTile(
                 leading: Icon(
-                  IconData(
-                    PresenceIntentIcons.codeFor(_intent),
-                    fontFamily: 'MaterialIcons',
-                  ),
+                  PresenceIntentIcons.iconFor(_intent),
                   color: context.accentColor,
                 ),
                 title: const Text('Intent'),

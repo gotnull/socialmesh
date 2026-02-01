@@ -568,10 +568,7 @@ class _ExtendedPresenceRow extends StatelessWidget {
         // Intent icon and label
         if (info.intent != PresenceIntent.unknown) ...[
           Icon(
-            IconData(
-              PresenceIntentIcons.codeFor(info.intent),
-              fontFamily: 'MaterialIcons',
-            ),
+            PresenceIntentIcons.iconFor(info.intent),
             size: 12,
             color: context.accentColor,
           ),

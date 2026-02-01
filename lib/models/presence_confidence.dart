@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 
 enum PresenceConfidence { active, fading, stale, unknown }
 
@@ -277,4 +277,48 @@ class PresenceIntentIcons {
   };
 
   static int codeFor(PresenceIntent intent) => _iconCodes[intent] ?? 0xe8fd;
+
+  // Const IconData instances for tree-shaking
+  static const IconData _unknownIcon = IconData(
+    0xe8fd,
+    fontFamily: 'MaterialIcons',
+  );
+  static const IconData _availableIcon = IconData(
+    0xe558,
+    fontFamily: 'MaterialIcons',
+  );
+  static const IconData _campingIcon = IconData(
+    0xea3a,
+    fontFamily: 'MaterialIcons',
+  );
+  static const IconData _travelingIcon = IconData(
+    0xe531,
+    fontFamily: 'MaterialIcons',
+  );
+  static const IconData _emergencyStandbyIcon = IconData(
+    0xeb2e,
+    fontFamily: 'MaterialIcons',
+  );
+  static const IconData _relayNodeIcon = IconData(
+    0xe1b1,
+    fontFamily: 'MaterialIcons',
+  );
+  static const IconData _passiveIcon = IconData(
+    0xe63e,
+    fontFamily: 'MaterialIcons',
+  );
+
+  /// Returns an IconData for the given intent.
+  /// Tree-shake friendly - returns const IconData instances.
+  static IconData iconFor(PresenceIntent intent) {
+    return switch (intent) {
+      PresenceIntent.unknown => _unknownIcon,
+      PresenceIntent.available => _availableIcon,
+      PresenceIntent.camping => _campingIcon,
+      PresenceIntent.traveling => _travelingIcon,
+      PresenceIntent.emergencyStandby => _emergencyStandbyIcon,
+      PresenceIntent.relayNode => _relayNodeIcon,
+      PresenceIntent.passive => _passiveIcon,
+    };
+  }
 }
