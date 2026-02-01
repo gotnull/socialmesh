@@ -324,8 +324,9 @@ final premiumFeatureGateProvider = Provider.family<bool, String>((
                 final prefs = await SharedPreferences.getInstance();
                 final featuresJson =
                     prefs.getString('premium_gated_features') ?? '';
-                if (featuresJson.isEmpty)
+                if (featuresJson.isEmpty) {
                   return true; // Gate by default if no config
+                }
 
                 final features = Map<String, bool>.fromEntries(
                   featuresJson.split(',').where((s) => s.contains(':')).map((
