@@ -190,7 +190,9 @@ void main() {
           isTrue,
         );
         expect(
-          MeshCoreCodeClassification.isPushCode(MeshCorePushCodes.sendConfirmed),
+          MeshCoreCodeClassification.isPushCode(
+            MeshCorePushCodes.sendConfirmed,
+          ),
           isTrue,
         );
         expect(
@@ -211,7 +213,9 @@ void main() {
           isTrue,
         );
         expect(
-          MeshCoreCodeClassification.isCommandCode(MeshCoreCommands.deviceQuery),
+          MeshCoreCodeClassification.isCommandCode(
+            MeshCoreCommands.deviceQuery,
+          ),
           isTrue,
         );
       });
