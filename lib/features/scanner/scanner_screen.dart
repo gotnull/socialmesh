@@ -1803,16 +1803,24 @@ class _DeviceCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Text(
+                        device.name,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: context.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
                       Row(
                         children: [
-                          Expanded(
-                            child: Text(
-                              device.name,
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: context.textPrimary,
-                              ),
+                          Text(
+                            device.type == TransportType.ble
+                                ? 'Bluetooth'
+                                : 'USB',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: context.textTertiary,
                             ),
                           ),
                           // Always show protocol badge for Meshtastic/MeshCore
@@ -1823,14 +1831,6 @@ class _DeviceCard extends StatelessWidget {
                             _ProtocolBadge(protocolType: protocolType),
                           ],
                         ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        device.type == TransportType.ble ? 'Bluetooth' : 'USB',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: context.textTertiary,
-                        ),
                       ),
                     ],
                   ),
