@@ -167,6 +167,7 @@ class FakeMeshCoreBleTransport implements MeshCoreBleTransport {
   final StreamController<Uint8List> _rawRxController =
       StreamController<Uint8List>.broadcast();
   DeviceConnectionState _state = DeviceConnectionState.disconnected;
+  bool _disposed = false;
 
   Duration connectDelay = Duration.zero;
 
@@ -194,14 +195,19 @@ class FakeMeshCoreBleTransport implements MeshCoreBleTransport {
     if (connectDelay > Duration.zero) {
       await Future.delayed(connectDelay);
     }
+    if (_disposed) return;
     _state = DeviceConnectionState.connected;
-    _stateController.add(_state);
+    if (!_stateController.isClosed) {
+      _stateController.add(_state);
+    }
   }
 
   @override
   Future<void> disconnect() async {
     _state = DeviceConnectionState.disconnected;
-    _stateController.add(_state);
+    if (!_stateController.isClosed) {
+      _stateController.add(_state);
+    }
   }
 
   @override
@@ -214,6 +220,8 @@ class FakeMeshCoreBleTransport implements MeshCoreBleTransport {
 
   @override
   Future<void> dispose() async {
+    if (_disposed) return;
+    _disposed = true;
     await _stateController.close();
     await _dataController.close();
     await _rawRxController.close();
@@ -948,4 +956,523 @@ void main() {
       expect(capture.frameCount, equals(0));
     });
   });
+
+  group('Cancellation-safe disconnect', () {
+    test('disconnect during MeshCore connect aborts and cleans up', () async {
+      // Use a transport that delays connect so we can call disconnect mid-flight
+      final connectCompleter = Completer<void>();
+      final disposeCount = CallCounter();
+
+      final slowTransport = FakeMeshCoreBleTransportWithHooks(
+        onConnect: () async {
+          await connectCompleter.future;
+        },
+        onDispose: () {
+          disposeCount.increment();
+        },
+      );
+
+      final meshtasticFactoryCount = CallCounter();
+      final coordinator = ConnectionCoordinator(
+        meshCoreAdapterFactory: (transport) => FakeMeshCoreAdapter(transport),
+        meshCoreTransportFactory: () => slowTransport,
+        meshtasticAdapterFactory: (protocolService) {
+          meshtasticFactoryCount.increment();
+          throw FactoryShouldNotBeCalledException('MeshtasticAdapterFactory');
+        },
+      );
+
+      final device = DeviceInfo(
+        id: 'meshcore-test-id',
+        name: 'MeshCore Test',
+        type: TransportType.ble,
+      );
+
+      // Start connect (will block at transport.connect)
+      final connectFuture = coordinator.connect(
+        device: device,
+        advertisedServiceUuids: [MeshCoreBleUuids.serviceUuid],
+      );
+
+      // Wait a bit, then disconnect while connect is in-flight
+      await Future.delayed(const Duration(milliseconds: 10));
+      expect(coordinator.isConnecting, isTrue);
+
+      // Disconnect should abort the connect
+      await coordinator.disconnect();
+
+      // Complete the transport connect (simulating BLE finally responding)
+      connectCompleter.complete();
+
+      // Wait for connect to finish
+      final result = await connectFuture;
+
+      // Connect should have failed with cancelled
+      expect(result.success, isFalse);
+      expect(result.protocolError, equals(MeshProtocolError.cancelled));
+
+      // State should be clean
+      expect(coordinator.activeAdapter, isNull);
+      expect(coordinator.activeProtocol, isNull);
+      expect(coordinator.meshCoreCapture, isNull);
+
+      // Meshtastic factory should never have been called
+      expect(meshtasticFactoryCount.count, equals(0));
+
+      // Transport should have been disposed
+      expect(disposeCount.count, greaterThan(0));
+
+      await coordinator.dispose();
+    });
+
+    test('disconnect during Meshtastic connect aborts and cleans up', () async {
+      // Use an adapter that delays identify so we can call disconnect mid-flight
+      final identifyCompleter = Completer<void>();
+
+      final coordinator = ConnectionCoordinator(
+        meshCoreAdapterFactory: (transport) {
+          throw FactoryShouldNotBeCalledException('MeshCoreAdapterFactory');
+        },
+        meshCoreTransportFactory: () {
+          throw FactoryShouldNotBeCalledException('MeshCoreTransportFactory');
+        },
+        meshtasticAdapterFactory: (protocolService) =>
+            FakeMeshtasticAdapterWithDelay(
+              protocolService,
+              identifyCompleter.future,
+            ),
+      );
+
+      final device = DeviceInfo(
+        id: 'meshtastic-test-id',
+        name: 'Meshtastic Test',
+        type: TransportType.ble,
+      );
+
+      // Start connect (will block at adapter.identify)
+      final connectFuture = coordinator.connect(
+        device: device,
+        advertisedServiceUuids: ['6ba1b218-15a8-461f-9fa8-5dcae273eafd'],
+        protocolService: FakeProtocolService(),
+      );
+
+      // Wait a bit, then disconnect while connect is in-flight
+      await Future.delayed(const Duration(milliseconds: 10));
+      expect(coordinator.isConnecting, isTrue);
+
+      // Disconnect should abort the connect
+      await coordinator.disconnect();
+
+      // Complete the adapter identify (simulating it finally responding)
+      identifyCompleter.complete();
+
+      // Wait for connect to finish
+      final result = await connectFuture;
+
+      // Connect should have failed with cancelled
+      expect(result.success, isFalse);
+      expect(result.protocolError, equals(MeshProtocolError.cancelled));
+
+      // State should be clean
+      expect(coordinator.activeAdapter, isNull);
+      expect(coordinator.activeProtocol, isNull);
+
+      await coordinator.dispose();
+    });
+
+    test(
+      'connect A in-flight then disconnect then connect B succeeds',
+      () async {
+        final connectCompleterA = Completer<void>();
+        var transportCount = 0;
+
+        final coordinator = ConnectionCoordinator(
+          meshCoreAdapterFactory: (transport) => FakeMeshCoreAdapter(transport),
+          meshCoreTransportFactory: () {
+            transportCount++;
+            if (transportCount == 1) {
+              // First transport: delayed connect
+              return FakeMeshCoreBleTransportWithHooks(
+                onConnect: () async {
+                  await connectCompleterA.future;
+                },
+              );
+            }
+            // Second transport: immediate connect
+            return FakeMeshCoreBleTransport();
+          },
+        );
+
+        final deviceA = DeviceInfo(
+          id: 'meshcore-a',
+          name: 'MeshCore A',
+          type: TransportType.ble,
+        );
+
+        final deviceB = DeviceInfo(
+          id: 'meshcore-b',
+          name: 'MeshCore B',
+          type: TransportType.ble,
+        );
+
+        // Start connect A (will block)
+        final connectFutureA = coordinator.connect(
+          device: deviceA,
+          advertisedServiceUuids: [MeshCoreBleUuids.serviceUuid],
+        );
+
+        await Future.delayed(const Duration(milliseconds: 10));
+        expect(coordinator.isConnecting, isTrue);
+
+        // Disconnect (cancels A)
+        await coordinator.disconnect();
+
+        // Complete A's transport (it will see cancelled)
+        connectCompleterA.complete();
+
+        // A should fail
+        final resultA = await connectFutureA;
+        expect(resultA.success, isFalse);
+        expect(resultA.protocolError, equals(MeshProtocolError.cancelled));
+
+        // Now connect B should succeed
+        final resultB = await coordinator.connect(
+          device: deviceB,
+          advertisedServiceUuids: [MeshCoreBleUuids.serviceUuid],
+        );
+
+        expect(resultB.success, isTrue);
+        expect(coordinator.activeAdapter, isNotNull);
+
+        await coordinator.dispose();
+      },
+    );
+
+    test('no double-dispose on MeshCore transport', () async {
+      final transportDisposeCount = CallCounter();
+
+      final transport = FakeMeshCoreBleTransportWithHooks(
+        onDispose: () {
+          transportDisposeCount.increment();
+        },
+      );
+
+      final coordinator = ConnectionCoordinator(
+        meshCoreAdapterFactory: (transport) => FakeMeshCoreAdapter(transport),
+        meshCoreTransportFactory: () => transport,
+      );
+
+      final device = DeviceInfo(
+        id: 'meshcore-test-id',
+        name: 'MeshCore Test',
+        type: TransportType.ble,
+      );
+
+      await coordinator.connect(
+        device: device,
+        advertisedServiceUuids: [MeshCoreBleUuids.serviceUuid],
+      );
+
+      await coordinator.disconnect();
+
+      // Transport dispose should be called exactly once
+      expect(transportDisposeCount.count, equals(1));
+
+      await coordinator.dispose();
+    });
+
+    test('no double-dispose on Meshtastic adapter', () async {
+      final disposeCount = CallCounter();
+
+      final coordinator = ConnectionCoordinator(
+        meshtasticAdapterFactory: (protocolService) =>
+            FakeMeshtasticAdapterWithDisposeHook(protocolService, disposeCount),
+      );
+
+      final device = DeviceInfo(
+        id: 'meshtastic-test-id',
+        name: 'Meshtastic Test',
+        type: TransportType.ble,
+      );
+
+      await coordinator.connect(
+        device: device,
+        advertisedServiceUuids: ['6ba1b218-15a8-461f-9fa8-5dcae273eafd'],
+        protocolService: FakeProtocolService(),
+      );
+
+      await coordinator.disconnect();
+
+      // Dispose should be called exactly once
+      expect(disposeCount.count, equals(1));
+
+      await coordinator.dispose();
+    });
+
+    test(
+      'rapid disconnect during early connect phase cleans up pending transport',
+      () async {
+        final disposeCount = CallCounter();
+
+        // Transport that never completes connect
+        final coordinator = ConnectionCoordinator(
+          meshCoreAdapterFactory: (transport) => FakeMeshCoreAdapter(transport),
+          meshCoreTransportFactory: () => FakeMeshCoreBleTransportWithHooks(
+            onConnect: () async {
+              // Never completes - simulating very slow BLE
+              await Completer<void>().future;
+            },
+            onDispose: () {
+              disposeCount.increment();
+            },
+          ),
+        );
+
+        final device = DeviceInfo(
+          id: 'meshcore-test-id',
+          name: 'MeshCore Test',
+          type: TransportType.ble,
+        );
+
+        // Start connect (intentionally not awaited - tests cleanup of stuck connect)
+        unawaited(
+          coordinator.connect(
+            device: device,
+            advertisedServiceUuids: [MeshCoreBleUuids.serviceUuid],
+          ),
+        );
+
+        // Immediately disconnect before connect even gets going
+        await Future.delayed(const Duration(milliseconds: 5));
+        await coordinator.disconnect();
+
+        // The pending transport should have been cleaned up
+        expect(disposeCount.count, greaterThan(0));
+
+        // Don't await connectFuture - it will never complete since the
+        // transport.connect() never completes. This is intentional to test
+        // the cleanup path.
+        await coordinator.dispose();
+      },
+    );
+  });
+}
+
+// =============================================================================
+// Additional Test Fakes for Cancellation Tests
+// =============================================================================
+
+/// Fake MeshCore BLE transport with hooks for testing cancellation/cleanup.
+class FakeMeshCoreBleTransportWithHooks implements MeshCoreBleTransport {
+  final StreamController<DeviceConnectionState> _stateController =
+      StreamController<DeviceConnectionState>.broadcast();
+  final StreamController<List<int>> _dataController =
+      StreamController<List<int>>.broadcast();
+  final StreamController<Uint8List> _rawRxController =
+      StreamController<Uint8List>.broadcast();
+  DeviceConnectionState _state = DeviceConnectionState.disconnected;
+  bool _disposed = false;
+
+  final Future<void> Function()? _onConnect;
+  final void Function()? _onDispose;
+
+  FakeMeshCoreBleTransportWithHooks({
+    Future<void> Function()? onConnect,
+    void Function()? onDispose,
+  }) : _onConnect = onConnect,
+       _onDispose = onDispose;
+
+  @override
+  TransportType get transportType => TransportType.ble;
+
+  @override
+  DeviceConnectionState get connectionState => _state;
+
+  @override
+  Stream<DeviceConnectionState> get connectionStateStream =>
+      _stateController.stream;
+
+  @override
+  Stream<List<int>> get dataStream => _dataController.stream;
+
+  @override
+  Stream<Uint8List> get rawRxStream => _rawRxController.stream;
+
+  @override
+  bool get isConnected => _state == DeviceConnectionState.connected;
+
+  @override
+  Future<void> connect(DeviceInfo device) async {
+    if (_onConnect != null) {
+      await _onConnect();
+    }
+    // Don't update state if disposed (simulates cancelled connect)
+    if (_disposed) return;
+    _state = DeviceConnectionState.connected;
+    if (!_stateController.isClosed) {
+      _stateController.add(_state);
+    }
+  }
+
+  @override
+  Future<void> disconnect() async {
+    _state = DeviceConnectionState.disconnected;
+    if (!_stateController.isClosed) {
+      _stateController.add(_state);
+    }
+  }
+
+  @override
+  Future<void> sendBytes(List<int> data) async {}
+
+  @override
+  Future<void> sendRaw(Uint8List data) async {
+    await sendBytes(data);
+  }
+
+  @override
+  Future<void> dispose() async {
+    if (_disposed) return; // Prevent double-dispose
+    _disposed = true;
+    _onDispose?.call();
+    await _stateController.close();
+    await _dataController.close();
+    await _rawRxController.close();
+  }
+}
+
+/// Fake Meshtastic adapter with delayed identify for testing cancellation.
+class FakeMeshtasticAdapterWithDelay implements MeshtasticAdapter {
+  MeshDeviceInfo? _deviceInfo;
+  final Future<void> _delayFuture;
+
+  FakeMeshtasticAdapterWithDelay(
+    ProtocolService protocolService,
+    this._delayFuture,
+  );
+
+  @override
+  MeshProtocolType get protocolType => MeshProtocolType.meshtastic;
+
+  @override
+  bool get isReady => _deviceInfo != null;
+
+  @override
+  MeshDeviceInfo? get deviceInfo => _deviceInfo;
+
+  @override
+  Future<MeshProtocolResult<MeshDeviceInfo>> identify() async {
+    await _delayFuture;
+    _deviceInfo = const MeshDeviceInfo(
+      protocolType: MeshProtocolType.meshtastic,
+      displayName: 'Fake Meshtastic',
+    );
+    return MeshProtocolResult.success(_deviceInfo!);
+  }
+
+  @override
+  Future<MeshProtocolResult<Duration>> ping() async {
+    return const MeshProtocolResult.success(Duration(milliseconds: 100));
+  }
+
+  @override
+  Future<void> disconnect() async {}
+
+  @override
+  Future<void> dispose() async {}
+}
+
+/// Fake MeshCore adapter with dispose hook for counting dispose calls.
+class FakeMeshCoreAdapterWithDisposeHook implements MeshCoreAdapter {
+  final MeshTransport _transport;
+  final CallCounter _disposeCounter;
+  MeshDeviceInfo? _deviceInfo;
+
+  final StreamController<MeshCoreFrame> _frameController =
+      StreamController<MeshCoreFrame>.broadcast();
+
+  FakeMeshCoreAdapterWithDisposeHook(this._transport, this._disposeCounter);
+
+  @override
+  MeshProtocolType get protocolType => MeshProtocolType.meshcore;
+
+  @override
+  bool get isReady => _deviceInfo != null;
+
+  @override
+  MeshDeviceInfo? get deviceInfo => _deviceInfo;
+
+  @override
+  MeshCoreSession? get session => null;
+
+  @override
+  Stream<MeshCoreFrame> get frameStream => _frameController.stream;
+
+  @override
+  Future<MeshProtocolResult<MeshDeviceInfo>> identify() async {
+    _deviceInfo = const MeshDeviceInfo(
+      protocolType: MeshProtocolType.meshcore,
+      displayName: 'Fake MeshCore',
+    );
+    return MeshProtocolResult.success(_deviceInfo!);
+  }
+
+  @override
+  Future<MeshProtocolResult<Duration>> ping() async {
+    return const MeshProtocolResult.success(Duration(milliseconds: 50));
+  }
+
+  @override
+  Future<void> disconnect() async {
+    await _transport.disconnect();
+  }
+
+  @override
+  Future<void> dispose() async {
+    _disposeCounter.increment();
+    await _frameController.close();
+    await _transport.dispose();
+  }
+}
+
+/// Fake Meshtastic adapter with dispose hook for counting dispose calls.
+class FakeMeshtasticAdapterWithDisposeHook implements MeshtasticAdapter {
+  final CallCounter _disposeCounter;
+  MeshDeviceInfo? _deviceInfo;
+
+  FakeMeshtasticAdapterWithDisposeHook(
+    ProtocolService protocolService,
+    this._disposeCounter,
+  );
+
+  @override
+  MeshProtocolType get protocolType => MeshProtocolType.meshtastic;
+
+  @override
+  bool get isReady => _deviceInfo != null;
+
+  @override
+  MeshDeviceInfo? get deviceInfo => _deviceInfo;
+
+  @override
+  Future<MeshProtocolResult<MeshDeviceInfo>> identify() async {
+    _deviceInfo = const MeshDeviceInfo(
+      protocolType: MeshProtocolType.meshtastic,
+      displayName: 'Fake Meshtastic',
+    );
+    return MeshProtocolResult.success(_deviceInfo!);
+  }
+
+  @override
+  Future<MeshProtocolResult<Duration>> ping() async {
+    return const MeshProtocolResult.success(Duration(milliseconds: 100));
+  }
+
+  @override
+  Future<void> disconnect() async {}
+
+  @override
+  Future<void> dispose() async {
+    _disposeCounter.increment();
+  }
 }

@@ -338,8 +338,7 @@ class IOSBGTaskScheduler implements PlatformScheduler {
     if (_initialized) return;
 
     // Configure background fetch
-    // ignore: unused_local_variable
-    final status = await bgf.BackgroundFetch.configure(
+    await bgf.BackgroundFetch.configure(
       bgf.BackgroundFetchConfig(
         minimumFetchInterval: 15, // minutes
         stopOnTerminate: false,
@@ -739,13 +738,10 @@ class SchedulerBridge {
 
     // Register all active schedules
     final now = _now();
-    // ignore: unused_local_variable
-    int registered = 0;
 
     for (final spec in inAppScheduler.schedules) {
       if (spec.enabled && spec.isActive(now)) {
         await _registerWithPlatform(spec);
-        registered++;
       }
     }
 
@@ -775,12 +771,9 @@ class SchedulerBridge {
     // Process all due schedules via the in-app scheduler
     // The in-app scheduler handles catch-up logic, deduplication, etc.
     final now = _now();
-    // ignore: unused_local_variable
-    final events = inAppScheduler.tick(now);
+    inAppScheduler.tick(now);
 
-    AppLogging.automations(
-      'SchedulerBridge: Platform task processed \${events.length} events',
-    );
+    AppLogging.automations('SchedulerBridge: Platform task processed');
 
     // Persist state after processing
     await inAppScheduler.persist();
@@ -797,12 +790,9 @@ class SchedulerBridge {
 
     // Process all due schedules via the in-app scheduler
     final now = _now();
-    // ignore: unused_local_variable
-    final events = inAppScheduler.tick(now);
+    inAppScheduler.tick(now);
 
-    AppLogging.automations(
-      'SchedulerBridge: Platform fetch processed \${events.length} events',
-    );
+    AppLogging.automations('SchedulerBridge: Platform fetch processed');
 
     // Persist state after processing
     await inAppScheduler.persist();

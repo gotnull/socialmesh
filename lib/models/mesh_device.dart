@@ -200,6 +200,9 @@ enum MeshProtocolError {
 
   /// A connection attempt is already in progress
   connectionInProgress,
+
+  /// Connection attempt was cancelled (e.g., disconnect during connect)
+  cancelled,
 }
 
 /// Extension providing user-friendly error messages for protocol errors.
@@ -228,6 +231,8 @@ extension MeshProtocolErrorMessages on MeshProtocolError {
       case MeshProtocolError.connectionInProgress:
         return 'A connection attempt is already in progress. '
             'Please wait for it to complete.';
+      case MeshProtocolError.cancelled:
+        return 'Connection was cancelled.';
     }
   }
 
@@ -250,6 +255,8 @@ extension MeshProtocolErrorMessages on MeshProtocolError {
         return 'Unsupported Device';
       case MeshProtocolError.connectionInProgress:
         return 'Connection In Progress';
+      case MeshProtocolError.cancelled:
+        return 'Cancelled';
     }
   }
 }

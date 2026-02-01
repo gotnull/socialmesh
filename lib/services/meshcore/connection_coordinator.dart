@@ -69,6 +69,15 @@ class ConnectionResult {
     );
   }
 
+  /// Factory for cancelled connection result.
+  factory ConnectionResult.cancelled() {
+    return ConnectionResult._(
+      success: false,
+      errorMessage: 'Connection was cancelled',
+      protocolError: MeshProtocolError.cancelled,
+    );
+  }
+
   @override
   String toString() => success
       ? 'ConnectionResult.success(${deviceInfo?.displayName})'
@@ -129,6 +138,16 @@ class ConnectionCoordinator {
 
   /// Single-flight guard: non-null while connect() is running.
   Completer<ConnectionResult>? _connectInProgress;
+
+  /// Monotonically increasing connection attempt ID for cancellation safety.
+  ///
+  /// Incremented on every disconnect() call. Each connect() captures
+  /// the current ID at entry and checks it after every await boundary.
+  /// If IDs don't match, the attempt was cancelled by a concurrent disconnect().
+  int _connectionAttemptId = 0;
+
+  /// Transport created during in-flight MeshCore connect (for cleanup on cancel).
+  MeshCoreBleTransport? _pendingMeshCoreTransport;
 
   /// Stream controller for connection state changes.
   final StreamController<MeshConnectionState> _stateController =
@@ -268,6 +287,12 @@ class ConnectionCoordinator {
     _stateController.add(MeshConnectionState.connecting);
 
     // -------------------------------------------------------------------------
+    // Capture connection attempt ID for cancellation detection.
+    // If disconnect() is called during this connect, the ID will change.
+    // -------------------------------------------------------------------------
+    final attemptId = _connectionAttemptId;
+
+    // -------------------------------------------------------------------------
     // Protocol locked at entry: compute once, never change
     // -------------------------------------------------------------------------
     final detection = detectProtocol(
@@ -287,7 +312,7 @@ class ConnectionCoordinator {
       switch (lockedProtocol) {
         case MeshProtocolType.meshcore:
           // MeshCore path: uses MeshCore transport/session, NEVER ProtocolService
-          return await _connectMeshCore(device);
+          return await _connectMeshCore(device, attemptId);
 
         case MeshProtocolType.meshtastic:
           // Meshtastic path: uses ProtocolService, NEVER MeshCore resources
@@ -295,6 +320,7 @@ class ConnectionCoordinator {
             device,
             protocolService,
             existingTransport,
+            attemptId,
           );
 
         case MeshProtocolType.unknown:
@@ -316,7 +342,10 @@ class ConnectionCoordinator {
     }
   }
 
-  Future<ConnectionResult> _connectMeshCore(DeviceInfo device) async {
+  Future<ConnectionResult> _connectMeshCore(
+    DeviceInfo device,
+    int attemptId,
+  ) async {
     AppLogging.connection('ConnectionCoordinator: Using MeshCore adapter');
 
     // -------------------------------------------------------------------------
@@ -327,6 +356,7 @@ class ConnectionCoordinator {
 
     // Create MeshCore transport using injectable factory
     final transport = _meshCoreTransportFactory();
+    _pendingMeshCoreTransport = transport;
 
     try {
       // -------------------------------------------------------------------------
@@ -346,11 +376,25 @@ class ConnectionCoordinator {
       // Step 1-3: Connect transport (handles BLE connect + service discovery + notify subscribe)
       await transport.connect(device);
 
+      // Check for cancellation after await
+      if (_connectionAttemptId != attemptId) {
+        AppLogging.connection(
+          'ConnectionCoordinator: MeshCore connect cancelled after transport.connect',
+        );
+        // Only dispose if disconnect() hasn't already cleaned up this transport
+        if (_pendingMeshCoreTransport == transport) {
+          await transport.dispose();
+          _pendingMeshCoreTransport = null;
+        }
+        return ConnectionResult.cancelled();
+      }
+
       // Step 4: Create adapter which initializes session (starts listening)
       // Uses injectable factory - tests can verify this is never called for Meshtastic
       final adapter = _meshCoreAdapterFactory(transport);
       _activeAdapter = adapter;
       _activeProtocol = MeshProtocolType.meshcore;
+      _pendingMeshCoreTransport = null; // Now managed by adapter
 
       // Attach capture in debug builds for dev-only protocol inspection
       if (kDebugMode) {
@@ -362,6 +406,16 @@ class ConnectionCoordinator {
       // Step 5-7: Identify device (sends deviceQuery + appStart, waits for selfInfo)
       _stateController.add(MeshConnectionState.identifying);
       final identifyResult = await adapter.identify();
+
+      // Check for cancellation after await
+      if (_connectionAttemptId != attemptId) {
+        AppLogging.connection(
+          'ConnectionCoordinator: MeshCore connect cancelled after identify',
+        );
+        // Adapter owns the transport now, so cleanup via adapter
+        await _cleanupMeshCore(transport);
+        return ConnectionResult.cancelled();
+      }
 
       if (identifyResult.isFailure) {
         await _cleanupMeshCore(transport);
@@ -381,6 +435,7 @@ class ConnectionCoordinator {
 
       return ConnectionResult.success(adapter, _currentDeviceInfo!);
     } catch (e) {
+      _pendingMeshCoreTransport = null;
       await _cleanupMeshCore(transport);
       _stateController.add(MeshConnectionState.error);
       return ConnectionResult.failure(e.toString());
@@ -399,6 +454,7 @@ class ConnectionCoordinator {
     DeviceInfo device,
     ProtocolService? protocolService,
     DeviceTransport? existingTransport,
+    int attemptId,
   ) async {
     AppLogging.connection('ConnectionCoordinator: Using Meshtastic adapter');
 
@@ -426,6 +482,16 @@ class ConnectionCoordinator {
     _stateController.add(MeshConnectionState.identifying);
     final identifyResult = await adapter.identify();
 
+    // Check for cancellation after await
+    if (_connectionAttemptId != attemptId) {
+      AppLogging.connection(
+        'ConnectionCoordinator: Meshtastic connect cancelled after identify',
+      );
+      _activeAdapter = null;
+      _activeProtocol = null;
+      return ConnectionResult.cancelled();
+    }
+
     if (identifyResult.isFailure) {
       _activeAdapter = null;
       _activeProtocol = null;
@@ -452,9 +518,32 @@ class ConnectionCoordinator {
   /// Cleans up only the active protocol's resources:
   /// - MeshCore: disposes session, transport, capture
   /// - Meshtastic: disposes adapter only (transport managed elsewhere)
+  ///
+  /// Cancellation-safe: If called during an in-flight connect(), the
+  /// connection attempt will be cancelled and cleaned up deterministically.
+  /// The connect() future will resolve to [ConnectionResult.cancelled()].
   Future<void> disconnect() async {
     AppLogging.connection('ConnectionCoordinator: Disconnecting...');
+
+    // -------------------------------------------------------------------------
+    // Increment connection attempt ID to signal cancellation to any
+    // in-flight connect(). This must happen FIRST, before any async work.
+    // -------------------------------------------------------------------------
+    _connectionAttemptId++;
+    AppLogging.connection(
+      'ConnectionCoordinator: Incremented attemptId to $_connectionAttemptId',
+    );
+
     _stateController.add(MeshConnectionState.disconnecting);
+
+    // Clean up any pending MeshCore transport from an in-flight connect
+    if (_pendingMeshCoreTransport != null) {
+      AppLogging.connection(
+        'ConnectionCoordinator: Cleaning up pending MeshCore transport',
+      );
+      await _pendingMeshCoreTransport!.dispose();
+      _pendingMeshCoreTransport = null;
+    }
 
     // Protocol-specific cleanup
     if (_activeProtocol == MeshProtocolType.meshcore) {
