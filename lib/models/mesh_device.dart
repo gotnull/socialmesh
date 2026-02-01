@@ -197,6 +197,9 @@ enum MeshProtocolError {
 
   /// Device is missing required characteristics/services
   unsupportedDevice,
+
+  /// A connection attempt is already in progress
+  connectionInProgress,
 }
 
 /// Extension providing user-friendly error messages for protocol errors.
@@ -222,6 +225,9 @@ extension MeshProtocolErrorMessages on MeshProtocolError {
       case MeshProtocolError.unsupportedDevice:
         return 'This device is missing required BLE characteristics. '
             'It may not be compatible.';
+      case MeshProtocolError.connectionInProgress:
+        return 'A connection attempt is already in progress. '
+            'Please wait for it to complete.';
     }
   }
 
@@ -242,6 +248,8 @@ extension MeshProtocolErrorMessages on MeshProtocolError {
         return 'Unsupported Version';
       case MeshProtocolError.unsupportedDevice:
         return 'Unsupported Device';
+      case MeshProtocolError.connectionInProgress:
+        return 'Connection In Progress';
     }
   }
 }
