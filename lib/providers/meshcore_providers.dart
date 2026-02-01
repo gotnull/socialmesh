@@ -4,12 +4,16 @@
 // These providers enable the UI to access protocol-agnostic device
 // information without depending on Meshtastic or MeshCore specific code.
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/transport.dart';
 import '../models/mesh_device.dart';
 import '../services/meshcore/connection_coordinator.dart';
+import '../services/meshcore/meshcore_adapter.dart';
 import '../services/meshcore/meshcore_detector.dart';
+import '../services/meshcore/protocol/meshcore_capture.dart';
+import '../services/meshcore/protocol/meshcore_session.dart';
 import 'app_providers.dart';
 import 'connection_providers.dart';
 
@@ -77,6 +81,31 @@ final meshDeviceInfoProvider = Provider<MeshDeviceInfo?>((ref) {
 final meshProtocolTypeProvider = Provider<MeshProtocolType>((ref) {
   final deviceInfo = ref.watch(meshDeviceInfoProvider);
   return deviceInfo?.protocolType ?? MeshProtocolType.unknown;
+});
+
+/// Provider for the MeshCore adapter (null if not connected or not MeshCore).
+///
+/// Use this to access MeshCore-specific functionality like the session.
+final meshCoreAdapterProvider = Provider<MeshCoreAdapter?>((ref) {
+  final coordinator = ref.watch(connectionCoordinatorProvider);
+  return coordinator.meshCoreAdapter;
+});
+
+/// Provider for the MeshCore session (null if not connected or not MeshCore).
+///
+/// Use this for direct protocol operations on MeshCore devices.
+final meshCoreSessionProvider = Provider<MeshCoreSession?>((ref) {
+  final adapter = ref.watch(meshCoreAdapterProvider);
+  return adapter?.session;
+});
+
+/// Provider for the MeshCore debug capture (null if not MeshCore or release build).
+///
+/// Only available in debug builds for dev-only protocol inspection.
+final meshCoreCaptureProvider = Provider<MeshCoreFrameCapture?>((ref) {
+  if (!kDebugMode) return null;
+  final coordinator = ref.watch(connectionCoordinatorProvider);
+  return coordinator.meshCoreCapture;
 });
 
 /// Provider for protocol detection on a scanned device.
@@ -294,3 +323,89 @@ class GattDumpNotifier extends Notifier<GattDumpState> {
     state = const GattDumpState.idle();
   }
 }
+
+// ---------------------------------------------------------------------------
+// MeshCore Capture State (Dev-only)
+// ---------------------------------------------------------------------------
+
+/// Snapshot of MeshCore capture state for UI display.
+///
+/// Contains a copy of captured frames at a point in time.
+class MeshCoreCaptureSnapshot {
+  /// List of captured frames.
+  final List<CapturedFrame> frames;
+
+  /// Total frame count (may differ from frames.length if truncated).
+  final int totalCount;
+
+  /// Whether capture is active.
+  final bool isActive;
+
+  const MeshCoreCaptureSnapshot({
+    required this.frames,
+    required this.totalCount,
+    required this.isActive,
+  });
+
+  /// Empty snapshot.
+  const MeshCoreCaptureSnapshot.empty()
+    : frames = const [],
+      totalCount = 0,
+      isActive = false;
+
+  /// Whether there are any frames.
+  bool get hasFrames => frames.isNotEmpty;
+}
+
+/// Notifier for MeshCore capture snapshot.
+///
+/// Provides a way for UI to observe capture changes without heavy rebuilds.
+/// Call refresh() to poll the latest snapshot from the capture instance.
+class MeshCoreCaptureNotifier extends Notifier<MeshCoreCaptureSnapshot> {
+  @override
+  MeshCoreCaptureSnapshot build() {
+    // Initial state: check if we have an active capture
+    final capture = ref.read(meshCoreCaptureProvider);
+    if (capture == null) {
+      return const MeshCoreCaptureSnapshot.empty();
+    }
+    return _snapshotFromCapture(capture);
+  }
+
+  /// Refresh the snapshot from the current capture.
+  void refresh() {
+    final capture = ref.read(meshCoreCaptureProvider);
+    if (capture == null) {
+      state = const MeshCoreCaptureSnapshot.empty();
+      return;
+    }
+    state = _snapshotFromCapture(capture);
+  }
+
+  /// Clear the capture and refresh state.
+  void clear() {
+    final capture = ref.read(meshCoreCaptureProvider);
+    capture?.clear();
+    refresh();
+  }
+
+  /// Get the compact hex log for clipboard.
+  String getHexLog() {
+    final capture = ref.read(meshCoreCaptureProvider);
+    return capture?.toCompactHexLog() ?? '(no capture active)';
+  }
+
+  MeshCoreCaptureSnapshot _snapshotFromCapture(MeshCoreFrameCapture capture) {
+    final frames = capture.snapshot();
+    return MeshCoreCaptureSnapshot(
+      frames: frames,
+      totalCount: frames.length,
+      isActive: capture.isActive,
+    );
+  }
+}
+
+final meshCoreCaptureSnapshotProvider =
+    NotifierProvider<MeshCoreCaptureNotifier, MeshCoreCaptureSnapshot>(
+      MeshCoreCaptureNotifier.new,
+    );

@@ -13,6 +13,7 @@ import '../../providers/connection_providers.dart';
 import '../../providers/meshcore_providers.dart';
 import '../../utils/snackbar.dart';
 import 'package:socialmesh/core/navigation.dart';
+import 'widgets/meshcore_console.dart';
 
 /// Shows the device sheet as a modal bottom sheet
 void showDeviceSheet(BuildContext context) {
@@ -218,6 +219,16 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent> {
               if (isConnected) _PingDebugTile(enabled: actionsEnabled),
               // Debug: Dump GATT services (developer tool for BLE UUIDs)
               if (isConnected) _GattDumpDebugTile(enabled: actionsEnabled),
+
+              // Dev-only MeshCore Console (visible in debug builds for MeshCore devices)
+              if (MeshCoreConsole.shouldShow(
+                ref.watch(meshProtocolTypeProvider),
+              )) ...[
+                const SizedBox(height: 24),
+                _buildSectionTitle(context, 'Developer Tools'),
+                const SizedBox(height: 12),
+                const MeshCoreConsole(),
+              ],
               const SizedBox(height: 24),
 
               // Connection Actions

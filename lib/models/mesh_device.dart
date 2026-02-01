@@ -53,12 +53,20 @@ class MeshDeviceInfo {
   /// Hardware model or variant
   final String? hardwareModel;
 
+  /// Battery percentage (0-100), null if unknown
+  final int? batteryPercentage;
+
+  /// Battery voltage in millivolts, null if unknown
+  final int? batteryVoltageMillivolts;
+
   const MeshDeviceInfo({
     required this.protocolType,
     required this.displayName,
     this.nodeId,
     this.firmwareVersion,
     this.hardwareModel,
+    this.batteryPercentage,
+    this.batteryVoltageMillivolts,
   });
 
   MeshDeviceInfo copyWith({
@@ -67,6 +75,8 @@ class MeshDeviceInfo {
     String? nodeId,
     String? firmwareVersion,
     String? hardwareModel,
+    int? batteryPercentage,
+    int? batteryVoltageMillivolts,
   }) {
     return MeshDeviceInfo(
       protocolType: protocolType ?? this.protocolType,
@@ -74,6 +84,9 @@ class MeshDeviceInfo {
       nodeId: nodeId ?? this.nodeId,
       firmwareVersion: firmwareVersion ?? this.firmwareVersion,
       hardwareModel: hardwareModel ?? this.hardwareModel,
+      batteryPercentage: batteryPercentage ?? this.batteryPercentage,
+      batteryVoltageMillivolts:
+          batteryVoltageMillivolts ?? this.batteryVoltageMillivolts,
     );
   }
 
@@ -90,7 +103,9 @@ class MeshDeviceInfo {
           displayName == other.displayName &&
           nodeId == other.nodeId &&
           firmwareVersion == other.firmwareVersion &&
-          hardwareModel == other.hardwareModel;
+          hardwareModel == other.hardwareModel &&
+          batteryPercentage == other.batteryPercentage &&
+          batteryVoltageMillivolts == other.batteryVoltageMillivolts;
 
   @override
   int get hashCode =>
@@ -98,7 +113,9 @@ class MeshDeviceInfo {
       displayName.hashCode ^
       nodeId.hashCode ^
       firmwareVersion.hashCode ^
-      hardwareModel.hashCode;
+      hardwareModel.hashCode ^
+      batteryPercentage.hashCode ^
+      batteryVoltageMillivolts.hashCode;
 }
 
 /// Protocol-agnostic connection state for mesh devices.

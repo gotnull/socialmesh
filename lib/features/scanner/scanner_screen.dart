@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:io' show Platform;
 
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../core/logging.dart';
 import '../../providers/connection_providers.dart' as conn;
@@ -1384,72 +1385,75 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                   ),
 
                 // Dev mode toggle: Show all BLE devices
-                Consumer(
-                  builder: (context, ref, child) {
-                    final showAllDevices = ref.watch(showAllBleDevicesProvider);
-                    return Container(
-                      padding: const EdgeInsets.all(12),
-                      margin: const EdgeInsets.only(bottom: 16),
-                      decoration: BoxDecoration(
-                        color: Colors.purple.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.purple.withValues(alpha: 0.3),
+                if (kDebugMode)
+                  Consumer(
+                    builder: (context, ref, child) {
+                      final showAllDevices = ref.watch(
+                        showAllBleDevicesProvider,
+                      );
+                      return Container(
+                        padding: const EdgeInsets.all(12),
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.purple.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.purple.withValues(alpha: 0.3),
+                          ),
                         ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.developer_mode,
-                            color: Colors.purple,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Show all BLE devices',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: context.textPrimary,
-                                  ),
-                                ),
-                                Text(
-                                  showAllDevices
-                                      ? 'Scanning all devices (dev mode)'
-                                      : 'Filtering by Meshtastic UUID',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: context.textTertiary,
-                                  ),
-                                ),
-                              ],
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.developer_mode,
+                              color: Colors.purple,
+                              size: 20,
                             ),
-                          ),
-                          Switch.adaptive(
-                            value: showAllDevices,
-                            onChanged: _scanning
-                                ? null
-                                : (value) async {
-                                    final storage = await ref.read(
-                                      settingsServiceProvider.future,
-                                    );
-                                    await storage.setShowAllBleDevices(value);
-                                    ref.invalidate(settingsServiceProvider);
-                                    if (mounted) {
-                                      _startScan();
-                                    }
-                                  },
-                            activeColor: Colors.purple,
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Show all BLE devices',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: context.textPrimary,
+                                    ),
+                                  ),
+                                  Text(
+                                    showAllDevices
+                                        ? 'Scanning all devices (dev mode)'
+                                        : 'Filtering by Meshtastic UUID',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: context.textTertiary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Switch.adaptive(
+                              value: showAllDevices,
+                              onChanged: _scanning
+                                  ? null
+                                  : (value) async {
+                                      final storage = await ref.read(
+                                        settingsServiceProvider.future,
+                                      );
+                                      await storage.setShowAllBleDevices(value);
+                                      ref.invalidate(settingsServiceProvider);
+                                      if (mounted) {
+                                        _startScan();
+                                      }
+                                    },
+                              activeColor: Colors.purple,
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
 
                 if (displayDevices.isNotEmpty)
                   Padding(
