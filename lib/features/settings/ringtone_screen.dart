@@ -925,17 +925,23 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
     bool isCustom = false,
   }) async {
     // Meshtastic Default (index 0) is always free - it's the device default
-    // Other built-in presets require premium
+    // Other built-in presets require premium check
     // Custom presets are user-created, so no gate
     final isMeshtasticDefault = !isCustom && index == 0;
     if (!isCustom && !isMeshtasticDefault) {
-      final hasPremium = await checkPremiumOrShowUpsell(
-        context: context,
-        ref: ref,
-        feature: PremiumFeature.customRingtones,
-        featureDescription: 'Access premium ringtone presets',
+      // Check if customRingtones feature should show upsell
+      final shouldGate = ref.read(
+        premiumFeatureGateProvider('customRingtones'),
       );
-      if (!hasPremium) return;
+      if (shouldGate) {
+        final hasPremium = await checkPremiumOrShowUpsell(
+          context: context,
+          ref: ref,
+          feature: PremiumFeature.customRingtones,
+          featureDescription: 'Access premium ringtone presets',
+        );
+        if (!hasPremium) return;
+      }
     }
 
     final source = isCustom ? 'custom' : 'builtin';
@@ -967,13 +973,16 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
   }
 
   void _showLibraryBrowser() async {
-    // Check premium before showing library
-    final hasPremium = await checkPremiumOrShowUpsell(
-      context: context,
-      ref: ref,
-      feature: PremiumFeature.customRingtones,
-    );
-    if (!hasPremium) return;
+    // Check if customRingtones feature should show upsell
+    final shouldGate = ref.read(premiumFeatureGateProvider('customRingtones'));
+    if (shouldGate) {
+      final hasPremium = await checkPremiumOrShowUpsell(
+        context: context,
+        ref: ref,
+        feature: PremiumFeature.customRingtones,
+      );
+      if (!hasPremium) return;
+    }
 
     if (!mounted) return;
     AppBottomSheet.showScrollable(

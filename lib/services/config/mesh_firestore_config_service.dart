@@ -144,6 +144,10 @@ class MeshConfigData {
   // Debug mode settings (synced globally for admin access)
   final bool premiumUpsellEnabled;
   final bool adminModeEnabled;
+  // Granular premium feature gating - controls "Try It" upsell per feature
+  // Keys match PremiumFeature enum names: 'customRingtones', 'advancedAutomations', etc.
+  // true = show upsell, false = feature is freely available
+  final Map<String, bool> premiumGatedFeatures;
 
   const MeshConfigData({
     this.size = 600,
@@ -167,6 +171,7 @@ class MeshConfigData {
     this.secretGestureEnableHaptics = true,
     this.premiumUpsellEnabled = false,
     this.adminModeEnabled = false,
+    this.premiumGatedFeatures = const {},
   });
 
   factory MeshConfigData.fromJson(Map<String, dynamic> json) {
@@ -198,6 +203,11 @@ class MeshConfigData {
           json['secretGestureEnableHaptics'] as bool? ?? true,
       premiumUpsellEnabled: json['premiumUpsellEnabled'] as bool? ?? false,
       adminModeEnabled: json['adminModeEnabled'] as bool? ?? false,
+      premiumGatedFeatures:
+          (json['premiumGatedFeatures'] as Map<String, dynamic>?)?.map(
+            (key, value) => MapEntry(key, value as bool),
+          ) ??
+          {},
     );
   }
 
@@ -224,6 +234,7 @@ class MeshConfigData {
       'secretGestureEnableHaptics': secretGestureEnableHaptics,
       'premiumUpsellEnabled': premiumUpsellEnabled,
       'adminModeEnabled': adminModeEnabled,
+      'premiumGatedFeatures': premiumGatedFeatures,
     };
   }
 

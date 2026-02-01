@@ -6,6 +6,7 @@ import 'package:collection/collection.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../config/admin_config.dart';
 import '../core/logging.dart';
 import '../core/transport.dart';
@@ -279,9 +280,74 @@ final firestoreConfigWatcherProvider = StreamProvider<MeshConfigData?>((
         // Invalidate settings provider to trigger rebuild
         ref.invalidate(settingsServiceProvider);
       }
+
+      // Sync premium gated features map to local storage
+      final prefs = await SharedPreferences.getInstance();
+      final featuresJson = config.premiumGatedFeatures.entries
+          .map((e) => '${e.key}:${e.value}')
+          .join(',');
+      await prefs.setString('premium_gated_features', featuresJson);
+      AppLogging.settings('🔄 Synced premium gated features: $featuresJson');
     }
     yield config;
   }
+});
+
+/// Check if a specific premium feature should show the "Try It" upsell.
+/// Features can be individually enabled/disabled from Firestore (premiumGatedFeatures map).
+/// Returns true if the feature should show upsell, false if it's freely available.
+///
+/// Feature keys match PremiumFeature enum names:
+/// - 'customRingtones': Custom ringtone presets and library
+/// - 'advancedAutomations': Advanced automation triggers and actions
+/// - 'detectionSensors': Detection sensor monitoring and logging
+/// - 'mapStyles': Premium map styles
+///
+/// Usage: Check before calling checkPremiumOrShowUpsell() to optionally skip the gate.
+final premiumFeatureGateProvider = Provider.family<bool, String>((
+  ref,
+  featureKey,
+) {
+  final settingsAsync = ref.watch(settingsServiceProvider);
+  return settingsAsync.maybeWhen(
+    data: (settings) {
+      // Global kill switch - if premium upsell is disabled, all features are free
+      if (!settings.premiumUpsellEnabled) return false;
+
+      // Check granular feature gate from SharedPreferences
+      // Default to true (gated) if not explicitly set to false
+      try {
+        // Access SharedPreferences directly since SettingsService doesn't expose prefs
+        return ref
+            .watch(
+              FutureProvider((ref) async {
+                final prefs = await SharedPreferences.getInstance();
+                final featuresJson =
+                    prefs.getString('premium_gated_features') ?? '';
+                if (featuresJson.isEmpty)
+                  return true; // Gate by default if no config
+
+                final features = Map<String, bool>.fromEntries(
+                  featuresJson.split(',').where((s) => s.contains(':')).map((
+                    entry,
+                  ) {
+                    final parts = entry.split(':');
+                    return MapEntry(parts[0], parts[1] == 'true');
+                  }),
+                );
+
+                return features[featureKey] ??
+                    true; // Gate by default if key not found
+              }),
+            )
+            .maybeWhen(data: (gated) => gated, orElse: () => true);
+      } catch (e) {
+        AppLogging.settings('⚠️ Failed to parse premium gated features: $e');
+        return true; // Gate by default on error
+      }
+    },
+    orElse: () => true, // Gate by default if settings not loaded
+  );
 });
 
 /// Debug setting: admin mode enabled (full debug features visible).

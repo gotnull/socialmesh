@@ -223,6 +223,11 @@ Future<void> _saveGlobalConfigToPrefs(
   );
   // Sync premium upsell flag from Firestore to local storage
   await prefs.setBool('premium_upsell_enabled', config.premiumUpsellEnabled);
+  // Sync granular premium feature gates (store as JSON string)
+  final featuresJson = config.premiumGatedFeatures.entries
+      .map((e) => '${e.key}:${e.value}')
+      .join(',');
+  await prefs.setString('premium_gated_features', featuresJson);
 }
 
 /// Convert MeshConfigData to SplashMeshConfig
