@@ -15,6 +15,7 @@ import '../../providers/subscription_providers.dart';
 import '../../services/audio/rtttl_library_service.dart';
 import '../../services/audio/rtttl_player.dart';
 import '../../utils/snackbar.dart';
+import '../../utils/number_format.dart';
 import '../../core/widgets/loading_indicator.dart';
 
 /// Preset ringtones with name and RTTTL string
@@ -923,13 +924,16 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
     int index, {
     bool isCustom = false,
   }) async {
-    // Built-in presets require premium (custom presets are user-created, so no gate)
-    if (!isCustom) {
+    // Meshtastic Default (index 0) is always free - it's the device default
+    // Other built-in presets require premium
+    // Custom presets are user-created, so no gate
+    final isMeshtasticDefault = !isCustom && index == 0;
+    if (!isCustom && !isMeshtasticDefault) {
       final hasPremium = await checkPremiumOrShowUpsell(
         context: context,
         ref: ref,
         feature: PremiumFeature.customRingtones,
-        featureDescription: 'Access built-in ringtone presets',
+        featureDescription: 'Access premium ringtone presets',
       );
       if (!hasPremium) return;
     }
@@ -1378,7 +1382,7 @@ class _RingtoneScreenState extends ConsumerState<RingtoneScreen> {
                                     Row(
                                       children: [
                                         Text(
-                                          'Browse ${_libraryToneCount > 0 ? '${(_libraryToneCount / 1000).toStringAsFixed(1).replaceAll('.0', '')}k+' : ''} Ringtones',
+                                          'Browse ${_libraryToneCount > 0 ? '${NumberFormatUtils.formatWithThousandsSeparators(_libraryToneCount)}+ ' : ''}Ringtones',
                                           style: TextStyle(
                                             color: context.textPrimary,
                                             fontSize: 16,

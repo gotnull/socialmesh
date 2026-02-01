@@ -9,7 +9,6 @@ import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
-
 import '../../core/map_config.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
@@ -977,7 +976,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
         AnimatedCounter(
           value: value,
           duration: const Duration(milliseconds: 600),
-          formatter: (v) => v.toString(),
+          formatter: (v) => NumberFormatUtils.formatWithThousandsSeparators(v),
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
             color: highlight ? theme.colorScheme.primary : null,
