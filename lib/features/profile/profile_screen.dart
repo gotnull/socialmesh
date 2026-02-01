@@ -124,11 +124,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
 
     // Force refresh after sheet closes - always refresh to be safe
+    if (!mounted) return;
+    ref.invalidate(userProfileProvider);
+    // Wait for the provider to reload
+    await ref.read(userProfileProvider.future);
+    // Force rebuild - check mounted again after async gap
     if (mounted) {
-      ref.invalidate(userProfileProvider);
-      // Wait for the provider to reload
-      await ref.read(userProfileProvider.future);
-      // Force rebuild
       setState(() {});
     }
   }

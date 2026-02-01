@@ -221,6 +221,8 @@ Future<void> _saveGlobalConfigToPrefs(
     'splash_mesh_stretch_intensity',
     config.stretchIntensity,
   );
+  // Sync premium upsell flag from Firestore to local storage
+  await prefs.setBool('premium_upsell_enabled', config.premiumUpsellEnabled);
 }
 
 /// Convert MeshConfigData to SplashMeshConfig
