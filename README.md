@@ -35,6 +35,45 @@
 
 Connect to your mesh radio, exchange messages, track nearby nodes, and configure your device — **all without internet**.
 
+## Screenshots
+
+<p align="center">
+  <img src="web/screenshots/dashboard.png" width="200" alt="Dashboard">
+  <img src="web/screenshots/nodes.png" width="200" alt="Nodes">
+  <img src="web/screenshots/mesh-map.png" width="200" alt="Mesh Map">
+  <img src="web/screenshots/channels.png" width="200" alt="Channels">
+</p>
+
+<p align="center">
+  <img src="web/screenshots/signals-home.png" width="200" alt="Signals">
+  <img src="web/screenshots/automations-empty.png" width="200" alt="Automations">
+  <img src="web/screenshots/themes.png" width="200" alt="Themes">
+  <img src="web/screenshots/mesh-globe.png" width="200" alt="Globe View">
+</p>
+
+<details>
+<summary><strong>More Screenshots</strong></summary>
+<br>
+
+**3D Visualization**
+
+<p align="center">
+  <img src="web/screenshots/mesh3d-propagation.png" width="200" alt="3D Mesh Propagation">
+  <img src="web/screenshots/mesh3d-signal.png" width="200" alt="3D Signal View">
+  <img src="web/screenshots/nodes-globe.png" width="200" alt="Nodes Globe">
+</p>
+
+**Widgets & Tools**
+
+<p align="center">
+  <img src="web/screenshots/traceroute.png" width="200" alt="Traceroute">
+  <img src="web/screenshots/timeline.png" width="200" alt="Timeline">
+  <img src="web/screenshots/presence.png" width="200" alt="Presence">
+  <img src="web/screenshots/ringtones.png" width="200" alt="Ringtones">
+</p>
+
+</details>
+
 ## Signals
 
 > _Leave short, ephemeral traces for people nearby._
