@@ -53,7 +53,8 @@ class UsbTransport implements DeviceTransport {
   }
 
   @override
-  Stream<DeviceInfo> scan({Duration? timeout}) async* {
+  Stream<DeviceInfo> scan({Duration? timeout, bool scanAll = false}) async* {
+    // scanAll is ignored for USB - always shows all USB devices
     AppLogging.debug('Scanning for USB devices...');
 
     try {

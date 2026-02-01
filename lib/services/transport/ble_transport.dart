@@ -7,6 +7,18 @@ import '../../core/logging.dart';
 import '../../core/transport.dart';
 import '../../generated/meshtastic/mesh.pb.dart' as pb;
 
+/// Exception thrown when Meshtastic BLE service is not found on a device.
+///
+/// This typically occurs when connecting to a device that runs a different
+/// protocol (e.g., MeshCore) or is not a mesh radio at all.
+class MeshtasticServiceNotFoundException implements Exception {
+  final String message;
+  const MeshtasticServiceNotFoundException(this.message);
+
+  @override
+  String toString() => 'MeshtasticServiceNotFoundException: $message';
+}
+
 /// BLE implementation of DeviceTransport
 class BleTransport implements DeviceTransport {
   final StreamController<DeviceConnectionState> _stateController;
@@ -87,8 +99,8 @@ class BleTransport implements DeviceTransport {
   }
 
   @override
-  Stream<DeviceInfo> scan({Duration? timeout}) {
-    AppLogging.ble('📡 BLE_TRANSPORT: scan() called');
+  Stream<DeviceInfo> scan({Duration? timeout, bool scanAll = false}) {
+    AppLogging.ble('📡 BLE_TRANSPORT: scan() called (scanAll: $scanAll)');
 
     // Use a StreamController so we can properly cancel the scan
     // The old await for approach didn't exit when stopScan() was called,
@@ -178,9 +190,11 @@ class BleTransport implements DeviceTransport {
             AppLogging.ble(
               '📡 BLE_TRANSPORT: Calling FlutterBluePlus.startScan() (attempt ${retryCount + 1})...',
             );
+            // When scanAll is true, scan without service filter to see ALL devices
+            // When false, filter by Meshtastic service UUID only
             await FlutterBluePlus.startScan(
               timeout: scanDuration,
-              withServices: [Guid(_serviceUuid)],
+              withServices: scanAll ? [] : [Guid(_serviceUuid)],
             );
             AppLogging.ble(
               '📡 BLE_TRANSPORT: startScan() completed successfully',
@@ -241,18 +255,28 @@ class BleTransport implements DeviceTransport {
             );
             for (final r in results) {
               deviceCount++;
+              // Extract advertisement data
+              final serviceUuids = r.advertisementData.serviceUuids
+                  .map((guid) => guid.toString().toLowerCase())
+                  .toList();
+              final manufacturerData = r.advertisementData.manufacturerData.map(
+                (key, value) => MapEntry(key, value.toList()),
+              );
               AppLogging.ble(
-                '📡 BLE_TRANSPORT: Found device #$deviceCount: ${r.device.remoteId} (${r.device.platformName})',
+                '📡 BLE_TRANSPORT: Found device #$deviceCount: ${r.device.remoteId} '
+                '(${r.device.platformName}) services: $serviceUuids',
               );
               controller.add(
                 DeviceInfo(
                   id: r.device.remoteId.toString(),
                   name: r.device.platformName.isNotEmpty
                       ? r.device.platformName
-                      : 'Unknown Meshtastic Device',
+                      : 'Unknown Device',
                   type: TransportType.ble,
                   address: r.device.remoteId.toString(),
                   rssi: r.rssi,
+                  serviceUuids: serviceUuids,
+                  manufacturerData: manufacturerData,
                 ),
               );
             }
@@ -468,9 +492,26 @@ class BleTransport implements DeviceTransport {
       await _readDeviceModelNumber(services);
 
       // Find Meshtastic service
-      final service = services.firstWhere(
-        (s) => s.uuid.toString().toLowerCase() == _serviceUuid.toLowerCase(),
+      final service = services.cast<BluetoothService?>().firstWhere(
+        (s) => s?.uuid.toString().toLowerCase() == _serviceUuid.toLowerCase(),
+        orElse: () => null,
       );
+
+      if (service == null) {
+        // Meshtastic service not found - this device may be MeshCore or another protocol
+        AppLogging.ble('⚠️ Meshtastic service not found (UUID: $_serviceUuid)');
+        AppLogging.ble(
+          'This device may use a different protocol (e.g., MeshCore). '
+          'Discovered services:',
+        );
+        for (final svc in services) {
+          AppLogging.ble('  - ${svc.uuid}');
+        }
+        throw MeshtasticServiceNotFoundException(
+          'Meshtastic BLE service not found. This device may be running '
+          'a different protocol (e.g., MeshCore) or is not a mesh radio.',
+        );
+      }
 
       // Find characteristics
       for (final characteristic in service.characteristics) {

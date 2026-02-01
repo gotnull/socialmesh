@@ -2,7 +2,7 @@
 /// Transport types supported by the app
 enum TransportType { ble, usb }
 
-/// Device information
+/// Device information from scan results
 class DeviceInfo {
   final String id;
   final String name;
@@ -10,12 +10,20 @@ class DeviceInfo {
   final String? address;
   final int? rssi;
 
+  /// BLE advertisement data: service UUIDs (lowercased)
+  final List<String> serviceUuids;
+
+  /// BLE advertisement data: manufacturer data (company ID -> payload bytes)
+  final Map<int, List<int>> manufacturerData;
+
   DeviceInfo({
     required this.id,
     required this.name,
     required this.type,
     this.address,
     this.rssi,
+    this.serviceUuids = const [],
+    this.manufacturerData = const {},
   });
 
   @override
@@ -62,7 +70,12 @@ abstract class DeviceTransport {
   Stream<List<int>> get dataStream;
 
   /// Scan for available devices
-  Stream<DeviceInfo> scan({Duration? timeout});
+  ///
+  /// [timeout] - How long to scan for devices
+  /// [scanAll] - If true, scan for ALL BLE devices without service filtering.
+  ///   Default (false) filters by known mesh protocol service UUIDs.
+  ///   When true, returns all discovered devices with advertisement data.
+  Stream<DeviceInfo> scan({Duration? timeout, bool scanAll = false});
 
   /// Connect to a device
   Future<void> connect(DeviceInfo device);

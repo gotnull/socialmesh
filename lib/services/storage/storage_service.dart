@@ -244,6 +244,15 @@ class SettingsService {
   bool get adminModeEnabled =>
       _preferences.getBool('admin_mode_enabled') ?? false;
 
+  // Debug: Show all BLE devices in scanner (dev mode only)
+  // When enabled, scanner shows ALL BLE devices regardless of protocol detection
+  Future<void> setShowAllBleDevices(bool enabled) async {
+    await _preferences.setBool('show_all_ble_devices', enabled);
+  }
+
+  bool get showAllBleDevices =>
+      _preferences.getBool('show_all_ble_devices') ?? false;
+
   // Privacy: Signal location approximation radius (meters)
   Future<void> setSignalLocationRadiusMeters(int meters) async {
     final normalized = LocationPrivacy.normalizeRadiusMeters(meters);

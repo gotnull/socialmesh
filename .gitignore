@@ -12,6 +12,8 @@
 .swiftpm/
 migrate_working_dir/
 meshtastic-ios/
+MeshCore/
+meshcore-open/
 .venv/
 .firebase
 android/.kotlin/sessions/

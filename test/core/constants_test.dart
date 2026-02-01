@@ -99,7 +99,7 @@ void main() {
       });
 
       test('androidPackage follows reverse domain notation', () {
-        expect(AppUrls.androidPackage, 'app.socialmesh');
+        expect(AppUrls.androidPackage, 'com.gotnull.socialmesh');
         expect(AppUrls.androidPackage, contains('.'));
       });
 
@@ -117,7 +117,7 @@ void main() {
 
       test('playStoreUrl is valid Google URL', () {
         expect(AppUrls.playStoreUrl, startsWith('https://play.google.com'));
-        expect(AppUrls.playStoreUrl, contains('app.socialmesh'));
+        expect(AppUrls.playStoreUrl, contains('com.gotnull.socialmesh'));
       });
     });
   });

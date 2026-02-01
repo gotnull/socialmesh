@@ -252,6 +252,16 @@ final adminModeEnabledProvider = Provider<bool>((ref) {
   );
 });
 
+/// Debug setting: show all BLE devices in scanner (dev mode only).
+/// When enabled, scanner shows ALL BLE devices regardless of protocol detection.
+final showAllBleDevicesProvider = Provider<bool>((ref) {
+  final settingsAsync = ref.watch(settingsServiceProvider);
+  return settingsAsync.maybeWhen(
+    data: (settings) => settings.showAllBleDevices,
+    orElse: () => false,
+  );
+});
+
 // Message storage service
 final messageStorageProvider = FutureProvider<MessageStorageService>((
   ref,

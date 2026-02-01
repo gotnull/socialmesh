@@ -61,7 +61,7 @@ class AppUrls {
 
   // App identifiers
   static const String iosAppId = '6739187207';
-  static const String androidPackage = 'app.socialmesh';
+  static const String androidPackage = 'com.gotnull.socialmesh';
   static const String deepLinkScheme = 'socialmesh';
 }
 

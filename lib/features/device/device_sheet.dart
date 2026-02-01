@@ -7,8 +7,10 @@ import '../../core/theme.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/info_table.dart';
 import '../../core/widgets/auto_scroll_text.dart';
+import '../../models/mesh_device.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/connection_providers.dart';
+import '../../providers/meshcore_providers.dart';
 import '../../utils/snackbar.dart';
 import 'package:socialmesh/core/navigation.dart';
 
@@ -212,6 +214,10 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent> {
                   enabled: actionsEnabled,
                   onTap: () => _showResetNodeDbDialog(context),
                 ),
+              // Debug: Ping device action (developer tool)
+              if (isConnected) _PingDebugTile(enabled: actionsEnabled),
+              // Debug: Dump GATT services (developer tool for BLE UUIDs)
+              if (isConnected) _GattDumpDebugTile(enabled: actionsEnabled),
               const SizedBox(height: 24),
 
               // Connection Actions
@@ -468,7 +474,7 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent> {
   }
 }
 
-class _DeviceInfoCard extends StatelessWidget {
+class _DeviceInfoCard extends ConsumerWidget {
   final transport.DeviceInfo? device;
   final transport.DeviceConnectionState connectionState;
   final int? batteryLevel;
@@ -482,7 +488,7 @@ class _DeviceInfoCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isConnected =
         connectionState == transport.DeviceConnectionState.connected;
 
@@ -497,6 +503,9 @@ class _DeviceInfoCard extends StatelessWidget {
               ? AppTheme.warningYellow
               : AppTheme.errorRed)
         : null;
+
+    // Get protocol-agnostic device info
+    final meshDeviceInfo = ref.watch(meshDeviceInfoProvider);
 
     final batteryColor = batteryLevel != null
         ? (batteryLevel! > 100
@@ -517,6 +526,17 @@ class _DeviceInfoCard extends StatelessWidget {
       ),
       child: InfoTable(
         rows: [
+          // Protocol badge row
+          if (meshDeviceInfo != null && isConnected)
+            InfoTableRow(
+              label: 'Protocol',
+              value: meshDeviceInfo.protocolType.displayName,
+              icon: _getProtocolIcon(meshDeviceInfo.protocolType),
+              iconColor: _getProtocolColor(
+                context,
+                meshDeviceInfo.protocolType,
+              ),
+            ),
           if (nodeLongName != null)
             InfoTableRow(
               label: 'Node Name',
@@ -530,6 +550,22 @@ class _DeviceInfoCard extends StatelessWidget {
             icon: Icons.router,
             iconColor: context.accentColor,
           ),
+          // Show firmware version from protocol-agnostic info
+          if (meshDeviceInfo?.firmwareVersion != null && isConnected)
+            InfoTableRow(
+              label: 'Firmware',
+              value: meshDeviceInfo!.firmwareVersion!,
+              icon: Icons.memory,
+              iconColor: context.accentColor,
+            ),
+          // Show node ID from protocol-agnostic info
+          if (meshDeviceInfo?.nodeId != null && isConnected)
+            InfoTableRow(
+              label: 'Node ID',
+              value: meshDeviceInfo!.nodeId!,
+              icon: Icons.tag,
+              iconColor: context.accentColor,
+            ),
           InfoTableRow(
             label: 'Status',
             value: _getConnectionStateText(connectionState),
@@ -598,6 +634,28 @@ class _DeviceInfoCard extends StatelessWidget {
     if (level >= 20) return Icons.battery_2_bar;
     if (level >= 10) return Icons.battery_1_bar;
     return Icons.battery_alert;
+  }
+
+  IconData _getProtocolIcon(MeshProtocolType protocolType) {
+    switch (protocolType) {
+      case MeshProtocolType.meshtastic:
+        return Icons.cell_tower;
+      case MeshProtocolType.meshcore:
+        return Icons.hub;
+      case MeshProtocolType.unknown:
+        return Icons.help_outline;
+    }
+  }
+
+  Color _getProtocolColor(BuildContext context, MeshProtocolType protocolType) {
+    switch (protocolType) {
+      case MeshProtocolType.meshtastic:
+        return context.accentColor;
+      case MeshProtocolType.meshcore:
+        return AccentColors.purple;
+      case MeshProtocolType.unknown:
+        return context.textTertiary;
+    }
   }
 }
 
@@ -684,5 +742,250 @@ class _ActionTile extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// Debug tile for ping device action.
+///
+/// This is a developer tool that tests bidirectional communication
+/// with the connected mesh device.
+class _PingDebugTile extends ConsumerWidget {
+  final bool enabled;
+
+  const _PingDebugTile({required this.enabled});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final pingState = ref.watch(pingTestProvider);
+    final isEnabled = enabled && !pingState.isInProgress;
+
+    String subtitle;
+    IconData trailingIcon;
+    Color? trailingColor;
+
+    if (pingState.isInProgress) {
+      subtitle = 'Pinging device...';
+      trailingIcon = Icons.hourglass_empty;
+      trailingColor = context.textTertiary;
+    } else if (pingState.isSuccess) {
+      subtitle = 'Success: ${pingState.latency!.inMilliseconds}ms';
+      trailingIcon = Icons.check_circle;
+      trailingColor = AppTheme.primaryGreen;
+    } else if (pingState.isFailure) {
+      subtitle = 'Failed: ${pingState.errorMessage}';
+      trailingIcon = Icons.error;
+      trailingColor = AppTheme.errorRed;
+    } else {
+      subtitle = 'Test device communication';
+      trailingIcon = Icons.chevron_right;
+      trailingColor = context.textTertiary;
+    }
+
+    final opacity = isEnabled ? 1.0 : 0.5;
+
+    return Opacity(
+      opacity: opacity,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        decoration: BoxDecoration(
+          color: context.background,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: context.border),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: isEnabled ? () => _onPing(ref) : null,
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: context.card,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.network_ping,
+                      color: context.accentColor,
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Ping Device',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: context.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: pingState.isFailure
+                                ? AppTheme.errorRed
+                                : pingState.isSuccess
+                                ? AppTheme.primaryGreen
+                                : context.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (pingState.isInProgress)
+                    SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: context.accentColor,
+                      ),
+                    )
+                  else
+                    Icon(trailingIcon, color: trailingColor, size: 20),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _onPing(WidgetRef ref) {
+    ref.read(pingTestProvider.notifier).ping();
+  }
+}
+
+/// Debug tile for dumping GATT services and characteristics.
+///
+/// This helps discover actual BLE UUIDs when MeshCore service UUIDs
+/// are unknown or need to be verified.
+class _GattDumpDebugTile extends ConsumerWidget {
+  final bool enabled;
+
+  const _GattDumpDebugTile({required this.enabled});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final gattState = ref.watch(gattDumpProvider);
+    final isEnabled = enabled && !gattState.isInProgress;
+
+    String subtitle;
+    IconData trailingIcon;
+    Color? trailingColor;
+
+    if (gattState.isInProgress) {
+      subtitle = 'Discovering services...';
+      trailingIcon = Icons.hourglass_empty;
+      trailingColor = context.textTertiary;
+    } else if (gattState.isSuccess) {
+      final count = gattState.services?.length ?? 0;
+      subtitle = 'Found $count services (check logs)';
+      trailingIcon = Icons.check_circle;
+      trailingColor = AppTheme.primaryGreen;
+    } else if (gattState.isFailure) {
+      subtitle = gattState.errorMessage ?? 'Failed';
+      trailingIcon = Icons.error;
+      trailingColor = AppTheme.errorRed;
+    } else {
+      subtitle = 'List all BLE services and UUIDs';
+      trailingIcon = Icons.chevron_right;
+      trailingColor = context.textTertiary;
+    }
+
+    final opacity = isEnabled ? 1.0 : 0.5;
+
+    return Opacity(
+      opacity: opacity,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        decoration: BoxDecoration(
+          color: context.background,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: context.border),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: isEnabled ? () => _onDump(ref) : null,
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: context.card,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.bluetooth_searching,
+                      color: context.accentColor,
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Dump GATT Services',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: context.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: gattState.isFailure
+                                ? AppTheme.errorRed
+                                : gattState.isSuccess
+                                ? AppTheme.primaryGreen
+                                : context.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (gattState.isInProgress)
+                    SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: context.accentColor,
+                      ),
+                    )
+                  else
+                    Icon(trailingIcon, color: trailingColor, size: 20),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _onDump(WidgetRef ref) {
+    ref.read(gattDumpProvider.notifier).dump();
   }
 }

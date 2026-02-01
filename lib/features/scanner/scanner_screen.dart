@@ -16,6 +16,8 @@ import '../../core/theme.dart';
 import '../../core/widgets/connecting_content.dart';
 import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/ico_help_system.dart';
+import '../../models/mesh_device.dart';
+import '../../services/meshcore/meshcore_detector.dart';
 import '../../utils/permissions.dart';
 import '../../utils/snackbar.dart';
 import '../../providers/app_providers.dart';
@@ -449,8 +451,14 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       }
 
       final transport = ref.read(transportProvider);
-      AppLogging.connection('📡 SCANNER: Starting transport.scan()...');
-      final scanStream = transport.scan(timeout: const Duration(seconds: 10));
+      final showAllDevices = ref.read(showAllBleDevicesProvider);
+      AppLogging.connection(
+        '📡 SCANNER: Starting transport.scan(scanAll: $showAllDevices)...',
+      );
+      final scanStream = transport.scan(
+        timeout: const Duration(seconds: 10),
+        scanAll: showAllDevices,
+      );
 
       await for (final device in scanStream) {
         if (!mounted) {
@@ -560,6 +568,34 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     AppLogging.connection(
       '📡 SCANNER: User tapped to connect to ${device.id} (${device.name})',
     );
+
+    // Detect protocol from device info
+    final detection = device.detectProtocol();
+    AppLogging.connection(
+      '📡 SCANNER: Detected protocol: ${detection.protocolType} (confidence: ${detection.confidence})',
+    );
+
+    // Route connection based on detected protocol
+    switch (detection.protocolType) {
+      case MeshProtocolType.meshcore:
+        await _connectMeshCore(device, detection);
+        return;
+      case MeshProtocolType.meshtastic:
+        // Continue with Meshtastic connect below
+        break;
+      case MeshProtocolType.unknown:
+        // Should not reach here - unknown devices go through warning dialog
+        // But if we do, show error and don't attempt Meshtastic connect
+        AppLogging.connection('📡 SCANNER: Unknown protocol - not connecting');
+        if (mounted) {
+          showErrorSnackBar(
+            context,
+            'Unknown device protocol - cannot connect',
+          );
+        }
+        return;
+    }
+
     // Clear userDisconnected flag since user is explicitly connecting
     // This allows auto-reconnect to work for this new device
     ref.read(userDisconnectedProvider.notifier).setUserDisconnected(false);
@@ -570,6 +606,81 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
         .read(autoReconnectStateProvider.notifier)
         .setState(AutoReconnectState.manualConnecting);
     await _connectToDevice(device, isAutoReconnect: false);
+  }
+
+  /// Connect to a MeshCore device.
+  ///
+  /// MeshCore uses Nordic UART Service (6e400001-b5a3-f393-e0a9-e50e24dcca9e)
+  /// with TX (6e400002) and RX (6e400003) characteristics.
+  Future<void> _connectMeshCore(
+    DeviceInfo device,
+    ProtocolDetectionResult detection,
+  ) async {
+    AppLogging.connection(
+      '📡 SCANNER: MeshCore device detected - ${detection.reason}',
+    );
+
+    // MeshCore connection is not yet fully implemented in the main app flow.
+    // Show informational dialog instead of attempting Meshtastic connect.
+    if (!mounted) return;
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.router, color: Colors.blue),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text('MeshCore Device', style: TextStyle(fontSize: 18)),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'This device is running MeshCore firmware.',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: context.cardAlt,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Protocol: MeshCore (Nordic UART)',
+                    style: TextStyle(fontSize: 12, fontFamily: 'monospace'),
+                  ),
+                  Text(
+                    'Detection: ${detection.reason}',
+                    style: TextStyle(fontSize: 12, fontFamily: 'monospace'),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'MeshCore connection support is coming soon. '
+              'Currently, only Meshtastic devices are fully supported.',
+              style: TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _connectToDevice(
@@ -1272,6 +1383,74 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                     ),
                   ),
 
+                // Dev mode toggle: Show all BLE devices
+                Consumer(
+                  builder: (context, ref, child) {
+                    final showAllDevices = ref.watch(showAllBleDevicesProvider);
+                    return Container(
+                      padding: const EdgeInsets.all(12),
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.purple.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.purple.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.developer_mode,
+                            color: Colors.purple,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Show all BLE devices',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: context.textPrimary,
+                                  ),
+                                ),
+                                Text(
+                                  showAllDevices
+                                      ? 'Scanning all devices (dev mode)'
+                                      : 'Filtering by Meshtastic UUID',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: context.textTertiary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Switch.adaptive(
+                            value: showAllDevices,
+                            onChanged: _scanning
+                                ? null
+                                : (value) async {
+                                    final storage = await ref.read(
+                                      settingsServiceProvider.future,
+                                    );
+                                    await storage.setShowAllBleDevices(value);
+                                    ref.invalidate(settingsServiceProvider);
+                                    if (mounted) {
+                                      _startScan();
+                                    }
+                                  },
+                            activeColor: Colors.purple,
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+
                 if (displayDevices.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 12),
@@ -1368,20 +1547,114 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                     ),
                   )
                 else
-                  ...displayDevices.map(
-                    (device) => Column(
-                      children: [
-                        _DeviceCard(
-                          device: device,
-                          onTap: () => _connect(device),
-                        ),
-                        if (device.rssi != null)
-                          _DeviceDetailsTable(device: device),
-                      ],
-                    ),
+                  Consumer(
+                    builder: (context, ref, child) {
+                      final showAllDevices = ref.watch(
+                        showAllBleDevicesProvider,
+                      );
+                      return Column(
+                        children: displayDevices.map((device) {
+                          final detection = device.detectProtocol();
+                          final isUnknown =
+                              detection.protocolType ==
+                              MeshProtocolType.unknown;
+                          return Column(
+                            children: [
+                              _DeviceCard(
+                                device: device,
+                                protocolType: detection.protocolType,
+                                showDebugInfo: showAllDevices,
+                                onTap: () {
+                                  // Allow unknown devices only in dev mode
+                                  if (isUnknown && !showAllDevices) {
+                                    return;
+                                  }
+                                  if (isUnknown) {
+                                    // Show warning dialog for unknown devices
+                                    _showUnknownDeviceWarning(
+                                      context,
+                                      device,
+                                      detection,
+                                    );
+                                  } else {
+                                    _connect(device);
+                                  }
+                                },
+                              ),
+                              if (device.rssi != null)
+                                _DeviceDetailsTable(
+                                  device: device,
+                                  showAdvertisementData: showAllDevices,
+                                ),
+                            ],
+                          );
+                        }).toList(),
+                      );
+                    },
                   ),
               ]),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showUnknownDeviceWarning(
+    BuildContext context,
+    DeviceInfo device,
+    ProtocolDetectionResult detection,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.warning_amber, color: Colors.orange),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text('Unknown Protocol', style: TextStyle(fontSize: 18)),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('This device was not detected as Meshtastic or MeshCore.'),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: context.cardAlt,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Detection: ${detection.reason}',
+                    style: TextStyle(fontSize: 12, fontFamily: 'monospace'),
+                  ),
+                  Text(
+                    'Confidence: ${(detection.confidence * 100).toStringAsFixed(0)}%',
+                    style: TextStyle(fontSize: 12, fontFamily: 'monospace'),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'This device cannot be connected automatically. '
+              'Only Meshtastic and MeshCore devices are supported.',
+              style: TextStyle(fontSize: 14),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
           ),
         ],
       ),
@@ -1391,13 +1664,21 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
 class _DeviceCard extends StatelessWidget {
   final DeviceInfo device;
+  final MeshProtocolType protocolType;
+  final bool showDebugInfo;
   final VoidCallback onTap;
 
-  const _DeviceCard({required this.device, required this.onTap});
+  const _DeviceCard({
+    required this.device,
+    required this.onTap,
+    this.protocolType = MeshProtocolType.meshtastic,
+    this.showDebugInfo = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     final signalBars = _calculateSignalBars(device.rssi);
+    final isUnknown = protocolType == MeshProtocolType.unknown;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -1412,7 +1693,11 @@ class _DeviceCard extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: context.border),
+              border: Border.all(
+                color: isUnknown && showDebugInfo
+                    ? Colors.orange.withValues(alpha: 0.5)
+                    : context.border,
+              ),
             ),
             padding: const EdgeInsets.all(16),
             child: Row(
@@ -1428,7 +1713,9 @@ class _DeviceCard extends StatelessWidget {
                     device.type == TransportType.ble
                         ? Icons.bluetooth
                         : Icons.usb,
-                    color: context.accentColor,
+                    color: isUnknown && showDebugInfo
+                        ? Colors.orange
+                        : context.accentColor,
                     size: 24,
                   ),
                 ),
@@ -1437,13 +1724,23 @@ class _DeviceCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        device.name,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: context.textPrimary,
-                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              device.name,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: context.textPrimary,
+                              ),
+                            ),
+                          ),
+                          if (showDebugInfo) ...[
+                            const SizedBox(width: 8),
+                            _ProtocolBadge(protocolType: protocolType),
+                          ],
+                        ],
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -1494,10 +1791,47 @@ class _DeviceCard extends StatelessWidget {
   }
 }
 
+/// Protocol type badge for device cards
+class _ProtocolBadge extends StatelessWidget {
+  final MeshProtocolType protocolType;
+
+  const _ProtocolBadge({required this.protocolType});
+
+  @override
+  Widget build(BuildContext context) {
+    final (label, color) = switch (protocolType) {
+      MeshProtocolType.meshtastic => ('Meshtastic', Colors.green),
+      MeshProtocolType.meshcore => ('MeshCore', Colors.blue),
+      MeshProtocolType.unknown => ('Unknown', Colors.orange),
+    };
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
+      ),
+    );
+  }
+}
+
 class _DeviceDetailsTable extends StatelessWidget {
   final DeviceInfo device;
+  final bool showAdvertisementData;
 
-  const _DeviceDetailsTable({required this.device});
+  const _DeviceDetailsTable({
+    required this.device,
+    this.showAdvertisementData = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1511,6 +1845,23 @@ class _DeviceDetailsTable extends StatelessWidget {
             : 'USB Serial',
       ),
       if (device.rssi != null) ('Signal Strength', '${device.rssi} dBm'),
+      // Advertisement data (dev mode only)
+      if (showAdvertisementData && device.serviceUuids.isNotEmpty)
+        (
+          'Service UUIDs',
+          device.serviceUuids.isEmpty ? 'None' : device.serviceUuids.join('\n'),
+        ),
+      if (showAdvertisementData && device.manufacturerData.isNotEmpty)
+        (
+          'Manufacturer Data',
+          device.manufacturerData.entries
+              .map(
+                (e) =>
+                    '0x${e.key.toRadixString(16).padLeft(4, '0')}: '
+                    '[${e.value.length} bytes]',
+              )
+              .join('\n'),
+        ),
     ];
 
     return Container(

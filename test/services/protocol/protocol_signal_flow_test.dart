@@ -32,7 +32,8 @@ class _FakeTransport extends DeviceTransport {
   Stream<List<int>> get dataStream => _dataController.stream;
 
   @override
-  Stream<DeviceInfo> scan({Duration? timeout}) =>
+  @override
+  Stream<DeviceInfo> scan({Duration? timeout, bool scanAll = false}) =>
       const Stream<DeviceInfo>.empty();
 
   @override
