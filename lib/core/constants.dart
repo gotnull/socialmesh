@@ -57,7 +57,7 @@ class AppUrls {
 
   static String get playStoreUrl =>
       dotenv.env['PLAY_STORE_URL'] ??
-      'https://play.google.com/store/apps/details?id=app.socialmesh';
+      'https://play.google.com/store/apps/details?id=com.gotnull.socialmesh';
 
   // App identifiers
   static const String iosAppId = '6739187207';
