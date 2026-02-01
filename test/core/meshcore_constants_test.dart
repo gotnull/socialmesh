@@ -92,4 +92,129 @@ void main() {
       );
     });
   });
+
+  group('MeshCoreCodeClassification', () {
+    group('isResponseCode', () {
+      test('returns true for response codes (0x00-0x7F)', () {
+        expect(MeshCoreCodeClassification.isResponseCode(0x00), isTrue);
+        expect(MeshCoreCodeClassification.isResponseCode(0x05), isTrue);
+        expect(MeshCoreCodeClassification.isResponseCode(0x0C), isTrue);
+        expect(MeshCoreCodeClassification.isResponseCode(0x7F), isTrue);
+      });
+
+      test('returns false for push codes (0x80+)', () {
+        expect(MeshCoreCodeClassification.isResponseCode(0x80), isFalse);
+        expect(MeshCoreCodeClassification.isResponseCode(0x85), isFalse);
+        expect(MeshCoreCodeClassification.isResponseCode(0xFF), isFalse);
+      });
+
+      test('boundary value at 0x80', () {
+        expect(MeshCoreCodeClassification.isResponseCode(0x7F), isTrue);
+        expect(MeshCoreCodeClassification.isResponseCode(0x80), isFalse);
+      });
+    });
+
+    group('isPushCode', () {
+      test('returns true for push codes (0x80+)', () {
+        expect(MeshCoreCodeClassification.isPushCode(0x80), isTrue);
+        expect(MeshCoreCodeClassification.isPushCode(0x85), isTrue);
+        expect(MeshCoreCodeClassification.isPushCode(0x8C), isTrue);
+        expect(MeshCoreCodeClassification.isPushCode(0xFF), isTrue);
+      });
+
+      test('returns false for response codes (0x00-0x7F)', () {
+        expect(MeshCoreCodeClassification.isPushCode(0x00), isFalse);
+        expect(MeshCoreCodeClassification.isPushCode(0x05), isFalse);
+        expect(MeshCoreCodeClassification.isPushCode(0x7F), isFalse);
+      });
+
+      test('boundary value at 0x80', () {
+        expect(MeshCoreCodeClassification.isPushCode(0x7F), isFalse);
+        expect(MeshCoreCodeClassification.isPushCode(0x80), isTrue);
+      });
+    });
+
+    group('isCommandCode', () {
+      test('returns true for valid commands (0x01-0x39)', () {
+        expect(MeshCoreCodeClassification.isCommandCode(0x01), isTrue);
+        expect(MeshCoreCodeClassification.isCommandCode(0x14), isTrue);
+        expect(MeshCoreCodeClassification.isCommandCode(0x16), isTrue);
+        expect(
+          MeshCoreCodeClassification.isCommandCode(
+            MeshCoreCommands.getRadioSettings,
+          ),
+          isTrue,
+        );
+      });
+
+      test('returns false for 0x00 (OK response)', () {
+        expect(MeshCoreCodeClassification.isCommandCode(0x00), isFalse);
+      });
+
+      test('returns false for codes above command range', () {
+        expect(
+          MeshCoreCodeClassification.isCommandCode(
+            MeshCoreCommands.getRadioSettings + 1,
+          ),
+          isFalse,
+        );
+        expect(MeshCoreCodeClassification.isCommandCode(0x80), isFalse);
+      });
+    });
+
+    group('known code constants validation', () {
+      test('MeshCoreResponses are response codes', () {
+        expect(
+          MeshCoreCodeClassification.isResponseCode(MeshCoreResponses.ok),
+          isTrue,
+        );
+        expect(
+          MeshCoreCodeClassification.isResponseCode(MeshCoreResponses.selfInfo),
+          isTrue,
+        );
+        expect(
+          MeshCoreCodeClassification.isResponseCode(
+            MeshCoreResponses.battAndStorage,
+          ),
+          isTrue,
+        );
+      });
+
+      test('MeshCorePushCodes are push codes', () {
+        expect(
+          MeshCoreCodeClassification.isPushCode(MeshCorePushCodes.advert),
+          isTrue,
+        );
+        expect(
+          MeshCoreCodeClassification.isPushCode(MeshCorePushCodes.pathUpdated),
+          isTrue,
+        );
+        expect(
+          MeshCoreCodeClassification.isPushCode(MeshCorePushCodes.sendConfirmed),
+          isTrue,
+        );
+        expect(
+          MeshCoreCodeClassification.isPushCode(MeshCorePushCodes.newAdvert),
+          isTrue,
+        );
+      });
+
+      test('MeshCoreCommands are command codes', () {
+        expect(
+          MeshCoreCodeClassification.isCommandCode(MeshCoreCommands.appStart),
+          isTrue,
+        );
+        expect(
+          MeshCoreCodeClassification.isCommandCode(
+            MeshCoreCommands.getBattAndStorage,
+          ),
+          isTrue,
+        );
+        expect(
+          MeshCoreCodeClassification.isCommandCode(MeshCoreCommands.deviceQuery),
+          isTrue,
+        );
+      });
+    });
+  });
 }

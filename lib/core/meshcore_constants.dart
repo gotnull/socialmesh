@@ -10,49 +10,6 @@
 // identifiers are documented, update them here. The constants are designed
 // to be easily swappable without changing other code.
 
-// MeshCore Protocol Code Ranges (from meshcore-open reference):
-// - Commands (app -> device): 0x01-0x3F
-// - Responses (device -> app, request/reply): 0x00-0x7F
-// - Push codes (device -> app, async events): 0x80-0xFF
-//
-// Key distinction:
-// - Response codes (0x00-0x7F) answer a specific command and should satisfy waiters
-// - Push codes (0x80-0xFF) are unsolicited events and must NOT satisfy waiters
-
-/// MeshCore protocol code classification helpers.
-///
-/// These helpers categorize frame codes into commands, responses, and push events.
-/// Critical for waiter safety: only response codes should complete pending requests.
-class MeshCoreCodeClassification {
-  MeshCoreCodeClassification._();
-
-  /// Maximum code value for response codes (request/reply pattern).
-  /// Codes 0x00-0x7F are responses; 0x80-0xFF are push/async events.
-  static const int maxResponseCode = 0x7F;
-
-  /// Minimum code value for push codes (async events).
-  static const int minPushCode = 0x80;
-
-  /// Check if a code is a response code (0x00-0x7F).
-  ///
-  /// Response codes are returned by the device in reply to a command.
-  /// These codes CAN satisfy pending response waiters.
-  static bool isResponseCode(int code) =>
-      code >= 0x00 && code <= maxResponseCode;
-
-  /// Check if a code is a push code (0x80-0xFF).
-  ///
-  /// Push codes are unsolicited async events from the device (advertisements,
-  /// delivery confirmations, etc.). These codes must NEVER satisfy waiters.
-  static bool isPushCode(int code) => code >= minPushCode && code <= 0xFF;
-
-  /// Check if a code is a command code (app -> device).
-  ///
-  /// Command codes are in the range 0x01-0x3F based on meshcore-open.
-  /// This is used for validation, not waiter logic.
-  static bool isCommandCode(int code) => code >= 0x01 && code <= 0x3F;
-}
-
 /// MeshCore BLE service and characteristic UUIDs.
 ///
 /// These UUIDs identify MeshCore devices during BLE scanning and are used
@@ -417,4 +374,42 @@ class MeshCoreTimeouts {
 
   /// Timeout for generic requests.
   static const Duration request = Duration(seconds: 10);
+}
+
+/// MeshCore code classification utilities.
+///
+/// Code ranges learned from meshcore-open reference implementation:
+/// - Commands (app -> device): 0x01 - 0x39
+/// - Responses (device -> app, synchronous): 0x00 - 0x7F
+/// - Push codes (device -> app, asynchronous): 0x80 - 0xFF
+///
+/// Responses are direct replies to commands. Push codes are unsolicited
+/// events from the device (advertisements, path updates, confirmations).
+class MeshCoreCodeClassification {
+  MeshCoreCodeClassification._();
+
+  /// The boundary between response codes and push codes.
+  ///
+  /// Codes >= this value are push codes (async events).
+  /// Codes < this value are response codes (command replies).
+  static const int pushCodeBoundary = 0x80;
+
+  /// Check if [code] is a response code (synchronous reply to a command).
+  ///
+  /// Response codes are in the range 0x00 - 0x7F and are direct replies
+  /// to commands sent by the app.
+  static bool isResponseCode(int code) => code < pushCodeBoundary;
+
+  /// Check if [code] is a push code (asynchronous event from device).
+  ///
+  /// Push codes are in the range 0x80 - 0xFF and represent unsolicited
+  /// events like advertisements, path updates, and delivery confirmations.
+  static bool isPushCode(int code) => code >= pushCodeBoundary;
+
+  /// Check if [code] is a valid command code (app -> device).
+  ///
+  /// Command codes are in the range 0x01 - 0x39 based on meshcore-open.
+  /// Note: 0x00 is not a valid command (it's the OK response).
+  static bool isCommandCode(int code) =>
+      code >= 0x01 && code <= MeshCoreCommands.getRadioSettings;
 }
