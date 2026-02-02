@@ -26,7 +26,7 @@
 
 <p align="center">
   <a href="https://socialmesh.app">Website</a> •
-  <a href="https://apps.apple.com/app/socialmesh/id6475642447">iOS App</a> •
+  <a href="https://apps.apple.com/app/id6742694642">iOS App</a> •
   <a href="https://play.google.com/store/apps/details?id=com.gotnull.socialmesh">Android App</a> •
   <a href="https://github.com/gotnull/socialmesh/issues">Issues</a>
 </p>
