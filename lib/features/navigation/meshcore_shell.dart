@@ -15,11 +15,7 @@ import '../../providers/meshcore_providers.dart';
 import '../../providers/connection_providers.dart' as conn;
 import '../../services/haptic_service.dart';
 import '../../utils/snackbar.dart';
-import '../meshcore/screens/meshcore_contacts_screen.dart';
-import '../meshcore/screens/meshcore_channels_screen.dart';
-import '../meshcore/screens/meshcore_tools_screen.dart';
-import '../meshcore/screens/meshcore_map_screen.dart';
-import '../meshcore/screens/meshcore_settings_screen.dart';
+import '../meshcore/screens/screens.dart';
 
 // MeshCore bottom navigation tab items
 class _MeshCoreNavItem {

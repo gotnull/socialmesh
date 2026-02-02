@@ -12,7 +12,7 @@
 .swiftpm/
 migrate_working_dir/
 meshtastic-ios/
-/MeshCore/
+/MeshCore-Firmware/
 /meshcore-open/
 .venv/
 .firebase
