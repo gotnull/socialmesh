@@ -514,10 +514,14 @@ final meshCoreMessageHistoryProvider =
 MeshCoreMessageDeliveryStatus _convertStatus(
   MeshCoreMessageStatus storedStatus,
 ) {
-  return switch (storedStatus) {
-    MeshCoreMessageStatus.pending => MeshCoreMessageDeliveryStatus.pending,
-    MeshCoreMessageStatus.sent => MeshCoreMessageDeliveryStatus.sent,
-    MeshCoreMessageStatus.delivered => MeshCoreMessageDeliveryStatus.delivered,
-    MeshCoreMessageStatus.failed => MeshCoreMessageDeliveryStatus.failed,
-  };
+  switch (storedStatus) {
+    case MeshCoreMessageStatus.pending:
+      return MeshCoreMessageDeliveryStatus.pending;
+    case MeshCoreMessageStatus.sent:
+      return MeshCoreMessageDeliveryStatus.sent;
+    case MeshCoreMessageStatus.delivered:
+      return MeshCoreMessageDeliveryStatus.delivered;
+    case MeshCoreMessageStatus.failed:
+      return MeshCoreMessageDeliveryStatus.failed;
+  }
 }
