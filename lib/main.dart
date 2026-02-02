@@ -39,6 +39,8 @@ import 'providers/signal_providers.dart';
 import 'providers/connectivity_providers.dart';
 import 'providers/presence_providers.dart';
 import 'providers/glyph_provider.dart';
+import 'providers/meshcore_providers.dart';
+import 'services/meshcore/connection_coordinator.dart' show ConnectionResult;
 import 'features/automations/automation_providers.dart';
 import 'models/mesh_models.dart';
 import 'models/social.dart';
@@ -59,6 +61,7 @@ import 'features/settings/qr_import_screen.dart';
 import 'features/device/device_config_screen.dart';
 import 'features/settings/device_management_screen.dart';
 import 'features/navigation/main_shell.dart';
+import 'features/navigation/app_root_shell.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/onboarding/screens/mesh_brain_emotion_test_screen.dart';
 import 'features/timeline/timeline_screen.dart';
@@ -209,6 +212,15 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
     with WidgetsBindingObserver {
   StreamSubscription<NotificationNavigation>? _pushNotificationSubscription;
 
+  /// Guard to prevent concurrent reconnect attempts.
+  bool _reconnectInFlight = false;
+
+  /// Timestamp of last reconnect attempt for cooldown.
+  DateTime? _lastReconnectAttempt;
+
+  /// Minimum interval between reconnect attempts (prevents iOS resume spam).
+  static const _reconnectCooldown = Duration(seconds: 3);
+
   @override
   void initState() {
     super.initState();
@@ -292,28 +304,45 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
     }
   }
 
-  /// Handle app returning to foreground
-  /// This cleans up stale BLE state and triggers reconnect if needed
+  /// Handle app returning to foreground.
+  ///
+  /// Uses protocol-aware state checks to avoid reconnecting while already
+  /// connected (MeshCore) or while a reconnect is in progress.
   Future<void> _handleAppResumed() async {
-    AppLogging.connection('📱 APP RESUMED: Checking BLE state...');
+    AppLogging.connection('📱 APP RESUMED: Checking connection state...');
 
-    final transport = ref.read(transportProvider);
+    // Use protocol-aware connection state checks
+    final isLinkConnected = ref.read(isLinkConnectedProvider);
+    final isLinkConnecting = ref.read(isLinkConnectingProvider);
     final autoReconnectState = ref.read(autoReconnectStateProvider);
-    final deviceConnectionState = ref.read(conn.deviceConnectionProvider);
     final userDisconnected = ref.read(userDisconnectedProvider);
+    final deviceConnectionState = ref.read(conn.deviceConnectionProvider);
+
+    // Get protocol for logging
+    final settingsAsync = ref.read(settingsServiceProvider);
+    final protocol =
+        settingsAsync.asData?.value.lastDeviceProtocol ?? 'unknown';
 
     AppLogging.connection(
-      '📱 APP RESUMED: transport.state=${transport.state}, '
+      '📱 APP RESUMED: protocol=$protocol, '
+      'isLinkConnected=$isLinkConnected, '
+      'isLinkConnecting=$isLinkConnecting, '
       'autoReconnectState=$autoReconnectState, '
-      'deviceConnectionState=${deviceConnectionState.state}, '
-      'reason=${deviceConnectionState.reason}, '
       'userDisconnected=$userDisconnected',
     );
 
-    // If we think we're connected, verify the connection is still valid
-    if (transport.state == DeviceConnectionState.connected) {
+    // If the active protocol link is connected, do nothing
+    if (isLinkConnected) {
       AppLogging.connection(
-        '📱 APP RESUMED: Transport reports connected, doing nothing',
+        '📱 APP RESUMED: $protocol link already connected, doing nothing',
+      );
+      return;
+    }
+
+    // If the active protocol link is connecting, do nothing
+    if (isLinkConnecting) {
+      AppLogging.connection(
+        '📱 APP RESUMED: $protocol link is connecting, doing nothing',
       );
       return;
     }
@@ -359,7 +388,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
 
       if (lastDeviceId != null && settings.autoReconnect) {
         AppLogging.connection(
-          '📱 APP RESUMED: Disconnected with saved device, triggering reconnect scan...',
+          '📱 APP RESUMED: Disconnected with saved device, triggering reconnect...',
         );
 
         // Reset to idle first to allow reconnect to proceed
@@ -367,8 +396,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
             .read(autoReconnectStateProvider.notifier)
             .setState(AutoReconnectState.idle);
 
-        // Trigger reconnect by simulating a disconnect event
-        // The autoReconnectManager will pick this up
+        // Trigger reconnect
         ref
             .read(autoReconnectStateProvider.notifier)
             .setState(AutoReconnectState.scanning);
@@ -385,34 +413,302 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
     }
   }
 
-  /// Perform a single reconnect attempt when app resumes
+  /// Perform a single reconnect attempt when app resumes.
+  ///
+  /// Includes reentrancy guard and cooldown to prevent duplicate attempts.
+  /// Routes to appropriate protocol based on lastDeviceProtocol setting.
   Future<void> _performReconnectOnResume(String deviceId) async {
+    // Reentrancy guard: only one reconnect attempt at a time
+    if (_reconnectInFlight) {
+      AppLogging.connection(
+        '📱 RECONNECT ON RESUME: BLOCKED - reconnect already in flight',
+      );
+      return;
+    }
+
+    // Cooldown check: prevent rapid-fire reconnect attempts
+    if (_lastReconnectAttempt != null) {
+      final elapsed = DateTime.now().difference(_lastReconnectAttempt!);
+      if (elapsed < _reconnectCooldown) {
+        AppLogging.connection(
+          '📱 RECONNECT ON RESUME: BLOCKED - cooldown (${elapsed.inMilliseconds}ms < ${_reconnectCooldown.inMilliseconds}ms)',
+        );
+        ref
+            .read(autoReconnectStateProvider.notifier)
+            .setState(AutoReconnectState.idle);
+        return;
+      }
+    }
+
+    // Re-check connection state (may have changed since _handleAppResumed)
+    final isLinkConnected = ref.read(isLinkConnectedProvider);
+    final isLinkConnecting = ref.read(isLinkConnectingProvider);
+    if (isLinkConnected || isLinkConnecting) {
+      AppLogging.connection(
+        '📱 RECONNECT ON RESUME: BLOCKED - link already connected/connecting',
+      );
+      ref
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.idle);
+      return;
+    }
+
     AppLogging.connection(
       '📱 RECONNECT ON RESUME: Starting for device: $deviceId',
     );
 
-    // CRITICAL: Check the global userDisconnected flag
-    if (ref.read(userDisconnectedProvider)) {
-      AppLogging.connection(
-        '📱 RECONNECT ON RESUME: BLOCKED - user manually disconnected (global flag)',
-      );
-      ref
-          .read(autoReconnectStateProvider.notifier)
-          .setState(AutoReconnectState.idle);
-      return;
-    }
+    _reconnectInFlight = true;
+    _lastReconnectAttempt = DateTime.now();
 
-    // Also check device connection state reason
-    final deviceState = ref.read(conn.deviceConnectionProvider);
-    if (deviceState.reason == conn.DisconnectReason.userDisconnected) {
+    try {
+      // CRITICAL: Check the global userDisconnected flag
+      if (ref.read(userDisconnectedProvider)) {
+        AppLogging.connection(
+          '📱 RECONNECT ON RESUME: BLOCKED - user manually disconnected (global flag)',
+        );
+        ref
+            .read(autoReconnectStateProvider.notifier)
+            .setState(AutoReconnectState.idle);
+        return;
+      }
+
+      // Also check device connection state reason
+      final deviceState = ref.read(conn.deviceConnectionProvider);
+      if (deviceState.reason == conn.DisconnectReason.userDisconnected) {
+        AppLogging.connection(
+          '📱 RECONNECT ON RESUME: BLOCKED - user manually disconnected (reason)',
+        );
+        ref
+            .read(autoReconnectStateProvider.notifier)
+            .setState(AutoReconnectState.idle);
+        return;
+      }
+
+      // Check protocol type to route to appropriate reconnect path
+      final settings = await ref.read(settingsServiceProvider.future);
+      final lastProtocol = settings.lastDeviceProtocol;
+
+      if (lastProtocol == 'meshcore') {
+        await _performMeshCoreReconnectOnResume(deviceId, settings);
+      } else {
+        await _performMeshtasticReconnectOnResume(deviceId, settings);
+      }
+    } finally {
+      // Always clear the mutex, even on exceptions
+      _reconnectInFlight = false;
+      AppLogging.connection('📱 RECONNECT ON RESUME: Completed, mutex cleared');
+    }
+  }
+
+  /// Reconnect to a MeshCore device on app resume.
+  ///
+  /// On iOS, service UUID filtering during scans can miss MeshCore devices
+  /// because iOS may not include service UUIDs in the advertisement packet.
+  /// This method uses a multi-strategy approach:
+  /// 1. First try direct connection by device identifier (most reliable on iOS)
+  /// 2. Fall back to unfiltered scan matching by device identifier
+  Future<void> _performMeshCoreReconnectOnResume(
+    String deviceId,
+    dynamic settings,
+  ) async {
+    AppLogging.connection(
+      '📱 RECONNECT ON RESUME: MeshCore protocol detected, deviceId=$deviceId',
+    );
+
+    try {
+      // Strategy 1: Try direct connect by device identifier (no scan needed)
+      // On iOS, this is the most reliable way to reconnect to a known peripheral
       AppLogging.connection(
-        '📱 RECONNECT ON RESUME: BLOCKED - user manually disconnected (reason)',
+        '📱 RECONNECT ON RESUME: Strategy 1 - attempting direct connect by ID...',
+      );
+
+      DeviceInfo? foundDevice;
+
+      try {
+        // Check system devices first (peripherals iOS already knows about)
+        final systemDevices = await FlutterBluePlus.systemDevices([]);
+        AppLogging.connection(
+          '📱 RECONNECT ON RESUME: Found ${systemDevices.length} system devices',
+        );
+
+        for (final device in systemDevices) {
+          AppLogging.connection(
+            '📱 RECONNECT ON RESUME: System device: ${device.remoteId}',
+          );
+          if (device.remoteId.toString() == deviceId) {
+            AppLogging.connection(
+              '📱 RECONNECT ON RESUME: Target found in system devices!',
+            );
+            foundDevice = DeviceInfo(
+              id: device.remoteId.toString(),
+              name: device.platformName.isNotEmpty
+                  ? device.platformName
+                  : settings.lastDeviceName ?? 'MeshCore Device',
+              type: TransportType.ble,
+              address: device.remoteId.toString(),
+            );
+            break;
+          }
+        }
+
+        // If not found in system devices, create a device reference by ID
+        // This allows iOS to connect to a known peripheral without scanning
+        if (foundDevice == null) {
+          AppLogging.connection(
+            '📱 RECONNECT ON RESUME: Not in system devices, creating device by ID...',
+          );
+          foundDevice = DeviceInfo(
+            id: deviceId,
+            name: settings.lastDeviceName ?? 'MeshCore Device',
+            type: TransportType.ble,
+            address: deviceId,
+          );
+        }
+      } catch (e) {
+        AppLogging.connection(
+          '📱 RECONNECT ON RESUME: System devices check failed: $e',
+        );
+        // Create device reference anyway
+        foundDevice = DeviceInfo(
+          id: deviceId,
+          name: settings.lastDeviceName ?? 'MeshCore Device',
+          type: TransportType.ble,
+          address: deviceId,
+        );
+      }
+
+      // Try direct connection first
+      AppLogging.connection(
+        '📱 RECONNECT ON RESUME: Attempting direct connect to ${foundDevice.id}...',
       );
       ref
           .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.connecting);
+
+      final coordinator = ref.read(connectionCoordinatorProvider);
+      var result = await coordinator.connect(device: foundDevice);
+
+      if (result.success) {
+        // Direct connect succeeded!
+        AppLogging.connection(
+          '📱 RECONNECT ON RESUME: Direct connect succeeded!',
+        );
+        await _finalizeMeshCoreReconnect(foundDevice, result);
+        return;
+      }
+
+      // Strategy 2: Direct connect failed, try scanning without service filter
+      // On iOS, service UUID filtering can miss devices that don't advertise
+      // their service UUIDs in the advertisement packet
+      AppLogging.connection(
+        '📱 RECONNECT ON RESUME: Direct connect failed (${result.errorMessage}), '
+        'trying Strategy 2 - unfiltered scan...',
+      );
+      ref
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.scanning);
+
+      final transport = ref.read(transportProvider);
+
+      // Use scanAll=true to avoid iOS service UUID filtering issues
+      AppLogging.connection(
+        '📱 RECONNECT ON RESUME: Starting 10s unfiltered scan (scanAll=true), '
+        'matching by deviceId=$deviceId',
+      );
+      final scanStream = transport.scan(
+        timeout: const Duration(seconds: 10),
+        scanAll: true, // Important: don't filter by service UUID
+      );
+
+      foundDevice = null;
+      await for (final device in scanStream) {
+        AppLogging.connection(
+          '📱 RECONNECT ON RESUME: Scan found: ${device.id} (${device.name})',
+        );
+        if (device.id == deviceId) {
+          foundDevice = device;
+          AppLogging.connection(
+            '📱 RECONNECT ON RESUME: Target MeshCore device found in scan!',
+          );
+          break;
+        }
+      }
+
+      if (foundDevice == null) {
+        AppLogging.connection(
+          '📱 RECONNECT ON RESUME: MeshCore device not found in unfiltered scan',
+        );
+        ref
+            .read(autoReconnectStateProvider.notifier)
+            .setState(AutoReconnectState.idle);
+        return;
+      }
+
+      // Try to connect to the scanned device
+      AppLogging.connection(
+        '📱 RECONNECT ON RESUME: Connecting to scanned MeshCore device...',
+      );
+      ref
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.connecting);
+
+      result = await coordinator.connect(device: foundDevice);
+
+      if (!result.success) {
+        AppLogging.connection(
+          '📱 RECONNECT ON RESUME: MeshCore connect failed: ${result.errorMessage}',
+        );
+        throw Exception(result.errorMessage ?? 'MeshCore connection failed');
+      }
+
+      await _finalizeMeshCoreReconnect(foundDevice, result);
+    } catch (e) {
+      AppLogging.connection('📱 RECONNECT ON RESUME: MeshCore failed: $e');
+      ref
+          .read(autoReconnectStateProvider.notifier)
           .setState(AutoReconnectState.idle);
-      return;
     }
+  }
+
+  /// Finalize MeshCore reconnection by updating providers and state.
+  Future<void> _finalizeMeshCoreReconnect(
+    DeviceInfo device,
+    ConnectionResult result,
+  ) async {
+    // Update providers
+    ref.read(connectedDeviceProvider.notifier).setState(device);
+
+    // Mark as paired with isMeshCore=true
+    final nodeIdHex = result.deviceInfo?.nodeId ?? '0';
+    final nodeNumParsed = int.tryParse(nodeIdHex, radix: 16);
+    ref
+        .read(conn.deviceConnectionProvider.notifier)
+        .markAsPaired(device, nodeNumParsed, isMeshCore: true);
+
+    // Clear userDisconnected flags
+    ref.read(userDisconnectedProvider.notifier).setUserDisconnected(false);
+    ref.read(conn.deviceConnectionProvider.notifier).clearUserDisconnected();
+
+    AppLogging.connection(
+      '📱 RECONNECT ON RESUME: MeshCore connected: ${result.deviceInfo?.displayName}',
+    );
+
+    ref
+        .read(autoReconnectStateProvider.notifier)
+        .setState(AutoReconnectState.success);
+
+    await Future.delayed(const Duration(milliseconds: 500));
+    ref
+        .read(autoReconnectStateProvider.notifier)
+        .setState(AutoReconnectState.idle);
+  }
+
+  /// Reconnect to a Meshtastic device on app resume.
+  Future<void> _performMeshtasticReconnectOnResume(
+    String deviceId,
+    dynamic settings,
+  ) async {
+    AppLogging.connection('📱 RECONNECT ON RESUME: Meshtastic protocol');
 
     try {
       final transport = ref.read(transportProvider);
@@ -1301,9 +1597,11 @@ class _AppRouter extends ConsumerWidget {
         // First time user needs to pair a device before using mesh features
         return const ScannerScreen();
       case AppInitState.ready:
-        // App is ready - show main UI immediately
-        // Device connection will happen in background (if auto-reconnect enabled)
-        return const MainShell();
+        // App is ready - route to protocol-specific shell
+        // AppRootShell watches activeProtocolProvider and routes to:
+        // - MainShell for Meshtastic/none
+        // - MeshCoreShell for MeshCore
+        return const AppRootShell();
     }
   }
 }

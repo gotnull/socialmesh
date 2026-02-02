@@ -33,6 +33,7 @@ import '../features/automations/automation_engine.dart';
 import '../models/mesh_models.dart';
 import '../generated/meshtastic/config.pbenum.dart' as config_pbenum;
 import '../generated/meshtastic/mesh.pb.dart' as mesh_pb;
+import 'meshcore_providers.dart';
 import 'social_providers.dart';
 import 'telemetry_providers.dart';
 import 'connection_providers.dart';
@@ -551,6 +552,9 @@ final transportProvider = Provider<DeviceTransport>((ref) {
 // Connection state - create a stream that emits current state immediately,
 // then listens for future updates. This fixes the issue where the dashboard
 // subscribes after the state has already changed to connected.
+//
+// NOTE: This provider watches only the Meshtastic transport. For MeshCore,
+// use unifiedConnectionStateProvider which considers both protocols.
 final connectionStateProvider = StreamProvider<DeviceConnectionState>((
   ref,
 ) async* {
@@ -563,6 +567,457 @@ final connectionStateProvider = StreamProvider<DeviceConnectionState>((
   await for (final state in transport.stateStream) {
     yield state;
   }
+});
+
+/// Unified connection state that considers both Meshtastic and MeshCore protocols.
+///
+/// This provider should be used by UI components that need to know if ANY
+/// protocol is connected, not just Meshtastic. It checks:
+/// 1. If lastDeviceProtocol is 'meshcore', returns connected if MeshCore coordinator
+///    reports an active connection (not just DevicePairingState)
+/// 2. Otherwise, returns the Meshtastic transport state
+///
+/// This prevents the UI from showing "Disconnected" when MeshCore is actually connected,
+/// and also prevents showing "Connected" when MeshCore has actually disconnected but
+/// DevicePairingState wasn't updated yet.
+final unifiedConnectionStateProvider = Provider<DeviceConnectionState>((ref) {
+  // Check if we should be using MeshCore
+  final settingsAsync = ref.watch(settingsServiceProvider);
+  final settings = settingsAsync.asData?.value;
+
+  if (settings?.lastDeviceProtocol == 'meshcore') {
+    // For MeshCore, check the actual coordinator connection state
+    // This is more reliable than DevicePairingState which can be stale
+    final coordinator = ref.watch(connectionCoordinatorProvider);
+    if (coordinator.isConnected) {
+      return DeviceConnectionState.connected;
+    }
+    if (coordinator.isConnecting) {
+      return DeviceConnectionState.connecting;
+    }
+    return DeviceConnectionState.disconnected;
+  }
+
+  // For Meshtastic, use the transport state
+  final connectionStateAsync = ref.watch(connectionStateProvider);
+  return connectionStateAsync.when(
+    data: (state) => state,
+    loading: () => DeviceConnectionState.disconnected,
+    error: (_, _) => DeviceConnectionState.disconnected,
+  );
+});
+
+/// Whether the active protocol link is connected.
+///
+/// This checks the correct state source based on the active protocol:
+/// - For MeshCore: checks ConnectionCoordinator.isConnected
+/// - For Meshtastic: checks the Meshtastic transport state
+///
+/// Use this in resume/reconnect logic to avoid reconnecting while connected.
+final isLinkConnectedProvider = Provider<bool>((ref) {
+  final settingsAsync = ref.watch(settingsServiceProvider);
+  final settings = settingsAsync.asData?.value;
+
+  if (settings?.lastDeviceProtocol == 'meshcore') {
+    final coordinator = ref.watch(connectionCoordinatorProvider);
+    return coordinator.isConnected;
+  }
+
+  // For Meshtastic, check transport state
+  final connectionStateAsync = ref.watch(connectionStateProvider);
+  return connectionStateAsync.when(
+    data: (state) => state == DeviceConnectionState.connected,
+    loading: () => false,
+    error: (_, _) => false,
+  );
+});
+
+/// Whether the active protocol link is currently connecting.
+///
+/// This checks the correct state source based on the active protocol:
+/// - For MeshCore: checks ConnectionCoordinator.isConnecting
+/// - For Meshtastic: checks transport state == connecting
+///
+/// Use this in resume/reconnect logic to avoid starting concurrent reconnects.
+final isLinkConnectingProvider = Provider<bool>((ref) {
+  final settingsAsync = ref.watch(settingsServiceProvider);
+  final settings = settingsAsync.asData?.value;
+
+  if (settings?.lastDeviceProtocol == 'meshcore') {
+    final coordinator = ref.watch(connectionCoordinatorProvider);
+    return coordinator.isConnecting;
+  }
+
+  // For Meshtastic, check transport state
+  final connectionStateAsync = ref.watch(connectionStateProvider);
+  return connectionStateAsync.when(
+    data: (state) => state == DeviceConnectionState.connecting,
+    loading: () => false,
+    error: (_, _) => false,
+  );
+});
+
+// ============================================================================
+// Link Status - Single source of truth for connection UI
+// ============================================================================
+
+/// Connection status for the link.
+enum LinkConnectionStatus { disconnected, connecting, connected }
+
+/// Protocol type for the link (mirrors MeshProtocolType but for link status).
+enum LinkProtocol { unknown, meshtastic, meshcore }
+
+/// Unified link status model that combines connection state and protocol info.
+///
+/// This is the SINGLE SOURCE OF TRUTH for connection UI. All UI components
+/// (banners, screens, indicators) should use this instead of checking
+/// individual Meshtastic or MeshCore providers.
+class LinkStatus {
+  final LinkProtocol protocol;
+  final LinkConnectionStatus status;
+  final String? deviceName;
+  final String? deviceId;
+
+  const LinkStatus({
+    required this.protocol,
+    required this.status,
+    this.deviceName,
+    this.deviceId,
+  });
+
+  bool get isConnected => status == LinkConnectionStatus.connected;
+  bool get isConnecting => status == LinkConnectionStatus.connecting;
+  bool get isDisconnected => status == LinkConnectionStatus.disconnected;
+  bool get isMeshCore => protocol == LinkProtocol.meshcore;
+  bool get isMeshtastic => protocol == LinkProtocol.meshtastic;
+
+  static const disconnected = LinkStatus(
+    protocol: LinkProtocol.unknown,
+    status: LinkConnectionStatus.disconnected,
+  );
+
+  @override
+  String toString() =>
+      'LinkStatus(protocol: $protocol, status: $status, device: $deviceName)';
+}
+
+/// The single source of truth for connection state across the app.
+///
+/// This provider derives the correct connection status by checking the
+/// appropriate source based on the saved protocol preference:
+/// - For MeshCore: checks ConnectionCoordinator state
+/// - For Meshtastic: checks the transport state
+///
+/// Use this provider in ALL UI components that need to show connection status:
+/// - Top status banner
+/// - Device status button
+/// - Nodes screen
+/// - Any "connected/disconnected" indicators
+final linkStatusProvider = Provider<LinkStatus>((ref) {
+  final settingsAsync = ref.watch(settingsServiceProvider);
+  final settings = settingsAsync.asData?.value;
+
+  final lastDeviceId = settings?.lastDeviceId;
+  final lastDeviceName = settings?.lastDeviceName;
+  final savedProtocol = settings?.lastDeviceProtocol;
+
+  // CRITICAL: Check what's ACTUALLY connected, not what was saved.
+  // This prevents "Connected to MeshCore" showing when Meshtastic is active.
+
+  // CRITICAL: Watch the MeshCore connection state stream for reactivity.
+  // The coordinator itself is a singleton that doesn't trigger rebuilds -
+  // we need to watch its stateStream via this StreamProvider so that
+  // linkStatusProvider rebuilds when MeshCore connects/disconnects.
+  // This fixes the navigation bug where the wrong shell was shown after
+  // connecting to MeshCore because this provider wasn't rebuilding.
+  ref.watch(meshCoreConnectionStateProvider);
+
+  // 1. Check if MeshCore is actively connected/connecting
+  final coordinator = ref.watch(connectionCoordinatorProvider);
+  if (coordinator.isConnected) {
+    final meshDeviceInfo = coordinator.deviceInfo;
+    return LinkStatus(
+      protocol: LinkProtocol.meshcore,
+      status: LinkConnectionStatus.connected,
+      deviceName: meshDeviceInfo?.displayName ?? lastDeviceName,
+      deviceId: meshDeviceInfo?.nodeId ?? lastDeviceId,
+    );
+  }
+  if (coordinator.isConnecting) {
+    return LinkStatus(
+      protocol: LinkProtocol.meshcore,
+      status: LinkConnectionStatus.connecting,
+      deviceName: lastDeviceName,
+      deviceId: lastDeviceId,
+    );
+  }
+
+  // 2. Check if Meshtastic transport is actively connected/connecting
+  final connectionStateAsync = ref.watch(connectionStateProvider);
+  final transportState = connectionStateAsync.when(
+    data: (state) => state,
+    loading: () => DeviceConnectionState.disconnected,
+    error: (_, _) => DeviceConnectionState.disconnected,
+  );
+
+  if (transportState == DeviceConnectionState.connected ||
+      transportState == DeviceConnectionState.connecting) {
+    final linkStatus = transportState == DeviceConnectionState.connected
+        ? LinkConnectionStatus.connected
+        : LinkConnectionStatus.connecting;
+
+    return LinkStatus(
+      protocol: LinkProtocol.meshtastic,
+      status: linkStatus,
+      deviceName: lastDeviceName,
+      deviceId: lastDeviceId,
+    );
+  }
+
+  // 3. Neither protocol is actively connected - use saved protocol for "last known"
+  //    but status is disconnected
+  if (lastDeviceId != null) {
+    final protocol = savedProtocol == 'meshcore'
+        ? LinkProtocol.meshcore
+        : LinkProtocol.meshtastic;
+
+    return LinkStatus(
+      protocol: protocol,
+      status: LinkConnectionStatus.disconnected,
+      deviceName: lastDeviceName,
+      deviceId: lastDeviceId,
+    );
+  }
+
+  // No device saved
+  return LinkStatus.disconnected;
+});
+
+// ============================================================================
+// Protocol Capabilities - What features each protocol supports
+// ============================================================================
+
+/// Capabilities of the current protocol.
+///
+/// Use this to gate features that are protocol-specific. Screens and widgets
+/// should check capabilities, not protocol enums directly. This allows
+/// gradual feature rollout and clean separation of concerns.
+class ProtocolCapabilities {
+  // ---- Node/Contact Discovery ----
+
+  /// Meshtastic-style mesh-wide node discovery with telemetry.
+  final bool supportsNodes;
+
+  /// MeshCore-style contact discovery via adverts.
+  final bool supportsMeshCoreContacts;
+
+  /// MeshCore contact code (QR sharing).
+  final bool supportsContactCodes;
+
+  /// MeshCore "Discover Contacts" active scanning.
+  final bool supportsContactDiscovery;
+
+  // ---- Channels ----
+
+  /// Meshtastic channel configuration.
+  final bool supportsChannels;
+
+  /// MeshCore channel/room concept.
+  final bool supportsMeshCoreChannels;
+
+  // ---- Map/Location ----
+
+  /// Position packets and map display.
+  final bool supportsMap;
+
+  /// MeshCore trace path features.
+  final bool supportsTracePath;
+
+  /// MeshCore antenna coverage analysis.
+  final bool supportsAntennaCoverage;
+
+  /// MeshCore line of sight analysis.
+  final bool supportsLineOfSight;
+
+  // ---- Messaging ----
+
+  /// Direct text messaging.
+  final bool supportsMessaging;
+
+  // ---- Telemetry & Diagnostics ----
+
+  /// Battery, signal, environment telemetry.
+  final bool supportsTelemetry;
+
+  /// MeshCore Rx Log (received packets log).
+  final bool supportsRxLog;
+
+  /// MeshCore noise floor monitoring.
+  final bool supportsNoiseFloor;
+
+  /// MeshCore nearby node discovery scan.
+  final bool supportsNearbyNodeDiscovery;
+
+  // ---- Device Configuration ----
+
+  /// Full device/radio configuration.
+  final bool supportsDeviceConfig;
+
+  const ProtocolCapabilities({
+    required this.supportsNodes,
+    required this.supportsMeshCoreContacts,
+    required this.supportsContactCodes,
+    required this.supportsContactDiscovery,
+    required this.supportsChannels,
+    required this.supportsMeshCoreChannels,
+    required this.supportsMap,
+    required this.supportsTracePath,
+    required this.supportsAntennaCoverage,
+    required this.supportsLineOfSight,
+    required this.supportsMessaging,
+    required this.supportsTelemetry,
+    required this.supportsRxLog,
+    required this.supportsNoiseFloor,
+    required this.supportsNearbyNodeDiscovery,
+    required this.supportsDeviceConfig,
+  });
+
+  /// Full capabilities for Meshtastic protocol.
+  static const meshtastic = ProtocolCapabilities(
+    supportsNodes: true,
+    supportsMeshCoreContacts: false,
+    supportsContactCodes: false,
+    supportsContactDiscovery: false,
+    supportsChannels: true,
+    supportsMeshCoreChannels: false,
+    supportsMap: true,
+    supportsTracePath: false,
+    supportsAntennaCoverage: false,
+    supportsLineOfSight: false,
+    supportsMessaging: true,
+    supportsTelemetry: true,
+    supportsRxLog: false,
+    supportsNoiseFloor: false,
+    supportsNearbyNodeDiscovery: false,
+    supportsDeviceConfig: true,
+  );
+
+  /// Capabilities for MeshCore protocol.
+  /// These reflect what the MeshCore firmware/app supports.
+  static const meshcore = ProtocolCapabilities(
+    supportsNodes: false, // MeshCore uses contacts, not nodes
+    supportsMeshCoreContacts: true,
+    supportsContactCodes: true,
+    supportsContactDiscovery: true,
+    supportsChannels: false, // MeshCore has its own channel concept
+    supportsMeshCoreChannels: true,
+    supportsMap: true, // MeshCore has map features
+    supportsTracePath: true,
+    supportsAntennaCoverage: true,
+    supportsLineOfSight: true,
+    supportsMessaging: true,
+    supportsTelemetry: false, // Different telemetry model
+    supportsRxLog: true,
+    supportsNoiseFloor: true,
+    supportsNearbyNodeDiscovery: true,
+    supportsDeviceConfig: false, // Different config model
+  );
+
+  /// No capabilities when not connected.
+  static const none = ProtocolCapabilities(
+    supportsNodes: false,
+    supportsMeshCoreContacts: false,
+    supportsContactCodes: false,
+    supportsContactDiscovery: false,
+    supportsChannels: false,
+    supportsMeshCoreChannels: false,
+    supportsMap: false,
+    supportsTracePath: false,
+    supportsAntennaCoverage: false,
+    supportsLineOfSight: false,
+    supportsMessaging: false,
+    supportsTelemetry: false,
+    supportsRxLog: false,
+    supportsNoiseFloor: false,
+    supportsNearbyNodeDiscovery: false,
+    supportsDeviceConfig: false,
+  );
+
+  /// Whether this is effectively a MeshCore session.
+  bool get isMeshCore =>
+      supportsMeshCoreContacts || supportsMeshCoreChannels || supportsRxLog;
+
+  /// Whether this is effectively a Meshtastic session.
+  bool get isMeshtastic => supportsNodes || supportsChannels;
+}
+
+/// Provider for protocol capabilities based on the current link protocol.
+///
+/// Use this to gate UI features that depend on protocol support.
+/// Example:
+/// ```dart
+/// final capabilities = ref.watch(protocolCapabilitiesProvider);
+/// if (!capabilities.supportsNodes) {
+///   return ProtocolNotSupportedView(feature: 'Nodes');
+/// }
+/// ```
+final protocolCapabilitiesProvider = Provider<ProtocolCapabilities>((ref) {
+  final linkStatus = ref.watch(linkStatusProvider);
+
+  return switch (linkStatus.protocol) {
+    LinkProtocol.meshtastic => ProtocolCapabilities.meshtastic,
+    LinkProtocol.meshcore => ProtocolCapabilities.meshcore,
+    LinkProtocol.unknown => ProtocolCapabilities.none,
+  };
+});
+
+// ============================================================================
+// Active Protocol Provider - The SINGLE source of truth for protocol routing
+// ============================================================================
+
+/// The active protocol used for shell routing.
+///
+/// This determines which shell (MeshtasticShell or MeshCoreShell) is mounted.
+/// It is derived from the actual connection state, NOT from user settings.
+///
+/// Values:
+/// - `none`: No active connection → show scanner/onboarding
+/// - `meshtastic`: Meshtastic device connected or was last connected
+/// - `meshcore`: MeshCore device connected or was last connected
+enum ActiveProtocol { none, meshtastic, meshcore }
+
+/// Provider for the active protocol.
+///
+/// This is THE source of truth for deciding which app shell to render.
+/// The connection layer (ConnectionCoordinator, transport) sets this,
+/// NOT UI components.
+///
+/// When this changes, the previous shell must be completely unmounted
+/// to avoid any state leakage between protocols.
+final activeProtocolProvider = Provider<ActiveProtocol>((ref) {
+  final linkStatus = ref.watch(linkStatusProvider);
+
+  // If connected or connecting, use that protocol
+  if (linkStatus.isConnected || linkStatus.isConnecting) {
+    return switch (linkStatus.protocol) {
+      LinkProtocol.meshcore => ActiveProtocol.meshcore,
+      LinkProtocol.meshtastic => ActiveProtocol.meshtastic,
+      LinkProtocol.unknown => ActiveProtocol.none,
+    };
+  }
+
+  // If disconnected but we have a saved device, use that protocol
+  // This allows the shell to persist after temporary disconnects
+  if (linkStatus.deviceId != null) {
+    return switch (linkStatus.protocol) {
+      LinkProtocol.meshcore => ActiveProtocol.meshcore,
+      LinkProtocol.meshtastic => ActiveProtocol.meshtastic,
+      LinkProtocol.unknown => ActiveProtocol.none,
+    };
+  }
+
+  // No connection history - show onboarding/scanner
+  return ActiveProtocol.none;
 });
 
 // Currently connected device
@@ -713,7 +1168,7 @@ final bluetoothStateListenerProvider = Provider<void>((ref) {
   ref.listen<AsyncValue<BluetoothAdapterState>>(bluetoothStateProvider, (
     previous,
     next,
-  ) {
+  ) async {
     // Extract the values from AsyncValue using when()
     final prevState = previous?.when(
       data: (state) => state,
@@ -747,6 +1202,15 @@ final bluetoothStateListenerProvider = Provider<void>((ref) {
       AppLogging.connection(
         '🔵 Bluetooth turned ON - checking if reconnect needed',
       );
+
+      // Skip for MeshCore - this reconnect logic uses Meshtastic scanning
+      final settings = await ref.read(settingsServiceProvider.future);
+      if (settings.lastDeviceProtocol == 'meshcore') {
+        AppLogging.connection(
+          '🔵 Bluetooth ON but last device was MeshCore - not using Meshtastic reconnect',
+        );
+        return;
+      }
 
       // Check if user manually disconnected - if so, don't auto-reconnect
       final userDisconnected = ref.read(userDisconnectedProvider);
@@ -858,6 +1322,8 @@ final autoReconnectManagerProvider = Provider<void>((ref) {
   });
 
   // Listen for connection state changes
+  // NOTE: This listener is for Meshtastic transport only.
+  // MeshCore connection state is managed by ConnectionCoordinator.
   ref.listen<AsyncValue<DeviceConnectionState>>(connectionStateProvider, (
     previous,
     next,
@@ -866,7 +1332,17 @@ final autoReconnectManagerProvider = Provider<void>((ref) {
       'connectionStateProvider changed: $previous -> $next',
     );
 
-    next.whenData((state) {
+    next.whenData((state) async {
+      // Check if last device was MeshCore - if so, ignore Meshtastic transport state
+      final settings = await ref.read(settingsServiceProvider.future);
+      if (settings.lastDeviceProtocol == 'meshcore') {
+        AppLogging.connection(
+          '🔄 IGNORED: connectionStateProvider is Meshtastic-only, '
+          'last device was MeshCore',
+        );
+        return;
+      }
+
       final lastDeviceId = ref.read(_lastConnectedDeviceIdProvider);
       final autoReconnectState = ref.read(autoReconnectStateProvider);
       final userDisconnected = ref.read(userDisconnectedProvider);
@@ -1467,11 +1943,19 @@ class LiveActivityManagerNotifier extends Notifier<bool> {
 
   void _init() {
     // Listen for connection state changes
+    // NOTE: This listener is for Meshtastic transport only.
+    // MeshCore devices don't support Live Activities via this path.
     ref.listen<AsyncValue<DeviceConnectionState>>(connectionStateProvider, (
       previous,
       current,
     ) {
-      current.whenData((connectionState) {
+      current.whenData((connectionState) async {
+        // Skip for MeshCore devices - they use ConnectionCoordinator state
+        final settings = await ref.read(settingsServiceProvider.future);
+        if (settings.lastDeviceProtocol == 'meshcore') {
+          return;
+        }
+
         if (connectionState == DeviceConnectionState.connected && !state) {
           _startLiveActivity();
         } else if (connectionState == DeviceConnectionState.disconnected &&
@@ -3407,16 +3891,26 @@ final offlineQueueProvider = Provider<OfflineQueueService>((ref) {
   );
 
   // Check current connection state immediately (in case we're already connected)
-  final currentState = ref.read(connectionStateProvider);
-  currentState.whenData((state) {
-    service.setConnectionState(state == DeviceConnectionState.connected);
-  });
+  // Skip for MeshCore - this queue uses Meshtastic protocol
+  // Note: We check settings asynchronously to avoid blocking provider initialization
+  () async {
+    final settings = await ref.read(settingsServiceProvider.future);
+    if (settings.lastDeviceProtocol != 'meshcore') {
+      final currentState = ref.read(connectionStateProvider);
+      currentState.whenData((state) {
+        service.setConnectionState(state == DeviceConnectionState.connected);
+      });
+    }
+  }();
 
   // Listen to connection state changes for future updates
+  // Gate for MeshCore - connectionStateProvider watches Meshtastic transport only
   ref.listen<AsyncValue<DeviceConnectionState>>(connectionStateProvider, (
     prev,
     next,
-  ) {
+  ) async {
+    final settings = await ref.read(settingsServiceProvider.future);
+    if (settings.lastDeviceProtocol == 'meshcore') return; // Skip for MeshCore
     next.whenData((state) {
       service.setConnectionState(state == DeviceConnectionState.connected);
     });

@@ -6,13 +6,17 @@
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/transport.dart';
 import '../models/mesh_device.dart';
+import '../models/meshcore_contact.dart';
+import '../models/meshcore_channel.dart';
 import '../services/meshcore/connection_coordinator.dart';
 import '../services/meshcore/meshcore_adapter.dart';
 import '../services/meshcore/meshcore_detector.dart';
 import '../services/meshcore/protocol/meshcore_capture.dart';
+import '../services/meshcore/protocol/meshcore_messages.dart';
 import '../services/meshcore/protocol/meshcore_session.dart';
 import 'app_providers.dart';
 import 'connection_providers.dart';
@@ -29,6 +33,43 @@ final connectionCoordinatorProvider = Provider<ConnectionCoordinator>((ref) {
   });
 
   return coordinator;
+});
+
+/// Reactive provider for MeshCore connection state.
+///
+/// This StreamProvider watches the coordinator's stateStream, making the
+/// connection state reactive. Dependent providers (like linkStatusProvider)
+/// will rebuild when MeshCore connects/disconnects.
+///
+/// CRITICAL: This fixes the shell navigation bug where MeshCore connections
+/// weren't triggering UI rebuilds because connectionCoordinatorProvider is
+/// a plain Provider that doesn't notify on internal state changes.
+///
+/// The stream is seeded with the current connection state so new subscribers
+/// immediately see the current state, not just future changes.
+final meshCoreConnectionStateProvider = StreamProvider<MeshConnectionState>((
+  ref,
+) {
+  final coordinator = ref.watch(connectionCoordinatorProvider);
+
+  // Determine current state from coordinator
+  MeshConnectionState currentState;
+  if (coordinator.isConnected) {
+    currentState = MeshConnectionState.connected;
+  } else if (coordinator.isConnecting) {
+    currentState = MeshConnectionState.connecting;
+  } else {
+    currentState = MeshConnectionState.disconnected;
+  }
+
+  // Emit current state first, then forward all future state changes.
+  // This ensures new subscribers see the current state immediately.
+  return Stream.value(currentState).asyncExpand((initial) async* {
+    yield initial;
+    await for (final state in coordinator.stateStream) {
+      yield state;
+    }
+  });
 });
 
 /// Provider for the current protocol-agnostic device info.
@@ -98,6 +139,386 @@ final meshCoreSessionProvider = Provider<MeshCoreSession?>((ref) {
   final adapter = ref.watch(meshCoreAdapterProvider);
   return adapter?.session;
 });
+
+// ---------------------------------------------------------------------------
+// MeshCore Self Info Provider
+// ---------------------------------------------------------------------------
+
+/// Cached self info for the connected MeshCore device.
+///
+/// Provides the device's own identity information including public key and name.
+class MeshCoreSelfInfoState {
+  final MeshCoreSelfInfo? selfInfo;
+  final bool isLoading;
+  final String? error;
+
+  const MeshCoreSelfInfoState({
+    this.selfInfo,
+    this.isLoading = false,
+    this.error,
+  });
+
+  const MeshCoreSelfInfoState.initial()
+    : selfInfo = null,
+      isLoading = false,
+      error = null;
+  const MeshCoreSelfInfoState.loading()
+    : selfInfo = null,
+      isLoading = true,
+      error = null;
+  MeshCoreSelfInfoState.loaded(MeshCoreSelfInfo info)
+    : selfInfo = info,
+      isLoading = false,
+      error = null;
+  MeshCoreSelfInfoState.failed(String msg)
+    : selfInfo = null,
+      isLoading = false,
+      error = msg;
+}
+
+class MeshCoreSelfInfoNotifier extends Notifier<MeshCoreSelfInfoState> {
+  @override
+  MeshCoreSelfInfoState build() {
+    // Auto-fetch when adapter is available
+    final adapter = ref.watch(meshCoreAdapterProvider);
+    if (adapter != null && adapter.deviceInfo != null) {
+      // Device is identified, try to get self info
+      _loadSelfInfo();
+    }
+    return const MeshCoreSelfInfoState.initial();
+  }
+
+  Future<void> _loadSelfInfo() async {
+    state = const MeshCoreSelfInfoState.loading();
+    try {
+      final session = ref.read(meshCoreSessionProvider);
+      if (session == null) {
+        state = MeshCoreSelfInfoState.failed('No session available');
+        return;
+      }
+
+      final selfInfo = await session.getSelfInfo();
+      if (selfInfo != null) {
+        state = MeshCoreSelfInfoState.loaded(selfInfo);
+      } else {
+        state = MeshCoreSelfInfoState.failed('Failed to get self info');
+      }
+    } catch (e) {
+      state = MeshCoreSelfInfoState.failed(e.toString());
+    }
+  }
+
+  Future<void> refresh() async {
+    await _loadSelfInfo();
+  }
+}
+
+final meshCoreSelfInfoProvider =
+    NotifierProvider<MeshCoreSelfInfoNotifier, MeshCoreSelfInfoState>(
+      MeshCoreSelfInfoNotifier.new,
+    );
+
+// ---------------------------------------------------------------------------
+// MeshCore Contacts Provider
+// ---------------------------------------------------------------------------
+
+/// State for MeshCore contacts list.
+class MeshCoreContactsState {
+  final List<MeshCoreContact> contacts;
+  final bool isLoading;
+  final String? error;
+  final DateTime? lastRefresh;
+
+  const MeshCoreContactsState({
+    this.contacts = const [],
+    this.isLoading = false,
+    this.error,
+    this.lastRefresh,
+  });
+
+  const MeshCoreContactsState.initial()
+    : contacts = const [],
+      isLoading = false,
+      error = null,
+      lastRefresh = null;
+  const MeshCoreContactsState.loading()
+    : contacts = const [],
+      isLoading = true,
+      error = null,
+      lastRefresh = null;
+
+  MeshCoreContactsState copyWith({
+    List<MeshCoreContact>? contacts,
+    bool? isLoading,
+    String? error,
+    DateTime? lastRefresh,
+  }) {
+    return MeshCoreContactsState(
+      contacts: contacts ?? this.contacts,
+      isLoading: isLoading ?? this.isLoading,
+      error: error,
+      lastRefresh: lastRefresh ?? this.lastRefresh,
+    );
+  }
+}
+
+class MeshCoreContactsNotifier extends Notifier<MeshCoreContactsState> {
+  @override
+  MeshCoreContactsState build() {
+    // Auto-fetch contacts when connected to MeshCore
+    final linkStatus = ref.watch(linkStatusProvider);
+    if (linkStatus.isMeshCore && linkStatus.isConnected) {
+      // Defer loading to avoid build-phase side effects
+      Future.microtask(() => _loadContacts());
+    }
+    return const MeshCoreContactsState.initial();
+  }
+
+  Future<void> _loadContacts() async {
+    if (state.isLoading) return;
+
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      final session = ref.read(meshCoreSessionProvider);
+      if (session == null) {
+        state = state.copyWith(isLoading: false, error: 'No MeshCore session');
+        return;
+      }
+
+      final contactInfos = await session.getContacts();
+
+      // Load unread counts from storage
+      final unreadCounts = <String, int>{};
+      try {
+        final contactStore = await SharedPreferences.getInstance();
+        for (final info in contactInfos) {
+          final keyHex = info.publicKey
+              .map((b) => b.toRadixString(16).padLeft(2, '0'))
+              .join();
+          final unread = contactStore.getInt('meshcore_unread_$keyHex') ?? 0;
+          unreadCounts[keyHex] = unread;
+        }
+      } catch (e) {
+        // Ignore storage errors, use 0 for all
+      }
+
+      // Convert MeshCoreContactInfo to MeshCoreContact with unread counts
+      final contacts = contactInfos.map((info) {
+        final keyHex = info.publicKey
+            .map((b) => b.toRadixString(16).padLeft(2, '0'))
+            .join();
+        return MeshCoreContact(
+          publicKey: info.publicKey,
+          name: info.name,
+          type: info.advType,
+          pathLength: info.pathLength,
+          path: info.pathBytes,
+          latitude: info.latitudeDegrees,
+          longitude: info.longitudeDegrees,
+          lastSeen: DateTime.now(),
+          unreadCount: unreadCounts[keyHex] ?? 0,
+        );
+      }).toList();
+
+      // Sort by name
+      contacts.sort(
+        (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+      );
+
+      state = MeshCoreContactsState(
+        contacts: contacts,
+        isLoading: false,
+        lastRefresh: DateTime.now(),
+      );
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
+  Future<void> refresh() async {
+    await _loadContacts();
+  }
+
+  /// Update unread count for a contact.
+  void updateUnreadCount(String publicKeyHex, int count) {
+    final updated = state.contacts.map((c) {
+      if (c.publicKeyHex == publicKeyHex) {
+        return c.copyWith(unreadCount: count);
+      }
+      return c;
+    }).toList();
+    state = state.copyWith(contacts: updated);
+  }
+
+  /// Clear unread count for a contact.
+  void clearUnread(String publicKeyHex) {
+    updateUnreadCount(publicKeyHex, 0);
+  }
+
+  void addContact(MeshCoreContact contact) {
+    final updated = [...state.contacts];
+    final existingIndex = updated.indexWhere(
+      (c) => c.publicKeyHex == contact.publicKeyHex,
+    );
+    if (existingIndex >= 0) {
+      updated[existingIndex] = contact;
+    } else {
+      updated.add(contact);
+    }
+    updated.sort(
+      (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+    );
+    state = state.copyWith(contacts: updated);
+  }
+
+  void removeContact(String publicKeyHex) {
+    final updated = state.contacts
+        .where((c) => c.publicKeyHex != publicKeyHex)
+        .toList();
+    state = state.copyWith(contacts: updated);
+  }
+}
+
+final meshCoreContactsProvider =
+    NotifierProvider<MeshCoreContactsNotifier, MeshCoreContactsState>(
+      MeshCoreContactsNotifier.new,
+    );
+
+// ---------------------------------------------------------------------------
+// MeshCore Channels Provider
+// ---------------------------------------------------------------------------
+
+/// State for MeshCore channels list.
+class MeshCoreChannelsState {
+  final List<MeshCoreChannel> channels;
+  final bool isLoading;
+  final String? error;
+  final DateTime? lastRefresh;
+
+  const MeshCoreChannelsState({
+    this.channels = const [],
+    this.isLoading = false,
+    this.error,
+    this.lastRefresh,
+  });
+
+  const MeshCoreChannelsState.initial()
+    : channels = const [],
+      isLoading = false,
+      error = null,
+      lastRefresh = null;
+  const MeshCoreChannelsState.loading()
+    : channels = const [],
+      isLoading = true,
+      error = null,
+      lastRefresh = null;
+
+  MeshCoreChannelsState copyWith({
+    List<MeshCoreChannel>? channels,
+    bool? isLoading,
+    String? error,
+    DateTime? lastRefresh,
+  }) {
+    return MeshCoreChannelsState(
+      channels: channels ?? this.channels,
+      isLoading: isLoading ?? this.isLoading,
+      error: error,
+      lastRefresh: lastRefresh ?? this.lastRefresh,
+    );
+  }
+}
+
+class MeshCoreChannelsNotifier extends Notifier<MeshCoreChannelsState> {
+  @override
+  MeshCoreChannelsState build() {
+    // Auto-fetch channels when connected to MeshCore
+    final linkStatus = ref.watch(linkStatusProvider);
+    if (linkStatus.isMeshCore && linkStatus.isConnected) {
+      // Defer loading to avoid build-phase side effects
+      Future.microtask(() => _loadChannels());
+    }
+    return const MeshCoreChannelsState.initial();
+  }
+
+  Future<void> _loadChannels() async {
+    if (state.isLoading) return;
+
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      final session = ref.read(meshCoreSessionProvider);
+      if (session == null) {
+        state = state.copyWith(isLoading: false, error: 'No MeshCore session');
+        return;
+      }
+
+      final channelInfos = await session.getChannels();
+
+      // Convert MeshCoreChannelInfo to MeshCoreChannel
+      final channels = channelInfos.map((info) {
+        return MeshCoreChannel(
+          index: info.index,
+          name: info.name,
+          psk: info.psk,
+        );
+      }).toList();
+
+      // Sort by index
+      channels.sort((a, b) => a.index.compareTo(b.index));
+
+      state = MeshCoreChannelsState(
+        channels: channels,
+        isLoading: false,
+        lastRefresh: DateTime.now(),
+      );
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
+  Future<void> refresh() async {
+    await _loadChannels();
+  }
+
+  /// Add or update a channel on the device.
+  Future<bool> setChannel(MeshCoreChannel channel) async {
+    try {
+      final session = ref.read(meshCoreSessionProvider);
+      if (session == null) return false;
+
+      final success = await session.setChannel(
+        index: channel.index,
+        name: channel.name,
+        psk: channel.psk,
+      );
+
+      if (success) {
+        // Update local state
+        final updated = [...state.channels];
+        final existingIndex = updated.indexWhere(
+          (c) => c.index == channel.index,
+        );
+        if (existingIndex >= 0) {
+          updated[existingIndex] = channel;
+        } else {
+          updated.add(channel);
+          updated.sort((a, b) => a.index.compareTo(b.index));
+        }
+        state = state.copyWith(channels: updated);
+      }
+
+      return success;
+    } catch (e) {
+      return false;
+    }
+  }
+}
+
+final meshCoreChannelsProvider =
+    NotifierProvider<MeshCoreChannelsNotifier, MeshCoreChannelsState>(
+      MeshCoreChannelsNotifier.new,
+    );
 
 /// Provider for the MeshCore debug capture (null if not MeshCore or release build).
 ///

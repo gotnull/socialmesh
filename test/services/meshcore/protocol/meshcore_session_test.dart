@@ -460,10 +460,23 @@ void main() {
       // Small delay to let commands send
       await Future<void>.delayed(const Duration(milliseconds: 10));
 
-      // Verify startup sequence sent: deviceQuery (0x16) then appStart (0x01)
+      // Verify startup sequence sent: deviceQuery then appStart
+      // Both frames must have proper payload per firmware requirements:
+      // - deviceQuery: [0x16, app_version] (2 bytes min)
+      // - appStart: [0x01, app_version, reserved x6, app_name...] (8 bytes min)
       expect(transport.sentData.length, 2);
-      expect(transport.sentData[0], Uint8List.fromList([0x16])); // deviceQuery
-      expect(transport.sentData[1], Uint8List.fromList([0x01])); // appStart
+
+      // deviceQuery frame: [cmdDeviceQuery, appProtocolVersion]
+      expect(transport.sentData[0].length, greaterThanOrEqualTo(2));
+      expect(transport.sentData[0][0], equals(0x16)); // cmdDeviceQuery
+      expect(transport.sentData[0][1], equals(3)); // appProtocolVersion
+
+      // appStart frame: [cmdAppStart, appVersion, reserved x6, appName...]
+      expect(transport.sentData[1].length, greaterThanOrEqualTo(8));
+      expect(transport.sentData[1][0], equals(0x01)); // cmdAppStart
+      expect(transport.sentData[1][1], equals(3)); // appProtocolVersion
+      // Bytes 2-7 are reserved (zeros)
+      expect(transport.sentData[1].sublist(2, 8), equals(Uint8List(6)));
 
       // Simulate selfInfo response (code 0x05)
       final responsePayload = buildSelfInfoPayload('TestDevice');
@@ -498,6 +511,76 @@ void main() {
       );
 
       expect(result, isNull);
+    });
+
+    test('getSelfInfo with ERR:1 status returns null after timeout', () async {
+      // This test verifies the behavior when firmware returns ERR:1 status
+      // frames for commands instead of actual responses. This happens when
+      // commands have invalid format or firmware doesn't recognize them.
+      //
+      // With proper frame formats, firmware should return SELF_INFO instead.
+
+      final statusFrames = <MeshCoreStatusFrame>[];
+      session.statusStream.listen(statusFrames.add);
+
+      final selfInfoFuture = session.getSelfInfo(
+        timeout: const Duration(milliseconds: 200),
+      );
+
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+
+      // Simulate firmware returning ERR:1 for deviceQuery (unsupported command)
+      transport.simulateReceiveFrame(
+        MeshCoreFrame(command: 0x01, payload: Uint8List.fromList([0x01])),
+      );
+
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+
+      // Simulate firmware returning ERR:1 for appStart (unsupported command)
+      transport.simulateReceiveFrame(
+        MeshCoreFrame(command: 0x01, payload: Uint8List.fromList([0x01])),
+      );
+
+      // Wait for timeout since no SELF_INFO was sent
+      final result = await selfInfoFuture;
+
+      expect(result, isNull);
+      // Both ERR:1 frames should be captured in status stream
+      expect(statusFrames.length, equals(2));
+      expect(statusFrames.every((s) => s.statusCode == 1), isTrue);
+    });
+
+    test('getSelfInfo frame format matches firmware requirements', () async {
+      // Verify that our frames meet firmware length requirements:
+      // - deviceQuery: len >= 2
+      // - appStart: len >= 8
+      final selfInfoFuture = session.getSelfInfo(
+        timeout: const Duration(milliseconds: 100),
+      );
+
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+
+      // Verify frame formats
+      expect(transport.sentData.length, equals(2));
+
+      // deviceQuery must be at least 2 bytes
+      final deviceQueryFrame = transport.sentData[0];
+      expect(
+        deviceQueryFrame.length,
+        greaterThanOrEqualTo(2),
+        reason: 'deviceQuery frame must be >= 2 bytes for firmware',
+      );
+
+      // appStart must be at least 8 bytes
+      final appStartFrame = transport.sentData[1];
+      expect(
+        appStartFrame.length,
+        greaterThanOrEqualTo(8),
+        reason: 'appStart frame must be >= 8 bytes for firmware',
+      );
+
+      // Timeout since we don't send response
+      await selfInfoFuture;
     });
 
     test('getBattAndStorage sends correct command', () async {
@@ -728,6 +811,270 @@ void main() {
       expect(frames.length, equals(2));
       expect(frames[0].command, equals(0x80));
       expect(frames[1].command, equals(0x05));
+    });
+  });
+
+  group('MeshCoreSession ACK/status frame handling', () {
+    // Tests for status frames (code 0x01) which should not satisfy data waiters.
+    //
+    // MeshCore devices send ACK/status frames (code=0x01) in response to commands.
+    // These frames typically have a 1-byte payload with a status code:
+    // - 0x00 = OK/success
+    // - Non-zero = error
+    //
+    // The key behavior being tested:
+    // 1. Status frames go to statusStream
+    // 2. Status frames do NOT satisfy waiters for other response codes
+    // 3. Validated waiters only complete when predicate is satisfied
+
+    late FakeMeshCoreTransport transport;
+    late MeshCoreSession session;
+
+    setUp(() {
+      transport = FakeMeshCoreTransport();
+      session = MeshCoreSession(transport);
+    });
+
+    tearDown(() async {
+      await session.dispose();
+      await transport.dispose();
+    });
+
+    test('status frames (0x01) are emitted to statusStream', () async {
+      final statusFrames = <MeshCoreStatusFrame>[];
+      session.statusStream.listen(statusFrames.add);
+
+      await Future<void>.delayed(Duration.zero);
+
+      // Send status frame with OK status
+      transport.simulateReceiveFrame(
+        MeshCoreFrame(command: 0x01, payload: Uint8List.fromList([0x00])),
+      );
+
+      await Future<void>.delayed(Duration.zero);
+
+      expect(statusFrames.length, equals(1));
+      expect(statusFrames[0].statusCode, equals(0x00));
+      expect(statusFrames[0].isOk, isTrue);
+    });
+
+    test('status frames with error code are detected', () async {
+      final statusFrames = <MeshCoreStatusFrame>[];
+      session.statusStream.listen(statusFrames.add);
+
+      await Future<void>.delayed(Duration.zero);
+
+      // Send status frame with error status
+      transport.simulateReceiveFrame(
+        MeshCoreFrame(command: 0x01, payload: Uint8List.fromList([0x05])),
+      );
+
+      await Future<void>.delayed(Duration.zero);
+
+      expect(statusFrames.length, equals(1));
+      expect(statusFrames[0].statusCode, equals(0x05));
+      expect(statusFrames[0].isError, isTrue);
+    });
+
+    test('status frames do NOT satisfy waiters for other codes', () async {
+      // Register waiter for SELF_INFO (0x05)
+      final selfInfoFuture = session.waitForResponse(
+        0x05,
+        timeout: const Duration(milliseconds: 300),
+      );
+
+      // Send multiple status/ACK frames (code 0x01) - these should NOT satisfy the 0x05 waiter
+      transport.simulateReceiveFrame(
+        MeshCoreFrame(command: 0x01, payload: Uint8List.fromList([0x00])),
+      );
+      transport.simulateReceiveFrame(
+        MeshCoreFrame(command: 0x01, payload: Uint8List.fromList([0x00])),
+      );
+
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      // Waiter should still be pending
+      expect(session.hasWaiter(0x05), isTrue);
+
+      // Now send the real SELF_INFO response
+      transport.simulateReceiveFrame(
+        MeshCoreFrame(command: 0x05, payload: Uint8List.fromList([0x01])),
+      );
+
+      final result = await selfInfoFuture;
+      expect(result, isNotNull);
+      expect(result!.command, equals(0x05));
+    });
+
+    test('ACK then SELF_INFO succeeds - simulates real device behavior', () async {
+      // This simulates real device behavior:
+      // 1. Device receives cmdDeviceQuery -> sends ACK (0x01)
+      // 2. Device receives cmdAppStart -> sends ACK (0x01)
+      // 3. Device processes appStart -> sends SELF_INFO (0x05)
+
+      final statusFrames = <MeshCoreStatusFrame>[];
+      session.statusStream.listen(statusFrames.add);
+
+      // Wait for SELF_INFO with minimum payload size (simulating getSelfInfo behavior)
+      final selfInfoFuture = session.waitForResponse(
+        0x05,
+        timeout: const Duration(milliseconds: 500),
+      );
+
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+
+      // Device sends ACK for deviceQuery
+      transport.simulateReceiveFrame(
+        MeshCoreFrame(command: 0x01, payload: Uint8List.fromList([0x00])),
+      );
+
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+
+      // Device sends ACK for appStart
+      transport.simulateReceiveFrame(
+        MeshCoreFrame(command: 0x01, payload: Uint8List.fromList([0x00])),
+      );
+
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+
+      // Waiter should still be pending (ACKs don't satisfy it)
+      expect(session.hasWaiter(0x05), isTrue);
+      expect(statusFrames.length, equals(2));
+
+      // Device sends actual SELF_INFO response
+      // Minimum valid payload: ADV_TYPE + tx_power + MAX_LORA_TX_POWER + 32-byte pubkey = 35 bytes
+      final selfInfoPayload = Uint8List.fromList([
+        0x01, // ADV_TYPE
+        20, // tx_power
+        22, // MAX_LORA_TX_POWER
+        ...List.filled(32, 0xAA), // pub_key
+        ...List.filled(30, 0x00), // remaining fields
+      ]);
+      transport.simulateReceiveFrame(
+        MeshCoreFrame(command: 0x05, payload: selfInfoPayload),
+      );
+
+      final result = await selfInfoFuture;
+      expect(result, isNotNull);
+      expect(result!.command, equals(0x05));
+      expect(result.payload.length, greaterThanOrEqualTo(35));
+    });
+
+    test('status frames still appear in general frameStream', () async {
+      final allFrames = <MeshCoreFrame>[];
+      session.frameStream.listen(allFrames.add);
+
+      await Future<void>.delayed(Duration.zero);
+
+      transport.simulateReceiveFrame(
+        MeshCoreFrame(command: 0x01, payload: Uint8List.fromList([0x00])),
+      );
+      transport.simulateReceiveFrame(
+        MeshCoreFrame(command: 0x05, payload: Uint8List.fromList([0x01])),
+      );
+
+      await Future<void>.delayed(Duration.zero);
+
+      // Both frames should appear in general stream
+      expect(allFrames.length, equals(2));
+      expect(allFrames[0].command, equals(0x01));
+      expect(allFrames[1].command, equals(0x05));
+    });
+
+    test('empty status frame payload defaults to 0xFF', () async {
+      final statusFrames = <MeshCoreStatusFrame>[];
+      session.statusStream.listen(statusFrames.add);
+
+      await Future<void>.delayed(Duration.zero);
+
+      // Send status frame with empty payload
+      transport.simulateReceiveFrame(MeshCoreFrame.simple(0x01));
+
+      await Future<void>.delayed(Duration.zero);
+
+      expect(statusFrames.length, equals(1));
+      expect(statusFrames[0].statusCode, equals(0xFF));
+      expect(statusFrames[0].isError, isTrue);
+    });
+  });
+
+  group('MeshCoreSession validated waiters', () {
+    // Tests for validated waiters that use predicates to filter frames.
+    // This is used by getSelfInfo to ensure we don't complete on
+    // short/malformed frames.
+
+    late FakeMeshCoreTransport transport;
+    late MeshCoreSession session;
+
+    setUp(() {
+      transport = FakeMeshCoreTransport();
+      session = MeshCoreSession(transport);
+    });
+
+    tearDown(() async {
+      await session.dispose();
+      await transport.dispose();
+    });
+
+    test('trivial frames ignored until valid frame arrives', () async {
+      // This tests that frames with correct code but wrong payload size
+      // don't satisfy a validated waiter
+
+      // We need to use the internal API for this test - use getSelfInfo which
+      // internally uses validated waiter requiring >= 35 bytes
+
+      // Start getSelfInfo (uses validated waiter internally)
+      final selfInfoFuture = session.getSelfInfo(
+        timeout: const Duration(milliseconds: 500),
+      );
+
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+
+      // Send frames with correct code (0x05) but too short payload
+      transport.simulateReceiveFrame(
+        MeshCoreFrame(command: 0x05, payload: Uint8List.fromList([0x01])),
+      );
+      transport.simulateReceiveFrame(
+        MeshCoreFrame(command: 0x05, payload: Uint8List.fromList([0x01, 0x02])),
+      );
+      transport.simulateReceiveFrame(
+        MeshCoreFrame(
+          command: 0x05,
+          payload: Uint8List.fromList(List.filled(10, 0x00)),
+        ),
+      );
+
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      // Waiter should still be pending because payloads are too short
+      expect(session.hasWaiter(0x05), isTrue);
+
+      // Now send valid SELF_INFO (>= 35 bytes)
+      final validPayload = Uint8List.fromList([
+        0x01, // ADV_TYPE
+        20, // tx_power
+        22, // MAX_LORA_TX_POWER
+        ...List.filled(32, 0xAA), // pub_key (32 bytes)
+        ...List.filled(30, 0x00), // remaining fields
+      ]);
+      transport.simulateReceiveFrame(
+        MeshCoreFrame(command: 0x05, payload: validPayload),
+      );
+
+      final result = await selfInfoFuture;
+      expect(result, isNotNull);
+      expect(result!.nodeName, isNotNull);
+    });
+
+    test('getSelfInfo timeout returns null not throws', () async {
+      // Don't send any response - verify timeout behavior
+      final result = await session.getSelfInfo(
+        timeout: const Duration(milliseconds: 100),
+      );
+
+      expect(result, isNull);
+      // Waiter should be cleaned up
+      expect(session.hasWaiter(0x05), isFalse);
     });
   });
 }

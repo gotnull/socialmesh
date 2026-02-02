@@ -6,7 +6,7 @@
 // followed by variable-length payload. BLE notifications are always complete
 // frames (no extra framing needed).
 //
-// Frame Format (learned from meshcore-open reference):
+// Frame Format:
 // ```
 // [command: 1 byte][payload: 0-171 bytes]
 // ```
@@ -25,8 +25,6 @@
 import 'dart:typed_data';
 
 /// Maximum frame size in bytes (command + payload).
-///
-/// From meshcore-open: maxFrameSize = 172
 const int meshCoreMaxFrameSize = 172;
 
 /// Size of the public key in bytes.

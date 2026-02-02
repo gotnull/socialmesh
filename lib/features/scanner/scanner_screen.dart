@@ -559,8 +559,8 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       // Normal mode: filter to only recognized protocols
       devices = _devices.where((device) {
         final protocol = device.detectProtocol().protocolType;
-        return protocol == MeshProtocolType.meshtastic;
-        //|| protocol == MeshProtocolType.meshcore;
+        return protocol == MeshProtocolType.meshtastic ||
+            protocol == MeshProtocolType.meshcore;
       }).toList();
     }
 
@@ -655,6 +655,17 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     });
 
     try {
+      // Stop any running Meshtastic ProtocolService to prevent state mixing.
+      // MeshCore and Meshtastic are mutually exclusive - only one protocol
+      // can be active at a time. Stopping ProtocolService ensures:
+      // - No "Requesting position" errors from Meshtastic polling
+      // - No stale Meshtastic state interfering with MeshCore UI
+      final protocol = ref.read(protocolServiceProvider);
+      protocol.stop();
+      AppLogging.connection(
+        '📡 SCANNER: Stopped Meshtastic ProtocolService for MeshCore connect',
+      );
+
       // Use ConnectionCoordinator to handle MeshCore connection
       final coordinator = ref.read(connectionCoordinatorProvider);
       final result = await coordinator.connect(device: device);
@@ -703,6 +714,11 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       ref
           .read(autoReconnectStateProvider.notifier)
           .setState(AutoReconnectState.idle);
+
+      // CRITICAL: Invalidate linkStatusProvider to force UI rebuild.
+      // This ensures activeProtocolProvider sees MeshCore as connected
+      // and AppRootShell routes to MeshCoreShell instead of MainShell.
+      ref.invalidate(linkStatusProvider);
 
       AppLogging.connection(
         '📡 SCANNER: MeshCore connected successfully: ${result.deviceInfo?.displayName}',
@@ -1168,11 +1184,6 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
           ),
         ),
         actions: [
-          if (_scanning)
-            const SizedBox(
-              width: 48,
-              child: Center(child: LoadingIndicator(size: 20)),
-            ),
           IcoHelpAppBarButton(
             topicId: 'device_connection',
             autoTrigger: widget.isOnboarding,

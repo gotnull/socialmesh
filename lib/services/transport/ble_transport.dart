@@ -188,8 +188,14 @@ class BleTransport implements DeviceTransport {
 
         while (retryCount < maxRetries) {
           try {
+            // Build service filter list for logging
+            final serviceFilters = scanAll
+                ? <String>[]
+                : [_serviceUuid, MeshCoreBleUuids.serviceUuid];
             AppLogging.ble(
-              '📡 BLE_TRANSPORT: Calling FlutterBluePlus.startScan() (attempt ${retryCount + 1})...',
+              '📡 BLE_TRANSPORT: Calling FlutterBluePlus.startScan() '
+              '(attempt ${retryCount + 1}, scanAll=$scanAll, '
+              'serviceFilters=${serviceFilters.isEmpty ? "NONE" : serviceFilters})...',
             );
             // When scanAll is true, scan without service filter to see ALL devices
             // When false, filter by Meshtastic AND MeshCore service UUIDs

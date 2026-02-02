@@ -360,7 +360,7 @@ class ConnectionCoordinator {
 
     try {
       // -------------------------------------------------------------------------
-      // MeshCore Connection Sequence (from meshcore-open reference):
+      // MeshCore Connection Sequence:
       // 1. BLE connect to device
       // 2. Discover services (Nordic UART: 6e400001-...)
       // 3. Subscribe to TX notify characteristic BEFORE any writes
@@ -522,8 +522,20 @@ class ConnectionCoordinator {
   /// Cancellation-safe: If called during an in-flight connect(), the
   /// connection attempt will be cancelled and cleaned up deterministically.
   /// The connect() future will resolve to [ConnectionResult.cancelled()].
-  Future<void> disconnect() async {
-    AppLogging.connection('ConnectionCoordinator: Disconnecting...');
+  ///
+  /// [reason] - Optional debug reason for tracing disconnect callers.
+  Future<void> disconnect({String? reason}) async {
+    AppLogging.connection(
+      'ConnectionCoordinator: Disconnecting... '
+      '(reason: ${reason ?? "unspecified"}, protocol: $_activeProtocol)',
+    );
+
+    // Debug: Log stack trace to identify disconnect caller
+    if (kDebugMode) {
+      AppLogging.connection(
+        'ConnectionCoordinator: disconnect() called from:\n${StackTrace.current}',
+      );
+    }
 
     // -------------------------------------------------------------------------
     // Increment connection attempt ID to signal cancellation to any

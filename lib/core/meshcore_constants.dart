@@ -104,8 +104,6 @@ class MeshCoreFramingConstants {
   static const int usbHeaderSize = 3;
 
   /// Maximum frame size in bytes (command + payload).
-  ///
-  /// From meshcore-open: maxFrameSize = 172
   static const int maxFrameSize = 172;
 
   /// Maximum payload size in bytes (legacy alias for maxFrameSize - 1).
@@ -128,8 +126,6 @@ class MeshCoreFramingConstants {
 }
 
 /// MeshCore protocol command codes (app -> device).
-///
-/// Learned from meshcore-open reference implementation.
 class MeshCoreCommands {
   MeshCoreCommands._();
 
@@ -231,8 +227,6 @@ class MeshCoreCommands {
 }
 
 /// MeshCore response codes (device -> app, 0x00-0x7F).
-///
-/// Learned from meshcore-open reference implementation.
 class MeshCoreResponses {
   MeshCoreResponses._();
 
@@ -292,8 +286,6 @@ class MeshCoreResponses {
 }
 
 /// MeshCore push codes (async device -> app, 0x80+).
-///
-/// Learned from meshcore-open reference implementation.
 class MeshCorePushCodes {
   MeshCorePushCodes._();
 
@@ -378,7 +370,7 @@ class MeshCoreTimeouts {
 
 /// MeshCore code classification utilities.
 ///
-/// Code ranges learned from meshcore-open reference implementation:
+/// Code ranges from reference implementation:
 /// - Commands (app -> device): 0x01 - 0x39
 /// - Responses (device -> app, synchronous): 0x00 - 0x7F
 /// - Push codes (device -> app, asynchronous): 0x80 - 0xFF
@@ -408,7 +400,7 @@ class MeshCoreCodeClassification {
 
   /// Check if [code] is a valid command code (app -> device).
   ///
-  /// Command codes are in the range 0x01 - 0x39 based on meshcore-open.
+  /// Command codes are in the range 0x01 - 0x39 based.
   /// Note: 0x00 is not a valid command (it's the OK response).
   static bool isCommandCode(int code) =>
       code >= 0x01 && code <= MeshCoreCommands.getRadioSettings;

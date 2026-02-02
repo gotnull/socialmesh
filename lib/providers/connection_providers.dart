@@ -15,14 +15,16 @@
 import 'dart:async';
 import 'dart:io' show Platform;
 
-import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:flutter/foundation.dart' show kDebugMode, visibleForTesting;
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/logging.dart';
 import '../core/transport.dart';
+import '../services/meshcore/connection_coordinator.dart' show ConnectionResult;
 import 'app_providers.dart';
 import 'connectivity_providers.dart';
+import 'meshcore_providers.dart';
 
 // =============================================================================
 // DEVICE PAIRING STATE
@@ -322,7 +324,12 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       // Small delay to let UI render first
       Future.delayed(const Duration(milliseconds: 500), () {
         if (!_userDisconnected) {
-          startBackgroundConnection();
+          // Route to appropriate protocol's connect method
+          if (lastProtocol == 'meshcore') {
+            _startMeshCoreBackgroundConnection(lastDeviceId, settings);
+          } else {
+            startBackgroundConnection();
+          }
         } else {
           AppLogging.connection(
             '🔌 DeviceConnectionNotifier: Skipping auto-connect - user disconnected',
@@ -574,10 +581,10 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
       return;
     }
 
-    // MeshCore auto-reconnect is handled by ConnectionCoordinator, not here
+    // MeshCore auto-reconnect uses _startMeshCoreBackgroundConnection instead
     if (lastProtocol == 'meshcore') {
       AppLogging.connection(
-        '🔌 startBackgroundConnection: MeshCore device - skipping Meshtastic reconnect',
+        '🔌 startBackgroundConnection: MeshCore device - use _startMeshCoreBackgroundConnection',
       );
       _backgroundScanInProgress = false;
       return;
@@ -804,6 +811,260 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     }
   }
 
+  /// Start background connection for MeshCore device.
+  ///
+  /// Uses the same direct-connect-by-id strategy as resume reconnect.
+  /// On iOS, scanning with service UUID filters can miss MeshCore devices,
+  /// so we attempt direct connect first, then fall back to unfiltered scan.
+  Future<void> _startMeshCoreBackgroundConnection(
+    String deviceId,
+    dynamic settings,
+  ) async {
+    AppLogging.connection(
+      '🔌 MeshCore background connect: Starting for device: $deviceId',
+    );
+
+    // Guard against concurrent connection attempts
+    if (_backgroundScanInProgress) {
+      AppLogging.connection(
+        '🔌 MeshCore background connect: BLOCKED - connection already in progress',
+      );
+      return;
+    }
+
+    // Check if already connected
+    final coordinator = ref.read(connectionCoordinatorProvider);
+    if (coordinator.isConnected) {
+      AppLogging.connection(
+        '🔌 MeshCore background connect: Already connected, skipping',
+      );
+      return;
+    }
+
+    if (coordinator.isConnecting) {
+      AppLogging.connection(
+        '🔌 MeshCore background connect: Connection already in progress, skipping',
+      );
+      return;
+    }
+
+    // Check Bluetooth state first
+    final btState = await FlutterBluePlus.adapterState.first;
+    if (btState != BluetoothAdapterState.on) {
+      AppLogging.connection('🔌 MeshCore background connect: Bluetooth is off');
+      state = state.copyWith(
+        state: DevicePairingState.error,
+        reason: DisconnectReason.bluetoothDisabled,
+        errorMessage: 'Bluetooth is disabled',
+      );
+      return;
+    }
+
+    _backgroundScanInProgress = true;
+
+    try {
+      // Update state to scanning/connecting
+      state = state.copyWith(state: DevicePairingState.scanning);
+      ref
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.scanning);
+
+      // Strategy 1: Direct connect by device identifier
+      AppLogging.connection(
+        '🔌 MeshCore background connect: Strategy 1 - direct connect by ID',
+      );
+
+      DeviceInfo foundDevice;
+
+      // Check system devices first (iOS may know about the peripheral)
+      try {
+        final systemDevices = await FlutterBluePlus.systemDevices([]);
+        AppLogging.connection(
+          '🔌 MeshCore background connect: Found ${systemDevices.length} system devices',
+        );
+
+        DeviceInfo? fromSystem;
+        for (final device in systemDevices) {
+          if (device.remoteId.toString() == deviceId) {
+            AppLogging.connection(
+              '🔌 MeshCore background connect: Target found in system devices',
+            );
+            fromSystem = DeviceInfo(
+              id: device.remoteId.toString(),
+              name: device.platformName.isNotEmpty
+                  ? device.platformName
+                  : settings.lastDeviceName ?? 'MeshCore Device',
+              type: TransportType.ble,
+              address: device.remoteId.toString(),
+            );
+            break;
+          }
+        }
+
+        foundDevice =
+            fromSystem ??
+            DeviceInfo(
+              id: deviceId,
+              name: settings.lastDeviceName ?? 'MeshCore Device',
+              type: TransportType.ble,
+              address: deviceId,
+            );
+      } catch (e) {
+        AppLogging.connection(
+          '🔌 MeshCore background connect: System devices check failed: $e',
+        );
+        foundDevice = DeviceInfo(
+          id: deviceId,
+          name: settings.lastDeviceName ?? 'MeshCore Device',
+          type: TransportType.ble,
+          address: deviceId,
+        );
+      }
+
+      // Try direct connection
+      ref
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.connecting);
+      state = state.copyWith(state: DevicePairingState.connecting);
+
+      var result = await coordinator.connect(device: foundDevice);
+
+      if (result.success) {
+        AppLogging.connection(
+          '🔌 MeshCore background connect: Direct connect succeeded!',
+        );
+        await _finalizeMeshCoreConnect(foundDevice, result, settings);
+        return;
+      }
+
+      // Strategy 2: Fall back to unfiltered scan
+      AppLogging.connection(
+        '🔌 MeshCore background connect: Direct connect failed (${result.errorMessage}), '
+        'trying Strategy 2 - unfiltered scan',
+      );
+
+      ref
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.scanning);
+      state = state.copyWith(state: DevicePairingState.scanning);
+
+      final transport = ref.read(transportProvider);
+      DeviceInfo? scannedDevice;
+
+      await for (final device in transport.scan(
+        timeout: const Duration(seconds: 10),
+        scanAll: true, // Don't filter by service UUID
+      )) {
+        AppLogging.connection(
+          '🔌 MeshCore background connect: Scan found: ${device.id}',
+        );
+        if (device.id == deviceId) {
+          scannedDevice = device;
+          break;
+        }
+      }
+
+      if (scannedDevice == null) {
+        AppLogging.connection(
+          '🔌 MeshCore background connect: Device not found in scan',
+        );
+        state = state.copyWith(
+          state: DevicePairingState.disconnected,
+          reason: DisconnectReason.deviceNotFound,
+          errorMessage: 'Device not found',
+        );
+        ref
+            .read(autoReconnectStateProvider.notifier)
+            .setState(AutoReconnectState.failed);
+        return;
+      }
+
+      // Try connect with scanned device
+      ref
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.connecting);
+      state = state.copyWith(state: DevicePairingState.connecting);
+
+      result = await coordinator.connect(device: scannedDevice);
+
+      if (!result.success) {
+        AppLogging.connection(
+          '🔌 MeshCore background connect: Scanned device connect failed: ${result.errorMessage}',
+        );
+        state = state.copyWith(
+          state: DevicePairingState.disconnected,
+          reason: DisconnectReason.connectionFailed,
+          errorMessage: result.errorMessage ?? 'Connection failed',
+        );
+        ref
+            .read(autoReconnectStateProvider.notifier)
+            .setState(AutoReconnectState.failed);
+        return;
+      }
+
+      AppLogging.connection(
+        '🔌 MeshCore background connect: Scanned device connect succeeded!',
+      );
+      await _finalizeMeshCoreConnect(scannedDevice, result, settings);
+    } catch (e) {
+      AppLogging.connection('🔌 MeshCore background connect: Error: $e');
+      state = state.copyWith(
+        state: DevicePairingState.disconnected,
+        reason: DisconnectReason.connectionFailed,
+        errorMessage: e.toString(),
+      );
+      ref
+          .read(autoReconnectStateProvider.notifier)
+          .setState(AutoReconnectState.failed);
+    } finally {
+      _backgroundScanInProgress = false;
+    }
+  }
+
+  /// Finalize MeshCore connection by updating all state providers.
+  Future<void> _finalizeMeshCoreConnect(
+    DeviceInfo device,
+    ConnectionResult result,
+    dynamic settings,
+  ) async {
+    // Update connected device provider
+    ref.read(connectedDeviceProvider.notifier).setState(device);
+
+    // Parse node ID for pairing state
+    final nodeIdHex = result.deviceInfo?.nodeId ?? '0';
+    final nodeNumParsed = int.tryParse(nodeIdHex, radix: 16);
+
+    // Update pairing state
+    state = state.copyWith(
+      state: DevicePairingState.connected,
+      device: device,
+      myNodeNum: nodeNumParsed,
+      reason: DisconnectReason.none,
+      connectionSessionId: _nextConnectionSessionId(),
+    );
+
+    // Mark as paired in the pairing helper (with MeshCore flag)
+    markAsPaired(device, nodeNumParsed, isMeshCore: true);
+
+    // Clear user disconnected flags
+    _userDisconnected = false;
+    ref.read(userDisconnectedProvider.notifier).setUserDisconnected(false);
+
+    AppLogging.connection(
+      '🔌 MeshCore background connect: Finalized, device=${result.deviceInfo?.displayName}',
+    );
+
+    // Set success state briefly then idle
+    ref
+        .read(autoReconnectStateProvider.notifier)
+        .setState(AutoReconnectState.success);
+
+    await Future.delayed(const Duration(milliseconds: 500));
+    ref
+        .read(autoReconnectStateProvider.notifier)
+        .setState(AutoReconnectState.idle);
+  }
+
   Future<bool> reportMissingSavedDevice() async {
     if (state.state == DevicePairingState.pairedDeviceInvalidated) {
       return true;
@@ -1008,6 +1269,13 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     AppLogging.connection(
       '🔌 _handleDisconnect: reason=$reason, currentState=${state.state}',
     );
+
+    // Debug: Log stack trace to identify who triggered this disconnect
+    if (kDebugMode) {
+      AppLogging.connection(
+        '🔌 _handleDisconnect called from:\n${StackTrace.current}',
+      );
+    }
 
     if (state.state == DevicePairingState.pairedDeviceInvalidated) {
       AppLogging.connection(

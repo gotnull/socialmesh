@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 import '../../core/logging.dart';
@@ -263,6 +264,14 @@ class MeshCoreBleTransport implements MeshTransport {
   @override
   Future<void> disconnect() async {
     AppLogging.ble('MeshCore: Disconnecting...');
+
+    // Debug: Log stack trace to identify disconnect caller
+    if (kDebugMode) {
+      AppLogging.ble(
+        'MeshCore transport disconnect() called from:\n${StackTrace.current}',
+      );
+    }
+
     _updateState(DeviceConnectionState.disconnecting);
 
     await _notifySubscription?.cancel();

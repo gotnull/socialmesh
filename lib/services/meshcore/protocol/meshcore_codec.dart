@@ -2,7 +2,7 @@
 
 // MeshCore protocol codec for encoding/decoding frames.
 //
-// BLE Framing (from meshcore-open reference):
+// BLE Framing:
 // - Each BLE notification IS a complete frame - no length prefix, no delimiter
 // - Frame = [code: 1 byte][payload: 0-171 bytes]
 // - Max 172 bytes per frame

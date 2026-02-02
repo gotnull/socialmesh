@@ -5,8 +5,6 @@
 // Pure functions for parsing MeshCore response payloads into structured data.
 // These functions do NOT handle framing or transport - they only parse payloads
 // that have already been extracted from MeshCoreFrame.
-//
-// Reference: meshcore-open implementation
 
 import 'dart:typed_data';
 
@@ -246,6 +244,216 @@ ParseResult<MeshCoreBattAndStorage> parseBattAndStorage(Uint8List payload) {
       batteryMillivolts: batteryMillivolts,
       storageUsed: storageUsed,
       storageTotal: storageTotal,
+      rawPayload: payload,
+    ),
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Contact Parsing
+// ---------------------------------------------------------------------------
+
+/// Parsed contact entry from CONTACT response.
+class MeshCoreContactInfo {
+  /// Public key (32 bytes).
+  final Uint8List publicKey;
+
+  /// Advertisement type (chat, repeater, room, sensor).
+  final int advType;
+
+  /// Path length: -1 = flood, 0+ = direct hops.
+  final int pathLength;
+
+  /// Last modification timestamp.
+  final int lastMod;
+
+  /// Latitude (raw int32, divide by 1e7 for degrees).
+  final int? latitude;
+
+  /// Longitude (raw int32, divide by 1e7 for degrees).
+  final int? longitude;
+
+  /// Contact name.
+  final String name;
+
+  /// Path bytes (length = pathLength if pathLength > 0).
+  final Uint8List pathBytes;
+
+  /// Raw payload for debugging.
+  final Uint8List rawPayload;
+
+  const MeshCoreContactInfo({
+    required this.publicKey,
+    required this.advType,
+    required this.pathLength,
+    required this.lastMod,
+    this.latitude,
+    this.longitude,
+    required this.name,
+    required this.pathBytes,
+    required this.rawPayload,
+  });
+
+  /// Public key as hex string.
+  String get publicKeyHex =>
+      publicKey.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+
+  /// Latitude in degrees (or null).
+  double? get latitudeDegrees => latitude != null ? latitude! / 1e7 : null;
+
+  /// Longitude in degrees (or null).
+  double? get longitudeDegrees => longitude != null ? longitude! / 1e7 : null;
+
+  @override
+  String toString() =>
+      'MeshCoreContactInfo(name=$name, type=$advType, path=$pathLength)';
+}
+
+/// Parse a CONTACT response payload.
+///
+/// CONTACT format:
+/// ```
+/// [0-31] = pub_key (32 bytes)
+/// [32] = adv_type
+/// [33] = path_len (signed: -1 for flood)
+/// [34-35] = lastmod (uint16 LE)
+/// [36-39] = lat (int32 LE, 0 if no location)
+/// [40-43] = lon (int32 LE, 0 if no location)
+/// [44+] = name (null-terminated, max 32 chars)
+/// [after name] = path_bytes (path_len bytes if path_len > 0)
+/// ```
+ParseResult<MeshCoreContactInfo> parseContact(Uint8List payload) {
+  // Minimum: pub_key(32) + adv_type(1) + path_len(1) + lastmod(2) = 36
+  const minLength = 36;
+
+  if (payload.length < minLength) {
+    return ParseResult.failure(
+      'Contact payload too short: ${payload.length} < $minLength',
+    );
+  }
+
+  final reader = MeshCoreBufferReader(payload);
+
+  // Required fields
+  final pubKey = reader.readBytes(meshCorePubKeySize);
+  final advType = reader.readByte();
+  final pathLenUnsigned = reader.readByte();
+  final pathLen = pathLenUnsigned >= 128
+      ? pathLenUnsigned - 256
+      : pathLenUnsigned;
+  final lastMod = reader.readUint16LE();
+
+  // Optional lat/lon (need 8 more bytes)
+  int? lat;
+  int? lon;
+  if (reader.remaining >= 8) {
+    lat = reader.readInt32LE();
+    lon = reader.readInt32LE();
+    // Zero means no location
+    if (lat == 0 && lon == 0) {
+      lat = null;
+      lon = null;
+    }
+  }
+
+  // Name (null-terminated)
+  String name = '';
+  if (reader.hasRemaining) {
+    name = reader.readCString(meshCoreMaxNameSize);
+  }
+
+  // Path bytes (if path_len > 0)
+  Uint8List pathBytes = Uint8List(0);
+  if (pathLen > 0 && reader.remaining >= pathLen) {
+    pathBytes = reader.readBytes(pathLen);
+  }
+
+  return ParseResult.success(
+    MeshCoreContactInfo(
+      publicKey: pubKey,
+      advType: advType,
+      pathLength: pathLen,
+      lastMod: lastMod,
+      latitude: lat,
+      longitude: lon,
+      name: name,
+      pathBytes: pathBytes,
+      rawPayload: payload,
+    ),
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Channel Parsing
+// ---------------------------------------------------------------------------
+
+/// Parsed channel info from CHANNEL_INFO response.
+class MeshCoreChannelInfo {
+  /// Channel index (0-based).
+  final int index;
+
+  /// Channel name.
+  final String name;
+
+  /// Pre-shared key (16 bytes).
+  final Uint8List psk;
+
+  /// Raw payload for debugging.
+  final Uint8List rawPayload;
+
+  const MeshCoreChannelInfo({
+    required this.index,
+    required this.name,
+    required this.psk,
+    required this.rawPayload,
+  });
+
+  /// PSK as hex string.
+  String get pskHex =>
+      psk.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+
+  /// Whether this channel is empty/unconfigured.
+  bool get isEmpty => name.isEmpty && psk.every((b) => b == 0);
+
+  @override
+  String toString() => 'MeshCoreChannelInfo($index: $name)';
+}
+
+/// Parse a CHANNEL_INFO response payload.
+///
+/// CHANNEL_INFO format:
+/// ```
+/// [0] = channel_idx
+/// [1-32] = name (32 bytes, null-terminated)
+/// [33-48] = psk (16 bytes)
+/// ```
+ParseResult<MeshCoreChannelInfo> parseChannelInfo(Uint8List payload) {
+  // Need: idx(1) + name(32) + psk(16) = 49 bytes
+  const minLength = 49;
+
+  if (payload.length < minLength) {
+    return ParseResult.failure(
+      'Channel info payload too short: ${payload.length} < $minLength',
+    );
+  }
+
+  final index = payload[0];
+
+  // Read name (null-terminated within 32 bytes)
+  int nameEnd = 1;
+  while (nameEnd < 33 && nameEnd < payload.length && payload[nameEnd] != 0) {
+    nameEnd++;
+  }
+  final name = String.fromCharCodes(payload.sublist(1, nameEnd));
+
+  // Read PSK (16 bytes at offset 33)
+  final psk = Uint8List.fromList(payload.sublist(33, 49));
+
+  return ParseResult.success(
+    MeshCoreChannelInfo(
+      index: index,
+      name: name,
+      psk: psk,
       rawPayload: payload,
     ),
   );

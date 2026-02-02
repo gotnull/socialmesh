@@ -8,7 +8,7 @@ import 'package:socialmesh/services/meshcore/protocol/meshcore_frame.dart';
 
 // MeshCore adapter tests using real protocol commands.
 //
-// Startup sequence (from meshcore-open):
+// Startup sequence:
 // - Send cmdDeviceQuery (0x16) + cmdAppStart (0x01)
 // - Wait for respSelfInfo (0x05)
 //
@@ -113,19 +113,19 @@ void main() {
         await adapter.identify();
 
         // Verify startup sequence was sent:
-        // 1. cmdDeviceQuery (0x16)
-        // 2. cmdAppStart (0x01)
+        // 1. cmdDeviceQuery (0x16) with app version
+        // 2. cmdAppStart (0x01) with app version, reserved bytes, and app name
         expect(fakeTransport.sentData.length, greaterThanOrEqualTo(2));
 
-        // First should be deviceQuery
-        expect(fakeTransport.sentData[0].length, equals(1));
+        // First should be deviceQuery: [0x16, app_version]
+        expect(fakeTransport.sentData[0].length, greaterThanOrEqualTo(2));
         expect(
           fakeTransport.sentData[0][0],
           equals(MeshCoreCommands.deviceQuery),
         );
 
-        // Second should be appStart
-        expect(fakeTransport.sentData[1].length, equals(1));
+        // Second should be appStart: [0x01, app_version, reserved x6, app_name...]
+        expect(fakeTransport.sentData[1].length, greaterThanOrEqualTo(8));
         expect(fakeTransport.sentData[1][0], equals(MeshCoreCommands.appStart));
       });
 
@@ -165,7 +165,8 @@ void main() {
       });
 
       test('handles short response gracefully', () async {
-        // Queue a too-short response
+        // Queue a too-short response that won't satisfy the waiter predicate
+        // (requires >= 35 bytes payload for valid SELF_INFO)
         fakeTransport.queueResponse([
           MeshCoreResponses.selfInfo,
           0x01, // Just ADV_TYPE, not enough data
@@ -173,8 +174,10 @@ void main() {
 
         final result = await adapter.identify();
 
+        // Short frames don't satisfy the validated waiter, so we get timeout
+        // (the waiter keeps waiting for a valid frame that never comes)
         expect(result.isFailure, isTrue);
-        expect(result.error, equals(MeshProtocolError.identificationFailed));
+        expect(result.error, equals(MeshProtocolError.timeout));
       });
     });
 
@@ -317,7 +320,7 @@ void main() {
       await adapter.dispose();
     });
 
-    test('frames are sent as [command][payload]', () async {
+    test('frames are sent with proper payload format', () async {
       final fakeTransport = FakeMeshTransport();
       final adapter = MeshCoreAdapter(fakeTransport);
 
@@ -330,9 +333,23 @@ void main() {
 
       await adapter.identify();
 
-      // Check the frame format: deviceQuery is just [0x16]
-      expect(fakeTransport.sentData[0], equals([MeshCoreCommands.deviceQuery]));
-      expect(fakeTransport.sentData[1], equals([MeshCoreCommands.appStart]));
+      // Check the frame format: deviceQuery is [0x16, app_version]
+      // appStart is [0x01, app_version, reserved x6, app_name...]
+      expect(
+        fakeTransport.sentData[0][0],
+        equals(MeshCoreCommands.deviceQuery),
+      );
+      expect(
+        fakeTransport.sentData[0].length,
+        greaterThanOrEqualTo(2),
+        reason: 'deviceQuery requires len >= 2 for firmware',
+      );
+      expect(fakeTransport.sentData[1][0], equals(MeshCoreCommands.appStart));
+      expect(
+        fakeTransport.sentData[1].length,
+        greaterThanOrEqualTo(8),
+        reason: 'appStart requires len >= 8 for firmware',
+      );
 
       await adapter.dispose();
     });
@@ -594,8 +611,9 @@ void main() {
       expect(result.value!.batteryVoltageMillivolts, isNull);
     });
 
-    test('parse failure returns identificationFailed', () async {
-      // Queue a too-short response that will fail to parse
+    test('short response returns timeout (waiter not satisfied)', () async {
+      // Queue a too-short response that won't satisfy the validated waiter
+      // The waiter requires >= 35 bytes payload for valid SELF_INFO
       fakeTransport.queueResponse([
         MeshCoreResponses.selfInfo,
         0x01, // Just ADV_TYPE, not enough data
@@ -603,8 +621,10 @@ void main() {
 
       final result = await adapter.identify();
 
+      // Short frames don't satisfy the validated waiter predicate,
+      // so we get a timeout error (waiting for valid frame that never comes)
       expect(result.isFailure, isTrue);
-      expect(result.error, equals(MeshProtocolError.identificationFailed));
+      expect(result.error, equals(MeshProtocolError.timeout));
     });
   });
 
