@@ -3,6 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/shop_models.dart';
 import '../services/device_shop_service.dart';
+import '../services/device_shop_event_logger.dart';
+
+/// Provider for DeviceShopEventLogger
+final deviceShopEventLoggerProvider = Provider<DeviceShopEventLogger>((ref) {
+  return LocalDeviceShopEventLogger();
+});
 
 /// Provider for DeviceShopService
 final deviceShopServiceProvider = Provider<DeviceShopService>((ref) {
@@ -137,4 +143,11 @@ final userFavoriteIdsProvider = StreamProvider.family<Set<String>, String>((
 final shopStatisticsProvider = FutureProvider<ShopStatistics>((ref) {
   final service = ref.watch(deviceShopServiceProvider);
   return service.getShopStatistics();
+});
+
+/// Provider for trending products (by view count)
+/// Used for "Popular" section - safe because based on product data, not user input
+final trendingProductsProvider = StreamProvider<List<ShopProduct>>((ref) {
+  final service = ref.watch(deviceShopServiceProvider);
+  return service.watchTrendingProducts();
 });

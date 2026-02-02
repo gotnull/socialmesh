@@ -133,7 +133,19 @@ class DeviceShopService {
 
   // ============ PRODUCT OPERATIONS ============
 
-  /// Watch all active products
+  /// Get set of active seller IDs for filtering products
+  Future<Set<String>> _getActiveSellerIds() async {
+    final snapshot = await _sellersCollection.get();
+    return snapshot.docs
+        .map((doc) => ShopSeller.fromFirestore(doc))
+        .where((s) => s.isActive)
+        .map((s) => s.id)
+        .toSet();
+  }
+
+  /// Watch all active products (from active sellers only)
+  /// Note: Filters client-side for isActive/isFeatured/isInStock to handle
+  /// documents that may be missing these fields (backward compatibility)
   Stream<List<ShopProduct>> watchProducts({
     DeviceCategory? category,
     String? sellerId,
@@ -141,10 +153,9 @@ class DeviceShopService {
     bool? inStockOnly,
     String? searchQuery,
   }) {
-    Query<Map<String, dynamic>> query = _productsCollection.where(
-      'isActive',
-      isEqualTo: true,
-    );
+    // Start with base query - only use where clauses for fields that
+    // are guaranteed to exist (category, sellerId set at creation time)
+    Query<Map<String, dynamic>> query = _productsCollection;
 
     if (category != null) {
       query = query.where('category', isEqualTo: category.name);
@@ -154,18 +165,26 @@ class DeviceShopService {
       query = query.where('sellerId', isEqualTo: sellerId);
     }
 
-    if (featuredOnly == true) {
-      query = query.where('isFeatured', isEqualTo: true);
-    }
-
-    if (inStockOnly == true) {
-      query = query.where('isInStock', isEqualTo: true);
-    }
-
-    return query.snapshots().map((snapshot) {
+    return query.snapshots().asyncMap((snapshot) async {
+      final activeSellerIds = await _getActiveSellerIds();
       var products = snapshot.docs
           .map((doc) => ShopProduct.fromFirestore(doc))
           .toList();
+
+      // Client-side filters for fields that might be missing in old documents
+      // Model defaults: isActive=true, isFeatured=false, isInStock=true
+      // Also filter by active sellers
+      products = products
+          .where((p) => p.isActive && activeSellerIds.contains(p.sellerId))
+          .toList();
+
+      if (featuredOnly == true) {
+        products = products.where((p) => p.isFeatured).toList();
+      }
+
+      if (inStockOnly == true) {
+        products = products.where((p) => p.isInStock).toList();
+      }
 
       // Client-side search filter (Firestore doesn't support full-text search)
       if (searchQuery != null && searchQuery.isNotEmpty) {
@@ -182,74 +201,103 @@ class DeviceShopService {
     });
   }
 
-  /// Watch featured products
+  /// Watch featured products (from active sellers only)
+  /// Note: Filters client-side for backward compatibility with old documents
   Stream<List<ShopProduct>> watchFeaturedProducts({int limit = 10}) {
-    return _productsCollection
-        .where('isActive', isEqualTo: true)
-        .where('isFeatured', isEqualTo: true)
-        .limit(limit)
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map((doc) => ShopProduct.fromFirestore(doc))
-              .toList(),
-        );
+    return _productsCollection.snapshots().asyncMap((snapshot) async {
+      final activeSellerIds = await _getActiveSellerIds();
+      final products = snapshot.docs
+          .map((doc) => ShopProduct.fromFirestore(doc))
+          .where(
+            (p) =>
+                p.isActive &&
+                p.isFeatured &&
+                activeSellerIds.contains(p.sellerId),
+          )
+          .take(limit)
+          .toList();
+      return products;
+    });
   }
 
-  /// Watch new arrivals
+  /// Watch new arrivals (from active sellers only)
+  /// Note: Filters client-side for backward compatibility with old documents
   Stream<List<ShopProduct>> watchNewArrivals({int limit = 20}) {
-    return _productsCollection
-        .where('isActive', isEqualTo: true)
-        .orderBy('createdAt', descending: true)
-        .limit(limit)
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
+    return _productsCollection.snapshots().asyncMap((snapshot) async {
+      final activeSellerIds = await _getActiveSellerIds();
+      final products =
+          snapshot.docs
               .map((doc) => ShopProduct.fromFirestore(doc))
-              .toList(),
-        );
+              .where((p) => p.isActive && activeSellerIds.contains(p.sellerId))
+              .toList()
+            ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return products.take(limit).toList();
+    });
   }
 
-  /// Watch best sellers
+  /// Watch best sellers (from active sellers only)
+  /// Note: Filters client-side for backward compatibility with old documents
   Stream<List<ShopProduct>> watchBestSellers({int limit = 20}) {
-    return _productsCollection
-        .where('isActive', isEqualTo: true)
-        .orderBy('salesCount', descending: true)
-        .limit(limit)
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
+    return _productsCollection.snapshots().asyncMap((snapshot) async {
+      final activeSellerIds = await _getActiveSellerIds();
+      final products =
+          snapshot.docs
               .map((doc) => ShopProduct.fromFirestore(doc))
-              .toList(),
-        );
+              .where((p) => p.isActive && activeSellerIds.contains(p.sellerId))
+              .toList()
+            ..sort((a, b) => b.salesCount.compareTo(a.salesCount));
+      return products.take(limit).toList();
+    });
   }
 
-  /// Watch products on sale
+  /// Watch trending products by view count (from active sellers only)
+  /// Used for "Popular" section - safe because it's based on product data, not user input
+  Stream<List<ShopProduct>> watchTrendingProducts({int limit = 8}) {
+    return _productsCollection.snapshots().asyncMap((snapshot) async {
+      final activeSellerIds = await _getActiveSellerIds();
+      final products =
+          snapshot.docs
+              .map((doc) => ShopProduct.fromFirestore(doc))
+              .where((p) => p.isActive && activeSellerIds.contains(p.sellerId))
+              .toList()
+            ..sort((a, b) => b.viewCount.compareTo(a.viewCount));
+      return products.take(limit).toList();
+    });
+  }
+
+  /// Watch products on sale (from active sellers only)
+  /// Note: Filters client-side for backward compatibility with old documents
   Stream<List<ShopProduct>> watchOnSale({int limit = 20}) {
-    return _productsCollection
-        .where('isActive', isEqualTo: true)
-        .where('compareAtPrice', isGreaterThan: 0)
-        .limit(limit)
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map((doc) => ShopProduct.fromFirestore(doc))
-              .toList(),
-        );
+    return _productsCollection.snapshots().asyncMap((snapshot) async {
+      final activeSellerIds = await _getActiveSellerIds();
+      final products = snapshot.docs
+          .map((doc) => ShopProduct.fromFirestore(doc))
+          .where(
+            (p) =>
+                p.isActive &&
+                (p.compareAtPrice ?? 0) > 0 &&
+                activeSellerIds.contains(p.sellerId),
+          )
+          .take(limit)
+          .toList();
+      return products;
+    });
   }
 
-  /// Watch products by category
+  /// Watch products by category (from active sellers only)
+  /// Note: Filters client-side for backward compatibility with old documents
   Stream<List<ShopProduct>> watchByCategory(DeviceCategory category) {
     return _productsCollection
-        .where('isActive', isEqualTo: true)
         .where('category', isEqualTo: category.name)
-        .orderBy('salesCount', descending: true)
         .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
+        .asyncMap((snapshot) async {
+          final activeSellerIds = await _getActiveSellerIds();
+          return snapshot.docs
               .map((doc) => ShopProduct.fromFirestore(doc))
-              .toList(),
-        );
+              .where((p) => p.isActive && activeSellerIds.contains(p.sellerId))
+              .toList()
+            ..sort((a, b) => b.salesCount.compareTo(a.salesCount));
+        });
   }
 
   /// Get a single product
@@ -280,18 +328,19 @@ class DeviceShopService {
     }
   }
 
-  /// Search products
+  /// Search products (from active sellers only)
+  /// Note: Filters client-side for backward compatibility with old documents
   Future<List<ShopProduct>> searchProducts(String query) async {
     if (query.isEmpty) return [];
 
-    // Get all active products and filter client-side
+    // Get all products and filter client-side
     // For production, consider using Algolia or similar
-    final snapshot = await _productsCollection
-        .where('isActive', isEqualTo: true)
-        .get();
+    final snapshot = await _productsCollection.get();
+    final activeSellerIds = await _getActiveSellerIds();
 
     final products = snapshot.docs
         .map((doc) => ShopProduct.fromFirestore(doc))
+        .where((p) => p.isActive && activeSellerIds.contains(p.sellerId))
         .toList();
 
     final lowerQuery = query.toLowerCase();
@@ -308,29 +357,33 @@ class DeviceShopService {
   // ============ SELLER OPERATIONS ============
 
   /// Watch all verified sellers
+  /// Note: Filters client-side for backward compatibility with old documents
   Stream<List<ShopSeller>> watchSellers() {
-    return _sellersCollection
-        .where('isActive', isEqualTo: true)
-        .orderBy('isOfficialPartner', descending: true)
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
+    return _sellersCollection.snapshots().map(
+      (snapshot) =>
+          snapshot.docs
               .map((doc) => ShopSeller.fromFirestore(doc))
-              .toList(),
-        );
+              .where((s) => s.isActive)
+              .toList()
+            ..sort((a, b) {
+              // Sort official partners first
+              if (a.isOfficialPartner != b.isOfficialPartner) {
+                return a.isOfficialPartner ? -1 : 1;
+              }
+              return a.name.compareTo(b.name);
+            }),
+    );
   }
 
   /// Watch official partners
+  /// Note: Filters client-side for backward compatibility with old documents
   Stream<List<ShopSeller>> watchOfficialPartners() {
-    return _sellersCollection
-        .where('isActive', isEqualTo: true)
-        .where('isOfficialPartner', isEqualTo: true)
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map((doc) => ShopSeller.fromFirestore(doc))
-              .toList(),
-        );
+    return _sellersCollection.snapshots().map(
+      (snapshot) => snapshot.docs
+          .map((doc) => ShopSeller.fromFirestore(doc))
+          .where((s) => s.isActive && s.isOfficialPartner)
+          .toList(),
+    );
   }
 
   /// Get a seller
@@ -355,32 +408,35 @@ class DeviceShopService {
   Stream<List<ProductReview>> watchProductReviews(String productId) {
     return _reviewsCollection
         .where('productId', isEqualTo: productId)
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .where((doc) {
-                // Show reviews that are approved OR don't have a status field (backward compatibility)
-                final data = doc.data() as Map<String, dynamic>?;
-                final hasStatusField = data?.containsKey('status') ?? false;
-                final status = data?['status'] as String?;
-                return !hasStatusField || status == 'approved';
-              })
-              .map((doc) => ProductReview.fromFirestore(doc))
-              .toList(),
-        );
+        .map((snapshot) {
+          final reviews =
+              snapshot.docs
+                  .where((doc) {
+                    // Show reviews that are approved OR don't have a status field (backward compatibility)
+                    final data = doc.data();
+                    final hasStatusField = data.containsKey('status');
+                    final status = data['status'] as String?;
+                    return !hasStatusField || status == 'approved';
+                  })
+                  .map((doc) => ProductReview.fromFirestore(doc))
+                  .toList()
+                ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return reviews;
+        });
   }
 
   /// Watch ALL reviews for a product (admin only, includes pending/rejected)
   Stream<List<ProductReview>> watchAllProductReviews(String productId) {
     return _reviewsCollection
         .where('productId', isEqualTo: productId)
-        .orderBy('createdAt', descending: true)
         .snapshots()
         .map(
-          (snapshot) => snapshot.docs
-              .map((doc) => ProductReview.fromFirestore(doc))
-              .toList(),
+          (snapshot) =>
+              snapshot.docs
+                  .map((doc) => ProductReview.fromFirestore(doc))
+                  .toList()
+                ..sort((a, b) => b.createdAt.compareTo(a.createdAt)),
         );
   }
 
@@ -388,45 +444,42 @@ class DeviceShopService {
   Stream<List<ProductReview>> watchPendingReviews() {
     return _reviewsCollection
         .where('status', isEqualTo: 'pending')
-        .orderBy('createdAt', descending: false)
         .snapshots()
         .map(
-          (snapshot) => snapshot.docs
-              .map((doc) => ProductReview.fromFirestore(doc))
-              .toList(),
+          (snapshot) =>
+              snapshot.docs
+                  .map((doc) => ProductReview.fromFirestore(doc))
+                  .toList()
+                ..sort((a, b) => a.createdAt.compareTo(b.createdAt)),
         );
   }
 
   /// Watch ALL reviews for admin management (including those without status)
   Stream<List<ProductReview>> watchAllReviews() {
-    return _reviewsCollection
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs.map((doc) {
-            try {
-              return ProductReview.fromFirestore(doc);
-            } catch (e) {
-              // Handle old reviews without status field
-              AppLogging.app('Error parsing review ${doc.id}: $e');
-              // Return a review with pending status as fallback
-              final data = doc.data();
-              return ProductReview(
-                id: doc.id,
-                productId: data['productId'] as String? ?? '',
-                userId: data['userId'] as String? ?? '',
-                userName: data['userName'] as String? ?? 'Unknown',
-                rating: data['rating'] as int? ?? 0,
-                body: data['body'] as String?,
-                createdAt:
-                    (data['createdAt'] as Timestamp?)?.toDate() ??
-                    DateTime.now(),
-                status:
-                    data['status'] as String? ?? 'legacy', // Mark old reviews
-              );
-            }
-          }).toList(),
-        );
+    return _reviewsCollection.snapshots().map((snapshot) {
+      final reviews = snapshot.docs.map((doc) {
+        try {
+          return ProductReview.fromFirestore(doc);
+        } catch (e) {
+          // Handle old reviews without status field
+          AppLogging.app('Error parsing review ${doc.id}: $e');
+          // Return a review with pending status as fallback
+          final data = doc.data();
+          return ProductReview(
+            id: doc.id,
+            productId: data['productId'] as String? ?? '',
+            userId: data['userId'] as String? ?? '',
+            userName: data['userName'] as String? ?? 'Unknown',
+            rating: data['rating'] as int? ?? 0,
+            body: data['body'] as String?,
+            createdAt:
+                (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+            status: data['status'] as String? ?? 'legacy', // Mark old reviews
+          );
+        }
+      }).toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return reviews;
+    });
   }
 
   /// Get review stats for a product
@@ -476,12 +529,19 @@ class DeviceShopService {
   }
 
   Future<void> _updateProductRating(String productId) async {
+    // Fetch all reviews for this product and filter client-side
+    // to handle old reviews that may be missing the status field
+    // (those default to 'approved' in the model)
     final snapshot = await _reviewsCollection
         .where('productId', isEqualTo: productId)
-        .where('status', isEqualTo: 'approved')
         .get();
 
-    if (snapshot.docs.isEmpty) {
+    final approvedReviews = snapshot.docs
+        .map((doc) => ProductReview.fromFirestore(doc))
+        .where((r) => r.status == 'approved')
+        .toList();
+
+    if (approvedReviews.isEmpty) {
       // No approved reviews, reset to defaults
       await _productsCollection.doc(productId).update({
         'rating': 0.0,
@@ -490,15 +550,15 @@ class DeviceShopService {
       return;
     }
 
-    final totalRating = snapshot.docs.fold<int>(
+    final totalRating = approvedReviews.fold<int>(
       0,
-      (total, doc) => total + (doc.data()['rating'] as int? ?? 0),
+      (total, review) => total + review.rating,
     );
-    final avgRating = totalRating / snapshot.docs.length;
+    final avgRating = totalRating / approvedReviews.length;
 
     await _productsCollection.doc(productId).update({
       'rating': avgRating,
-      'reviewCount': snapshot.docs.length,
+      'reviewCount': approvedReviews.length,
     });
   }
 
@@ -557,12 +617,13 @@ class DeviceShopService {
   Stream<List<ProductFavorite>> watchUserFavorites(String oderId) {
     return _favoritesCollection
         .where('userId', isEqualTo: oderId)
-        .orderBy('addedAt', descending: true)
         .snapshots()
         .map(
-          (snapshot) => snapshot.docs
-              .map((doc) => ProductFavorite.fromFirestore(doc))
-              .toList(),
+          (snapshot) =>
+              snapshot.docs
+                  .map((doc) => ProductFavorite.fromFirestore(doc))
+                  .toList()
+                ..sort((a, b) => b.addedAt.compareTo(a.addedAt)),
         );
   }
 
@@ -762,11 +823,12 @@ class DeviceShopService {
     await _sellersCollection.doc(seller.id).update(data);
   }
 
-  /// Deactivate a seller
+  /// Deactivate a seller (soft delete)
   Future<void> deactivateSeller(String sellerId, {String? adminId}) async {
     final updates = <String, dynamic>{
       'isActive': false,
       'updatedAt': Timestamp.now(),
+      'deactivatedAt': Timestamp.now(),
     };
     if (adminId != null) {
       updates['deactivatedBy'] = adminId;
@@ -774,55 +836,127 @@ class DeviceShopService {
     await _sellersCollection.doc(sellerId).update(updates);
   }
 
+  /// Reactivate a seller
+  Future<void> reactivateSeller(String sellerId, {String? adminId}) async {
+    final updates = <String, dynamic>{
+      'isActive': true,
+      'updatedAt': Timestamp.now(),
+      'deactivatedAt': FieldValue.delete(),
+      'deactivatedBy': FieldValue.delete(),
+    };
+    if (adminId != null) {
+      updates['updatedBy'] = adminId;
+    }
+    await _sellersCollection.doc(sellerId).update(updates);
+  }
+
+  /// Delete a seller permanently (admin only)
+  /// This also deactivates all products from this seller
+  Future<void> deleteSellerPermanently(String sellerId) async {
+    // Deactivate all products from this seller
+    final productsSnapshot = await _productsCollection
+        .where('sellerId', isEqualTo: sellerId)
+        .get();
+
+    final batch = FirebaseFirestore.instance.batch();
+
+    for (final doc in productsSnapshot.docs) {
+      batch.update(doc.reference, {
+        'isActive': false,
+        'deletedAt': Timestamp.now(),
+        'deletedReason': 'Seller deleted',
+      });
+    }
+
+    // Delete the seller
+    batch.delete(_sellersCollection.doc(sellerId));
+
+    await batch.commit();
+  }
+
+  /// Update featured order for products (batch operation)
+  Future<void> updateFeaturedOrders(
+    Map<String, int> productOrders, {
+    String? adminId,
+  }) async {
+    final batch = FirebaseFirestore.instance.batch();
+
+    for (final entry in productOrders.entries) {
+      final updates = <String, dynamic>{
+        'featuredOrder': entry.value,
+        'updatedAt': Timestamp.now(),
+      };
+      if (adminId != null) {
+        updates['updatedBy'] = adminId;
+      }
+      batch.update(_productsCollection.doc(entry.key), updates);
+    }
+
+    await batch.commit();
+  }
+
+  /// Watch featured products ordered by featuredOrder
+  /// Note: Filters client-side for backward compatibility with old documents
+  Stream<List<ShopProduct>> watchFeaturedProductsOrdered() {
+    return _productsCollection.snapshots().map(
+      (snapshot) =>
+          snapshot.docs
+              .map((doc) => ShopProduct.fromFirestore(doc))
+              .where((p) => p.isActive && p.isFeatured)
+              .toList()
+            ..sort((a, b) => a.featuredOrder.compareTo(b.featuredOrder)),
+    );
+  }
+
   /// Watch all sellers (including inactive) for admin
   Stream<List<ShopSeller>> watchAllSellersAdmin() {
-    return _sellersCollection
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map((doc) => ShopSeller.fromFirestore(doc))
-              .toList(),
-        );
+    return _sellersCollection.snapshots().map(
+      (snapshot) =>
+          snapshot.docs.map((doc) => ShopSeller.fromFirestore(doc)).toList()
+            ..sort((a, b) => b.joinedAt.compareTo(a.joinedAt)),
+    );
   }
 
   /// Watch all products (including inactive) for admin
   Stream<List<ShopProduct>> watchAllProductsAdmin() {
-    return _productsCollection
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map((doc) => ShopProduct.fromFirestore(doc))
-              .toList(),
-        );
+    return _productsCollection.snapshots().map(
+      (snapshot) =>
+          snapshot.docs.map((doc) => ShopProduct.fromFirestore(doc)).toList()
+            ..sort((a, b) => b.createdAt.compareTo(a.createdAt)),
+    );
   }
 
   // ============ ANALYTICS ============
 
   /// Get shop statistics
+  /// Note: Filters client-side for backward compatibility with old documents
   Future<ShopStatistics> getShopStatistics() async {
     try {
-      final productsSnapshot = await _productsCollection
-          .where('isActive', isEqualTo: true)
-          .get();
-      final sellersSnapshot = await _sellersCollection
-          .where('isActive', isEqualTo: true)
-          .get();
+      final productsSnapshot = await _productsCollection.get();
+      final sellersSnapshot = await _sellersCollection.get();
 
-      int totalProducts = productsSnapshot.docs.length;
-      int totalSellers = sellersSnapshot.docs.length;
+      final activeProducts = productsSnapshot.docs
+          .map((doc) => ShopProduct.fromFirestore(doc))
+          .where((p) => p.isActive)
+          .toList();
+      final activeSellers = sellersSnapshot.docs
+          .map((doc) => ShopSeller.fromFirestore(doc))
+          .where((s) => s.isActive)
+          .toList();
+
+      int totalProducts = activeProducts.length;
+      int totalSellers = activeSellers.length;
       int totalSales = 0;
       int totalViews = 0;
       int officialPartners = 0;
 
-      for (final doc in productsSnapshot.docs) {
-        totalSales += (doc.data()['salesCount'] as int?) ?? 0;
-        totalViews += (doc.data()['viewCount'] as int?) ?? 0;
+      for (final product in activeProducts) {
+        totalSales += product.salesCount;
+        totalViews += product.viewCount;
       }
 
-      for (final doc in sellersSnapshot.docs) {
-        if (doc.data()['isOfficialPartner'] == true) {
+      for (final seller in activeSellers) {
+        if (seller.isOfficialPartner) {
           officialPartners++;
         }
       }
@@ -841,12 +975,14 @@ class DeviceShopService {
   }
 
   /// Get extended admin statistics
+  /// Note: Filters client-side for backward compatibility with old documents
   Future<AdminShopStatistics> getAdminStatistics() async {
     try {
       final allProductsSnapshot = await _productsCollection.get();
-      final activeProductsSnapshot = await _productsCollection
-          .where('isActive', isEqualTo: true)
-          .get();
+      final allProducts = allProductsSnapshot.docs
+          .map((doc) => ShopProduct.fromFirestore(doc))
+          .toList();
+      final activeProducts = allProducts.where((p) => p.isActive).toList();
       final sellersSnapshot = await _sellersCollection.get();
       final reviewsSnapshot = await _reviewsCollection.get();
 
@@ -855,22 +991,17 @@ class DeviceShopService {
       double totalRevenue = 0;
       int outOfStock = 0;
 
-      for (final doc in allProductsSnapshot.docs) {
-        final data = doc.data();
-        final sales = (data['salesCount'] as int?) ?? 0;
-        final price = (data['price'] as num?)?.toDouble() ?? 0;
-        totalSales += sales;
-        totalViews += (data['viewCount'] as int?) ?? 0;
-        totalRevenue += sales * price;
-        if (data['isInStock'] == false) outOfStock++;
+      for (final product in allProducts) {
+        totalSales += product.salesCount;
+        totalViews += product.viewCount;
+        totalRevenue += product.salesCount * product.price;
+        if (!product.isInStock) outOfStock++;
       }
 
       return AdminShopStatistics(
-        totalProducts: allProductsSnapshot.docs.length,
-        activeProducts: activeProductsSnapshot.docs.length,
-        inactiveProducts:
-            allProductsSnapshot.docs.length -
-            activeProductsSnapshot.docs.length,
+        totalProducts: allProducts.length,
+        activeProducts: activeProducts.length,
+        inactiveProducts: allProducts.length - activeProducts.length,
         totalSellers: sellersSnapshot.docs.length,
         totalReviews: reviewsSnapshot.docs.length,
         totalSales: totalSales,

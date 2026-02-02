@@ -559,8 +559,8 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       // Normal mode: filter to only recognized protocols
       devices = _devices.where((device) {
         final protocol = device.detectProtocol().protocolType;
-        return protocol == MeshProtocolType.meshtastic ||
-            protocol == MeshProtocolType.meshcore;
+        return protocol == MeshProtocolType.meshtastic;
+        //|| protocol == MeshProtocolType.meshcore;
       }).toList();
     }
 

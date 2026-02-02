@@ -4,11 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme.dart';
 import '../../../core/widgets/glass_scaffold.dart';
-import '../../../utils/snackbar.dart';
 import '../providers/admin_shop_providers.dart';
 import '../services/device_shop_service.dart';
 import 'admin_products_screen.dart';
 import 'admin_sellers_screen.dart';
+import 'featured_products_screen.dart';
+import 'review_moderation_screen.dart';
 
 /// Admin dashboard for managing the device shop
 class ShopAdminDashboard extends ConsumerWidget {
@@ -283,20 +284,24 @@ class _AdminDashboardContent extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
         _ManagementCard(
-          icon: Icons.rate_review,
-          title: 'Reviews',
-          subtitle: 'Moderate product reviews',
+          icon: Icons.star,
+          title: 'Featured Products',
+          subtitle: 'Manage featured product display order',
           onTap: () {
-            showInfoSnackBar(context, 'Reviews management coming soon');
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const FeaturedProductsScreen()),
+            );
           },
         ),
         const SizedBox(height: 12),
         _ManagementCard(
-          icon: Icons.analytics,
-          title: 'Analytics',
-          subtitle: 'View detailed shop analytics',
+          icon: Icons.rate_review,
+          title: 'Reviews',
+          subtitle: 'Moderate product reviews',
           onTap: () {
-            showInfoSnackBar(context, 'Analytics coming soon');
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const ReviewModerationScreen()),
+            );
           },
         ),
       ],

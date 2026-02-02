@@ -209,6 +209,14 @@ class ProductFormNotifier extends Notifier<ShopProduct> {
   void updateStockQuantity(int quantity) {
     state = state.copyWith(stockQuantity: quantity);
   }
+
+  void updateVendorVerified(bool verified) {
+    state = state.copyWith(vendorVerified: verified);
+  }
+
+  void updateFeaturedOrder(int order) {
+    state = state.copyWith(featuredOrder: order);
+  }
 }
 
 final productFormProvider = NotifierProvider<ProductFormNotifier, ShopProduct>(
@@ -293,8 +301,40 @@ class SellerFormNotifier extends Notifier<ShopSeller> {
   void updateIsActive(bool active) {
     state = state.copyWith(isActive: active);
   }
+
+  // Discount code methods
+  void updateDiscountCode(String? code) {
+    state = state.copyWith(discountCode: code);
+  }
+
+  void updateDiscountCodeLabel(String? label) {
+    state = state.copyWith(discountCodeLabel: label);
+  }
+
+  void updateDiscountCodeExpiry(DateTime? expiry) {
+    state = state.copyWith(discountCodeExpiry: expiry);
+  }
+
+  void updateDiscountCodeTerms(String? terms) {
+    state = state.copyWith(discountCodeTerms: terms);
+  }
+
+  void clearDiscountCode() {
+    state = state.copyWith(
+      discountCode: null,
+      discountCodeLabel: null,
+      discountCodeExpiry: null,
+      discountCodeTerms: null,
+    );
+  }
 }
 
 final sellerFormProvider = NotifierProvider<SellerFormNotifier, ShopSeller>(
   SellerFormNotifier.new,
 );
+
+/// Provider for featured products (ordered by featuredOrder) for admin
+final adminFeaturedProductsProvider = StreamProvider<List<ShopProduct>>((ref) {
+  final service = ref.watch(deviceShopServiceProvider);
+  return service.watchFeaturedProductsOrdered();
+});

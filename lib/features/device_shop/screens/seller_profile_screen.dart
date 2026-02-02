@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -159,6 +160,10 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen> {
 
             // Contact section
             SliverToBoxAdapter(child: _ContactSection(seller: seller)),
+
+            // Discount code section (LILYGO only)
+            if (seller.discountCode != null && seller.discountCode!.isNotEmpty)
+              SliverToBoxAdapter(child: _DiscountCodeSection(seller: seller)),
 
             // Products section header
             SliverToBoxAdapter(
@@ -522,13 +527,13 @@ class _SellerDescription extends StatelessWidget {
   }
 }
 
-class _ContactSection extends StatelessWidget {
+class _ContactSection extends ConsumerWidget {
   final ShopSeller seller;
 
   const _ContactSection({required this.seller});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final hasWebsite = seller.websiteUrl != null;
     final hasEmail = seller.contactEmail != null;
     final hasShipping = seller.countries.isNotEmpty;
@@ -563,7 +568,17 @@ class _ContactSection extends StatelessWidget {
               icon: Icons.language,
               label: 'Website',
               value: _formatUrl(seller.websiteUrl!),
-              onTap: () => _launchUrl(seller.websiteUrl!),
+              onTap: () async {
+                await ref
+                    .read(deviceShopEventLoggerProvider)
+                    .logPartnerContactTap(
+                      sellerId: seller.id,
+                      sellerName: seller.name,
+                      actionType: 'website',
+                      destinationUrl: seller.websiteUrl,
+                    );
+                await _launchUrl(seller.websiteUrl!);
+              },
             ),
 
           if (hasEmail)
@@ -571,7 +586,17 @@ class _ContactSection extends StatelessWidget {
               icon: Icons.email_outlined,
               label: 'Email',
               value: seller.contactEmail!,
-              onTap: () => _launchUrl('mailto:${seller.contactEmail}'),
+              onTap: () async {
+                await ref
+                    .read(deviceShopEventLoggerProvider)
+                    .logPartnerContactTap(
+                      sellerId: seller.id,
+                      sellerName: seller.name,
+                      actionType: 'email',
+                      destinationUrl: 'mailto:${seller.contactEmail}',
+                    );
+                await _launchUrl('mailto:${seller.contactEmail}');
+              },
             ),
 
           if (hasShipping)
@@ -648,6 +673,146 @@ class _ContactRow extends StatelessWidget {
             ),
             if (onTap != null)
               Icon(Icons.open_in_new, color: context.textTertiary, size: 16),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Discount code section for partner sellers
+class _DiscountCodeSection extends ConsumerStatefulWidget {
+  final ShopSeller seller;
+
+  const _DiscountCodeSection({required this.seller});
+
+  @override
+  ConsumerState<_DiscountCodeSection> createState() =>
+      _DiscountCodeSectionState();
+}
+
+class _DiscountCodeSectionState extends ConsumerState<_DiscountCodeSection> {
+  bool _isRevealed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: context.card,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: context.accentColor.withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.local_offer, color: context.accentColor, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'Partner Discount',
+                  style: TextStyle(
+                    color: context.textPrimary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (!_isRevealed) ...[
+              Text(
+                'Exclusive discount code for Socialmesh users',
+                style: TextStyle(color: context.textSecondary, fontSize: 13),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () async {
+                    setState(() => _isRevealed = true);
+                    await ref
+                        .read(deviceShopEventLoggerProvider)
+                        .logDiscountReveal(
+                          sellerId: widget.seller.id,
+                          sellerName: widget.seller.name,
+                          code: widget.seller.discountCode!,
+                        );
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: context.accentColor,
+                    side: BorderSide(color: context.accentColor),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text('Reveal Code'),
+                ),
+              ),
+            ] else ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: context.background.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: context.accentColor.withValues(alpha: 0.2),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        widget.seller.discountCode!,
+                        style: TextStyle(
+                          color: context.textPrimary,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 2,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.copy, color: context.accentColor),
+                      onPressed: () async {
+                        await Clipboard.setData(
+                          ClipboardData(text: widget.seller.discountCode!),
+                        );
+                        await ref
+                            .read(deviceShopEventLoggerProvider)
+                            .logDiscountCopy(
+                              sellerId: widget.seller.id,
+                              sellerName: widget.seller.name,
+                              code: widget.seller.discountCode!,
+                            );
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Text('Code copied to clipboard'),
+                            backgroundColor: context.accentColor,
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                      tooltip: 'Copy code',
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Apply this code at checkout on the seller\'s store',
+                style: TextStyle(color: context.textTertiary, fontSize: 11),
+              ),
+            ],
           ],
         ),
       ),

@@ -560,14 +560,59 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Technical Specifications',
-            style: TextStyle(
-              color: context.textPrimary,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Technical Specifications',
+                style: TextStyle(
+                  color: context.textPrimary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              if (product.vendorVerified)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: context.accentColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: context.accentColor.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.verified,
+                        size: 14,
+                        color: context.accentColor,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Vendor Verified',
+                        style: TextStyle(
+                          color: context.accentColor,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
           ),
+          if (product.vendorVerified && product.approvedAt != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              'Verified on ${_formatDate(product.approvedAt!)}',
+              style: TextStyle(color: context.textTertiary, fontSize: 11),
+            ),
+          ],
           const SizedBox(height: 16),
           Container(
             decoration: BoxDecoration(
@@ -808,91 +853,150 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
         border: Border(top: BorderSide(color: context.border)),
       ),
       child: SafeArea(
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            // Price summary
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
+            // Marketplace disclaimer
+            Container(
+              padding: const EdgeInsets.all(12),
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: context.background.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: context.accentColor.withValues(alpha: 0.2),
+                  width: 1,
+                ),
+              ),
+              child: Row(
                 children: [
-                  Text(
-                    'Total',
-                    style: TextStyle(
-                      color: context.textSecondary,
-                      fontSize: 12,
-                    ),
+                  Icon(
+                    Icons.info_outline,
+                    color: context.accentColor,
+                    size: 16,
                   ),
-                  Text(
-                    product.formattedPrice,
-                    style: TextStyle(
-                      color: context.accentColor,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Purchases completed on seller\'s official store',
+                      style: TextStyle(
+                        color: context.textSecondary,
+                        fontSize: 11,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-            // Admin edit button
-            if (isAdmin) ...[
-              const SizedBox(width: 8),
-              OutlinedButton.icon(
-                onPressed: () {
-                  ref.read(productFormProvider.notifier).loadProduct(product);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => AdminProductEditScreen(product: product),
+            Row(
+              children: [
+                // Price summary
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Total',
+                        style: TextStyle(
+                          color: context.textSecondary,
+                          fontSize: 12,
+                        ),
+                      ),
+                      Text(
+                        product.formattedPrice,
+                        style: TextStyle(
+                          color: context.accentColor,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Admin edit button
+                if (isAdmin) ...[
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      ref
+                          .read(productFormProvider.notifier)
+                          .loadProduct(product);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              AdminProductEditScreen(product: product),
+                        ),
+                      ).then(
+                        (_) =>
+                            ref.invalidate(singleProductProvider(product.id)),
+                      );
+                    },
+                    icon: Icon(Icons.edit, size: 18),
+                    label: const Text('Edit'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: context.accentColor,
+                      side: BorderSide(color: context.accentColor),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 16,
+                        horizontal: 16,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                  ).then(
-                    (_) => ref.invalidate(singleProductProvider(product.id)),
-                  );
-                },
-                icon: Icon(Icons.edit, size: 18),
-                label: const Text('Edit'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: context.accentColor,
-                  side: BorderSide(color: context.accentColor),
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 16,
-                    horizontal: 16,
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ],
-            const SizedBox(width: 8),
-            // Buy button
-            Expanded(
-              child: ElevatedButton(
-                onPressed: product.isInStock
-                    ? () => _buyProduct(product)
-                    : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: context.accentColor,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  disabledBackgroundColor: context.border,
-                ),
-                child: Text(
-                  product.isInStock ? 'Buy Now' : 'Out of Stock',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                ],
+                const SizedBox(width: 8),
+                // Buy button
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: product.isInStock
+                        ? () => _buyProduct(product)
+                        : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: context.accentColor,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      disabledBackgroundColor: context.border,
+                    ),
+                    child: Text(
+                      product.isInStock ? 'Buy Now' : 'Out of Stock',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
           ],
         ),
       ),
     );
+  }
+
+  String _formatDate(DateTime date) {
+    final months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${months[date.month - 1]} ${date.day}, ${date.year}';
   }
 
   void _showFullscreenImage(List<String> images, int initialIndex) {
@@ -916,6 +1020,20 @@ Price: ${product.formattedPrice}${product.purchaseUrl != null ? '\n\n${product.p
   }
 
   Future<void> _buyProduct(ShopProduct product) async {
+    // Log the buy now tap
+    final logger = ref.read(deviceShopEventLoggerProvider);
+    await logger.logBuyNowTap(
+      sellerId: product.sellerId,
+      sellerName: product.sellerName,
+      productId: product.id,
+      productName: product.name,
+      category: product.category.name,
+      price: product.price,
+      currency: product.currency,
+      destinationUrl: product.purchaseUrl ?? 'no-url',
+      screen: 'detail',
+    );
+
     if (product.purchaseUrl != null) {
       final uri = Uri.parse(product.purchaseUrl!);
       if (await canLaunchUrl(uri)) {

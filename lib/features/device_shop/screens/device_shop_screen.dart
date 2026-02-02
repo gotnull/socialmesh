@@ -34,16 +34,6 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
   Timer? _debounce;
   bool _isSearchFocused = false;
   final List<String> _recentSearches = [];
-  final List<String> _popularSearches = [
-    'T-Beam',
-    'LoRa',
-    'SenseCAP',
-    'RAK',
-    'Solar',
-    'Antenna',
-    'ESP32',
-    'nRF52',
-  ];
 
   @override
   void initState() {
@@ -186,6 +176,9 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
               else if (_searchQuery.isNotEmpty)
                 _buildSearchResults()
               else ...[
+                // Marketplace Disclaimer
+                SliverToBoxAdapter(child: _buildMarketplaceDisclaimer()),
+
                 // Categories
                 SliverToBoxAdapter(
                   child: _CategoriesSection(onCategoryTap: _openCategory),
@@ -228,6 +221,54 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
       context,
       MaterialPageRoute(
         builder: (_) => CategoryProductsScreen(category: category),
+      ),
+    );
+  }
+
+  Widget _buildMarketplaceDisclaimer() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: context.card.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: context.accentColor.withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.info_outline, color: context.accentColor, size: 20),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Marketplace Information',
+                    style: TextStyle(
+                      color: context.textPrimary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Purchases are completed on the seller\'s official store. Socialmesh does not handle payment, shipping, warranty, or returns.',
+                    style: TextStyle(
+                      color: context.textSecondary,
+                      fontSize: 12,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -278,9 +319,9 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
               const SizedBox(height: 24),
             ],
 
-            // Popular searches
+            // Trending products
             Text(
-              'Popular Searches',
+              'Trending',
               style: TextStyle(
                 color: context.textPrimary,
                 fontSize: 16,
@@ -288,19 +329,84 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: _popularSearches
-                  .map(
-                    (s) => _SearchChip(
-                      label: s,
-                      icon: Icons.trending_up,
-                      onTap: () => _performSearch(s),
+            ref
+                .watch(trendingProductsProvider)
+                .when(
+                  data: (products) => products.isEmpty
+                      ? const SizedBox.shrink()
+                      : Column(
+                          children: products
+                              .map(
+                                (p) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: Material(
+                                    color: context.card,
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(12),
+                                      onTap: () => Navigator.push(
+                                        context,
+                                        MaterialPageRoute<void>(
+                                          builder: (_) => ProductDetailScreen(
+                                            productId: p.id,
+                                          ),
+                                        ),
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 12,
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.trending_up,
+                                              size: 18,
+                                              color: context.accentColor,
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: Text(
+                                                p.name,
+                                                style: TextStyle(
+                                                  color: context.textPrimary,
+                                                  fontSize: 14,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                            Icon(
+                                              Icons.chevron_right,
+                                              size: 20,
+                                              color: context.textTertiary,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                        ),
+                  loading: () => Column(
+                    children: List.generate(
+                      4,
+                      (_) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Container(
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: context.card,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
                     ),
-                  )
-                  .toList(),
-            ),
+                  ),
+                  error: (e, _) => const SizedBox.shrink(),
+                ),
             const SizedBox(height: 24),
 
             // Browse by category

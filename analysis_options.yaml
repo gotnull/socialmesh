@@ -19,6 +19,10 @@ analyzer:
     - "**/*.pbenum.dart"
     - "**/*.pbjson.dart"
     - "**/*.pbserver.dart"
+    - meshcore-open/**
+    - MeshCore-Firmware/**
+    - meshtastic-ios/**
+    - mesh-observer/**
   errors:
     # Suppress deprecation warnings from generated protobuf files
     # These are maintained upstream by the Meshtastic protobufs project

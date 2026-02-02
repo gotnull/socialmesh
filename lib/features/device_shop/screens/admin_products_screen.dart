@@ -483,6 +483,7 @@ class _AdminProductEditScreenState
   final _weightController = TextEditingController();
   final _dimensionsController = TextEditingController();
   final _stockQuantityController = TextEditingController();
+  final _featuredOrderController = TextEditingController();
 
   bool _isLoading = false;
   bool _isUploadingImage = false;
@@ -498,6 +499,7 @@ class _AdminProductEditScreenState
   bool _isInStock = true;
   bool _isFeatured = false;
   bool _isActive = true;
+  bool _vendorVerified = false;
 
   bool get _isEditing => widget.product != null;
 
@@ -518,6 +520,7 @@ class _AdminProductEditScreenState
     _purchaseUrlController.text = product.purchaseUrl ?? '';
     _tagsController.text = product.tags.join(', ');
     _chipsetController.text = product.chipset ?? '';
+    _featuredOrderController.text = product.featuredOrder.toString();
     _loraChipController.text = product.loraChip ?? '';
     _batteryCapacityController.text = product.batteryCapacity ?? '';
     _weightController.text = product.weight ?? '';
@@ -536,6 +539,7 @@ class _AdminProductEditScreenState
     _isInStock = product.isInStock;
     _isFeatured = product.isFeatured;
     _isActive = product.isActive;
+    _vendorVerified = product.vendorVerified;
   }
 
   @override
@@ -553,6 +557,7 @@ class _AdminProductEditScreenState
     _weightController.dispose();
     _dimensionsController.dispose();
     _stockQuantityController.dispose();
+    _featuredOrderController.dispose();
     super.dispose();
   }
 
@@ -892,7 +897,7 @@ class _AdminProductEditScreenState
                     }),
                   ),
                   SwitchListTile(
-                    title: Text('Featured'),
+                    title: const Text('Featured'),
                     subtitle: const Text('Show in featured products section'),
                     value: _isFeatured,
                     onChanged: (v) => setState(() => _isFeatured = v),
@@ -906,8 +911,23 @@ class _AdminProductEditScreenState
                       return null;
                     }),
                   ),
+                  if (_isFeatured)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 16, right: 16),
+                      child: TextFormField(
+                        controller: _featuredOrderController,
+                        decoration: const InputDecoration(
+                          labelText: 'Featured Order',
+                          hintText: 'Lower numbers appear first (0 = top)',
+                          helperText:
+                              'Controls display order in featured section',
+                        ),
+                        keyboardType: TextInputType.number,
+                      ),
+                    ),
+                  const SizedBox(height: 8),
                   SwitchListTile(
-                    title: Text('Active'),
+                    title: const Text('Active'),
                     subtitle: const Text('Product is visible in the shop'),
                     value: _isActive,
                     onChanged: (v) => setState(() => _isActive = v),
@@ -921,8 +941,40 @@ class _AdminProductEditScreenState
                       return null;
                     }),
                   ),
+                  const SizedBox(height: 24),
 
-                  SizedBox(height: 32),
+                  // Vendor Verification Section
+                  _buildSectionTitle('Vendor Verification'),
+                  Card(
+                    color: _vendorVerified
+                        ? Colors.green.withValues(alpha: 0.1)
+                        : Colors.white.withValues(alpha: 0.05),
+                    child: SwitchListTile(
+                      title: const Text('Vendor Verified Specs'),
+                      subtitle: Text(
+                        _vendorVerified
+                            ? 'Specifications have been verified by the vendor'
+                            : 'Mark when vendor confirms all specs are accurate',
+                      ),
+                      value: _vendorVerified,
+                      onChanged: (v) => setState(() => _vendorVerified = v),
+                      secondary: Icon(
+                        _vendorVerified
+                            ? Icons.verified
+                            : Icons.verified_outlined,
+                        color: _vendorVerified ? Colors.green : null,
+                      ),
+                      activeTrackColor: Colors.green.withValues(alpha: 0.5),
+                      thumbColor: WidgetStateProperty.resolveWith((states) {
+                        if (states.contains(WidgetState.selected)) {
+                          return Colors.green;
+                        }
+                        return null;
+                      }),
+                    ),
+                  ),
+
+                  const SizedBox(height: 32),
 
                   // Save Button
                   SizedBox(
@@ -1144,6 +1196,10 @@ class _AdminProductEditScreenState
           .where((t) => t.isNotEmpty)
           .toList();
 
+      final featuredOrder = _featuredOrderController.text.isEmpty
+          ? 999
+          : int.tryParse(_featuredOrderController.text) ?? 999;
+
       final product = ShopProduct(
         id: widget.product?.id ?? '',
         name: _nameController.text,
@@ -1186,8 +1242,13 @@ class _AdminProductEditScreenState
             : _purchaseUrlController.text,
         tags: tags,
         isFeatured: _isFeatured,
+        featuredOrder: featuredOrder,
         isInStock: _isInStock,
         isActive: _isActive,
+        vendorVerified: _vendorVerified,
+        approvedAt: _vendorVerified && widget.product?.approvedAt == null
+            ? DateTime.now()
+            : widget.product?.approvedAt,
         viewCount: widget.product?.viewCount ?? 0,
         salesCount: widget.product?.salesCount ?? 0,
         favoriteCount: widget.product?.favoriteCount ?? 0,

@@ -418,6 +418,16 @@ class _MainShellState extends ConsumerState<MainShell> {
       premiumFeature: PremiumFeature.iftttIntegration,
       iconColor: Colors.blue.shade300,
     ),
+
+    // Shop - no section header, standalone item
+    _DrawerMenuItem(
+      icon: Icons.store_outlined,
+      label: 'Device Shop',
+      screen: const DeviceShopScreen(),
+      sectionHeader: 'SHOP',
+      iconColor: Colors.amber.shade600,
+      requiresConnection: false,
+    ),
   ];
 
   final List<_NavItem> _navItems = [

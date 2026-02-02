@@ -121,12 +121,6 @@ class _AdminSellersScreenState extends ConsumerState<AdminSellersScreen> {
               SliverFillRemaining(child: Center(child: Text('Error: $e'))),
         ),
       ],
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _navigateToEdit(null),
-        icon: const Icon(Icons.add),
-        label: const Text('Add Seller'),
-        backgroundColor: context.accentColor,
-      ),
     );
   }
 
@@ -205,17 +199,21 @@ class _SellerListItem extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
+                    Text(
+                      seller.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    // Status badges
+                    Wrap(
+                      spacing: 4,
+                      runSpacing: 4,
                       children: [
-                        Expanded(
-                          child: Text(
-                            seller.name,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
                         if (!seller.isActive)
                           _buildBadge('INACTIVE', Colors.red),
                         if (seller.isOfficialPartner)
@@ -373,12 +371,18 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen> {
   final _contactEmailController = TextEditingController();
   final _countriesController = TextEditingController();
 
+  // Discount code controllers
+  final _discountCodeController = TextEditingController();
+  final _discountLabelController = TextEditingController();
+  final _discountTermsController = TextEditingController();
+
   bool _isLoading = false;
   bool _isUploadingLogo = false;
   String? _logoUrl;
   bool _isVerified = false;
   bool _isOfficialPartner = false;
   bool _isActive = true;
+  DateTime? _discountCodeExpiry;
 
   bool get _isEditing => widget.seller != null;
 
@@ -400,6 +404,12 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen> {
     _isVerified = seller.isVerified;
     _isOfficialPartner = seller.isOfficialPartner;
     _isActive = seller.isActive;
+
+    // Discount code fields
+    _discountCodeController.text = seller.discountCode ?? '';
+    _discountLabelController.text = seller.discountCodeLabel ?? '';
+    _discountTermsController.text = seller.discountCodeTerms ?? '';
+    _discountCodeExpiry = seller.discountCodeExpiry;
   }
 
   @override
@@ -409,6 +419,9 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen> {
     _websiteUrlController.dispose();
     _contactEmailController.dispose();
     _countriesController.dispose();
+    _discountCodeController.dispose();
+    _discountLabelController.dispose();
+    _discountTermsController.dispose();
     super.dispose();
   }
 
@@ -416,6 +429,14 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen> {
   Widget build(BuildContext context) {
     return GlassScaffold(
       title: _isEditing ? 'Edit Seller' : 'Add Seller',
+      actions: [
+        if (_isEditing)
+          IconButton(
+            icon: const Icon(Icons.delete, color: Colors.red),
+            onPressed: _confirmDelete,
+            tooltip: 'Delete Seller',
+          ),
+      ],
       slivers: [
         SliverToBoxAdapter(
           child: Form(
@@ -428,7 +449,7 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen> {
                   // Logo Section
                   _buildSectionTitle('Seller Logo'),
                   _buildLogoSection(),
-                  SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
                   // Basic Info
                   _buildSectionTitle('Basic Information'),
@@ -488,6 +509,11 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen> {
                   ),
                   const SizedBox(height: 24),
 
+                  // Discount Code Section
+                  _buildSectionTitle('Partner Discount Code'),
+                  _buildDiscountCodeSection(),
+                  const SizedBox(height: 24),
+
                   // Status Toggles
                   _buildSectionTitle('Status & Verification'),
                   SwitchListTile(
@@ -506,7 +532,7 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen> {
                     }),
                   ),
                   SwitchListTile(
-                    title: Text('Official Partner'),
+                    title: const Text('Official Partner'),
                     subtitle: const Text(
                       'Display as official Meshtastic partner',
                     ),
@@ -523,7 +549,7 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen> {
                     }),
                   ),
                   SwitchListTile(
-                    title: Text('Active'),
+                    title: const Text('Active'),
                     subtitle: const Text('Seller is visible in the shop'),
                     value: _isActive,
                     onChanged: (v) => setState(() => _isActive = v),
@@ -538,7 +564,7 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen> {
                     }),
                   ),
 
-                  SizedBox(height: 32),
+                  const SizedBox(height: 32),
 
                   // Save Button
                   SizedBox(
@@ -562,6 +588,56 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen> {
                           : Text(_isEditing ? 'Save Changes' : 'Create Seller'),
                     ),
                   ),
+
+                  // Delete Section for existing sellers
+                  if (_isEditing) ...[
+                    const SizedBox(height: 24),
+                    const Divider(),
+                    const SizedBox(height: 16),
+                    _buildSectionTitle('Danger Zone'),
+                    Card(
+                      color: Colors.red.withValues(alpha: 0.1),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Row(
+                              children: [
+                                Icon(Icons.warning, color: Colors.red),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Delete Seller',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.red,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Permanently delete this seller and deactivate all their products. '
+                              'This action cannot be undone.',
+                              style: TextStyle(
+                                color: context.textSecondary,
+                                fontSize: 13,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            OutlinedButton(
+                              onPressed: _confirmDelete,
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.red,
+                                side: const BorderSide(color: Colors.red),
+                              ),
+                              child: const Text('Delete Seller Permanently'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 32),
                 ],
               ),
@@ -584,6 +660,139 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildDiscountCodeSection() {
+    final hasDiscount = _discountCodeController.text.isNotEmpty;
+    final isExpired =
+        _discountCodeExpiry != null &&
+        DateTime.now().isAfter(_discountCodeExpiry!);
+
+    return Card(
+      color: hasDiscount
+          ? (isExpired
+                ? Colors.orange.withValues(alpha: 0.1)
+                : Colors.green.withValues(alpha: 0.1))
+          : Colors.white.withValues(alpha: 0.05),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (hasDiscount && isExpired)
+              Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.warning, color: Colors.orange, size: 16),
+                    SizedBox(width: 4),
+                    Text(
+                      'Discount code has expired',
+                      style: TextStyle(color: Colors.orange, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            TextFormField(
+              controller: _discountCodeController,
+              decoration: const InputDecoration(
+                labelText: 'Discount Code',
+                hintText: 'e.g., MESH10',
+                prefixIcon: Icon(Icons.local_offer),
+              ),
+              textCapitalization: TextCapitalization.characters,
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _discountLabelController,
+              decoration: const InputDecoration(
+                labelText: 'Display Label',
+                hintText: 'e.g., 10% off for Socialmesh users',
+              ),
+            ),
+            const SizedBox(height: 16),
+            InkWell(
+              onTap: _selectExpiryDate,
+              child: InputDecorator(
+                decoration: const InputDecoration(
+                  labelText: 'Expiry Date (optional)',
+                  prefixIcon: Icon(Icons.calendar_today),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      _discountCodeExpiry != null
+                          ? '${_discountCodeExpiry!.day}/${_discountCodeExpiry!.month}/${_discountCodeExpiry!.year}'
+                          : 'No expiry',
+                      style: TextStyle(
+                        color: _discountCodeExpiry != null
+                            ? context.textPrimary
+                            : context.textSecondary,
+                      ),
+                    ),
+                    if (_discountCodeExpiry != null)
+                      IconButton(
+                        icon: const Icon(Icons.clear, size: 18),
+                        onPressed: () =>
+                            setState(() => _discountCodeExpiry = null),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _discountTermsController,
+              decoration: const InputDecoration(
+                labelText: 'Terms & Conditions',
+                hintText: 'e.g., Cannot be combined with other offers',
+              ),
+              maxLines: 2,
+            ),
+            if (hasDiscount) ...[
+              const SizedBox(height: 16),
+              TextButton.icon(
+                onPressed: _clearDiscountCode,
+                icon: const Icon(Icons.clear, size: 18),
+                label: const Text('Clear Discount Code'),
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _selectExpiryDate() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _discountCodeExpiry ?? now.add(const Duration(days: 30)),
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 365 * 2)),
+    );
+    if (picked != null) {
+      setState(() => _discountCodeExpiry = picked);
+    }
+  }
+
+  void _clearDiscountCode() {
+    setState(() {
+      _discountCodeController.clear();
+      _discountLabelController.clear();
+      _discountTermsController.clear();
+      _discountCodeExpiry = null;
+    });
   }
 
   Widget _buildLogoSection() {
@@ -712,6 +921,17 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen> {
         salesCount: widget.seller?.salesCount ?? 0,
         joinedAt: widget.seller?.joinedAt ?? DateTime.now(),
         countries: countries,
+        // Discount code fields
+        discountCode: _discountCodeController.text.isEmpty
+            ? null
+            : _discountCodeController.text.toUpperCase(),
+        discountCodeLabel: _discountLabelController.text.isEmpty
+            ? null
+            : _discountLabelController.text,
+        discountCodeExpiry: _discountCodeExpiry,
+        discountCodeTerms: _discountTermsController.text.isEmpty
+            ? null
+            : _discountTermsController.text,
       );
 
       if (_isEditing) {
@@ -734,6 +954,82 @@ class _AdminSellerEditScreenState extends ConsumerState<AdminSellerEditScreen> {
       setState(() => _isLoading = false);
       if (mounted) {
         showErrorSnackBar(context, 'Error: $e');
+      }
+    }
+  }
+
+  Future<void> _confirmDelete() async {
+    if (widget.seller == null) return;
+
+    final productCount = widget.seller!.productCount;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Seller'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Are you sure you want to permanently delete "${widget.seller!.name}"?',
+            ),
+            if (productCount > 0) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.warning, color: Colors.orange),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '$productCount product(s) will be deactivated.',
+                        style: const TextStyle(color: Colors.orange),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 12),
+            const Text(
+              'This action cannot be undone.',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        final service = ref.read(deviceShopServiceProvider);
+        await service.deleteSellerPermanently(widget.seller!.id);
+        ref.invalidate(adminAllSellersProvider);
+        ref.invalidate(shopSellersProvider);
+        if (mounted) {
+          Navigator.pop(context);
+          showSuccessSnackBar(context, 'Seller deleted');
+        }
+      } catch (e) {
+        if (mounted) {
+          showErrorSnackBar(context, 'Error: $e');
+        }
       }
     }
   }

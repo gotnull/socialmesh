@@ -65,6 +65,16 @@ class ShopSeller {
   final String? stripeAccountId;
   final bool isActive;
 
+  // Discount code / promotion fields
+  final String? discountCode; // Partner discount code
+  final String? discountCodeLabel; // Display label (e.g., "10% off")
+  final DateTime? discountCodeExpiry; // Expiration date
+  final String? discountCodeTerms; // Terms and conditions
+
+  // Audit fields
+  final DateTime? deactivatedAt;
+  final String? deactivatedBy;
+
   const ShopSeller({
     required this.id,
     required this.name,
@@ -82,17 +92,23 @@ class ShopSeller {
     this.countries = const [],
     this.stripeAccountId,
     this.isActive = true,
+    this.discountCode,
+    this.discountCodeLabel,
+    this.discountCodeExpiry,
+    this.discountCodeTerms,
+    this.deactivatedAt,
+    this.deactivatedBy,
   });
 
+  /// Check if discount code is active
+  bool get hasActiveDiscount {
+    if (discountCode == null || discountCode!.isEmpty) return false;
+    if (discountCodeExpiry == null) return true;
+    return DateTime.now().isBefore(discountCodeExpiry!);
+  }
+
   /// Known official partners
-  static const officialPartners = [
-    'LilyGO',
-    'SenseCAP',
-    'RAK Wireless',
-    'Heltec',
-    'TTGO',
-    'Rokland',
-  ];
+  static const officialPartners = ['LilyGO'];
 
   factory ShopSeller.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
@@ -117,6 +133,12 @@ class ShopSeller {
           [],
       stripeAccountId: data['stripeAccountId'],
       isActive: data['isActive'] ?? true,
+      discountCode: data['discountCode'],
+      discountCodeLabel: data['discountCodeLabel'],
+      discountCodeExpiry: (data['discountCodeExpiry'] as Timestamp?)?.toDate(),
+      discountCodeTerms: data['discountCodeTerms'],
+      deactivatedAt: (data['deactivatedAt'] as Timestamp?)?.toDate(),
+      deactivatedBy: data['deactivatedBy'],
     );
   }
 
@@ -137,6 +159,16 @@ class ShopSeller {
       'countries': countries,
       'stripeAccountId': stripeAccountId,
       'isActive': isActive,
+      'discountCode': discountCode,
+      'discountCodeLabel': discountCodeLabel,
+      'discountCodeExpiry': discountCodeExpiry != null
+          ? Timestamp.fromDate(discountCodeExpiry!)
+          : null,
+      'discountCodeTerms': discountCodeTerms,
+      'deactivatedAt': deactivatedAt != null
+          ? Timestamp.fromDate(deactivatedAt!)
+          : null,
+      'deactivatedBy': deactivatedBy,
     };
   }
 
@@ -157,6 +189,12 @@ class ShopSeller {
     List<String>? countries,
     String? stripeAccountId,
     bool? isActive,
+    String? discountCode,
+    String? discountCodeLabel,
+    DateTime? discountCodeExpiry,
+    String? discountCodeTerms,
+    DateTime? deactivatedAt,
+    String? deactivatedBy,
   }) {
     return ShopSeller(
       id: id ?? this.id,
@@ -175,6 +213,12 @@ class ShopSeller {
       countries: countries ?? this.countries,
       stripeAccountId: stripeAccountId ?? this.stripeAccountId,
       isActive: isActive ?? this.isActive,
+      discountCode: discountCode ?? this.discountCode,
+      discountCodeLabel: discountCodeLabel ?? this.discountCodeLabel,
+      discountCodeExpiry: discountCodeExpiry ?? this.discountCodeExpiry,
+      discountCodeTerms: discountCodeTerms ?? this.discountCodeTerms,
+      deactivatedAt: deactivatedAt ?? this.deactivatedAt,
+      deactivatedBy: deactivatedBy ?? this.deactivatedBy,
     );
   }
 }
@@ -198,6 +242,7 @@ class ShopProduct {
   final bool isInStock;
   final bool isActive;
   final bool isFeatured;
+  final int featuredOrder; // Lower numbers appear first (0 = top)
 
   // Technical specs
   final List<FrequencyBand> frequencyBands;
@@ -235,6 +280,10 @@ class ShopProduct {
   final String? hardwareVersion;
   final String? purchaseUrl; // External URL if redirecting
 
+  // Vendor verification
+  final bool vendorVerified; // Specs verified by vendor
+  final DateTime? approvedAt; // Listing approval timestamp
+
   const ShopProduct({
     required this.id,
     required this.sellerId,
@@ -253,6 +302,7 @@ class ShopProduct {
     this.isInStock = true,
     this.isActive = true,
     this.isFeatured = false,
+    this.featuredOrder = 999,
     this.frequencyBands = const [],
     this.chipset,
     this.loraChip,
@@ -279,6 +329,8 @@ class ShopProduct {
     this.firmwareVersion,
     this.hardwareVersion,
     this.purchaseUrl,
+    this.vendorVerified = false,
+    this.approvedAt,
   });
 
   /// Check if product is on sale
@@ -330,6 +382,7 @@ class ShopProduct {
       isInStock: data['isInStock'] ?? true,
       isActive: data['isActive'] ?? true,
       isFeatured: data['isFeatured'] ?? false,
+      featuredOrder: data['featuredOrder'] ?? 999,
       frequencyBands:
           (data['frequencyBands'] as List<dynamic>?)
               ?.map((e) => FrequencyBand.fromString(e.toString()))
@@ -368,6 +421,8 @@ class ShopProduct {
       firmwareVersion: data['firmwareVersion'],
       hardwareVersion: data['hardwareVersion'],
       purchaseUrl: data['purchaseUrl'],
+      vendorVerified: data['vendorVerified'] ?? false,
+      approvedAt: (data['approvedAt'] as Timestamp?)?.toDate(),
     );
   }
 
@@ -389,6 +444,7 @@ class ShopProduct {
       'isInStock': isInStock,
       'isActive': isActive,
       'isFeatured': isFeatured,
+      'featuredOrder': featuredOrder,
       'frequencyBands': frequencyBands.map((f) => f.name).toList(),
       'chipset': chipset,
       'loraChip': loraChip,
@@ -415,6 +471,8 @@ class ShopProduct {
       'firmwareVersion': firmwareVersion,
       'hardwareVersion': hardwareVersion,
       'purchaseUrl': purchaseUrl,
+      'vendorVerified': vendorVerified,
+      'approvedAt': approvedAt != null ? Timestamp.fromDate(approvedAt!) : null,
     };
   }
 
@@ -436,6 +494,7 @@ class ShopProduct {
     bool? isInStock,
     bool? isActive,
     bool? isFeatured,
+    int? featuredOrder,
     List<FrequencyBand>? frequencyBands,
     String? chipset,
     String? loraChip,
@@ -462,6 +521,8 @@ class ShopProduct {
     String? firmwareVersion,
     String? hardwareVersion,
     String? purchaseUrl,
+    bool? vendorVerified,
+    DateTime? approvedAt,
   }) {
     return ShopProduct(
       id: id ?? this.id,
@@ -481,6 +542,7 @@ class ShopProduct {
       isInStock: isInStock ?? this.isInStock,
       isActive: isActive ?? this.isActive,
       isFeatured: isFeatured ?? this.isFeatured,
+      featuredOrder: featuredOrder ?? this.featuredOrder,
       frequencyBands: frequencyBands ?? this.frequencyBands,
       chipset: chipset ?? this.chipset,
       loraChip: loraChip ?? this.loraChip,
@@ -509,6 +571,8 @@ class ShopProduct {
       firmwareVersion: firmwareVersion ?? this.firmwareVersion,
       hardwareVersion: hardwareVersion ?? this.hardwareVersion,
       purchaseUrl: purchaseUrl ?? this.purchaseUrl,
+      vendorVerified: vendorVerified ?? this.vendorVerified,
+      approvedAt: approvedAt ?? this.approvedAt,
     );
   }
 }
