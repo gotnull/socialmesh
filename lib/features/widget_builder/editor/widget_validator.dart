@@ -2,6 +2,28 @@
 import '../models/widget_schema.dart';
 import '../models/data_binding.dart';
 
+/// Validation constants - these limits prevent abuse and ensure performance
+class ValidationLimits {
+  /// Maximum depth of nested elements (prevents stack overflow during render)
+  static const int maxNestingDepth = 10;
+
+  /// Maximum number of children in a single container
+  static const int maxChildrenPerContainer = 50;
+
+  /// Maximum total elements in a widget schema
+  static const int maxTotalElements = 200;
+
+  /// Maximum length for text content
+  static const int maxTextLength = 1000;
+
+  /// Maximum name/description length
+  static const int maxNameLength = 100;
+  static const int maxDescriptionLength = 500;
+
+  /// Maximum number of tags
+  static const int maxTags = 10;
+}
+
 /// Validation issue severity
 enum ValidationSeverity {
   error, // Must be fixed before saving
@@ -48,16 +70,8 @@ class WidgetValidator {
   static ValidationResult validate(WidgetSchema schema) {
     final issues = <ValidationIssue>[];
 
-    // Check widget name
-    if (schema.name.isEmpty || schema.name == 'New Widget') {
-      issues.add(
-        const ValidationIssue(
-          severity: ValidationSeverity.warning,
-          message: 'Give your widget a descriptive name',
-          fix: 'Tap the title to rename',
-        ),
-      );
-    }
+    // Validate metadata fields
+    _validateMetadata(schema, issues);
 
     // Check if widget has any content
     if (schema.root.children.isEmpty) {
@@ -70,8 +84,22 @@ class WidgetValidator {
       );
     }
 
-    // Recursively validate all elements
-    _validateElement(schema.root, issues, isRoot: true);
+    // Count total elements and check limits
+    var totalElements = 0;
+    _countElements(schema.root, (count) => totalElements = count);
+    if (totalElements > ValidationLimits.maxTotalElements) {
+      issues.add(
+        ValidationIssue(
+          severity: ValidationSeverity.error,
+          message:
+              'Widget has too many elements ($totalElements). Maximum is ${ValidationLimits.maxTotalElements}.',
+          fix: 'Simplify your widget by removing unnecessary elements',
+        ),
+      );
+    }
+
+    // Recursively validate all elements with depth tracking
+    _validateElement(schema.root, issues, isRoot: true, depth: 0);
 
     // Calculate overall validity
     final hasErrors = issues.any((i) => i.severity == ValidationSeverity.error);
@@ -79,11 +107,102 @@ class WidgetValidator {
     return ValidationResult(issues: issues, isValid: !hasErrors);
   }
 
+  /// Validate widget metadata (name, description, tags)
+  static void _validateMetadata(
+    WidgetSchema schema,
+    List<ValidationIssue> issues,
+  ) {
+    // Check widget name
+    if (schema.name.isEmpty || schema.name == 'New Widget') {
+      issues.add(
+        const ValidationIssue(
+          severity: ValidationSeverity.warning,
+          message: 'Give your widget a descriptive name',
+          fix: 'Tap the title to rename',
+        ),
+      );
+    }
+
+    if (schema.name.length > ValidationLimits.maxNameLength) {
+      issues.add(
+        ValidationIssue(
+          severity: ValidationSeverity.error,
+          message:
+              'Widget name is too long (${schema.name.length} characters). Maximum is ${ValidationLimits.maxNameLength}.',
+          fix: 'Use a shorter name',
+        ),
+      );
+    }
+
+    if (schema.description != null &&
+        schema.description!.length > ValidationLimits.maxDescriptionLength) {
+      issues.add(
+        ValidationIssue(
+          severity: ValidationSeverity.error,
+          message:
+              'Description is too long. Maximum is ${ValidationLimits.maxDescriptionLength} characters.',
+          fix: 'Shorten the description',
+        ),
+      );
+    }
+
+    if (schema.tags.length > ValidationLimits.maxTags) {
+      issues.add(
+        ValidationIssue(
+          severity: ValidationSeverity.warning,
+          message:
+              'Too many tags (${schema.tags.length}). Maximum is ${ValidationLimits.maxTags}.',
+          fix: 'Remove some tags',
+        ),
+      );
+    }
+  }
+
+  /// Count total elements recursively
+  static void _countElements(
+    ElementSchema element,
+    void Function(int) onCount,
+  ) {
+    var count = 1;
+    for (final child in element.children) {
+      _countElements(child, (childCount) => count += childCount);
+    }
+    onCount(count);
+  }
+
   static void _validateElement(
     ElementSchema element,
     List<ValidationIssue> issues, {
     bool isRoot = false,
+    int depth = 0,
   }) {
+    // Check nesting depth
+    if (depth > ValidationLimits.maxNestingDepth) {
+      issues.add(
+        ValidationIssue(
+          severity: ValidationSeverity.error,
+          message:
+              'Widget nesting is too deep ($depth levels). Maximum is ${ValidationLimits.maxNestingDepth}.',
+          elementId: element.id,
+          fix: 'Flatten your widget structure',
+        ),
+      );
+      return; // Stop validating deeper
+    }
+
+    // Check children count
+    if (element.children.length > ValidationLimits.maxChildrenPerContainer) {
+      issues.add(
+        ValidationIssue(
+          severity: ValidationSeverity.error,
+          message:
+              'Container has too many children (${element.children.length}). Maximum is ${ValidationLimits.maxChildrenPerContainer}.',
+          elementId: element.id,
+          fix: 'Split into multiple containers',
+        ),
+      );
+    }
+
     switch (element.type) {
       case ElementType.text:
         _validateText(element, issues);
@@ -113,9 +232,9 @@ class WidgetValidator {
       _validateAction(element, issues);
     }
 
-    // Recursively validate children
+    // Recursively validate children with incremented depth
     for (final child in element.children) {
-      _validateElement(child, issues);
+      _validateElement(child, issues, depth: depth + 1);
     }
   }
 
@@ -133,6 +252,19 @@ class WidgetValidator {
           message: 'Text element has no content',
           elementId: element.id,
           fix: 'Add text or bind to data',
+        ),
+      );
+    }
+
+    // Check text length limit
+    if (hasText && element.text!.length > ValidationLimits.maxTextLength) {
+      issues.add(
+        ValidationIssue(
+          severity: ValidationSeverity.error,
+          message:
+              'Text is too long (${element.text!.length} characters). Maximum is ${ValidationLimits.maxTextLength}.',
+          elementId: element.id,
+          fix: 'Shorten the text content',
         ),
       );
     }

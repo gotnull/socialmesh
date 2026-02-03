@@ -17,16 +17,14 @@ class WidgetStorageService {
 
   /// Initialize the service
   Future<void> init() async {
-    AppLogging.widgetBuilder('[WidgetStorage] Initializing...');
+    AppLogging.widgets('[WidgetStorage] Initializing...');
     _prefs = await SharedPreferences.getInstance();
-    AppLogging.widgetBuilder('[WidgetStorage] Initialized successfully');
+    AppLogging.widgets('[WidgetStorage] Initialized successfully');
   }
 
   SharedPreferences get _preferences {
     if (_prefs == null) {
-      AppLogging.widgetBuilder(
-        '[WidgetStorage] ERROR: Service not initialized!',
-      );
+      AppLogging.widgets('[WidgetStorage] ERROR: Service not initialized!');
       throw Exception('WidgetStorageService not initialized');
     }
     return _prefs!;
@@ -34,45 +32,45 @@ class WidgetStorageService {
 
   /// Save a custom widget
   Future<void> saveWidget(WidgetSchema widget) async {
-    AppLogging.widgetBuilder(
+    AppLogging.widgets(
       '[WidgetStorage] saveWidget called for id=${widget.id}, name=${widget.name}',
     );
     try {
       // Ensure initialized
       if (_prefs == null) {
-        AppLogging.widgetBuilder(
+        AppLogging.widgets(
           '[WidgetStorage] Not initialized, initializing now...',
         );
         await init();
       }
 
       final widgets = await getWidgets();
-      AppLogging.widgetBuilder(
+      AppLogging.widgets(
         '[WidgetStorage] Current widgets count: ${widgets.length}',
       );
 
       final index = widgets.indexWhere((w) => w.id == widget.id);
-      AppLogging.widgetBuilder('[WidgetStorage] Existing widget index: $index');
+      AppLogging.widgets('[WidgetStorage] Existing widget index: $index');
 
       if (index >= 0) {
-        AppLogging.widgetBuilder(
+        AppLogging.widgets(
           '[WidgetStorage] Updating existing widget at index $index',
         );
         widgets[index] = widget;
       } else {
-        AppLogging.widgetBuilder('[WidgetStorage] Adding new widget');
+        AppLogging.widgets('[WidgetStorage] Adding new widget');
         widgets.add(widget);
       }
 
       await _saveWidgetsList(widgets);
-      AppLogging.widgetBuilder(
+      AppLogging.widgets(
         '[WidgetStorage] Widget saved successfully, new count: ${widgets.length}',
       );
-      AppLogging.widgetBuilder('Saved widget: ${widget.name}');
+      AppLogging.widgets('Saved widget: ${widget.name}');
     } catch (e, stack) {
-      AppLogging.widgetBuilder('[WidgetStorage] ERROR saving widget: $e');
-      AppLogging.widgetBuilder('[WidgetStorage] Stack: $stack');
-      AppLogging.widgetBuilder('⚠️ Error saving widget: $e');
+      AppLogging.widgets('[WidgetStorage] ERROR saving widget: $e');
+      AppLogging.widgets('[WidgetStorage] Stack: $stack');
+      AppLogging.widgets('⚠️ Error saving widget: $e');
       rethrow;
     }
   }
@@ -82,32 +80,32 @@ class WidgetStorageService {
     try {
       // Ensure initialized
       if (_prefs == null) {
-        AppLogging.widgetBuilder(
+        AppLogging.widgets(
           '[WidgetStorage] Not initialized in getWidgets, initializing...',
         );
         await init();
       }
 
       final json = _preferences.getString(_storageKey);
-      AppLogging.widgetBuilder(
+      AppLogging.widgets(
         '[WidgetStorage] getWidgets - raw json length: ${json?.length ?? 0}',
       );
       if (json == null || json.isEmpty) {
-        AppLogging.widgetBuilder('[WidgetStorage] No widgets stored');
+        AppLogging.widgets('[WidgetStorage] No widgets stored');
         return [];
       }
 
       final list = jsonDecode(json) as List<dynamic>;
-      AppLogging.widgetBuilder(
+      AppLogging.widgets(
         '[WidgetStorage] Parsed ${list.length} widgets from storage',
       );
       return list
           .map((item) => WidgetSchema.fromJson(item as Map<String, dynamic>))
           .toList();
     } catch (e, stack) {
-      AppLogging.widgetBuilder('[WidgetStorage] ERROR loading widgets: $e');
-      AppLogging.widgetBuilder('[WidgetStorage] Stack: $stack');
-      AppLogging.widgetBuilder('⚠️ Error loading widgets: $e');
+      AppLogging.widgets('[WidgetStorage] ERROR loading widgets: $e');
+      AppLogging.widgets('[WidgetStorage] Stack: $stack');
+      AppLogging.widgets('⚠️ Error loading widgets: $e');
       return [];
     }
   }
@@ -132,7 +130,7 @@ class WidgetStorageService {
 
       // Look up marketplace ID from schema ID mapping
       final marketplaceId = await getMarketplaceIdForSchema(id);
-      AppLogging.widgetBuilder(
+      AppLogging.widgets(
         '[WidgetStorage] deleteWidget: schemaId=$id, marketplaceId=$marketplaceId',
       );
 
@@ -142,10 +140,10 @@ class WidgetStorageService {
       if (installed.contains(idToRemove)) {
         installed.remove(idToRemove);
         await _preferences.setStringList(_installedKey, installed);
-        AppLogging.widgetBuilder(
+        AppLogging.widgets(
           '[WidgetStorage] Removed from marketplace installed list: $idToRemove',
         );
-        AppLogging.widgetBuilder(
+        AppLogging.widgets(
           'Removed from marketplace installed list: $idToRemove',
         );
       }
@@ -161,10 +159,10 @@ class WidgetStorageService {
         await _removeSchemaToMarketplaceMapping(id);
       }
 
-      AppLogging.widgetBuilder('Deleted widget: $id');
+      AppLogging.widgets('Deleted widget: $id');
       return marketplaceId; // Return for profile cleanup
     } catch (e) {
-      AppLogging.widgetBuilder('⚠️ Error deleting widget: $e');
+      AppLogging.widgets('⚠️ Error deleting widget: $e');
       rethrow;
     }
   }
@@ -221,7 +219,7 @@ class WidgetStorageService {
       await saveWidget(importedWidget);
       return importedWidget;
     } catch (e) {
-      AppLogging.widgetBuilder('⚠️ Error importing widget: $e');
+      AppLogging.widgets('⚠️ Error importing widget: $e');
       rethrow;
     }
   }
@@ -243,7 +241,7 @@ class WidgetStorageService {
       if (!installed.contains(idToTrack)) {
         installed.add(idToTrack);
         await _preferences.setStringList(_installedKey, installed);
-        AppLogging.widgetBuilder(
+        AppLogging.widgets(
           '[WidgetStorage] Tracking marketplace ID: $idToTrack for widget: ${widget.name}',
         );
       }
@@ -251,16 +249,16 @@ class WidgetStorageService {
       // Store schema ID -> marketplace ID mapping for deletion lookup
       if (marketplaceId != null && marketplaceId != widget.id) {
         await _saveSchemaToMarketplaceMapping(widget.id, marketplaceId);
-        AppLogging.widgetBuilder(
+        AppLogging.widgets(
           '[WidgetStorage] Saved mapping: ${widget.id} -> $marketplaceId',
         );
       }
 
-      AppLogging.widgetBuilder(
+      AppLogging.widgets(
         'Installed marketplace widget: ${widget.name} (marketplace ID: $idToTrack)',
       );
     } catch (e) {
-      AppLogging.widgetBuilder('⚠️ Error installing marketplace widget: $e');
+      AppLogging.widgets('⚠️ Error installing marketplace widget: $e');
       rethrow;
     }
   }
@@ -284,7 +282,7 @@ class WidgetStorageService {
       final map = jsonDecode(mapJson) as Map<String, dynamic>;
       return map[schemaId] as String?;
     } catch (e) {
-      AppLogging.widgetBuilder(
+      AppLogging.widgets(
         '[WidgetStorage] Error reading schema->marketplace map: $e',
       );
       return null;
@@ -328,7 +326,7 @@ class WidgetStorageService {
     await _preferences.remove(_storageKey);
     await _preferences.remove(_installedKey);
     await _preferences.remove(_schemaToMarketplaceKey);
-    AppLogging.widgetBuilder('Cleared all custom widgets');
+    AppLogging.widgets('Cleared all custom widgets');
   }
 }
 

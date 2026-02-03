@@ -208,12 +208,29 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
     
-    // Widgets marketplace - public read, authenticated write
+    // Widgets marketplace - public read, authenticated write with field protection
     match /widgets/{widgetId} {
       allow read: if true;
-      allow create: if isAuthenticated() && isValidSize();
+      
+      // Create: authenticated user, valid size, must set authorId to self
+      allow create: if isAuthenticated() && isValidSize() &&
+        request.resource.data.authorId == request.auth.uid;
+      
+      // Update: owner or admin, with immutable field protection
+      // Cannot modify: authorId, createdAt, downloadCount, ratingSum, ratingCount
       allow update: if isAuthenticated() && isValidSize() &&
-        (resource.data.authorId == request.auth.uid || isAdmin());
+        (resource.data.authorId == request.auth.uid || isAdmin()) &&
+        // Protect immutable fields from modification by non-admins
+        (isAdmin() || (
+          request.resource.data.authorId == resource.data.authorId &&
+          request.resource.data.createdAt == resource.data.createdAt &&
+          (!('downloadCount' in request.resource.data) || request.resource.data.downloadCount == resource.data.downloadCount) &&
+          (!('ratingSum' in request.resource.data) || request.resource.data.ratingSum == resource.data.ratingSum) &&
+          (!('ratingCount' in request.resource.data) || request.resource.data.ratingCount == resource.data.ratingCount) &&
+          (!('averageRating' in request.resource.data) || request.resource.data.averageRating == resource.data.averageRating)
+        ));
+      
+      // Delete: owner or admin only
       allow delete: if isAuthenticated() && 
         (resource.data.authorId == request.auth.uid || isAdmin());
       
@@ -221,6 +238,13 @@ service cloud.firestore {
       match /ratings/{ratingId} {
         allow read: if true;
         allow write: if isAuthenticated() && ratingId == request.auth.uid;
+      }
+      
+      // Widget installers subcollection - tracks who has installed (for idempotency)
+      // Created by Cloud Functions, read-only for clients
+      match /installers/{installerId} {
+        allow read: if isAdmin();
+        allow write: if false; // Only Cloud Functions can write
       }
     }
     

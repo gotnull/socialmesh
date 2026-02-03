@@ -88,6 +88,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   Set<ActionType>?
   _originalActions; // Actions at load time (for actions template)
   bool? _originalMergeCharts; // Merge state at load time (for graph template)
+  _LayoutStyle? _originalLayoutStyle; // Layout at load time
+  bool? _originalShowLabels; // Show labels at load time
 
   // Step 4: Appearance
   Color _accentColor = ChartColors.blue;
@@ -160,16 +162,14 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
   void _initFromSchema() {
     final schema = widget.initialSchema;
-    AppLogging.widgetBuilder(
+    AppLogging.widgets(
       'Wizard: _initFromSchema called, schema is ${schema == null ? "NULL" : "present"}',
     );
     if (schema == null) return;
 
-    AppLogging.widgetBuilder(
-      'Wizard: Schema id=${schema.id}, name=${schema.name}',
-    );
-    AppLogging.widgetBuilder('Wizard: Schema root type=${schema.root.type}');
-    AppLogging.widgetBuilder(
+    AppLogging.widgets('Wizard: Schema id=${schema.id}, name=${schema.name}');
+    AppLogging.widgets('Wizard: Schema root type=${schema.root.type}');
+    AppLogging.widgets(
       'Wizard: Schema root has ${schema.root.children.length} children',
     );
 
@@ -180,17 +180,17 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     _extractBindingsFromElement(schema.root);
     // Store original bindings to detect structural changes later
     _originalBindings = Set<String>.from(_selectedBindings);
-    AppLogging.widgetBuilder('Wizard: Extracted bindings: $_selectedBindings');
+    AppLogging.widgets('Wizard: Extracted bindings: $_selectedBindings');
 
     // Extract actions from schema
     _extractActionsFromElement(schema.root);
     // Store original actions to detect changes later
     _originalActions = Set<ActionType>.from(_selectedActions);
-    AppLogging.widgetBuilder('Wizard: Extracted actions: $_selectedActions');
+    AppLogging.widgets('Wizard: Extracted actions: $_selectedActions');
 
     // Try to detect template from tags first - MOST RELIABLE
     final tags = schema.tags;
-    AppLogging.widgetBuilder('Wizard: Schema tags: $tags');
+    AppLogging.widgets('Wizard: Schema tags: $tags');
 
     // Tags are the authoritative source for template type
     // They're saved by the wizard and should be trusted
@@ -215,14 +215,14 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
     if (templateFromTags != null) {
       _selectedTemplate = templateFromTags;
-      AppLogging.widgetBuilder(
+      AppLogging.widgets(
         'Wizard: Template detected from tags: ${_selectedTemplate?.id}',
       );
     } else {
       // No template tag - try to detect from structure (for UI purposes only)
       // Note: We DON'T rebuild edited widgets - we preserve the original structure
       _selectedTemplate = _detectTemplateFromStructure(schema.root);
-      AppLogging.widgetBuilder(
+      AppLogging.widgets(
         'Wizard: Template detected from structure: ${_selectedTemplate?.id}',
       );
     }
@@ -231,13 +231,51 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     _extractAppearanceFromElement(schema.root);
     // Store original merge state to detect changes later
     _originalMergeCharts = _mergeCharts;
-    AppLogging.widgetBuilder(
-      'Wizard: Accent color: $_accentColor, Chart type: $_chartType, Merge: $_mergeCharts',
+
+    // Detect if labels are shown by analyzing the schema structure
+    // Labels are static text elements (no binding) used to describe values
+    _showLabels = _detectShowLabels(schema.root);
+    // Store original showLabels to detect changes later
+    _originalShowLabels = _showLabels;
+    AppLogging.widgets(
+      'Wizard: Accent color: $_accentColor, Chart type: $_chartType, Merge: $_mergeCharts, ShowLabels: $_showLabels',
     );
 
     // Detect layout style from root element structure
     _detectLayoutStyle(schema.root);
-    AppLogging.widgetBuilder('Wizard: Layout style: $_layoutStyle');
+    // Store original layout style to detect changes later
+    _originalLayoutStyle = _layoutStyle;
+    AppLogging.widgets('Wizard: Layout style: $_layoutStyle');
+  }
+
+  /// Detect if labels are shown in the schema by looking for static text elements
+  /// that describe data values (text without bindings next to text with bindings)
+  bool _detectShowLabels(ElementSchema root) {
+    bool hasLabelText = false;
+    bool hasValueText = false;
+
+    void scanElement(ElementSchema element) {
+      if (element.type == ElementType.text) {
+        if (element.binding != null) {
+          // This is a dynamic value text
+          hasValueText = true;
+        } else if (element.text != null && element.text!.isNotEmpty) {
+          // This is a static label text
+          hasLabelText = true;
+        }
+      }
+      for (final child in element.children) {
+        scanElement(child);
+      }
+    }
+
+    scanElement(root);
+
+    // Labels are shown if we have both static labels AND dynamic values
+    // If we only have dynamic values, labels are hidden
+    // If we have no values at all, default to true (new widget behavior)
+    if (!hasValueText) return true;
+    return hasLabelText;
   }
 
   /// Detect template type from element structure
@@ -254,16 +292,14 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     void scanElement(ElementSchema element) {
       if (element.type == ElementType.chart) {
         hasChart = true;
-        AppLogging.widgetBuilder('Wizard: Found chart element');
+        AppLogging.widgets('Wizard: Found chart element');
       }
       if (element.type == ElementType.gauge) {
         // CRITICAL: Distinguish between gauge types
         // Radial, arc, battery, signal = gauge template
         // Linear = status template (progress bars)
         final gaugeType = element.gaugeType ?? GaugeType.linear;
-        AppLogging.widgetBuilder(
-          'Wizard: Found gauge with type: ${gaugeType.name}',
-        );
+        AppLogging.widgets('Wizard: Found gauge with type: ${gaugeType.name}');
         if (gaugeType == GaugeType.linear) {
           hasLinearGauge = true;
         } else {
@@ -272,13 +308,11 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       }
       if (element.type == ElementType.map) {
         hasMap = true;
-        AppLogging.widgetBuilder('Wizard: Found map element');
+        AppLogging.widgets('Wizard: Found map element');
       }
       if (element.action != null && element.action!.type != ActionType.none) {
         hasAction = true;
-        AppLogging.widgetBuilder(
-          'Wizard: Found action: ${element.action!.type}',
-        );
+        AppLogging.widgets('Wizard: Found action: ${element.action!.type}');
       }
       for (final child in element.children) {
         scanElement(child);
@@ -287,7 +321,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
     scanElement(root);
 
-    AppLogging.widgetBuilder(
+    AppLogging.widgets(
       'Wizard: Structure detection - chart=$hasChart, radialGauge=$hasRadialGauge, '
       'linearGauge=$hasLinearGauge, map=$hasMap, action=$hasAction, '
       'bindings=${_selectedBindings.length}',
@@ -296,41 +330,37 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     // Determine template based on detected elements
     // Order matters - more specific detections first
     if (hasChart) {
-      AppLogging.widgetBuilder(
-        'Wizard: Detected as GRAPH template (has chart)',
-      );
+      AppLogging.widgets('Wizard: Detected as GRAPH template (has chart)');
       return templates.firstWhere((t) => t.id == 'graph');
     } else if (hasRadialGauge) {
       // Only radial/arc/etc gauges indicate gauge template
-      AppLogging.widgetBuilder(
+      AppLogging.widgets(
         'Wizard: Detected as GAUGE template (has radial gauge)',
       );
       return templates.firstWhere((t) => t.id == 'gauge');
     } else if (hasLinearGauge) {
       // Linear gauges indicate status template (progress bars)
-      AppLogging.widgetBuilder(
+      AppLogging.widgets(
         'Wizard: Detected as STATUS template (has linear gauge)',
       );
       return templates.firstWhere((t) => t.id == 'status');
     } else if (hasMap) {
-      AppLogging.widgetBuilder(
-        'Wizard: Detected as LOCATION template (has map)',
-      );
+      AppLogging.widgets('Wizard: Detected as LOCATION template (has map)');
       return templates.firstWhere((t) => t.id == 'location');
     } else if (hasAction && _selectedBindings.isEmpty) {
-      AppLogging.widgetBuilder(
+      AppLogging.widgets(
         'Wizard: Detected as ACTIONS template (has action, no bindings)',
       );
       return templates.firstWhere((t) => t.id == 'actions');
     } else if (_selectedBindings.isNotEmpty) {
       // Default to info for widgets with data bindings but no gauges
-      AppLogging.widgetBuilder(
+      AppLogging.widgets(
         'Wizard: Detected as INFO template (has bindings, no gauges)',
       );
       return templates.firstWhere((t) => t.id == 'info');
     }
 
-    AppLogging.widgetBuilder('Wizard: No template detected');
+    AppLogging.widgets('Wizard: No template detected');
     return null;
   }
 
@@ -484,12 +514,6 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       }
     }
 
-    // Detect if labels are shown (look for label text elements)
-    if (element.type == ElementType.text && element.text != null) {
-      // If there are label-style text elements, labels are shown
-      _showLabels = true;
-    }
-
     // Recurse into children
     for (final child in element.children) {
       _extractAppearanceFromElement(child);
@@ -497,34 +521,89 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   }
 
   void _detectLayoutStyle(ElementSchema root) {
-    // Detect layout based on root element type
+    // Detect layout based on structural analysis
+    // Default to vertical if we can't determine
+    _layoutStyle = _LayoutStyle.vertical;
+
+    AppLogging.widgets(
+      '[DETECT_LAYOUT] Root type: ${root.type}, children: ${root.children.length}',
+    );
+
     if (root.type == ElementType.row) {
+      // Single row at root = horizontal with few items
       _layoutStyle = _LayoutStyle.horizontal;
-    } else if (root.type == ElementType.column) {
-      _layoutStyle = _LayoutStyle.vertical;
-    } else if (root.type == ElementType.stack) {
-      _layoutStyle = _LayoutStyle.grid;
+      AppLogging.widgets('[DETECT_LAYOUT] Result: HORIZONTAL (root is row)');
+      return;
     }
 
-    // Check first level children for more specific layout detection
-    if (root.children.isNotEmpty) {
-      final firstChild = root.children.first;
-      if (firstChild.type == ElementType.row) {
-        _layoutStyle = _LayoutStyle.horizontal;
-      } else if (firstChild.type == ElementType.column) {
+    if (root.type == ElementType.column && root.children.isNotEmpty) {
+      // Check if children are rows (either horizontal or grid)
+      final rowChildren = root.children
+          .where((c) => c.type == ElementType.row)
+          .toList();
+
+      AppLogging.widgets(
+        '[DETECT_LAYOUT] Column has ${rowChildren.length} row children',
+      );
+
+      if (rowChildren.isEmpty) {
+        // No row children = vertical layout
         _layoutStyle = _LayoutStyle.vertical;
+        AppLogging.widgets(
+          '[DETECT_LAYOUT] Result: VERTICAL (no row children)',
+        );
+        return;
       }
+
+      // Analyze row structure to distinguish horizontal vs grid
+      // Horizontal: rows with 3 items, tight spacing (6), spaceEvenly
+      // Grid: rows with 2 items, wider spacing (12), start alignment
+      final firstRow = rowChildren.first;
+      final itemsPerRow = firstRow.children.length;
+      final spacing = firstRow.style.spacing ?? 8;
+      final mainAxisAlign = firstRow.style.mainAxisAlignment;
+
+      AppLogging.widgets(
+        '[DETECT_LAYOUT] First row analysis: items=$itemsPerRow, spacing=$spacing, mainAxis=$mainAxisAlign',
+      );
+
+      // Grid uses 2 items per row, start alignment, and larger spacing (>= 10)
+      // Horizontal uses 3+ items with spaceEvenly
+      if (itemsPerRow <= 2 &&
+          spacing >= 10 &&
+          mainAxisAlign == MainAxisAlignmentOption.start) {
+        _layoutStyle = _LayoutStyle.grid;
+        AppLogging.widgets(
+          '[DETECT_LAYOUT] Result: GRID (2 items, spacing>=10, start align)',
+        );
+      } else if (itemsPerRow >= 3 &&
+          mainAxisAlign == MainAxisAlignmentOption.spaceEvenly) {
+        _layoutStyle = _LayoutStyle.horizontal;
+        AppLogging.widgets(
+          '[DETECT_LAYOUT] Result: HORIZONTAL (3+ items, spaceEvenly)',
+        );
+      } else {
+        // Fallback based on item count
+        _layoutStyle = itemsPerRow >= 3
+            ? _LayoutStyle.horizontal
+            : _LayoutStyle.grid;
+        AppLogging.widgets(
+          '[DETECT_LAYOUT] Result: ${_layoutStyle.name} (fallback based on item count)',
+        );
+      }
+    } else {
+      AppLogging.widgets('[DETECT_LAYOUT] Result: VERTICAL (default)');
     }
   }
 
   void _extractBindingsFromElement(ElementSchema element) {
-    AppLogging.widgetBuilder(
+    AppLogging.widgets(
       'Wizard: Scanning element type=${element.type}, binding=${element.binding?.path}, chartBindingPath=${element.chartBindingPath}, chartBindingPaths=${element.chartBindingPaths}',
     );
 
     // Regular binding
     if (element.binding != null) {
-      AppLogging.widgetBuilder(
+      AppLogging.widgets(
         'Wizard: Found regular binding: ${element.binding!.path}',
       );
       _selectedBindings.add(element.binding!.path);
@@ -532,9 +611,9 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
     // Chart-specific bindings
     if (element.type == ElementType.chart) {
-      AppLogging.widgetBuilder('Wizard: Found chart element');
+      AppLogging.widgets('Wizard: Found chart element');
       if (element.chartBindingPath != null) {
-        AppLogging.widgetBuilder(
+        AppLogging.widgets(
           'Wizard: Found chartBindingPath: ${element.chartBindingPath}',
         );
         _selectedBindings.add(element.chartBindingPath!);
@@ -547,7 +626,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         }
       }
       if (element.chartBindingPaths != null) {
-        AppLogging.widgetBuilder(
+        AppLogging.widgets(
           'Wizard: Found chartBindingPaths: ${element.chartBindingPaths}',
         );
         for (int i = 0; i < element.chartBindingPaths!.length; i++) {
@@ -596,13 +675,13 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
   /// Handle close button with confirmation if needed
   Future<void> _handleClose() async {
-    AppLogging.widgetBuilder('[WidgetWizard] _handleClose called');
-    AppLogging.widgetBuilder(
+    AppLogging.widgets('[WidgetWizard] _handleClose called');
+    AppLogging.widgets(
       '[WidgetWizard] hasUnsavedChanges: ${_hasUnsavedChanges()}',
     );
 
     if (!_hasUnsavedChanges()) {
-      AppLogging.widgetBuilder(
+      AppLogging.widgets(
         '[WidgetWizard] No unsaved changes, closing immediately',
       );
       Navigator.pop(context);
@@ -639,10 +718,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       ),
     );
 
-    AppLogging.widgetBuilder('[WidgetWizard] Dialog result: $shouldClose');
+    AppLogging.widgets('[WidgetWizard] Dialog result: $shouldClose');
 
     if (shouldClose == true && mounted) {
-      AppLogging.widgetBuilder('[WidgetWizard] User confirmed close, popping');
+      AppLogging.widgets('[WidgetWizard] User confirmed close, popping');
       Navigator.pop(context);
     }
   }
@@ -914,12 +993,12 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     // CRITICAL: Always rebuild from current state for live preview
     // This ensures layout, colors, labels, gauge count all update reactively
     // NO CACHING - NO CONDITIONAL PATHS - ALWAYS REBUILD FROM CONFIG STATE
-    AppLogging.widgetBuilder('[PREVIEW] === Building Live Preview ===');
-    AppLogging.widgetBuilder('[PREVIEW] _mergeCharts=$_mergeCharts');
-    AppLogging.widgetBuilder('[PREVIEW] _showMinMax=$_showMinMax');
-    AppLogging.widgetBuilder('[PREVIEW] _mergeColors=$_mergeColors');
-    AppLogging.widgetBuilder('[PREVIEW] _seriesGradients=$_seriesGradients');
-    AppLogging.widgetBuilder('[PREVIEW] _selectedBindings=$_selectedBindings');
+    AppLogging.widgets('[PREVIEW] === Building Live Preview ===');
+    AppLogging.widgets('[PREVIEW] _mergeCharts=$_mergeCharts');
+    AppLogging.widgets('[PREVIEW] _showMinMax=$_showMinMax');
+    AppLogging.widgets('[PREVIEW] _mergeColors=$_mergeColors');
+    AppLogging.widgets('[PREVIEW] _seriesGradients=$_seriesGradients');
+    AppLogging.widgets('[PREVIEW] _selectedBindings=$_selectedBindings');
 
     final previewSchema = _buildPreviewSchema();
 
@@ -962,7 +1041,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       // Series colors
       '_$mergeColorsKey',
     );
-    AppLogging.widgetBuilder('[PREVIEW] previewKey=$previewKey');
+    AppLogging.widgets('[PREVIEW] previewKey=$previewKey');
 
     final nodes = ref.watch(nodesProvider);
     final myNodeNum = ref.watch(myNodeNumProvider);
@@ -1953,7 +2032,12 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             child: Material(
               color: Colors.transparent,
               child: InkWell(
-                onTap: () => setState(() => _layoutStyle = layout.$1),
+                onTap: () {
+                  AppLogging.widgets(
+                    '[LAYOUT_TAP] Tapped layout: ${layout.$2}, was: $_layoutStyle, now: ${layout.$1}',
+                  );
+                  setState(() => _layoutStyle = layout.$1);
+                },
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 16),
@@ -2385,14 +2469,14 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   }
 
   void _toggleMergeCharts() {
-    AppLogging.widgetBuilder(
+    AppLogging.widgets(
       '[MERGE] _toggleMergeCharts called, current _mergeCharts=$_mergeCharts',
     );
     _setMergeCharts(!_mergeCharts);
   }
 
   void _setMergeCharts(bool value) {
-    AppLogging.widgetBuilder(
+    AppLogging.widgets(
       '[MERGE] _setMergeCharts($value), current _mergeCharts=$_mergeCharts',
     );
     if (value && !_mergeCharts) {
@@ -2408,15 +2492,13 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       // Migrate thresholds and gradients from merged to per-series
       _migrateFromMerged();
     }
-    AppLogging.widgetBuilder('[MERGE] Setting _mergeCharts to $value');
+    AppLogging.widgets('[MERGE] Setting _mergeCharts to $value');
     setState(() => _mergeCharts = value);
-    AppLogging.widgetBuilder(
-      '[MERGE] After setState, _mergeCharts=$_mergeCharts',
-    );
+    AppLogging.widgets('[MERGE] After setState, _mergeCharts=$_mergeCharts');
   }
 
   void _migrateToMerged() {
-    AppLogging.widgetBuilder('[MERGE] _migrateToMerged called');
+    AppLogging.widgets('[MERGE] _migrateToMerged called');
     // Migrate thresholds: collect all thresholds into _merged key
     final allThresholds = <_ThresholdLine>[];
     for (final bindingPath in _selectedBindings) {
@@ -2442,13 +2524,13 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     if (firstEnabled != null) {
       _seriesGradients['_merged'] = firstEnabled;
     }
-    AppLogging.widgetBuilder(
+    AppLogging.widgets(
       '[MERGE] After migration: _seriesGradients=$_seriesGradients',
     );
   }
 
   void _migrateFromMerged() {
-    AppLogging.widgetBuilder('[MERGE] _migrateFromMerged called');
+    AppLogging.widgets('[MERGE] _migrateFromMerged called');
     // Migrate thresholds: move _merged thresholds to first series
     final mergedThresholds = _seriesThresholds['_merged'] ?? [];
     _seriesThresholds.remove('_merged');
@@ -2464,7 +2546,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         _selectedBindings.isNotEmpty) {
       _seriesGradients[_selectedBindings.first] = mergedGradient;
     }
-    AppLogging.widgetBuilder(
+    AppLogging.widgets(
       '[MERGE] After migration: _seriesGradients=$_seriesGradients',
     );
   }
@@ -2594,13 +2676,13 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                           currentColor.toARGB32() == color.toARGB32();
                       return GestureDetector(
                         onTap: () {
-                          AppLogging.widgetBuilder(
+                          AppLogging.widgets(
                             '[COLOR] Setting color for $bindingPath to ${color.toARGB32().toRadixString(16)}',
                           );
                           setState(() {
                             _mergeColors[bindingPath] = color;
                           });
-                          AppLogging.widgetBuilder(
+                          AppLogging.widgets(
                             '[COLOR] _mergeColors after update: $_mergeColors',
                           );
                         },
@@ -4142,7 +4224,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   }
 
   void _create() async {
-    AppLogging.widgetBuilder('[WidgetWizard] _create called');
+    AppLogging.widgets('[WidgetWizard] _create called');
 
     // Check premium for new widgets (editing existing widgets is always allowed)
     final isNewWidget = widget.initialSchema == null;
@@ -4158,29 +4240,27 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     // Final validation check
     final validationError = _getValidationError();
     if (validationError != null) {
-      AppLogging.widgetBuilder(
-        '[WidgetWizard] Validation failed: $validationError',
-      );
+      AppLogging.widgets('[WidgetWizard] Validation failed: $validationError');
       if (!mounted) return;
       showErrorSnackBar(context, validationError);
       return;
     }
 
-    AppLogging.widgetBuilder('[WidgetWizard] Building final schema...');
+    AppLogging.widgets('[WidgetWizard] Building final schema...');
 
     final schema = _buildFinalSchema();
-    AppLogging.widgetBuilder(
+    AppLogging.widgets(
       '[WidgetWizard] Schema built: id=${schema.id}, name=${schema.name}',
     );
-    AppLogging.widgetBuilder('[WidgetWizard] Existing ID was: $_existingId');
+    AppLogging.widgets('[WidgetWizard] Existing ID was: $_existingId');
 
     try {
-      AppLogging.widgetBuilder('[WidgetWizard] Calling onSave callback...');
+      AppLogging.widgets('[WidgetWizard] Calling onSave callback...');
       await widget.onSave(schema);
-      AppLogging.widgetBuilder('[WidgetWizard] onSave completed successfully');
+      AppLogging.widgets('[WidgetWizard] onSave completed successfully');
     } catch (e, stack) {
-      AppLogging.widgetBuilder('[WidgetWizard] ERROR in onSave: $e');
-      AppLogging.widgetBuilder('[WidgetWizard] Stack trace: $stack');
+      AppLogging.widgets('[WidgetWizard] ERROR in onSave: $e');
+      AppLogging.widgets('[WidgetWizard] Stack trace: $stack');
       if (mounted) {
         showErrorSnackBar(context, 'Failed to save widget: $e');
       }
@@ -4188,7 +4268,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     }
 
     if (mounted) {
-      AppLogging.widgetBuilder(
+      AppLogging.widgets(
         '[WidgetWizard] Popping with result, addToDashboard=$_addToDashboard',
       );
       showSuccessSnackBar(
@@ -4222,7 +4302,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   /// Apply wizard appearance settings to an existing element tree
   /// This preserves the structure but updates colors, chart settings, etc.
   ElementSchema _applyAppearanceToElement(ElementSchema element) {
-    AppLogging.widgetBuilder(
+    AppLogging.widgets(
       '[APPLY] _applyAppearanceToElement type=${element.type}',
     );
     final colorHex =
@@ -4232,7 +4312,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     ElementSchema modified = element;
 
     if (element.type == ElementType.gauge) {
-      AppLogging.widgetBuilder('[APPLY] Gauge: setting color=$colorHex');
+      AppLogging.widgets('[APPLY] Gauge: setting color=$colorHex');
       // Update gauge color
       modified = element.copyWith(gaugeColor: colorHex);
     } else if (element.type == ElementType.chart) {
@@ -4257,24 +4337,22 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           gradientKey = '';
         }
       }
-      AppLogging.widgetBuilder('[APPLY] Chart: gradientKey=$gradientKey');
-      AppLogging.widgetBuilder(
+      AppLogging.widgets('[APPLY] Chart: gradientKey=$gradientKey');
+      AppLogging.widgets(
         '[APPLY] Chart: chartBindingPath=${element.chartBindingPath}',
       );
-      AppLogging.widgetBuilder(
+      AppLogging.widgets(
         '[APPLY] Chart: binding.path=${element.binding?.path}',
       );
-      AppLogging.widgetBuilder(
+      AppLogging.widgets(
         '[APPLY] Chart: chartBindingPaths=${element.chartBindingPaths}',
       );
-      AppLogging.widgetBuilder('[APPLY] Chart: _showMinMax=$_showMinMax');
-      AppLogging.widgetBuilder('[APPLY] Chart: _mergeCharts=$_mergeCharts');
+      AppLogging.widgets('[APPLY] Chart: _showMinMax=$_showMinMax');
+      AppLogging.widgets('[APPLY] Chart: _mergeCharts=$_mergeCharts');
 
       // Get gradient settings for this chart
       final gradient = _seriesGradients[gradientKey] ?? _GradientConfig();
-      AppLogging.widgetBuilder(
-        '[APPLY] Chart: gradient.enabled=${gradient.enabled}',
-      );
+      AppLogging.widgets('[APPLY] Chart: gradient.enabled=${gradient.enabled}');
 
       // Get threshold settings for this chart
       final thresholds = _seriesThresholds[gradientKey] ?? [];
@@ -4285,16 +4363,12 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       final newChartType = selectedBindingsList.length > 1 && _mergeCharts
           ? ChartType.multiLine
           : _chartType;
-      AppLogging.widgetBuilder(
-        '[APPLY] Chart: Setting chartType=$newChartType',
-      );
-      AppLogging.widgetBuilder(
-        '[APPLY] Chart: Setting chartShowMinMax=$_showMinMax',
-      );
-      AppLogging.widgetBuilder(
+      AppLogging.widgets('[APPLY] Chart: Setting chartType=$newChartType');
+      AppLogging.widgets('[APPLY] Chart: Setting chartShowMinMax=$_showMinMax');
+      AppLogging.widgets(
         '[APPLY] Chart: Setting chartGradientFill=${gradient.enabled}',
       );
-      AppLogging.widgetBuilder(
+      AppLogging.widgets(
         '[APPLY] Chart: Setting chartBindingPaths=$selectedBindingsList',
       );
 
@@ -4310,7 +4384,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           legendColors.add(_colorToHex(_getDefaultColorForIndex(index)));
         }
       }
-      AppLogging.widgetBuilder(
+      AppLogging.widgets(
         '[APPLY] Chart: Setting chartLegendColors=$legendColors',
       );
 
@@ -4326,7 +4400,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                 ? _getDefaultColorForIndex(bindingIndex)
                 : _accentColor);
         chartTextColor = _colorToHex(chartColor);
-        AppLogging.widgetBuilder(
+        AppLogging.widgets(
           '[APPLY] Chart: Non-merged chart for $bindingPath, setting textColor=$chartTextColor',
         );
       }
@@ -4357,7 +4431,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             ? element.style.copyWith(textColor: chartTextColor)
             : element.style,
       );
-      AppLogging.widgetBuilder(
+      AppLogging.widgets(
         '[APPLY] Chart: modified.chartShowMinMax=${modified.chartShowMinMax}',
       );
     } else if (element.type == ElementType.text &&
@@ -4423,6 +4497,27 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     return _mergeCharts != _originalMergeCharts;
   }
 
+  /// Check if the layout style has been changed from the original
+  bool _hasLayoutChanged() {
+    if (_originalLayoutStyle == null) {
+      AppLogging.widgets(
+        '[LAYOUT_CHANGED] _originalLayoutStyle is null, returning false',
+      );
+      return false;
+    }
+    final changed = _layoutStyle != _originalLayoutStyle;
+    AppLogging.widgets(
+      '[LAYOUT_CHANGED] current=$_layoutStyle, original=$_originalLayoutStyle, changed=$changed',
+    );
+    return changed;
+  }
+
+  /// Check if the showLabels setting has been changed from the original
+  bool _hasShowLabelsChanged() {
+    if (_originalShowLabels == null) return false;
+    return _showLabels != _originalShowLabels;
+  }
+
   /// Check if bindings have been changed from the original (adding/removing data fields)
   bool _haveBindingsChanged() {
     if (_originalBindings == null) return false;
@@ -4431,162 +4526,117 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     return !_selectedBindings.containsAll(_originalBindings!);
   }
 
+  /// UNIFIED REBUILD PREDICATE
+  /// This is the single source of truth for determining if a structural rebuild is needed.
+  /// Used by both _buildPreviewSchema() and _buildFinalSchema() to ensure consistency.
+  ///
+  /// Returns true if the widget structure needs to be rebuilt from current wizard state.
+  /// Returns false if only appearance changes can be applied to the existing structure.
+  bool _requiresStructuralRebuild() {
+    final isNewWidget = widget.initialSchema == null;
+    final isGraphTemplate = _selectedTemplate?.id == 'graph';
+    final isActionsTemplate = _selectedTemplate?.id == 'actions';
+
+    // NEW WIDGETS: Always rebuild from current state
+    if (isNewWidget) {
+      AppLogging.widgets('[REBUILD] New widget - requires rebuild');
+      return true;
+    }
+
+    // TEMPLATE CHANGED: Always rebuild to use new template structure
+    if (_hasTemplateChanged()) {
+      AppLogging.widgets('[REBUILD] Template changed - requires rebuild');
+      return true;
+    }
+
+    // ACTIONS TEMPLATE: Rebuild if actions have changed
+    if (isActionsTemplate && _haveActionsChanged()) {
+      AppLogging.widgets('[REBUILD] Actions changed - requires rebuild');
+      return true;
+    }
+
+    // GRAPH TEMPLATE: Rebuild if merge setting has changed
+    if (isGraphTemplate && _hasMergeChanged()) {
+      AppLogging.widgets('[REBUILD] Merge changed - requires rebuild');
+      return true;
+    }
+
+    // ALL TEMPLATES: Rebuild if bindings have changed
+    if (_haveBindingsChanged()) {
+      AppLogging.widgets('[REBUILD] Bindings changed - requires rebuild');
+      return true;
+    }
+
+    // ALL TEMPLATES: Rebuild if layout style has changed
+    if (_hasLayoutChanged()) {
+      AppLogging.widgets('[REBUILD] Layout changed - requires rebuild');
+      return true;
+    }
+
+    // ALL TEMPLATES: Rebuild if showLabels has changed
+    if (_hasShowLabelsChanged()) {
+      AppLogging.widgets('[REBUILD] ShowLabels changed - requires rebuild');
+      return true;
+    }
+
+    // No structural changes detected - can apply appearance updates only
+    AppLogging.widgets('[REBUILD] No structural changes - appearance only');
+    return false;
+  }
+
   /// Build schema for LIVE PREVIEW
-  /// For template changes: ALWAYS rebuild to use new template structure
-  /// For new graph/actions widgets: rebuild from current state
-  /// For edited graph/actions widgets: preserve structure (marketplace/installed widgets)
-  /// For other edited widgets: preserves structure but applies appearance changes
-  /// For new widgets: builds from current wizard state
+  /// Uses unified rebuild predicate to determine if structural rebuild is needed
   WidgetSchema _buildPreviewSchema() {
-    AppLogging.widgetBuilder('[SCHEMA] _buildPreviewSchema called');
-    AppLogging.widgetBuilder(
-      '[SCHEMA] widget.initialSchema is ${widget.initialSchema == null ? "NULL (new widget)" : "PRESENT (editing)"}',
-    );
-    AppLogging.widgetBuilder(
-      '[SCHEMA] _selectedTemplate=${_selectedTemplate?.id}',
-    );
+    AppLogging.widgets('[SCHEMA] _buildPreviewSchema called');
 
     final name = _nameController.text.trim().isEmpty
         ? 'My Widget'
         : _nameController.text.trim();
 
-    // TEMPLATE CHANGED: Rebuild from new template structure
-    // This must be checked FIRST as it applies to all templates
-    if (_hasTemplateChanged()) {
-      AppLogging.widgetBuilder(
-        '[SCHEMA] Template changed - rebuilding from new template',
-      );
+    // Use unified rebuild predicate
+    if (_requiresStructuralRebuild()) {
       return _buildSchemaFromCurrentState(name);
     }
 
-    // GRAPH/ACTIONS WIDGETS: Rebuild from current state for NEW widgets
-    // or when structural changes are made (actions changed, merge/unmerge)
-    final isGraphTemplate = _selectedTemplate?.id == 'graph';
-    final isActionsTemplate = _selectedTemplate?.id == 'actions';
-    final isNewWidget = widget.initialSchema == null;
-
-    // For actions template: rebuild if new OR if actions have changed
-    if (isActionsTemplate && (isNewWidget || _haveActionsChanged())) {
-      AppLogging.widgetBuilder(
-        '[SCHEMA] Actions template - rebuilding (new=$isNewWidget, actionsChanged=${_haveActionsChanged()})',
-      );
-      return _buildSchemaFromCurrentState(name);
-    }
-
-    // For graph template: rebuild if new OR if merge setting has changed
-    if (isGraphTemplate && (isNewWidget || _hasMergeChanged())) {
-      AppLogging.widgetBuilder(
-        '[SCHEMA] Graph template - rebuilding (new=$isNewWidget, mergeChanged=${_hasMergeChanged()})',
-      );
-      return _buildSchemaFromCurrentState(name);
-    }
-
-    // ALL TEMPLATES: Rebuild if bindings have changed (added/removed data fields)
-    // This ensures the widget structure updates to match the new binding set
-    if (_haveBindingsChanged()) {
-      AppLogging.widgetBuilder(
-        '[SCHEMA] Bindings changed - rebuilding structure (template=${_selectedTemplate?.id})',
-      );
-      return _buildSchemaFromCurrentState(name);
-    }
-
-    // EDITED WIDGETS (same template, no structural changes): Preserve structure but apply appearance changes
-    if (widget.initialSchema != null) {
-      AppLogging.widgetBuilder(
-        '[SCHEMA] Using EDITED path - preserving structure with appearance updates',
-      );
-      // Apply current appearance settings to the original structure
-      final modifiedRoot = _applyAppearanceToElement(
-        widget.initialSchema!.root,
-      );
-
-      return WidgetSchema(
-        id: _existingId ?? widget.initialSchema!.id,
-        name: name,
-        description: widget.initialSchema!.description,
-        size: widget.initialSchema!.size,
-        root: modifiedRoot, // Original structure with updated appearance
-        tags: widget.initialSchema!.tags,
-      );
-    }
-
-    // NEW WIDGETS: Build from current state
-    AppLogging.widgetBuilder(
-      '[SCHEMA] Using NEW WIDGET path - building from current state',
+    // EDITED WIDGETS (no structural changes): Preserve structure but apply appearance changes
+    AppLogging.widgets(
+      '[SCHEMA] Using EDITED path - preserving structure with appearance updates',
     );
-    return _buildSchemaFromCurrentState(name);
+    final modifiedRoot = _applyAppearanceToElement(widget.initialSchema!.root);
+
+    return WidgetSchema(
+      id: _existingId ?? widget.initialSchema!.id,
+      name: name,
+      description: widget.initialSchema!.description,
+      size: widget.initialSchema!.size,
+      root: modifiedRoot,
+      tags: widget.initialSchema!.tags,
+    );
   }
 
   /// Build schema for FINAL SAVE
-  /// For template changes: ALWAYS rebuild to use new template structure
-  /// For new graph/actions widgets: rebuild from current state
-  /// For edited graph/actions widgets: preserve structure (marketplace/installed widgets)
-  /// For other edited widgets: preserves structure but applies appearance changes
-  /// For new widgets: builds from current wizard state
+  /// Uses unified rebuild predicate to determine if structural rebuild is needed
   WidgetSchema _buildFinalSchema() {
     final name = _nameController.text.trim().isEmpty
         ? 'My Widget'
         : _nameController.text.trim();
 
-    // TEMPLATE CHANGED: Rebuild from new template structure
-    // This must be checked FIRST as it applies to all templates
-    if (_hasTemplateChanged()) {
-      AppLogging.widgetBuilder(
-        '[SCHEMA] Template changed - rebuilding from new template for save',
-      );
+    // Use unified rebuild predicate
+    if (_requiresStructuralRebuild()) {
       return _buildSchemaFromCurrentState(name);
     }
 
-    // GRAPH/ACTIONS WIDGETS: Rebuild from current state for NEW widgets
-    // or when structural changes are made (actions changed, merge/unmerge)
-    final isGraphTemplate = _selectedTemplate?.id == 'graph';
-    final isActionsTemplate = _selectedTemplate?.id == 'actions';
-    final isNewWidget = widget.initialSchema == null;
+    // EDITED WIDGETS (no structural changes): Preserve structure but apply appearance changes
+    final modifiedRoot = _applyAppearanceToElement(widget.initialSchema!.root);
 
-    // For actions template: rebuild if new OR if actions have changed
-    if (isActionsTemplate && (isNewWidget || _haveActionsChanged())) {
-      AppLogging.widgetBuilder(
-        '[SCHEMA] Actions template for save - rebuilding (new=$isNewWidget, actionsChanged=${_haveActionsChanged()})',
-      );
-      return _buildSchemaFromCurrentState(name);
-    }
-
-    // For graph template: rebuild if new OR if merge setting has changed
-    if (isGraphTemplate && (isNewWidget || _hasMergeChanged())) {
-      AppLogging.widgetBuilder(
-        '[SCHEMA] Graph template for save - rebuilding (new=$isNewWidget, mergeChanged=${_hasMergeChanged()})',
-      );
-      return _buildSchemaFromCurrentState(name);
-    }
-
-    // For ALL templates: rebuild if bindings have been added or removed
-    // This ensures new data fields are shown and removed fields disappear
-    if (_haveBindingsChanged()) {
-      AppLogging.widgetBuilder(
-        '[SCHEMA] Bindings changed for save - rebuilding structure',
-      );
-      return _buildSchemaFromCurrentState(name);
-    }
-
-    // EDITED WIDGETS (same template, no structural changes): Preserve structure but apply appearance changes
-    if (widget.initialSchema != null) {
-      // Apply current appearance settings to the original structure
-      final modifiedRoot = _applyAppearanceToElement(
-        widget.initialSchema!.root,
-      );
-
-      return WidgetSchema(
-        id: _existingId ?? widget.initialSchema!.id,
-        name: name,
-        description: widget.initialSchema!.description,
-        size: widget.initialSchema!.size,
-        root: modifiedRoot, // Original structure with updated appearance
-        tags: widget.initialSchema!.tags,
-      );
-    }
-
-    // NEW WIDGETS: Build from current state
-    return _buildSchemaFromCurrentState(name);
+    return WidgetSchema(
+      id: _existingId ?? widget.initialSchema!.id,
+      name: name,
+      description: widget.initialSchema!.description,
+      size: widget.initialSchema!.size,
+      root: modifiedRoot,
+      tags: widget.initialSchema!.tags,
+    );
   }
 
   /// UNIFIED SCHEMA BUILDER - the single source of truth for widget rendering
@@ -4608,15 +4658,26 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     if (_selectedTemplate?.id == 'actions') {
       // Build action buttons
       children.addAll(_buildActionElements());
+      AppLogging.widgets(
+        '[SCHEMA_BUILD] Actions template - ${children.length} action elements',
+      );
     } else {
       // Build data display
       children.addAll(_buildDataElements(name));
+      AppLogging.widgets(
+        '[SCHEMA_BUILD] Data template - ${children.length} data elements',
+      );
     }
+
+    AppLogging.widgets(
+      '[SCHEMA_BUILD] Layout style: $_layoutStyle, children.length: ${children.length}',
+    );
 
     // Create root based on layout style
     final ElementSchema root;
     if (_selectedTemplate?.id == 'actions') {
       // Actions use vertical layout - each action is a row with icon + label
+      AppLogging.widgets('[SCHEMA_BUILD] Using ACTIONS layout (column)');
       root = ElementSchema(
         type: ElementType.column,
         style: const StyleSchema(padding: 8, spacing: 8),
@@ -4625,55 +4686,78 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
     } else if (_selectedTemplate?.id == 'graph') {
       // Graph template: ALWAYS use column layout for chart stacking
       // Graph elements include headers, spacers, and charts that must be vertical
+      AppLogging.widgets('[SCHEMA_BUILD] Using GRAPH layout (column)');
       root = ElementSchema(
         type: ElementType.column,
         style: const StyleSchema(padding: 12, spacing: 4),
         children: children,
       );
     } else if (_layoutStyle == _LayoutStyle.horizontal) {
-      // Horizontal layout - stack rows of 3 items each for better wrapping
+      AppLogging.widgets(
+        '[SCHEMA_BUILD] Using HORIZONTAL layout, children: ${children.length}',
+      );
+      // Horizontal layout - compact chips in rows of 3 with tight spacing
       if (children.length <= 3) {
         // Few items - single row with even spacing
+        AppLogging.widgets('[SCHEMA_BUILD] HORIZONTAL: Single row (<=3 items)');
+        AppLogging.widgets(
+          '[SCHEMA_BUILD] HORIZONTAL row style: padding=8, spacing=6, mainAxis=spaceEvenly, crossAxis=center',
+        );
         root = ElementSchema(
           type: ElementType.row,
           style: const StyleSchema(
-            padding: 12,
-            spacing: 8,
+            padding: 8,
+            spacing: 6,
             mainAxisAlignment: MainAxisAlignmentOption.spaceEvenly,
+            crossAxisAlignment: CrossAxisAlignmentOption.center,
           ),
           children: children,
         );
       } else {
-        // Many items - stack into rows of 3
+        // Many items - stack into rows of 3 with tight spacing
+        AppLogging.widgets(
+          '[SCHEMA_BUILD] HORIZONTAL: Multiple rows (>3 items)',
+        );
         final rows = <ElementSchema>[];
         for (var i = 0; i < children.length; i += 3) {
           final rowItems = <ElementSchema>[];
           for (var j = i; j < i + 3 && j < children.length; j++) {
             rowItems.add(children[j]);
           }
+          AppLogging.widgets(
+            '[SCHEMA_BUILD] HORIZONTAL row $i: ${rowItems.length} items, mainAxis=spaceEvenly',
+          );
           rows.add(
             ElementSchema(
               type: ElementType.row,
               style: const StyleSchema(
-                spacing: 8,
+                spacing: 6,
                 mainAxisAlignment: MainAxisAlignmentOption.spaceEvenly,
+                crossAxisAlignment: CrossAxisAlignmentOption.center,
               ),
               children: rowItems,
             ),
           );
         }
+        AppLogging.widgets(
+          '[SCHEMA_BUILD] HORIZONTAL: Created ${rows.length} rows',
+        );
         root = ElementSchema(
           type: ElementType.column,
-          style: const StyleSchema(padding: 12, spacing: 8),
+          style: const StyleSchema(padding: 8, spacing: 6),
           children: rows,
         );
       }
     } else if (_layoutStyle == _LayoutStyle.grid) {
-      // Create a 2-column grid - simpler approach without expanded containers
+      AppLogging.widgets(
+        '[SCHEMA_BUILD] Using GRID layout, children: ${children.length}',
+      );
+      // Grid layout - card-style 2-column layout with larger spacing
       if (children.isEmpty) {
+        AppLogging.widgets('[SCHEMA_BUILD] GRID: Empty, showing placeholder');
         root = ElementSchema(
           type: ElementType.column,
-          style: const StyleSchema(padding: 12, spacing: 8),
+          style: const StyleSchema(padding: 12, spacing: 12),
           children: [
             ElementSchema(
               type: ElementType.text,
@@ -4692,30 +4776,53 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           if (i + 1 < children.length) {
             rowChildren.add(children[i + 1]);
           }
+          AppLogging.widgets(
+            '[SCHEMA_BUILD] GRID row ${i ~/ 2}: ${rowChildren.length} items',
+          );
+          for (var j = 0; j < rowChildren.length; j++) {
+            final child = rowChildren[j];
+            AppLogging.widgets(
+              '[SCHEMA_BUILD] GRID row child $j: type=${child.type}, flex=${child.style.flex}, expanded=${child.style.expanded}',
+            );
+          }
           rows.add(
             ElementSchema(
               type: ElementType.row,
               style: const StyleSchema(
-                spacing: 8,
-                mainAxisAlignment: MainAxisAlignmentOption.spaceEvenly,
+                spacing: 12,
+                // Use start alignment - children have flex:1 which handles equal distribution
+                // Do NOT use spaceBetween with flex children (causes layout conflicts)
+                // Do NOT use stretch cross-axis - causes unbounded height issues with flex children
+                mainAxisAlignment: MainAxisAlignmentOption.start,
+                crossAxisAlignment: CrossAxisAlignmentOption.start,
               ),
               children: rowChildren,
             ),
           );
         }
+        AppLogging.widgets(
+          '[SCHEMA_BUILD] GRID: Created ${rows.length} rows, mainAxis=start, crossAxis=start',
+        );
         root = ElementSchema(
           type: ElementType.column,
-          style: const StyleSchema(padding: 12, spacing: 8),
+          style: const StyleSchema(padding: 12, spacing: 12),
           children: rows,
         );
       }
     } else {
+      AppLogging.widgets(
+        '[SCHEMA_BUILD] Using VERTICAL layout (default), children: ${children.length}',
+      );
       root = ElementSchema(
         type: ElementType.column,
         style: const StyleSchema(padding: 12, spacing: 8),
         children: children,
       );
     }
+
+    AppLogging.widgets(
+      '[SCHEMA_BUILD] Final root: type=${root.type}, children=${root.children.length}',
+    );
 
     return WidgetSchema(
       id: _existingId,
@@ -4728,6 +4835,9 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   }
 
   List<ElementSchema> _buildDataElements(String name) {
+    AppLogging.widgets(
+      '[DATA_ELEMENTS] template=${_selectedTemplate?.id}, layout=$_layoutStyle',
+    );
     // Dispatch to template-specific builders for distinct visual styles
     return switch (_selectedTemplate?.id) {
       'gauge' => _buildGaugeElements(name),
@@ -4855,12 +4965,12 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
   /// Graph: Line, area, bar, or sparkline charts
   List<ElementSchema> _buildGraphElements(String name) {
-    AppLogging.widgetBuilder('[GRAPH] === _buildGraphElements ===');
-    AppLogging.widgetBuilder('[GRAPH] _mergeCharts=$_mergeCharts');
-    AppLogging.widgetBuilder('[GRAPH] _showMinMax=$_showMinMax');
-    AppLogging.widgetBuilder('[GRAPH] _selectedBindings=$_selectedBindings');
-    AppLogging.widgetBuilder('[GRAPH] _mergeColors=$_mergeColors');
-    AppLogging.widgetBuilder('[GRAPH] _seriesGradients=$_seriesGradients');
+    AppLogging.widgets('[GRAPH] === _buildGraphElements ===');
+    AppLogging.widgets('[GRAPH] _mergeCharts=$_mergeCharts');
+    AppLogging.widgets('[GRAPH] _showMinMax=$_showMinMax');
+    AppLogging.widgets('[GRAPH] _selectedBindings=$_selectedBindings');
+    AppLogging.widgets('[GRAPH] _mergeColors=$_mergeColors');
+    AppLogging.widgets('[GRAPH] _seriesGradients=$_seriesGradients');
 
     if (_selectedBindings.isEmpty) {
       return [
@@ -4882,7 +4992,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
     // Merge mode: single chart with multiple data series
     if (_mergeCharts && _selectedBindings.length > 1) {
-      AppLogging.widgetBuilder('[GRAPH] Building MERGED chart');
+      AppLogging.widgets('[GRAPH] Building MERGED chart');
       // Collect labels and colors for legend
       final legendLabels = <String>[];
       final legendColors = <String>[];
@@ -4914,12 +5024,12 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         final color =
             _mergeColors[bindingPath] ??
             defaultChartColors[i % defaultChartColors.length];
-        AppLogging.widgetBuilder(
+        AppLogging.widgets(
           '[GRAPH] Merged binding $bindingPath color=${color.toARGB32().toRadixString(16)}',
         );
         legendColors.add(_colorToHex(color));
       }
-      AppLogging.widgetBuilder('[GRAPH] legendColors=$legendColors');
+      AppLogging.widgets('[GRAPH] legendColors=$legendColors');
 
       // Legend row at top
       if (_showLabels) {
@@ -4975,10 +5085,10 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       // For merged charts, use the "_merged" key for thresholds and gradient
       final mergedThresholds = _seriesThresholds['_merged'] ?? [];
       final mergedGradient = _seriesGradients['_merged'] ?? _GradientConfig();
-      AppLogging.widgetBuilder('[GRAPH] Creating merged chart element');
-      AppLogging.widgetBuilder('[GRAPH] chartShowMinMax=$_showMinMax');
-      AppLogging.widgetBuilder('[GRAPH] chartLegendColors=$legendColors');
-      AppLogging.widgetBuilder(
+      AppLogging.widgets('[GRAPH] Creating merged chart element');
+      AppLogging.widgets('[GRAPH] chartShowMinMax=$_showMinMax');
+      AppLogging.widgets('[GRAPH] chartLegendColors=$legendColors');
+      AppLogging.widgets(
         '[GRAPH] mergedGradient.enabled=${mergedGradient.enabled}',
       );
       children.add(
@@ -5012,14 +5122,12 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         ),
       );
     } else {
-      AppLogging.widgetBuilder(
+      AppLogging.widgets(
         '[GRAPH] Building NON-MERGED charts (separate per binding)',
       );
       // Non-merged mode: separate chart per binding
       for (final bindingPath in _selectedBindings) {
-        AppLogging.widgetBuilder(
-          '[GRAPH] Building chart for binding: $bindingPath',
-        );
+        AppLogging.widgets('[GRAPH] Building chart for binding: $bindingPath');
         final binding = BindingRegistry.bindings.firstWhere(
           (b) => b.path == bindingPath,
           orElse: () => BindingDefinition(
@@ -5041,7 +5149,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           bindingChartType = ChartType.line; // Fallback for multi-series types
         }
         // Note: Chart type is used directly - Area shows fill, Line does not
-        AppLogging.widgetBuilder('[GRAPH] bindingChartType=$bindingChartType');
+        AppLogging.widgets('[GRAPH] bindingChartType=$bindingChartType');
 
         // Get color for this specific binding (series colors)
         final bindingIndex = _selectedBindings.toList().indexOf(bindingPath);
@@ -5102,12 +5210,12 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         final bindingThresholds = _seriesThresholds[bindingPath] ?? [];
         final bindingGradient =
             _seriesGradients[bindingPath] ?? _GradientConfig();
-        AppLogging.widgetBuilder('[GRAPH] Non-merged chart for $bindingPath:');
-        AppLogging.widgetBuilder('[GRAPH]   chartShowMinMax=$_showMinMax');
-        AppLogging.widgetBuilder(
+        AppLogging.widgets('[GRAPH] Non-merged chart for $bindingPath:');
+        AppLogging.widgets('[GRAPH]   chartShowMinMax=$_showMinMax');
+        AppLogging.widgets(
           '[GRAPH]   bindingGradient.enabled=${bindingGradient.enabled}',
         );
-        AppLogging.widgetBuilder(
+        AppLogging.widgets(
           '[GRAPH]   bindingColor=${bindingColor.toARGB32().toRadixString(16)}',
         );
         children.add(
@@ -5367,6 +5475,9 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
   /// Status: Dashboard-style with progress bars
   List<ElementSchema> _buildStatusElements(String name) {
+    AppLogging.widgets(
+      '[STATUS_ELEMENTS] START - layout=$_layoutStyle, bindings=${_selectedBindings.length}',
+    );
     final children = <ElementSchema>[];
 
     if (_selectedBindings.isEmpty) {
@@ -5383,71 +5494,192 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       return children;
     }
 
-    // Status rows with progress bars for numeric values
+    // Status template creates label + value + gauge for each binding
+    // Layout style affects how these are wrapped and styled
     for (final bindingPath in _selectedBindings) {
       final binding = _getBinding(bindingPath);
       final isNumeric = binding.valueType == int || binding.valueType == double;
 
-      // Label + value row
-      children.add(
-        ElementSchema(
-          type: ElementType.row,
-          style: const StyleSchema(
-            mainAxisAlignment: MainAxisAlignmentOption.spaceBetween,
-          ),
-          children: [
-            ElementSchema(
-              type: ElementType.text,
-              text: binding.label,
-              style: StyleSchema(
-                textColor: _colorToHex(context.textSecondary),
-                fontSize: 13,
-              ),
-            ),
-            ElementSchema(
-              type: ElementType.text,
-              binding: BindingSchema(
-                path: bindingPath,
-                format: binding.defaultFormat,
-                defaultValue: '--',
-              ),
-              style: const StyleSchema(
-                textColor: '#FFFFFF',
-                fontSize: 14,
-                fontWeight: 'w600',
-              ),
-            ),
-          ],
-        ),
-      );
-
-      // Add progress bar for numeric values
-      if (isNumeric) {
+      if (_layoutStyle == _LayoutStyle.horizontal) {
+        // HORIZONTAL: Compact card with label, value, and small gauge
+        AppLogging.widgets(
+          '[STATUS_ELEMENTS] HORIZONTAL: compact card for $bindingPath',
+        );
         children.add(
           ElementSchema(
-            type: ElementType.gauge,
-            gaugeType: GaugeType.linear,
-            gaugeMin: binding.minValue ?? 0,
-            gaugeMax: binding.maxValue ?? 100,
-            gaugeColor: _colorToHex(_accentColor),
-            binding: BindingSchema(path: bindingPath),
-            style: const StyleSchema(height: 6),
+            type: ElementType.column,
+            style: StyleSchema(
+              padding: 8,
+              backgroundColor: _colorToHex(context.card.withValues(alpha: 0.3)),
+              borderRadius: 8,
+              alignment: AlignmentOption.center,
+              spacing: 4,
+            ),
+            children: [
+              // Label
+              ElementSchema(
+                type: ElementType.text,
+                text: binding.label,
+                style: StyleSchema(
+                  textColor: _colorToHex(context.textSecondary),
+                  fontSize: 10,
+                ),
+              ),
+              // Value
+              ElementSchema(
+                type: ElementType.text,
+                binding: BindingSchema(
+                  path: bindingPath,
+                  format: binding.defaultFormat,
+                  defaultValue: '--',
+                ),
+                style: StyleSchema(
+                  textColor: _colorToHex(_accentColor),
+                  fontSize: 16,
+                  fontWeight: 'w600',
+                ),
+              ),
+              // Small gauge for numeric values
+              if (isNumeric)
+                ElementSchema(
+                  type: ElementType.gauge,
+                  gaugeType: GaugeType.linear,
+                  gaugeMin: binding.minValue ?? 0,
+                  gaugeMax: binding.maxValue ?? 100,
+                  gaugeColor: _colorToHex(_accentColor),
+                  binding: BindingSchema(path: bindingPath),
+                  style: const StyleSchema(height: 4),
+                ),
+            ],
           ),
         );
+      } else if (_layoutStyle == _LayoutStyle.grid) {
+        // GRID: Card-style tile with label, large value, and gauge
+        AppLogging.widgets(
+          '[STATUS_ELEMENTS] GRID: card tile with flex=1 for $bindingPath',
+        );
+        children.add(
+          ElementSchema(
+            type: ElementType.column,
+            style: StyleSchema(
+              padding: 12,
+              backgroundColor: _colorToHex(context.card.withValues(alpha: 0.6)),
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: _colorToHex(context.border),
+              alignment: AlignmentOption.center,
+              spacing: 6,
+              flex: 1, // CRITICAL: flex for equal distribution in grid rows
+            ),
+            children: [
+              // Label
+              ElementSchema(
+                type: ElementType.text,
+                text: binding.label,
+                style: StyleSchema(
+                  textColor: _colorToHex(context.textSecondary),
+                  fontSize: 11,
+                  fontWeight: 'w500',
+                ),
+              ),
+              // Large value
+              ElementSchema(
+                type: ElementType.text,
+                binding: BindingSchema(
+                  path: bindingPath,
+                  format: binding.defaultFormat,
+                  defaultValue: '--',
+                ),
+                style: StyleSchema(
+                  textColor: _colorToHex(_accentColor),
+                  fontSize: 22,
+                  fontWeight: 'w700',
+                ),
+              ),
+              // Gauge for numeric values
+              if (isNumeric)
+                ElementSchema(
+                  type: ElementType.gauge,
+                  gaugeType: GaugeType.linear,
+                  gaugeMin: binding.minValue ?? 0,
+                  gaugeMax: binding.maxValue ?? 100,
+                  gaugeColor: _colorToHex(_accentColor),
+                  binding: BindingSchema(path: bindingPath),
+                  style: const StyleSchema(height: 6),
+                ),
+            ],
+          ),
+        );
+      } else {
+        // VERTICAL (default): Label + value row, then gauge below
+        AppLogging.widgets(
+          '[STATUS_ELEMENTS] VERTICAL: row + gauge for $bindingPath',
+        );
+        // Label + value row
+        children.add(
+          ElementSchema(
+            type: ElementType.row,
+            style: const StyleSchema(
+              mainAxisAlignment: MainAxisAlignmentOption.spaceBetween,
+            ),
+            children: [
+              ElementSchema(
+                type: ElementType.text,
+                text: binding.label,
+                style: StyleSchema(
+                  textColor: _colorToHex(context.textSecondary),
+                  fontSize: 13,
+                ),
+              ),
+              ElementSchema(
+                type: ElementType.text,
+                binding: BindingSchema(
+                  path: bindingPath,
+                  format: binding.defaultFormat,
+                  defaultValue: '--',
+                ),
+                style: const StyleSchema(
+                  textColor: '#FFFFFF',
+                  fontSize: 14,
+                  fontWeight: 'w600',
+                ),
+              ),
+            ],
+          ),
+        );
+
+        // Add progress bar for numeric values
+        if (isNumeric) {
+          children.add(
+            ElementSchema(
+              type: ElementType.gauge,
+              gaugeType: GaugeType.linear,
+              gaugeMin: binding.minValue ?? 0,
+              gaugeMax: binding.maxValue ?? 100,
+              gaugeColor: _colorToHex(_accentColor),
+              binding: BindingSchema(path: bindingPath),
+              style: const StyleSchema(height: 6),
+            ),
+          );
+        }
       }
     }
 
+    AppLogging.widgets(
+      '[STATUS_ELEMENTS] END - created ${children.length} elements',
+    );
     return children;
   }
 
   /// Generic fallback for blank/custom templates
   List<ElementSchema> _buildGenericElements(String name) {
+    AppLogging.widgets(
+      '[GENERIC_ELEMENTS] START - layout=$_layoutStyle, bindings=${_selectedBindings.length}, showLabels=$_showLabels',
+    );
     final children = <ElementSchema>[];
-    final isCompactLayout =
-        _layoutStyle == _LayoutStyle.horizontal ||
-        _layoutStyle == _LayoutStyle.grid;
 
     if (_selectedBindings.isEmpty) {
+      AppLogging.widgets('[GENERIC_ELEMENTS] No bindings selected');
       children.add(
         ElementSchema(
           type: ElementType.text,
@@ -5463,17 +5695,25 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
     for (final bindingPath in _selectedBindings) {
       final binding = _getBinding(bindingPath);
+      AppLogging.widgets(
+        '[GENERIC_ELEMENTS] Building element for binding: $bindingPath, layout=$_layoutStyle',
+      );
 
-      if (isCompactLayout) {
-        final isHorizontal = _layoutStyle == _LayoutStyle.horizontal;
+      if (_layoutStyle == _LayoutStyle.horizontal) {
+        // HORIZONTAL: Compact inline chips - small footprint, value-focused
+        // These will be arranged 3-per-row in _buildSchemaFromCurrentState
+        AppLogging.widgets(
+          '[GENERIC_ELEMENTS] HORIZONTAL style: padding=6, borderRadius=6, fontSize=9/14, NO flex, NO border',
+        );
         children.add(
           ElementSchema(
             type: ElementType.column,
             style: StyleSchema(
-              padding: isHorizontal ? 4 : 8,
-              backgroundColor: _colorToHex(context.card.withValues(alpha: 0.5)),
+              padding: 6,
+              backgroundColor: _colorToHex(context.card.withValues(alpha: 0.3)),
               borderRadius: 6,
               alignment: AlignmentOption.center,
+              spacing: 2,
             ),
             children: [
               if (_showLabels)
@@ -5482,7 +5722,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                   text: binding.label,
                   style: StyleSchema(
                     textColor: _colorToHex(context.textSecondary),
-                    fontSize: isHorizontal ? 9 : 11,
+                    fontSize: 9,
                   ),
                 ),
               ElementSchema(
@@ -5494,7 +5734,56 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                 ),
                 style: StyleSchema(
                   textColor: _colorToHex(_accentColor),
-                  fontSize: isHorizontal ? 14 : 18,
+                  fontSize: 14,
+                  fontWeight: 'w600',
+                ),
+              ),
+            ],
+          ),
+        );
+      } else if (_layoutStyle == _LayoutStyle.grid) {
+        // GRID: Card-style tiles - larger, more visual presence
+        // These will be arranged 2-per-row in _buildSchemaFromCurrentState
+        // NOTE: Do NOT use expanded:true here - it conflicts with spaceBetween in rows
+        // Instead, use flex on children and let the row handle distribution
+        AppLogging.widgets(
+          '[GENERIC_ELEMENTS] GRID style: padding=16, borderRadius=12, fontSize=12/24, flex=1, HAS border',
+        );
+        children.add(
+          ElementSchema(
+            type: ElementType.column,
+            style: StyleSchema(
+              padding: 16,
+              backgroundColor: _colorToHex(context.card.withValues(alpha: 0.6)),
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: _colorToHex(context.border),
+              alignment: AlignmentOption.center,
+              spacing: 8,
+              flex:
+                  1, // Use flex instead of expanded for proper row distribution
+            ),
+            children: [
+              if (_showLabels)
+                ElementSchema(
+                  type: ElementType.text,
+                  text: binding.label,
+                  style: StyleSchema(
+                    textColor: _colorToHex(context.textSecondary),
+                    fontSize: 12,
+                    fontWeight: 'w500',
+                  ),
+                ),
+              ElementSchema(
+                type: ElementType.text,
+                binding: BindingSchema(
+                  path: bindingPath,
+                  format: binding.defaultFormat,
+                  defaultValue: '--',
+                ),
+                style: StyleSchema(
+                  textColor: _colorToHex(_accentColor),
+                  fontSize: 24,
                   fontWeight: 'w700',
                 ),
               ),
@@ -5502,6 +5791,9 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           ),
         );
       } else if (_showLabels) {
+        AppLogging.widgets(
+          '[GENERIC_ELEMENTS] VERTICAL style (with labels): row with spaceBetween, fontSize=13/14',
+        );
         children.add(
           ElementSchema(
             type: ElementType.row,
@@ -5534,6 +5826,9 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
           ),
         );
       } else {
+        AppLogging.widgets(
+          '[GENERIC_ELEMENTS] VERTICAL style (no labels): single text element',
+        );
         children.add(
           ElementSchema(
             type: ElementType.text,

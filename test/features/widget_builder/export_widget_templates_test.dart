@@ -27,7 +27,7 @@ void main() {
     for (final (filename, widget) in templates) {
       final file = File('${outputDir.path}/$filename');
       file.writeAsStringSync(widget.toJsonString());
-      AppLogging.widgetBuilder('Exported: $filename');
+      AppLogging.widgets('Exported: $filename');
     }
 
     // Verify files were created
@@ -35,7 +35,7 @@ void main() {
       expect(File('${outputDir.path}/$filename').existsSync(), isTrue);
     }
 
-    AppLogging.widgetBuilder(
+    AppLogging.widgets(
       '\n✅ All widget templates exported to assets/widget_templates/',
     );
   });

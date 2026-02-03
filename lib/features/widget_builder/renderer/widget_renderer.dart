@@ -6,6 +6,7 @@ import '../models/data_binding.dart';
 import 'primitive_renderers.dart';
 import 'widget_action_handler.dart';
 import '../../../core/theme.dart';
+import '../../../core/logging.dart';
 import '../../../models/mesh_models.dart';
 
 /// Main widget renderer - interprets WidgetSchema and builds Flutter widgets
@@ -115,6 +116,9 @@ class _ElementRenderer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    AppLogging.widgets(
+      '[ELEMENT_BUILD] type=${element.type}, id=${element.id}, flex=${element.style.flex}, expanded=${element.style.expanded}',
+    );
     // Check condition first
     if (element.condition != null) {
       final conditionMet = bindingEngine.evaluateCondition(element.condition!);
@@ -486,8 +490,18 @@ class _ElementRenderer extends StatelessWidget {
     final children = <Widget>[];
     final shouldStretch = fillParent || element.style.expanded == true;
 
+    AppLogging.widgets(
+      '[RENDERER_ROW] Building row: ${element.children.length} children, spacing=$spacing, shouldStretch=$shouldStretch',
+    );
+    AppLogging.widgets(
+      '[RENDERER_ROW] Row style: mainAxis=${element.style.mainAxisAlignment}, crossAxis=${element.style.crossAxisAlignment}',
+    );
+
     for (var i = 0; i < element.children.length; i++) {
       final child = element.children[i];
+      AppLogging.widgets(
+        '[RENDERER_ROW] Child $i: type=${child.type}, flex=${child.style.flex}, expanded=${child.style.expanded}',
+      );
       Widget childWidget = _ElementRenderer(
         element: child,
         bindingEngine: bindingEngine,
@@ -502,6 +516,9 @@ class _ElementRenderer extends StatelessWidget {
 
       // Wrap in Expanded if style.expanded is true or flex is set
       if (child.style.expanded == true || child.style.flex != null) {
+        AppLogging.widgets(
+          '[RENDERER_ROW] Wrapping child $i in Expanded(flex=${child.style.flex ?? 1})',
+        );
         childWidget = Expanded(flex: child.style.flex ?? 1, child: childWidget);
       }
 
@@ -526,6 +543,10 @@ class _ElementRenderer extends StatelessWidget {
     final crossAxisAlignment =
         element.style.crossAxisAlignmentValue ?? CrossAxisAlignment.center;
 
+    AppLogging.widgets(
+      '[RENDERER_ROW] Final: mainAxisSize=${needsMaxSize ? "max" : "min"}, mainAxis=$alignment, crossAxis=$crossAxisAlignment',
+    );
+
     Widget row = Row(
       mainAxisSize: needsMaxSize ? MainAxisSize.max : MainAxisSize.min,
       mainAxisAlignment: alignment,
@@ -540,8 +561,18 @@ class _ElementRenderer extends StatelessWidget {
     final spacing = element.style.spacing ?? 0;
     final children = <Widget>[];
 
+    AppLogging.widgets(
+      '[RENDERER_COLUMN] Building column: ${element.children.length} children, spacing=$spacing',
+    );
+    AppLogging.widgets(
+      '[RENDERER_COLUMN] Column style: mainAxis=${element.style.mainAxisAlignment}, crossAxis=${element.style.crossAxisAlignment}',
+    );
+
     for (var i = 0; i < element.children.length; i++) {
       final child = element.children[i];
+      AppLogging.widgets(
+        '[RENDERER_COLUMN] Child $i: type=${child.type}, flex=${child.style.flex}, expanded=${child.style.expanded}',
+      );
       Widget childWidget = _ElementRenderer(
         element: child,
         bindingEngine: bindingEngine,
@@ -555,6 +586,9 @@ class _ElementRenderer extends StatelessWidget {
 
       // Wrap in Expanded if style.expanded is true
       if (child.style.expanded == true) {
+        AppLogging.widgets(
+          '[RENDERER_COLUMN] Wrapping child $i in Expanded(flex=${child.style.flex ?? 1})',
+        );
         childWidget = Expanded(flex: child.style.flex ?? 1, child: childWidget);
       }
 
@@ -566,12 +600,18 @@ class _ElementRenderer extends StatelessWidget {
       }
     }
 
+    final mainAxis =
+        element.style.mainAxisAlignmentValue ?? MainAxisAlignment.start;
+    final crossAxis =
+        element.style.crossAxisAlignmentValue ?? CrossAxisAlignment.start;
+    AppLogging.widgets(
+      '[RENDERER_COLUMN] Final: mainAxisSize=min, mainAxis=$mainAxis, crossAxis=$crossAxis',
+    );
+
     return Column(
       mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment:
-          element.style.mainAxisAlignmentValue ?? MainAxisAlignment.start,
-      crossAxisAlignment:
-          element.style.crossAxisAlignmentValue ?? CrossAxisAlignment.start,
+      mainAxisAlignment: mainAxis,
+      crossAxisAlignment: crossAxis,
       children: children,
     );
   }

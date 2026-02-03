@@ -26,7 +26,7 @@ class AppLogging {
   static bool? _bleLoggingEnabled;
   static bool? _mapLoggingEnabled;
   static bool? _protocolLoggingEnabled;
-  static bool? _widgetBuilderLoggingEnabled;
+  static bool? _widgetsLoggingEnabled;
   static bool? _liveActivityLoggingEnabled;
   static bool? _automationsLoggingEnabled;
   static bool? _messagesLoggingEnabled;
@@ -73,10 +73,10 @@ class AppLogging {
     return _protocolLoggingEnabled!;
   }
 
-  static bool get widgetBuilderLoggingEnabled {
-    _widgetBuilderLoggingEnabled ??=
+  static bool get widgetsLoggingEnabled {
+    _widgetsLoggingEnabled ??=
         _safeGetEnv('WIDGET_BUILDER_LOGGING_ENABLED')?.toLowerCase() != 'false';
-    return _widgetBuilderLoggingEnabled!;
+    return _widgetsLoggingEnabled!;
   }
 
   static bool get liveActivityLoggingEnabled {
@@ -252,55 +252,55 @@ class AppLogging {
   }
 
   static void map(String message) {
-    if (mapLoggingEnabled) debugPrint('🗺️ MAP: $message');
+    if (mapLoggingEnabled) debugPrint('MAP: $message');
   }
 
   static void protocol(String message) {
-    if (protocolLoggingEnabled) debugPrint('📦 Protocol: $message');
+    if (protocolLoggingEnabled) debugPrint('Protocol: $message');
   }
 
-  static void widgetBuilder(String message) {
-    if (widgetBuilderLoggingEnabled) debugPrint('�� WidgetBuilder: $message');
+  static void widgets(String message) {
+    if (widgetsLoggingEnabled) debugPrint('Widgets: $message');
   }
 
   static void liveActivity(String message) {
-    if (liveActivityLoggingEnabled) debugPrint('📱 LiveActivity: $message');
+    if (liveActivityLoggingEnabled) debugPrint('LiveActivity: $message');
   }
 
   static void automations(String message) {
-    if (automationsLoggingEnabled) debugPrint('🤖 $message');
+    if (automationsLoggingEnabled) debugPrint('Automations: $message');
   }
 
   static void messages(String message) {
-    if (messagesLoggingEnabled) debugPrint('📨 $message');
+    if (messagesLoggingEnabled) debugPrint('Messages: $message');
   }
 
   static void ifttt(String message) {
-    if (iftttLoggingEnabled) debugPrint('🔗 IFTTT: $message');
+    if (iftttLoggingEnabled) debugPrint('IFTTT: $message');
   }
 
   static void telemetry(String message) {
-    if (telemetryLoggingEnabled) debugPrint('📊 Telemetry: $message');
+    if (telemetryLoggingEnabled) debugPrint('Telemetry: $message');
   }
 
   static void connection(String message) {
-    if (connectionLoggingEnabled) debugPrint('🔄 $message');
+    if (connectionLoggingEnabled) debugPrint('Connection: $message');
   }
 
   static void nodes(String message) {
-    if (nodesLoggingEnabled) debugPrint('📍 $message');
+    if (nodesLoggingEnabled) debugPrint('Nodes: $message');
   }
 
   static void channels(String message) {
-    if (channelsLoggingEnabled) debugPrint('📡 $message');
+    if (channelsLoggingEnabled) debugPrint('Channels: $message');
   }
 
   static void app(String message) {
-    if (appLoggingEnabled) debugPrint('🔵 $message');
+    if (appLoggingEnabled) debugPrint('App: $message');
   }
 
   static void subscriptions(String message) {
-    if (subscriptionsLoggingEnabled) debugPrint('💳 $message');
+    if (subscriptionsLoggingEnabled) debugPrint('Subscriptions: $message');
   }
 
   static void notifications(String message) {
@@ -308,61 +308,61 @@ class AppLogging {
   }
 
   static void audio(String message) {
-    if (audioLoggingEnabled) debugPrint('🔊 $message');
+    if (audioLoggingEnabled) debugPrint('Audio: $message');
   }
 
   static void maps(String message) {
-    if (mapsLoggingEnabled) debugPrint('🗺️ $message');
+    if (mapsLoggingEnabled) debugPrint('Maps: $message');
   }
 
   static void firmware(String message) {
-    if (firmwareLoggingEnabled) debugPrint('📲 $message');
+    if (firmwareLoggingEnabled) debugPrint('Firmware: $message');
   }
 
   static void settings(String message) {
-    if (settingsLoggingEnabled) debugPrint('⚙️ $message');
+    if (settingsLoggingEnabled) debugPrint('Settings: $message');
   }
 
   static void debug(String message) {
-    if (debugLoggingEnabled) debugPrint('🐛 $message');
+    if (debugLoggingEnabled) debugPrint('Debug: $message');
   }
 
   static void auth(String message) {
-    if (authLoggingEnabled) debugPrint('🔐 Auth: $message');
+    if (authLoggingEnabled) debugPrint('Auth: $message');
   }
 
   static void social(String message) {
-    if (socialLoggingEnabled) debugPrint('👥 Social: $message');
+    if (socialLoggingEnabled) debugPrint('Social: $message');
   }
 
   static void signals(String message) {
-    if (signalsLoggingEnabled) debugPrint('📡 Signals: $message');
+    if (signalsLoggingEnabled) debugPrint('Signals: $message');
   }
 
   static void storage(String message) {
-    if (storageLoggingEnabled) debugPrint('💾 Storage: $message');
+    if (storageLoggingEnabled) debugPrint('Storage: $message');
   }
 
   static void permissions(String message) {
-    if (permissionsLoggingEnabled) debugPrint('🔒 Permissions: $message');
+    if (permissionsLoggingEnabled) debugPrint('Permissions: $message');
   }
 
   static void marketplace(String message) {
-    if (marketplaceLoggingEnabled) debugPrint('🛒 Marketplace: $message');
+    if (marketplaceLoggingEnabled) debugPrint('Marketplace: $message');
   }
 
   static void qr(String message) {
-    if (qrLoggingEnabled) debugPrint('📱 QR: $message');
+    if (qrLoggingEnabled) debugPrint('QR: $message');
   }
 
   static void bugReport(String message) {
-    if (bugReportLoggingEnabled) debugPrint('🐞 BugReport: $message');
+    if (bugReportLoggingEnabled) debugPrint('BugReport: $message');
   }
 
   static void reset() {
     _bleLoggingEnabled = null;
     _protocolLoggingEnabled = null;
-    _widgetBuilderLoggingEnabled = null;
+    _widgetsLoggingEnabled = null;
     _liveActivityLoggingEnabled = null;
     _automationsLoggingEnabled = null;
     _messagesLoggingEnabled = null;

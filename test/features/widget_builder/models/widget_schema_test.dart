@@ -357,4 +357,62 @@ void main() {
       expect(GaugeType.values, contains(GaugeType.signal));
     });
   });
+
+  group('Schema Versioning', () {
+    test('new widgets have current schema version', () {
+      final widget = WidgetSchema(
+        name: 'Test Widget',
+        root: ElementSchema(type: ElementType.text, text: 'Hello'),
+      );
+
+      expect(widget.schemaVersion, kCurrentSchemaVersion);
+    });
+
+    test('schemaVersion is serialized to JSON', () {
+      final widget = WidgetSchema(
+        name: 'Test Widget',
+        root: ElementSchema(type: ElementType.text, text: 'Hello'),
+      );
+
+      final json = widget.toJson();
+
+      expect(json['schemaVersion'], kCurrentSchemaVersion);
+    });
+
+    test('legacy widget without schemaVersion gets migrated', () {
+      final json = {
+        'id': 'legacy-widget',
+        'name': 'Legacy Widget',
+        'root': {'type': 'text', 'text': 'Old content'},
+        // Note: no schemaVersion field
+      };
+
+      final widget = WidgetSchema.fromJson(json);
+
+      // After migration, schema version should be current
+      expect(widget.schemaVersion, kCurrentSchemaVersion);
+    });
+
+    test('schemaVersion preserved through copyWith', () {
+      final widget = WidgetSchema(
+        name: 'Test Widget',
+        root: ElementSchema(type: ElementType.text, text: 'Hello'),
+      );
+
+      final copy = widget.copyWith(name: 'Updated Name');
+
+      expect(copy.schemaVersion, widget.schemaVersion);
+    });
+
+    test('schemaVersion can be updated via copyWith', () {
+      final widget = WidgetSchema(
+        name: 'Test Widget',
+        root: ElementSchema(type: ElementType.text, text: 'Hello'),
+      );
+
+      final upgraded = widget.copyWith(schemaVersion: 2);
+
+      expect(upgraded.schemaVersion, 2);
+    });
+  });
 }

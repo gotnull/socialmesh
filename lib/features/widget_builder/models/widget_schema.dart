@@ -953,6 +953,13 @@ enum CustomWidgetSize {
   custom, // User-defined size
 }
 
+/// Current schema format version - increment when breaking changes are made
+/// to the schema structure. Used for migrations.
+///
+/// Version history:
+/// - 1: Initial schema format
+const int kCurrentSchemaVersion = 1;
+
 /// Complete widget schema - the root definition
 class WidgetSchema {
   final String id;
@@ -960,6 +967,12 @@ class WidgetSchema {
   final String? description;
   final String? author;
   final String version;
+
+  /// Schema format version for migrations. This is different from [version]
+  /// which is the semantic version of the widget content.
+  /// When loading a widget with an older schemaVersion, migration logic
+  /// in [WidgetSchema.fromJson] will upgrade it to the current format.
+  final int schemaVersion;
   final DateTime createdAt;
   final DateTime updatedAt;
   final CustomWidgetSize size;
@@ -978,6 +991,7 @@ class WidgetSchema {
     this.description,
     this.author,
     this.version = '1.0.0',
+    int? schemaVersion,
     DateTime? createdAt,
     DateTime? updatedAt,
     this.size = CustomWidgetSize.medium,
@@ -990,6 +1004,7 @@ class WidgetSchema {
     this.downloadCount,
     this.rating,
   }) : id = id ?? const Uuid().v4(),
+       schemaVersion = schemaVersion ?? kCurrentSchemaVersion,
        createdAt = createdAt ?? DateTime.now(),
        updatedAt = updatedAt ?? DateTime.now();
 
@@ -1024,6 +1039,7 @@ class WidgetSchema {
     String? description,
     String? author,
     String? version,
+    int? schemaVersion,
     DateTime? createdAt,
     DateTime? updatedAt,
     CustomWidgetSize? size,
@@ -1042,6 +1058,7 @@ class WidgetSchema {
       description: description ?? this.description,
       author: author ?? this.author,
       version: version ?? this.version,
+      schemaVersion: schemaVersion ?? this.schemaVersion,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? DateTime.now(),
       size: size ?? this.size,
@@ -1062,6 +1079,7 @@ class WidgetSchema {
     if (description != null) 'description': description,
     if (author != null) 'author': author,
     'version': version,
+    'schemaVersion': schemaVersion,
     'createdAt': createdAt.toIso8601String(),
     'updatedAt': updatedAt.toIso8601String(),
     'size': size.name,
@@ -1076,12 +1094,23 @@ class WidgetSchema {
   };
 
   factory WidgetSchema.fromJson(Map<String, dynamic> json) {
+    // Read the schema version for migrations
+    // ignore: unused_local_variable
+    final loadedSchemaVersion = json['schemaVersion'] as int? ?? 1;
+
+    // Apply migrations if needed (currently no migrations needed)
+    // When adding migrations in the future:
+    // if (loadedSchemaVersion < 2) {
+    //   json = _migrateV1ToV2(json);
+    // }
+
     return WidgetSchema(
       id: json['id'] as String?,
       name: json['name'] as String,
       description: json['description'] as String?,
       author: json['author'] as String?,
       version: json['version'] as String? ?? '1.0.0',
+      schemaVersion: kCurrentSchemaVersion, // Always store at current version
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'] as String)
           : null,

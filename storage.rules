@@ -82,9 +82,21 @@ service firebase.storage {
     // =============================================================================
     // WIDGET ASSETS
     // =============================================================================
+    // Widget assets require ownership validation via Firestore lookup
+    // The widgetId must exist in Firestore and be owned by the uploading user
     match /widget_assets/{widgetId}/{fileName} {
       allow read: if true;
-      allow write: if isAuthenticated() && isValidImage();
+      // Write allowed if:
+      // 1. User is authenticated
+      // 2. Image is valid
+      // 3. User is admin OR user owns the widget (authorId matches)
+      allow write: if isAuthenticated() && isValidImage() &&
+        (isAdmin() || 
+         firestore.get(/databases/(default)/documents/widgets/$(widgetId)).data.authorId == request.auth.uid);
+      // Delete allowed only for admin or widget owner
+      allow delete: if isAuthenticated() &&
+        (isAdmin() || 
+         firestore.get(/databases/(default)/documents/widgets/$(widgetId)).data.authorId == request.auth.uid);
     }
     
     // =============================================================================
