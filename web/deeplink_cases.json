@@ -107,11 +107,11 @@
       "title": "Profile - User Profile",
       "category": "custom-scheme",
       "type": "profile",
-      "deepLink": "socialmesh://profile/fulvio",
+      "deepLink": "socialmesh://profile/gotnull",
       "expectedLocation": {
         "route": "/profile",
         "args": {
-          "displayName": "fulvio"
+          "displayName": "gotnull"
         }
       },
       "notes": "Opens the public profile page for a user by their unique display name.",

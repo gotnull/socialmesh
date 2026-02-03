@@ -117,11 +117,12 @@ class ShareLinkService {
     required String displayName,
     Rect? sharePositionOrigin,
   }) async {
-    final shareUrl = AppUrls.shareProfileUrl(userId);
+    // Use displayName in URL so the receiver can look up the user
+    final shareUrl = AppUrls.shareProfileUrl(displayName);
 
     await Share.share(
-      'Check out $displayName on Socialmesh!\n$shareUrl',
-      subject: '$displayName - Socialmesh Profile',
+      'Check out @$displayName on Socialmesh!\n$shareUrl',
+      subject: '@$displayName - Socialmesh Profile',
       sharePositionOrigin: _getSafeSharePosition(sharePositionOrigin),
     );
   }

@@ -13,30 +13,20 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme.dart';
 import '../../../core/widgets/animations.dart';
-import '../../../core/widgets/app_bottom_sheet.dart';
-import '../../../core/widgets/auto_scroll_text.dart';
 import '../../../core/widgets/content_moderation_warning.dart';
 import '../../../core/widgets/default_banner.dart';
 import '../../../core/widgets/edge_fade.dart';
-import '../../../core/widgets/node_avatar.dart';
-import '../../../models/presence_confidence.dart';
 import '../../../core/widgets/shimmer_image.dart';
 import '../../../core/widgets/verified_badge.dart';
-import '../../../models/mesh_models.dart';
 import '../../../models/social.dart';
 import '../../../providers/activity_providers.dart';
-import '../../../providers/app_providers.dart';
 import '../../../services/user_presence_service.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/profile_providers.dart';
 import '../../../providers/social_providers.dart';
 import '../../../utils/snackbar.dart';
 import '../../../utils/validation.dart';
-import '../../map/map_screen.dart';
-import '../../messaging/messaging_screen.dart'
-    show ChatScreen, ConversationType;
 import '../../profile/profile_screen.dart';
-import '../../settings/linked_devices_screen.dart';
 import '../../settings/settings_screen.dart';
 import '../widgets/follow_button.dart';
 import '../widgets/subscribe_button.dart';
@@ -226,17 +216,6 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
                     isFollowing,
                   ),
                 ),
-                // Linked devices - only visible to self or followers
-                if (canViewContent)
-                  SliverToBoxAdapter(
-                    child: _LinkedDevicesSection(
-                      linkedNodeIds: profile.linkedNodeIds,
-                      linkedNodeMetadata: profile.linkedNodeMetadata,
-                      primaryNodeId: profile.primaryNodeId,
-                      isOwnProfile: isOwnProfile,
-                      onManageDevices: () => _navigateToLinkedDevices(),
-                    ),
-                  ),
                 // Posts section - only visible if allowed
                 if (canViewContent) ...[
                   // Posts filter tabs
@@ -1370,15 +1349,6 @@ class _ProfileSocialScreenState extends ConsumerState<ProfileSocialScreen>
     );
   }
 
-  void _navigateToLinkedDevices() async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const LinkedDevicesScreen()),
-    );
-    // Refresh the profile stream when returning to pick up new linked devices
-    ref.invalidate(publicProfileStreamProvider(widget.userId));
-  }
-
   String _formatJoinedDate(DateTime date) {
     const months = [
       'January',
@@ -1554,282 +1524,6 @@ class _StatColumn extends StatelessWidget {
     if (onTap == null) return content;
 
     return BouncyTap(onTap: onTap, scaleFactor: 0.95, child: content);
-  }
-}
-
-/// Section showing linked Meshtastic devices.
-/// Only visible to followers or the profile owner.
-class _LinkedDevicesSection extends ConsumerWidget {
-  const _LinkedDevicesSection({
-    required this.linkedNodeIds,
-    required this.linkedNodeMetadata,
-    required this.primaryNodeId,
-    required this.isOwnProfile,
-    this.onManageDevices,
-  });
-
-  final List<int> linkedNodeIds;
-  final Map<int, LinkedNodeInfo> linkedNodeMetadata;
-  final int? primaryNodeId;
-  final bool isOwnProfile;
-  final VoidCallback? onManageDevices;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    if (linkedNodeIds.isEmpty) {
-      if (!isOwnProfile) return const SizedBox.shrink();
-
-      // Show "link your device" prompt for own profile
-      return Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        child: OutlinedButton.icon(
-          onPressed: onManageDevices,
-          icon: const Icon(Icons.add_link, size: 18),
-          label: const Text('Link a Meshtastic device'),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: context.accentColor,
-            side: BorderSide(color: context.accentColor.withValues(alpha: 0.5)),
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-          ),
-        ),
-      );
-    }
-
-    final allNodes = ref.watch(nodesProvider);
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.router_outlined,
-                size: 16,
-                color: context.textSecondary,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'Linked Devices',
-                style: TextStyle(
-                  color: context.textSecondary,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const Spacer(),
-              if (isOwnProfile)
-                GestureDetector(
-                  onTap: onManageDevices,
-                  child: Text(
-                    'Manage',
-                    style: TextStyle(
-                      color: context.accentColor,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          SizedBox(
-            height: 90,
-            child: Builder(
-              builder: (context) {
-                // Sort nodes with primary first
-                final sortedNodeIds = List<int>.from(linkedNodeIds);
-                if (primaryNodeId != null &&
-                    sortedNodeIds.contains(primaryNodeId)) {
-                  sortedNodeIds.remove(primaryNodeId);
-                  sortedNodeIds.insert(0, primaryNodeId!);
-                }
-
-                return EdgeFade.end(
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: sortedNodeIds.length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(width: 10),
-                    itemBuilder: (context, index) {
-                      final nodeId = sortedNodeIds[index];
-                      final node = allNodes[nodeId];
-                      final cachedInfo = linkedNodeMetadata[nodeId];
-                      final isPrimary = nodeId == primaryNodeId;
-
-                      return ScaleInAnimation(
-                        delay: Duration(milliseconds: 50 * index),
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeOutBack,
-                        child: _LinkedDeviceChip(
-                          nodeId: nodeId,
-                          node: node,
-                          cachedInfo: cachedInfo,
-                          isPrimary: isPrimary,
-                        ),
-                      );
-                    },
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LinkedDeviceChip extends StatelessWidget {
-  const _LinkedDeviceChip({
-    required this.nodeId,
-    required this.node,
-    this.cachedInfo,
-    required this.isPrimary,
-  });
-
-  final int nodeId;
-  final MeshNode? node;
-  final LinkedNodeInfo? cachedInfo;
-  final bool isPrimary;
-
-  Color _getNodeColor(int nodeNum) {
-    final colors = [
-      const Color(0xFF5B4FCE),
-      const Color(0xFFD946A6),
-      const Color(0xFF3B82F6),
-      const Color(0xFFF59E0B),
-      const Color(0xFFEF4444),
-      const Color(0xFF10B981),
-    ];
-    return colors[nodeNum % colors.length];
-  }
-
-  /// Get display name - prefer live node data, fallback to cached info
-  String get _displayName =>
-      node?.displayName ??
-      cachedInfo?.displayName ??
-      '!${nodeId.toRadixString(16)}';
-
-  /// Get avatar name - prefer live node data, fallback to cached info
-  String get _avatarName =>
-      node?.avatarName ?? cachedInfo?.avatarName ?? nodeId.toRadixString(16)[0];
-
-  /// Get long name for display under avatar
-  String get _longName =>
-      node?.longName ?? cachedInfo?.longName ?? '!${nodeId.toRadixString(16)}';
-
-  /// Check if we have a real name (not just hex ID)
-  bool get _hasRealName =>
-      node?.longName != null || cachedInfo?.longName != null;
-
-  @override
-  Widget build(BuildContext context) {
-    final presence = node?.presenceConfidence ?? PresenceConfidence.unknown;
-    final accentColor = context.accentColor;
-    final gradientColors = AccentColors.gradientFor(accentColor);
-
-    return BouncyTap(
-      onTap: () => _showNodeBottomSheet(context),
-      scaleFactor: 0.95,
-      child: SizedBox(
-        width: 56,
-        child: Column(
-          children: [
-            NodeAvatar(
-              text: _avatarName,
-              color: _getNodeColor(nodeId),
-              size: 44,
-              showGradientBorder: true,
-              gradientColors: gradientColors,
-              showOnlineIndicator: presence.isActive,
-              onlineStatus: presence.isActive ? OnlineStatus.online : null,
-              batteryLevel: node?.batteryLevel,
-              showBatteryBadge: false,
-              badge: isPrimary
-                  ? Container(
-                      padding: const EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                        color: context.accentColor,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: context.background, width: 2),
-                      ),
-                      child: const Icon(
-                        Icons.star,
-                        color: Colors.white,
-                        size: 8,
-                      ),
-                    )
-                  : null,
-              badgeAlignment: Alignment.topRight,
-            ),
-            const SizedBox(height: 6),
-            SizedBox(
-              width: 56,
-              height: 14,
-              child: Center(
-                child: AutoScrollText(
-                  _longName,
-                  style: TextStyle(
-                    color: context.textSecondary,
-                    fontSize: 11,
-                    fontFamily: _hasRealName ? null : AppTheme.fontFamily,
-                  ),
-                  maxLines: 1,
-                  velocity: 25.0,
-                  fadeWidth: 8.0,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showNodeBottomSheet(BuildContext context) {
-    HapticFeedback.lightImpact();
-
-    AppBottomSheet.showActions(
-      context: context,
-      header: Text(
-        _displayName,
-        style: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: context.textPrimary,
-        ),
-      ),
-      actions: [
-        BottomSheetAction(
-          icon: Icons.message_outlined,
-          iconColor: context.accentColor,
-          label: 'Send Message',
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => ChatScreen(
-                type: ConversationType.directMessage,
-                nodeNum: nodeId,
-                title: _displayName,
-              ),
-            ),
-          ),
-        ),
-        if (node?.hasPosition == true)
-          BottomSheetAction(
-            icon: Icons.map_outlined,
-            label: 'View on Map',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => MapScreen(initialNodeNum: nodeId),
-              ),
-            ),
-          ),
-      ],
-    );
   }
 }
 
