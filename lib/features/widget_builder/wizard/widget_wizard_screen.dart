@@ -4696,19 +4696,30 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       AppLogging.widgets(
         '[SCHEMA_BUILD] Using HORIZONTAL layout, children: ${children.length}',
       );
+      // Check if children have flex (like Status template cards)
+      final hasFlexChildren =
+          children.isNotEmpty && children.first.style.flex != null;
+      // Use start alignment with flex children, spaceEvenly without
+      final rowAlignment = hasFlexChildren
+          ? MainAxisAlignmentOption.start
+          : MainAxisAlignmentOption.spaceEvenly;
+      AppLogging.widgets(
+        '[SCHEMA_BUILD] HORIZONTAL: hasFlexChildren=$hasFlexChildren, rowAlignment=$rowAlignment',
+      );
+
       // Horizontal layout - compact chips in rows of 3 with tight spacing
       if (children.length <= 3) {
         // Few items - single row with even spacing
         AppLogging.widgets('[SCHEMA_BUILD] HORIZONTAL: Single row (<=3 items)');
         AppLogging.widgets(
-          '[SCHEMA_BUILD] HORIZONTAL row style: padding=8, spacing=6, mainAxis=spaceEvenly, crossAxis=center',
+          '[SCHEMA_BUILD] HORIZONTAL row style: padding=8, spacing=6, mainAxis=$rowAlignment, crossAxis=center',
         );
         root = ElementSchema(
           type: ElementType.row,
-          style: const StyleSchema(
+          style: StyleSchema(
             padding: 8,
             spacing: 6,
-            mainAxisAlignment: MainAxisAlignmentOption.spaceEvenly,
+            mainAxisAlignment: rowAlignment,
             crossAxisAlignment: CrossAxisAlignmentOption.center,
           ),
           children: children,
@@ -4725,14 +4736,14 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             rowItems.add(children[j]);
           }
           AppLogging.widgets(
-            '[SCHEMA_BUILD] HORIZONTAL row $i: ${rowItems.length} items, mainAxis=spaceEvenly',
+            '[SCHEMA_BUILD] HORIZONTAL row $i: ${rowItems.length} items, mainAxis=$rowAlignment',
           );
           rows.add(
             ElementSchema(
               type: ElementType.row,
-              style: const StyleSchema(
+              style: StyleSchema(
                 spacing: 6,
-                mainAxisAlignment: MainAxisAlignmentOption.spaceEvenly,
+                mainAxisAlignment: rowAlignment,
                 crossAxisAlignment: CrossAxisAlignmentOption.center,
               ),
               children: rowItems,
@@ -5502,8 +5513,9 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
       if (_layoutStyle == _LayoutStyle.horizontal) {
         // HORIZONTAL: Compact card with label, value, and small gauge
+        // Uses flex:1 for equal distribution in rows
         AppLogging.widgets(
-          '[STATUS_ELEMENTS] HORIZONTAL: compact card for $bindingPath',
+          '[STATUS_ELEMENTS] HORIZONTAL: compact card with flex=1 for $bindingPath',
         );
         children.add(
           ElementSchema(
@@ -5514,6 +5526,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
               borderRadius: 8,
               alignment: AlignmentOption.center,
               spacing: 4,
+              flex: 1, // Equal distribution in horizontal rows
             ),
             children: [
               // Label
