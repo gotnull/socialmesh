@@ -4712,7 +4712,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         // Few items - single row with even spacing
         AppLogging.widgets('[SCHEMA_BUILD] HORIZONTAL: Single row (<=3 items)');
         AppLogging.widgets(
-          '[SCHEMA_BUILD] HORIZONTAL row style: padding=8, spacing=6, mainAxis=$rowAlignment, crossAxis=center',
+          '[SCHEMA_BUILD] HORIZONTAL row style: padding=8, spacing=6, mainAxis=$rowAlignment, crossAxis=start',
         );
         root = ElementSchema(
           type: ElementType.row,
@@ -4720,7 +4720,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             padding: 8,
             spacing: 6,
             mainAxisAlignment: rowAlignment,
-            crossAxisAlignment: CrossAxisAlignmentOption.center,
+            crossAxisAlignment: CrossAxisAlignmentOption.start,
           ),
           children: children,
         );
@@ -4744,7 +4744,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
               style: StyleSchema(
                 spacing: 6,
                 mainAxisAlignment: rowAlignment,
-                crossAxisAlignment: CrossAxisAlignmentOption.center,
+                crossAxisAlignment: CrossAxisAlignmentOption.start,
               ),
               children: rowItems,
             ),
@@ -5387,15 +5387,16 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
               flex: 1, // Equal distribution in horizontal rows
             ),
             children: [
-              // Label
-              ElementSchema(
-                type: ElementType.text,
-                text: binding.label,
-                style: StyleSchema(
-                  textColor: _colorToHex(context.textSecondary),
-                  fontSize: 10,
+              // Label (controlled by _showLabels)
+              if (_showLabels)
+                ElementSchema(
+                  type: ElementType.text,
+                  text: binding.label,
+                  style: StyleSchema(
+                    textColor: _colorToHex(context.textSecondary),
+                    fontSize: 10,
+                  ),
                 ),
-              ),
               // Value
               ElementSchema(
                 type: ElementType.text,
@@ -5432,16 +5433,17 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
               flex: 1, // CRITICAL: flex for equal distribution in grid rows
             ),
             children: [
-              // Label
-              ElementSchema(
-                type: ElementType.text,
-                text: binding.label,
-                style: StyleSchema(
-                  textColor: _colorToHex(context.textSecondary),
-                  fontSize: 11,
-                  fontWeight: 'w500',
+              // Label (controlled by _showLabels)
+              if (_showLabels)
+                ElementSchema(
+                  type: ElementType.text,
+                  text: binding.label,
+                  style: StyleSchema(
+                    textColor: _colorToHex(context.textSecondary),
+                    fontSize: 11,
+                    fontWeight: 'w500',
+                  ),
                 ),
-              ),
               // Large value
               ElementSchema(
                 type: ElementType.text,
@@ -5470,14 +5472,16 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
               padding: 6,
             ),
             children: [
-              ElementSchema(
-                type: ElementType.text,
-                text: binding.label,
-                style: StyleSchema(
-                  textColor: _colorToHex(context.textSecondary),
-                  fontSize: 13,
+              // Label (controlled by _showLabels)
+              if (_showLabels)
+                ElementSchema(
+                  type: ElementType.text,
+                  text: binding.label,
+                  style: StyleSchema(
+                    textColor: _colorToHex(context.textSecondary),
+                    fontSize: 13,
+                  ),
                 ),
-              ),
               ElementSchema(
                 type: ElementType.text,
                 binding: BindingSchema(
@@ -5553,14 +5557,16 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                 iconSize: 12,
                 style: const StyleSchema(textColor: '#A78BFA'),
               ),
-              ElementSchema(
-                type: ElementType.text,
-                text: binding.label,
-                style: StyleSchema(
-                  textColor: _colorToHex(context.textSecondary),
-                  fontSize: 9,
+              // Label (controlled by _showLabels)
+              if (_showLabels)
+                ElementSchema(
+                  type: ElementType.text,
+                  text: binding.label,
+                  style: StyleSchema(
+                    textColor: _colorToHex(context.textSecondary),
+                    fontSize: 9,
+                  ),
                 ),
-              ),
               ElementSchema(
                 type: ElementType.text,
                 binding: BindingSchema(
@@ -5601,18 +5607,21 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                 iconSize: 16,
                 style: const StyleSchema(textColor: '#A78BFA'),
               ),
-              ElementSchema(
-                type: ElementType.spacer,
-                style: const StyleSchema(height: 4),
-              ),
-              ElementSchema(
-                type: ElementType.text,
-                text: binding.label,
-                style: StyleSchema(
-                  textColor: _colorToHex(context.textSecondary),
-                  fontSize: 11,
+              // Label (controlled by _showLabels)
+              if (_showLabels) ...[
+                ElementSchema(
+                  type: ElementType.spacer,
+                  style: const StyleSchema(height: 4),
                 ),
-              ),
+                ElementSchema(
+                  type: ElementType.text,
+                  text: binding.label,
+                  style: StyleSchema(
+                    textColor: _colorToHex(context.textSecondary),
+                    fontSize: 11,
+                  ),
+                ),
+              ],
               ElementSchema(
                 type: ElementType.spacer,
                 style: const StyleSchema(height: 2),
@@ -5654,18 +5663,21 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                     iconSize: 14,
                     style: const StyleSchema(textColor: '#A78BFA'),
                   ),
-                  ElementSchema(
-                    type: ElementType.spacer,
-                    style: const StyleSchema(width: 6),
-                  ),
-                  ElementSchema(
-                    type: ElementType.text,
-                    text: binding.label,
-                    style: StyleSchema(
-                      textColor: _colorToHex(context.textSecondary),
-                      fontSize: 12,
+                  // Label (controlled by _showLabels)
+                  if (_showLabels) ...[
+                    ElementSchema(
+                      type: ElementType.spacer,
+                      style: const StyleSchema(width: 6),
                     ),
-                  ),
+                    ElementSchema(
+                      type: ElementType.text,
+                      text: binding.label,
+                      style: StyleSchema(
+                        textColor: _colorToHex(context.textSecondary),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                 ],
               ),
               ElementSchema(
@@ -5739,14 +5751,16 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                 iconSize: 14,
                 style: StyleSchema(textColor: valueColor),
               ),
-              ElementSchema(
-                type: ElementType.text,
-                text: binding.label,
-                style: StyleSchema(
-                  textColor: _colorToHex(context.textSecondary),
-                  fontSize: 9,
+              // Label (controlled by _showLabels)
+              if (_showLabels)
+                ElementSchema(
+                  type: ElementType.text,
+                  text: binding.label,
+                  style: StyleSchema(
+                    textColor: _colorToHex(context.textSecondary),
+                    fontSize: 9,
+                  ),
                 ),
-              ),
               ElementSchema(
                 type: ElementType.text,
                 binding: BindingSchema(
@@ -5787,18 +5801,21 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                 iconSize: 20,
                 style: StyleSchema(textColor: valueColor),
               ),
-              ElementSchema(
-                type: ElementType.spacer,
-                style: const StyleSchema(height: 4),
-              ),
-              ElementSchema(
-                type: ElementType.text,
-                text: binding.label,
-                style: StyleSchema(
-                  textColor: _colorToHex(context.textSecondary),
-                  fontSize: 11,
+              // Label (controlled by _showLabels)
+              if (_showLabels) ...[
+                ElementSchema(
+                  type: ElementType.spacer,
+                  style: const StyleSchema(height: 4),
                 ),
-              ),
+                ElementSchema(
+                  type: ElementType.text,
+                  text: binding.label,
+                  style: StyleSchema(
+                    textColor: _colorToHex(context.textSecondary),
+                    fontSize: 11,
+                  ),
+                ),
+              ],
               ElementSchema(
                 type: ElementType.spacer,
                 style: const StyleSchema(height: 2),
@@ -5841,18 +5858,21 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
                     iconSize: 16,
                     style: StyleSchema(textColor: valueColor),
                   ),
-                  ElementSchema(
-                    type: ElementType.spacer,
-                    style: const StyleSchema(width: 8),
-                  ),
-                  ElementSchema(
-                    type: ElementType.text,
-                    text: binding.label,
-                    style: StyleSchema(
-                      textColor: _colorToHex(context.textSecondary),
-                      fontSize: 12,
+                  // Label (controlled by _showLabels)
+                  if (_showLabels) ...[
+                    ElementSchema(
+                      type: ElementType.spacer,
+                      style: const StyleSchema(width: 8),
                     ),
-                  ),
+                    ElementSchema(
+                      type: ElementType.text,
+                      text: binding.label,
+                      style: StyleSchema(
+                        textColor: _colorToHex(context.textSecondary),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                 ],
               ),
               ElementSchema(
@@ -5922,15 +5942,16 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
               flex: 1, // Equal distribution in horizontal rows
             ),
             children: [
-              // Label
-              ElementSchema(
-                type: ElementType.text,
-                text: binding.label,
-                style: StyleSchema(
-                  textColor: _colorToHex(context.textSecondary),
-                  fontSize: 10,
+              // Label (controlled by _showLabels)
+              if (_showLabels)
+                ElementSchema(
+                  type: ElementType.text,
+                  text: binding.label,
+                  style: StyleSchema(
+                    textColor: _colorToHex(context.textSecondary),
+                    fontSize: 10,
+                  ),
                 ),
-              ),
               // Value
               ElementSchema(
                 type: ElementType.text,
@@ -5978,16 +5999,17 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
               flex: 1, // CRITICAL: flex for equal distribution in grid rows
             ),
             children: [
-              // Label
-              ElementSchema(
-                type: ElementType.text,
-                text: binding.label,
-                style: StyleSchema(
-                  textColor: _colorToHex(context.textSecondary),
-                  fontSize: 11,
-                  fontWeight: 'w500',
+              // Label (controlled by _showLabels)
+              if (_showLabels)
+                ElementSchema(
+                  type: ElementType.text,
+                  text: binding.label,
+                  style: StyleSchema(
+                    textColor: _colorToHex(context.textSecondary),
+                    fontSize: 11,
+                    fontWeight: 'w500',
+                  ),
                 ),
-              ),
               // Large value
               ElementSchema(
                 type: ElementType.text,
@@ -6029,14 +6051,16 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
               mainAxisAlignment: MainAxisAlignmentOption.spaceBetween,
             ),
             children: [
-              ElementSchema(
-                type: ElementType.text,
-                text: binding.label,
-                style: StyleSchema(
-                  textColor: _colorToHex(context.textSecondary),
-                  fontSize: 13,
+              // Label (controlled by _showLabels)
+              if (_showLabels)
+                ElementSchema(
+                  type: ElementType.text,
+                  text: binding.label,
+                  style: StyleSchema(
+                    textColor: _colorToHex(context.textSecondary),
+                    fontSize: 13,
+                  ),
                 ),
-              ),
               ElementSchema(
                 type: ElementType.text,
                 binding: BindingSchema(
