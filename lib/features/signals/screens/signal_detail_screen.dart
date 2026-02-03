@@ -952,7 +952,6 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
 
     return GlassScaffold(
       title: 'Signal',
-      centerTitle: false,
       actions: [_buildSignalMenu(context, signal)],
       controller: _scrollController,
       resizeToAvoidBottomInset:

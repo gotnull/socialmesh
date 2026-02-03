@@ -38,29 +38,40 @@ class AutomationsScreen extends ConsumerWidget {
         title: 'Automations',
         actions: [
           IconButton(
-            icon: const Icon(Icons.history),
-            tooltip: 'Execution Log',
-            onPressed: () => _showExecutionLog(context, ref),
-          ),
-          IconButton(
-            icon: const Icon(Icons.qr_code_scanner),
-            tooltip: 'Scan QR Code',
-            onPressed: () => Navigator.pushNamed(context, '/qr-scanner'),
-          ),
-          IconButton(
             icon: const Icon(Icons.add),
             tooltip: 'New Automation',
             onPressed: () => _showAddAutomation(context, ref),
           ),
           AppBarOverflowMenu<String>(
             onSelected: (value) {
-              if (value == 'help') {
-                ref
-                    .read(helpProvider.notifier)
-                    .startTour('automations_overview');
+              switch (value) {
+                case 'history':
+                  _showExecutionLog(context, ref);
+                case 'scan':
+                  Navigator.pushNamed(context, '/qr-scanner');
+                case 'help':
+                  ref
+                      .read(helpProvider.notifier)
+                      .startTour('automations_overview');
               }
             },
             itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'history',
+                child: ListTile(
+                  leading: Icon(Icons.history),
+                  title: Text('Execution Log'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'scan',
+                child: ListTile(
+                  leading: Icon(Icons.qr_code_scanner),
+                  title: Text('Scan QR Code'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
               const PopupMenuItem(
                 value: 'help',
                 child: ListTile(

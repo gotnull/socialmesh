@@ -59,7 +59,7 @@ class MarqueeAppBar extends StatelessWidget implements PreferredSizeWidget {
   /// Optional bottom widget (like a TabBar)
   final PreferredSizeWidget? bottom;
 
-  /// Center the title (defaults to false for custom leading)
+  /// Center the title (defaults to true for consistency)
   final bool centerTitle;
 
   const MarqueeAppBar({
@@ -77,7 +77,7 @@ class MarqueeAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.elevation = 0,
     this.systemOverlayStyle,
     this.bottom,
-    this.centerTitle = false,
+    this.centerTitle = true,
   });
 
   @override
