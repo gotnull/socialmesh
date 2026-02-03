@@ -43,6 +43,12 @@ class AutomationsScreen extends ConsumerWidget {
             onPressed: () => _showExecutionLog(context, ref),
           ),
           IconButton(
+            icon: const Icon(Icons.qr_code_scanner),
+            tooltip: 'Scan Automation QR',
+            onPressed: () =>
+                Navigator.pushNamed(context, '/channel-qr-scanner'),
+          ),
+          IconButton(
             icon: const Icon(Icons.add),
             tooltip: 'New Automation',
             onPressed: () => _showAddAutomation(context, ref),

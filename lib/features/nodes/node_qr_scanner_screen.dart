@@ -62,6 +62,29 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
     super.dispose();
   }
 
+  /// Parse node data from QR code - handles both base64 JSON and hex Firestore ID
+  Map<String, dynamic> _parseNodeData(String data) {
+    // Check if it looks like a hex ID (8 characters, all hex digits)
+    final hexPattern = RegExp(r'^[0-9A-Fa-f]{8}$');
+    if (hexPattern.hasMatch(data)) {
+      // It's a Firestore hex ID - convert to nodeNum
+      final nodeNum = int.parse(data, radix: 16);
+      AppLogging.qr('📷 QR SCANNER: Parsed hex ID $data as nodeNum=$nodeNum');
+      return {'nodeNum': nodeNum};
+    }
+
+    // Try to decode as base64 JSON
+    try {
+      final jsonStr = utf8.decode(Base64Utils.decodeWithPadding(data));
+      final parsed = jsonDecode(jsonStr) as Map<String, dynamic>;
+      AppLogging.qr('📷 QR SCANNER: Parsed base64 JSON successfully');
+      return parsed;
+    } catch (e) {
+      AppLogging.qr('📷 QR SCANNER ERROR: Failed to parse node data: $e');
+      throw Exception('Invalid node QR code format');
+    }
+  }
+
   void _onDetect(BarcodeCapture capture) {
     AppLogging.qr('📷 QR SCANNER: onDetect called');
     if (_isProcessing) {
@@ -102,21 +125,22 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
     AppLogging.qr('📷 QR SCANNER: Processing QR code');
     try {
       // Node QR codes format: "socialmesh://node/<base64-encoded-json>"
+      // Also supports: "socialmesh://node/<hex-id>" (Firestore doc ID)
       // Also supports legacy format: "meshtastic://node/<base64-encoded-json>"
-      String base64Data;
+      String nodeData;
       if (code.startsWith('socialmesh://node/')) {
-        base64Data = code.substring('socialmesh://node/'.length);
+        nodeData = code.substring('socialmesh://node/'.length);
         AppLogging.qr('📷 QR SCANNER: Valid socialmesh node QR detected');
       } else if (code.startsWith('meshtastic://node/')) {
-        base64Data = code.substring('meshtastic://node/'.length);
+        nodeData = code.substring('meshtastic://node/'.length);
         AppLogging.qr('📷 QR SCANNER: Valid meshtastic node QR detected');
       } else {
         AppLogging.qr('📷 QR SCANNER ERROR: Invalid QR format: $code');
         throw Exception('Not a valid node QR code');
       }
-      // Use Base64Utils to handle unpadded base64 (common in QR codes)
-      final jsonStr = utf8.decode(Base64Utils.decodeWithPadding(base64Data));
-      final nodeInfo = jsonDecode(jsonStr) as Map<String, dynamic>;
+
+      // Try to parse the node data - could be base64 JSON or hex Firestore ID
+      final nodeInfo = _parseNodeData(nodeData);
 
       // Extract node information
       final nodeNum = nodeInfo['nodeNum'] as int?;
@@ -427,7 +451,7 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
       appBar: AppBar(
         backgroundColor: context.background,
         title: Text(
-          'Scan Node QR',
+          'Scan QR Code',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
@@ -482,16 +506,20 @@ class _NodeQrScannerScreenState extends ConsumerState<NodeQrScannerScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.person_add, size: 32, color: context.accentColor),
+                  Icon(
+                    Icons.qr_code_scanner,
+                    size: 32,
+                    color: context.accentColor,
+                  ),
                   SizedBox(height: 12),
                   Text(
-                    'Point your camera at a node QR code',
+                    'Point your camera at a QR code',
                     style: TextStyle(color: context.textPrimary, fontSize: 14),
                     textAlign: TextAlign.center,
                   ),
                   SizedBox(height: 8),
                   Text(
-                    'The node will be added to your favorites',
+                    'Supports nodes shared from Socialmesh',
                     style: TextStyle(
                       color: context.textSecondary,
                       fontSize: 12,

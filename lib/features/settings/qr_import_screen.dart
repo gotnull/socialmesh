@@ -480,7 +480,7 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
       appBar: AppBar(
         backgroundColor: context.background,
         title: Text(
-          'Scan Channel QR',
+          'Scan QR Code',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
@@ -542,13 +542,13 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
                   ),
                   SizedBox(height: 12),
                   Text(
-                    'Point your camera at a Meshtastic channel QR code',
+                    'Point your camera at a QR code',
                     style: TextStyle(color: context.textPrimary, fontSize: 14),
                     textAlign: TextAlign.center,
                   ),
                   SizedBox(height: 8),
                   Text(
-                    'The channel will be automatically imported',
+                    'Supports channels and automations',
                     style: TextStyle(
                       color: context.textSecondary,
                       fontSize: 12,

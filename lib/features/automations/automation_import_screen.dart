@@ -9,6 +9,7 @@ import '../../core/widgets/glass_scaffold.dart';
 import '../../core/widgets/premium_gating.dart';
 import '../../models/subscription_models.dart';
 import '../../providers/subscription_providers.dart';
+import '../../utils/encoding.dart';
 import '../../utils/snackbar.dart';
 import 'models/automation.dart';
 import 'automation_providers.dart';
@@ -47,8 +48,10 @@ class _AutomationImportScreenState
 
     try {
       if (widget.base64Data != null) {
-        // Decode from base64
-        final jsonString = utf8.decode(base64Decode(widget.base64Data!));
+        // Decode from base64 (handle unpadded base64 from QR codes)
+        final jsonString = utf8.decode(
+          Base64Utils.decodeWithPadding(widget.base64Data!),
+        );
         final json = jsonDecode(jsonString) as Map<String, dynamic>;
 
         // Create automation from JSON (without id/timestamps for import)
