@@ -955,6 +955,7 @@ class AutomationsScreen extends ConsumerWidget {
 }
 
 /// Bottom sheet for adding automations (when user has existing automations)
+/// Uses the same rich UI as the empty state for consistency
 class _AddAutomationSheet extends ConsumerWidget {
   final VoidCallback onCreateNew;
   final void Function(String templateId) onSelectTemplate;
@@ -1009,7 +1010,7 @@ class _AddAutomationSheet extends ConsumerWidget {
               ),
             ),
           ),
-          // Title with premium badge if needed
+          // Title
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
@@ -1024,155 +1025,24 @@ class _AddAutomationSheet extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 16),
-          // Scrollable content
+          // Scrollable content - matches empty state UI
           Expanded(
             child: ListView(
               controller: scrollController,
               padding: const EdgeInsets.symmetric(horizontal: 16),
               children: [
-                // Create from scratch
-                BouncyTap(
-                  onTap: onCreateNew,
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Theme.of(
-                            context,
-                          ).colorScheme.primary.withValues(alpha: 0.15),
-                          Theme.of(
-                            context,
-                          ).colorScheme.primary.withValues(alpha: 0.05),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.primary.withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.primary.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(
-                            Icons.add,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Create from Scratch',
-                                style: TextStyle(fontWeight: FontWeight.w600),
-                              ),
-                              const SizedBox(height: 4),
-                              const Text(
-                                'Build a custom automation with full control',
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const Icon(Icons.chevron_right, color: Colors.grey),
-                      ],
-                    ),
-                  ),
-                ),
+                // Create from scratch - same style as empty state
+                _buildCreateFromScratchCard(context),
 
                 const SizedBox(height: 24),
 
-                // Templates section
-                Text(
-                  'Quick Start Templates',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleSmall?.copyWith(color: Colors.grey),
-                ),
-                const SizedBox(height: 12),
-
-                // Templates in horizontal scroll
-                SizedBox(
-                  height: 100,
-                  child: EdgeFade.horizontal(
-                    fadeSize: 24,
-                    fadeColor: context.surface,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: AutomationRepository.templates.length,
-                      separatorBuilder: (_, _) => const SizedBox(width: 8),
-                      itemBuilder: (context, index) {
-                        final template = AutomationRepository.templates[index];
-                        return BouncyTap(
-                          onTap: () => onSelectTemplate(template.id),
-                          child: Container(
-                            width: 140,
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: context.card,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: context.border),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Icon(template.icon, size: 24),
-                                const Spacer(),
-                                Text(
-                                  template.name,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 13,
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
+                // Quick Start Templates - same style as empty state
+                _buildTemplatesSection(context),
 
                 const SizedBox(height: 24),
 
-                // Trigger types by category
-                Text(
-                  'Start with Trigger',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleSmall?.copyWith(color: Colors.grey),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Choose a trigger type to get started quickly',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
-                ),
-                const SizedBox(height: 16),
-
-                // Build trigger categories
-                ..._buildTriggerCategories(context),
+                // Start with a Trigger - same style as empty state
+                _buildTriggerCategoriesSection(context),
 
                 SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
               ],
@@ -1183,73 +1053,284 @@ class _AddAutomationSheet extends ConsumerWidget {
     );
   }
 
-  List<Widget> _buildTriggerCategories(BuildContext context) {
-    final widgets = <Widget>[];
-    final grouped = _triggersByCategory;
+  /// Primary CTA to create from scratch - matches empty state style
+  Widget _buildCreateFromScratchCard(BuildContext context) {
+    return BouncyTap(
+      onTap: onCreateNew,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+              Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(
+                Icons.add,
+                size: 28,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Create from Scratch',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Build a custom automation with full control over triggers and actions',
+                    style: TextStyle(
+                      color: context.textSecondary,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: context.textTertiary),
+          ],
+        ),
+      ),
+    );
+  }
 
-    for (final category in _categoryOrder) {
-      final triggers = grouped[category];
-      if (triggers == null || triggers.isEmpty) continue;
+  /// Quick Start Templates section - matches empty state style
+  Widget _buildTemplatesSection(BuildContext context) {
+    final templates = AutomationRepository.templates;
 
-      widgets.add(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         Padding(
-          padding: const EdgeInsets.only(top: 8, bottom: 8),
+          padding: const EdgeInsets.only(left: 4),
           child: Row(
             children: [
-              Icon(
-                _categoryIcon(category),
-                size: 16,
-                color: _categoryColor(context, category),
-              ),
-              const SizedBox(width: 8),
+              Icon(Icons.flash_on, size: 18, color: Colors.amber),
+              const SizedBox(width: 6),
               Text(
-                category,
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
-                  color: _categoryColor(context, category),
-                ),
+                'Quick Start Templates',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
               ),
             ],
           ),
         ),
-      );
-
-      widgets.add(
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: triggers
-              .map((type) => _buildTriggerChip(context, type))
-              .toList(),
+        const SizedBox(height: 4),
+        Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: Text(
+            'One-tap setup for common use cases',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: context.textTertiary),
+          ),
         ),
-      );
-
-      widgets.add(const SizedBox(height: 8));
-    }
-
-    return widgets;
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 110,
+          child: EdgeFade.horizontal(
+            fadeSize: 24,
+            fadeColor: context.surface,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: templates.length,
+              separatorBuilder: (context, index) => const SizedBox(width: 12),
+              itemBuilder: (context, index) {
+                final template = templates[index];
+                return BouncyTap(
+                  onTap: () => onSelectTemplate(template.id),
+                  child: Container(
+                    width: 140,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: context.card,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: context.border),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: _getTemplateColor(
+                              template.id,
+                            ).withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(
+                            template.icon,
+                            size: 20,
+                            color: _getTemplateColor(template.id),
+                          ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          template.name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
-  Widget _buildTriggerChip(BuildContext context, TriggerType type) {
-    return BouncyTap(
-      onTap: () => onSelectTrigger(type),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: context.card,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: context.border),
+  /// Get color for template based on its type - same as empty state
+  Color _getTemplateColor(String templateId) {
+    switch (templateId) {
+      case 'low_battery_alert':
+        return Colors.amber;
+      case 'node_offline_alert':
+        return Colors.red;
+      case 'geofence_exit':
+        return Colors.purple;
+      case 'sos_response':
+        return Colors.red.shade700;
+      case 'dead_mans_switch':
+        return Colors.orange;
+      default:
+        return Colors.blue;
+    }
+  }
+
+  /// Trigger categories section for exploration - matches empty state style
+  Widget _buildTriggerCategoriesSection(BuildContext context) {
+    final triggersByCategory = _triggersByCategory;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: Row(
+            children: [
+              Icon(Icons.explore, size: 18, color: context.accentColor),
+              const SizedBox(width: 6),
+              Text(
+                'Start with a Trigger',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(type.icon, size: 16),
-            const SizedBox(width: 6),
-            Text(type.displayName, style: const TextStyle(fontSize: 13)),
-          ],
+        const SizedBox(height: 4),
+        Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: Text(
+            'Choose what event starts your automation',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: context.textTertiary),
+          ),
         ),
-      ),
+        const SizedBox(height: 16),
+
+        // Build categories
+        ..._categoryOrder.map((category) {
+          final triggers = triggersByCategory[category];
+          if (triggers == null || triggers.isEmpty) {
+            return const SizedBox.shrink();
+          }
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Category header
+                Row(
+                  children: [
+                    Icon(
+                      _categoryIcon(category),
+                      size: 14,
+                      color: _categoryColor(context, category),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      category,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: _categoryColor(context, category),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                // Trigger chips
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: triggers.map((type) {
+                    return BouncyTap(
+                      onTap: () => onSelectTrigger(type),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: context.card,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: context.border),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(type.icon, size: 16),
+                            const SizedBox(width: 6),
+                            Text(
+                              type.displayName,
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+          );
+        }),
+      ],
     );
   }
 

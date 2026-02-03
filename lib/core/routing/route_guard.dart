@@ -63,7 +63,8 @@ class RouteRegistry {
     // from scanner to avoid route guard interference during device reboot.
     '/qr-scanner': RouteMetadata(
       path: '/qr-scanner',
-      requirements: {}, // No requirements - scanner handles device check per-type
+      requirements:
+          {}, // No requirements - scanner handles device check per-type
       fallbackRoute: '/main',
     ),
 
