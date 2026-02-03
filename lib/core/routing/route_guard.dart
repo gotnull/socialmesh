@@ -61,11 +61,10 @@ class RouteRegistry {
     ),
     // Note: '/region-setup' is NOT a protected route - it's navigated to directly
     // from scanner to avoid route guard interference during device reboot.
-    '/channel-qr-scanner': RouteMetadata(
-      path: '/channel-qr-scanner',
-      requirements: {RouteRequirement.deviceConnected},
+    '/qr-scanner': RouteMetadata(
+      path: '/qr-scanner',
+      requirements: {}, // No requirements - scanner handles device check per-type
       fallbackRoute: '/main',
-      blockedMessage: 'Connect device to import channels',
     ),
 
     // Cached data routes (can work offline but need to have paired once)

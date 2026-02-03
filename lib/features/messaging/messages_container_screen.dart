@@ -55,7 +55,7 @@ class _MessagesContainerScreenState
       return;
     }
 
-    Navigator.of(context).pushNamed('/channel-qr-scanner');
+    Navigator.of(context).pushNamed('/qr-scanner');
   }
 
   @override

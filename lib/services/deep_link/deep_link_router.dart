@@ -83,7 +83,7 @@ class DeepLinkRouter {
     }
 
     return DeepLinkRouteResult(
-      routeName: '/qr-import',
+      routeName: '/qr-scanner',
       arguments: {'base64Data': link.channelBase64Data},
       requiresDevice: true,
       fallbackMessage: 'Connect a device to import this channel',

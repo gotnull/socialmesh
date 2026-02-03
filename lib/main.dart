@@ -54,10 +54,9 @@ import 'features/scanner/scanner_screen.dart';
 import 'features/messaging/messaging_screen.dart';
 import 'features/channels/channels_screen.dart';
 import 'features/nodes/nodes_screen.dart';
-import 'features/nodes/node_qr_scanner_screen.dart';
+import 'features/qr_scanner/universal_qr_scanner_screen.dart';
 import 'features/map/map_screen.dart';
 import 'features/settings/settings_screen.dart';
-import 'features/settings/qr_import_screen.dart';
 import 'features/device/device_config_screen.dart';
 import 'features/settings/device_management_screen.dart';
 import 'features/navigation/main_shell.dart';
@@ -1209,12 +1208,10 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
           '/messages': (context) => const MessagingScreen(),
           '/channels': (context) => const ChannelsScreen(),
           '/nodes': (context) => const NodesScreen(),
-          '/node-qr-scanner': (context) => const NodeQrScannerScreen(),
+          '/qr-scanner': (context) => const UniversalQrScannerScreen(),
           '/map': (context) => const MapScreen(),
           '/globe': (context) => const GlobeScreen(),
           '/settings': (context) => const SettingsScreen(),
-          '/qr-import': (context) => const QrImportScreen(),
-          '/channel-qr-scanner': (context) => const QrImportScreen(),
           '/device-config': (context) => _buildProtectedRoute(
             context,
             '/device-config',

@@ -191,12 +191,12 @@ class _DeviceSheetContentState extends ConsumerState<_DeviceSheetContent> {
               ),
               _ActionTile(
                 icon: Icons.qr_code_scanner,
-                title: 'Scan Channel QR',
-                subtitle: 'Import channel from QR code',
-                enabled: actionsEnabled && isConnected,
+                title: 'Scan QR Code',
+                subtitle: 'Import nodes, channels, or automations',
+                enabled: actionsEnabled,
                 onTap: () {
                   Navigator.pop(context);
-                  Navigator.of(context).pushNamed('/channel-qr-scanner');
+                  Navigator.of(context).pushNamed('/qr-scanner');
                 },
               ),
               _ActionTile(

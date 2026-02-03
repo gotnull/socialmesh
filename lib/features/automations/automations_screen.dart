@@ -44,9 +44,8 @@ class AutomationsScreen extends ConsumerWidget {
           ),
           IconButton(
             icon: const Icon(Icons.qr_code_scanner),
-            tooltip: 'Scan Automation QR',
-            onPressed: () =>
-                Navigator.pushNamed(context, '/channel-qr-scanner'),
+            tooltip: 'Scan QR Code',
+            onPressed: () => Navigator.pushNamed(context, '/qr-scanner'),
           ),
           IconButton(
             icon: const Icon(Icons.add),
@@ -330,7 +329,7 @@ class AutomationsScreen extends ConsumerWidget {
             fadeColor: context.background,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               itemCount: templates.length,
               separatorBuilder: (context, index) => const SizedBox(width: 12),
               itemBuilder: (context, index) {

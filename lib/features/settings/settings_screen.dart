@@ -599,7 +599,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           subtitle: 'Scan a Meshtastic channel QR code',
           keywords: ['qr', 'channel', 'import', 'scan'],
           section: 'DEVICE',
-          onTap: () => Navigator.pushNamed(context, '/qr-import'),
+          onTap: () => Navigator.pushNamed(context, '/qr-scanner'),
         ),
 
         // Modules
@@ -2163,10 +2163,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           ),
                           _SettingsTile(
                             icon: Icons.qr_code_scanner,
-                            title: 'Import channel via QR',
-                            subtitle: 'Scan a Meshtastic channel QR code',
+                            title: 'Scan QR Code',
+                            subtitle: 'Import nodes, channels, or automations',
                             onTap: () =>
-                                Navigator.pushNamed(context, '/qr-import'),
+                                Navigator.pushNamed(context, '/qr-scanner'),
                           ),
 
                           const SizedBox(height: 16),

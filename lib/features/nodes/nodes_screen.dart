@@ -166,8 +166,8 @@ class _NodesScreenState extends ConsumerState<NodesScreen> {
           actions: [
             IconButton(
               icon: const Icon(Icons.qr_code_scanner),
-              tooltip: 'Scan Node QR',
-              onPressed: () => Navigator.pushNamed(context, '/node-qr-scanner'),
+              tooltip: 'Scan QR Code',
+              onPressed: () => Navigator.pushNamed(context, '/qr-scanner'),
             ),
             const DeviceStatusButton(),
             AppBarOverflowMenu<String>(

@@ -2597,7 +2597,7 @@ class MessagingPopupMenu extends ConsumerWidget {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    'Scan channel QR',
+                    'Scan QR code',
                     style: TextStyle(color: context.textPrimary),
                   ),
                 ],

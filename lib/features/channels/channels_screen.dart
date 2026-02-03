@@ -314,7 +314,7 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen> {
                         ),
                       );
                     case 'scan':
-                      Navigator.of(context).pushNamed('/qr-import');
+                      Navigator.of(context).pushNamed('/qr-scanner');
                     case 'settings':
                       Navigator.pushNamed(context, '/settings');
                     case 'help':
