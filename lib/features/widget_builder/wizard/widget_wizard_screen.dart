@@ -4863,6 +4863,9 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
   /// Gauge: Up to 3 gauges displayed horizontally
   List<ElementSchema> _buildGaugeElements(String name) {
+    AppLogging.widgets(
+      '[GAUGE_ELEMENTS] START - layout=$_layoutStyle, bindings=${_selectedBindings.length}',
+    );
     if (_selectedBindings.isEmpty) {
       return [
         ElementSchema(
@@ -4876,7 +4879,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       ];
     }
 
-    // Build a gauge column for each binding
+    // Build a gauge column for each binding - layout affects sizing and structure
     final gaugeColumns = <ElementSchema>[];
 
     for (final bindingPath in _selectedBindings) {
@@ -4894,16 +4897,72 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         ),
       );
 
-      // Adjust size based on number of gauges
-      final gaugeSize = _selectedBindings.length == 1 ? 100.0 : 70.0;
-      final valueFontSize = _selectedBindings.length == 1 ? 28.0 : 20.0;
-      final labelFontSize = _selectedBindings.length == 1 ? 13.0 : 11.0;
+      // Adjust size based on layout style and number of gauges
+      late final double gaugeSize;
+      late final double valueFontSize;
+      late final double labelFontSize;
+      late final int? flexValue;
+      late final double padding;
+      late final double? borderRadius;
+      late final String? backgroundColor;
+      late final double? borderWidth;
+      late final String? borderColor;
+
+      if (_layoutStyle == _LayoutStyle.horizontal) {
+        // HORIZONTAL: Smaller, compact gauges with flex for distribution
+        AppLogging.widgets(
+          '[GAUGE_ELEMENTS] HORIZONTAL: compact gauge with flex=1 for $bindingPath',
+        );
+        gaugeSize = 50.0;
+        valueFontSize = 14.0;
+        labelFontSize = 9.0;
+        flexValue = 1;
+        padding = 4.0;
+        borderRadius = 8.0;
+        backgroundColor = '#1A1A2E';
+        borderWidth = null;
+        borderColor = null;
+      } else if (_layoutStyle == _LayoutStyle.grid) {
+        // GRID: Medium gauges with borders and flex
+        AppLogging.widgets(
+          '[GAUGE_ELEMENTS] GRID: bordered gauge with flex=1 for $bindingPath',
+        );
+        gaugeSize = 70.0;
+        valueFontSize = 20.0;
+        labelFontSize = 11.0;
+        flexValue = 1;
+        padding = 8.0;
+        borderRadius = 12.0;
+        backgroundColor = '#1A1A2E';
+        borderWidth = 1.0;
+        borderColor = '#2D2D44';
+      } else {
+        // VERTICAL: Original sizing based on count
+        AppLogging.widgets(
+          '[GAUGE_ELEMENTS] VERTICAL: standard gauge for $bindingPath',
+        );
+        gaugeSize = _selectedBindings.length == 1 ? 100.0 : 70.0;
+        valueFontSize = _selectedBindings.length == 1 ? 28.0 : 20.0;
+        labelFontSize = _selectedBindings.length == 1 ? 13.0 : 11.0;
+        flexValue = null;
+        padding = 0.0;
+        borderRadius = null;
+        backgroundColor = null;
+        borderWidth = null;
+        borderColor = null;
+      }
 
       gaugeColumns.add(
         ElementSchema(
           type: ElementType.column,
-          style: const StyleSchema(
+          style: StyleSchema(
             crossAxisAlignment: CrossAxisAlignmentOption.center,
+            padding: padding > 0 ? padding : null,
+            borderRadius: borderRadius,
+            backgroundColor: backgroundColor,
+            borderWidth: borderWidth,
+            borderColor: borderColor,
+            flex: flexValue,
           ),
           children: [
             // Value text above gauge (controlled by _showLabels)
@@ -4923,7 +4982,9 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
               ),
               ElementSchema(
                 type: ElementType.spacer,
-                style: const StyleSchema(height: 8),
+                style: StyleSchema(
+                  height: _layoutStyle == _LayoutStyle.horizontal ? 4 : 8,
+                ),
               ),
             ],
             // Radial gauge
@@ -4940,7 +5001,9 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
             if (_showLabels) ...[
               ElementSchema(
                 type: ElementType.spacer,
-                style: const StyleSchema(height: 8),
+                style: StyleSchema(
+                  height: _layoutStyle == _LayoutStyle.horizontal ? 4 : 8,
+                ),
               ),
               ElementSchema(
                 type: ElementType.text,
@@ -4957,17 +5020,22 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       );
     }
 
-    // If single gauge, return centered column
-    if (gaugeColumns.length == 1) {
+    // If single gauge and vertical layout, return centered column
+    if (gaugeColumns.length == 1 && _layoutStyle == _LayoutStyle.vertical) {
       return gaugeColumns;
     }
 
-    // Multiple gauges: wrap in a row with space around
+    // Multiple gauges or non-vertical: wrap in a row
+    // Use start alignment when children have flex (horizontal/grid)
+    final hasFlexChildren = _layoutStyle != _LayoutStyle.vertical;
     return [
       ElementSchema(
         type: ElementType.row,
-        style: const StyleSchema(
-          mainAxisAlignment: MainAxisAlignmentOption.spaceEvenly,
+        style: StyleSchema(
+          mainAxisAlignment: hasFlexChildren
+              ? MainAxisAlignmentOption.start
+              : MainAxisAlignmentOption.spaceEvenly,
+          spacing: hasFlexChildren ? 8 : null,
         ),
         children: gaugeColumns,
       ),
@@ -4977,6 +5045,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
   /// Graph: Line, area, bar, or sparkline charts
   List<ElementSchema> _buildGraphElements(String name) {
     AppLogging.widgets('[GRAPH] === _buildGraphElements ===');
+    AppLogging.widgets('[GRAPH] _layoutStyle=$_layoutStyle');
     AppLogging.widgets('[GRAPH] _mergeCharts=$_mergeCharts');
     AppLogging.widgets('[GRAPH] _showMinMax=$_showMinMax');
     AppLogging.widgets('[GRAPH] _selectedBindings=$_selectedBindings');
@@ -5277,6 +5346,9 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
   /// Info Card: Clean text-focused layout with icon badges
   List<ElementSchema> _buildInfoCardElements(String name) {
+    AppLogging.widgets(
+      '[INFO_ELEMENTS] START - layout=$_layoutStyle, bindings=${_selectedBindings.length}',
+    );
     final children = <ElementSchema>[];
 
     if (_selectedBindings.isEmpty) {
@@ -5293,48 +5365,149 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       return children;
     }
 
-    // Info rows with subtle styling
+    // Info template creates label + value for each binding
+    // Layout style affects how these are wrapped and styled
     for (final bindingPath in _selectedBindings) {
       final binding = _getBinding(bindingPath);
-      children.add(
-        ElementSchema(
-          type: ElementType.row,
-          style: const StyleSchema(
-            mainAxisAlignment: MainAxisAlignmentOption.spaceBetween,
-            padding: 6,
+
+      if (_layoutStyle == _LayoutStyle.horizontal) {
+        // HORIZONTAL: Compact card with label and value stacked
+        AppLogging.widgets(
+          '[INFO_ELEMENTS] HORIZONTAL: compact card with flex=1 for $bindingPath',
+        );
+        children.add(
+          ElementSchema(
+            type: ElementType.column,
+            style: StyleSchema(
+              padding: 8,
+              backgroundColor: _colorToHex(context.card.withValues(alpha: 0.3)),
+              borderRadius: 8,
+              alignment: AlignmentOption.center,
+              spacing: 2,
+              flex: 1, // Equal distribution in horizontal rows
+            ),
+            children: [
+              // Label
+              ElementSchema(
+                type: ElementType.text,
+                text: binding.label,
+                style: StyleSchema(
+                  textColor: _colorToHex(context.textSecondary),
+                  fontSize: 10,
+                ),
+              ),
+              // Value
+              ElementSchema(
+                type: ElementType.text,
+                binding: BindingSchema(
+                  path: bindingPath,
+                  format: binding.defaultFormat,
+                  defaultValue: '--',
+                ),
+                style: StyleSchema(
+                  textColor: _colorToHex(_accentColor),
+                  fontSize: 14,
+                  fontWeight: 'w500',
+                ),
+              ),
+            ],
           ),
-          children: [
-            ElementSchema(
-              type: ElementType.text,
-              text: binding.label,
-              style: StyleSchema(
-                textColor: _colorToHex(context.textSecondary),
-                fontSize: 13,
-              ),
+        );
+      } else if (_layoutStyle == _LayoutStyle.grid) {
+        // GRID: Card-style tile with label and large value
+        AppLogging.widgets(
+          '[INFO_ELEMENTS] GRID: card tile with flex=1 for $bindingPath',
+        );
+        children.add(
+          ElementSchema(
+            type: ElementType.column,
+            style: StyleSchema(
+              padding: 12,
+              backgroundColor: _colorToHex(context.card.withValues(alpha: 0.6)),
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: _colorToHex(context.border),
+              alignment: AlignmentOption.center,
+              spacing: 4,
+              flex: 1, // CRITICAL: flex for equal distribution in grid rows
             ),
-            ElementSchema(
-              type: ElementType.text,
-              binding: BindingSchema(
-                path: bindingPath,
-                format: binding.defaultFormat,
-                defaultValue: '--',
+            children: [
+              // Label
+              ElementSchema(
+                type: ElementType.text,
+                text: binding.label,
+                style: StyleSchema(
+                  textColor: _colorToHex(context.textSecondary),
+                  fontSize: 11,
+                  fontWeight: 'w500',
+                ),
               ),
-              style: StyleSchema(
-                textColor: _colorToHex(_accentColor),
-                fontSize: 13,
-                fontWeight: 'w500',
+              // Large value
+              ElementSchema(
+                type: ElementType.text,
+                binding: BindingSchema(
+                  path: bindingPath,
+                  format: binding.defaultFormat,
+                  defaultValue: '--',
+                ),
+                style: StyleSchema(
+                  textColor: _colorToHex(_accentColor),
+                  fontSize: 20,
+                  fontWeight: 'w600',
+                ),
               ),
+            ],
+          ),
+        );
+      } else {
+        // VERTICAL (default): Label + value row with subtle styling
+        AppLogging.widgets('[INFO_ELEMENTS] VERTICAL: row for $bindingPath');
+        children.add(
+          ElementSchema(
+            type: ElementType.row,
+            style: const StyleSchema(
+              mainAxisAlignment: MainAxisAlignmentOption.spaceBetween,
+              padding: 6,
             ),
-          ],
-        ),
-      );
+            children: [
+              ElementSchema(
+                type: ElementType.text,
+                text: binding.label,
+                style: StyleSchema(
+                  textColor: _colorToHex(context.textSecondary),
+                  fontSize: 13,
+                ),
+              ),
+              ElementSchema(
+                type: ElementType.text,
+                binding: BindingSchema(
+                  path: bindingPath,
+                  format: binding.defaultFormat,
+                  defaultValue: '--',
+                ),
+                style: StyleSchema(
+                  textColor: _colorToHex(_accentColor),
+                  fontSize: 13,
+                  fontWeight: 'w500',
+                ),
+              ),
+            ],
+          ),
+        );
+      }
     }
 
+    AppLogging.widgets(
+      '[INFO_ELEMENTS] END - created ${children.length} elements',
+    );
     return children;
   }
 
   /// Location: Map-style layout with coordinates and compass
   List<ElementSchema> _buildLocationElements(String name) {
+    AppLogging.widgets(
+      '[LOCATION_ELEMENTS] START - layout=$_layoutStyle, bindings=${_selectedBindings.length}',
+    );
     final children = <ElementSchema>[];
 
     if (_selectedBindings.isEmpty) {
@@ -5351,58 +5524,167 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       return children;
     }
 
-    // Coordinate-style display
+    // Coordinate-style display - layout affects structure
     for (final bindingPath in _selectedBindings) {
       final binding = _getBinding(bindingPath);
       final isCoord =
           bindingPath.contains('latitude') || bindingPath.contains('longitude');
+      final valueColor = isCoord ? '#A78BFA' : '#FFFFFF';
 
-      children.add(
-        ElementSchema(
-          type: ElementType.row,
-          style: const StyleSchema(
-            mainAxisAlignment: MainAxisAlignmentOption.spaceBetween,
+      if (_layoutStyle == _LayoutStyle.horizontal) {
+        // HORIZONTAL: Compact card with icon, label, value stacked vertically
+        AppLogging.widgets(
+          '[LOCATION_ELEMENTS] HORIZONTAL: compact card with flex=1 for $bindingPath',
+        );
+        children.add(
+          ElementSchema(
+            type: ElementType.column,
+            style: const StyleSchema(
+              crossAxisAlignment: CrossAxisAlignmentOption.center,
+              padding: 6,
+              borderRadius: 8,
+              backgroundColor: '#1A1A2E',
+              flex: 1,
+            ),
+            children: [
+              ElementSchema(
+                type: ElementType.icon,
+                iconName: isCoord ? 'explore' : 'near_me',
+                iconSize: 12,
+                style: const StyleSchema(textColor: '#A78BFA'),
+              ),
+              ElementSchema(
+                type: ElementType.text,
+                text: binding.label,
+                style: StyleSchema(
+                  textColor: _colorToHex(context.textSecondary),
+                  fontSize: 9,
+                ),
+              ),
+              ElementSchema(
+                type: ElementType.text,
+                binding: BindingSchema(
+                  path: bindingPath,
+                  format: isCoord ? '%.4f' : binding.defaultFormat,
+                  defaultValue: '--',
+                ),
+                style: StyleSchema(
+                  textColor: valueColor,
+                  fontSize: 12,
+                  fontWeight: 'w600',
+                ),
+              ),
+            ],
           ),
-          children: [
-            ElementSchema(
-              type: ElementType.row,
-              children: [
-                ElementSchema(
-                  type: ElementType.icon,
-                  iconName: isCoord ? 'explore' : 'near_me',
-                  iconSize: 14,
-                  style: const StyleSchema(textColor: '#A78BFA'),
+        );
+      } else if (_layoutStyle == _LayoutStyle.grid) {
+        // GRID: Larger card with border, icon, label, value
+        AppLogging.widgets(
+          '[LOCATION_ELEMENTS] GRID: bordered card with flex=1 for $bindingPath',
+        );
+        children.add(
+          ElementSchema(
+            type: ElementType.column,
+            style: const StyleSchema(
+              crossAxisAlignment: CrossAxisAlignmentOption.center,
+              padding: 10,
+              borderRadius: 12,
+              backgroundColor: '#1A1A2E',
+              borderWidth: 1,
+              borderColor: '#2D2D44',
+              flex: 1,
+            ),
+            children: [
+              ElementSchema(
+                type: ElementType.icon,
+                iconName: isCoord ? 'explore' : 'near_me',
+                iconSize: 16,
+                style: const StyleSchema(textColor: '#A78BFA'),
+              ),
+              ElementSchema(
+                type: ElementType.spacer,
+                style: const StyleSchema(height: 4),
+              ),
+              ElementSchema(
+                type: ElementType.text,
+                text: binding.label,
+                style: StyleSchema(
+                  textColor: _colorToHex(context.textSecondary),
+                  fontSize: 11,
                 ),
-                ElementSchema(
-                  type: ElementType.spacer,
-                  style: const StyleSchema(width: 6),
+              ),
+              ElementSchema(
+                type: ElementType.spacer,
+                style: const StyleSchema(height: 2),
+              ),
+              ElementSchema(
+                type: ElementType.text,
+                binding: BindingSchema(
+                  path: bindingPath,
+                  format: isCoord ? '%.5f' : binding.defaultFormat,
+                  defaultValue: '--',
                 ),
-                ElementSchema(
-                  type: ElementType.text,
-                  text: binding.label,
-                  style: StyleSchema(
-                    textColor: _colorToHex(context.textSecondary),
-                    fontSize: 12,
+                style: StyleSchema(
+                  textColor: valueColor,
+                  fontSize: 18,
+                  fontWeight: 'w700',
+                ),
+              ),
+            ],
+          ),
+        );
+      } else {
+        // VERTICAL: Row with icon+label on left, value on right
+        AppLogging.widgets(
+          '[LOCATION_ELEMENTS] VERTICAL: row with spaceBetween for $bindingPath',
+        );
+        children.add(
+          ElementSchema(
+            type: ElementType.row,
+            style: const StyleSchema(
+              mainAxisAlignment: MainAxisAlignmentOption.spaceBetween,
+            ),
+            children: [
+              ElementSchema(
+                type: ElementType.row,
+                children: [
+                  ElementSchema(
+                    type: ElementType.icon,
+                    iconName: isCoord ? 'explore' : 'near_me',
+                    iconSize: 14,
+                    style: const StyleSchema(textColor: '#A78BFA'),
                   ),
+                  ElementSchema(
+                    type: ElementType.spacer,
+                    style: const StyleSchema(width: 6),
+                  ),
+                  ElementSchema(
+                    type: ElementType.text,
+                    text: binding.label,
+                    style: StyleSchema(
+                      textColor: _colorToHex(context.textSecondary),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+              ElementSchema(
+                type: ElementType.text,
+                binding: BindingSchema(
+                  path: bindingPath,
+                  format: isCoord ? '%.5f' : binding.defaultFormat,
+                  defaultValue: '--',
                 ),
-              ],
-            ),
-            ElementSchema(
-              type: ElementType.text,
-              binding: BindingSchema(
-                path: bindingPath,
-                format: isCoord ? '%.5f' : binding.defaultFormat,
-                defaultValue: '--',
+                style: StyleSchema(
+                  textColor: valueColor,
+                  fontSize: 13,
+                  fontWeight: 'w600',
+                ),
               ),
-              style: StyleSchema(
-                textColor: isCoord ? '#A78BFA' : '#FFFFFF',
-                fontSize: 13,
-                fontWeight: 'w600',
-              ),
-            ),
-          ],
-        ),
-      );
+            ],
+          ),
+        );
+      }
     }
 
     return children;
@@ -5410,6 +5692,9 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
 
   /// Environment: Weather card style with icons for each reading
   List<ElementSchema> _buildEnvironmentElements(String name) {
+    AppLogging.widgets(
+      '[ENVIRONMENT_ELEMENTS] START - layout=$_layoutStyle, bindings=${_selectedBindings.length}',
+    );
     final children = <ElementSchema>[];
 
     if (_selectedBindings.isEmpty) {
@@ -5426,59 +5711,167 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       return children;
     }
 
-    // Environment readings with appropriate icons
+    // Environment readings with appropriate icons - layout affects structure
     for (final bindingPath in _selectedBindings) {
       final binding = _getBinding(bindingPath);
       final iconName = _getEnvironmentIcon(bindingPath);
       final valueColor = _getEnvironmentColor(bindingPath);
 
-      children.add(
-        ElementSchema(
-          type: ElementType.row,
-          style: const StyleSchema(
-            mainAxisAlignment: MainAxisAlignmentOption.spaceBetween,
-            padding: 4,
+      if (_layoutStyle == _LayoutStyle.horizontal) {
+        // HORIZONTAL: Compact card with icon, label, value stacked vertically
+        AppLogging.widgets(
+          '[ENVIRONMENT_ELEMENTS] HORIZONTAL: compact card with flex=1 for $bindingPath',
+        );
+        children.add(
+          ElementSchema(
+            type: ElementType.column,
+            style: const StyleSchema(
+              crossAxisAlignment: CrossAxisAlignmentOption.center,
+              padding: 6,
+              borderRadius: 8,
+              backgroundColor: '#1A1A2E',
+              flex: 1,
+            ),
+            children: [
+              ElementSchema(
+                type: ElementType.icon,
+                iconName: iconName,
+                iconSize: 14,
+                style: StyleSchema(textColor: valueColor),
+              ),
+              ElementSchema(
+                type: ElementType.text,
+                text: binding.label,
+                style: StyleSchema(
+                  textColor: _colorToHex(context.textSecondary),
+                  fontSize: 9,
+                ),
+              ),
+              ElementSchema(
+                type: ElementType.text,
+                binding: BindingSchema(
+                  path: bindingPath,
+                  format: binding.defaultFormat,
+                  defaultValue: '--',
+                ),
+                style: StyleSchema(
+                  textColor: valueColor,
+                  fontSize: 13,
+                  fontWeight: 'w700',
+                ),
+              ),
+            ],
           ),
-          children: [
-            ElementSchema(
-              type: ElementType.row,
-              children: [
-                ElementSchema(
-                  type: ElementType.icon,
-                  iconName: iconName,
-                  iconSize: 16,
-                  style: StyleSchema(textColor: valueColor),
+        );
+      } else if (_layoutStyle == _LayoutStyle.grid) {
+        // GRID: Larger card with border, icon, label, value
+        AppLogging.widgets(
+          '[ENVIRONMENT_ELEMENTS] GRID: bordered card with flex=1 for $bindingPath',
+        );
+        children.add(
+          ElementSchema(
+            type: ElementType.column,
+            style: const StyleSchema(
+              crossAxisAlignment: CrossAxisAlignmentOption.center,
+              padding: 10,
+              borderRadius: 12,
+              backgroundColor: '#1A1A2E',
+              borderWidth: 1,
+              borderColor: '#2D2D44',
+              flex: 1,
+            ),
+            children: [
+              ElementSchema(
+                type: ElementType.icon,
+                iconName: iconName,
+                iconSize: 20,
+                style: StyleSchema(textColor: valueColor),
+              ),
+              ElementSchema(
+                type: ElementType.spacer,
+                style: const StyleSchema(height: 4),
+              ),
+              ElementSchema(
+                type: ElementType.text,
+                text: binding.label,
+                style: StyleSchema(
+                  textColor: _colorToHex(context.textSecondary),
+                  fontSize: 11,
                 ),
-                ElementSchema(
-                  type: ElementType.spacer,
-                  style: const StyleSchema(width: 8),
+              ),
+              ElementSchema(
+                type: ElementType.spacer,
+                style: const StyleSchema(height: 2),
+              ),
+              ElementSchema(
+                type: ElementType.text,
+                binding: BindingSchema(
+                  path: bindingPath,
+                  format: binding.defaultFormat,
+                  defaultValue: '--',
                 ),
-                ElementSchema(
-                  type: ElementType.text,
-                  text: binding.label,
-                  style: StyleSchema(
-                    textColor: _colorToHex(context.textSecondary),
-                    fontSize: 12,
+                style: StyleSchema(
+                  textColor: valueColor,
+                  fontSize: 20,
+                  fontWeight: 'w700',
+                ),
+              ),
+            ],
+          ),
+        );
+      } else {
+        // VERTICAL: Row with icon+label on left, value on right
+        AppLogging.widgets(
+          '[ENVIRONMENT_ELEMENTS] VERTICAL: row with spaceBetween for $bindingPath',
+        );
+        children.add(
+          ElementSchema(
+            type: ElementType.row,
+            style: const StyleSchema(
+              mainAxisAlignment: MainAxisAlignmentOption.spaceBetween,
+              padding: 4,
+            ),
+            children: [
+              ElementSchema(
+                type: ElementType.row,
+                children: [
+                  ElementSchema(
+                    type: ElementType.icon,
+                    iconName: iconName,
+                    iconSize: 16,
+                    style: StyleSchema(textColor: valueColor),
                   ),
+                  ElementSchema(
+                    type: ElementType.spacer,
+                    style: const StyleSchema(width: 8),
+                  ),
+                  ElementSchema(
+                    type: ElementType.text,
+                    text: binding.label,
+                    style: StyleSchema(
+                      textColor: _colorToHex(context.textSecondary),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+              ElementSchema(
+                type: ElementType.text,
+                binding: BindingSchema(
+                  path: bindingPath,
+                  format: binding.defaultFormat,
+                  defaultValue: '--',
                 ),
-              ],
-            ),
-            ElementSchema(
-              type: ElementType.text,
-              binding: BindingSchema(
-                path: bindingPath,
-                format: binding.defaultFormat,
-                defaultValue: '--',
+                style: StyleSchema(
+                  textColor: valueColor,
+                  fontSize: 15,
+                  fontWeight: 'w700',
+                ),
               ),
-              style: StyleSchema(
-                textColor: valueColor,
-                fontSize: 15,
-                fontWeight: 'w700',
-              ),
-            ),
-          ],
-        ),
-      );
+            ],
+          ),
+        );
+      }
     }
 
     return children;
