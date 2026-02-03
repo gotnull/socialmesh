@@ -44,6 +44,12 @@ class DeepLinkManager {
   /// Stream subscription for incoming deep links.
   StreamSubscription<Uri>? _linkSubscription;
 
+  /// Deduplication: track last processed link target to avoid double navigation
+  /// Key format: "type:identifier" (e.g., "profile:gotnull", "node:abc123")
+  String? _lastProcessedTarget;
+  DateTime? _lastProcessedTime;
+  static const _deduplicationWindow = Duration(seconds: 5);
+
   /// Initialize the deep link manager.
   ///
   /// This sets up listening for deep links but does NOT process them
@@ -104,7 +110,22 @@ class DeepLinkManager {
       'valid=${parsed.isValid}, errors=${parsed.validationErrors}',
     );
 
-    // Step 2: Queue or process based on app readiness
+    // Step 2: Check for duplicate (same target within deduplication window)
+    final targetKey = _getTargetKey(parsed);
+    if (targetKey != null && _isDuplicate(targetKey)) {
+      AppLogging.qr(
+        '🔗 DeepLinkManager: Skipping duplicate link (same target: $targetKey)',
+      );
+      return;
+    }
+
+    // Record this link for deduplication
+    if (targetKey != null) {
+      _lastProcessedTarget = targetKey;
+      _lastProcessedTime = DateTime.now();
+    }
+
+    // Step 3: Queue or process based on app readiness
     if (_appReady && _isNavigatorReady()) {
       AppLogging.qr(
         'QR - 🔗 DeepLinkManager: App ready, processing immediately',
@@ -118,6 +139,47 @@ class DeepLinkManager {
       );
       _pendingLink = parsed;
     }
+  }
+
+  /// Generate a unique key for the link target (type + identifier)
+  /// This allows deduplication across different URL formats pointing to same target
+  String? _getTargetKey(ParsedDeepLink link) {
+    switch (link.type) {
+      case DeepLinkType.profile:
+        final name = link.profileDisplayName?.toLowerCase();
+        return name != null ? 'profile:$name' : null;
+      case DeepLinkType.node:
+        final id = link.nodeFirestoreId ?? link.nodeNum?.toString();
+        return id != null ? 'node:$id' : null;
+      case DeepLinkType.widget:
+        return link.widgetId != null ? 'widget:${link.widgetId}' : null;
+      case DeepLinkType.post:
+        return link.postId != null ? 'post:${link.postId}' : null;
+      case DeepLinkType.channel:
+        // Channels are unique by their base64 data
+        final data = link.channelBase64Data;
+        return data != null ? 'channel:${data.hashCode}' : null;
+      case DeepLinkType.location:
+        final lat = link.locationLatitude;
+        final lng = link.locationLongitude;
+        return lat != null && lng != null ? 'location:$lat,$lng' : null;
+      case DeepLinkType.automation:
+        final id =
+            link.automationFirestoreId ??
+            link.automationBase64Data?.hashCode.toString();
+        return id != null ? 'automation:$id' : null;
+      case DeepLinkType.invalid:
+        return null;
+    }
+  }
+
+  /// Check if this target was recently processed (within deduplication window)
+  bool _isDuplicate(String targetKey) {
+    if (_lastProcessedTarget != targetKey) return false;
+    if (_lastProcessedTime == null) return false;
+
+    final elapsed = DateTime.now().difference(_lastProcessedTime!);
+    return elapsed < _deduplicationWindow;
   }
 
   /// Check if the navigator is ready for navigation.
