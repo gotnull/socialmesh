@@ -145,12 +145,9 @@ void main() {
     });
 
     test('officialPartners contains known partners', () {
+      // Currently only LilyGO is an official partner
       expect(ShopSeller.officialPartners, contains('LilyGO'));
-      expect(ShopSeller.officialPartners, contains('SenseCAP'));
-      expect(ShopSeller.officialPartners, contains('RAK Wireless'));
-      expect(ShopSeller.officialPartners, contains('Heltec'));
-      expect(ShopSeller.officialPartners, contains('TTGO'));
-      expect(ShopSeller.officialPartners, contains('Rokland'));
+      expect(ShopSeller.officialPartners.length, 1);
     });
 
     test('toFirestore returns correct map', () {

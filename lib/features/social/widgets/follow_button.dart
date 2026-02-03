@@ -53,7 +53,7 @@ class _FollowButtonState extends ConsumerState<FollowButton> {
         buttonState: FollowButtonState.notFollowing,
         isLoading: false,
         onPressed: () {
-          showInfoSnackBar(context, 'Sign in to follow users');
+          showSignInRequiredSnackBar(context, 'Sign in to follow users');
         },
       );
     }

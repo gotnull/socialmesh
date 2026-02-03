@@ -42,11 +42,11 @@ import 'providers/glyph_provider.dart';
 import 'providers/meshcore_providers.dart';
 import 'services/meshcore/connection_coordinator.dart' show ConnectionResult;
 import 'features/automations/automation_providers.dart';
+import 'features/automations/automation_import_screen.dart';
 import 'models/mesh_models.dart';
 import 'models/social.dart';
 import 'services/app_intents/app_intents_service.dart';
-import 'services/deep_link_service.dart';
-import 'utils/snackbar.dart';
+import 'services/deep_link_manager.dart';
 import 'services/profile/profile_cloud_sync_service.dart';
 import 'services/notifications/push_notification_service.dart';
 import 'services/content_moderation/profanity_checker.dart';
@@ -237,7 +237,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
       ref.read(appIntentsServiceProvider).setup();
       // Initialize RevenueCat for purchases
       _initializePurchases();
-      // Initialize deep link handling
+      // Initialize deep link handling (lifecycle-safe via DeepLinkManager)
       _initializeDeepLinks();
       // Initialize push notification navigation
       _initializePushNotificationNavigation();
@@ -815,15 +815,10 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
 
   Future<void> _initializeDeepLinks() async {
     try {
-      final deepLinkService = ref.read(deepLinkServiceProvider);
-      await deepLinkService.initialize();
-
-      // Listen for deep links and handle them
-      deepLinkService.linkStream.listen((link) {
-        _handleDeepLink(link);
-      });
-
-      AppLogging.debug('🔗 Deep link service initialized');
+      // Use DeepLinkManager for lifecycle-safe navigation
+      final deepLinkManager = ref.read(deepLinkManagerProvider);
+      await deepLinkManager.initialize();
+      AppLogging.debug('🔗 Deep link manager initialized');
     } catch (e) {
       AppLogging.debug('🔗 Deep link init failed: $e');
     }
@@ -920,100 +915,6 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
           AppLogging.notifications('🔔 Unknown notification type: ${nav.type}');
       }
     });
-  }
-
-  Future<void> _handleDeepLink(DeepLinkData link) async {
-    AppLogging.debug('🔗 Handling deep link: ${link.runtimeType}');
-
-    switch (link) {
-      case NodeDeepLink():
-        await _handleNodeDeepLink(link);
-      case ChannelDeepLink():
-        _handleChannelDeepLink(link);
-      case ProfileDeepLink():
-        _handleProfileDeepLink(link);
-      case WidgetDeepLink():
-        _handleWidgetDeepLink(link);
-      case LocationDeepLink():
-        _handleLocationDeepLink(link);
-      case PostDeepLink():
-        _handlePostDeepLink(link);
-    }
-  }
-
-  Future<void> _handleNodeDeepLink(NodeDeepLink link) async {
-    final deepLinkService = ref.read(deepLinkServiceProvider);
-    final success = await deepLinkService.handleNodeLink(link);
-
-    if (success && mounted) {
-      // Navigate to nodes screen and show success
-      final navigator = Navigator.of(context);
-      if (navigator.canPop()) {
-        navigator.popUntil((route) => route.isFirst);
-      }
-
-      // Show notification using shared snackbar helper with action
-      showActionSnackBar(
-        context,
-        'Node "${link.longName ?? 'Unknown'}" added',
-        actionLabel: 'View',
-        onAction: () => Navigator.of(context).pushNamed('/nodes'),
-        type: SnackBarType.success,
-      );
-    } else if (mounted) {
-      showErrorSnackBar(context, 'Failed to add node from link');
-    }
-  }
-
-  void _handleChannelDeepLink(ChannelDeepLink link) {
-    // Navigate to channel QR import screen with the data
-    if (mounted) {
-      Navigator.of(
-        context,
-      ).pushNamed('/qr-import', arguments: {'base64Data': link.base64Data});
-    }
-  }
-
-  void _handleProfileDeepLink(ProfileDeepLink link) {
-    AppLogging.debug('🔗 Profile deep link: ${link.profileId}');
-    if (mounted) {
-      Navigator.of(
-        context,
-      ).pushNamed('/profile', arguments: {'userId': link.profileId});
-    }
-  }
-
-  void _handleWidgetDeepLink(WidgetDeepLink link) {
-    AppLogging.debug('🔗 Widget deep link: ${link.widgetId}');
-    if (mounted) {
-      Navigator.of(
-        context,
-      ).pushNamed('/widget-detail', arguments: {'widgetId': link.widgetId});
-    }
-  }
-
-  void _handleLocationDeepLink(LocationDeepLink link) {
-    // Navigate to map screen centered on location
-    if (mounted) {
-      Navigator.of(context).pushNamed(
-        '/map',
-        arguments: {
-          'latitude': link.latitude,
-          'longitude': link.longitude,
-          'label': link.label,
-        },
-      );
-    }
-  }
-
-  void _handlePostDeepLink(PostDeepLink link) {
-    AppLogging.debug('🔗 Post deep link: ${link.postId}');
-    // Navigate to post detail screen
-    if (mounted) {
-      Navigator.of(
-        context,
-      ).pushNamed('/post-detail', arguments: {'postId': link.postId});
-    }
   }
 
   Future<void> _loadAccentColor() async {
@@ -1369,9 +1270,20 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
           if (settings.name == '/profile') {
             final args = settings.arguments as Map<String, dynamic>?;
             final userId = args?['userId'] as String?;
+            final displayName = args?['displayName'] as String?;
+
+            // Direct userId takes precedence (internal navigation)
             if (userId != null) {
               return MaterialPageRoute(
                 builder: (context) => ProfileSocialScreen(userId: userId),
+              );
+            }
+
+            // Display name lookup (from deep links)
+            if (displayName != null) {
+              return MaterialPageRoute(
+                builder: (context) =>
+                    _ProfileDisplayNameLoader(displayName: displayName),
               );
             }
           }
@@ -1383,6 +1295,15 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
                 builder: (context) => _SignalDetailLoader(signalId: signalId),
               );
             }
+          }
+          if (settings.name == '/automation-import') {
+            final args = settings.arguments as Map<String, dynamic>?;
+            return MaterialPageRoute(
+              builder: (context) => AutomationImportScreen(
+                base64Data: args?['base64Data'] as String?,
+                firestoreId: args?['firestoreId'] as String?,
+              ),
+            );
           }
           return null;
         },
@@ -1486,6 +1407,78 @@ class _SignalDetailLoader extends ConsumerWidget {
   }
 }
 
+/// Loader widget that looks up a user by display name and navigates to their profile
+class _ProfileDisplayNameLoader extends ConsumerWidget {
+  final String displayName;
+
+  const _ProfileDisplayNameLoader({required this.displayName});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profileSyncService = ref.watch(profileCloudSyncServiceProvider);
+
+    return Scaffold(
+      appBar: AppBar(title: Text('@$displayName')),
+      body: FutureBuilder<String?>(
+        future: profileSyncService.getUserIdByDisplayName(displayName),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                  const SizedBox(height: 16),
+                  Text('Error looking up user: ${snapshot.error}'),
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Go Back'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          final userId = snapshot.data;
+          if (userId == null) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.person_off, size: 48),
+                  const SizedBox(height: 16),
+                  Text('User "@$displayName" not found'),
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Go Back'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          // Navigate to profile screen with the looked up userId
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (context) => ProfileSocialScreen(userId: userId),
+              ),
+            );
+          });
+
+          return const Center(child: CircularProgressIndicator());
+        },
+      ),
+    );
+  }
+}
+
 /// Screen shown when a device-required route is accessed while disconnected
 class _BlockedRouteScreen extends ConsumerWidget {
   final String routeName;
@@ -1578,12 +1571,47 @@ class _BlockedRouteScreen extends ConsumerWidget {
 /// App router handles initialization and navigation flow
 /// NOTE: With deferred connection, MainShell is shown as soon as app is 'ready'.
 /// Device connection happens asynchronously via DeviceConnectionNotifier.
-class _AppRouter extends ConsumerWidget {
+class _AppRouter extends ConsumerStatefulWidget {
   const _AppRouter();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_AppRouter> createState() => _AppRouterState();
+}
+
+class _AppRouterState extends ConsumerState<_AppRouter> {
+  @override
+  void initState() {
+    super.initState();
+    // Listen for app ready state and signal deep link manager
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAppReady();
+    });
+  }
+
+  void _checkAppReady() {
+    final initState = ref.read(appInitProvider);
+    if (initState == AppInitState.ready) {
+      // App is ready, mark deep links ready (in next frame to ensure navigation is set up)
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ref.read(deepLinkReadyProvider.notifier).setReady();
+        }
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final initState = ref.watch(appInitProvider);
+
+    // Check readiness whenever state changes
+    if (initState == AppInitState.ready) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ref.read(deepLinkReadyProvider.notifier).setReady();
+        }
+      });
+    }
 
     switch (initState) {
       case AppInitState.uninitialized:

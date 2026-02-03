@@ -778,37 +778,32 @@ class _PartnerCard extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 if (seller.logoUrl != null)
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: Image.network(
                       seller.logoUrl!,
-                      width: 40,
-                      height: 40,
+                      width: 32,
+                      height: 32,
                       fit: BoxFit.contain,
                       errorBuilder: (context, error, stackTrace) =>
                           Icon(Icons.store, color: context.accentColor),
                     ),
                   )
                 else
-                  Icon(Icons.store, color: context.accentColor, size: 32),
-                const SizedBox(height: 8),
-                SizedBox(
-                  width: 120,
-                  child: Center(
-                    child: AutoScrollText(
-                      seller.name,
-                      style: TextStyle(
-                        color: context.textPrimary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 1,
-                      velocity: 25.0,
-                      fadeWidth: 10.0,
-                    ),
+                  Icon(Icons.store, color: context.accentColor, size: 28),
+                const SizedBox(height: 6),
+                Text(
+                  seller.name,
+                  style: TextStyle(
+                    color: context.textPrimary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),

@@ -125,7 +125,7 @@ class _LikeButtonState extends ConsumerState<_LikeButton>
 
   Future<void> _handleLike(bool currentlyLiked) async {
     if (widget.currentUserId == null) {
-      showInfoSnackBar(context, 'Sign in to like posts');
+      showSignInRequiredSnackBar(context, 'Sign in to like posts');
       return;
     }
 

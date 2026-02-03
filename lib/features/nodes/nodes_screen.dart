@@ -1768,6 +1768,20 @@ class _NodeDetailsSheetState extends ConsumerState<NodeDetailsSheet> {
         description:
             '${node.role ?? 'Mesh Node'} • ${node.hardwareModel ?? 'Unknown Hardware'}',
       );
+    } on StateError catch (e) {
+      if (context.mounted) {
+        if (e.message.contains('signed in')) {
+          showActionSnackBar(
+            context,
+            'Sign in to share nodes',
+            actionLabel: 'Sign In',
+            onAction: () => Navigator.pushNamed(context, '/account'),
+            type: SnackBarType.info,
+          );
+        } else {
+          showErrorSnackBar(context, 'Failed to share node: ${e.message}');
+        }
+      }
     } catch (e) {
       if (context.mounted) {
         showErrorSnackBar(context, 'Failed to share node: $e');

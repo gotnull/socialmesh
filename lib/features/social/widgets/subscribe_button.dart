@@ -33,8 +33,10 @@ class _SubscribeButtonState extends ConsumerState<SubscribeButton> {
 
     if (currentUser == null) {
       return TextButton(
-        onPressed: () =>
-            showInfoSnackBar(context, 'Sign in to manage subscriptions'),
+        onPressed: () => showSignInRequiredSnackBar(
+          context,
+          'Sign in to manage subscriptions',
+        ),
         child: const Text('Subscribe'),
       );
     }

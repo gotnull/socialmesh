@@ -170,7 +170,7 @@ class _ScheduleFlightScreenState extends ConsumerState<ScheduleFlightScreen> {
 
     final user = ref.read(currentUserProvider);
     if (user == null) {
-      showWarningSnackBar(context, 'Please sign in to schedule a flight');
+      showSignInRequiredSnackBar(context, 'Sign in to schedule a flight');
       return;
     }
 

@@ -17,6 +17,7 @@ import '../../core/widgets/animations.dart';
 import '../../core/widgets/edge_fade.dart';
 import 'automation_providers.dart';
 import 'automation_repository.dart';
+import 'automation_share_utils.dart';
 import 'models/automation.dart';
 import 'widgets/automation_card.dart';
 import 'automation_editor_screen.dart';
@@ -640,6 +641,7 @@ class AutomationsScreen extends ConsumerWidget {
                   },
                   onTap: () => _editAutomation(context, ref, automation),
                   onDelete: () => _confirmDelete(context, ref, automation),
+                  onShare: () => _shareAutomation(context, ref, automation),
                 ),
               ),
             );
@@ -802,6 +804,14 @@ class AutomationsScreen extends ConsumerWidget {
     if (context.mounted) {
       showSuccessSnackBar(context, 'Automation created from template');
     }
+  }
+
+  void _shareAutomation(
+    BuildContext context,
+    WidgetRef ref,
+    Automation automation,
+  ) {
+    showAutomationShareSheet(context, automation, ref: ref);
   }
 
   void _confirmDelete(

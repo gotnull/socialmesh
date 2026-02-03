@@ -873,7 +873,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
       if (token == null) {
         if (mounted) Navigator.pop(context);
         if (mounted) {
-          showErrorSnackBar(context, 'Please sign in to submit widgets');
+          showSignInRequiredSnackBar(context, 'Sign in to submit widgets');
         }
         return;
       }

@@ -242,6 +242,19 @@ service cloud.firestore {
         resource.data.createdBy == request.auth.uid;
     }
     
+    // Shared automations (for QR code sharing)
+    match /shared_automations/{automationId} {
+      // Anyone can read shared automations (needed for QR scanning)
+      allow read: if true;
+      // Authenticated users can create shared automations
+      allow create: if isAuthenticated() && isValidSize() &&
+        request.resource.data.keys().hasAll(['name', 'trigger', 'actions', 'createdBy', 'createdAt']) &&
+        request.resource.data.createdBy == request.auth.uid;
+      // Only the creator can update or delete
+      allow update, delete: if isAuthenticated() && 
+        resource.data.createdBy == request.auth.uid;
+    }
+    
     // =============================================================================
     // DEVICE SHOP COLLECTIONS
     // =============================================================================

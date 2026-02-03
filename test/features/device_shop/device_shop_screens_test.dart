@@ -134,12 +134,12 @@ void main() {
       expect(find.byType(TextField), findsOneWidget);
     });
 
-    testWidgets('shows popular searches section', (WidgetTester tester) async {
+    testWidgets('shows trending section', (WidgetTester tester) async {
       await tester.pumpWidget(createTestWidget(const SearchProductsScreen()));
       await tester.pump();
 
-      // Popular searches should be displayed
-      expect(find.text('Popular Searches'), findsOneWidget);
+      // Trending section should be displayed
+      expect(find.text('Trending'), findsOneWidget);
     });
 
     testWidgets('shows browse categories section', (WidgetTester tester) async {
@@ -180,21 +180,21 @@ void main() {
       expect(find.byIcon(Icons.clear), findsOneWidget);
     });
 
-    testWidgets('popular search chips are tappable', (
+    testWidgets('category list items are tappable', (
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(createTestWidget(const SearchProductsScreen()));
       await tester.pump();
 
-      // Find and tap a popular search chip
-      final chip = find.text('T-Beam');
-      expect(chip, findsOneWidget);
+      // Find and tap a category item (Nodes is the first category)
+      final categoryItem = find.text('Nodes');
+      expect(categoryItem, findsOneWidget);
 
-      await tester.tap(chip);
+      await tester.tap(categoryItem);
       await tester.pump();
 
-      // Text should now be in search field
-      expect(find.text('T-Beam'), findsWidgets);
+      // Category label should be used as search query
+      expect(find.text('Nodes'), findsWidgets);
     });
   });
 

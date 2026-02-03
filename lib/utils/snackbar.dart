@@ -413,3 +413,28 @@ void _showLoadingSnackBar(
     ..hideCurrentSnackBar()
     ..showSnackBar(snackBar);
 }
+
+/// Shows a standardized auth-required snackbar with Sign In action.
+///
+/// Use this whenever an action requires authentication. Shows an info snackbar
+/// with a "Sign In" button that navigates to the account screen.
+///
+/// Usage:
+/// ```dart
+/// void onTap() {
+///   if (user == null) {
+///     showSignInRequiredSnackBar(context, 'Sign in to follow users');
+///     return;
+///   }
+///   // ... proceed with action
+/// }
+/// ```
+void showSignInRequiredSnackBar(BuildContext context, String message) {
+  showActionSnackBar(
+    context,
+    message,
+    actionLabel: 'Sign In',
+    onAction: () => Navigator.pushNamed(context, '/account'),
+    type: SnackBarType.info,
+  );
+}

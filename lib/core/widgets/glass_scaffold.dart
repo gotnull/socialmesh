@@ -198,7 +198,7 @@ class GlassScaffold extends StatelessWidget {
 
     // Determine slivers to use
     final effectiveSlivers = body != null
-        ? [SliverToBoxAdapter(child: body)]
+        ? [SliverFillRemaining(hasScrollBody: false, child: body)]
         : slivers;
 
     // Default to kGlassScrollPhysics for consistent iOS bounce behavior

@@ -109,6 +109,40 @@ class ProfileCloudSyncService {
     return false;
   }
 
+  /// Look up a user's Firebase UID by their display name.
+  /// Returns null if no user found with that display name.
+  /// Display names are unique and case-insensitive.
+  Future<String?> getUserIdByDisplayName(String displayName) async {
+    final normalizedName = displayName.trim().toLowerCase();
+    if (normalizedName.isEmpty) return null;
+
+    try {
+      final query = await _firestore
+          .collection(_profilesCollection)
+          .where('displayNameLower', isEqualTo: normalizedName)
+          .limit(1)
+          .get();
+
+      if (query.docs.isEmpty) {
+        AppLogging.auth(
+          'ProfileSync: No user found with displayName: $displayName',
+        );
+        return null;
+      }
+
+      final userId = query.docs.first.id;
+      AppLogging.auth(
+        'ProfileSync: Found userId $userId for displayName: $displayName',
+      );
+      return userId;
+    } catch (e) {
+      AppLogging.auth(
+        'ProfileSync: Error looking up displayName "$displayName": $e',
+      );
+      return null;
+    }
+  }
+
   /// Sync only the public-facing profile fields to `profiles` collection
   /// This is the collection used by social features (followers, posts, etc.)
   Future<void> _syncPublicProfile(String uid, UserProfile profile) async {

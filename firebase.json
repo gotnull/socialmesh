@@ -79,6 +79,10 @@
     ],
     "rewrites": [
       {
+        "source": "/deeplinks",
+        "destination": "/deeplinks_test.html"
+      },
+      {
         "source": "/privacy",
         "destination": "/privacy-policy.html"
       },

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -269,6 +270,21 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
   }
 
   Future<void> _shareNodeAsLink() async {
+    // Check if user is authenticated
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      if (mounted) {
+        showActionSnackBar(
+          context,
+          'Sign in to share nodes',
+          actionLabel: 'Sign In',
+          onAction: () => Navigator.pushNamed(context, '/account'),
+          type: SnackBarType.info,
+        );
+      }
+      return;
+    }
+
     final node = _node;
 
     // Capture share position before async gap
@@ -280,22 +296,29 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
         : null;
     final statusText = presenceStatusText(node.presenceConfidence, lastSeenAge);
 
-    final docRef = await FirebaseFirestore.instance
-        .collection('shared_nodes')
-        .add({
-          'nodeId': _nodeId,
-          'name': node.displayName,
-          'description': '${node.role} • ${node.hwModel} • $statusText',
-          'createdAt': FieldValue.serverTimestamp(),
-        });
+    try {
+      final docRef = await FirebaseFirestore.instance
+          .collection('shared_nodes')
+          .add({
+            'nodeId': _nodeId,
+            'name': node.displayName,
+            'description': '${node.role} • ${node.hwModel} • $statusText',
+            'createdBy': currentUser.uid,
+            'createdAt': FieldValue.serverTimestamp(),
+          });
 
-    final shareUrl = AppUrls.shareNodeUrl(docRef.id);
+      final shareUrl = AppUrls.shareNodeUrl(docRef.id);
 
-    await Share.share(
-      'Check out ${node.displayName} on Socialmesh!\n$shareUrl',
-      subject: 'Mesh Node: ${node.displayName}',
-      sharePositionOrigin: sharePosition,
-    );
+      await Share.share(
+        'Check out ${node.displayName} on Socialmesh!\n$shareUrl',
+        subject: 'Mesh Node: ${node.displayName}',
+        sharePositionOrigin: sharePosition,
+      );
+    } catch (e) {
+      if (mounted) {
+        showErrorSnackBar(context, 'Failed to share node: $e');
+      }
+    }
   }
 
   void _shareNodeAsText() {

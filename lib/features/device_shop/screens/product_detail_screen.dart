@@ -1211,7 +1211,7 @@ class _ReviewsSection extends ConsumerWidget {
   void _showWriteReviewSheet(BuildContext context, WidgetRef ref) {
     final user = ref.read(currentUserProvider);
     if (user == null) {
-      showWarningSnackBar(context, 'Please sign in to write a review');
+      showSignInRequiredSnackBar(context, 'Sign in to write a review');
       return;
     }
 

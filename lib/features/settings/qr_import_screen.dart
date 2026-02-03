@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -10,6 +9,7 @@ import '../../core/transport.dart';
 import '../../generated/meshtastic/channel.pb.dart' as channel_pb;
 import '../../core/theme.dart';
 import '../../utils/snackbar.dart';
+import '../../utils/encoding.dart';
 import '../channels/channel_form_screen.dart';
 import '../../core/widgets/loading_indicator.dart';
 
@@ -21,23 +21,90 @@ class QrImportScreen extends ConsumerStatefulWidget {
 }
 
 class _QrImportScreenState extends ConsumerState<QrImportScreen> {
-  final MobileScannerController _controller = MobileScannerController();
+  late final MobileScannerController _controller;
   bool _isProcessing = false;
+  bool _checkedRouteArgs = false;
+  String? _lastProcessedCode;
 
   @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    AppLogging.qr('QR Import Scanner: initState - initializing');
+
+    // Create controller - autoStart defaults to true
+    _controller = MobileScannerController();
+
+    // Listen to barcode stream for debugging
+    _controller.barcodes.listen(
+      (capture) {
+        AppLogging.qr(
+          'QR Import Scanner: Barcode stream - ${capture.barcodes.length} codes',
+        );
+      },
+      onError: (error) {
+        AppLogging.qr('QR Import Scanner ERROR: $error');
+      },
+    );
   }
 
-  void _onDetect(BarcodeCapture capture) {
-    if (_isProcessing) return;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    // Check for route arguments (from deep link)
+    if (!_checkedRouteArgs) {
+      _checkedRouteArgs = true;
+      final args =
+          ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+      if (args != null && args['base64Data'] != null) {
+        final base64Data = args['base64Data'] as String;
+        AppLogging.qr('QR Import: Received base64Data from deep link');
+        // Process in next frame to avoid build-time navigation
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _processBase64Channel(base64Data);
+          }
+        });
+      }
+    }
+  }
+
+  /// Process channel data received from deep link (not from scanner)
+  Future<void> _processBase64Channel(String base64Data) async {
+    setState(() {
+      _isProcessing = true;
+    });
+    // Construct the full URL format and process
+    await _processQrCode('socialmesh://channel/$base64Data');
+  }
+
+  void _handleBarcodeCapture(BarcodeCapture capture) {
+    if (_isProcessing) {
+      AppLogging.qr('QR Import Scanner: Already processing, ignoring');
+      return;
+    }
 
     final List<Barcode> barcodes = capture.barcodes;
-    if (barcodes.isEmpty) return;
+    if (barcodes.isEmpty) {
+      AppLogging.qr('QR Import Scanner: No barcodes in capture');
+      return;
+    }
 
     final String? code = barcodes.first.rawValue;
-    if (code == null) return;
+    if (code == null) {
+      AppLogging.qr('QR Import Scanner: Barcode rawValue is null');
+      return;
+    }
+
+    // Skip if we already processed this exact code
+    if (code == _lastProcessedCode) {
+      return;
+    }
+    _lastProcessedCode = code;
+
+    AppLogging.qr(
+      'QR Import Scanner: Detected code: ${code.substring(0, code.length > 50 ? 50 : code.length)}...',
+    );
 
     setState(() {
       _isProcessing = true;
@@ -46,9 +113,36 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
     _processQrCode(code);
   }
 
+  @override
+  void dispose() {
+    AppLogging.qr('QR Import Scanner: dispose - stopping camera');
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onDetect(BarcodeCapture capture) {
+    AppLogging.qr('QR Import Scanner: onDetect callback triggered');
+    _handleBarcodeCapture(capture);
+  }
+
   Future<void> _processQrCode(String code) async {
     try {
       AppLogging.qr('Processing QR code: $code');
+
+      // Check for automation QR codes first - hand off to deep link system
+      if (code.startsWith('socialmesh://automation/')) {
+        final base64Data = code.substring('socialmesh://automation/'.length);
+        AppLogging.qr('Detected automation QR code, navigating to import');
+        if (mounted) {
+          Navigator.pop(context); // Close scanner
+          Navigator.pushNamed(
+            context,
+            '/automation-import',
+            arguments: {'base64Data': base64Data},
+          );
+        }
+        return;
+      }
 
       // Channel QR codes format: "socialmesh://channel/<base64data>"
       // Also supports legacy formats:
@@ -75,8 +169,18 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
         }
         base64Data = Uri.decodeComponent(uri.fragment);
       } else {
-        // Assume it's raw base64 (possibly URL-encoded)
-        base64Data = Uri.decodeComponent(code);
+        // Not a recognized format - show helpful error
+        AppLogging.qr('Unrecognized QR format: $code');
+        if (mounted) {
+          showErrorSnackBar(
+            context,
+            'Not a Meshtastic channel QR code. Scan a channel QR from the Meshtastic app.',
+          );
+          setState(() {
+            _isProcessing = false;
+          });
+        }
+        return;
       }
 
       AppLogging.qr('Decoded base64 data: $base64Data');
@@ -85,8 +189,8 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
         throw Exception('Empty channel data');
       }
 
-      // Decode base64 to bytes
-      final bytes = base64Decode(base64Data);
+      // Decode base64 to bytes (handles both standard and URL-safe, with/without padding)
+      final bytes = Base64Utils.decodeWithPadding(base64Data);
       AppLogging.qr('Decoded ${bytes.length} bytes');
 
       // Try to parse as different protobuf formats
@@ -155,9 +259,14 @@ class _QrImportScreenState extends ConsumerState<QrImportScreen> {
       }).firstOrNull;
 
       if (existingChannel != null) {
-        throw Exception(
-          'Channel already exists as "${existingChannel.name}" (slot ${existingChannel.index})',
-        );
+        if (mounted) {
+          Navigator.pop(context);
+          showInfoSnackBar(
+            context,
+            'You already have this channel as "${existingChannel.name}"',
+          );
+        }
+        return;
       }
 
       // Find next available channel index

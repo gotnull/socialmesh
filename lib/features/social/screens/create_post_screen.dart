@@ -776,7 +776,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     // Get current user for metadata
     final currentUser = ref.read(currentUserProvider);
     if (currentUser == null) {
-      showErrorSnackBar(context, 'Must be signed in to upload images');
+      showSignInRequiredSnackBar(context, 'Sign in to upload images');
       return;
     }
 

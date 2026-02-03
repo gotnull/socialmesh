@@ -284,7 +284,7 @@ class _SignalDetailScreenState extends ConsumerState<SignalDetailScreen>
     if (!isAuthenticated) {
       AppLogging.signals('🔒 Vote blocked: user not authenticated');
       if (mounted) {
-        showErrorSnackBar(context, 'Sign in required to vote');
+        showSignInRequiredSnackBar(context, 'Sign in to vote on responses');
       }
       return;
     }

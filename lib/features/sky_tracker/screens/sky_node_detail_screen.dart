@@ -715,7 +715,10 @@ class _ReportBottomSheetState extends ConsumerState<_ReportBottomSheet> {
   Future<void> _submit() async {
     final user = ref.read(currentUserProvider);
     if (user == null) {
-      showInfoSnackBar(context, 'Please sign in to report');
+      showSignInRequiredSnackBar(
+        context,
+        'Sign in to submit a reception report',
+      );
       return;
     }
 

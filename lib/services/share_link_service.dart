@@ -36,11 +36,18 @@ class ShareLinkService {
 
   /// Share a mesh node with rich preview
   /// Stores complete node data in Firestore for proper deep link handling
+  /// Throws [StateError] if user is not signed in
   Future<void> shareNode({
     required MeshNode node,
     String? description,
     Rect? sharePositionOrigin,
   }) async {
+    // Check if user is authenticated
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) {
+      throw StateError('Must be signed in to share nodes');
+    }
+
     // Create a shareable record in Firestore with complete node data
     final docRef = await _firestore.collection('shared_nodes').add({
       'nodeNum': node.nodeNum,
@@ -58,7 +65,7 @@ class ShareLinkService {
       if (node.hardwareModel != null) 'hardwareModel': node.hardwareModel,
       if (node.role != null) 'role': node.role,
       // Metadata
-      'createdBy': _auth.currentUser?.uid,
+      'createdBy': currentUser.uid,
       'createdAt': FieldValue.serverTimestamp(),
     });
 
@@ -73,18 +80,25 @@ class ShareLinkService {
 
   /// Share a mesh node with basic info only (legacy method)
   /// Prefer using shareNode with MeshNode for complete data
+  /// Throws [StateError] if user is not signed in
   Future<void> shareNodeBasic({
     required String nodeId,
     required String nodeName,
     String? description,
     Rect? sharePositionOrigin,
   }) async {
+    // Check if user is authenticated
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) {
+      throw StateError('Must be signed in to share nodes');
+    }
+
     // Create a shareable record in Firestore
     final docRef = await _firestore.collection('shared_nodes').add({
       'nodeId': nodeId,
       'name': nodeName,
       'description': description ?? 'A mesh node on Socialmesh',
-      'createdBy': _auth.currentUser?.uid,
+      'createdBy': currentUser.uid,
       'createdAt': FieldValue.serverTimestamp(),
     });
 

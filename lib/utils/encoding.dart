@@ -51,6 +51,26 @@ class Base64Utils {
       return false;
     }
   }
+
+  /// Normalize base64 padding and decode.
+  ///
+  /// Handles both standard base64 (+/) and URL-safe base64 (-_).
+  /// Adds missing padding characters (=) if needed.
+  static Uint8List decodeWithPadding(String str) {
+    // Normalize URL-safe to standard base64
+    String normalized = str.replaceAll('-', '+').replaceAll('_', '/');
+
+    // Add padding if needed
+    final remainder = normalized.length % 4;
+    if (remainder != 0) {
+      normalized = normalized.padRight(
+        normalized.length + (4 - remainder),
+        '=',
+      );
+    }
+
+    return base64Decode(normalized);
+  }
 }
 
 /// CRC utilities for packet validation

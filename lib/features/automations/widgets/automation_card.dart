@@ -11,6 +11,7 @@ class AutomationCard extends StatelessWidget {
   final void Function(bool enabled) onToggle;
   final VoidCallback onTap;
   final VoidCallback onDelete;
+  final VoidCallback? onShare;
 
   const AutomationCard({
     super.key,
@@ -18,6 +19,7 @@ class AutomationCard extends StatelessWidget {
     required this.onToggle,
     required this.onTap,
     required this.onDelete,
+    this.onShare,
   });
 
   @override
@@ -157,6 +159,18 @@ class AutomationCard extends StatelessWidget {
                   ),
                 ],
                 const Spacer(),
+                // Share button
+                if (onShare != null) ...[
+                  GestureDetector(
+                    onTap: onShare,
+                    child: Icon(
+                      Icons.qr_code_2,
+                      color: context.accentColor,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                ],
                 // Delete button - always visible
                 GestureDetector(
                   onTap: onDelete,
