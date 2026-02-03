@@ -28,6 +28,9 @@ class WidgetPreviewCard extends ConsumerWidget {
   /// Optional leading icon to display next to title
   final Widget? titleLeading;
 
+  /// Optional callback for share/QR code button - shows QR icon when provided
+  final VoidCallback? onShare;
+
   /// Whether the widget preview is still loading
   final bool isLoading;
 
@@ -42,6 +45,7 @@ class WidgetPreviewCard extends ConsumerWidget {
     this.onTap,
     this.trailing,
     this.titleLeading,
+    this.onShare,
     this.isLoading = false,
     this.loadingHeight = 120,
   });
@@ -124,6 +128,21 @@ class WidgetPreviewCard extends ConsumerWidget {
                       ],
                     ),
                   ),
+                  // QR code share button
+                  if (onShare != null) ...[
+                    GestureDetector(
+                      onTap: onShare,
+                      child: Padding(
+                        padding: const EdgeInsets.all(4),
+                        child: Icon(
+                          Icons.qr_code_2,
+                          color: context.accentColor,
+                          size: 22,
+                        ),
+                      ),
+                    ),
+                    if (trailing != null) const SizedBox(width: 8),
+                  ],
                   if (trailing != null) trailing!,
                 ],
               ),

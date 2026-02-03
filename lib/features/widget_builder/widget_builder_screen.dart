@@ -14,6 +14,7 @@ import 'wizard/widget_wizard_screen.dart';
 import 'marketplace/widget_marketplace_screen.dart';
 import 'marketplace/widget_marketplace_service.dart';
 import 'marketplace/marketplace_providers.dart';
+import 'widget_share_utils.dart';
 import '../../core/theme.dart';
 import '../../core/widgets/app_bar_overflow_menu.dart';
 import '../../core/widgets/widget_preview_card.dart';
@@ -180,7 +181,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
           ),
           actions: [
             IconButton(
-              icon: const Icon(Icons.add_box),
+              icon: const Icon(Icons.add),
               onPressed: _createNewWidget,
               tooltip: 'Create Widget',
             ),
@@ -300,6 +301,7 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
       titleLeading: isFromMarketplace
           ? Icon(Icons.store, size: 14, color: context.accentColor)
           : null,
+      onShare: isTemplate ? null : () => _shareWidget(schema),
       trailing: isTemplate
           ? TextButton(
               onPressed: () => _useTemplate(schema),
@@ -560,6 +562,10 @@ class _WidgetBuilderScreenState extends ConsumerState<WidgetBuilderScreen> {
     // Always reload widgets after returning from wizard
     await _loadWidgets();
     AppLogging.widgets('[WidgetBuilder] Widgets reloaded');
+  }
+
+  void _shareWidget(WidgetSchema schema) {
+    showWidgetShareSheet(context, schema, ref: ref);
   }
 
   void _useTemplate(WidgetSchema template) async {

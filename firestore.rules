@@ -279,6 +279,19 @@ service cloud.firestore {
         resource.data.createdBy == request.auth.uid;
     }
     
+    // Shared widgets (for QR code sharing)
+    match /shared_widgets/{widgetId} {
+      // Anyone can read shared widgets (needed for QR scanning)
+      allow read: if true;
+      // Authenticated users can create shared widgets
+      allow create: if isAuthenticated() && isValidSize() &&
+        request.resource.data.keys().hasAll(['name', 'createdBy', 'createdAt']) &&
+        request.resource.data.createdBy == request.auth.uid;
+      // Only the creator can update or delete
+      allow update, delete: if isAuthenticated() && 
+        resource.data.createdBy == request.auth.uid;
+    }
+    
     // =============================================================================
     // DEVICE SHOP COLLECTIONS
     // =============================================================================

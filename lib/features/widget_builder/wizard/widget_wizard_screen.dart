@@ -4956,6 +4956,7 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
         ElementSchema(
           type: ElementType.column,
           style: StyleSchema(
+            mainAxisAlignment: MainAxisAlignmentOption.center,
             crossAxisAlignment: CrossAxisAlignmentOption.center,
             padding: padding > 0 ? padding : null,
             borderRadius: borderRadius,
@@ -5025,17 +5026,15 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
       return gaugeColumns;
     }
 
-    // Multiple gauges or non-vertical: wrap in a row
-    // Use start alignment when children have flex (horizontal/grid)
-    final hasFlexChildren = _layoutStyle != _LayoutStyle.vertical;
+    // Multiple gauges: wrap in a row
+    // Always use spaceEvenly for gauges to center them properly
+    // and center for cross-axis to vertically center them
     return [
       ElementSchema(
         type: ElementType.row,
         style: StyleSchema(
-          mainAxisAlignment: hasFlexChildren
-              ? MainAxisAlignmentOption.start
-              : MainAxisAlignmentOption.spaceEvenly,
-          spacing: hasFlexChildren ? 8 : null,
+          mainAxisAlignment: MainAxisAlignmentOption.spaceEvenly,
+          crossAxisAlignment: CrossAxisAlignmentOption.center,
         ),
         children: gaugeColumns,
       ),
@@ -5382,7 +5381,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
               padding: 8,
               backgroundColor: _colorToHex(context.card.withValues(alpha: 0.3)),
               borderRadius: 8,
-              alignment: AlignmentOption.center,
+              crossAxisAlignment:
+                  CrossAxisAlignmentOption.start, // Top-left align
               spacing: 2,
               flex: 1, // Equal distribution in horizontal rows
             ),
@@ -5428,7 +5428,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
               borderRadius: 12,
               borderWidth: 1,
               borderColor: _colorToHex(context.border),
-              alignment: AlignmentOption.center,
+              crossAxisAlignment:
+                  CrossAxisAlignmentOption.start, // Top-left align
               spacing: 4,
               flex: 1, // CRITICAL: flex for equal distribution in grid rows
             ),
@@ -5937,7 +5938,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
               padding: 8,
               backgroundColor: _colorToHex(context.card.withValues(alpha: 0.3)),
               borderRadius: 8,
-              alignment: AlignmentOption.center,
+              crossAxisAlignment:
+                  CrossAxisAlignmentOption.start, // Top-left align
               spacing: 4,
               flex: 1, // Equal distribution in horizontal rows
             ),
@@ -5994,7 +5996,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
               borderRadius: 12,
               borderWidth: 1,
               borderColor: _colorToHex(context.border),
-              alignment: AlignmentOption.center,
+              crossAxisAlignment:
+                  CrossAxisAlignmentOption.start, // Top-left align
               spacing: 6,
               flex: 1, // CRITICAL: flex for equal distribution in grid rows
             ),
@@ -6142,7 +6145,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
               padding: 6,
               backgroundColor: _colorToHex(context.card.withValues(alpha: 0.3)),
               borderRadius: 6,
-              alignment: AlignmentOption.center,
+              crossAxisAlignment:
+                  CrossAxisAlignmentOption.start, // Top-left align
               spacing: 2,
             ),
             children: [
@@ -6188,7 +6192,8 @@ class _WidgetWizardScreenState extends ConsumerState<WidgetWizardScreen> {
               borderRadius: 12,
               borderWidth: 1,
               borderColor: _colorToHex(context.border),
-              alignment: AlignmentOption.center,
+              crossAxisAlignment:
+                  CrossAxisAlignmentOption.start, // Top-left align
               spacing: 8,
               flex:
                   1, // Use flex instead of expanded for proper row distribution

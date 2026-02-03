@@ -395,15 +395,73 @@ class DeepLinkParser {
   }
 
   /// Parse a widget deep link.
+  /// Handles:
+  /// - id:{firestoreId} - Cloud-stored widget from QR code sharing
+  /// - Marketplace widget IDs (Firestore document IDs)
+  /// - Base64-encoded widget schemas (legacy from QR code sharing)
   ParsedDeepLink _parseWidgetLink(String? data, String original) {
     if (data == null || data.isEmpty) {
       return ParsedDeepLink.invalid(original, ['Missing widget ID']);
     }
+
+    // Check for Firestore ID prefix (from cloud-stored widgets)
+    // Format: id:{firestoreId}
+    if (data.startsWith('id:')) {
+      final firestoreId = data.substring(3);
+      if (firestoreId.isEmpty) {
+        return ParsedDeepLink.invalid(original, [
+          'Missing widget Firestore ID',
+        ]);
+      }
+      AppLogging.qr('🔗 Parser: Detected Firestore widget ID: $firestoreId');
+      return ParsedDeepLink(
+        type: DeepLinkType.widget,
+        originalUri: original,
+        widgetFirestoreId: firestoreId,
+      );
+    }
+
+    // Check if it's base64-encoded widget schema data (legacy)
+    // Base64 data from share is typically longer and starts with 'ey' (base64 for '{')
+    // Firestore IDs are typically 20-28 characters and alphanumeric
+    if (_isBase64WidgetData(data)) {
+      AppLogging.qr('🔗 Parser: Detected base64 widget schema');
+      return ParsedDeepLink(
+        type: DeepLinkType.widget,
+        originalUri: original,
+        widgetBase64Data: data,
+      );
+    }
+
+    // Otherwise treat as marketplace widget ID
     return ParsedDeepLink(
       type: DeepLinkType.widget,
       originalUri: original,
       widgetId: data,
     );
+  }
+
+  /// Check if the data looks like base64-encoded widget schema.
+  /// Base64 widget data is typically very long (1000+ chars) and
+  /// starts with 'ey' which is base64 for '{"'
+  bool _isBase64WidgetData(String data) {
+    // Widget schemas are complex and result in long base64 strings
+    // Firestore IDs are typically 20-28 characters
+    if (data.length < 100) return false;
+
+    // Try to decode and verify it's a widget schema
+    try {
+      // URL-safe base64 uses - and _ instead of + and /
+      final normalized = data.replaceAll('-', '+').replaceAll('_', '/');
+      // Add padding if needed
+      final padded = normalized.padRight((normalized.length + 3) & ~3, '=');
+      final decoded = utf8.decode(base64Decode(padded));
+      final json = jsonDecode(decoded) as Map<String, dynamic>;
+      // Check for required widget schema fields
+      return json.containsKey('name') && json.containsKey('root');
+    } catch (e) {
+      return false;
+    }
   }
 
   /// Parse a post deep link.

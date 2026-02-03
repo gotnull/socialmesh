@@ -49,6 +49,8 @@ class ParsedDeepLink {
     this.channelBase64Data,
     this.profileDisplayName,
     this.widgetId,
+    this.widgetBase64Data,
+    this.widgetFirestoreId,
     this.postId,
     this.locationLatitude,
     this.locationLongitude,
@@ -80,7 +82,14 @@ class ParsedDeepLink {
   final String? profileDisplayName;
 
   // Widget-specific fields
+  /// Marketplace widget ID (Firestore document ID)
   final String? widgetId;
+
+  /// Base64-encoded widget schema for direct sharing (QR code/deep link)
+  final String? widgetBase64Data;
+
+  /// Firestore document ID for cloud-stored shared widgets
+  final String? widgetFirestoreId;
 
   // Post-specific fields
   final String? postId;
@@ -107,6 +116,14 @@ class ParsedDeepLink {
 
   /// Whether this node link has complete data for local processing.
   bool get hasCompleteNodeData => type == DeepLinkType.node && nodeNum != null;
+
+  /// Whether this widget link has base64 data for direct import.
+  bool get hasWidgetBase64Data =>
+      type == DeepLinkType.widget && widgetBase64Data != null;
+
+  /// Whether this widget link needs to fetch data from Firestore.
+  bool get hasWidgetFirestoreId =>
+      type == DeepLinkType.widget && widgetFirestoreId != null;
 
   /// Create an invalid deep link with errors.
   factory ParsedDeepLink.invalid(String originalUri, List<String> errors) {
@@ -139,6 +156,7 @@ class ParsedDeepLink {
       channelBase64Data: channelBase64Data,
       profileDisplayName: profileDisplayName,
       widgetId: widgetId,
+      widgetFirestoreId: widgetFirestoreId,
       postId: postId,
       locationLatitude: locationLatitude,
       automationBase64Data: automationBase64Data,

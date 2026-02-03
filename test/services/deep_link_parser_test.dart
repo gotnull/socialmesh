@@ -56,6 +56,35 @@ void main() {
         expect(result.widgetId, 'widget456');
       });
 
+      test('parses widget link with base64 schema data', () {
+        // Base64 encoded: {"name":"Test Widget","root":{"type":"container"}}
+        // which is long enough to trigger base64 detection
+        const base64Schema =
+            'eyJuYW1lIjoiVGVzdCBXaWRnZXQiLCJyb290Ijp7InR5cGUiOiJjb250YWluZXIiLCJpZCI6InRlc3QiLCJjaGlsZHJlbiI6W119LCJzaXplIjoibWVkaXVtIn0';
+        final result = deepLinkParser.parse(
+          'socialmesh://widget/$base64Schema',
+        );
+
+        expect(result.type, DeepLinkType.widget);
+        expect(result.isValid, true);
+        expect(result.widgetBase64Data, base64Schema);
+        expect(result.widgetId, isNull);
+        expect(result.hasWidgetBase64Data, true);
+      });
+
+      test('parses widget link with Firestore ID prefix', () {
+        final result = deepLinkParser.parse(
+          'socialmesh://widget/id:abc123xyz789',
+        );
+
+        expect(result.type, DeepLinkType.widget);
+        expect(result.isValid, true);
+        expect(result.widgetFirestoreId, 'abc123xyz789');
+        expect(result.widgetId, isNull);
+        expect(result.widgetBase64Data, isNull);
+        expect(result.hasWidgetFirestoreId, true);
+      });
+
       test('parses post link', () {
         final result = deepLinkParser.parse('socialmesh://post/post789');
 
@@ -309,7 +338,7 @@ void main() {
       expect(result.arguments?['scrollToNode'], true);
     });
 
-    test('routes channel link to /qr-import', () {
+    test('routes channel link to /qr-scanner', () {
       final link = ParsedDeepLink(
         type: DeepLinkType.channel,
         originalUri: 'socialmesh://channel/data',
@@ -318,7 +347,7 @@ void main() {
 
       final result = deepLinkRouter.route(link);
 
-      expect(result.routeName, '/qr-import');
+      expect(result.routeName, '/qr-scanner');
       expect(result.arguments?['base64Data'], 'channelData123');
       expect(result.requiresDevice, true);
     });
@@ -347,6 +376,34 @@ void main() {
 
       expect(result.routeName, '/widget-detail');
       expect(result.arguments?['widgetId'], 'w1');
+    });
+
+    test('routes widget link with base64 data to /widget-import', () {
+      final link = ParsedDeepLink(
+        type: DeepLinkType.widget,
+        originalUri: 'socialmesh://widget/base64data',
+        widgetBase64Data: 'base64data',
+      );
+
+      final result = deepLinkRouter.route(link);
+
+      expect(result.routeName, '/widget-import');
+      expect(result.arguments?['base64Data'], 'base64data');
+      expect(result.requiresDevice, false);
+    });
+
+    test('routes widget link with Firestore ID to /widget-import', () {
+      final link = ParsedDeepLink(
+        type: DeepLinkType.widget,
+        originalUri: 'socialmesh://widget/id:abc123',
+        widgetFirestoreId: 'abc123',
+      );
+
+      final result = deepLinkRouter.route(link);
+
+      expect(result.routeName, '/widget-import');
+      expect(result.arguments?['firestoreId'], 'abc123');
+      expect(result.requiresDevice, false);
     });
 
     test('routes post link to /post-detail', () {

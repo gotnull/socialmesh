@@ -701,11 +701,28 @@ class _UniversalQrScannerScreenState
   void _handleWidgetQr(ParsedDeepLink parsed) {
     if (mounted) {
       Navigator.pop(context);
-      Navigator.pushNamed(
-        context,
-        '/widget-detail',
-        arguments: {'widgetId': parsed.widgetId},
-      );
+      // Handle Firestore ID (cloud-stored widget)
+      if (parsed.hasWidgetFirestoreId) {
+        Navigator.pushNamed(
+          context,
+          '/widget-import',
+          arguments: {'firestoreId': parsed.widgetFirestoreId},
+        );
+      } else if (parsed.hasWidgetBase64Data) {
+        // Handle base64-encoded widget schema (legacy direct import)
+        Navigator.pushNamed(
+          context,
+          '/widget-import',
+          arguments: {'base64Data': parsed.widgetBase64Data},
+        );
+      } else {
+        // Handle marketplace widget ID
+        Navigator.pushNamed(
+          context,
+          '/widget-detail',
+          arguments: {'widgetId': parsed.widgetId},
+        );
+      }
     }
   }
 

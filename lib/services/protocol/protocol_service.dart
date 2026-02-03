@@ -2940,6 +2940,49 @@ class ProtocolService {
     }
   }
 
+  /// Send position to a specific node (direct message, not broadcast)
+  Future<void> sendPositionToNode({
+    required int nodeNum,
+    required double latitude,
+    required double longitude,
+    int? altitude,
+  }) async {
+    try {
+      AppLogging.protocol(
+        'Sending position to node $nodeNum: $latitude, $longitude',
+      );
+
+      final position = pb.Position()
+        ..latitudeI = (latitude * 1e7).toInt()
+        ..longitudeI = (longitude * 1e7).toInt()
+        ..time = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+
+      if (altitude != null) {
+        position.altitude = altitude;
+      }
+
+      final data = pb.Data()
+        ..portnum = pn.PortNum.POSITION_APP
+        ..payload = position.writeToBuffer();
+
+      final packet = pb.MeshPacket()
+        ..from = _myNodeNum ?? 0
+        ..to =
+            nodeNum // Send to specific node
+        ..decoded = data
+        ..id = _generatePacketId()
+        ..wantAck = true;
+
+      final toRadio = pb.ToRadio()..packet = packet;
+      final bytes = toRadio.writeToBuffer();
+
+      await _transport.send(_prepareForSend(bytes));
+    } catch (e) {
+      AppLogging.protocol('Error sending position to node: $e');
+      rethrow;
+    }
+  }
+
   /// Request node info/PKI key exchange by broadcasting our own User info
   ///
   /// This triggers the Meshtastic key exchange mechanism:

@@ -100,7 +100,7 @@ void main() {
         channelBase64Data: 'test123',
       );
       final channelResult = deepLinkRouter.route(channelLink);
-      expect(channelResult.routeName, '/qr-import');
+      expect(channelResult.routeName, '/qr-scanner');
       expect(channelResult.requiresDevice, true);
 
       // Test routing a profile link

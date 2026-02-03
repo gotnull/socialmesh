@@ -43,6 +43,7 @@ import 'providers/meshcore_providers.dart';
 import 'services/meshcore/connection_coordinator.dart' show ConnectionResult;
 import 'features/automations/automation_providers.dart';
 import 'features/automations/automation_import_screen.dart';
+import 'features/widget_builder/widget_import_screen.dart';
 import 'models/mesh_models.dart';
 import 'models/social.dart';
 import 'services/app_intents/app_intents_service.dart';
@@ -1327,6 +1328,19 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
                 firestoreId: args?['firestoreId'] as String?,
               ),
             );
+          }
+          if (settings.name == '/widget-import') {
+            final args = settings.arguments as Map<String, dynamic>?;
+            final base64Data = args?['base64Data'] as String?;
+            final firestoreId = args?['firestoreId'] as String?;
+            if (base64Data != null || firestoreId != null) {
+              return MaterialPageRoute(
+                builder: (context) => WidgetImportScreen(
+                  base64Data: base64Data,
+                  firestoreId: firestoreId,
+                ),
+              );
+            }
           }
           return null;
         },

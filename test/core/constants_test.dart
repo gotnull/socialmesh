@@ -112,7 +112,8 @@ void main() {
     group('Store URLs', () {
       test('appStoreUrl is valid Apple URL', () {
         expect(AppUrls.appStoreUrl, startsWith('https://apps.apple.com'));
-        expect(AppUrls.appStoreUrl, contains('socialmesh'));
+        // The URL contains the app ID, not necessarily the name
+        expect(AppUrls.appStoreUrl, contains('app/id'));
       });
 
       test('playStoreUrl is valid Google URL', () {

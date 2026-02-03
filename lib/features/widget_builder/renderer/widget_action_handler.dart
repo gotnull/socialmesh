@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/widget_schema.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/action_sheets.dart';
+import '../../../core/widgets/node_selector_sheet.dart';
 import '../../../providers/app_providers.dart';
 import '../../../utils/snackbar.dart';
 
@@ -69,11 +70,56 @@ class WidgetActionHandler {
   }
 
   Future<void> _handleShareLocation() async {
+    if (!context.mounted) return;
+
+    // Show node selector to choose who to share location with
+    final selection = await NodeSelectorSheet.show(
+      context,
+      title: 'Share Location With',
+      allowBroadcast: true,
+      broadcastLabel: 'All Nodes',
+      broadcastSubtitle: 'Broadcast to everyone on channel',
+    );
+
+    if (selection == null || !context.mounted) return;
+
     try {
       final locationService = ref.read(locationServiceProvider);
-      await locationService.sendPositionOnce();
-      if (context.mounted) {
-        showSuccessSnackBar(context, 'Location shared with mesh');
+      final position = await locationService.getCurrentPosition();
+
+      if (position == null) {
+        if (context.mounted) {
+          showErrorSnackBar(context, 'Unable to get your location');
+        }
+        return;
+      }
+
+      final protocol = ref.read(protocolServiceProvider);
+
+      if (selection.isBroadcast) {
+        // Broadcast to all nodes
+        await protocol.sendPosition(
+          latitude: position.latitude,
+          longitude: position.longitude,
+          altitude: position.altitude.toInt(),
+        );
+        if (context.mounted) {
+          showSuccessSnackBar(context, 'Location shared with mesh');
+        }
+      } else {
+        // Send to specific node
+        await protocol.sendPositionToNode(
+          nodeNum: selection.nodeNum!,
+          latitude: position.latitude,
+          longitude: position.longitude,
+          altitude: position.altitude.toInt(),
+        );
+        if (context.mounted) {
+          final nodes = ref.read(nodesProvider);
+          final targetNode = nodes[selection.nodeNum!];
+          final targetName = targetNode?.displayName ?? 'node';
+          showSuccessSnackBar(context, 'Location shared with $targetName');
+        }
       }
     } catch (e) {
       if (context.mounted) {
