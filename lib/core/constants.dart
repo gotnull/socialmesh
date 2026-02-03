@@ -52,8 +52,7 @@ class AppUrls {
 
   // App Store URLs
   static String get appStoreUrl =>
-      dotenv.env['APP_STORE_URL'] ??
-      'https://apps.apple.com/app/socialmesh/id6739187207';
+      dotenv.env['APP_STORE_URL'] ?? 'https://apps.apple.com/app/id6742694642';
 
   static String get playStoreUrl =>
       dotenv.env['PLAY_STORE_URL'] ??
