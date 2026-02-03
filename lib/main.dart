@@ -72,6 +72,9 @@ import 'features/reachability/mesh_reachability_screen.dart';
 import 'features/social/screens/post_detail_screen.dart';
 import 'features/social/screens/profile_social_screen.dart';
 import 'features/signals/screens/signal_detail_screen.dart';
+import 'features/widget_builder/marketplace/widget_marketplace_screen.dart';
+import 'features/widget_builder/marketplace/widget_marketplace_service.dart';
+import 'features/widget_builder/marketplace/marketplace_providers.dart';
 import 'services/user_presence_service.dart';
 // import 'features/intro/intro_screen.dart';
 import 'models/route.dart' as route_model;
@@ -1307,6 +1310,15 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
               );
             }
           }
+          if (settings.name == '/widget-detail') {
+            final args = settings.arguments as Map<String, dynamic>?;
+            final widgetId = args?['widgetId'] as String?;
+            if (widgetId != null) {
+              return MaterialPageRoute(
+                builder: (context) => _WidgetDetailLoader(widgetId: widgetId),
+              );
+            }
+          }
           if (settings.name == '/automation-import') {
             final args = settings.arguments as Map<String, dynamic>?;
             return MaterialPageRoute(
@@ -1404,9 +1416,96 @@ class _SignalDetailLoader extends ConsumerWidget {
 
           // Navigate to signal detail screen with the loaded signal
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            Navigator.of(context).pushReplacement(
+            // Use global navigatorKey to avoid "Navigator.of() called with
+            // a context that does not contain a Navigator" crash when
+            // the widget is disposed before the callback runs
+            final navigator = navigatorKey.currentState;
+            if (navigator == null) {
+              return;
+            }
+            navigator.pushReplacement(
               MaterialPageRoute(
                 builder: (context) => SignalDetailScreen(signal: signal),
+              ),
+            );
+          });
+
+          return const Center(child: CircularProgressIndicator());
+        },
+      ),
+    );
+  }
+}
+
+/// Loader widget that fetches widget data from marketplace and navigates to WidgetDetailsScreen
+class _WidgetDetailLoader extends ConsumerWidget {
+  final String widgetId;
+
+  const _WidgetDetailLoader({required this.widgetId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final service = ref.watch(marketplaceServiceProvider);
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Loading Widget')),
+      body: FutureBuilder<MarketplaceWidget>(
+        future: service.getWidget(widgetId),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                  const SizedBox(height: 16),
+                  Text('Error loading widget: ${snapshot.error}'),
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Go Back'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          final widget = snapshot.data;
+          if (widget == null) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.widgets_outlined, size: 48),
+                  const SizedBox(height: 16),
+                  const Text('Widget not found'),
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Go Back'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          // Navigate to widget detail screen with the loaded widget
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            // Use global navigatorKey to avoid "Navigator.of() called with
+            // a context that does not contain a Navigator" crash when
+            // the widget is disposed before the callback runs
+            final navigator = navigatorKey.currentState;
+            if (navigator == null) {
+              return;
+            }
+            navigator.pushReplacement(
+              MaterialPageRoute(
+                builder: (context) =>
+                    WidgetDetailsScreen(marketplaceWidget: widget),
               ),
             );
           });
@@ -1498,7 +1597,17 @@ class _ProfileDisplayNameLoader extends ConsumerWidget {
           );
           WidgetsBinding.instance.addPostFrameCallback((_) {
             AppLogging.qr('🔗 ProfileLoader: Executing pushReplacement');
-            Navigator.of(context).pushReplacement(
+            // Use global navigatorKey to avoid "Navigator.of() called with
+            // a context that does not contain a Navigator" crash when
+            // the widget is disposed before the callback runs
+            final navigator = navigatorKey.currentState;
+            if (navigator == null) {
+              AppLogging.qr(
+                '🔗 ProfileLoader: Navigator not available, skipping navigation',
+              );
+              return;
+            }
+            navigator.pushReplacement(
               MaterialPageRoute(
                 builder: (context) => ProfileSocialScreen(userId: userId),
               ),

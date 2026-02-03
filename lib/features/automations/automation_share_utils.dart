@@ -31,14 +31,51 @@ Future<void> showAutomationShareSheet(
     );
     return;
   }
-  // Generate base64 data
+
+  // Sanitize trigger config - remove user-specific data
+  final sanitizedTriggerConfig = Map<String, dynamic>.from(
+    automation.trigger.config,
+  );
+  // Remove node-specific references (recipient won't have the same nodes)
+  sanitizedTriggerConfig.remove('nodeNum');
+  // Remove channel index (recipient's channel setup may differ)
+  sanitizedTriggerConfig.remove('channelIndex');
+  // Keep geofence coordinates - they're useful as a template
+
+  // Sanitize actions - remove user-specific data
+  final sanitizedActions = automation.actions.map((action) {
+    final sanitizedConfig = Map<String, dynamic>.from(action.config);
+
+    // Remove node-specific references
+    sanitizedConfig.remove('targetNodeNum');
+    // Remove channel index
+    sanitizedConfig.remove('targetChannelIndex');
+    // Remove webhook credentials (contains user's API keys)
+    sanitizedConfig.remove('webhookUrl');
+    sanitizedConfig.remove('webhookEventName');
+    // Keep shortcutName as a hint, but recipient will need their own
+
+    return {'type': action.type.name, 'config': sanitizedConfig};
+  }).toList();
+
+  // Sanitize conditions - remove user-specific data
+  final sanitizedConditions = automation.conditions?.map((condition) {
+    final sanitizedConfig = Map<String, dynamic>.from(condition.config);
+    // Remove node-specific references
+    sanitizedConfig.remove('nodeNum');
+    return {'type': condition.type.name, 'config': sanitizedConfig};
+  }).toList();
+
+  // Generate base64 data with sanitized export
   final exportData = {
     'name': automation.name,
     'description': automation.description,
-    'trigger': automation.trigger.toJson(),
-    'actions': automation.actions.map((a) => a.toJson()).toList(),
-    if (automation.conditions != null)
-      'conditions': automation.conditions!.map((c) => c.toJson()).toList(),
+    'trigger': {
+      'type': automation.trigger.type.name,
+      'config': sanitizedTriggerConfig,
+    },
+    'actions': sanitizedActions,
+    if (sanitizedConditions != null) 'conditions': sanitizedConditions,
   };
 
   final jsonString = jsonEncode(exportData);

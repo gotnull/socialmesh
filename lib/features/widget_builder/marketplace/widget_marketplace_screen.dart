@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/widgets/glass_scaffold.dart';
+import '../../../services/share_link_service.dart';
+import '../../../utils/share_utils.dart';
 import '../../../core/widgets/ico_help_system.dart';
 import '../../../core/widgets/premium_gating.dart';
 import '../../../models/subscription_models.dart';
@@ -470,7 +472,7 @@ class _WidgetMarketplaceScreenState
     final installed = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-        builder: (context) => _WidgetDetailsScreen(marketplaceWidget: widget),
+        builder: (context) => WidgetDetailsScreen(marketplaceWidget: widget),
       ),
     );
 
@@ -528,17 +530,17 @@ class _MarketplaceWidgetCard extends ConsumerWidget {
 }
 
 /// Widget details screen
-class _WidgetDetailsScreen extends ConsumerStatefulWidget {
+class WidgetDetailsScreen extends ConsumerStatefulWidget {
   final MarketplaceWidget marketplaceWidget;
 
-  const _WidgetDetailsScreen({required this.marketplaceWidget});
+  const WidgetDetailsScreen({super.key, required this.marketplaceWidget});
 
   @override
-  ConsumerState<_WidgetDetailsScreen> createState() =>
+  ConsumerState<WidgetDetailsScreen> createState() =>
       _WidgetDetailsScreenState();
 }
 
-class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
+class _WidgetDetailsScreenState extends ConsumerState<WidgetDetailsScreen> {
   bool _isInstalling = false;
 
   @override
@@ -556,6 +558,13 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
 
     return GlassScaffold(
       title: mWidget.name,
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.share),
+          tooltip: 'Share Widget',
+          onPressed: () => _shareWidget(context),
+        ),
+      ],
       slivers: [
         SliverPadding(
           padding: const EdgeInsets.all(16),
@@ -855,6 +864,17 @@ class _WidgetDetailsScreenState extends ConsumerState<_WidgetDetailsScreen> {
       }
     }
   }
+
+  Future<void> _shareWidget(BuildContext context) async {
+    final shareService = ref.read(shareLinkServiceProvider);
+    final sharePosition = getSafeSharePosition(context);
+
+    await shareService.shareWidget(
+      widgetId: widget.marketplaceWidget.id,
+      widgetName: widget.marketplaceWidget.name,
+      sharePositionOrigin: sharePosition,
+    );
+  }
 }
 
 /// Category screen using provider-based state management
@@ -957,7 +977,7 @@ class _CategoryScreenState extends ConsumerState<_CategoryScreen> {
                       final installed = await Navigator.push<bool>(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => _WidgetDetailsScreen(
+                          builder: (context) => WidgetDetailsScreen(
                             marketplaceWidget: widgets[index],
                           ),
                         ),
