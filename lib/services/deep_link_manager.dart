@@ -49,35 +49,44 @@ class DeepLinkManager {
   /// This sets up listening for deep links but does NOT process them
   /// until [markAppReady] is called.
   Future<void> initialize() async {
-    AppLogging.debug('🔗 DeepLinkManager: Initializing...');
+    AppLogging.qr('🔗 DeepLinkManager: Initializing...');
 
     try {
       // Handle initial link (app opened via deep link from cold start)
       try {
+        AppLogging.qr('🔗 DeepLinkManager: Checking for initial link...');
         final initialUri = await _appLinks.getInitialLink();
         if (initialUri != null) {
-          AppLogging.debug('🔗 DeepLinkManager: Initial link: $initialUri');
+          AppLogging.qr(
+            '🔗 DeepLinkManager: FOUND initial link (cold start): $initialUri',
+          );
           _processUri(initialUri.toString());
+        } else {
+          AppLogging.qr(
+            '🔗 DeepLinkManager: No initial link (app opened normally)',
+          );
         }
       } catch (e) {
-        AppLogging.debug('🔗 DeepLinkManager: Error getting initial link: $e');
+        AppLogging.qr(
+          'QR - 🔗 DeepLinkManager: Error getting initial link: $e',
+        );
       }
 
       // Listen for incoming links while app is running
       await _linkSubscription?.cancel();
       _linkSubscription = _appLinks.uriLinkStream.listen(
         (Uri uri) {
-          AppLogging.debug('🔗 DeepLinkManager: Stream link: $uri');
+          AppLogging.qr('🔗 DeepLinkManager: Stream link received: $uri');
           _processUri(uri.toString());
         },
         onError: (error) {
-          AppLogging.debug('🔗 DeepLinkManager: Stream error: $error');
+          AppLogging.qr('🔗 DeepLinkManager: Stream error: $error');
         },
       );
 
-      AppLogging.debug('🔗 DeepLinkManager: Initialized successfully');
+      AppLogging.qr('🔗 DeepLinkManager: Initialized successfully');
     } catch (e) {
-      AppLogging.debug('🔗 DeepLinkManager: Init failed: $e');
+      AppLogging.qr('🔗 DeepLinkManager: Init failed: $e');
     }
   }
 
@@ -85,21 +94,29 @@ class DeepLinkManager {
   ///
   /// This is the single entry point for all deep links.
   void _processUri(String uriString) {
+    AppLogging.qr('🔗 DeepLinkManager: Processing URI: $uriString');
+
     // Step 1: Parse the URI
     final parsed = deepLinkParser.parse(uriString);
 
-    AppLogging.debug(
-      '🔗 DeepLinkManager: Parsed ${parsed.type}, valid=${parsed.isValid}',
+    AppLogging.qr(
+      '🔗 DeepLinkManager: Parsed result - type=${parsed.type}, '
+      'valid=${parsed.isValid}, errors=${parsed.validationErrors}',
     );
 
     // Step 2: Queue or process based on app readiness
     if (_appReady && _isNavigatorReady()) {
+      AppLogging.qr(
+        'QR - 🔗 DeepLinkManager: App ready, processing immediately',
+      );
       // App is ready, process immediately (in next frame)
       _scheduleNavigation(parsed);
     } else {
       // App not ready, queue for later
+      AppLogging.qr(
+        '🔗 DeepLinkManager: App not ready (ready=$_appReady), queuing link',
+      );
       _pendingLink = parsed;
-      AppLogging.debug('🔗 DeepLinkManager: Queued link for later processing');
     }
   }
 
@@ -118,15 +135,23 @@ class DeepLinkManager {
   /// Call this once the app shell, auth, and providers are fully initialized.
   /// This will process any pending deep link.
   void markAppReady() {
-    if (_appReady) return;
+    if (_appReady) {
+      AppLogging.qr('🔗 DeepLinkManager: Already marked ready, ignoring');
+      return;
+    }
 
-    AppLogging.debug('🔗 DeepLinkManager: App marked as ready');
+    AppLogging.qr('🔗 DeepLinkManager: App marked as READY');
     _appReady = true;
 
     // Process pending link if we have one
     if (_pendingLink != null) {
+      AppLogging.qr(
+        '🔗 DeepLinkManager: Processing pending link: ${_pendingLink!.type}',
+      );
       _scheduleNavigation(_pendingLink!);
       _pendingLink = null;
+    } else {
+      AppLogging.qr('🔗 DeepLinkManager: No pending link to process');
     }
   }
 
@@ -147,31 +172,57 @@ class DeepLinkManager {
 
   /// Perform the actual navigation, with safety checks.
   Future<void> _performNavigation(ParsedDeepLink link) async {
+    AppLogging.qr(
+      '🔗 DeepLinkManager: _performNavigation - type=${link.type}, '
+      'uri=${link.originalUri}',
+    );
+
+    // Silently ignore invalid/empty deep links - don't navigate anywhere
+    if (link.type == DeepLinkType.invalid || !link.isValid) {
+      AppLogging.qr(
+        '🔗 DeepLinkManager: Ignoring invalid link (not navigating): '
+        '${link.validationErrors}',
+      );
+      return;
+    }
+
     // Final safety check before navigation
     final navigator = navigatorKey.currentState;
     if (navigator == null) {
-      AppLogging.debug(
+      AppLogging.qr(
         '🔗 DeepLinkManager: Navigator not ready at navigation time, re-queueing',
       );
       _pendingLink = link;
       return;
     }
 
-    AppLogging.debug('🔗 DeepLinkManager: Processing ${link.type}');
+    AppLogging.qr(
+      '🔗 DeepLinkManager: Navigator ready, processing ${link.type}',
+    );
 
     try {
       // Handle node links specially - they may need Firestore fetch
       if (link.type == DeepLinkType.node) {
+        AppLogging.qr('🔗 DeepLinkManager: Handling as node link');
         await _handleNodeLink(link, navigator);
         return;
       }
 
       // For all other types, use the router
+      AppLogging.qr('🔗 DeepLinkManager: Using router for ${link.type}');
       final routeResult = deepLinkRouter.route(link);
+
+      AppLogging.qr(
+        '🔗 DeepLinkManager: Router returned - route=${routeResult.routeName}, '
+        'args=${routeResult.arguments}, requiresDevice=${routeResult.requiresDevice}',
+      );
 
       if (routeResult.requiresDevice) {
         // Check if device is connected
         final isConnected = _ref.read(isDeviceConnectedProvider);
+        AppLogging.qr(
+          '🔗 DeepLinkManager: Route requires device, isConnected=$isConnected',
+        );
         if (!isConnected) {
           _showSnackBar(
             routeResult.fallbackMessage ?? 'Connect a device first',
@@ -182,10 +233,14 @@ class DeepLinkManager {
       }
 
       // Navigate to the determined route
+      AppLogging.qr(
+        '🔗 DeepLinkManager: Navigating to ${routeResult.routeName} '
+        'with args=${routeResult.arguments}',
+      );
       _safeNavigate(routeResult.routeName, arguments: routeResult.arguments);
     } catch (e, st) {
       // Never crash on deep link handling - log and continue
-      AppLogging.debug('🔗 DeepLinkManager: Navigation error: $e\n$st');
+      AppLogging.qr('🔗 DeepLinkManager: Navigation error: $e\n$st');
     }
   }
 
@@ -266,18 +321,24 @@ class DeepLinkManager {
 
   /// Safely navigate using the global navigator key.
   void _safeNavigate(String routeName, {Object? arguments}) {
+    AppLogging.qr(
+      '🔗 DeepLinkManager: _safeNavigate to $routeName with args=$arguments',
+    );
+
     final navigator = navigatorKey.currentState;
     if (navigator == null) {
-      AppLogging.debug(
-        '🔗 DeepLinkManager: Cannot navigate to $routeName - navigator null',
+      AppLogging.qr(
+        '🔗 DeepLinkManager: Cannot navigate to $routeName - navigator is null',
       );
       return;
     }
 
     try {
+      AppLogging.qr('🔗 DeepLinkManager: Calling pushNamed($routeName)');
       navigator.pushNamed(routeName, arguments: arguments);
+      AppLogging.qr('🔗 DeepLinkManager: pushNamed succeeded');
     } catch (e) {
-      AppLogging.debug('🔗 DeepLinkManager: pushNamed failed: $e');
+      AppLogging.qr('🔗 DeepLinkManager: pushNamed failed: $e');
     }
   }
 

@@ -113,8 +113,21 @@ class ProfileCloudSyncService {
   /// Returns null if no user found with that display name.
   /// Display names are unique and case-insensitive.
   Future<String?> getUserIdByDisplayName(String displayName) async {
+    AppLogging.qr(
+      '🔗 ProfileSync: getUserIdByDisplayName called with "$displayName"',
+    );
+
     final normalizedName = displayName.trim().toLowerCase();
-    if (normalizedName.isEmpty) return null;
+    if (normalizedName.isEmpty) {
+      AppLogging.qr(
+        'QR - 🔗 ProfileSync: Empty displayName after normalization',
+      );
+      return null;
+    }
+
+    AppLogging.qr(
+      '🔗 ProfileSync: Querying Firestore for displayNameLower="$normalizedName"',
+    );
 
     try {
       final query = await _firestore
@@ -123,21 +136,27 @@ class ProfileCloudSyncService {
           .limit(1)
           .get();
 
+      AppLogging.qr(
+        'QR - 🔗 ProfileSync: Query returned ${query.docs.length} docs',
+      );
+
       if (query.docs.isEmpty) {
-        AppLogging.auth(
-          'ProfileSync: No user found with displayName: $displayName',
+        AppLogging.qr(
+          '🔗 ProfileSync: No user found with displayName: $displayName',
         );
         return null;
       }
 
       final userId = query.docs.first.id;
-      AppLogging.auth(
-        'ProfileSync: Found userId $userId for displayName: $displayName',
+      final docData = query.docs.first.data();
+      AppLogging.qr(
+        '🔗 ProfileSync: Found userId=$userId for displayName=$displayName, '
+        'doc keys=${docData.keys.toList()}',
       );
       return userId;
     } catch (e) {
-      AppLogging.auth(
-        'ProfileSync: Error looking up displayName "$displayName": $e',
+      AppLogging.qr(
+        '🔗 ProfileSync: ERROR looking up displayName "$displayName": $e',
       );
       return null;
     }

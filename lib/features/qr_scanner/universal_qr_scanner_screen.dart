@@ -32,14 +32,18 @@ class UniversalQrScannerScreen extends ConsumerStatefulWidget {
 
 class _UniversalQrScannerScreenState
     extends ConsumerState<UniversalQrScannerScreen> {
-  final MobileScannerController _controller = MobileScannerController();
+  late final MobileScannerController _controller;
   bool _isProcessing = false;
   String? _lastProcessedCode;
+  bool _isDisposed = false;
 
   @override
   void initState() {
     super.initState();
     AppLogging.qr('📷 Universal QR Scanner: Initializing');
+
+    // Create controller with autoStart disabled to prevent race conditions
+    _controller = MobileScannerController(autoStart: false);
 
     _controller.barcodes.listen(
       (capture) {
@@ -50,22 +54,27 @@ class _UniversalQrScannerScreenState
       },
     );
 
-    _controller
-        .start()
-        .then((_) {
-          AppLogging.qr('📷 Universal QR Scanner: Camera started');
-          if (mounted) setState(() {});
-        })
-        .catchError((error) {
-          AppLogging.qr(
-            '📷 Universal QR Scanner ERROR: Failed to start: $error',
-          );
-        });
+    // Start camera manually after controller is fully initialized
+    _startCamera();
+  }
+
+  Future<void> _startCamera() async {
+    if (_isDisposed) return;
+    try {
+      await _controller.start();
+      AppLogging.qr('📷 Universal QR Scanner: Camera started');
+      if (mounted) setState(() {});
+    } catch (error) {
+      AppLogging.qr(
+        'QR - 📷 Universal QR Scanner ERROR: Failed to start: $error',
+      );
+    }
   }
 
   @override
   void dispose() {
     AppLogging.qr('📷 Universal QR Scanner: Disposing');
+    _isDisposed = true;
     _controller.dispose();
     super.dispose();
   }
@@ -402,6 +411,8 @@ class _UniversalQrScannerScreenState
 
     if (code.startsWith('socialmesh://channel/')) {
       base64Data = code.substring('socialmesh://channel/'.length);
+    } else if (code.startsWith('meshtastic://channel/')) {
+      base64Data = code.substring('meshtastic://channel/'.length);
     } else if (code.contains('meshtastic.org/e/#')) {
       final hashIndex = code.indexOf('#');
       if (hashIndex == -1 || hashIndex == code.length - 1) {
@@ -420,7 +431,7 @@ class _UniversalQrScannerScreenState
 
     // Decode base64 to bytes
     final bytes = Base64Utils.decodeWithPadding(base64Data);
-    AppLogging.qr('📷 Channel QR: Decoded ${bytes.length} bytes');
+    AppLogging.qr('📷 Channel QR Decoded ${bytes.length} bytes');
 
     // Parse channel settings from protobuf
     ChannelConfig? channel;

@@ -21,11 +21,16 @@ class DeepLinkRouter {
   /// Returns a [DeepLinkRouteResult] containing the route name,
   /// arguments, and any requirements/fallback info.
   DeepLinkRouteResult route(ParsedDeepLink link) {
-    AppLogging.debug('🔗 Router: Routing ${link.type} link');
+    AppLogging.qr(
+      '🔗 Router: Routing ${link.type} link, valid=${link.isValid}, '
+      'uri=${link.originalUri}',
+    );
 
     // Invalid links go to fallback with error message
     if (!link.isValid) {
-      AppLogging.debug('🔗 Router: Invalid link - ${link.validationErrors}');
+      AppLogging.qr(
+        '🔗 Router: Invalid link - errors=${link.validationErrors}',
+      );
       return DeepLinkRouteResult(
         routeName: '/main',
         fallbackMessage: link.validationErrors.isNotEmpty
@@ -34,24 +39,22 @@ class DeepLinkRouter {
       );
     }
 
-    switch (link.type) {
-      case DeepLinkType.node:
-        return _routeNode(link);
-      case DeepLinkType.channel:
-        return _routeChannel(link);
-      case DeepLinkType.profile:
-        return _routeProfile(link);
-      case DeepLinkType.widget:
-        return _routeWidget(link);
-      case DeepLinkType.post:
-        return _routePost(link);
-      case DeepLinkType.location:
-        return _routeLocation(link);
-      case DeepLinkType.automation:
-        return _routeAutomation(link);
-      case DeepLinkType.invalid:
-        return DeepLinkRouteResult.fallback;
-    }
+    final result = switch (link.type) {
+      DeepLinkType.node => _routeNode(link),
+      DeepLinkType.channel => _routeChannel(link),
+      DeepLinkType.profile => _routeProfile(link),
+      DeepLinkType.widget => _routeWidget(link),
+      DeepLinkType.post => _routePost(link),
+      DeepLinkType.location => _routeLocation(link),
+      DeepLinkType.automation => _routeAutomation(link),
+      DeepLinkType.invalid => DeepLinkRouteResult.fallback,
+    };
+
+    AppLogging.qr(
+      '🔗 Router: Result - route=${result.routeName}, '
+      'args=${result.arguments}, requiresDevice=${result.requiresDevice}',
+    );
+    return result;
   }
 
   /// Route a node deep link.
@@ -92,13 +95,21 @@ class DeepLinkRouter {
 
   /// Route a profile deep link.
   DeepLinkRouteResult _routeProfile(ParsedDeepLink link) {
+    AppLogging.qr(
+      '🔗 Router: _routeProfile - displayName=${link.profileDisplayName}',
+    );
+
     if (link.profileDisplayName == null) {
+      AppLogging.qr('🔗 Router: ERROR - Missing profile display name');
       return const DeepLinkRouteResult(
         routeName: '/main',
         fallbackMessage: 'Invalid profile link',
       );
     }
 
+    AppLogging.qr(
+      '🔗 Router: Routing to /profile with displayName=${link.profileDisplayName}',
+    );
     return DeepLinkRouteResult(
       routeName: '/profile',
       arguments: {'displayName': link.profileDisplayName},

@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:socialmesh/core/logging.dart';
 
 import '../core/constants.dart';
 import '../models/mesh_models.dart';
@@ -117,8 +118,13 @@ class ShareLinkService {
     required String displayName,
     Rect? sharePositionOrigin,
   }) async {
+    AppLogging.qr(
+      '🔗 ShareService: shareProfile - userId=$userId, displayName=$displayName',
+    );
+
     // Use displayName in URL so the receiver can look up the user
     final shareUrl = AppUrls.shareProfileUrl(displayName);
+    AppLogging.qr('🔗 ShareService: Generated share URL: $shareUrl');
 
     await Share.share(
       'Check out @$displayName on Socialmesh!\n$shareUrl',

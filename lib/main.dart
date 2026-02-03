@@ -1269,8 +1269,15 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
             final userId = args?['userId'] as String?;
             final displayName = args?['displayName'] as String?;
 
+            AppLogging.qr(
+              '🔗 RouteGenerator: /profile - userId=$userId, displayName=$displayName, args=$args',
+            );
+
             // Direct userId takes precedence (internal navigation)
             if (userId != null) {
+              AppLogging.qr(
+                'QR - 🔗 RouteGenerator: Using direct userId=$userId',
+              );
               return MaterialPageRoute(
                 builder: (context) => ProfileSocialScreen(userId: userId),
               );
@@ -1278,11 +1285,18 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
 
             // Display name lookup (from deep links)
             if (displayName != null) {
+              AppLogging.qr(
+                '🔗 RouteGenerator: Using displayName lookup for $displayName',
+              );
               return MaterialPageRoute(
                 builder: (context) =>
                     _ProfileDisplayNameLoader(displayName: displayName),
               );
             }
+
+            AppLogging.qr(
+              '🔗 RouteGenerator: ERROR - /profile route has no userId or displayName!',
+            );
           }
           if (settings.name == '/signal-detail') {
             final args = settings.arguments as Map<String, dynamic>?;
@@ -1412,6 +1426,9 @@ class _ProfileDisplayNameLoader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    AppLogging.qr(
+      'QR - 🔗 ProfileLoader: Building for displayName=$displayName',
+    );
     final profileSyncService = ref.watch(profileCloudSyncServiceProvider);
 
     return Scaffold(
@@ -1419,11 +1436,22 @@ class _ProfileDisplayNameLoader extends ConsumerWidget {
       body: FutureBuilder<String?>(
         future: profileSyncService.getUserIdByDisplayName(displayName),
         builder: (context, snapshot) {
+          AppLogging.qr(
+            '🔗 ProfileLoader: FutureBuilder state=${snapshot.connectionState}, '
+            'hasError=${snapshot.hasError}, data=${snapshot.data}',
+          );
+
           if (snapshot.connectionState == ConnectionState.waiting) {
+            AppLogging.qr(
+              'QR - 🔗 ProfileLoader: Waiting for userId lookup...',
+            );
             return const Center(child: CircularProgressIndicator());
           }
 
           if (snapshot.hasError) {
+            AppLogging.qr(
+              '🔗 ProfileLoader: ERROR looking up user: ${snapshot.error}',
+            );
             return Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -1443,6 +1471,9 @@ class _ProfileDisplayNameLoader extends ConsumerWidget {
 
           final userId = snapshot.data;
           if (userId == null) {
+            AppLogging.qr(
+              '🔗 ProfileLoader: User "@$displayName" NOT FOUND in Firestore',
+            );
             return Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -1461,7 +1492,12 @@ class _ProfileDisplayNameLoader extends ConsumerWidget {
           }
 
           // Navigate to profile screen with the looked up userId
+          AppLogging.qr(
+            '🔗 ProfileLoader: Found userId=$userId for displayName=$displayName, '
+            'navigating to ProfileSocialScreen',
+          );
           WidgetsBinding.instance.addPostFrameCallback((_) {
+            AppLogging.qr('🔗 ProfileLoader: Executing pushReplacement');
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
                 builder: (context) => ProfileSocialScreen(userId: userId),
