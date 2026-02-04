@@ -1347,7 +1347,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                               const SizedBox(height: 4),
                               Text(
                                 _savedDeviceName != null
-                                    ? 'Select "$_savedDeviceName" below, or choose a different device to connect.'
+                                    ? 'Select "$_savedDeviceName" below, or enable auto-reconnect.'
                                     : 'Select a device below to connect manually.',
                                 style: TextStyle(
                                   color: context.textSecondary,
@@ -1357,17 +1357,24 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
                             ],
                           ),
                         ),
-                        IconButton(
-                          icon: Icon(
-                            Icons.close,
-                            color: context.textSecondary,
-                            size: 20,
-                          ),
-                          onPressed: () => setState(
-                            () => _showAutoReconnectDisabledHint = false,
-                          ),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
+                        const SizedBox(width: 8),
+                        Switch.adaptive(
+                          value: false,
+                          activeColor: context.accentColor,
+                          onChanged: (value) async {
+                            if (value) {
+                              // Enable auto-reconnect and trigger reconnection
+                              final settings = await ref.read(
+                                settingsServiceProvider.future,
+                              );
+                              await settings.setAutoReconnect(true);
+                              setState(
+                                () => _showAutoReconnectDisabledHint = false,
+                              );
+                              // Trigger auto-reconnect attempt
+                              _tryAutoReconnect();
+                            }
+                          },
                         ),
                       ],
                     ),
