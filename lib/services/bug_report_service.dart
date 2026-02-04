@@ -19,6 +19,7 @@ import '../core/logging.dart';
 import '../core/navigation.dart';
 import '../features/feedback/report_bug_sheet.dart';
 import '../providers/app_providers.dart';
+import '../providers/connection_providers.dart';
 
 class BugReportService with WidgetsBindingObserver {
   BugReportService(this.ref);
@@ -232,6 +233,9 @@ class BugReportService with WidgetsBindingObserver {
     final functions = FirebaseFunctions.instance;
     final callable = functions.httpsCallable('reportBug');
 
+    // Collect comprehensive app state for better bug context
+    final appContext = await _collectAppContext();
+
     AppLogging.bugReport('Submitting report (screenshot=$includeScreenshot)');
     final result = await callable.call({
       'description': description,
@@ -242,6 +246,12 @@ class BugReportService with WidgetsBindingObserver {
       'platformVersion': Platform.operatingSystemVersion,
       'uid': user?.uid,
       'email': user?.email,
+      'displayName': user?.displayName,
+      'isAnonymous': user?.isAnonymous,
+      'createdAt': user?.metadata.creationTime?.toIso8601String(),
+      'lastSignIn': user?.metadata.lastSignInTime?.toIso8601String(),
+      // Include comprehensive app context
+      ...appContext,
     });
 
     // Validate server response
@@ -255,5 +265,64 @@ class BugReportService with WidgetsBindingObserver {
 
     AppLogging.bugReport('Report submitted');
     return data;
+  }
+
+  /// Collects comprehensive app context for bug reports
+  Future<Map<String, dynamic>> _collectAppContext() async {
+    final context = <String, dynamic>{};
+
+    try {
+      // Settings and preferences
+      final settings = await ref.read(settingsServiceProvider.future);
+      context['settings'] = {
+        'autoReconnect': settings.autoReconnect,
+        'lastDeviceId': settings.lastDeviceId,
+        'lastDeviceName': settings.lastDeviceName,
+        'lastDeviceProtocol': settings.lastDeviceProtocol,
+        'notificationsEnabled': settings.notificationsEnabled,
+        'darkMode': settings.darkMode,
+        'themeMode': settings.themeMode,
+        'shakeToReportEnabled': settings.shakeToReportEnabled,
+      };
+
+      // Connection state
+      final autoReconnectState = ref.read(autoReconnectStateProvider);
+      final userDisconnected = ref.read(userDisconnectedProvider);
+      context['connectionState'] = {
+        'autoReconnectState': autoReconnectState.name,
+        'userDisconnected': userDisconnected,
+      };
+
+      // Try to get device connection state if available
+      try {
+        final deviceConnection = ref.read(deviceConnectionProvider);
+        context['deviceConnection'] = {
+          'state': deviceConnection.state.name,
+          'reason': deviceConnection.reason.name,
+          'deviceId': deviceConnection.device?.id,
+          'deviceName': deviceConnection.device?.name,
+          'myNodeNum': deviceConnection.myNodeNum,
+          'reconnectAttempts': deviceConnection.reconnectAttempts,
+          'lastConnectedAt': deviceConnection.lastConnectedAt
+              ?.toIso8601String(),
+        };
+      } catch (e) {
+        context['deviceConnection'] = {'error': e.toString()};
+      }
+
+      // Bluetooth state
+      try {
+        final btStateAsync = ref.read(bluetoothStateProvider);
+        btStateAsync.whenData((btState) {
+          context['bluetoothState'] = btState.name;
+        });
+      } catch (e) {
+        context['bluetoothState'] = 'unknown';
+      }
+    } catch (e) {
+      context['contextError'] = e.toString();
+    }
+
+    return context;
   }
 }

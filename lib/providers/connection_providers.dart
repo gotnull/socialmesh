@@ -570,6 +570,15 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     }
 
     final settings = await ref.read(settingsServiceProvider.future);
+
+    // Check if auto-reconnect is enabled in settings
+    if (!settings.autoReconnect) {
+      AppLogging.connection(
+        '🔌 startBackgroundConnection: BLOCKED - auto-reconnect disabled in settings',
+      );
+      return;
+    }
+
     final lastDeviceId = settings.lastDeviceId;
     final lastDeviceName = settings.lastDeviceName;
     final lastProtocol = settings.lastDeviceProtocol;

@@ -1259,7 +1259,16 @@ final bluetoothStateListenerProvider = Provider<void>((ref) {
         '🔵 Bluetooth ON - scheduling reconnect attempt in 2s',
       );
 
-      Future.delayed(const Duration(seconds: 2), () {
+      Future.delayed(const Duration(seconds: 2), () async {
+        // Recheck auto-reconnect setting (user may have toggled it during delay)
+        final currentSettings = await ref.read(settingsServiceProvider.future);
+        if (!currentSettings.autoReconnect) {
+          AppLogging.connection(
+            '🔵 BT reconnect cancelled - auto-reconnect disabled in settings',
+          );
+          return;
+        }
+
         // Recheck conditions after delay
         final stillUserDisconnected = ref.read(userDisconnectedProvider);
         if (stillUserDisconnected) {
@@ -1386,6 +1395,15 @@ final autoReconnectManagerProvider = Provider<void>((ref) {
       if (autoReconnectState == AutoReconnectState.manualConnecting) {
         AppLogging.connection(
           '🔄 BLOCKED: User is manually connecting - not auto-reconnecting',
+        );
+        return;
+      }
+
+      // Check if auto-reconnect is enabled in settings BEFORE triggering reconnect
+      // (settings was already fetched above for protocol check)
+      if (!settings.autoReconnect) {
+        AppLogging.connection(
+          '🔄 BLOCKED: Auto-reconnect is disabled in settings',
         );
         return;
       }
