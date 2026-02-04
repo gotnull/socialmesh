@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'dart:async';
 
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:purchases_flutter/purchases_flutter.dart' hide PurchaseResult;
@@ -289,6 +290,24 @@ Future<bool> restorePurchases(WidgetRef ref) async {
         '💳 [RestorePurchases] Refreshing after Firebase login...',
       );
       await service.refreshPurchases();
+      
+      // Sync purchases to Firestore via Cloud Function
+      // This ensures the admin panel can see the purchases
+      AppLogging.subscriptions(
+        '💳 [RestorePurchases] Syncing purchases to Firestore...',
+      );
+      try {
+        final callable = FirebaseFunctions.instance.httpsCallable('syncPurchasesToFirestore');
+        final result = await callable.call<Map<String, dynamic>>();
+        AppLogging.subscriptions(
+          '💳 [RestorePurchases] Firestore sync result: ${result.data}',
+        );
+      } catch (syncError) {
+        // Don't fail the restore if Firestore sync fails
+        AppLogging.subscriptions(
+          '💳 [RestorePurchases] ⚠️ Firestore sync failed (non-fatal): $syncError',
+        );
+      }
     } else {
       AppLogging.subscriptions(
         '💳 [RestorePurchases] No Firebase user signed in (restore still works via store account)',
@@ -369,6 +388,23 @@ Future<bool> syncRevenueCatWithFirebase(WidgetRef ref) async {
       // Refresh to get any purchases associated with this user
       await service.refreshPurchases();
       await ref.read(purchaseStateProvider.notifier).refresh();
+      
+      // Sync purchases to Firestore via Cloud Function
+      AppLogging.subscriptions(
+        '💳 [SyncRevenueCat] Syncing purchases to Firestore...',
+      );
+      try {
+        final callable = FirebaseFunctions.instance.httpsCallable('syncPurchasesToFirestore');
+        final result = await callable.call<Map<String, dynamic>>();
+        AppLogging.subscriptions(
+          '💳 [SyncRevenueCat] Firestore sync result: ${result.data}',
+        );
+      } catch (syncError) {
+        AppLogging.subscriptions(
+          '💳 [SyncRevenueCat] ⚠️ Firestore sync failed (non-fatal): $syncError',
+        );
+      }
+      
       AppLogging.subscriptions('💳 [SyncRevenueCat] ✅ Sync complete');
     }
 
