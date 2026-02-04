@@ -251,5 +251,19 @@ class FakeDeviceShopEventLogger implements DeviceShopEventLogger {
   Future<List<DeviceShopEvent>> getEvents() async => events;
 
   @override
+  Future<Map<String, int>> getProductTapCounts() async {
+    final counts = <String, int>{};
+    for (final event in events) {
+      if (event.event == 'device_shop_buy_now_tap') {
+        final productId = event.payload['product_id'] as String?;
+        if (productId != null) {
+          counts[productId] = (counts[productId] ?? 0) + 1;
+        }
+      }
+    }
+    return counts;
+  }
+
+  @override
   Future<void> clearEvents() async => events.clear();
 }

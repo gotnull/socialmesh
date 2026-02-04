@@ -4,6 +4,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme.dart';
 import '../../../core/widgets/auto_scroll_text.dart';
@@ -11,6 +12,7 @@ import '../../../core/widgets/edge_fade.dart';
 import '../../../core/widgets/ico_help_system.dart';
 import '../../../providers/auth_providers.dart';
 import '../../../providers/help_providers.dart';
+import '../../../utils/snackbar.dart';
 import '../models/shop_models.dart';
 import '../providers/device_shop_providers.dart';
 import 'product_detail_screen.dart';
@@ -199,6 +201,9 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
 
                 // On Sale
                 const SliverToBoxAdapter(child: _OnSaleSection()),
+
+                // Become a Seller
+                const SliverToBoxAdapter(child: _BecomeSellerSection()),
               ],
 
               // Bottom padding
@@ -847,23 +852,40 @@ class _NewArrivalsSection extends ConsumerWidget {
   }
 }
 
-/// Best sellers section - shows popular LILYGO products
+/// Best sellers section - shows popular LILYGO products based on Buy Now taps
 class _BestSellersSection extends ConsumerWidget {
   const _BestSellersSection();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Use LILYGO API - we don't have sales data, so show in-stock nodes
     final productsAsync = ref.watch(lilygoProductsProvider);
+    final tapCountsAsync = ref.watch(productTapCountsProvider);
 
     return productsAsync.when(
       loading: () => _SectionLoading(title: 'Popular Devices'),
       error: (error, stack) => const SizedBox.shrink(),
       data: (products) {
-        // Show in-stock devices (nodes category) as "popular"
-        final popular = products
-            .where((p) => p.isInStock && p.category == DeviceCategory.node)
-            .toList();
+        final tapCounts = tapCountsAsync.value ?? {};
+        final hasUserData = tapCounts.isNotEmpty;
+
+        List<ShopProduct> popular;
+
+        if (hasUserData) {
+          // Sort by tap counts (user engagement data)
+          final sorted = List<ShopProduct>.from(products)
+            ..sort((a, b) {
+              final aTaps = tapCounts[a.id] ?? 0;
+              final bTaps = tapCounts[b.id] ?? 0;
+              return bTaps.compareTo(aTaps);
+            });
+          // Get products with at least one tap
+          popular = sorted.where((p) => (tapCounts[p.id] ?? 0) > 0).toList();
+        } else {
+          // Fallback: show in-stock devices (nodes category) as "popular"
+          popular = products
+              .where((p) => p.isInStock && p.category == DeviceCategory.node)
+              .toList();
+        }
 
         if (popular.isEmpty) return const SizedBox.shrink();
 
@@ -879,6 +901,116 @@ class _BestSellersSection extends ConsumerWidget {
 }
 
 /// On sale section - shows products with compare-at price
+class _BecomeSellerSection extends StatelessWidget {
+  const _BecomeSellerSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 32, 16, 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            context.accentColor.withValues(alpha: 0.15),
+            context.accentColor.withValues(alpha: 0.05),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.accentColor.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: context.accentColor.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.storefront,
+                  color: context.accentColor,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Become a Seller',
+                      style: TextStyle(
+                        color: context.textPrimary,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      'Sell your Meshtastic devices',
+                      style: TextStyle(
+                        color: context.textSecondary,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Are you a manufacturer or distributor of Meshtastic-compatible '
+            'devices? Join our marketplace to reach mesh radio enthusiasts '
+            'worldwide.',
+            style: TextStyle(
+              color: context.textSecondary,
+              fontSize: 14,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => _contactSocialmesh(context),
+                  icon: const Icon(Icons.email_outlined, size: 18),
+                  label: const Text('Contact Us'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: context.accentColor,
+                    side: BorderSide(color: context.accentColor),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Center(
+            child: Text(
+              'support@socialmesh.app',
+              style: TextStyle(color: context.textTertiary, fontSize: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _contactSocialmesh(BuildContext context) {
+    final uri = Uri.parse(
+      'mailto:support@socialmesh.app?subject=Device%20Shop%20Seller%20Inquiry',
+    );
+    launchUrl(uri);
+  }
+}
+
 class _OnSaleSection extends ConsumerWidget {
   const _OnSaleSection();
 
@@ -1283,7 +1415,10 @@ class _ProductCardState extends ConsumerState<ProductCard>
   }
 
   void _toggleFavorite(String? oderId) async {
-    if (oderId == null) return;
+    if (oderId == null) {
+      showSignInRequiredSnackBar(context, 'Sign in to save favorites');
+      return;
+    }
 
     // Animate heart
     await _heartController.forward();

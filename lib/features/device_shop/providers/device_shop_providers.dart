@@ -31,11 +31,11 @@ ShopSeller lilygoSeller(int productCount) => ShopSeller(
   contactEmail: 'support@lilygo.cc',
   isVerified: true,
   isOfficialPartner: true,
-  rating: 4.6, // Based on aggregate reviews
+  rating: 0, // No rating until we have real user reviews
   reviewCount: 0, // We don't have review data from API
   productCount: productCount,
   salesCount: 0, // We don't have sales data from API
-  joinedAt: DateTime(2017, 1, 1), // LILYGO founded ~2017
+  joinedAt: DateTime(2026, 2, 4), // LILYGO joined Socialmesh Feb 4, 2026
   countries: [
     'Worldwide', // LILYGO ships globally via their store
   ],
@@ -179,20 +179,51 @@ final lilygoSearchProvider =
       });
     });
 
+/// Provider for product "Buy Now" tap counts (for popularity ranking)
+final productTapCountsProvider = FutureProvider<Map<String, int>>((ref) async {
+  final logger = ref.watch(deviceShopEventLoggerProvider);
+  return logger.getProductTapCounts();
+});
+
 /// Provider for LILYGO trending/popular products
-/// Since LILYGO API doesn't have view counts, we use featured products
-/// and supplement with popular categories (T-Deck, T-Echo, T-Lora)
+/// Ranks products by "Buy Now" tap counts when available, falls back to
+/// featured products and popular product lines (T-Deck, T-Echo, etc.)
 final lilygoTrendingProductsProvider = Provider<AsyncValue<List<ShopProduct>>>((
   ref,
 ) {
   AppLogging.shop('[Provider] lilygoTrendingProductsProvider called');
   final productsAsync = ref.watch(lilygoProductsProvider);
+  final tapCountsAsync = ref.watch(productTapCountsProvider);
 
   return productsAsync.whenData((products) {
-    // Prioritize featured products first
-    final featured = products.where((p) => p.isFeatured).toList();
+    // Get tap counts if available
+    final tapCounts = tapCountsAsync.value ?? {};
 
-    // Add popular product lines that aren't already featured
+    // Sort products by tap count (descending)
+    final sortedByTaps = List<ShopProduct>.from(products)
+      ..sort((a, b) {
+        final aTaps = tapCounts[a.id] ?? 0;
+        final bTaps = tapCounts[b.id] ?? 0;
+        return bTaps.compareTo(aTaps);
+      });
+
+    // If we have tap data, use it
+    final hasUserData = tapCounts.isNotEmpty;
+    if (hasUserData) {
+      // Get products that have been tapped
+      final tapped = sortedByTaps
+          .where((p) => (tapCounts[p.id] ?? 0) > 0)
+          .toList();
+      if (tapped.isNotEmpty) {
+        AppLogging.shop(
+          '[Provider] lilygoTrendingProductsProvider: ${tapped.length} products with taps',
+        );
+        return tapped.take(8).toList();
+      }
+    }
+
+    // Fallback: featured products + popular product lines
+    final featured = products.where((p) => p.isFeatured).toList();
     final popularNames = ['T-Deck', 'T-Echo', 'T-Lora', 'T-Beam', 'T-Watch'];
     final popular = products.where((p) {
       final isPopular = popularNames.any(
@@ -201,12 +232,11 @@ final lilygoTrendingProductsProvider = Provider<AsyncValue<List<ShopProduct>>>((
       return isPopular && !featured.contains(p);
     }).toList();
 
-    // Combine and limit to 8 items
     final trending = [...featured, ...popular].take(8).toList();
 
     AppLogging.shop(
       '[Provider] lilygoTrendingProductsProvider: ${trending.length} trending '
-      '(${featured.length} featured + ${popular.length} popular)',
+      '(fallback: ${featured.length} featured + ${popular.length} popular)',
     );
     return trending;
   });

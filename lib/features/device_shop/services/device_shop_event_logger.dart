@@ -74,6 +74,9 @@ abstract class DeviceShopEventLogger {
   /// Get all logged events (for inspection)
   Future<List<DeviceShopEvent>> getEvents();
 
+  /// Get buy now tap counts per product ID (for popularity ranking)
+  Future<Map<String, int>> getProductTapCounts();
+
   /// Clear all logged events
   Future<void> clearEvents();
 }
@@ -165,6 +168,28 @@ class LocalDeviceShopEventLogger implements DeviceShopEventLogger {
   }
 
   @override
+  Future<Map<String, int>> getProductTapCounts() async {
+    try {
+      final events = await getEvents();
+      final counts = <String, int>{};
+
+      for (final event in events) {
+        if (event.event == 'device_shop_buy_now_tap') {
+          final productId = event.payload['product_id'] as String?;
+          if (productId != null) {
+            counts[productId] = (counts[productId] ?? 0) + 1;
+          }
+        }
+      }
+
+      return counts;
+    } catch (e) {
+      AppLogging.app('[DeviceShopEventLogger] Error getting tap counts: $e');
+      return {};
+    }
+  }
+
+  @override
   Future<void> clearEvents() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -243,6 +268,9 @@ class NoOpDeviceShopEventLogger implements DeviceShopEventLogger {
 
   @override
   Future<List<DeviceShopEvent>> getEvents() async => [];
+
+  @override
+  Future<Map<String, int>> getProductTapCounts() async => {};
 
   @override
   Future<void> clearEvents() async {}

@@ -1095,14 +1095,13 @@ class WidgetSchema {
 
   factory WidgetSchema.fromJson(Map<String, dynamic> json) {
     // Read the schema version for migrations
-    // ignore: unused_local_variable
     final loadedSchemaVersion = json['schemaVersion'] as int? ?? 1;
 
-    // Apply migrations if needed (currently no migrations needed)
-    // When adding migrations in the future:
-    // if (loadedSchemaVersion < 2) {
-    //   json = _migrateV1ToV2(json);
-    // }
+    // Apply migrations if needed
+    if (loadedSchemaVersion < kCurrentSchemaVersion) {
+      // Future migrations will be applied here
+      // Currently at version 1, no migrations needed yet
+    }
 
     return WidgetSchema(
       id: json['id'] as String?,

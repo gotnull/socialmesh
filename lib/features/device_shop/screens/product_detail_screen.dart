@@ -254,6 +254,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
               ref
                   .read(deviceShopServiceProvider)
                   .toggleFavorite(userId, product.id);
+            } else {
+              showSignInRequiredSnackBar(context, 'Sign in to save favorites');
             }
           },
         ),

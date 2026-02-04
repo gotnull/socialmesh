@@ -464,7 +464,7 @@ class _SellerStats extends StatelessWidget {
             icon: Icons.calendar_today,
             iconColor: context.textSecondary,
             value: _formatJoinDate(seller.joinedAt),
-            label: 'Joined',
+            label: 'Founded',
           ),
         ],
       ),
