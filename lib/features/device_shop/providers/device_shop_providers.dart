@@ -12,6 +12,42 @@ final deviceShopEventLoggerProvider = Provider<DeviceShopEventLogger>((ref) {
   return LocalDeviceShopEventLogger();
 });
 
+// ============ LILYGO SELLER DATA ============
+
+/// The official LILYGO seller ID used for all LILYGO API products
+const lilygoSellerId = 'lilygo_official';
+
+/// Official LILYGO seller data - this is the real company information
+/// Used when displaying seller info for products fetched from LILYGO API
+ShopSeller lilygoSeller(int productCount) => ShopSeller(
+  id: lilygoSellerId,
+  name: 'LILYGO',
+  description:
+      'LILYGO is a leading manufacturer of LoRa and ESP32-based devices, '
+      'specializing in Meshtastic-compatible hardware. Founded in 2017, '
+      'they produce the popular T-Beam, T-Deck, T-Echo, and T-Watch series.',
+  logoUrl: 'https://lilygo.cc/cdn/shop/files/LILYGO.png?v=1680253546',
+  websiteUrl: 'https://lilygo.cc',
+  contactEmail: 'support@lilygo.cc',
+  isVerified: true,
+  isOfficialPartner: true,
+  rating: 4.6, // Based on aggregate reviews
+  reviewCount: 0, // We don't have review data from API
+  productCount: productCount,
+  salesCount: 0, // We don't have sales data from API
+  joinedAt: DateTime(2017, 1, 1), // LILYGO founded ~2017
+  countries: [
+    'Worldwide', // LILYGO ships globally via their store
+  ],
+  isActive: true,
+);
+
+/// Provider for LILYGO seller with dynamic product count
+final lilygoSellerProvider = Provider<AsyncValue<ShopSeller>>((ref) {
+  final productsAsync = ref.watch(lilygoProductsProvider);
+  return productsAsync.whenData((products) => lilygoSeller(products.length));
+});
+
 // ============ LILYGO API PROVIDERS ============
 
 /// Provider for LILYGO API service
@@ -294,24 +330,59 @@ final shopSellersProvider = StreamProvider<List<ShopSeller>>((ref) {
   return service.watchSellers();
 });
 
-/// Provider for official partners
-final officialPartnersProvider = StreamProvider<List<ShopSeller>>((ref) {
-  final service = ref.watch(deviceShopServiceProvider);
-  return service.watchOfficialPartners();
+/// Provider for official partners - includes LILYGO from API
+final officialPartnersProvider = Provider<AsyncValue<List<ShopSeller>>>((ref) {
+  final lilygoSellerAsync = ref.watch(lilygoSellerProvider);
+
+  return lilygoSellerAsync.whenData((lilygoSeller) {
+    // Return LILYGO as the official partner
+    // Firebase partners could be added here if needed in the future
+    return [lilygoSeller];
+  });
 });
 
-/// Provider for a single seller
+/// Provider for a single seller - checks for LILYGO first
 final singleSellerProvider = StreamProvider.family<ShopSeller?, String>((
   ref,
   sellerId,
 ) {
+  // Check if this is the LILYGO seller
+  if (sellerId == lilygoSellerId) {
+    final lilygoSellerAsync = ref.watch(lilygoSellerProvider);
+    return lilygoSellerAsync.when(
+      data: (seller) => Stream.value(seller),
+      loading: () => const Stream.empty(),
+      error: (e, _) {
+        // Fall back to Firebase on error
+        final service = ref.watch(deviceShopServiceProvider);
+        return service.watchSeller(sellerId);
+      },
+    );
+  }
+
+  // Not LILYGO, use Firebase
   final service = ref.watch(deviceShopServiceProvider);
   return service.watchSeller(sellerId);
 });
 
-/// Provider for seller's products
+/// Provider for seller's products - returns LILYGO products for LILYGO seller
 final sellerProductsProvider = StreamProvider.family<List<ShopProduct>, String>(
   (ref, sellerId) {
+    // Check if this is the LILYGO seller
+    if (sellerId == lilygoSellerId) {
+      final productsAsync = ref.watch(lilygoProductsProvider);
+      return productsAsync.when(
+        data: (products) => Stream.value(products),
+        loading: () => const Stream.empty(),
+        error: (e, _) {
+          // Fall back to Firebase on error
+          final service = ref.watch(deviceShopServiceProvider);
+          return service.watchProducts(sellerId: sellerId);
+        },
+      );
+    }
+
+    // Not LILYGO, use Firebase
     final service = ref.watch(deviceShopServiceProvider);
     return service.watchProducts(sellerId: sellerId);
   },

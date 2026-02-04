@@ -41,7 +41,7 @@ void main() {
         ProviderScope(
           overrides: [
             officialPartnersProvider.overrideWith((ref) {
-              return Stream.value(mockSellers);
+              return AsyncValue.data(mockSellers);
             }),
             deviceShopEventLoggerProvider.overrideWithValue(fakeLogger),
           ],
@@ -80,7 +80,9 @@ void main() {
           overrides: [
             shopProductsProvider.overrideWith((ref) => Stream.value([])),
             featuredProductsProvider.overrideWith((ref) => Stream.value([])),
-            officialPartnersProvider.overrideWith((ref) => Stream.value([])),
+            officialPartnersProvider.overrideWith(
+              (ref) => const AsyncValue.data([]),
+            ),
             deviceShopEventLoggerProvider.overrideWithValue(fakeLogger),
           ],
           child: MaterialApp(home: DeviceShopScreen()),

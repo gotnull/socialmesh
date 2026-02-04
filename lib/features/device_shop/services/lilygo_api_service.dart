@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:socialmesh/core/logging.dart';
 import '../models/shop_models.dart';
 import '../models/lilygo_models.dart';
+import '../providers/device_shop_providers.dart' show lilygoSellerId;
 
 /// Service for fetching products directly from LILYGO's Shopify API
 ///
@@ -323,7 +324,7 @@ class LilygoApiService {
 
     final shopProduct = ShopProduct(
       id: 'lilygo_${product.id}',
-      sellerId: 'lilygo',
+      sellerId: lilygoSellerId,
       sellerName: 'LILYGO',
       name: product.title,
       description: _cleanHtml(product.bodyHtml),
