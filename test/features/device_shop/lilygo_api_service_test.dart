@@ -339,7 +339,7 @@ void main() {
 
       final product = products.first;
       expect(product.id, 'lilygo_12345');
-      expect(product.sellerId, 'lilygo');
+      expect(product.sellerId, 'lilygo_official');
       expect(product.sellerName, 'LILYGO');
       expect(product.name, 'T-Deck Meshtastic');
       expect(product.price, 52.66);
