@@ -45,17 +45,34 @@ class _UserPurchasesAdminScreenState
   Future<void> _loadUsers() async {
     // Guard against multiple simultaneous loads
     if (_isLoading) return;
-    
+
     setState(() {
       _isLoading = true;
       _error = null;
     });
 
     try {
-      // Fetch all users with entitlements from Firestore
-      final usersSnapshot = await FirebaseFirestore.instance
-          .collection('users')
-          .get();
+      // Batch fetch all collections at once to minimize Firestore calls
+      final futures = await Future.wait([
+        FirebaseFirestore.instance.collection('users').get(),
+        FirebaseFirestore.instance.collection('profiles').get(),
+        FirebaseFirestore.instance.collection('user_entitlements').get(),
+      ]);
+      
+      final usersSnapshot = futures[0];
+      final profilesSnapshot = futures[1];
+      final entitlementsSnapshot = futures[2];
+      
+      // Build lookup maps for O(1) access
+      final profilesMap = <String, Map<String, dynamic>>{};
+      for (final doc in profilesSnapshot.docs) {
+        profilesMap[doc.id] = doc.data();
+      }
+      
+      final entitlementsMap = <String, Map<String, dynamic>>{};
+      for (final doc in entitlementsSnapshot.docs) {
+        entitlementsMap[doc.id] = doc.data();
+      }
 
       final users = <_UserWithPurchases>[];
       double totalRevenue = 0;
@@ -64,35 +81,14 @@ class _UserPurchasesAdminScreenState
       for (final userDoc in usersSnapshot.docs) {
         final userId = userDoc.id;
         final userData = userDoc.data();
-
-        // Get profile data
-        final profileDoc = await FirebaseFirestore.instance
-            .collection('profiles')
-            .doc(userId)
-            .get();
-        final profileData = profileDoc.data();
+        final profileData = profilesMap[userId];
+        final entData = entitlementsMap[userId];
 
         final purchases = <_Purchase>[];
         String? revenueCatId;
 
-        // Check top-level user_entitlements collection (RevenueCat webhook data)
-        final userEntitlementDoc = await FirebaseFirestore.instance
-            .collection('user_entitlements')
-            .doc(userId)
-            .get();
-
-        if (userEntitlementDoc.exists) {
-          final entData = userEntitlementDoc.data()!;
-          final cloudSync = entData['cloud_sync'] as String?;
-          final allProducts = entData['all_products'] as List<dynamic>?;
-          final purchasedAt =
-              (entData['purchase_date'] as Timestamp?)?.toDate() ??
-              (entData['created_at'] as Timestamp?)?.toDate();
-          final expiresAt = (entData['expires_at'] as Timestamp?)?.toDate();
-          final source =
-              entData['store'] as String? ??
-              entData['source'] as String? ??
-              'revenuecat';
+        // Check user_entitlements data (from batch fetch)
+        if (entData != null) {
 
           // If we have all_products array, show each product
           if (allProducts != null && allProducts.isNotEmpty) {
@@ -146,59 +142,9 @@ class _UserPurchasesAdminScreenState
             .collection('entitlements')
             .get();
 
-        for (final entDoc in entitlementsSnapshot.docs) {
-          final entData = entDoc.data();
-          final productId = entData['product_id'] as String?;
-          final status =
-              entData['cloud_sync'] as String? ?? entData['status'] as String?;
-          revenueCatId ??= entData['revenuecat_app_user_id'] as String?;
-
-          if (productId != null) {
-            purchases.add(
-              _Purchase(
-                productId: productId,
-                status: status ?? 'unknown',
-                purchasedAt:
-                    (entData['created_at'] as Timestamp?)?.toDate() ??
-                    (entData['purchased_at'] as Timestamp?)?.toDate(),
-                expiresAt: (entData['expires_at'] as Timestamp?)?.toDate(),
-                source:
-                    entData['source'] as String? ??
-                    entData['store'] as String? ??
-                    'unknown',
-              ),
-            );
-          }
-        }
-
-        // Also check for one-time purchases in a purchases subcollection
-        final purchasesSnapshot = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(userId)
-            .collection('purchases')
-            .get();
-
-        for (final purchaseDoc in purchasesSnapshot.docs) {
-          final purchaseData = purchaseDoc.data();
-          final productId = purchaseData['product_id'] as String?;
-
-          if (productId != null) {
-            final price = (purchaseData['price'] as num?)?.toDouble() ?? 0;
-            totalRevenue += price;
-
-            purchases.add(
-              _Purchase(
-                productId: productId,
-                status: 'owned',
-                purchasedAt: (purchaseData['purchased_at'] as Timestamp?)
-                    ?.toDate(),
-                price: price,
-                currency: purchaseData['currency'] as String?,
-                source: purchaseData['store'] as String? ?? 'unknown',
-              ),
-            );
-          }
-        }
+        // Note: Legacy subcollections (users/{uid}/entitlements and users/{uid}/purchases)
+        // are no longer queried to avoid N+1 query problems. All purchase data now comes
+        // from the top-level user_entitlements collection populated by RevenueCat webhooks.
 
         if (purchases.isNotEmpty) {
           usersWithPurchases++;
@@ -223,12 +169,10 @@ class _UserPurchasesAdminScreenState
 
       // Also check for any entitlements not linked to Firebase users
       // (e.g., anonymous RevenueCat purchases before sign-in)
+      // We already have entitlementsSnapshot from the batch fetch above
       final existingUserIds = users.map((u) => u.userId).toSet();
-      final allEntitlementsSnapshot = await FirebaseFirestore.instance
-          .collection('user_entitlements')
-          .get();
 
-      for (final entDoc in allEntitlementsSnapshot.docs) {
+      for (final entDoc in entitlementsSnapshot.docs) {
         final entUserId = entDoc.id;
 
         // Skip if we already have this user
