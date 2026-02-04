@@ -290,14 +290,16 @@ Future<bool> restorePurchases(WidgetRef ref) async {
         '💳 [RestorePurchases] Refreshing after Firebase login...',
       );
       await service.refreshPurchases();
-      
+
       // Sync purchases to Firestore via Cloud Function
       // This ensures the admin panel can see the purchases
       AppLogging.subscriptions(
         '💳 [RestorePurchases] Syncing purchases to Firestore...',
       );
       try {
-        final callable = FirebaseFunctions.instance.httpsCallable('syncPurchasesToFirestore');
+        final callable = FirebaseFunctions.instance.httpsCallable(
+          'syncPurchasesToFirestore',
+        );
         final result = await callable.call<Map<String, dynamic>>();
         AppLogging.subscriptions(
           '💳 [RestorePurchases] Firestore sync result: ${result.data}',
@@ -388,13 +390,15 @@ Future<bool> syncRevenueCatWithFirebase(WidgetRef ref) async {
       // Refresh to get any purchases associated with this user
       await service.refreshPurchases();
       await ref.read(purchaseStateProvider.notifier).refresh();
-      
+
       // Sync purchases to Firestore via Cloud Function
       AppLogging.subscriptions(
         '💳 [SyncRevenueCat] Syncing purchases to Firestore...',
       );
       try {
-        final callable = FirebaseFunctions.instance.httpsCallable('syncPurchasesToFirestore');
+        final callable = FirebaseFunctions.instance.httpsCallable(
+          'syncPurchasesToFirestore',
+        );
         final result = await callable.call<Map<String, dynamic>>();
         AppLogging.subscriptions(
           '💳 [SyncRevenueCat] Firestore sync result: ${result.data}',
@@ -404,7 +408,7 @@ Future<bool> syncRevenueCatWithFirebase(WidgetRef ref) async {
           '💳 [SyncRevenueCat] ⚠️ Firestore sync failed (non-fatal): $syncError',
         );
       }
-      
+
       AppLogging.subscriptions('💳 [SyncRevenueCat] ✅ Sync complete');
     }
 
