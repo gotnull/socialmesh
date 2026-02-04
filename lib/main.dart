@@ -57,7 +57,7 @@ import 'features/nodes/nodes_screen.dart';
 import 'features/qr_scanner/universal_qr_scanner_screen.dart';
 import 'features/map/map_screen.dart';
 import 'features/settings/settings_screen.dart';
-import 'features/settings/account_screen.dart';
+import 'features/settings/account_subscriptions_screen.dart';
 import 'features/device/device_config_screen.dart';
 import 'features/settings/device_management_screen.dart';
 import 'features/navigation/main_shell.dart';
@@ -1216,7 +1216,7 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
           '/map': (context) => const MapScreen(),
           '/globe': (context) => const GlobeScreen(),
           '/settings': (context) => const SettingsScreen(),
-          '/account': (context) => const AccountScreen(),
+          '/account': (context) => const AccountSubscriptionsScreen(),
           '/device-config': (context) => _buildProtectedRoute(
             context,
             '/device-config',
