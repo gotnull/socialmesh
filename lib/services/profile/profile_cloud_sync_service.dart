@@ -23,9 +23,17 @@ class ProfileCloudSyncService {
   static const String _avatarsFolder = 'profile_avatars';
   static const String _bannersFolder = 'profile_banners';
 
+  /// Debounce window for fullSync to prevent redundant writes
+  static const Duration _syncDebounceWindow = Duration(seconds: 2);
+
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
   final ProfileService _localService;
+
+  /// Track in-flight sync operations to avoid duplicates
+  Future<UserProfile?>? _activeSyncFuture;
+  String? _activeSyncUid;
+  DateTime? _lastSyncTime;
 
   ProfileCloudSyncService(this._localService);
 
@@ -238,7 +246,45 @@ class ProfileCloudSyncService {
   }
 
   /// Two-way sync: push local changes and pull remote changes
+  ///
+  /// Includes deduplication: if called multiple times within [_syncDebounceWindow]
+  /// for the same uid, returns the existing in-flight future.
   Future<UserProfile?> fullSync(String uid) async {
+    // Check if we're already syncing for this uid
+    if (_activeSyncFuture != null && _activeSyncUid == uid) {
+      AppLogging.auth(
+        '☁️ fullSync: Already syncing for $uid, returning active future',
+      );
+      return _activeSyncFuture;
+    }
+
+    // Check if we synced recently (within debounce window)
+    final now = DateTime.now();
+    if (_lastSyncTime != null &&
+        _activeSyncUid == uid &&
+        now.difference(_lastSyncTime!) < _syncDebounceWindow) {
+      AppLogging.auth(
+        '☁️ fullSync: Skipping sync for $uid (within debounce window)',
+      );
+      // Return cached local profile instead of re-syncing
+      return _localService.getProfile();
+    }
+
+    // Start new sync
+    _activeSyncUid = uid;
+    _activeSyncFuture = _doFullSync(uid);
+
+    try {
+      final result = await _activeSyncFuture;
+      _lastSyncTime = DateTime.now();
+      return result;
+    } finally {
+      _activeSyncFuture = null;
+    }
+  }
+
+  /// Internal implementation of full sync (no deduplication)
+  Future<UserProfile?> _doFullSync(String uid) async {
     AppLogging.auth('');
     AppLogging.auth(
       '╔══════════════════════════════════════════════════════════════',

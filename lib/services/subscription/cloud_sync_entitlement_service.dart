@@ -152,7 +152,21 @@ class CloudSyncEntitlementService {
     }
 
     try {
-      // Check grandfathering status first (Firebase)
+      // Check if user is an admin first (admins get full access)
+      final isAdmin = await _checkIsAdmin(user.uid);
+      if (isAdmin) {
+        AppLogging.subscriptions('☁️ User is admin, granting full access');
+        _updateEntitlement(
+          const CloudSyncEntitlement(
+            state: CloudSyncEntitlementState.grandfathered,
+            canWrite: true,
+            canRead: true,
+          ),
+        );
+        return _cachedEntitlement;
+      }
+
+      // Check grandfathering status (Firebase)
       final grandfathered = await _checkGrandfathered(user.uid);
       if (grandfathered) {
         AppLogging.subscriptions('☁️ User is grandfathered, full access');
@@ -176,6 +190,19 @@ class CloudSyncEntitlementService {
       AppLogging.subscriptions('☁️ Error refreshing entitlement: $e');
       // Return cached on error
       return _cachedEntitlement;
+    }
+  }
+
+  /// Check if user is an admin (admins collection)
+  Future<bool> _checkIsAdmin(String uid) async {
+    try {
+      final adminDoc = await _firestore.collection('admins').doc(uid).get();
+      final isAdmin = adminDoc.exists;
+      AppLogging.subscriptions('☁️ Admin check for $uid: $isAdmin');
+      return isAdmin;
+    } catch (e) {
+      AppLogging.subscriptions('☁️ Error checking admin status: $e');
+      return false;
     }
   }
 

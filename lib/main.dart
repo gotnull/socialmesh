@@ -949,9 +949,10 @@ class _SocialmeshAppState extends ConsumerState<SocialmeshApp>
 
       // If user is signed in, sync from cloud
       if (authState != null) {
-        AppLogging.debug('🎨 User signed in, invalidating profile provider');
-        // Invalidate profile to trigger fresh cloud sync
-        ref.invalidate(userProfileProvider);
+        AppLogging.debug('🎨 User signed in, reading profile (no invalidate)');
+        // NOTE: Don't invalidate userProfileProvider here!
+        // UserProfileNotifier.build() already calls fullSync() which syncs from cloud.
+        // Invalidating here causes redundant Firestore writes (batches 6, 7, 8).
 
         AppLogging.debug('🎨 Waiting for profile future...');
         final profile = await ref.read(userProfileProvider.future);
