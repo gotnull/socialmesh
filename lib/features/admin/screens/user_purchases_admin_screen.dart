@@ -43,6 +43,9 @@ class _UserPurchasesAdminScreenState
   }
 
   Future<void> _loadUsers() async {
+    // Guard against multiple simultaneous loads
+    if (_isLoading) return;
+    
     setState(() {
       _isLoading = true;
       _error = null;
@@ -365,7 +368,7 @@ class _UserPurchasesAdminScreenState
                 Expanded(
                   child: _StatCard(
                     label: 'Revenue',
-                    value: '\$${_totalRevenue.toStringAsFixed(2)}',
+                    value: 'A\$${_totalRevenue.toStringAsFixed(2)}',
                     icon: Icons.attach_money,
                     color: Colors.orange,
                   ),
@@ -550,9 +553,12 @@ class _StatCard extends StatelessWidget {
             children: [
               Icon(icon, size: 16, color: color),
               const SizedBox(width: 6),
-              Text(
-                label,
-                style: TextStyle(fontSize: 11, color: context.textSecondary),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(fontSize: 11, color: context.textSecondary),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ],
           ),
@@ -564,6 +570,7 @@ class _StatCard extends StatelessWidget {
               fontWeight: FontWeight.bold,
               color: context.textPrimary,
             ),
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
