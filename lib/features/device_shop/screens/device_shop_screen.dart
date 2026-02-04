@@ -331,7 +331,7 @@ class _DeviceShopScreenState extends ConsumerState<DeviceShopScreen> {
             ),
             const SizedBox(height: 12),
             ref
-                .watch(trendingProductsProvider)
+                .watch(lilygoTrendingProductsProvider)
                 .when(
                   data: (products) => products.isEmpty
                       ? const SizedBox.shrink()

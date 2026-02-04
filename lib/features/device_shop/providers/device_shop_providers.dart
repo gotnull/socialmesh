@@ -179,6 +179,39 @@ final lilygoSearchProvider =
       });
     });
 
+/// Provider for LILYGO trending/popular products
+/// Since LILYGO API doesn't have view counts, we use featured products
+/// and supplement with popular categories (T-Deck, T-Echo, T-Lora)
+final lilygoTrendingProductsProvider = Provider<AsyncValue<List<ShopProduct>>>((
+  ref,
+) {
+  AppLogging.shop('[Provider] lilygoTrendingProductsProvider called');
+  final productsAsync = ref.watch(lilygoProductsProvider);
+
+  return productsAsync.whenData((products) {
+    // Prioritize featured products first
+    final featured = products.where((p) => p.isFeatured).toList();
+
+    // Add popular product lines that aren't already featured
+    final popularNames = ['T-Deck', 'T-Echo', 'T-Lora', 'T-Beam', 'T-Watch'];
+    final popular = products.where((p) {
+      final isPopular = popularNames.any(
+        (name) => p.name.toLowerCase().contains(name.toLowerCase()),
+      );
+      return isPopular && !featured.contains(p);
+    }).toList();
+
+    // Combine and limit to 8 items
+    final trending = [...featured, ...popular].take(8).toList();
+
+    AppLogging.shop(
+      '[Provider] lilygoTrendingProductsProvider: ${trending.length} trending '
+      '(${featured.length} featured + ${popular.length} popular)',
+    );
+    return trending;
+  });
+});
+
 // ============ FIREBASE PROVIDERS ============
 
 /// Provider for DeviceShopService
