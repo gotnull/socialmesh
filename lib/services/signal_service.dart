@@ -18,6 +18,7 @@ import 'package:uuid/uuid.dart';
 import '../core/logging.dart';
 import '../models/social.dart';
 import 'mesh_packet_dedupe_store.dart';
+import 'social_activity_service.dart';
 
 /// Default signal TTL options in minutes.
 class SignalTTL {
@@ -1606,6 +1607,23 @@ class SignalService {
     return _postFromDbMap(rows.first);
   }
 
+  /// Get a signal by ID from cloud (Firebase).
+  /// This is a fallback when the signal is not in local database.
+  Future<Post?> getSignalFromCloudById(String signalId) async {
+    return _lookupCloudSignal(signalId);
+  }
+
+  /// Save a signal to the local database.
+  /// Used when caching cloud signals locally (e.g., from activity notifications).
+  Future<void> saveSignalLocally(Post signal) async {
+    await _saveSignalToDb(signal);
+    // Start listeners for this signal
+    if (_currentUserId != null) {
+      _startCommentsListener(signal.id);
+      _startPostListener(signal.id);
+    }
+  }
+
   /// Update a signal in the database.
   Future<void> updateSignal(Post signal) async {
     await init();
@@ -2818,6 +2836,13 @@ class SignalService {
     // Sync to Firestore for authenticated users (fire-and-forget)
     if (_currentUserId != null) {
       _syncResponseToFirestore(response);
+
+      // Create activity for the appropriate user
+      _createResponseActivity(
+        response: response,
+        signal: signal,
+        parentId: parentId,
+      );
     }
 
     return response;
@@ -2880,6 +2905,237 @@ class SignalService {
         'Path: posts/${response.signalId}/comments/${response.id}',
       );
     }
+  }
+
+  /// Create activity for a signal response (comment or reply).
+  ///
+  /// If [parentId] is null, creates signalComment activity for signal owner.
+  /// If [parentId] is set, creates signalCommentReply activity for parent
+  /// comment author.
+  void _createResponseActivity({
+    required SignalResponse response,
+    required Post signal,
+    String? parentId,
+  }) async {
+    AppLogging.signals(
+      '📬 ACTIVITY_START: Creating activity for response ${response.id}\n'
+      '  signalId: ${response.signalId}\n'
+      '  signalAuthorId: ${signal.authorId}\n'
+      '  responseAuthorId: ${response.authorId}\n'
+      '  currentUserId: $_currentUserId\n'
+      '  parentId: $parentId\n'
+      '  isReply: ${parentId != null}',
+    );
+
+    try {
+      final activityService = SocialActivityService(
+        firestore: _firestore,
+        auth: _auth,
+      );
+
+      // Truncate content preview to 100 chars
+      final preview = response.content.length > 100
+          ? '${response.content.substring(0, 100)}...'
+          : response.content;
+
+      AppLogging.signals(
+        '📬 ACTIVITY_PREVIEW: "${preview.substring(0, preview.length.clamp(0, 50))}..."',
+      );
+
+      if (parentId != null) {
+        // This is a reply - find the parent comment author
+        AppLogging.signals(
+          '📬 ACTIVITY_REPLY: Looking up parent comment $parentId',
+        );
+        final parentComment = await _getCommentById(
+          response.signalId,
+          parentId,
+        );
+        if (parentComment == null) {
+          AppLogging.signals(
+            '📬 ACTIVITY_SKIP: Parent comment $parentId not found',
+          );
+          return;
+        }
+        AppLogging.signals(
+          '📬 ACTIVITY_PARENT_FOUND: authorId=${parentComment.authorId}',
+        );
+        if (parentComment.authorId == _currentUserId) {
+          AppLogging.signals(
+            '📬 ACTIVITY_SKIP: Not notifying self (replying to own comment)',
+          );
+          return;
+        }
+        AppLogging.signals(
+          '📬 ACTIVITY_CREATE: signalCommentReply -> ${parentComment.authorId}\n'
+          '  targetCollection: users/${parentComment.authorId}/activities',
+        );
+        await activityService.createSignalCommentReplyActivity(
+          signalId: response.signalId,
+          originalCommentAuthorId: parentComment.authorId,
+          replyPreview: preview,
+        );
+        AppLogging.signals(
+          '📬 ACTIVITY_SUCCESS: signalCommentReply created for ${parentComment.authorId}',
+        );
+      } else {
+        // This is a top-level comment - notify signal owner
+        // Resolve the real authorId - local DB may have mesh_ prefix for
+        // signals received over mesh, but Firestore has the real authorId
+        final realAuthorId = await _resolveSignalAuthorId(
+          signal.id,
+          signal.authorId,
+        );
+
+        if (realAuthorId == null) {
+          AppLogging.signals(
+            '📬 ACTIVITY_SKIP: Could not resolve real authorId for signal',
+          );
+          return;
+        }
+
+        if (realAuthorId == _currentUserId) {
+          AppLogging.signals(
+            '📬 ACTIVITY_SKIP: Not notifying self (commenting on own signal)',
+          );
+          return;
+        }
+        AppLogging.signals(
+          '📬 ACTIVITY_CREATE: signalComment -> $realAuthorId\n'
+          '  targetCollection: users/$realAuthorId/activities',
+        );
+        await activityService.createSignalCommentActivity(
+          signalId: response.signalId,
+          signalOwnerId: realAuthorId,
+          commentPreview: preview,
+        );
+        AppLogging.signals(
+          '📬 ACTIVITY_SUCCESS: signalComment created for $realAuthorId',
+        );
+      }
+    } catch (e, stackTrace) {
+      // Don't fail the response creation if activity creation fails
+      AppLogging.signals(
+        '📬 ACTIVITY_ERROR: Failed to create response activity\n'
+        '  error: $e\n'
+        '  stackTrace: $stackTrace',
+      );
+    }
+  }
+
+  /// Resolve the real authorId for a signal.
+  ///
+  /// Local DB may have mesh_ prefix for signals received over mesh, but
+  /// Firestore has the real authorId from the original creator.
+  /// Returns null if the signal has no real author (pure mesh signal).
+  Future<String?> _resolveSignalAuthorId(
+    String signalId,
+    String localAuthorId,
+  ) async {
+    // If it's already a real Firebase UID, use it
+    if (!localAuthorId.startsWith('mesh_')) {
+      AppLogging.signals(
+        '📬 AUTHOR_RESOLVE: Using local authorId (not mesh): $localAuthorId',
+      );
+      return localAuthorId;
+    }
+
+    AppLogging.signals(
+      '📬 AUTHOR_RESOLVE: Local has mesh_ prefix, checking Firestore for '
+      'real authorId',
+    );
+
+    try {
+      final doc = await _firestore.collection('posts').doc(signalId).get();
+      if (!doc.exists) {
+        AppLogging.signals(
+          '📬 AUTHOR_RESOLVE: Signal not in Firestore, no real author',
+        );
+        return null;
+      }
+
+      final data = doc.data()!;
+      final firestoreAuthorId = data['authorId'] as String?;
+
+      if (firestoreAuthorId == null) {
+        AppLogging.signals('📬 AUTHOR_RESOLVE: Firestore doc has no authorId');
+        return null;
+      }
+
+      if (firestoreAuthorId.startsWith('mesh_')) {
+        AppLogging.signals(
+          '📬 AUTHOR_RESOLVE: Firestore also has mesh_ authorId, '
+          'no real user to notify',
+        );
+        return null;
+      }
+
+      AppLogging.signals(
+        '📬 AUTHOR_RESOLVE: Found real authorId in Firestore: '
+        '$firestoreAuthorId (local was: $localAuthorId)',
+      );
+      return firestoreAuthorId;
+    } catch (e) {
+      AppLogging.signals(
+        '📬 AUTHOR_RESOLVE: Error fetching from Firestore: $e',
+      );
+      return null;
+    }
+  }
+
+  /// Get a single comment by ID from local DB or cloud cache.
+  Future<SignalResponse?> _getCommentById(
+    String signalId,
+    String commentId,
+  ) async {
+    AppLogging.signals(
+      '📬 COMMENT_LOOKUP: signalId=$signalId, commentId=$commentId',
+    );
+    await init();
+
+    // Check local DB first
+    final rows = await _db!.query(
+      _commentsTable,
+      where: 'id = ? AND signalId = ?',
+      whereArgs: [commentId, signalId],
+      limit: 1,
+    );
+
+    if (rows.isNotEmpty) {
+      final row = rows.first;
+      AppLogging.signals(
+        '📬 COMMENT_FOUND: in local DB, authorId=${row['authorId']}',
+      );
+      return SignalResponse(
+        id: row['id'] as String,
+        signalId: row['signalId'] as String,
+        content: row['content'] as String,
+        authorId: row['authorId'] as String,
+        authorName: row['authorName'] as String?,
+        parentId: row['parentId'] as String?,
+        depth: (row['depth'] as int?) ?? 0,
+        createdAt: DateTime.fromMillisecondsSinceEpoch(row['createdAt'] as int),
+        expiresAt: DateTime.fromMillisecondsSinceEpoch(row['expiresAt'] as int),
+      );
+    }
+
+    // Check cloud cache
+    AppLogging.signals(
+      '📬 COMMENT_LOOKUP: Not in local DB, checking cloud cache '
+      '(${_cloudComments[signalId]?.length ?? 0} cached comments)',
+    );
+    final cloudComments = _cloudComments[signalId] ?? [];
+    for (final comment in cloudComments) {
+      if (comment.id == commentId) {
+        AppLogging.signals(
+          '📬 COMMENT_FOUND: in cloud cache, authorId=${comment.authorId}',
+        );
+        return comment;
+      }
+    }
+
+    AppLogging.signals('📬 COMMENT_NOT_FOUND: $commentId');
+    return null;
   }
 
   /// Get comments for a signal.
@@ -3010,6 +3266,12 @@ class SignalService {
       AppLogging.signals(
         '📊 Vote set: posts/$signalId/comments/$commentId/votes/$voterId = $value',
       );
+
+      // Create activity for upvotes only (value == 1)
+      // Downvotes don't create notifications
+      if (value == 1) {
+        _createVoteActivity(signalId: signalId, commentId: commentId);
+      }
     } catch (e) {
       // Revert optimistic update on error
       _myVotesCache[signalId]?.remove(commentId);
@@ -3058,6 +3320,72 @@ class SignalService {
       }
       AppLogging.signals('📊 Failed to clear vote: $e');
       rethrow;
+    }
+  }
+
+  /// Create activity for an upvote on a signal response.
+  ///
+  /// Notifies the response author that someone upvoted their comment.
+  void _createVoteActivity({
+    required String signalId,
+    required String commentId,
+  }) async {
+    AppLogging.signals(
+      '📬 VOTE_ACTIVITY_START: Creating upvote activity\n'
+      '  signalId: $signalId\n'
+      '  commentId: $commentId\n'
+      '  voterId: $_currentUserId',
+    );
+
+    try {
+      // Get the comment to find its author
+      final comment = await _getCommentById(signalId, commentId);
+      if (comment == null) {
+        AppLogging.signals(
+          '📬 VOTE_ACTIVITY_SKIP: Comment $commentId not found',
+        );
+        return;
+      }
+
+      AppLogging.signals(
+        '📬 VOTE_ACTIVITY_COMMENT: Found comment\n'
+        '  authorId: ${comment.authorId}\n'
+        '  authorName: ${comment.authorName}',
+      );
+
+      // Don't notify self-votes
+      if (comment.authorId == _currentUserId) {
+        AppLogging.signals(
+          '📬 VOTE_ACTIVITY_SKIP: Not notifying self (upvoting own comment)',
+        );
+        return;
+      }
+
+      final activityService = SocialActivityService(
+        firestore: _firestore,
+        auth: _auth,
+      );
+
+      AppLogging.signals(
+        '📬 VOTE_ACTIVITY_CREATE: signalResponseVote -> ${comment.authorId}\n'
+        '  targetCollection: users/${comment.authorId}/activities',
+      );
+
+      await activityService.createSignalResponseVoteActivity(
+        signalId: signalId,
+        responseAuthorId: comment.authorId,
+      );
+
+      AppLogging.signals(
+        '📬 VOTE_ACTIVITY_SUCCESS: signalResponseVote created for ${comment.authorId}',
+      );
+    } catch (e, stackTrace) {
+      // Don't fail the vote if activity creation fails
+      AppLogging.signals(
+        '📬 VOTE_ACTIVITY_ERROR: Failed to create vote activity\n'
+        '  error: $e\n'
+        '  stackTrace: $stackTrace',
+      );
     }
   }
 

@@ -8,6 +8,7 @@ import '../../../core/widgets/app_bar_overflow_menu.dart';
 import '../../../core/widgets/glass_scaffold.dart';
 import '../../../core/widgets/section_header.dart';
 import '../../../core/widgets/verified_badge.dart';
+import '../../../models/social.dart';
 import '../../../models/social_activity.dart';
 import '../../../providers/activity_providers.dart';
 import '../../../providers/signal_providers.dart';
@@ -39,6 +40,62 @@ class _ActivityTimelineScreenState
     SocialActivityType.signalResponseVote,
   };
 
+  /// Set of activity IDs that have been validated as having missing signals
+  final Set<String> _invalidActivityIds = {};
+
+  /// Whether we've started the validation process
+  bool _validationStarted = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Validate activities after the first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _validateActivities();
+    });
+  }
+
+  /// Validates that all signal activities have existing signals.
+  /// Removes activities where the signal no longer exists.
+  Future<void> _validateActivities() async {
+    if (_validationStarted) return;
+    _validationStarted = true;
+
+    final feedState = ref.read(activityFeedProvider);
+    final signalService = ref.read(signalServiceProvider);
+
+    final signalActivities = feedState.activities
+        .where((a) => _signalActivityTypes.contains(a.type))
+        .where((a) => a.contentId != null)
+        .toList();
+
+    for (final activity in signalActivities) {
+      // Skip if already marked invalid
+      if (_invalidActivityIds.contains(activity.id)) continue;
+
+      // Check if signal exists locally
+      final localSignal = await signalService.getSignalById(
+        activity.contentId!,
+      );
+      if (localSignal != null) continue;
+
+      // Check if signal exists in cloud
+      final cloudSignal = await signalService.getSignalFromCloudById(
+        activity.contentId!,
+      );
+      if (cloudSignal != null) continue;
+
+      // Signal doesn't exist anywhere - mark as invalid and delete
+      _invalidActivityIds.add(activity.id);
+      ref.read(activityFeedProvider.notifier).deleteActivity(activity.id);
+    }
+
+    // Trigger rebuild if any were removed
+    if (_invalidActivityIds.isNotEmpty && mounted) {
+      setState(() {});
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final feedState = ref.watch(activityFeedProvider);
@@ -46,9 +103,18 @@ class _ActivityTimelineScreenState
         .watch(isAdminProvider)
         .maybeWhen(data: (value) => value, orElse: () => false);
 
-    // Only show signal-related activities
+    // Re-validate when activities change (new activities may have arrived)
+    ref.listen(activityFeedProvider, (previous, next) {
+      if (previous?.activities.length != next.activities.length) {
+        _validationStarted = false;
+        _validateActivities();
+      }
+    });
+
+    // Only show signal-related activities (filter out ones being validated as invalid)
     final signalActivities = feedState.activities
         .where((a) => _signalActivityTypes.contains(a.type))
+        .where((a) => !_invalidActivityIds.contains(a.id))
         .toList();
 
     return GlassScaffold(
@@ -336,6 +402,28 @@ class _ActivityTimelineScreenState
     return groups;
   }
 
+  /// Get a signal by ID, trying local DB first, then cloud fallback.
+  /// If found in cloud, saves locally so it appears in Presence Feed.
+  Future<Post?> _getSignalWithCloudFallback(String signalId) async {
+    final signalService = ref.read(signalServiceProvider);
+
+    // Try local first
+    final localSignal = await signalService.getSignalById(signalId);
+    if (localSignal != null) {
+      return localSignal;
+    }
+
+    // Try cloud fallback
+    final cloudSignal = await signalService.getSignalFromCloudById(signalId);
+    if (cloudSignal != null) {
+      // Save to local DB so it appears in Presence Feed
+      await signalService.saveSignalLocally(cloudSignal);
+      // Refresh the signal feed to show the newly cached signal
+      ref.read(signalFeedProvider.notifier).refresh(silent: true);
+    }
+    return cloudSignal;
+  }
+
   void _handleActivityTap(SocialActivity activity) {
     // Mark as read when tapped
     if (!activity.isRead) {
@@ -348,9 +436,7 @@ class _ActivityTimelineScreenState
         context,
         MaterialPageRoute(
           builder: (_) => FutureBuilder(
-            future: ref
-                .read(signalServiceProvider)
-                .getSignalById(activity.contentId!),
+            future: _getSignalWithCloudFallback(activity.contentId!),
             builder: (context, snapshot) {
               if (snapshot.connectionState != ConnectionState.done) {
                 return Scaffold(

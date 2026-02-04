@@ -204,6 +204,10 @@ class GlassScaffold extends StatelessWidget {
     // Default to kGlassScrollPhysics for consistent iOS bounce behavior
     final effectivePhysics = physics ?? kGlassScrollPhysics;
 
+    // When a controller is provided, primary must be false
+    // (primary ScrollViews get their controller via PrimaryScrollController)
+    final effectivePrimary = controller != null ? false : primary;
+
     return Scaffold(
       key: scaffoldKey,
       extendBodyBehindAppBar: true,
@@ -217,7 +221,7 @@ class GlassScaffold extends StatelessWidget {
       body: CustomScrollView(
         controller: controller,
         physics: effectivePhysics,
-        primary: primary,
+        primary: effectivePrimary,
         slivers: [
           _GlassSliverAppBarInternal(
             title: effectiveTitle,

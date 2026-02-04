@@ -84,10 +84,14 @@ void main() {
 
   group('CloudSyncEntitlementState', () {
     test('all states are properly defined', () {
-      expect(CloudSyncEntitlementState.values, hasLength(6));
+      expect(CloudSyncEntitlementState.values, hasLength(7));
       expect(
         CloudSyncEntitlementState.values,
         contains(CloudSyncEntitlementState.active),
+      );
+      expect(
+        CloudSyncEntitlementState.values,
+        contains(CloudSyncEntitlementState.cancelled),
       );
       expect(
         CloudSyncEntitlementState.values,
@@ -100,6 +104,10 @@ void main() {
       expect(
         CloudSyncEntitlementState.values,
         contains(CloudSyncEntitlementState.expired),
+      );
+      expect(
+        CloudSyncEntitlementState.values,
+        contains(CloudSyncEntitlementState.featureOnly),
       );
       expect(
         CloudSyncEntitlementState.values,

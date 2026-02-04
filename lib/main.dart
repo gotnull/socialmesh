@@ -1463,82 +1463,168 @@ class _SignalDetailLoader extends ConsumerWidget {
   }
 }
 
-/// Loader widget that fetches widget data from marketplace and navigates to WidgetDetailsScreen
-class _WidgetDetailLoader extends ConsumerWidget {
+/// Loader widget that fetches widget data from marketplace or shared_widgets collection
+/// and navigates to appropriate screen.
+///
+/// Tries marketplace API first, then falls back to shared_widgets Firestore collection.
+class _WidgetDetailLoader extends ConsumerStatefulWidget {
   final String widgetId;
 
   const _WidgetDetailLoader({required this.widgetId});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final service = ref.watch(marketplaceServiceProvider);
+  ConsumerState<_WidgetDetailLoader> createState() =>
+      _WidgetDetailLoaderState();
+}
 
+class _WidgetDetailLoaderState extends ConsumerState<_WidgetDetailLoader> {
+  bool _isLoading = true;
+  String? _error;
+  MarketplaceWidget? _marketplaceWidget;
+  bool _isSharedWidget = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadWidget();
+  }
+
+  Future<void> _loadWidget() async {
+    AppLogging.widgets(
+      '[WidgetDetailLoader] Loading widget: ${widget.widgetId}',
+    );
+
+    try {
+      // First try marketplace API
+      final service = ref.read(marketplaceServiceProvider);
+      try {
+        final marketplaceWidget = await service.getWidget(widget.widgetId);
+        AppLogging.widgets(
+          '[WidgetDetailLoader] Found in marketplace: ${marketplaceWidget.name}',
+        );
+        if (mounted) {
+          setState(() {
+            _marketplaceWidget = marketplaceWidget;
+            _isLoading = false;
+          });
+        }
+        return;
+      } catch (e) {
+        AppLogging.widgets(
+          '[WidgetDetailLoader] Not in marketplace, trying shared_widgets: $e',
+        );
+      }
+
+      // Fall back to shared_widgets collection
+      final doc = await FirebaseFirestore.instance
+          .collection('shared_widgets')
+          .doc(widget.widgetId)
+          .get();
+
+      if (doc.exists) {
+        AppLogging.widgets(
+          '[WidgetDetailLoader] Found in shared_widgets collection',
+        );
+        if (mounted) {
+          setState(() {
+            _isSharedWidget = true;
+            _isLoading = false;
+          });
+        }
+        return;
+      }
+
+      // Widget not found anywhere
+      AppLogging.widgets(
+        '[WidgetDetailLoader] Widget not found in marketplace or shared_widgets',
+      );
+      if (mounted) {
+        setState(() {
+          _error = 'Widget not found';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      AppLogging.widgets('[WidgetDetailLoader] Error loading widget: $e');
+      if (mounted) {
+        setState(() {
+          _error = 'Error loading widget: $e';
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Loading Widget')),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_error != null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Loading Widget')),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline, size: 48, color: Colors.red),
+              const SizedBox(height: 16),
+              Text(_error!),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Go Back'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // If it's a shared widget, redirect to import screen
+    if (_isSharedWidget) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final navigator = navigatorKey.currentState;
+        if (navigator == null) return;
+        navigator.pushReplacement(
+          MaterialPageRoute(
+            builder: (context) =>
+                WidgetImportScreen(firestoreId: widget.widgetId),
+          ),
+        );
+      });
+      return Scaffold(
+        appBar: AppBar(title: const Text('Loading Widget')),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    // If it's a marketplace widget, redirect to details screen
+    if (_marketplaceWidget != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final navigator = navigatorKey.currentState;
+        if (navigator == null) return;
+        navigator.pushReplacement(
+          MaterialPageRoute(
+            builder: (context) =>
+                WidgetDetailsScreen(marketplaceWidget: _marketplaceWidget!),
+          ),
+        );
+      });
+      return Scaffold(
+        appBar: AppBar(title: const Text('Loading Widget')),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    // Shouldn't reach here
     return Scaffold(
       appBar: AppBar(title: const Text('Loading Widget')),
-      body: FutureBuilder<MarketplaceWidget>(
-        future: service.getWidget(widgetId),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (snapshot.hasError) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                  const SizedBox(height: 16),
-                  Text('Error loading widget: ${snapshot.error}'),
-                  const SizedBox(height: 16),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Go Back'),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          final widget = snapshot.data;
-          if (widget == null) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.widgets_outlined, size: 48),
-                  const SizedBox(height: 16),
-                  const Text('Widget not found'),
-                  const SizedBox(height: 16),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Go Back'),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          // Navigate to widget detail screen with the loaded widget
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            // Use global navigatorKey to avoid "Navigator.of() called with
-            // a context that does not contain a Navigator" crash when
-            // the widget is disposed before the callback runs
-            final navigator = navigatorKey.currentState;
-            if (navigator == null) {
-              return;
-            }
-            navigator.pushReplacement(
-              MaterialPageRoute(
-                builder: (context) =>
-                    WidgetDetailsScreen(marketplaceWidget: widget),
-              ),
-            );
-          });
-
-          return const Center(child: CircularProgressIndicator());
-        },
-      ),
+      body: const Center(child: Text('Something went wrong')),
     );
   }
 }

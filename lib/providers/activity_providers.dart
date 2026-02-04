@@ -2,6 +2,7 @@
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socialmesh/core/logging.dart';
 
@@ -43,6 +44,15 @@ class ActivityFeedNotifier extends Notifier<ActivityFeedState> {
 
   void _listenToAuthChanges() {
     _authSubscription?.cancel();
+
+    // Check if Firebase is initialized before accessing FirebaseAuth
+    if (Firebase.apps.isEmpty) {
+      AppLogging.social(
+        '📬 [ActivityFeed] Firebase not initialized, skipping auth listener',
+      );
+      return;
+    }
+
     _authSubscription = FirebaseAuth.instance.authStateChanges().listen((_) {
       // Auth state changed - restart the activity stream
       AppLogging.social(

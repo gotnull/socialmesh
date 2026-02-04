@@ -123,6 +123,10 @@ class HamburgerMenuButton extends ConsumerWidget {
     final scaffoldKey = ref.watch(mainShellScaffoldKeyProvider);
     final theme = Theme.of(context);
     final adminNotificationCount = ref.watch(adminNotificationCountProvider);
+    final activityCount = ref.watch(unreadActivityCountProvider);
+
+    // Combine admin and activity counts for hamburger badge
+    final totalBadgeCount = adminNotificationCount + activityCount;
 
     return Stack(
       clipBehavior: Clip.none,
@@ -154,7 +158,7 @@ class HamburgerMenuButton extends ConsumerWidget {
           },
           tooltip: 'Menu',
         ),
-        if (adminNotificationCount > 0)
+        if (totalBadgeCount > 0)
           Positioned(
             right: 8,
             top: 8,
@@ -171,9 +175,7 @@ class HamburgerMenuButton extends ConsumerWidget {
                 ),
                 constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
                 child: Text(
-                  adminNotificationCount > 99
-                      ? '99+'
-                      : '$adminNotificationCount',
+                  totalBadgeCount > 99 ? '99+' : '$totalBadgeCount',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 10,
@@ -327,31 +329,15 @@ class _MainShellState extends ConsumerState<MainShell> {
   /// Drawer menu items for quick access screens not in bottom nav
   /// Organized into logical sections with headers
   final List<_DrawerMenuItem> _drawerMenuItems = [
-    // Social section - Signals first, then Activity
-    _DrawerMenuItem(
-      icon: Icons.sensors_outlined,
-      label: 'Signals',
-      screen: const PresenceFeedScreen(),
-      sectionHeader: 'SOCIAL',
-      iconColor: Colors.orange.shade400,
-      requiresConnection: true,
-    ),
+    // Social section - Activity (Signals is in bottom nav)
     _DrawerMenuItem(
       icon: Icons.favorite_border,
       label: 'Activity',
       screen: const ActivityTimelineScreen(),
+      sectionHeader: 'SOCIAL',
       iconColor: Colors.red.shade400,
       requiresConnection: false,
       badgeProviderKey: 'activity',
-    ),
-    // Dashboard moved from bottom nav
-    _DrawerMenuItem(
-      icon: Icons.dashboard_outlined,
-      label: 'Dashboard',
-      screen: const WidgetDashboardScreen(),
-      sectionHeader: 'HOME',
-      iconColor: Colors.blue.shade400,
-      requiresConnection: true,
     ),
     _DrawerMenuItem(
       icon: Icons.timeline,
@@ -412,14 +398,14 @@ class _MainShellState extends ConsumerState<MainShell> {
     ),
 
     // Shop - below MESH section
-    _DrawerMenuItem(
-      icon: Icons.store_outlined,
-      label: 'Device Shop',
-      screen: const DeviceShopScreen(),
-      sectionHeader: 'SHOP',
-      iconColor: Colors.amber.shade600,
-      requiresConnection: false,
-    ),
+    // _DrawerMenuItem(
+    //   icon: Icons.store_outlined,
+    //   label: 'Device Shop',
+    //   screen: const DeviceShopScreen(),
+    //   sectionHeader: 'SHOP',
+    //   iconColor: Colors.amber.shade600,
+    //   requiresConnection: false,
+    // ),
 
     // Premium Features - mixed requirements
     _DrawerMenuItem(
@@ -479,9 +465,9 @@ class _MainShellState extends ConsumerState<MainShell> {
       label: 'Nodes',
     ),
     _NavItem(
-      icon: Icons.favorite_outline,
-      activeIcon: Icons.favorite,
-      label: 'Activity',
+      icon: Icons.dashboard_outlined,
+      activeIcon: Icons.dashboard,
+      label: 'Dashboard',
     ),
   ];
 
@@ -511,8 +497,11 @@ class _MainShellState extends ConsumerState<MainShell> {
           child: NodesScreen(),
         );
       case 4:
-        // Activity doesn't require connection - it's social notifications
-        return const ActivityTimelineScreen();
+        // Dashboard requires connection for live widget data
+        return const ConnectionRequiredWrapper(
+          screenTitle: 'Dashboard',
+          child: WidgetDashboardScreen(),
+        );
       default:
         return const ConnectionRequiredWrapper(
           screenTitle: 'Messages',
@@ -1165,8 +1154,8 @@ class _MainShellState extends ConsumerState<MainShell> {
                   // Nodes tab - show new nodes count
                   badgeCount = ref.watch(newNodesCountProvider);
                 } else if (index == 4) {
-                  // Activity tab - show unread activity count
-                  badgeCount = ref.watch(unreadActivityCountProvider);
+                  // Dashboard tab - no badge needed
+                  badgeCount = 0;
                 }
 
                 return _NavBarItem(

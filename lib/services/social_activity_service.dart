@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:socialmesh/core/logging.dart';
 
 import '../models/social.dart';
@@ -11,13 +12,27 @@ import '../models/social_activity.dart';
 /// Activities are stored per-user for efficient querying of "my activity feed".
 class SocialActivityService {
   SocialActivityService({FirebaseFirestore? firestore, FirebaseAuth? auth})
-    : _firestore = firestore ?? FirebaseFirestore.instance,
-      _auth = auth ?? FirebaseAuth.instance;
+    : _firestore = firestore,
+      _auth = auth;
 
-  final FirebaseFirestore _firestore;
-  final FirebaseAuth _auth;
+  final FirebaseFirestore? _firestore;
+  final FirebaseAuth? _auth;
 
-  String? get _currentUserId => _auth.currentUser?.uid;
+  /// Get Firestore instance, safely checking if Firebase is initialized.
+  FirebaseFirestore? get _firestoreInstance {
+    if (_firestore != null) return _firestore;
+    if (Firebase.apps.isEmpty) return null;
+    return FirebaseFirestore.instance;
+  }
+
+  /// Get Auth instance, safely checking if Firebase is initialized.
+  FirebaseAuth? get _authInstance {
+    if (_auth != null) return _auth;
+    if (Firebase.apps.isEmpty) return null;
+    return FirebaseAuth.instance;
+  }
+
+  String? get _currentUserId => _authInstance?.currentUser?.uid;
 
   static const int _pageSize = 20;
 
@@ -40,14 +55,41 @@ class SocialActivityService {
     String? textContent,
   }) async {
     final currentUserId = _currentUserId;
-    if (currentUserId == null) return;
+
+    AppLogging.social(
+      '📬 [ActivityService] createActivity START\n'
+      '  type: ${type.name}\n'
+      '  targetUserId: $targetUserId\n'
+      '  contentId: $contentId\n'
+      '  currentUserId: $currentUserId\n'
+      '  textContent: ${textContent?.substring(0, textContent.length.clamp(0, 50))}...',
+    );
+
+    if (currentUserId == null) {
+      AppLogging.social(
+        '📬 [ActivityService] SKIP: currentUserId is null (not authenticated)',
+      );
+      return;
+    }
 
     // Don't create activity for own actions
-    if (currentUserId == targetUserId) return;
+    if (currentUserId == targetUserId) {
+      AppLogging.social(
+        '📬 [ActivityService] SKIP: actor == target (self-action)',
+      );
+      return;
+    }
 
     try {
       // Get actor snapshot
+      AppLogging.social(
+        '📬 [ActivityService] Fetching actor snapshot for $currentUserId',
+      );
       final actorSnapshot = await _getActorSnapshot(currentUserId);
+      AppLogging.social(
+        '📬 [ActivityService] Actor snapshot: '
+        '${actorSnapshot?.displayName ?? 'null'}',
+      );
 
       final activity = SocialActivity(
         id: '', // Will be set by Firestore
@@ -62,17 +104,38 @@ class SocialActivityService {
       );
 
       // Store in target user's activity feed
-      await _firestore
+      final docPath = 'users/$targetUserId/activities';
+      AppLogging.social('📬 [ActivityService] Writing to Firestore: $docPath');
+
+      final firestore = _firestoreInstance;
+      if (firestore == null) {
+        AppLogging.social(
+          '📬 [ActivityService] SKIP: Firebase not initialized',
+        );
+        return;
+      }
+
+      final docRef = await firestore
           .collection('users')
           .doc(targetUserId)
           .collection('activities')
           .add(activity.toFirestore());
 
       AppLogging.social(
-        '📬 [ActivityService] Created ${type.name} activity for user $targetUserId',
+        '📬 [ActivityService] SUCCESS: Created ${type.name} activity\n'
+        '  docId: ${docRef.id}\n'
+        '  path: $docPath/${docRef.id}\n'
+        '  targetUserId: $targetUserId\n'
+        '  actorId: $currentUserId',
       );
-    } catch (e) {
-      AppLogging.social('📬 [ActivityService] Error creating activity: $e');
+    } catch (e, stackTrace) {
+      AppLogging.social(
+        '📬 [ActivityService] ERROR creating activity:\n'
+        '  error: $e\n'
+        '  type: ${type.name}\n'
+        '  targetUserId: $targetUserId\n'
+        '  stackTrace: $stackTrace',
+      );
     }
   }
 
@@ -123,6 +186,48 @@ class SocialActivityService {
       targetUserId: signalOwnerId,
       contentId: signalId,
       previewImageUrl: signalThumbnailUrl,
+    );
+  }
+
+  /// Create a signal comment activity (when someone comments on your signal)
+  Future<void> createSignalCommentActivity({
+    required String signalId,
+    required String signalOwnerId,
+    required String commentPreview,
+  }) async {
+    await createActivity(
+      type: SocialActivityType.signalComment,
+      targetUserId: signalOwnerId,
+      contentId: signalId,
+      textContent: commentPreview,
+    );
+  }
+
+  /// Create a signal comment reply activity (when someone replies to your
+  /// comment on a signal)
+  Future<void> createSignalCommentReplyActivity({
+    required String signalId,
+    required String originalCommentAuthorId,
+    required String replyPreview,
+  }) async {
+    await createActivity(
+      type: SocialActivityType.signalCommentReply,
+      targetUserId: originalCommentAuthorId,
+      contentId: signalId,
+      textContent: replyPreview,
+    );
+  }
+
+  /// Create a signal response vote activity (when someone upvotes your
+  /// response on a signal)
+  Future<void> createSignalResponseVoteActivity({
+    required String signalId,
+    required String responseAuthorId,
+  }) async {
+    await createActivity(
+      type: SocialActivityType.signalResponseVote,
+      targetUserId: responseAuthorId,
+      contentId: signalId,
     );
   }
 
@@ -204,7 +309,10 @@ class SocialActivityService {
     final currentUserId = _currentUserId;
     if (currentUserId == null) return [];
 
-    var query = _firestore
+    final firestore = _firestoreInstance;
+    if (firestore == null) return [];
+
+    var query = firestore
         .collection('users')
         .doc(currentUserId)
         .collection('activities')
@@ -224,7 +332,10 @@ class SocialActivityService {
     final currentUserId = _currentUserId;
     if (currentUserId == null) return Stream.value([]);
 
-    return _firestore
+    final firestore = _firestoreInstance;
+    if (firestore == null) return Stream.value([]);
+
+    return firestore
         .collection('users')
         .doc(currentUserId)
         .collection('activities')
@@ -242,7 +353,10 @@ class SocialActivityService {
     final currentUserId = _currentUserId;
     if (currentUserId == null) return Stream.value(0);
 
-    return _firestore
+    final firestore = _firestoreInstance;
+    if (firestore == null) return Stream.value(0);
+
+    return firestore
         .collection('users')
         .doc(currentUserId)
         .collection('activities')
@@ -260,8 +374,11 @@ class SocialActivityService {
     final currentUserId = _currentUserId;
     if (currentUserId == null) return;
 
-    final batch = _firestore.batch();
-    final unreadDocs = await _firestore
+    final firestore = _firestoreInstance;
+    if (firestore == null) return;
+
+    final batch = firestore.batch();
+    final unreadDocs = await firestore
         .collection('users')
         .doc(currentUserId)
         .collection('activities')
@@ -280,7 +397,10 @@ class SocialActivityService {
     final currentUserId = _currentUserId;
     if (currentUserId == null) return;
 
-    await _firestore
+    final firestore = _firestoreInstance;
+    if (firestore == null) return;
+
+    await firestore
         .collection('users')
         .doc(currentUserId)
         .collection('activities')
@@ -293,7 +413,10 @@ class SocialActivityService {
     final currentUserId = _currentUserId;
     if (currentUserId == null) return;
 
-    await _firestore
+    final firestore = _firestoreInstance;
+    if (firestore == null) return;
+
+    await firestore
         .collection('users')
         .doc(currentUserId)
         .collection('activities')
@@ -306,8 +429,11 @@ class SocialActivityService {
     final currentUserId = _currentUserId;
     if (currentUserId == null) return;
 
-    final batch = _firestore.batch();
-    final allDocs = await _firestore
+    final firestore = _firestoreInstance;
+    if (firestore == null) return;
+
+    final batch = firestore.batch();
+    final allDocs = await firestore
         .collection('users')
         .doc(currentUserId)
         .collection('activities')
@@ -327,7 +453,10 @@ class SocialActivityService {
   /// Get actor snapshot for the current user.
   Future<PostAuthorSnapshot?> _getActorSnapshot(String userId) async {
     try {
-      final doc = await _firestore.collection('profiles').doc(userId).get();
+      final firestore = _firestoreInstance;
+      if (firestore == null) return null;
+
+      final doc = await firestore.collection('profiles').doc(userId).get();
       if (!doc.exists) return null;
 
       final data = doc.data()!;

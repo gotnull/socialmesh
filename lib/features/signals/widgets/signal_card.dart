@@ -176,6 +176,7 @@ class _SignalHeader extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Avatar
           UserAvatar(
@@ -191,7 +192,7 @@ class _SignalHeader extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Row 1: Name + Proximity + Bookmark (name gets priority)
+                // Row 1: Name + Bookmark
                 Row(
                   children: [
                     Expanded(
@@ -206,8 +207,6 @@ class _SignalHeader extends ConsumerWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    const SizedBox(width: 6),
-                    ProximityBadge(hopCount: signal.hopCount),
                     if (isBookmarked) ...[
                       const SizedBox(width: 6),
                       Icon(
@@ -219,7 +218,7 @@ class _SignalHeader extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: 2),
-                // Row 2: ShortName · Time · Live indicator (fixed info)
+                // Row 2: ShortName · Time · Live indicator · Proximity
                 Row(
                   children: [
                     if (isMeshSignal && authorShortName != null) ...[
@@ -257,6 +256,8 @@ class _SignalHeader extends ConsumerWidget {
                         ),
                       ),
                     ],
+                    const SizedBox(width: 6),
+                    ProximityBadge(hopCount: signal.hopCount),
                   ],
                 ),
               ],
@@ -266,6 +267,7 @@ class _SignalHeader extends ConsumerWidget {
           // Subscribe button for cloud authors (show even if profile service is disabled)
           if ((!isMeshSignal || signal.authorSnapshot != null) &&
               !isOwnMeshSignal) ...[
+            const SizedBox(width: 8),
             SubscribeButton(
               authorId:
                   signal.authorId.startsWith('mesh_') &&

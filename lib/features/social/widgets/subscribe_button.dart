@@ -48,16 +48,10 @@ class _SubscribeButtonState extends ConsumerState<SubscribeButton> {
     return subscribedAsync.when(
       data: (isSubscribed) => _buildButton(isSubscribed),
       loading: () => widget.compact
-          ? SizedBox(
-              width: 36,
-              height: 36,
-              child: const Center(
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              ),
+          ? const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
             )
           : SizedBox(
               width: 110,
@@ -81,16 +75,10 @@ class _SubscribeButtonState extends ConsumerState<SubscribeButton> {
   Widget _buildButton(bool isSubscribed) {
     if (_isLoading) {
       return widget.compact
-          ? SizedBox(
-              width: 36,
-              height: 36,
-              child: const Center(
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              ),
+          ? const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
             )
           : SizedBox(
               width: 110,
@@ -106,25 +94,16 @@ class _SubscribeButtonState extends ConsumerState<SubscribeButton> {
     }
 
     if (widget.compact) {
-      // Compact mode shows a small icon-only button with no internal padding
-      return SizedBox(
-        width: 36,
-        height: 36,
-        child: isSubscribed
-            ? IconButton(
-                onPressed: _handleToggle,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                icon: const Icon(Icons.check, size: 18),
-                tooltip: 'Subscribed',
-              )
-            : IconButton(
-                onPressed: _handleToggle,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                icon: const Icon(Icons.notifications_active, size: 18),
-                tooltip: 'Subscribe',
-              ),
+      // Compact mode shows a small icon-only button aligned to top
+      return GestureDetector(
+        onTap: _handleToggle,
+        child: Tooltip(
+          message: isSubscribed ? 'Subscribed' : 'Subscribe',
+          child: Icon(
+            isSubscribed ? Icons.check : Icons.notifications_active,
+            size: 18,
+          ),
+        ),
       );
     }
 
